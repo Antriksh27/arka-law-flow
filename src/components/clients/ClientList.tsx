@@ -99,7 +99,7 @@ export const ClientList = () => {
           <div className="flex items-center gap-4">
             <div className="flex-1 relative">
               <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <Input placeholder="Search clients..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10 border-gray-300" />
+              <Input placeholder="Search clients..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10 border-gray-300 bg-zinc-50" />
             </div>
             <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as StatusFilter)} className="px-3 py-2 border border-gray-300 rounded-md text-sm bg-white min-w-[120px]">
               <option value="all">Status</option>
