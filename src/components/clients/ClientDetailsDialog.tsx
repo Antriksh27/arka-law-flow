@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
@@ -39,14 +38,14 @@ export const ClientDetailsDialog: React.FC<ClientDetailsDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl bg-white">
         <DialogHeader>
           <DialogTitle>Client Details</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
           {/* Basic Information */}
-          <Card>
+          <Card className="bg-white">
             <CardHeader>
               <CardTitle className="text-lg">Basic Information</CardTitle>
             </CardHeader>
@@ -85,7 +84,7 @@ export const ClientDetailsDialog: React.FC<ClientDetailsDialogProps> = ({
           </Card>
 
           {/* Case Information */}
-          <Card>
+          <Card className="bg-white">
             <CardHeader>
               <CardTitle className="text-lg">Case Information</CardTitle>
             </CardHeader>

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Plus, Search, Filter, MoreHorizontal, Eye, Edit, Trash2 } from 'lucide-react';
@@ -25,9 +24,11 @@ interface Client {
   created_at: string;
 }
 
+type StatusFilter = 'all' | 'active' | 'inactive' | 'lead' | 'prospect';
+
 export const ClientList = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [viewingClient, setViewingClient] = useState<Client | null>(null);
@@ -112,7 +113,7 @@ export const ClientList = () => {
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card className="bg-white">
         <CardContent className="pt-6">
           <div className="flex gap-4">
             <div className="flex-1">
@@ -122,14 +123,14 @@ export const ClientList = () => {
                   placeholder="Search clients by name, email, or phone..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 bg-white"
                 />
               </div>
             </div>
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             >
               <option value="all">All Status</option>
               <option value="active">Active</option>
@@ -142,7 +143,7 @@ export const ClientList = () => {
       </Card>
 
       {/* Clients Table */}
-      <Card>
+      <Card className="bg-white">
         <CardHeader>
           <CardTitle>Clients ({filteredClients.length})</CardTitle>
         </CardHeader>
