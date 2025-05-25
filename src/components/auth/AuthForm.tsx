@@ -71,7 +71,7 @@ export const AuthForm: React.FC = () => {
           {mode === 'login' ? 'Sign in to your Arka Legal account' : 'Sign up for a new Arka Legal account'}
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="bg-gray-50">
         <form onSubmit={handleSubmit} className="space-y-4">
           {mode === 'signup' && <div className="space-y-2">
               <Label htmlFor="fullName">Full Name</Label>
