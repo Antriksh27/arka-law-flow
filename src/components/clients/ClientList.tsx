@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Plus, Search, MoreHorizontal, Eye } from 'lucide-react';
@@ -10,7 +9,6 @@ import { useToast } from '@/hooks/use-toast';
 import { AddClientDialog } from './AddClientDialog';
 import { EditClientDialog } from './EditClientDialog';
 import { ClientDetailsDialog } from './ClientDetailsDialog';
-
 interface Client {
   id: string;
   full_name: string;
@@ -22,51 +20,49 @@ interface Client {
   active_case_count: number;
   created_at: string;
 }
-
 type StatusFilter = 'all' | 'active' | 'inactive' | 'lead' | 'prospect';
-
 export const ClientList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [viewingClient, setViewingClient] = useState<Client | null>(null);
-  const { toast } = useToast();
-
-  const { data: clients = [], isLoading, refetch } = useQuery({
+  const {
+    toast
+  } = useToast();
+  const {
+    data: clients = [],
+    isLoading,
+    refetch
+  } = useQuery({
     queryKey: ['clients', searchTerm, statusFilter],
     queryFn: async () => {
-      let query = supabase
-        .from('client_stats')
-        .select('*')
-        .order('created_at', { ascending: false });
-
+      let query = supabase.from('client_stats').select('*').order('created_at', {
+        ascending: false
+      });
       if (searchTerm) {
         query = query.ilike('full_name', `%${searchTerm}%`);
       }
-
       if (statusFilter !== 'all') {
         query = query.eq('status', statusFilter);
       }
-
-      const { data, error } = await query;
+      const {
+        data,
+        error
+      } = await query;
       if (error) throw error;
       return data as Client[];
-    },
+    }
   });
-
   const handleDeleteClient = async (clientId: string) => {
     try {
-      const { error } = await supabase
-        .from('clients')
-        .delete()
-        .eq('id', clientId);
-
+      const {
+        error
+      } = await supabase.from('clients').delete().eq('id', clientId);
       if (error) throw error;
-
       toast({
         title: "Success",
-        description: "Client deleted successfully",
+        description: "Client deleted successfully"
       });
       refetch();
     } catch (error) {
@@ -74,35 +70,25 @@ export const ClientList = () => {
       toast({
         title: "Error",
         description: "Failed to delete client",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
-
   const filteredClients = clients.filter(client => {
-    const matchesSearch = client.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         client.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         client.phone?.includes(searchTerm);
+    const matchesSearch = client.full_name.toLowerCase().includes(searchTerm.toLowerCase()) || client.email?.toLowerCase().includes(searchTerm.toLowerCase()) || client.phone?.includes(searchTerm);
     const matchesStatus = statusFilter === 'all' || client.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
-
-  return (
-    <div className="min-h-screen bg-gray-50 p-6">
+  return <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-primary rounded flex items-center justify-center">
-              <span className="text-white text-sm">👥</span>
-            </div>
+            
             <h1 className="text-xl font-semibold text-gray-900">Clients</h1>
             <span className="text-sm text-gray-500">{filteredClients.length} Total</span>
           </div>
-          <Button 
-            onClick={() => setShowAddDialog(true)} 
-            className="bg-primary hover:bg-primary/90 text-white"
-          >
+          <Button onClick={() => setShowAddDialog(true)} className="bg-primary hover:bg-primary/90 text-white">
             <Plus className="w-4 h-4 mr-2" />
             Add New Client
           </Button>
@@ -113,18 +99,9 @@ export const ClientList = () => {
           <div className="flex items-center gap-4">
             <div className="flex-1 relative">
               <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <Input
-                placeholder="Search clients..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 border-gray-300"
-              />
+              <Input placeholder="Search clients..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10 border-gray-300" />
             </div>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-              className="px-3 py-2 border border-gray-300 rounded-md text-sm bg-white min-w-[120px]"
-            >
+            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as StatusFilter)} className="px-3 py-2 border border-gray-300 rounded-md text-sm bg-white min-w-[120px]">
               <option value="all">Status</option>
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
@@ -143,18 +120,13 @@ export const ClientList = () => {
 
         {/* Clients Table */}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          {isLoading ? (
-            <div className="text-center py-12">
+          {isLoading ? <div className="text-center py-12">
               <div className="text-gray-500">Loading clients...</div>
-            </div>
-          ) : filteredClients.length === 0 ? (
-            <div className="text-center py-12">
+            </div> : filteredClients.length === 0 ? <div className="text-center py-12">
               <div className="text-gray-500">
                 No clients found. {searchTerm || statusFilter !== 'all' ? 'Try adjusting your filters.' : 'Add your first client to get started.'}
               </div>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
+            </div> : <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
@@ -167,8 +139,7 @@ export const ClientList = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {filteredClients.map((client) => (
-                    <tr key={client.id} className="hover:bg-gray-50">
+                  {filteredClients.map(client => <tr key={client.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4">
                         <div className="font-medium text-gray-900">{client.full_name}</div>
                       </td>
@@ -178,30 +149,19 @@ export const ClientList = () => {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          {client.assigned_lawyer_name && (
-                            <>
+                          {client.assigned_lawyer_name && <>
                               <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
                                 <span className="text-xs font-medium text-gray-600">
                                   {client.assigned_lawyer_name.split(' ').map(n => n[0]).join('')}
                                 </span>
                               </div>
                               <span className="text-sm text-gray-900">{client.assigned_lawyer_name}</span>
-                            </>
-                          )}
-                          {!client.assigned_lawyer_name && (
-                            <span className="text-sm text-gray-500">-</span>
-                          )}
+                            </>}
+                          {!client.assigned_lawyer_name && <span className="text-sm text-gray-500">-</span>}
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <Badge 
-                          variant={client.status === 'active' ? 'default' : 'secondary'}
-                          className={
-                            client.status === 'active' 
-                              ? 'bg-green-100 text-green-800 hover:bg-green-100' 
-                              : 'bg-gray-100 text-gray-800 hover:bg-gray-100'
-                          }
-                        >
+                        <Badge variant={client.status === 'active' ? 'default' : 'secondary'} className={client.status === 'active' ? 'bg-green-100 text-green-800 hover:bg-green-100' : 'bg-gray-100 text-gray-800 hover:bg-gray-100'}>
                           {client.status}
                         </Badge>
                       </td>
@@ -210,62 +170,33 @@ export const ClientList = () => {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setViewingClient(client)}
-                            className="text-gray-600 hover:text-gray-900"
-                          >
+                          <Button variant="outline" size="sm" onClick={() => setViewingClient(client)} className="text-gray-600 hover:text-gray-900">
                             <Eye className="w-4 h-4 mr-1" />
                             View
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-gray-400 hover:text-gray-600"
-                          >
+                          <Button variant="ghost" size="sm" className="text-gray-400 hover:text-gray-600">
                             <MoreHorizontal className="w-4 h-4" />
                           </Button>
                         </div>
                       </td>
-                    </tr>
-                  ))}
+                    </tr>)}
                 </tbody>
               </table>
-            </div>
-          )}
+            </div>}
         </div>
       </div>
 
       {/* Dialogs */}
-      <AddClientDialog
-        open={showAddDialog}
-        onOpenChange={setShowAddDialog}
-        onSuccess={() => {
-          refetch();
-          setShowAddDialog(false);
-        }}
-      />
+      <AddClientDialog open={showAddDialog} onOpenChange={setShowAddDialog} onSuccess={() => {
+      refetch();
+      setShowAddDialog(false);
+    }} />
 
-      {editingClient && (
-        <EditClientDialog
-          client={editingClient}
-          open={!!editingClient}
-          onOpenChange={(open) => !open && setEditingClient(null)}
-          onSuccess={() => {
-            refetch();
-            setEditingClient(null);
-          }}
-        />
-      )}
+      {editingClient && <EditClientDialog client={editingClient} open={!!editingClient} onOpenChange={open => !open && setEditingClient(null)} onSuccess={() => {
+      refetch();
+      setEditingClient(null);
+    }} />}
 
-      {viewingClient && (
-        <ClientDetailsDialog
-          client={viewingClient}
-          open={!!viewingClient}
-          onOpenChange={(open) => !open && setViewingClient(null)}
-        />
-      )}
-    </div>
-  );
+      {viewingClient && <ClientDetailsDialog client={viewingClient} open={!!viewingClient} onOpenChange={open => !open && setViewingClient(null)} />}
+    </div>;
 };
