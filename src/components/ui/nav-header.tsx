@@ -73,7 +73,7 @@ const Tab = ({
       <Link 
         to={href}
         className={`block px-3 py-1.5 text-xs uppercase mix-blend-difference md:px-5 md:py-3 md:text-sm ${
-          isActive ? 'text-white' : 'text-slate-700'
+          isActive ? 'text-yellow-500' : 'text-slate-700'
         }`}
       >
         {children}
@@ -86,7 +86,7 @@ const Cursor = ({ position }: { position: any }) => {
   return (
     <motion.li
       animate={position}
-      className="absolute z-0 h-7 rounded-full bg-yellow-500 md:h-12"
+      className="absolute z-0 h-7 rounded-full bg-slate-900 md:h-12"
     />
   );
 };
