@@ -11,21 +11,36 @@ interface ClientAppointmentsProps {
   clientId: string;
 }
 
+interface AppointmentWithLawyer {
+  id: string;
+  start_time: string;
+  status: string;
+  type: string;
+  duration_minutes: number;
+  lawyer: {
+    full_name: string;
+  } | null;
+}
+
 export const ClientAppointments: React.FC<ClientAppointmentsProps> = ({ clientId }) => {
   const { data: appointments = [], isLoading } = useQuery({
     queryKey: ['client-appointments', clientId],
-    queryFn: async () => {
+    queryFn: async (): Promise<AppointmentWithLawyer[]> => {
       const { data, error } = await supabase
         .from('appointments')
         .select(`
-          *,
+          id,
+          start_time,
+          status,
+          type,
+          duration_minutes,
           lawyer:profiles!appointments_lawyer_id_fkey(full_name)
         `)
         .eq('client_id', clientId)
         .order('start_time', { ascending: false });
 
       if (error) throw error;
-      return data;
+      return data as AppointmentWithLawyer[];
     }
   });
 
