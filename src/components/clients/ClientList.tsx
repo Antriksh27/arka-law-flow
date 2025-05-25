@@ -93,7 +93,7 @@ export const ClientList = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-orange-500 rounded flex items-center justify-center">
+            <div className="w-6 h-6 bg-primary rounded flex items-center justify-center">
               <span className="text-white text-sm">👥</span>
             </div>
             <h1 className="text-xl font-semibold text-gray-900">Clients</h1>
@@ -101,7 +101,7 @@ export const ClientList = () => {
           </div>
           <Button 
             onClick={() => setShowAddDialog(true)} 
-            className="bg-orange-500 hover:bg-orange-600 text-white"
+            className="bg-primary hover:bg-primary/90 text-white"
           >
             <Plus className="w-4 h-4 mr-2" />
             Add New Client
@@ -180,8 +180,8 @@ export const ClientList = () => {
                         <div className="flex items-center gap-2">
                           {client.assigned_lawyer_name && (
                             <>
-                              <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                                <span className="text-xs font-medium text-orange-600">
+                              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                                <span className="text-xs font-medium text-gray-600">
                                   {client.assigned_lawyer_name.split(' ').map(n => n[0]).join('')}
                                 </span>
                               </div>
