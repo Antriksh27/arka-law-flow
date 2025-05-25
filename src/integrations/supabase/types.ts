@@ -69,6 +69,13 @@ export type Database = {
             foreignKeyName: "appointments_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
+            referencedRelation: "client_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["id"]
           },
@@ -522,6 +529,13 @@ export type Database = {
             foreignKeyName: "cases_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
+            referencedRelation: "client_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cases_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["id"]
           },
@@ -546,18 +560,22 @@ export type Database = {
           aadhaar_no: string | null
           address: string | null
           appointment_date: string | null
+          assigned_lawyer_id: string | null
           case_ref: string | null
           city: string | null
+          client_portal_enabled: boolean | null
           created_at: string | null
           created_by: string | null
           email: string | null
+          firm_id: string | null
           full_name: string
           id: string
           notes: string | null
+          organization: string | null
           phone: string | null
           services: string[] | null
           source: string | null
-          status: string | null
+          status: Database["public"]["Enums"]["client_status_enum"] | null
           total_billed_amount: number | null
           type: string | null
         }
@@ -565,18 +583,22 @@ export type Database = {
           aadhaar_no?: string | null
           address?: string | null
           appointment_date?: string | null
+          assigned_lawyer_id?: string | null
           case_ref?: string | null
           city?: string | null
+          client_portal_enabled?: boolean | null
           created_at?: string | null
           created_by?: string | null
           email?: string | null
+          firm_id?: string | null
           full_name: string
           id?: string
           notes?: string | null
+          organization?: string | null
           phone?: string | null
           services?: string[] | null
           source?: string | null
-          status?: string | null
+          status?: Database["public"]["Enums"]["client_status_enum"] | null
           total_billed_amount?: number | null
           type?: string | null
         }
@@ -584,22 +606,55 @@ export type Database = {
           aadhaar_no?: string | null
           address?: string | null
           appointment_date?: string | null
+          assigned_lawyer_id?: string | null
           case_ref?: string | null
           city?: string | null
+          client_portal_enabled?: boolean | null
           created_at?: string | null
           created_by?: string | null
           email?: string | null
+          firm_id?: string | null
           full_name?: string
           id?: string
           notes?: string | null
+          organization?: string | null
           phone?: string | null
           services?: string[] | null
           source?: string | null
-          status?: string | null
+          status?: Database["public"]["Enums"]["client_status_enum"] | null
           total_billed_amount?: number | null
           type?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "clients_assigned_lawyer_id_fkey"
+            columns: ["assigned_lawyer_id"]
+            isOneToOne: false
+            referencedRelation: "firm_statistics"
+            referencedColumns: ["admin_id"]
+          },
+          {
+            foreignKeyName: "clients_assigned_lawyer_id_fkey"
+            columns: ["assigned_lawyer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clients_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firm_statistics"
+            referencedColumns: ["firm_id"]
+          },
+          {
+            foreignKeyName: "clients_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "law_firms"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       court_hearings: {
         Row: {
@@ -717,6 +772,13 @@ export type Database = {
             columns: ["case_id"]
             isOneToOne: false
             referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_stats"
             referencedColumns: ["id"]
           },
           {
@@ -851,6 +913,13 @@ export type Database = {
             columns: ["case_id"]
             isOneToOne: false
             referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_stats"
             referencedColumns: ["id"]
           },
           {
@@ -1007,6 +1076,13 @@ export type Database = {
           type?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "matters_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_stats"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "matters_client_id_fkey"
             columns: ["client_id"]
@@ -1251,6 +1327,13 @@ export type Database = {
             foreignKeyName: "notes_v2_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
+            referencedRelation: "client_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notes_v2_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["id"]
           },
@@ -1356,6 +1439,13 @@ export type Database = {
           transaction_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "payments_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_stats"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "payments_client_id_fkey"
             columns: ["client_id"]
@@ -1636,6 +1726,51 @@ export type Database = {
         }
         Relationships: []
       }
+      client_stats: {
+        Row: {
+          active_case_count: number | null
+          assigned_lawyer_id: string | null
+          assigned_lawyer_name: string | null
+          client_portal_enabled: boolean | null
+          created_at: string | null
+          email: string | null
+          firm_id: string | null
+          full_name: string | null
+          id: string | null
+          phone: string | null
+          status: Database["public"]["Enums"]["client_status_enum"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clients_assigned_lawyer_id_fkey"
+            columns: ["assigned_lawyer_id"]
+            isOneToOne: false
+            referencedRelation: "firm_statistics"
+            referencedColumns: ["admin_id"]
+          },
+          {
+            foreignKeyName: "clients_assigned_lawyer_id_fkey"
+            columns: ["assigned_lawyer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clients_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firm_statistics"
+            referencedColumns: ["firm_id"]
+          },
+          {
+            foreignKeyName: "clients_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "law_firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       firm_statistics: {
         Row: {
           admin_email: string | null
@@ -1859,6 +1994,7 @@ export type Database = {
       client_category: "vip" | "regular" | "new"
       client_source: "referral" | "website" | "advertisement" | "walk_in"
       client_status: "lead" | "ongoing" | "payment_pending" | "closed"
+      client_status_enum: "active" | "inactive" | "lead" | "prospect"
       client_type: "individual" | "company" | "organization"
       firm_status: "active" | "suspended" | "pending"
       hearing_status: "scheduled" | "adjourned" | "completed" | "cancelled"
@@ -2011,6 +2147,7 @@ export const Constants = {
       client_category: ["vip", "regular", "new"],
       client_source: ["referral", "website", "advertisement", "walk_in"],
       client_status: ["lead", "ongoing", "payment_pending", "closed"],
+      client_status_enum: ["active", "inactive", "lead", "prospect"],
       client_type: ["individual", "company", "organization"],
       firm_status: ["active", "suspended", "pending"],
       hearing_status: ["scheduled", "adjourned", "completed", "cancelled"],
