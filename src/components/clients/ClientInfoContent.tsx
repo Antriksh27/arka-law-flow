@@ -19,21 +19,47 @@ export const ClientInfoContent: React.FC<ClientInfoContentProps> = ({ clientId }
   const { data: client, isLoading, error, refetch } = useQuery({
     queryKey: ['client', clientId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      console.log('Fetching client data for ID:', clientId);
+      
+      // First fetch the client without the profile join to avoid RLS issues
+      const { data: clientData, error: clientError } = await supabase
         .from('clients')
-        .select(`
-          *,
-          assigned_lawyer:profiles!clients_assigned_lawyer_id_fkey(
-            id,
-            full_name,
-            profile_pic
-          )
-        `)
+        .select('*')
         .eq('id', clientId)
         .single();
 
-      if (error) throw error;
-      return data;
+      if (clientError) {
+        console.error('Error fetching client:', clientError);
+        throw clientError;
+      }
+
+      console.log('Client data fetched:', clientData);
+
+      // If there's an assigned lawyer, fetch their profile separately
+      let assignedLawyer = null;
+      if (clientData?.assigned_lawyer_id) {
+        console.log('Fetching assigned lawyer profile for ID:', clientData.assigned_lawyer_id);
+        
+        const { data: lawyerData, error: lawyerError } = await supabase
+          .from('profiles')
+          .select('id, full_name, profile_pic')
+          .eq('id', clientData.assigned_lawyer_id)
+          .maybeSingle();
+
+        if (lawyerError) {
+          console.error('Error fetching lawyer profile:', lawyerError);
+          // Don't throw here, just log the error and continue without lawyer data
+        } else if (lawyerData) {
+          assignedLawyer = lawyerData;
+          console.log('Assigned lawyer data fetched:', assignedLawyer);
+        }
+      }
+
+      // Return the combined data
+      return {
+        ...clientData,
+        assigned_lawyer: assignedLawyer
+      };
     }
   });
 
@@ -49,6 +75,7 @@ export const ClientInfoContent: React.FC<ClientInfoContentProps> = ({ clientId }
   }
 
   if (error || !client) {
+    console.error('Client loading error:', error);
     return (
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="max-w-7xl mx-auto">
