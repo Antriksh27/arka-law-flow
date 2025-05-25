@@ -1,7 +1,7 @@
 
 import React from 'react';
-import Sidebar from './Sidebar';
 import Header from './Header';
+import NavHeader from '../ui/nav-header';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -9,16 +9,16 @@ interface DashboardLayoutProps {
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   return (
-    <div className="flex h-screen bg-legal-background">
-      <Sidebar />
-      <div className="flex-1 flex flex-col">
-        <Header />
-        <main className="flex-1 overflow-auto">
-          <div className="p-8">
-            {children}
-          </div>
-        </main>
+    <div className="min-h-screen bg-legal-background">
+      <Header />
+      <div className="border-b border-gray-200 py-4">
+        <NavHeader />
       </div>
+      <main className="flex-1">
+        <div className="p-8">
+          {children}
+        </div>
+      </main>
     </div>
   );
 };
