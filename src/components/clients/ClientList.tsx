@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Plus, Search, MoreHorizontal, Eye } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AddClientDialog } from './AddClientDialog';
 import { EditClientDialog } from './EditClientDialog';
 import { ClientDetailsDialog } from './ClientDetailsDialog';
+
 interface Client {
   id: string;
   full_name: string;
@@ -141,7 +143,12 @@ export const ClientList = () => {
                 <tbody className="divide-y divide-gray-200">
                   {filteredClients.map(client => <tr key={client.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4">
-                        <div className="font-medium text-gray-900">{client.full_name}</div>
+                        <Link 
+                          to={`/clients/${client.id}`} 
+                          className="font-medium text-gray-900 hover:text-primary transition-colors"
+                        >
+                          {client.full_name}
+                        </Link>
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm text-gray-900">{client.email || '-'}</div>
@@ -170,10 +177,12 @@ export const ClientList = () => {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <Button variant="outline" size="sm" onClick={() => setViewingClient(client)} className="text-gray-600 hover:text-gray-900 bg-zinc-50">
-                            <Eye className="w-4 h-4 mr-1" />
-                            View
-                          </Button>
+                          <Link to={`/clients/${client.id}`}>
+                            <Button variant="outline" size="sm" className="text-gray-600 hover:text-gray-900 bg-zinc-50">
+                              <Eye className="w-4 h-4 mr-1" />
+                              View
+                            </Button>
+                          </Link>
                           <Button variant="ghost" size="sm" className="text-gray-400 hover:text-gray-600">
                             <MoreHorizontal className="w-4 h-4" />
                           </Button>

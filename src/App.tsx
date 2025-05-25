@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Cases from "./pages/Cases";
 import Clients from "./pages/Clients";
+import ClientInfo from "./pages/ClientInfo";
 import Appointments from "./pages/Appointments";
 import Hearings from "./pages/Hearings";
 import Tasks from "./pages/Tasks";
@@ -29,6 +30,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/cases" element={<Cases />} />
           <Route path="/clients" element={<Clients />} />
+          <Route path="/clients/:id" element={<ClientInfo />} />
           <Route path="/appointments" element={<Appointments />} />
           <Route path="/hearings" element={<Hearings />} />
           <Route path="/tasks" element={<Tasks />} />
