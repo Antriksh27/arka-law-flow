@@ -12,7 +12,7 @@ const Header = () => {
           <img 
             src="/lovable-uploads/a3cdf643-6752-4129-b6b5-dd61377068d4.png" 
             alt="HRU Legal" 
-            className="h-8 w-auto"
+            className="h-10 w-auto"
           />
         </div>
 
