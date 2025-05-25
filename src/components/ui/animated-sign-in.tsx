@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -9,6 +8,8 @@ import {
   Twitter,
   Linkedin,
 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 import "../../index.css";
 
 const LoginPage: React.FC = () => {
@@ -20,6 +21,10 @@ const LoginPage: React.FC = () => {
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
   const [isEmailValid, setIsEmailValid] = useState(true);
   const [isFormSubmitted, setIsFormSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const { signIn } = useAuth();
+  const { toast } = useToast();
 
   // Email validation
   const validateEmail = (email: string) => {
@@ -39,22 +44,55 @@ const LoginPage: React.FC = () => {
   };
 
   // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsFormSubmitted(true);
 
     if (email && password && validateEmail(email)) {
-      console.log("Form submitted:", { email, password, rememberMe });
-      // Here you would typically handle the login process
-
-      // Simulate successful login feedback
-      const form = document.querySelector(".login-form") as HTMLElement;
-      if (form) {
-        form.classList.add("form-success");
-        setTimeout(() => {
-          form.classList.remove("form-success");
-        }, 1500);
+      setIsLoading(true);
+      console.log("Attempting to sign in with:", { email, password, rememberMe });
+      
+      try {
+        const { error } = await signIn(email, password);
+        
+        if (error) {
+          console.error("Sign in error:", error);
+          toast({
+            variant: "destructive",
+            title: "Sign in failed",
+            description: error.message || "An error occurred during sign in",
+          });
+        } else {
+          // Success feedback
+          const form = document.querySelector(".login-form") as HTMLElement;
+          if (form) {
+            form.classList.add("form-success");
+            setTimeout(() => {
+              form.classList.remove("form-success");
+            }, 1500);
+          }
+          
+          toast({
+            title: "Success",
+            description: "You have been signed in successfully",
+          });
+        }
+      } catch (error) {
+        console.error("Unexpected error:", error);
+        toast({
+          variant: "destructive",
+          title: "Sign in failed",
+          description: "An unexpected error occurred",
+        });
+      } finally {
+        setIsLoading(false);
       }
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Invalid form",
+        description: "Please enter a valid email and password",
+      });
     }
   };
 
@@ -171,6 +209,7 @@ const LoginPage: React.FC = () => {
                 onFocus={() => setIsEmailFocused(true)}
                 onBlur={() => setIsEmailFocused(false)}
                 required
+                disabled={isLoading}
               />
               <label htmlFor="email">Email Address</label>
               {!isEmailValid && email && (
@@ -193,6 +232,7 @@ const LoginPage: React.FC = () => {
                 onFocus={() => setIsPasswordFocused(true)}
                 onBlur={() => setIsPasswordFocused(false)}
                 required
+                disabled={isLoading}
               />
               <label htmlFor="password">Password</label>
               <button
@@ -200,6 +240,7 @@ const LoginPage: React.FC = () => {
                 className="toggle-password"
                 onClick={() => setShowPassword(!showPassword)}
                 aria-label={showPassword ? "Hide password" : "Show password"}
+                disabled={isLoading}
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -211,6 +252,7 @@ const LoginPage: React.FC = () => {
                   type="checkbox"
                   checked={rememberMe}
                   onChange={() => setRememberMe(!rememberMe)}
+                  disabled={isLoading}
                 />
                 <span className="checkmark"></span>
                 Remember me
@@ -225,10 +267,10 @@ const LoginPage: React.FC = () => {
               type="submit"
               className="login-button"
               disabled={
-                isFormSubmitted && (!email || !password || !isEmailValid)
+                isLoading || (isFormSubmitted && (!email || !password || !isEmailValid))
               }
             >
-              Sign In
+              {isLoading ? "Signing In..." : "Sign In"}
             </button>
           </form>
 
@@ -237,13 +279,13 @@ const LoginPage: React.FC = () => {
           </div>
 
           <div className="social-login">
-            <button className="social-button github">
+            <button className="social-button github" disabled={isLoading}>
               <Github size={18} />
             </button>
-            <button className="social-button twitter">
+            <button className="social-button twitter" disabled={isLoading}>
               <Twitter size={18} />
             </button>
-            <button className="social-button linkedin">
+            <button className="social-button linkedin" disabled={isLoading}>
               <Linkedin size={18} />
             </button>
           </div>
