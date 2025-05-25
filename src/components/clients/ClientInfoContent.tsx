@@ -3,9 +3,9 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ClientProfile } from './ClientProfile';
+import { ClientHeader } from './ClientHeader';
+import { ClientInfoSidebar } from './ClientInfoSidebar';
 import { ClientTabs } from './ClientTabs';
-import { ClientQuickActions } from './ClientQuickActions';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -17,14 +17,13 @@ interface ClientInfoContentProps {
 export const ClientInfoContent: React.FC<ClientInfoContentProps> = ({ clientId }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('cases');
+  const [activeTab, setActiveTab] = useState('overview');
 
   const { data: client, isLoading, error, refetch } = useQuery({
     queryKey: ['client', clientId],
     queryFn: async () => {
       console.log('Fetching client data for ID:', clientId);
       
-      // First fetch the client without the profile join to avoid RLS issues
       const { data: clientData, error: clientError } = await supabase
         .from('clients')
         .select('*')
@@ -38,7 +37,6 @@ export const ClientInfoContent: React.FC<ClientInfoContentProps> = ({ clientId }
 
       console.log('Client data fetched:', clientData);
 
-      // If there's an assigned lawyer, fetch their profile separately
       let assignedLawyer = null;
       if (clientData?.assigned_lawyer_id) {
         console.log('Fetching assigned lawyer profile for ID:', clientData.assigned_lawyer_id);
@@ -51,14 +49,12 @@ export const ClientInfoContent: React.FC<ClientInfoContentProps> = ({ clientId }
 
         if (lawyerError) {
           console.error('Error fetching lawyer profile:', lawyerError);
-          // Don't throw here, just log the error and continue without lawyer data
         } else if (lawyerData) {
           assignedLawyer = lawyerData;
           console.log('Assigned lawyer data fetched:', assignedLawyer);
         }
       }
 
-      // Return the combined data
       return {
         ...clientData,
         assigned_lawyer: assignedLawyer
@@ -103,41 +99,19 @@ export const ClientInfoContent: React.FC<ClientInfoContentProps> = ({ clientId }
 
   return (
     <div className="min-h-[calc(100vh-64px)] bg-gray-50">
-      <div className="max-w-7xl mx-auto p-6">
-        {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center gap-4 mb-4">
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => navigate('/clients')}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Clients
-            </Button>
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-semibold text-gray-900">
-                {client.full_name}
-              </h1>
-              <p className="text-gray-500 mt-1">Client Information & Activity</p>
-            </div>
-            <ClientQuickActions clientId={clientId} onAction={refetch} />
-          </div>
-        </div>
-
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Left Sidebar: Client Profile */}
-          <div className="lg:col-span-1">
-            <ClientProfile client={client} onUpdate={refetch} />
+      <div className="max-w-7xl mx-auto">
+        {/* Client Header */}
+        <ClientHeader client={client} onUpdate={refetch} />
+        
+        {/* Main Content */}
+        <div className="flex gap-6 px-6 pb-6">
+          {/* Left Sidebar */}
+          <div className="w-80 flex-shrink-0">
+            <ClientInfoSidebar client={client} onUpdate={refetch} />
           </div>
 
-          {/* Main Content: Activity Tabs */}
-          <div className="lg:col-span-3">
+          {/* Right Content */}
+          <div className="flex-1">
             <ClientTabs 
               clientId={clientId} 
               activeTab={activeTab}
