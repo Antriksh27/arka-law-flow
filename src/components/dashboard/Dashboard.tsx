@@ -131,7 +131,7 @@ const Dashboard = () => {
                   </div>
                   <div className="space-y-3">
                     {myTasks.map((task, index) => (
-                      <div key={index} className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                      <div key={index} className="p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
                         <div className="flex items-start justify-between mb-2">
                           <h4 className="text-sm font-medium text-gray-900">{task.title}</h4>
                           <span className={`text-xs px-2 py-1 rounded ${
