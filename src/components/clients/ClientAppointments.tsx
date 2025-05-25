@@ -19,7 +19,7 @@ export const ClientAppointments: React.FC<ClientAppointmentsProps> = ({ clientId
         .from('appointments')
         .select(`
           *,
-          lawyer:profiles!appointments_lawyer_id_fkey(full_name)
+          lawyer:profiles(full_name)
         `)
         .eq('client_id', clientId)
         .order('start_time', { ascending: false });
