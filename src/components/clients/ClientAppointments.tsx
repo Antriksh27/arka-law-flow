@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -34,13 +33,18 @@ export const ClientAppointments: React.FC<ClientAppointmentsProps> = ({ clientId
           status,
           type,
           duration_minutes,
-          lawyer:profiles!appointments_lawyer_id_fkey(full_name)
+          profiles!appointments_lawyer_id_fkey(full_name)
         `)
         .eq('client_id', clientId)
         .order('start_time', { ascending: false });
 
       if (error) throw error;
-      return data as AppointmentWithLawyer[];
+      
+      // Transform the data to match our interface
+      return (data || []).map(appointment => ({
+        ...appointment,
+        lawyer: appointment.profiles
+      }));
     }
   });
 
