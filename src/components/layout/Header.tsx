@@ -9,10 +9,11 @@ const Header = () => {
       <div className="flex items-center justify-between">
         {/* Logo Section */}
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-amber-500 rounded-md flex items-center justify-center">
-            <span className="text-slate-900 font-bold text-sm">A</span>
-          </div>
-          <span className="text-white font-semibold text-lg">ARKA</span>
+          <img 
+            src="/lovable-uploads/a3cdf643-6752-4129-b6b5-dd61377068d4.png" 
+            alt="HRU Legal" 
+            className="h-8 w-auto"
+          />
         </div>
 
         {/* Right Side Actions */}
