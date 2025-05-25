@@ -5,7 +5,8 @@ import {
   DropdownMenu, 
   DropdownMenuContent, 
   DropdownMenuItem, 
-  DropdownMenuTrigger 
+  DropdownMenuTrigger,
+  DropdownMenuSeparator 
 } from '@/components/ui/dropdown-menu';
 import { 
   MoreHorizontal, 
@@ -13,7 +14,9 @@ import {
   Calendar, 
   FileText, 
   StickyNote,
-  Briefcase 
+  Briefcase,
+  Edit,
+  Trash2
 } from 'lucide-react';
 
 interface ClientQuickActionsProps {
@@ -26,34 +29,43 @@ export const ClientQuickActions: React.FC<ClientQuickActionsProps> = ({
   onAction 
 }) => {
   return (
-    <div className="flex items-center gap-2">
-      <Button size="sm" className="bg-primary hover:bg-primary/90">
+    <div className="flex items-center gap-3">
+      <Button size="sm" className="bg-primary hover:bg-primary/90 text-white">
         <Plus className="w-4 h-4 mr-2" />
-        Quick Add
+        New Case
       </Button>
       
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" className="border-gray-200">
             <MoreHorizontal className="w-4 h-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuItem>
-            <Briefcase className="w-4 h-4 mr-2" />
-            Assign to Case
+        <DropdownMenuContent align="end" className="w-56 bg-white border border-gray-200 rounded-xl shadow-sm">
+          <DropdownMenuItem className="hover:bg-gray-50">
+            <Briefcase className="w-4 h-4 mr-3 text-gray-400" />
+            <span>Assign to Case</span>
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            <Calendar className="w-4 h-4 mr-2" />
-            Create Appointment
+          <DropdownMenuItem className="hover:bg-gray-50">
+            <Calendar className="w-4 h-4 mr-3 text-gray-400" />
+            <span>Schedule Appointment</span>
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            <FileText className="w-4 h-4 mr-2" />
-            Upload Document
+          <DropdownMenuItem className="hover:bg-gray-50">
+            <FileText className="w-4 h-4 mr-3 text-gray-400" />
+            <span>Upload Document</span>
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            <StickyNote className="w-4 h-4 mr-2" />
-            Add Note
+          <DropdownMenuItem className="hover:bg-gray-50">
+            <StickyNote className="w-4 h-4 mr-3 text-gray-400" />
+            <span>Add Note</span>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator className="bg-gray-200" />
+          <DropdownMenuItem className="hover:bg-gray-50">
+            <Edit className="w-4 h-4 mr-3 text-gray-400" />
+            <span>Edit Client</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem className="hover:bg-red-50 text-red-600">
+            <Trash2 className="w-4 h-4 mr-3 text-red-400" />
+            <span>Delete Client</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
