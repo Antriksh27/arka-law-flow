@@ -6,10 +6,10 @@ import { Button } from '@/components/ui/button';
 
 const Dashboard = () => {
   const metrics = [
-    { number: '1', label: 'Active Cases', bgColor: 'bg-blue-50', textColor: 'text-blue-600' },
-    { number: '5', label: 'Hearings', bgColor: 'bg-orange-50', textColor: 'text-orange-600' },
-    { number: '3', label: 'Appointments', bgColor: 'bg-green-50', textColor: 'text-green-600' },
-    { number: '8', label: 'Tasks', bgColor: 'bg-purple-50', textColor: 'text-purple-600' }
+    { number: '1', label: 'Active Cases' },
+    { number: '5', label: 'Hearings' },
+    { number: '3', label: 'Appointments' },
+    { number: '8', label: 'Tasks' }
   ];
 
   const weekDays = [
@@ -58,11 +58,11 @@ const Dashboard = () => {
       {/* Metrics Cards */}
       <div className="grid grid-cols-4 gap-4 mb-8">
         {metrics.map((metric, index) => (
-          <Card key={index} className="p-4">
+          <Card key={index} className="p-4 bg-white border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <div className={`w-10 h-10 rounded-lg ${metric.bgColor} flex items-center justify-center mb-2`}>
-                  <span className={`text-xl font-bold ${metric.textColor}`}>{metric.number}</span>
+                <div className="w-10 h-10 bg-white border border-gray-200 rounded-lg flex items-center justify-center mb-2 shadow-sm">
+                  <span className="text-xl font-bold text-gray-900">{metric.number}</span>
                 </div>
                 <p className="text-sm text-gray-600">{metric.label}</p>
               </div>
@@ -72,7 +72,7 @@ const Dashboard = () => {
       </div>
 
       {/* This Week's Events */}
-      <Card className="mb-8">
+      <Card className="mb-8 bg-white border border-gray-200 shadow-sm">
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg font-medium">This Week's Events</CardTitle>
@@ -90,7 +90,7 @@ const Dashboard = () => {
               <div key={index} className="text-center">
                 <div className="text-xs text-gray-500 mb-2">{day.day}</div>
                 <div className={`w-12 h-12 mx-auto flex items-center justify-center rounded-lg border ${
-                  day.events.length > 0 ? 'bg-blue-500 text-white' : 'border-gray-200'
+                  day.events.length > 0 ? 'bg-blue-500 text-white' : 'bg-white border-gray-200'
                 }`}>
                   <span className="font-medium">{day.date}</span>
                 </div>
@@ -109,7 +109,7 @@ const Dashboard = () => {
       <div className="grid grid-cols-12 gap-6">
         {/* Left Column - My Workspace */}
         <div className="col-span-8">
-          <Card>
+          <Card className="bg-white border border-gray-200 shadow-sm">
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg font-medium">My Workspace</CardTitle>
@@ -161,7 +161,7 @@ const Dashboard = () => {
                   </div>
                   <div className="space-y-3">
                     {myNotes.map((note, index) => (
-                      <div key={index} className="p-3 border border-gray-200 rounded-lg">
+                      <div key={index} className="p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
                         <h4 className="text-sm font-medium text-gray-900 mb-1">{note.title}</h4>
                         <p className="text-xs text-gray-600 mb-2">{note.subtitle}</p>
                         <p className="text-xs text-gray-500">{note.date}</p>
@@ -174,7 +174,7 @@ const Dashboard = () => {
           </Card>
 
           {/* Team Workload */}
-          <Card className="mt-6">
+          <Card className="mt-6 bg-white border border-gray-200 shadow-sm">
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg font-medium">Team Workload</CardTitle>
@@ -186,7 +186,7 @@ const Dashboard = () => {
                 {teamMembers.map((member, index) => (
                   <div key={index} className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-xs font-medium">
+                      <div className="w-8 h-8 bg-white border border-gray-200 rounded-full flex items-center justify-center text-xs font-medium shadow-sm">
                         {member.avatar}
                       </div>
                       <div>
@@ -205,7 +205,7 @@ const Dashboard = () => {
           </Card>
 
           {/* Recent Case Activity */}
-          <Card className="mt-6">
+          <Card className="mt-6 bg-white border border-gray-200 shadow-sm">
             <CardHeader className="pb-4">
               <CardTitle className="text-lg font-medium">Recent Case Activity</CardTitle>
             </CardHeader>
@@ -230,7 +230,7 @@ const Dashboard = () => {
         {/* Right Column - Quick Actions & Other */}
         <div className="col-span-4 space-y-6">
           {/* Quick Actions */}
-          <Card>
+          <Card className="bg-white border border-gray-200 shadow-sm">
             <CardHeader className="pb-4">
               <CardTitle className="text-lg font-medium">Quick Actions</CardTitle>
             </CardHeader>
@@ -251,7 +251,7 @@ const Dashboard = () => {
           </Card>
 
           {/* Revenue Overview */}
-          <Card>
+          <Card className="bg-white border border-gray-200 shadow-sm">
             <CardHeader className="pb-4">
               <CardTitle className="text-lg font-medium">Revenue Overview</CardTitle>
             </CardHeader>
@@ -276,7 +276,7 @@ const Dashboard = () => {
           </Card>
 
           {/* Recent Documents */}
-          <Card>
+          <Card className="bg-white border border-gray-200 shadow-sm">
             <CardHeader className="pb-4">
               <CardTitle className="text-lg font-medium">Recent Documents</CardTitle>
             </CardHeader>
