@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -70,7 +69,7 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({ client, onUpdate }
       case 'lead':
         return 'bg-blue-100 text-blue-800 hover:bg-blue-100';
       case 'prospect':
-        return 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100';
+        return 'bg-white text-gray-800 hover:bg-gray-50 border-gray-300';
       default:
         return 'bg-gray-100 text-gray-800 hover:bg-gray-100';
     }
