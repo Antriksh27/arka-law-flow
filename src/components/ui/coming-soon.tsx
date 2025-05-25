@@ -25,7 +25,7 @@ const ComingSoon: React.FC<ComingSoonProps> = ({ title }) => {
         </p>
         <Button 
           onClick={handleBackToHome}
-          className="bg-yellow-500 hover:bg-yellow-600 text-black font-medium"
+          className="bg-gray-800 hover:bg-gray-900 text-white font-medium"
         >
           Back to Dashboard
         </Button>
