@@ -8,8 +8,6 @@ import {
   Github,
   Twitter,
   Linkedin,
-  Sun,
-  Moon,
 } from "lucide-react";
 import "../../index.css";
 
@@ -18,7 +16,6 @@ const LoginPage: React.FC = () => {
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [isEmailFocused, setIsEmailFocused] = useState(false);
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
   const [isEmailValid, setIsEmailValid] = useState(true);
@@ -61,21 +58,9 @@ const LoginPage: React.FC = () => {
     }
   };
 
-  // Toggle dark mode
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-    document.documentElement.classList.toggle("dark-mode");
-  };
-
-  // Initialize theme based on user preference
+  // Set dark mode on component mount
   useEffect(() => {
-    const prefersDark = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches;
-    setIsDarkMode(prefersDark);
-    if (prefersDark) {
-      document.documentElement.classList.add("dark-mode");
-    }
+    document.documentElement.classList.add("dark-mode");
   }, []);
 
   // Create particles
@@ -110,9 +95,7 @@ const LoginPage: React.FC = () => {
         this.size = Math.random() * 3 + 1;
         this.speedX = (Math.random() - 0.5) * 0.5;
         this.speedY = (Math.random() - 0.5) * 0.5;
-        this.color = isDarkMode
-          ? `rgba(255, 255, 255, ${Math.random() * 0.2})`
-          : `rgba(0, 0, 100, ${Math.random() * 0.2})`;
+        this.color = `rgba(255, 255, 255, ${Math.random() * 0.2})`;
       }
 
       update() {
@@ -161,15 +144,11 @@ const LoginPage: React.FC = () => {
     return () => {
       window.removeEventListener("resize", setCanvasSize);
     };
-  }, [isDarkMode]);
+  }, []);
 
   return (
-    <div className={`login-container ${isDarkMode ? "dark" : "light"}`}>
+    <div className="login-container dark">
       <canvas id="particles" className="particles-canvas"></canvas>
-
-      <div className="theme-toggle" onClick={toggleDarkMode}>
-        {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-      </div>
 
       <div className="login-card">
         <div className="login-card-inner">
