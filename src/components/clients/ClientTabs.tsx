@@ -7,7 +7,6 @@ import { ClientAppointments } from './ClientAppointments';
 import { ClientDocuments } from './ClientDocuments';
 import { ClientNotes } from './ClientNotes';
 import { 
-  User, 
   BarChart3, 
   CheckSquare, 
   Calendar, 
@@ -30,7 +29,6 @@ export const ClientTabs: React.FC<ClientTabsProps> = ({
   onTabChange 
 }) => {
   const tabs = [
-    { value: 'overview', label: 'Client Details', icon: User },
     { value: 'overview-stats', label: 'Overview', icon: BarChart3 },
     { value: 'tasks', label: 'Tasks', icon: CheckSquare },
     { value: 'appointments', label: 'Appointments', icon: Calendar },
@@ -63,10 +61,6 @@ export const ClientTabs: React.FC<ClientTabsProps> = ({
         </TabsList>
 
         <div className="p-6">
-          <TabsContent value="overview" className="m-0">
-            <ClientOverview clientId={clientId} />
-          </TabsContent>
-
           <TabsContent value="overview-stats" className="m-0">
             <ClientOverview clientId={clientId} />
           </TabsContent>

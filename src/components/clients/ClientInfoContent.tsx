@@ -8,17 +8,18 @@ import { ClientTabs } from './ClientTabs';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+
 interface ClientInfoContentProps {
   clientId: string;
 }
+
 export const ClientInfoContent: React.FC<ClientInfoContentProps> = ({
   clientId
 }) => {
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('overview-stats');
+
   const {
     data: client,
     isLoading,
@@ -57,6 +58,7 @@ export const ClientInfoContent: React.FC<ClientInfoContentProps> = ({
       };
     }
   });
+
   if (isLoading) {
     return <div className="min-h-[calc(100vh-64px)] bg-gray-50 flex items-center justify-center">
         <div className="flex items-center gap-3">
@@ -65,6 +67,7 @@ export const ClientInfoContent: React.FC<ClientInfoContentProps> = ({
         </div>
       </div>;
   }
+
   if (error || !client) {
     console.error('Client loading error:', error);
     return <div className="min-h-[calc(100vh-64px)] bg-gray-50 p-6">
@@ -82,6 +85,7 @@ export const ClientInfoContent: React.FC<ClientInfoContentProps> = ({
         </div>
       </div>;
   }
+
   return <div className="min-h-[calc(100vh-64px)] bg-gray-50">
       <div className="max-w-7xl mx-auto">
         {/* Client Header */}
