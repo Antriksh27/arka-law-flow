@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,44 +8,42 @@ import { ClientTabs } from './ClientTabs';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-
 interface ClientInfoContentProps {
   clientId: string;
 }
-
-export const ClientInfoContent: React.FC<ClientInfoContentProps> = ({ clientId }) => {
-  const { toast } = useToast();
+export const ClientInfoContent: React.FC<ClientInfoContentProps> = ({
+  clientId
+}) => {
+  const {
+    toast
+  } = useToast();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
-
-  const { data: client, isLoading, error, refetch } = useQuery({
+  const {
+    data: client,
+    isLoading,
+    error,
+    refetch
+  } = useQuery({
     queryKey: ['client', clientId],
     queryFn: async () => {
       console.log('Fetching client data for ID:', clientId);
-      
-      const { data: clientData, error: clientError } = await supabase
-        .from('clients')
-        .select('*')
-        .eq('id', clientId)
-        .single();
-
+      const {
+        data: clientData,
+        error: clientError
+      } = await supabase.from('clients').select('*').eq('id', clientId).single();
       if (clientError) {
         console.error('Error fetching client:', clientError);
         throw clientError;
       }
-
       console.log('Client data fetched:', clientData);
-
       let assignedLawyer = null;
       if (clientData?.assigned_lawyer_id) {
         console.log('Fetching assigned lawyer profile for ID:', clientData.assigned_lawyer_id);
-        
-        const { data: lawyerData, error: lawyerError } = await supabase
-          .from('profiles')
-          .select('id, full_name, profile_pic')
-          .eq('id', clientData.assigned_lawyer_id)
-          .maybeSingle();
-
+        const {
+          data: lawyerData,
+          error: lawyerError
+        } = await supabase.from('profiles').select('id, full_name, profile_pic').eq('id', clientData.assigned_lawyer_id).maybeSingle();
         if (lawyerError) {
           console.error('Error fetching lawyer profile:', lawyerError);
         } else if (lawyerData) {
@@ -54,57 +51,44 @@ export const ClientInfoContent: React.FC<ClientInfoContentProps> = ({ clientId }
           console.log('Assigned lawyer data fetched:', assignedLawyer);
         }
       }
-
       return {
         ...clientData,
         assigned_lawyer: assignedLawyer
       };
     }
   });
-
   if (isLoading) {
-    return (
-      <div className="min-h-[calc(100vh-64px)] bg-gray-50 flex items-center justify-center">
+    return <div className="min-h-[calc(100vh-64px)] bg-gray-50 flex items-center justify-center">
         <div className="flex items-center gap-3">
           <Loader2 className="w-6 h-6 animate-spin text-primary" />
           <span className="text-gray-600">Loading client information...</span>
         </div>
-      </div>
-    );
+      </div>;
   }
-
   if (error || !client) {
     console.error('Client loading error:', error);
-    return (
-      <div className="min-h-[calc(100vh-64px)] bg-gray-50 p-6">
+    return <div className="min-h-[calc(100vh-64px)] bg-gray-50 p-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center py-12">
             <div className="text-red-600 mb-2 text-lg font-medium">Error loading client</div>
             <div className="text-gray-500 mb-4">
               {error?.message || 'Client not found'}
             </div>
-            <Button 
-              variant="outline" 
-              onClick={() => navigate('/clients')}
-              className="mx-auto"
-            >
+            <Button variant="outline" onClick={() => navigate('/clients')} className="mx-auto">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Clients
             </Button>
           </div>
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="min-h-[calc(100vh-64px)] bg-gray-50">
+  return <div className="min-h-[calc(100vh-64px)] bg-gray-50">
       <div className="max-w-7xl mx-auto">
         {/* Client Header */}
         <ClientHeader client={client} onUpdate={refetch} />
         
         {/* Main Content */}
-        <div className="flex gap-6 px-6 pb-6">
+        <div className="flex gap-6 px-6 pb-6 py-[17px]">
           {/* Left Sidebar */}
           <div className="w-80 flex-shrink-0">
             <ClientInfoSidebar client={client} onUpdate={refetch} />
@@ -112,14 +96,9 @@ export const ClientInfoContent: React.FC<ClientInfoContentProps> = ({ clientId }
 
           {/* Right Content */}
           <div className="flex-1">
-            <ClientTabs 
-              clientId={clientId} 
-              activeTab={activeTab}
-              onTabChange={setActiveTab}
-            />
+            <ClientTabs clientId={clientId} activeTab={activeTab} onTabChange={setActiveTab} />
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
