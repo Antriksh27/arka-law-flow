@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -49,9 +48,11 @@ export const ClientAppointments: React.FC<ClientAppointmentsProps> = ({ clientId
         status: appointment.status,
         type: appointment.type,
         duration_minutes: appointment.duration_minutes,
-        lawyer: appointment.profiles && Array.isArray(appointment.profiles) && appointment.profiles.length > 0 
+        lawyer: Array.isArray(appointment.profiles) && appointment.profiles.length > 0 
           ? appointment.profiles[0] 
-          : appointment.profiles || null
+          : appointment.profiles && !Array.isArray(appointment.profiles)
+          ? appointment.profiles
+          : null
       }));
     }
   });
