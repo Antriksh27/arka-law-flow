@@ -170,7 +170,7 @@ export const ClientList = () => {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <Button variant="outline" size="sm" onClick={() => setViewingClient(client)} className="text-gray-600 hover:text-gray-900">
+                          <Button variant="outline" size="sm" onClick={() => setViewingClient(client)} className="text-gray-600 hover:text-gray-900 bg-zinc-50">
                             <Eye className="w-4 h-4 mr-1" />
                             View
                           </Button>
