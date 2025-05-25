@@ -1,10 +1,9 @@
+
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Plus, Search, Filter, MoreHorizontal, Eye, Edit, Trash2 } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -80,16 +79,6 @@ export const ClientList = () => {
     }
   };
 
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case 'active': return 'default';
-      case 'inactive': return 'secondary';
-      case 'lead': return 'outline';
-      case 'prospect': return 'destructive';
-      default: return 'default';
-    }
-  };
-
   const filteredClients = clients.filter(client => {
     const matchesSearch = client.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          client.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -99,141 +88,154 @@ export const ClientList = () => {
   });
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Client Management</h1>
-          <p className="text-gray-600">Manage your clients and their information</p>
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 bg-orange-500 rounded flex items-center justify-center">
+              <span className="text-white text-sm">👥</span>
+            </div>
+            <h1 className="text-xl font-semibold text-gray-900">Clients</h1>
+            <span className="text-sm text-gray-500">{filteredClients.length} Total</span>
+          </div>
+          <Button 
+            onClick={() => setShowAddDialog(true)} 
+            className="bg-orange-500 hover:bg-orange-600 text-white"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add New Client
+          </Button>
         </div>
-        <Button onClick={() => setShowAddDialog(true)} className="flex items-center gap-2">
-          <Plus className="w-4 h-4" />
-          Add Client
-        </Button>
-      </div>
 
-      {/* Filters */}
-      <Card className="bg-white">
-        <CardContent className="pt-6">
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
-                <Input
-                  placeholder="Search clients by name, email, or phone..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 bg-white"
-                />
-              </div>
+        {/* Filters Bar */}
+        <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
+          <div className="flex items-center gap-4">
+            <div className="flex-1 relative">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <Input
+                placeholder="Search clients..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 border-gray-300"
+              />
             </div>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              className="px-3 py-2 border border-gray-300 rounded-md text-sm bg-white min-w-[120px]"
             >
-              <option value="all">All Status</option>
+              <option value="all">Status</option>
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
               <option value="lead">Lead</option>
               <option value="prospect">Prospect</option>
             </select>
+            <select className="px-3 py-2 border border-gray-300 rounded-md text-sm bg-white min-w-[140px]">
+              <option>Assigned To</option>
+            </select>
+            <Button variant="outline" className="text-sm">
+              <Search className="w-4 h-4 mr-2" />
+              More Filters
+            </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Clients Table */}
-      <Card className="bg-white">
-        <CardHeader>
-          <CardTitle>Clients ({filteredClients.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
+        {/* Clients Table */}
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           {isLoading ? (
-            <div className="text-center py-8">Loading clients...</div>
+            <div className="text-center py-12">
+              <div className="text-gray-500">Loading clients...</div>
+            </div>
           ) : filteredClients.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              No clients found. {searchTerm || statusFilter !== 'all' ? 'Try adjusting your filters.' : 'Add your first client to get started.'}
+            <div className="text-center py-12">
+              <div className="text-gray-500">
+                No clients found. {searchTerm || statusFilter !== 'all' ? 'Try adjusting your filters.' : 'Add your first client to get started.'}
+              </div>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Lawyer</TableHead>
-                  <TableHead>Active Cases</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead className="w-[100px]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredClients.map((client) => (
-                  <TableRow key={client.id}>
-                    <TableCell className="font-medium">
-                      <div>
-                        <div>{client.full_name}</div>
-                        {client.organization && (
-                          <div className="text-sm text-gray-500">{client.organization}</div>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm">
-                        {client.email && <div>{client.email}</div>}
-                        {client.phone && <div className="text-gray-600">{client.phone}</div>}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={getStatusBadgeVariant(client.status)}>
-                        {client.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {client.assigned_lawyer_name || '-'}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{client.active_case_count}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      {new Date(client.created_at).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setViewingClient(client)}
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="text-left px-6 py-4 text-sm font-medium text-gray-700">Client Name</th>
+                    <th className="text-left px-6 py-4 text-sm font-medium text-gray-700">Contact</th>
+                    <th className="text-left px-6 py-4 text-sm font-medium text-gray-700">Assigned Lawyer</th>
+                    <th className="text-left px-6 py-4 text-sm font-medium text-gray-700">Status</th>
+                    <th className="text-left px-6 py-4 text-sm font-medium text-gray-700">Active Cases</th>
+                    <th className="text-right px-6 py-4 text-sm font-medium text-gray-700">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {filteredClients.map((client) => (
+                    <tr key={client.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4">
+                        <div className="font-medium text-gray-900">{client.full_name}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-900">{client.email || '-'}</div>
+                        <div className="text-sm text-gray-500">{client.phone || '-'}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          {client.assigned_lawyer_name && (
+                            <>
+                              <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                                <span className="text-xs font-medium text-orange-600">
+                                  {client.assigned_lawyer_name.split(' ').map(n => n[0]).join('')}
+                                </span>
+                              </div>
+                              <span className="text-sm text-gray-900">{client.assigned_lawyer_name}</span>
+                            </>
+                          )}
+                          {!client.assigned_lawyer_name && (
+                            <span className="text-sm text-gray-500">-</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <Badge 
+                          variant={client.status === 'active' ? 'default' : 'secondary'}
+                          className={
+                            client.status === 'active' 
+                              ? 'bg-green-100 text-green-800 hover:bg-green-100' 
+                              : 'bg-gray-100 text-gray-800 hover:bg-gray-100'
+                          }
                         >
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setEditingClient(client)}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            if (confirm('Are you sure you want to delete this client?')) {
-                              handleDeleteClient(client.id);
-                            }
-                          }}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                          {client.status}
+                        </Badge>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm text-gray-900">{client.active_case_count} Cases</span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setViewingClient(client)}
+                            className="text-gray-600 hover:text-gray-900"
+                          >
+                            <Eye className="w-4 h-4 mr-1" />
+                            View
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-gray-400 hover:text-gray-600"
+                          >
+                            <MoreHorizontal className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Dialogs */}
       <AddClientDialog
