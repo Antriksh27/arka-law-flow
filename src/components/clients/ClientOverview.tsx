@@ -1,18 +1,22 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, AlertCircle } from 'lucide-react';
+
 interface ClientOverviewProps {
   clientId: string;
 }
+
 export const ClientOverview: React.FC<ClientOverviewProps> = ({
   clientId
 }) => {
-  return <div className="space-y-6">
+  return (
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold text-gray-900">Client Overview</h2>
-        <Button size="sm" variant="outline" className="bg-slate-800 hover:bg-slate-700 text-slate-50">
+        <Button size="sm">
           <Plus className="w-4 h-4 mr-2" />
           Add Note
         </Button>
@@ -28,7 +32,7 @@ export const ClientOverview: React.FC<ClientOverviewProps> = ({
               Sarah has not yet activated their client portal account.
             </p>
           </div>
-          <Button size="sm" variant="outline" className="text-amber-700 border-amber-300 hover:bg-amber-100">
+          <Button size="sm" variant="outline" className="text-amber-700 border-amber-300 hover:bg-amber-100 hover:text-amber-700">
             Send Invite
           </Button>
         </div>
@@ -69,5 +73,6 @@ export const ClientOverview: React.FC<ClientOverviewProps> = ({
           </div>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };

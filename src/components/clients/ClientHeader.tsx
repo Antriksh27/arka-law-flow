@@ -3,10 +3,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Edit, Link2, Briefcase } from 'lucide-react';
+
 interface ClientHeaderProps {
   client: any;
   onUpdate: () => void;
 }
+
 export const ClientHeader: React.FC<ClientHeaderProps> = ({
   client,
   onUpdate
@@ -25,7 +27,9 @@ export const ClientHeader: React.FC<ClientHeaderProps> = ({
         return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
-  return <div className="bg-white border-b border-gray-200 px-6 py-6">
+
+  return (
+    <div className="bg-white border-b border-gray-200 px-6 py-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Avatar className="w-16 h-16">
@@ -44,28 +48,28 @@ export const ClientHeader: React.FC<ClientHeaderProps> = ({
               </Badge>
             </div>
             <div className="text-gray-600">
-              
               <div>{client.phone}</div>
             </div>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm" className="text-slate-50 bg-slate-800 hover:bg-slate-700">
+          <Button size="sm">
             <Edit className="w-4 h-4 mr-2" />
             Edit Info
           </Button>
           
-          <Button variant="outline" size="sm" className="text-gray-600">
+          <Button variant="outline" size="sm">
             <Link2 className="w-4 h-4 mr-2" />
             Enable Portal
           </Button>
           
-          <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white">
+          <Button size="sm">
             <Briefcase className="w-4 h-4 mr-2" />
             Assign to Case
           </Button>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
