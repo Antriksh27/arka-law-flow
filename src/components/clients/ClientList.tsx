@@ -112,7 +112,7 @@ export const ClientList = () => {
             <select className="px-3 py-2 border border-gray-300 rounded-md text-sm bg-white min-w-[140px]">
               <option>Assigned To</option>
             </select>
-            <Button variant="outline" className="text-sm text-white bg-slate-900 hover:bg-slate-800 border-slate-900">
+            <Button variant="outline" className="text-sm border-slate-900 bg-slate-50 text-slate-900">
               <Search className="w-4 h-4 mr-2" />
               More Filters
             </Button>
