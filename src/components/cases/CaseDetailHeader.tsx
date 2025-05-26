@@ -16,7 +16,7 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({ case: caseDa
       case 'open':
         return 'bg-blue-100 text-blue-700 border-blue-200';
       case 'in_court':
-        return 'bg-slate-100 text-slate-900 border-slate-200';
+        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
       case 'on_hold':
         return 'bg-orange-100 text-orange-700 border-orange-200';
       case 'closed':
@@ -31,7 +31,7 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({ case: caseDa
       case 'high':
         return 'bg-red-100 text-red-700 border-red-200';
       case 'medium':
-        return 'bg-slate-100 text-slate-900 border-slate-200';
+        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
       case 'low':
         return 'bg-green-100 text-green-700 border-green-200';
       default:
