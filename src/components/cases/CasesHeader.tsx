@@ -22,7 +22,7 @@ export const CasesHeader: React.FC<CasesHeaderProps> = ({
           <Button variant={viewMode === 'grid' ? 'default' : 'ghost'} size="sm" onClick={() => onViewModeChange('grid')} className="h-8 px-3">
             <Grid3X3 className="w-4 h-4" />
           </Button>
-          <Button variant={viewMode === 'table' ? 'default' : 'ghost'} size="sm" onClick={() => onViewModeChange('table')} className="h-8 px-3">
+          <Button variant={viewMode === 'table' ? 'default' : 'ghost'} size="sm" onClick={() => onViewModeChange('table')} className="h-8 px-3 bg-slate-800 hover:bg-slate-700">
             <List className="w-4 h-4" />
           </Button>
         </div>
