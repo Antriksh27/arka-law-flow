@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -54,7 +53,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
       case 'open':
         return 'bg-blue-100 text-blue-700 border-blue-200';
       case 'in_court':
-        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+        return 'bg-slate-900 text-white border-slate-800';
       case 'on_hold':
         return 'bg-orange-100 text-orange-700 border-orange-200';
       case 'closed':

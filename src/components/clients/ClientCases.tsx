@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -34,7 +33,7 @@ export const ClientCases: React.FC<ClientCasesProps> = ({ clientId }) => {
       case 'open':
         return 'bg-blue-100 text-blue-800';
       case 'in_court':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-slate-900 text-white';
       case 'on_hold':
         return 'bg-orange-100 text-orange-800';
       case 'closed':
