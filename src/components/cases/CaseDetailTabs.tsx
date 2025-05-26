@@ -9,29 +9,42 @@ import { CaseTasks } from './CaseTasks';
 import { CaseNotes } from './CaseNotes';
 import { CaseMessages } from './CaseMessages';
 import { CaseActivity } from './CaseActivity';
-
 interface CaseDetailTabsProps {
   caseId: string;
   activeTab: string;
   onTabChange: (tab: string) => void;
 }
-
 export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
   caseId,
   activeTab,
   onTabChange
 }) => {
-  const tabs = [
-    { value: 'documents', label: 'Documents', icon: FileText },
-    { value: 'hearings', label: 'Hearings', icon: Calendar },
-    { value: 'tasks', label: 'Tasks', icon: CheckSquare },
-    { value: 'notes', label: 'Notes', icon: StickyNote },
-    { value: 'messages', label: 'Messages', icon: MessageSquare },
-    { value: 'activity', label: 'Activity', icon: Activity }
-  ];
-
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+  const tabs = [{
+    value: 'documents',
+    label: 'Documents',
+    icon: FileText
+  }, {
+    value: 'hearings',
+    label: 'Hearings',
+    icon: Calendar
+  }, {
+    value: 'tasks',
+    label: 'Tasks',
+    icon: CheckSquare
+  }, {
+    value: 'notes',
+    label: 'Notes',
+    icon: StickyNote
+  }, {
+    value: 'messages',
+    label: 'Messages',
+    icon: MessageSquare
+  }, {
+    value: 'activity',
+    label: 'Activity',
+    icon: Activity
+  }];
+  return <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
       {/* Main Content */}
       <div className="lg:col-span-3">
         <div className="bg-white border border-gray-200 rounded-2xl shadow-sm">
@@ -39,18 +52,12 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
             <TabsList className="w-full bg-white border-b border-gray-200 rounded-none h-auto p-0">
               <div className="flex overflow-x-auto w-full">
                 {tabs.map(tab => {
-                  const IconComponent = tab.icon;
-                  return (
-                    <TabsTrigger 
-                      key={tab.value} 
-                      value={tab.value} 
-                      className="flex items-center gap-2 px-6 py-4 text-sm font-medium text-gray-600 hover:text-gray-900 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-transparent bg-transparent rounded-none whitespace-nowrap"
-                    >
+                const IconComponent = tab.icon;
+                return <TabsTrigger key={tab.value} value={tab.value} className="flex items-center gap-2 px-6 py-4 text-sm font-medium text-gray-600 hover:text-gray-900 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-transparent bg-transparent rounded-none whitespace-nowrap">
                       <IconComponent className="w-4 h-4" />
                       {tab.label}
-                    </TabsTrigger>
-                  );
-                })}
+                    </TabsTrigger>;
+              })}
               </div>
             </TabsList>
 
@@ -61,7 +68,7 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
                     <div className="flex items-center gap-4">
                       <div className="relative">
                         <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                        <Input placeholder="Search documents..." className="pl-10 w-64" />
+                        <Input placeholder="Search documents..." className="pl-10 w-64 bg-slate-800" />
                       </div>
                       <Button size="sm">
                         <Filter className="w-4 h-4 mr-2" />
@@ -147,6 +154,5 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
