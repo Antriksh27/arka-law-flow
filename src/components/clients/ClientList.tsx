@@ -89,7 +89,7 @@ export const ClientList = () => {
             <h1 className="text-xl font-semibold text-gray-900">Clients</h1>
             <span className="text-sm text-gray-500">{filteredClients.length} Total</span>
           </div>
-          <Button onClick={() => setShowAddDialog(true)} className="bg-primary hover:bg-primary/90 text-white">
+          <Button onClick={() => setShowAddDialog(true)} className="text-white bg-slate-800 hover:bg-slate-700">
             <Plus className="w-4 h-4 mr-2" />
             Add New Client
           </Button>
