@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import Cases from "./pages/Cases";
+import CaseDetail from "./pages/CaseDetail";
 import Clients from "./pages/Clients";
 import ClientInfo from "./pages/ClientInfo";
 import Appointments from "./pages/Appointments";
@@ -40,6 +41,11 @@ const App = () => (
             <Route path="/cases" element={
               <ProtectedRoute>
                 <Cases />
+              </ProtectedRoute>
+            } />
+            <Route path="/cases/:id" element={
+              <ProtectedRoute>
+                <CaseDetail />
               </ProtectedRoute>
             } />
             <Route path="/clients" element={

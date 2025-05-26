@@ -10,6 +10,12 @@ import {
   Activity,
   BarChart3 
 } from 'lucide-react';
+import { CaseDocuments } from './CaseDocuments';
+import { CaseHearings } from './CaseHearings';
+import { CaseTasks } from './CaseTasks';
+import { CaseNotes } from './CaseNotes';
+import { CaseMessages } from './CaseMessages';
+import { CaseActivity } from './CaseActivity';
 
 interface CaseDetailTabsProps {
   caseId: string;
@@ -61,39 +67,27 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
           </TabsContent>
 
           <TabsContent value="documents" className="m-0">
-            <div className="text-center py-12 text-gray-500">
-              Documents content coming soon
-            </div>
+            <CaseDocuments caseId={caseId} />
           </TabsContent>
 
           <TabsContent value="hearings" className="m-0">
-            <div className="text-center py-12 text-gray-500">
-              Hearings content coming soon
-            </div>
+            <CaseHearings caseId={caseId} />
           </TabsContent>
 
           <TabsContent value="tasks" className="m-0">
-            <div className="text-center py-12 text-gray-500">
-              Tasks content coming soon
-            </div>
+            <CaseTasks caseId={caseId} />
           </TabsContent>
 
           <TabsContent value="notes" className="m-0">
-            <div className="text-center py-12 text-gray-500">
-              Notes content coming soon
-            </div>
+            <CaseNotes caseId={caseId} />
           </TabsContent>
 
           <TabsContent value="messages" className="m-0">
-            <div className="text-center py-12 text-gray-500">
-              Messages content coming soon
-            </div>
+            <CaseMessages caseId={caseId} />
           </TabsContent>
 
           <TabsContent value="activity" className="m-0">
-            <div className="text-center py-12 text-gray-500">
-              Activity feed content coming soon
-            </div>
+            <CaseActivity caseId={caseId} />
           </TabsContent>
         </div>
       </Tabs>

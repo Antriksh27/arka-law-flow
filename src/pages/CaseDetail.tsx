@@ -17,8 +17,12 @@ const CaseDetail = () => {
       if (!id) throw new Error('Case ID is required');
       
       const { data, error } = await supabase
-        .from('case_details')
-        .select('*')
+        .from('cases')
+        .select(`
+          *,
+          clients!inner(full_name),
+          profiles!cases_created_by_fkey(full_name)
+        `)
         .eq('id', id)
         .single();
       

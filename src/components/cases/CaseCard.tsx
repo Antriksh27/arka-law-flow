@@ -1,9 +1,9 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Calendar, FileText, Users, Clock } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Calendar, FileText, Users, MoreHorizontal } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface CaseCardProps {
@@ -11,8 +11,6 @@ interface CaseCardProps {
 }
 
 export const CaseCard: React.FC<CaseCardProps> = ({ case: caseItem }) => {
-  const navigate = useNavigate();
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'open':
@@ -41,73 +39,51 @@ export const CaseCard: React.FC<CaseCardProps> = ({ case: caseItem }) => {
     }
   };
 
-  const formatCaseType = (type: string) => {
-    return type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
-  };
-
   return (
-    <div 
-      className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all cursor-pointer hover:scale-[1.01]"
-      onClick={() => navigate(`/cases/${caseItem.id}`)}
-    >
+    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow p-6">
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
-          <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
-            {caseItem.title}
-          </h3>
-          <p className="text-sm text-gray-600 mb-3">
-            Client: {caseItem.client_name || 'No client assigned'}
+          <Link to={`/cases/${caseItem.id}`}>
+            <h3 className="font-semibold text-gray-900 hover:text-blue-600 cursor-pointer mb-2">
+              {caseItem.title}
+            </h3>
+          </Link>
+          <p className="text-gray-600 text-sm line-clamp-2 mb-3">
+            {caseItem.description || 'No description provided'}
           </p>
         </div>
+        <Button variant="ghost" size="sm">
+          <MoreHorizontal className="w-4 h-4" />
+        </Button>
+      </div>
+
+      <div className="flex flex-wrap gap-2 mb-4">
         <Badge className={`${getStatusColor(caseItem.status)} rounded-full text-xs`}>
           {caseItem.status?.replace('_', ' ')}
         </Badge>
+        <Badge className={`${getPriorityColor(caseItem.priority)} rounded-full text-xs`}>
+          {caseItem.priority} priority
+        </Badge>
       </div>
 
-      <div className="space-y-3">
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-gray-500">Type:</span>
-          <span className="text-gray-900">{formatCaseType(caseItem.case_type)}</span>
-        </div>
-
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-gray-500">Priority:</span>
-          <Badge className={`${getPriorityColor(caseItem.priority)} rounded-full text-xs`}>
-            {caseItem.priority}
-          </Badge>
-        </div>
-
-        <div className="flex items-center gap-4 text-sm text-gray-500 pt-3 border-t border-gray-100">
+      <div className="flex items-center justify-between text-sm text-gray-600">
+        <div className="flex items-center gap-4">
           <div className="flex items-center gap-1">
             <FileText className="w-4 h-4" />
-            <span>{caseItem.document_count || 0}</span>
+            <span>0</span>
           </div>
           <div className="flex items-center gap-1">
             <Calendar className="w-4 h-4" />
-            <span>{caseItem.hearing_count || 0}</span>
+            <span>0</span>
           </div>
           <div className="flex items-center gap-1">
             <Users className="w-4 h-4" />
-            <span>{caseItem.task_count || 0}</span>
+            <span>0</span>
           </div>
         </div>
-
-        <div className="flex items-center justify-between pt-2">
-          <div className="flex items-center gap-1 text-xs text-gray-500">
-            <Clock className="w-3 h-3" />
-            <span>Updated {format(new Date(caseItem.updated_at), 'MMM d')}</span>
-          </div>
-          
-          {caseItem.created_by_name && (
-            <div className="flex items-center gap-2">
-              <Avatar className="w-6 h-6">
-                <AvatarFallback className="text-xs bg-gray-100">
-                  {caseItem.created_by_name.split(' ').map((n: string) => n[0]).join('')}
-                </AvatarFallback>
-              </Avatar>
-            </div>
-          )}
-        </div>
+        <span className="text-xs">
+          {format(new Date(caseItem.updated_at), 'MMM d')}
+        </span>
       </div>
     </div>
   );
