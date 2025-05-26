@@ -27,7 +27,7 @@ export const CasesHeader: React.FC<CasesHeaderProps> = ({
           </Button>
         </div>
 
-        <Button onClick={onAddCase} className="bg-slate-900 hover:bg-slate-800">
+        <Button onClick={onAddCase} className="bg-slate-800 hover:bg-slate-700">
           <Plus className="w-4 h-4 mr-2" />
           New Case
         </Button>
