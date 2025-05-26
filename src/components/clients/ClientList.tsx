@@ -10,7 +10,6 @@ import { useToast } from '@/hooks/use-toast';
 import { AddClientDialog } from './AddClientDialog';
 import { EditClientDialog } from './EditClientDialog';
 import { ClientDetailsDialog } from './ClientDetailsDialog';
-
 interface Client {
   id: string;
   full_name: string;
@@ -132,7 +131,7 @@ export const ClientList = () => {
               <table className="w-full">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    <th className="text-left px-6 py-4 text-sm font-medium text-gray-700">Client Name</th>
+                    <th className="text-left px-6 py-4 text-sm font-medium text-gray-700 bg-slate-800">Client Name</th>
                     <th className="text-left px-6 py-4 text-sm font-medium text-gray-700">Contact</th>
                     <th className="text-left px-6 py-4 text-sm font-medium text-gray-700">Assigned Lawyer</th>
                     <th className="text-left px-6 py-4 text-sm font-medium text-gray-700">Status</th>
@@ -143,10 +142,7 @@ export const ClientList = () => {
                 <tbody className="divide-y divide-gray-200">
                   {filteredClients.map(client => <tr key={client.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4">
-                        <Link 
-                          to={`/clients/${client.id}`} 
-                          className="font-medium text-gray-900 hover:text-primary transition-colors"
-                        >
+                        <Link to={`/clients/${client.id}`} className="font-medium text-gray-900 hover:text-primary transition-colors">
                           {client.full_name}
                         </Link>
                       </td>
