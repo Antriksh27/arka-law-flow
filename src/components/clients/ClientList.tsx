@@ -112,7 +112,7 @@ export const ClientList = () => {
             <select className="px-3 py-2 border border-gray-300 rounded-md text-sm bg-white min-w-[140px]">
               <option>Assigned To</option>
             </select>
-            <Button variant="outline" className="text-sm text-gray-800 bg-gray-50">
+            <Button variant="outline" className="text-sm text-white bg-slate-900 hover:bg-slate-800 border-slate-900">
               <Search className="w-4 h-4 mr-2" />
               More Filters
             </Button>
@@ -174,7 +174,7 @@ export const ClientList = () => {
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Link to={`/clients/${client.id}`}>
-                            <Button variant="outline" size="sm" className="text-gray-600 hover:text-gray-900 bg-zinc-50">
+                            <Button variant="outline" size="sm" className="text-white hover:text-white bg-slate-900 hover:bg-slate-800 border-slate-900">
                               <Eye className="w-4 h-4 mr-1" />
                               View
                             </Button>
