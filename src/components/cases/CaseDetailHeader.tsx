@@ -3,7 +3,7 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Edit, Calendar, FileText, Users, Clock, Plus, Ban } from 'lucide-react';
+import { Edit, Calendar, FileText, Users, Clock, Plus, Ban, User, Building2, Gavel } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface CaseDetailHeaderProps {
@@ -16,9 +16,9 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({ case: caseDa
       case 'open':
         return 'bg-blue-100 text-blue-700 border-blue-200';
       case 'in_court':
-        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-      case 'on_hold':
         return 'bg-orange-100 text-orange-700 border-orange-200';
+      case 'on_hold':
+        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
       case 'closed':
         return 'bg-gray-100 text-gray-700 border-gray-200';
       default:
@@ -44,23 +44,21 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({ case: caseDa
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm">
+    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm mb-6">
+      {/* Header Section */}
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-start justify-between mb-6">
           <div className="flex-1">
-            <h1 className="text-2xl font-semibold text-gray-900 mb-2">
-              {caseData.title}
-            </h1>
-            <p className="text-gray-600 mb-4">
-              {caseData.description || 'No description provided'}
-            </p>
-            
-            <div className="flex flex-wrap gap-2 mb-4">
-              {caseData.tags?.map((tag: string, index: number) => (
-                <Badge key={index} variant="outline" className="text-xs">
-                  {tag}
-                </Badge>
-              ))}
+            <div className="flex items-center gap-3 mb-3">
+              <h1 className="text-2xl font-semibold text-gray-900">
+                {caseData.title}
+              </h1>
+              <Badge className={`${getStatusColor(caseData.status)} rounded-full`}>
+                {caseData.status === 'in_court' ? 'In Court' : caseData.status?.replace('_', ' ')}
+              </Badge>
+              <Badge variant="outline" className="text-xs">
+                {formatCaseType(caseData.case_type)}
+              </Badge>
             </div>
           </div>
           
@@ -69,92 +67,100 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({ case: caseDa
               <Edit className="w-4 h-4 mr-2" />
               Edit Case
             </Button>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
               <Ban className="w-4 h-4 mr-2" />
               Close Case
             </Button>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          <div>
-            <p className="text-sm text-gray-500 mb-1">Status</p>
-            <Badge className={`${getStatusColor(caseData.status)} rounded-full`}>
-              {caseData.status?.replace('_', ' ')}
-            </Badge>
-          </div>
-
-          <div>
-            <p className="text-sm text-gray-500 mb-1">Case Type</p>
-            <p className="font-medium text-gray-900">
-              {formatCaseType(caseData.case_type)}
-            </p>
-          </div>
-
-          <div>
-            <p className="text-sm text-gray-500 mb-1">Priority</p>
-            <Badge className={`${getPriorityColor(caseData.priority)} rounded-full`}>
-              {caseData.priority}
-            </Badge>
-          </div>
-
-          <div>
-            <p className="text-sm text-gray-500 mb-1">Client</p>
-            <p className="font-medium text-gray-900">
-              {caseData.clients?.full_name || 'No client assigned'}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="p-6">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div className="flex items-center gap-6 text-sm text-gray-600">
-            <div className="flex items-center gap-2">
-              <FileText className="w-4 h-4" />
-              <span>0 Documents</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4" />
-              <span>0 Hearings</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              <span>0 Tasks</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4" />
-              <span>Updated {format(new Date(caseData.updated_at), 'MMM d, yyyy')}</span>
-            </div>
-          </div>
-
-          <div className="flex gap-2">
-            <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-              <Calendar className="w-4 h-4 mr-2" />
+            <Button size="sm" className="bg-orange-500 hover:bg-orange-600">
+              <Plus className="w-4 h-4 mr-2" />
               Add Hearing
             </Button>
-            <Button size="sm" variant="outline">
-              <Users className="w-4 h-4 mr-2" />
-              Add Task
-            </Button>
-            <Button size="sm" variant="outline">
-              <FileText className="w-4 h-4 mr-2" />
-              Upload Document
-            </Button>
           </div>
         </div>
 
-        {caseData.profiles?.full_name && (
-          <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-200">
-            <span className="text-sm text-gray-500">Created by</span>
-            <Avatar className="w-8 h-8">
-              <AvatarFallback className="bg-gray-100 text-sm">
-                {caseData.profiles.full_name.split(' ').map((n: string) => n[0]).join('')}
-              </AvatarFallback>
-            </Avatar>
-            <span className="text-sm font-medium">{caseData.profiles.full_name}</span>
+        {/* Details Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="flex items-center gap-3">
+            <User className="w-4 h-4 text-gray-400" />
+            <div>
+              <p className="text-sm text-gray-500">Client</p>
+              <p className="font-medium text-gray-900">
+                {caseData.clients?.full_name || 'No client assigned'}
+              </p>
+            </div>
           </div>
-        )}
+
+          <div className="flex items-center gap-3">
+            <Users className="w-4 h-4 text-gray-400" />
+            <div>
+              <p className="text-sm text-gray-500">Team</p>
+              <div className="flex items-center gap-1 mt-1">
+                <Avatar className="w-6 h-6">
+                  <AvatarFallback className="bg-red-100 text-red-600 text-xs">A</AvatarFallback>
+                </Avatar>
+                <Avatar className="w-6 h-6">
+                  <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">B</AvatarFallback>
+                </Avatar>
+                <Button variant="ghost" size="sm" className="w-6 h-6 p-0 rounded-full border border-dashed border-gray-300">
+                  <Plus className="w-3 h-3" />
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Flag className="w-4 h-4 text-gray-400" />
+            <div>
+              <p className="text-sm text-gray-500">Priority</p>
+              <Badge className={`${getPriorityColor(caseData.priority)} rounded-full text-xs mt-1`}>
+                {caseData.priority} Priority
+              </Badge>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Clock className="w-4 h-4 text-gray-400" />
+            <div>
+              <p className="text-sm text-gray-500">Next Hearing</p>
+              <p className="font-medium text-gray-900">
+                {caseData.next_hearing_date ? format(new Date(caseData.next_hearing_date), 'MMM d, yyyy') : 'Not scheduled'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Additional Details Row */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mt-6 pt-6 border-t border-gray-100">
+          <div className="flex items-center gap-3">
+            <Calendar className="w-4 h-4 text-gray-400" />
+            <div>
+              <p className="text-sm text-gray-500">Filed Date</p>
+              <p className="font-medium text-gray-900">
+                {caseData.filing_date ? format(new Date(caseData.filing_date), 'MMM d, yyyy') : 'Not specified'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Building2 className="w-4 h-4 text-gray-400" />
+            <div>
+              <p className="text-sm text-gray-500">Court</p>
+              <p className="font-medium text-gray-900">
+                {caseData.court || 'Not specified'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Gavel className="w-4 h-4 text-gray-400" />
+            <div>
+              <p className="text-sm text-gray-500">Case Number</p>
+              <p className="font-medium text-gray-900">
+                {caseData.case_number || 'Not assigned'}
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
