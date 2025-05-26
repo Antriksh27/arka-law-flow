@@ -39,7 +39,7 @@ export const CasesFilters: React.FC<CasesFiltersProps> = ({
         </div>
 
         <Select value={statusFilter} onValueChange={onStatusChange}>
-          <SelectTrigger className="w-32 bg-white">
+          <SelectTrigger className="w-32 bg-white border-slate-900">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent className="bg-white">
@@ -52,7 +52,7 @@ export const CasesFilters: React.FC<CasesFiltersProps> = ({
         </Select>
 
         <Select value={typeFilter} onValueChange={onTypeChange}>
-          <SelectTrigger className="w-36 bg-white">
+          <SelectTrigger className="w-36 bg-white border-slate-900">
             <SelectValue placeholder="Case Type" />
           </SelectTrigger>
           <SelectContent className="bg-white">
@@ -69,7 +69,7 @@ export const CasesFilters: React.FC<CasesFiltersProps> = ({
         </Select>
 
         <Select value={assignedFilter} onValueChange={onAssignedChange}>
-          <SelectTrigger className="w-36 bg-white">
+          <SelectTrigger className="w-36 bg-white border-slate-900">
             <SelectValue placeholder="Assigned To" />
           </SelectTrigger>
           <SelectContent className="bg-white">
