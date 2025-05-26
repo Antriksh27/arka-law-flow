@@ -174,7 +174,7 @@ export const ClientList = () => {
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Link to={`/clients/${client.id}`}>
-                            <Button variant="outline" size="sm" className="text-white hover:text-white bg-slate-900 hover:bg-slate-800 border-slate-900">
+                            <Button variant="outline" size="sm" className="text-white hover:text-white border-slate-900 bg-slate-800 hover:bg-slate-700">
                               <Eye className="w-4 h-4 mr-1" />
                               View
                             </Button>
