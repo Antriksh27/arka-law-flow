@@ -34,7 +34,7 @@ export const CasesFilters: React.FC<CasesFiltersProps> = ({
             placeholder="Search cases by title or client..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-10"
+            className="pl-10 border-slate-900"
           />
         </div>
 
