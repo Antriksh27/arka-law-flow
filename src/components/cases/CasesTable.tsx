@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -7,14 +6,12 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
-
 interface CasesTableProps {
   searchQuery: string;
   statusFilter: string;
   typeFilter: string;
   assignedFilter: string;
 }
-
 export const CasesTable: React.FC<CasesTableProps> = ({
   searchQuery,
   statusFilter,
@@ -22,33 +19,32 @@ export const CasesTable: React.FC<CasesTableProps> = ({
   assignedFilter
 }) => {
   const navigate = useNavigate();
-
-  const { data: cases, isLoading } = useQuery({
+  const {
+    data: cases,
+    isLoading
+  } = useQuery({
     queryKey: ['cases-table', searchQuery, statusFilter, typeFilter, assignedFilter],
     queryFn: async () => {
-      let query = supabase
-        .from('case_details')
-        .select('*')
-        .order('created_at', { ascending: false });
-
+      let query = supabase.from('case_details').select('*').order('created_at', {
+        ascending: false
+      });
       if (searchQuery) {
         query = query.or(`title.ilike.%${searchQuery}%,client_name.ilike.%${searchQuery}%`);
       }
-
       if (statusFilter !== 'all') {
         query = query.eq('status', statusFilter as any);
       }
-
       if (typeFilter !== 'all') {
         query = query.eq('case_type', typeFilter as any);
       }
-
-      const { data, error } = await query;
+      const {
+        data,
+        error
+      } = await query;
       if (error) throw error;
       return data || [];
     }
   });
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'open':
@@ -63,17 +59,13 @@ export const CasesTable: React.FC<CasesTableProps> = ({
         return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
-
   const formatCaseType = (type: string) => {
     return type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
-
   if (isLoading) {
     return <div className="text-center py-8">Loading cases...</div>;
   }
-
-  return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-200">
+  return <div className="bg-white rounded-2xl shadow-sm border border-gray-200">
       <Table>
         <TableHeader>
           <TableRow>
@@ -83,16 +75,11 @@ export const CasesTable: React.FC<CasesTableProps> = ({
             <TableHead>Status</TableHead>
             <TableHead>Priority</TableHead>
             <TableHead>Created By</TableHead>
-            <TableHead>Updated</TableHead>
+            <TableHead className="bg-slate-900">Updated</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {cases?.map((caseItem) => (
-            <TableRow 
-              key={caseItem.id} 
-              className="cursor-pointer hover:bg-gray-50"
-              onClick={() => navigate(`/cases/${caseItem.id}`)}
-            >
+          {cases?.map(caseItem => <TableRow key={caseItem.id} className="cursor-pointer hover:bg-gray-50" onClick={() => navigate(`/cases/${caseItem.id}`)}>
               <TableCell className="font-medium">
                 {caseItem.title}
               </TableCell>
@@ -123,10 +110,8 @@ export const CasesTable: React.FC<CasesTableProps> = ({
               <TableCell>
                 {format(new Date(caseItem.updated_at), 'MMM d, yyyy')}
               </TableCell>
-            </TableRow>
-          ))}
+            </TableRow>)}
         </TableBody>
       </Table>
-    </div>
-  );
+    </div>;
 };
