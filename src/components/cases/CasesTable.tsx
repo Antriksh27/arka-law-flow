@@ -69,12 +69,12 @@ export const CasesTable: React.FC<CasesTableProps> = ({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Case Title</TableHead>
-            <TableHead>Client</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Priority</TableHead>
-            <TableHead>Created By</TableHead>
+            <TableHead className="bg-slate-800">Case Title</TableHead>
+            <TableHead className="bg-slate-800">Client</TableHead>
+            <TableHead className="bg-slate-800">Type</TableHead>
+            <TableHead className="bg-slate-800">Status</TableHead>
+            <TableHead className="bg-slate-800">Priority</TableHead>
+            <TableHead className="bg-slate-800">Created By</TableHead>
             <TableHead className="bg-slate-900">Updated</TableHead>
           </TableRow>
         </TableHeader>
