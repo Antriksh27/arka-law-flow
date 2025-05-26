@@ -16,18 +16,48 @@ const CaseDetail = () => {
     queryFn: async () => {
       if (!id) throw new Error('Case ID is required');
       
-      const { data, error } = await supabase
+      // First get the case data
+      const { data: caseResult, error: caseError } = await supabase
         .from('cases')
-        .select(`
-          *,
-          clients!inner(full_name),
-          profiles!cases_created_by_fkey(full_name)
-        `)
+        .select('*')
         .eq('id', id)
         .single();
       
-      if (error) throw error;
-      return data;
+      if (caseError) throw caseError;
+      
+      // Then get client data separately if client_id exists
+      let clientData = null;
+      if (caseResult.client_id) {
+        const { data: client, error: clientError } = await supabase
+          .from('clients')
+          .select('full_name')
+          .eq('id', caseResult.client_id)
+          .single();
+        
+        if (!clientError && client) {
+          clientData = client;
+        }
+      }
+      
+      // Get creator profile separately if created_by exists
+      let creatorData = null;
+      if (caseResult.created_by) {
+        const { data: creator, error: creatorError } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', caseResult.created_by)
+          .single();
+        
+        if (!creatorError && creator) {
+          creatorData = creator;
+        }
+      }
+      
+      return {
+        ...caseResult,
+        clients: clientData,
+        profiles: creatorData
+      };
     },
     enabled: !!id
   });
