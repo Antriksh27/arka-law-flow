@@ -51,7 +51,7 @@ export const ClientHeader: React.FC<ClientHeaderProps> = ({
         </div>
 
         <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm" className="text-gray-600">
+          <Button variant="outline" size="sm" className="text-slate-50 bg-slate-800 hover:bg-slate-700">
             <Edit className="w-4 h-4 mr-2" />
             Edit Info
           </Button>
