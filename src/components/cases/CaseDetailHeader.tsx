@@ -1,16 +1,15 @@
-
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Edit, Calendar, FileText, Users, Clock, Plus, Ban, User, Building2, Gavel, Flag } from 'lucide-react';
 import { format } from 'date-fns';
-
 interface CaseDetailHeaderProps {
   case: any;
 }
-
-export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({ case: caseData }) => {
+export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
+  case: caseData
+}) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'open':
@@ -25,7 +24,6 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({ case: caseDa
         return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
-
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
@@ -38,13 +36,10 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({ case: caseDa
         return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
-
   const formatCaseType = (type: string) => {
     return type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
-
-  return (
-    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm mb-6">
+  return <div className="bg-white border border-gray-200 rounded-2xl shadow-sm mb-6">
       {/* Header Section */}
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-start justify-between mb-6">
@@ -63,7 +58,7 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({ case: caseDa
           </div>
           
           <div className="flex gap-2 ml-4">
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="bg-slate-900 hover:bg-slate-800 text-slate-50">
               <Edit className="w-4 h-4 mr-2" />
               Edit Case
             </Button>
@@ -162,6 +157,5 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({ case: caseDa
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
