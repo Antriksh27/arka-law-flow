@@ -39,10 +39,10 @@ export const CasesFilters: React.FC<CasesFiltersProps> = ({
         </div>
 
         <Select value={statusFilter} onValueChange={onStatusChange}>
-          <SelectTrigger className="w-32">
+          <SelectTrigger className="w-32 bg-white">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-white">
             <SelectItem value="all">All Status</SelectItem>
             <SelectItem value="open">Open</SelectItem>
             <SelectItem value="in_court">In Court</SelectItem>
@@ -52,10 +52,10 @@ export const CasesFilters: React.FC<CasesFiltersProps> = ({
         </Select>
 
         <Select value={typeFilter} onValueChange={onTypeChange}>
-          <SelectTrigger className="w-36">
+          <SelectTrigger className="w-36 bg-white">
             <SelectValue placeholder="Case Type" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-white">
             <SelectItem value="all">All Types</SelectItem>
             <SelectItem value="civil">Civil</SelectItem>
             <SelectItem value="criminal">Criminal</SelectItem>
@@ -69,10 +69,10 @@ export const CasesFilters: React.FC<CasesFiltersProps> = ({
         </Select>
 
         <Select value={assignedFilter} onValueChange={onAssignedChange}>
-          <SelectTrigger className="w-36">
+          <SelectTrigger className="w-36 bg-white">
             <SelectValue placeholder="Assigned To" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-white">
             <SelectItem value="all">All Users</SelectItem>
             <SelectItem value="me">Assigned to Me</SelectItem>
             <SelectItem value="unassigned">Unassigned</SelectItem>
