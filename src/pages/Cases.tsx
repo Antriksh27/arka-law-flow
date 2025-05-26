@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import DashboardLayout from '../components/layout/DashboardLayout';
 import { CasesHeader } from '../components/cases/CasesHeader';
@@ -8,7 +7,7 @@ import { CasesTable } from '../components/cases/CasesTable';
 import { AddCaseDialog } from '../components/cases/AddCaseDialog';
 
 const Cases = () => {
-  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
