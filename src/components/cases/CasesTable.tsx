@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -35,11 +36,11 @@ export const CasesTable: React.FC<CasesTableProps> = ({
       }
 
       if (statusFilter !== 'all') {
-        query = query.eq('status', statusFilter as any);
+        query = query.eq('status', statusFilter as 'open' | 'in_court' | 'on_hold' | 'closed');
       }
 
       if (typeFilter !== 'all') {
-        query = query.eq('case_type', typeFilter as any);
+        query = query.eq('case_type', typeFilter as 'civil' | 'criminal' | 'corporate' | 'family' | 'tax' | 'labor' | 'intellectual_property' | 'real_estate' | 'immigration' | 'constitutional' | 'other');
       }
 
       const { data, error } = await query;
@@ -53,7 +54,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
       case 'open':
         return 'bg-blue-100 text-blue-700 border-blue-200';
       case 'in_court':
-        return 'bg-slate-900 text-white border-slate-800';
+        return 'bg-slate-100 text-slate-900 border-slate-200';
       case 'on_hold':
         return 'bg-orange-100 text-orange-700 border-orange-200';
       case 'closed':

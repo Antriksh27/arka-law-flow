@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
@@ -17,7 +18,7 @@ export const CaseCard: React.FC<CaseCardProps> = ({ case: caseItem }) => {
       case 'open':
         return 'bg-blue-100 text-blue-700 border-blue-200';
       case 'in_court':
-        return 'bg-slate-900 text-white border-slate-800';
+        return 'bg-slate-100 text-slate-900 border-slate-200';
       case 'on_hold':
         return 'bg-orange-100 text-orange-700 border-orange-200';
       case 'closed':
@@ -32,7 +33,7 @@ export const CaseCard: React.FC<CaseCardProps> = ({ case: caseItem }) => {
       case 'high':
         return 'bg-red-100 text-red-700 border-red-200';
       case 'medium':
-        return 'bg-slate-900 text-white border-slate-800';
+        return 'bg-slate-100 text-slate-900 border-slate-200';
       case 'low':
         return 'bg-green-100 text-green-700 border-green-200';
       default:
