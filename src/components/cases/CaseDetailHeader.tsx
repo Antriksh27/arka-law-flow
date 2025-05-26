@@ -3,7 +3,7 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Edit, Calendar, FileText, Users, Clock, Plus, Ban, User, Building2, Gavel } from 'lucide-react';
+import { Edit, Calendar, FileText, Users, Clock, Plus, Ban, User, Building2, Gavel, Flag } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface CaseDetailHeaderProps {
