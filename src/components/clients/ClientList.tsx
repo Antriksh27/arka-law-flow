@@ -129,14 +129,14 @@ export const ClientList = () => {
               </div>
             </div> : <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead className="bg-slate-800 border-b border-gray-200">
                   <tr>
-                    <th className="text-left px-6 py-4 text-sm font-medium text-gray-700 bg-slate-800">Client Name</th>
-                    <th className="text-left px-6 py-4 text-sm font-medium text-gray-700">Contact</th>
-                    <th className="text-left px-6 py-4 text-sm font-medium text-gray-700">Assigned Lawyer</th>
-                    <th className="text-left px-6 py-4 text-sm font-medium text-gray-700">Status</th>
-                    <th className="text-left px-6 py-4 text-sm font-medium text-gray-700">Active Cases</th>
-                    <th className="text-right px-6 py-4 text-sm font-medium text-gray-700">Actions</th>
+                    <th className="text-left px-6 py-4 text-sm font-medium text-white">Client Name</th>
+                    <th className="text-left px-6 py-4 text-sm font-medium text-white">Contact</th>
+                    <th className="text-left px-6 py-4 text-sm font-medium text-white">Assigned Lawyer</th>
+                    <th className="text-left px-6 py-4 text-sm font-medium text-white">Status</th>
+                    <th className="text-left px-6 py-4 text-sm font-medium text-white">Active Cases</th>
+                    <th className="text-right px-6 py-4 text-sm font-medium text-white">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
