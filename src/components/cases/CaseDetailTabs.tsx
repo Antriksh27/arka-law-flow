@@ -56,7 +56,7 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
                     <TabsTrigger 
                       key={tab.value}
                       value={tab.value} 
-                      className="flex items-center gap-2 px-6 py-4 text-sm font-medium text-gray-600 hover:text-gray-900 border-b-2 border-transparent data-[state=active]:border-orange-500 data-[state=active]:text-orange-600 data-[state=active]:bg-transparent bg-transparent rounded-none whitespace-nowrap"
+                      className="flex items-center gap-2 px-6 py-4 text-sm font-medium text-gray-600 hover:text-gray-900 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-transparent bg-transparent rounded-none whitespace-nowrap"
                     >
                       <IconComponent className="w-4 h-4" />
                       {tab.label}
@@ -80,7 +80,7 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
                         Filter
                       </Button>
                     </div>
-                    <Button className="bg-orange-500 hover:bg-orange-600">
+                    <Button className="bg-primary hover:bg-primary/90">
                       <Upload className="w-4 h-4 mr-2" />
                       Upload Document
                     </Button>
@@ -139,8 +139,8 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
           <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
           <div className="space-y-4">
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                <FileText className="w-4 h-4 text-orange-600" />
+              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <FileText className="w-4 h-4 text-blue-600" />
               </div>
               <div className="flex-1">
                 <p className="text-sm font-medium">Document uploaded</p>
@@ -148,8 +148,8 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                <Calendar className="w-4 h-4 text-orange-600" />
+              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <Calendar className="w-4 h-4 text-blue-600" />
               </div>
               <div className="flex-1">
                 <p className="text-sm font-medium">Hearing scheduled</p>

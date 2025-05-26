@@ -16,7 +16,7 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({ case: caseDa
       case 'open':
         return 'bg-blue-100 text-blue-700 border-blue-200';
       case 'in_court':
-        return 'bg-orange-100 text-orange-700 border-orange-200';
+        return 'bg-blue-100 text-blue-700 border-blue-200';
       case 'on_hold':
         return 'bg-yellow-100 text-yellow-700 border-yellow-200';
       case 'closed':
@@ -71,7 +71,7 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({ case: caseDa
               <Ban className="w-4 h-4 mr-2" />
               Close Case
             </Button>
-            <Button size="sm" className="bg-orange-500 hover:bg-orange-600">
+            <Button size="sm" className="bg-primary hover:bg-primary/90">
               <Plus className="w-4 h-4 mr-2" />
               Add Hearing
             </Button>
@@ -96,10 +96,10 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({ case: caseDa
               <p className="text-sm text-gray-500">Team</p>
               <div className="flex items-center gap-1 mt-1">
                 <Avatar className="w-6 h-6">
-                  <AvatarFallback className="bg-red-100 text-red-600 text-xs">A</AvatarFallback>
+                  <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">A</AvatarFallback>
                 </Avatar>
                 <Avatar className="w-6 h-6">
-                  <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">B</AvatarFallback>
+                  <AvatarFallback className="bg-primary-100 text-primary-600 text-xs">B</AvatarFallback>
                 </Avatar>
                 <Button variant="ghost" size="sm" className="w-6 h-6 p-0 rounded-full border border-dashed border-gray-300">
                   <Plus className="w-3 h-3" />
