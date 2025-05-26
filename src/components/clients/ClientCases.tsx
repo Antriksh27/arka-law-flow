@@ -29,12 +29,14 @@ export const ClientCases: React.FC<ClientCasesProps> = ({ clientId }) => {
     }
   });
 
-  const getStageColor = (stage: string) => {
-    switch (stage) {
-      case 'new':
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'open':
         return 'bg-blue-100 text-blue-800';
-      case 'active':
-        return 'bg-green-100 text-green-800';
+      case 'in_court':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'on_hold':
+        return 'bg-orange-100 text-orange-800';
       case 'closed':
         return 'bg-gray-100 text-gray-800';
       default:
@@ -78,9 +80,9 @@ export const ClientCases: React.FC<ClientCasesProps> = ({ clientId }) => {
                     <div className="flex items-center gap-4 text-sm text-gray-500">
                       <Badge 
                         variant="secondary" 
-                        className={getStageColor(case_item.stage)}
+                        className={getStatusColor(case_item.status)}
                       >
-                        {case_item.stage}
+                        {case_item.status?.replace('_', ' ')}
                       </Badge>
                       {case_item.assigned_to && (
                         <span>Assigned to: {case_item.assigned_to.full_name}</span>

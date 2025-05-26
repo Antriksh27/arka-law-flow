@@ -31,11 +31,11 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
       }
 
       if (statusFilter !== 'all') {
-        query = query.eq('status', statusFilter);
+        query = query.eq('status', statusFilter as any);
       }
 
       if (typeFilter !== 'all') {
-        query = query.eq('case_type', typeFilter);
+        query = query.eq('case_type', typeFilter as any);
       }
 
       const { data, error } = await query;
