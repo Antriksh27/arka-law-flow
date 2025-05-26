@@ -75,7 +75,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
             <TableHead className="bg-slate-800">Status</TableHead>
             <TableHead className="bg-slate-800">Priority</TableHead>
             <TableHead className="bg-slate-800">Created By</TableHead>
-            <TableHead className="bg-slate-900">Updated</TableHead>
+            <TableHead className="bg-slate-800">Updated</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
