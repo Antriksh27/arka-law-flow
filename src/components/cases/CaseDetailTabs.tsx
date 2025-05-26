@@ -1,18 +1,6 @@
-
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  FileText, 
-  Calendar, 
-  CheckSquare, 
-  StickyNote, 
-  MessageSquare, 
-  Activity,
-  Filter,
-  Search,
-  Upload,
-  Plus
-} from 'lucide-react';
+import { FileText, Calendar, CheckSquare, StickyNote, MessageSquare, Activity, Filter, Search, Upload, Plus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { CaseDocuments } from './CaseDocuments';
@@ -21,48 +9,55 @@ import { CaseTasks } from './CaseTasks';
 import { CaseNotes } from './CaseNotes';
 import { CaseMessages } from './CaseMessages';
 import { CaseActivity } from './CaseActivity';
-
 interface CaseDetailTabsProps {
   caseId: string;
   activeTab: string;
   onTabChange: (tab: string) => void;
 }
-
-export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({ 
-  caseId, 
-  activeTab, 
-  onTabChange 
+export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
+  caseId,
+  activeTab,
+  onTabChange
 }) => {
-  const tabs = [
-    { value: 'documents', label: 'Documents', icon: FileText },
-    { value: 'hearings', label: 'Hearings', icon: Calendar },
-    { value: 'tasks', label: 'Tasks', icon: CheckSquare },
-    { value: 'notes', label: 'Notes', icon: StickyNote },
-    { value: 'messages', label: 'Messages', icon: MessageSquare },
-    { value: 'activity', label: 'Activity', icon: Activity },
-  ];
-
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+  const tabs = [{
+    value: 'documents',
+    label: 'Documents',
+    icon: FileText
+  }, {
+    value: 'hearings',
+    label: 'Hearings',
+    icon: Calendar
+  }, {
+    value: 'tasks',
+    label: 'Tasks',
+    icon: CheckSquare
+  }, {
+    value: 'notes',
+    label: 'Notes',
+    icon: StickyNote
+  }, {
+    value: 'messages',
+    label: 'Messages',
+    icon: MessageSquare
+  }, {
+    value: 'activity',
+    label: 'Activity',
+    icon: Activity
+  }];
+  return <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
       {/* Main Content */}
       <div className="lg:col-span-3">
         <div className="bg-white border border-gray-200 rounded-2xl shadow-sm">
           <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
             <TabsList className="w-full bg-white border-b border-gray-200 rounded-none h-auto p-0">
               <div className="flex overflow-x-auto w-full">
-                {tabs.map((tab) => {
-                  const IconComponent = tab.icon;
-                  return (
-                    <TabsTrigger 
-                      key={tab.value}
-                      value={tab.value} 
-                      className="flex items-center gap-2 px-6 py-4 text-sm font-medium text-gray-600 hover:text-gray-900 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-transparent bg-transparent rounded-none whitespace-nowrap"
-                    >
+                {tabs.map(tab => {
+                const IconComponent = tab.icon;
+                return <TabsTrigger key={tab.value} value={tab.value} className="flex items-center gap-2 px-6 py-4 text-sm font-medium text-gray-600 hover:text-gray-900 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-transparent bg-transparent rounded-none whitespace-nowrap">
                       <IconComponent className="w-4 h-4" />
                       {tab.label}
-                    </TabsTrigger>
-                  );
-                })}
+                    </TabsTrigger>;
+              })}
               </div>
             </TabsList>
 
@@ -73,14 +68,14 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
                     <div className="flex items-center gap-4">
                       <div className="relative">
                         <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                        <Input placeholder="Search documents..." className="pl-10 w-64" />
+                        <Input placeholder="Search documents..." className="pl-10 w-64 bg-slate-800" />
                       </div>
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" className="bg-slate-800 hover:bg-slate-700 text-slate-50">
                         <Filter className="w-4 h-4 mr-2" />
                         Filter
                       </Button>
                     </div>
-                    <Button className="bg-primary hover:bg-primary/90">
+                    <Button className="bg-slate-800 hover:bg-slate-700">
                       <Upload className="w-4 h-4 mr-2" />
                       Upload Document
                     </Button>
@@ -119,15 +114,15 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
         <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
           <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
           <div className="space-y-3">
-            <Button variant="outline" className="w-full justify-start">
+            <Button variant="outline" className="w-full justify-start bg-slate-800 hover:bg-slate-700 text-slate-50">
               <Plus className="w-4 h-4 mr-2" />
               Add Task
             </Button>
-            <Button variant="outline" className="w-full justify-start">
+            <Button variant="outline" className="w-full justify-start bg-slate-800 hover:bg-slate-700 text-slate-50">
               <StickyNote className="w-4 h-4 mr-2" />
               New Note
             </Button>
-            <Button variant="outline" className="w-full justify-start">
+            <Button variant="outline" className="w-full justify-start bg-slate-800 hover:bg-slate-700 text-slate-50">
               <Upload className="w-4 h-4 mr-2" />
               Upload Document
             </Button>
@@ -159,6 +154,5 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };

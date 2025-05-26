@@ -62,14 +62,11 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
               <Edit className="w-4 h-4 mr-2" />
               Edit Case
             </Button>
-            <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
+            <Button variant="outline" size="sm" className="text-slate-50 bg-red-700 hover:bg-red-600">
               <Ban className="w-4 h-4 mr-2" />
               Close Case
             </Button>
-            <Button size="sm" className="bg-primary hover:bg-primary/90">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Hearing
-            </Button>
+            
           </div>
         </div>
 
