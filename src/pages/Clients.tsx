@@ -6,7 +6,9 @@ import { ClientList } from '../components/clients/ClientList';
 const Clients = () => {
   return (
     <DashboardLayout>
-      <ClientList />
+      <div className="space-y-6 p-6">
+        <ClientList />
+      </div>
     </DashboardLayout>
   );
 };
