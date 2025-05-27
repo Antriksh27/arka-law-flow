@@ -83,12 +83,7 @@ const SignIn1 = () => {
             {/* Google Sign In */}
             
             <div className="w-full text-center mt-2">
-              <span className="text-xs text-gray-400">
-                Don&apos;t have an account?{" "}
-                <a href="#" className="underline text-white/80 hover:text-white">
-                  Sign up, it&apos;s free!
-                </a>
-              </span>
+              
             </div>
           </div>
         </div>
