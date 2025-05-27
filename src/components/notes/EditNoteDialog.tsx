@@ -48,7 +48,7 @@ export const EditNoteDialog: React.FC<EditNoteDialogProps> = ({
     defaultValues: {
       title: note?.title || '',
       content: note?.content || '',
-      case_id: note?.case_id || '',
+      case_id: note?.case_id || 'no-case',
       visibility: note?.visibility || 'private',
       color: note?.color || 'gray',
       tags: note?.tags || []
@@ -63,7 +63,7 @@ export const EditNoteDialog: React.FC<EditNoteDialogProps> = ({
       reset({
         title: note.title,
         content: note.content,
-        case_id: note.case_id,
+        case_id: note.case_id || 'no-case',
         visibility: note.visibility,
         color: note.color,
         tags: note.tags || []
@@ -91,7 +91,7 @@ export const EditNoteDialog: React.FC<EditNoteDialogProps> = ({
       const noteData = {
         title: data.title,
         content: data.content || null,
-        case_id: data.case_id || null,
+        case_id: data.case_id === 'no-case' ? null : data.case_id,
         visibility: data.visibility,
         color: data.color,
         tags: data.tags
@@ -229,7 +229,7 @@ export const EditNoteDialog: React.FC<EditNoteDialogProps> = ({
                 <SelectValue placeholder="Select a case..." />
               </SelectTrigger>
               <SelectContent className="bg-white border border-gray-200 shadow-lg max-h-60">
-                <SelectItem value="">No case</SelectItem>
+                <SelectItem value="no-case">No case</SelectItem>
                 {cases.map((caseItem) => (
                   <SelectItem key={caseItem.id} value={caseItem.id}>
                     {caseItem.title}

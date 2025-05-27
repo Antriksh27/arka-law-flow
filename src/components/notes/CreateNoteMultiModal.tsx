@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -60,7 +59,7 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
       visibility: 'private',
       color: 'gray',
       tags: [],
-      case_id: caseId || ''
+      case_id: caseId || 'no-case'
     }
   });
 
@@ -103,7 +102,7 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
       const noteData = {
         title: data.title,
         content: finalContent,
-        case_id: data.case_id || null,
+        case_id: data.case_id === 'no-case' ? null : data.case_id,
         visibility: data.visibility,
         color: data.color,
         tags: data.tags
@@ -393,12 +392,12 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
             <Label htmlFor="case_id" className="text-sm font-medium text-gray-700">
               Link to Case (Optional)
             </Label>
-            <Select onValueChange={(value) => setValue('case_id', value)} defaultValue={caseId || ''}>
+            <Select onValueChange={(value) => setValue('case_id', value)} defaultValue={caseId || 'no-case'}>
               <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                 <SelectValue placeholder="Select a case..." />
               </SelectTrigger>
               <SelectContent className="bg-white border border-gray-200 shadow-lg max-h-60">
-                <SelectItem value="">No case</SelectItem>
+                <SelectItem value="no-case">No case</SelectItem>
                 {cases.map((caseItem) => (
                   <SelectItem key={caseItem.id} value={caseItem.id}>
                     {caseItem.title}
