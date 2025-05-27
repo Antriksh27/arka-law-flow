@@ -24,7 +24,7 @@ interface TaskFormData {
   status: 'todo' | 'in_progress' | 'completed';
   due_date?: string;
   tags?: string;
-  link_type?: 'case' | 'client' | 'none';
+  link_type?: 'matter' | 'client' | 'none';
   matter_id?: string;
   client_id?: string;
 }
@@ -48,7 +48,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
     defaultValues: {
       priority: 'medium',
       status: 'todo',
-      link_type: caseId ? 'case' : 'none',
+      link_type: caseId ? 'matter' : 'none',
       matter_id: caseId || ''
     }
   });
@@ -69,19 +69,19 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
     }
   });
 
-  // Fetch cases for linking
-  const { data: cases = [] } = useQuery({
-    queryKey: ['cases-for-tasks'],
+  // Fetch matters for linking
+  const { data: matters = [] } = useQuery({
+    queryKey: ['matters-for-tasks'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('cases')
+        .from('matters')
         .select('id, title')
         .eq('status', 'open')
         .order('title');
       if (error) throw error;
       return data || [];
     },
-    enabled: linkType === 'case'
+    enabled: linkType === 'matter'
   });
 
   // Fetch clients for linking
@@ -111,12 +111,13 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
         priority: data.priority,
         status: data.status,
         due_date: data.due_date ? new Date(data.due_date).toISOString().split('T')[0] : null,
-        matter_id: data.link_type === 'case' ? data.matter_id || null : null,
+        matter_id: data.link_type === 'matter' ? data.matter_id || null : null,
         client_id: data.link_type === 'client' ? data.client_id || null : null,
         created_by: user.data.user.id,
         tags: data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(Boolean) : []
       };
 
+      console.log('Creating task with data:', taskData);
       const { error } = await supabase.from('tasks').insert(taskData);
       if (error) throw error;
     },
@@ -128,6 +129,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       onClose();
     },
     onError: (error) => {
+      console.error('Task creation error:', error);
       toast({
         title: "Failed to create task",
         description: error.message,
@@ -180,32 +182,32 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
             </Label>
             <Select 
               onValueChange={(value) => setValue('link_type', value as any)} 
-              defaultValue={caseId ? 'case' : 'none'}
+              defaultValue={caseId ? 'matter' : 'none'}
             >
               <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
                 <SelectItem value="none" className="hover:bg-gray-50">No Link</SelectItem>
-                <SelectItem value="case" className="hover:bg-gray-50">Link to Case</SelectItem>
+                <SelectItem value="matter" className="hover:bg-gray-50">Link to Matter</SelectItem>
                 <SelectItem value="client" className="hover:bg-gray-50">Link to Client</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          {linkType === 'case' && (
+          {linkType === 'matter' && (
             <div className="space-y-2">
               <Label htmlFor="matter_id" className="text-sm font-medium text-gray-700">
-                Select Case
+                Select Matter
               </Label>
               <Select onValueChange={(value) => setValue('matter_id', value)}>
                 <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                  <SelectValue placeholder="Select a case..." />
+                  <SelectValue placeholder="Select a matter..." />
                 </SelectTrigger>
                 <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                  {cases.map((case_item) => (
-                    <SelectItem key={case_item.id} value={case_item.id} className="hover:bg-gray-50">
-                      {case_item.title}
+                  {matters.map((matter) => (
+                    <SelectItem key={matter.id} value={matter.id} className="hover:bg-gray-50">
+                      {matter.title}
                     </SelectItem>
                   ))}
                 </SelectContent>

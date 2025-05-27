@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import DashboardLayout from '../components/layout/DashboardLayout';
@@ -32,7 +33,7 @@ const Tasks = () => {
           *,
           assigned_user:profiles!tasks_assigned_to_fkey(full_name),
           creator:profiles!tasks_created_by_fkey(full_name),
-          case:cases!tasks_matter_id_fkey(title),
+          matter:matters!tasks_matter_id_fkey(title),
           client:clients!tasks_client_id_fkey(full_name)
         `)
         .order('created_at', { ascending: false });
@@ -130,9 +131,9 @@ const Tasks = () => {
         <p className="text-xs text-gray-600 mb-3 line-clamp-2">{task.description}</p>
       )}
 
-      {task.case && (
+      {task.matter && (
         <div className="text-xs text-blue-600 mb-2">
-          Case: {task.case.title}
+          Matter: {task.matter.title}
         </div>
       )}
 

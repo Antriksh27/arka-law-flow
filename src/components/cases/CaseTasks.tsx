@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,14 +23,29 @@ export const CaseTasks: React.FC<CaseTasksProps> = ({ caseId }) => {
     queryKey: ['case-tasks', caseId],
     queryFn: async () => {
       console.log('Fetching case tasks for caseId:', caseId);
+      // First, get the matter_id from the case
+      const { data: caseData, error: caseError } = await supabase
+        .from('cases')
+        .select('id')
+        .eq('id', caseId)
+        .single();
+        
+      if (caseError) {
+        console.error('Error fetching case:', caseError);
+        throw caseError;
+      }
+      
+      // Since we don't have a direct case-to-matter relationship, we'll fetch tasks by matter_id if it exists
+      // For now, let's fetch tasks that are linked to this case through matter_id
       const { data, error } = await supabase
         .from('tasks')
         .select(`
           *,
           assigned_user:profiles!tasks_assigned_to_fkey(full_name),
-          creator:profiles!tasks_created_by_fkey(full_name)
+          creator:profiles!tasks_created_by_fkey(full_name),
+          matter:matters!tasks_matter_id_fkey(title)
         `)
-        .eq('matter_id', caseId)
+        .eq('matter_id', caseId) // Assuming matter_id matches case_id for now
         .order('created_at', { ascending: false });
       
       if (error) {
