@@ -95,17 +95,21 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
           reader.onloadend = () => resolve(reader.result as string);
           reader.readAsDataURL(audioBlob);
         });
-        finalContent += '\n\n[Audio recording attached]';
+        
+        // Only add placeholder text if there's no other content
+        if (!finalContent.trim()) {
+          finalContent = '[Audio recording attached]';
+        }
       }
 
-      // Add drawing data if available
-      if (drawingData) {
-        finalContent += '\n\n[Drawing attached]';
+      // Add drawing placeholder if available and no content
+      if (drawingData && !finalContent.trim()) {
+        finalContent = '[Drawing attached]';
       }
 
       const noteData = {
         title: data.title,
-        content: finalContent,
+        content: finalContent || null,
         case_id: data.case_id === 'no-case' ? null : data.case_id,
         visibility: data.visibility,
         color: data.color,
@@ -287,6 +291,16 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
                   Drawing Canvas
                 </Label>
                 <DrawingCanvas onDrawingChange={setDrawingData} />
+                {drawingData && (
+                  <div className="mt-2 p-2 border border-gray-200 rounded-lg">
+                    <p className="text-sm text-green-600 mb-2">✓ Drawing created</p>
+                    <img 
+                      src={drawingData} 
+                      alt="Drawing preview" 
+                      className="max-h-32 rounded border"
+                    />
+                  </div>
+                )}
               </div>
             </TabsContent>
             
@@ -318,7 +332,7 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
                             Play
                           </>}
                       </Button>
-                      <span className="text-sm text-gray-600 flex-1">Recording ready</span>
+                      <span className="text-sm text-green-600 flex-1">✓ Recording ready</span>
                       <Button type="button" onClick={deleteRecording} variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50">
                         <Trash2 className="w-4 h-4" />
                       </Button>

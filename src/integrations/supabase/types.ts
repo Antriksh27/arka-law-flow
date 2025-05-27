@@ -1293,12 +1293,14 @@ export type Database = {
       notes_v2: {
         Row: {
           appointment_id: string | null
+          audio_data: string | null
           case_id: string | null
           client_id: string | null
           color: string | null
           content: string | null
           created_at: string
           created_by: string
+          drawing_data: string | null
           id: string
           is_archived: boolean | null
           is_pinned: boolean | null
@@ -1309,12 +1311,14 @@ export type Database = {
         }
         Insert: {
           appointment_id?: string | null
+          audio_data?: string | null
           case_id?: string | null
           client_id?: string | null
           color?: string | null
           content?: string | null
           created_at?: string
           created_by?: string
+          drawing_data?: string | null
           id?: string
           is_archived?: boolean | null
           is_pinned?: boolean | null
@@ -1325,12 +1329,14 @@ export type Database = {
         }
         Update: {
           appointment_id?: string | null
+          audio_data?: string | null
           case_id?: string | null
           client_id?: string | null
           color?: string | null
           content?: string | null
           created_at?: string
           created_by?: string
+          drawing_data?: string | null
           id?: string
           is_archived?: boolean | null
           is_pinned?: boolean | null
