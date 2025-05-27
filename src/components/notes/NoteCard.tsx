@@ -46,9 +46,20 @@ export const NoteCard: React.FC<NoteCardProps> = ({
     return content.substring(0, maxLength) + '...';
   };
 
+  // Helper function to get actual data value
+  const getDataValue = (data: any) => {
+    if (!data) return null;
+    if (typeof data === 'string') return data;
+    if (typeof data === 'object' && data.value && data.value !== 'undefined') return data.value;
+    return null;
+  };
+
+  const drawingData = getDataValue(note.drawing_data);
+  const audioData = getDataValue(note.audio_data);
+
   console.log('Note data in card:', note);
-  console.log('Drawing data:', note.drawing_data);
-  console.log('Audio data:', note.audio_data);
+  console.log('Processed drawing data:', drawingData);
+  console.log('Processed audio data:', audioData);
 
   return (
     <Card className={`relative bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border-t-4 ${getColorClasses(note.color)} hover:scale-[1.02]`}>
@@ -78,18 +89,28 @@ export const NoteCard: React.FC<NoteCardProps> = ({
         </h3>
 
         {/* Audio Recording Preview */}
-        {note.audio_data && (
-          <div className="mb-3 flex items-center gap-2 text-xs text-purple-600 bg-purple-50 px-2 py-1 rounded">
-            <Mic className="w-3 h-3" />
-            <span>Audio recording</span>
+        {audioData && audioData.startsWith('data:audio') && (
+          <div className="mb-3 p-2 border border-gray-200 rounded-lg bg-purple-50">
+            <div className="flex items-center gap-2 mb-2">
+              <Mic className="w-4 h-4 text-purple-600" />
+              <span className="text-sm text-purple-700 font-medium">Audio Recording</span>
+            </div>
+            <audio 
+              controls 
+              className="w-full h-8" 
+              style={{ height: '32px' }}
+            >
+              <source src={audioData} type="audio/wav" />
+              Your browser does not support the audio element.
+            </audio>
           </div>
         )}
 
-        {/* Drawing Preview - Updated logic */}
-        {note.drawing_data && note.drawing_data.trim() !== '' && (
+        {/* Drawing Preview */}
+        {drawingData && drawingData.startsWith('data:image') && (
           <div className="mb-3 border border-gray-200 rounded-lg overflow-hidden bg-white">
             <img 
-              src={note.drawing_data} 
+              src={drawingData} 
               alt="Drawing preview" 
               className="w-full h-32 object-cover cursor-pointer hover:opacity-90 transition-opacity" 
               onClick={onView}
@@ -97,22 +118,12 @@ export const NoteCard: React.FC<NoteCardProps> = ({
                 console.error('Failed to load drawing image:', e);
                 e.currentTarget.style.display = 'none';
               }}
-              onLoad={() => {
-                console.log('Drawing image loaded successfully');
-              }}
             />
           </div>
         )}
 
-        {/* Fallback text for debugging */}
-        {note.drawing_data && note.drawing_data.trim() === '' && (
-          <div className="mb-3 text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded">
-            Drawing data is empty
-          </div>
-        )}
-
-        {/* Content Preview */}
-        {note.content && (
+        {/* Content Preview - Filter out the placeholder text */}
+        {note.content && !note.content.includes('[Drawing attached]') && !note.content.includes('[Audio attached]') && (
           <p className="text-sm text-gray-600 mb-3 line-clamp-3">
             {getContentPreview(note.content)}
           </p>
