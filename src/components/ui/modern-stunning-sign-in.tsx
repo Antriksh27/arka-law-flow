@@ -61,9 +61,7 @@ const SignIn1 = () => {
       {/* Centered glass card */}
       <div className="relative z-10 w-full max-w-sm rounded-3xl bg-gradient-to-r from-[#ffffff10] to-slate-800 backdrop-blur-sm shadow-2xl p-8 flex flex-col items-center">
         {/* Logo */}
-        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-white/20 mb-6 shadow-lg">
-          <img src="/lovable-uploads/a3cdf643-6752-4129-b6b5-dd61377068d4.png" alt="Arka Legal Logo" className="w-8 h-8 object-contain" />
-        </div>
+        
         {/* Title */}
         <h2 className="text-2xl font-semibold text-white mb-6 text-center">
           Arka Legal
