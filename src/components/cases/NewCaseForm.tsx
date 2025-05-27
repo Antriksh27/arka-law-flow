@@ -268,7 +268,7 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
           </div>
 
           <div className="flex justify-end gap-4 pt-6 border-t">
-            <Button type="button" variant="outline" onClick={onCancel}>
+            <Button type="button" variant="outline" onClick={onCancel} className="bg-red-700 hover:bg-red-600">
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting} className="bg-slate-800 hover:bg-slate-700">
