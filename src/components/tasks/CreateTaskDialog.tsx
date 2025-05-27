@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -10,13 +9,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-
 interface CreateTaskDialogProps {
   open: boolean;
   onClose: () => void;
   caseId?: string;
 }
-
 interface TaskFormData {
   title: string;
   description?: string;
@@ -26,16 +23,26 @@ interface TaskFormData {
   due_date?: string;
   tags?: string;
 }
-
 export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   open,
   onClose,
   caseId
 }) => {
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const queryClient = useQueryClient();
-
-  const { register, handleSubmit, setValue, watch, reset, formState: { errors, isSubmitting } } = useForm<TaskFormData>({
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    reset,
+    formState: {
+      errors,
+      isSubmitting
+    }
+  } = useForm<TaskFormData>({
     defaultValues: {
       priority: 'medium',
       status: 'todo'
@@ -43,25 +50,23 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   });
 
   // Fetch team members for assignment
-  const { data: teamMembers = [] } = useQuery({
+  const {
+    data: teamMembers = []
+  } = useQuery({
     queryKey: ['team-members-for-tasks'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, role')
-        .in('role', ['admin', 'lawyer', 'paralegal', 'junior', 'associate', 'partner'])
-        .order('full_name');
-      
+      const {
+        data,
+        error
+      } = await supabase.from('profiles').select('id, full_name, role').in('role', ['admin', 'lawyer', 'paralegal', 'junior', 'associate', 'partner']).order('full_name');
       if (error) throw error;
       return data || [];
     }
   });
-
   const createTaskMutation = useMutation({
     mutationFn: async (data: TaskFormData) => {
       const user = await supabase.auth.getUser();
       if (!user.data.user) throw new Error('Not authenticated');
-
       const taskData = {
         title: data.title,
         description: data.description || null,
@@ -73,18 +78,25 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
         created_by: user.data.user.id,
         tags: data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(Boolean) : []
       };
-
-      const { error } = await supabase.from('tasks').insert(taskData);
+      const {
+        error
+      } = await supabase.from('tasks').insert(taskData);
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['case-tasks'] });
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      toast({ title: "Task created successfully" });
+      queryClient.invalidateQueries({
+        queryKey: ['case-tasks']
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['tasks']
+      });
+      toast({
+        title: "Task created successfully"
+      });
       reset();
       onClose();
     },
-    onError: (error) => {
+    onError: error => {
       toast({
         title: "Failed to create task",
         description: error.message,
@@ -92,13 +104,10 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       });
     }
   });
-
   const onSubmit = (data: TaskFormData) => {
     createTaskMutation.mutate(data);
   };
-
-  return (
-    <Dialog open={open} onOpenChange={onClose}>
+  return <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white border border-gray-200 shadow-lg">
         <DialogHeader className="pb-4 border-b border-gray-100">
           <DialogTitle className="text-xl font-semibold text-gray-900">Create New Task</DialogTitle>
@@ -109,28 +118,17 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
             <Label htmlFor="title" className="text-sm font-medium text-gray-700">
               Task Title *
             </Label>
-            <Input
-              id="title"
-              {...register('title', { required: 'Task title is required' })}
-              placeholder="Enter task title..."
-              className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-            />
-            {errors.title && (
-              <p className="text-sm text-red-600">{errors.title.message}</p>
-            )}
+            <Input id="title" {...register('title', {
+            required: 'Task title is required'
+          })} placeholder="Enter task title..." className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500" />
+            {errors.title && <p className="text-sm text-red-600">{errors.title.message}</p>}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="description" className="text-sm font-medium text-gray-700">
               Description
             </Label>
-            <Textarea
-              id="description"
-              {...register('description')}
-              placeholder="Enter task description..."
-              className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 min-h-[100px]"
-              rows={4}
-            />
+            <Textarea id="description" {...register('description')} placeholder="Enter task description..." className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 min-h-[100px]" rows={4} />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -138,7 +136,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
               <Label htmlFor="priority" className="text-sm font-medium text-gray-700">
                 Priority
               </Label>
-              <Select onValueChange={(value) => setValue('priority', value as any)} defaultValue="medium">
+              <Select onValueChange={value => setValue('priority', value as any)} defaultValue="medium">
                 <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                   <SelectValue />
                 </SelectTrigger>
@@ -154,7 +152,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
               <Label htmlFor="status" className="text-sm font-medium text-gray-700">
                 Status
               </Label>
-              <Select onValueChange={(value) => setValue('status', value as any)} defaultValue="todo">
+              <Select onValueChange={value => setValue('status', value as any)} defaultValue="todo">
                 <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                   <SelectValue />
                 </SelectTrigger>
@@ -171,16 +169,14 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
             <Label htmlFor="assigned_to" className="text-sm font-medium text-gray-700">
               Assign To
             </Label>
-            <Select onValueChange={(value) => setValue('assigned_to', value)}>
+            <Select onValueChange={value => setValue('assigned_to', value)}>
               <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                 <SelectValue placeholder="Select team member..." />
               </SelectTrigger>
               <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                {teamMembers.map((member) => (
-                  <SelectItem key={member.id} value={member.id} className="hover:bg-gray-50">
+                {teamMembers.map(member => <SelectItem key={member.id} value={member.id} className="hover:bg-gray-50">
                     {member.full_name} ({member.role})
-                  </SelectItem>
-                ))}
+                  </SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -189,46 +185,26 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
             <Label htmlFor="due_date" className="text-sm font-medium text-gray-700">
               Due Date
             </Label>
-            <Input
-              id="due_date"
-              type="date"
-              {...register('due_date')}
-              className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-            />
+            <Input id="due_date" type="date" {...register('due_date')} className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500" />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="tags" className="text-sm font-medium text-gray-700">
               Tags
             </Label>
-            <Input
-              id="tags"
-              {...register('tags')}
-              placeholder="Enter tags separated by commas..."
-              className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-            />
+            <Input id="tags" {...register('tags')} placeholder="Enter tags separated by commas..." className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500" />
             <p className="text-xs text-gray-500">Separate multiple tags with commas</p>
           </div>
 
           <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={onClose}
-              className="px-6 py-2 border-gray-300 text-gray-700 hover:bg-gray-50"
-            >
+            <Button type="button" variant="outline" onClick={onClose} className="px-6 py-2 border-gray-300 bg-red-700 hover:bg-red-600 text-slate-50">
               Cancel
             </Button>
-            <Button 
-              type="submit" 
-              disabled={isSubmitting} 
-              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white"
-            >
+            <Button type="submit" disabled={isSubmitting} className="px-6 py-2 text-white bg-slate-800 hover:bg-slate-700">
               {isSubmitting ? 'Creating...' : 'Create Task'}
             </Button>
           </div>
         </form>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 };
