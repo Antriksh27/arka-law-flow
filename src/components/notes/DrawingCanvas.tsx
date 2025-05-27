@@ -46,7 +46,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange })
     context.lineWidth = lineWidth;
   }, [currentColor, lineWidth]);
 
-  const getMousePos = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const getEventPos = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
 
@@ -54,31 +54,43 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange })
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
 
+    // Handle touch events
+    if ('touches' in e) {
+      const touch = e.touches[0] || e.changedTouches[0];
+      return {
+        x: (touch.clientX - rect.left) * scaleX,
+        y: (touch.clientY - rect.top) * scaleY
+      };
+    }
+
+    // Handle mouse events
     return {
       x: (e.clientX - rect.left) * scaleX,
       y: (e.clientY - rect.top) * scaleY
     };
   };
 
-  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault(); // Prevent scrolling on touch
     const canvas = canvasRef.current;
     const context = canvas?.getContext('2d');
     if (!canvas || !context) return;
 
-    const pos = getMousePos(e);
+    const pos = getEventPos(e);
     setIsDrawing(true);
     context.beginPath();
     context.moveTo(pos.x, pos.y);
   };
 
-  const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault(); // Prevent scrolling on touch
     if (!isDrawing) return;
 
     const canvas = canvasRef.current;
     const context = canvas?.getContext('2d');
     if (!canvas || !context) return;
 
-    const pos = getMousePos(e);
+    const pos = getEventPos(e);
     context.lineTo(pos.x, pos.y);
     context.stroke();
 
@@ -86,7 +98,8 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange })
     onDrawingChange(canvas.toDataURL());
   };
 
-  const stopDrawing = () => {
+  const stopDrawing = (e?: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (e) e.preventDefault();
     setIsDrawing(false);
   };
 
@@ -169,11 +182,16 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange })
       <div className="border border-gray-300 rounded-lg overflow-hidden">
         <canvas
           ref={canvasRef}
-          className="block cursor-crosshair bg-white w-full h-96"
+          className="block cursor-crosshair bg-white w-full h-96 touch-none"
+          style={{ touchAction: 'none' }}
           onMouseDown={startDrawing}
           onMouseMove={draw}
           onMouseUp={stopDrawing}
           onMouseLeave={stopDrawing}
+          onTouchStart={startDrawing}
+          onTouchMove={draw}
+          onTouchEnd={stopDrawing}
+          onTouchCancel={stopDrawing}
         />
       </div>
     </div>
