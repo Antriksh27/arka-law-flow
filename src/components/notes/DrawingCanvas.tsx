@@ -35,6 +35,16 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange })
     context.fillRect(0, 0, canvas.width, canvas.height);
   }, []);
 
+  // Update canvas context when color or line width changes
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const context = canvas?.getContext('2d');
+    if (!canvas || !context) return;
+
+    context.strokeStyle = currentColor;
+    context.lineWidth = lineWidth;
+  }, [currentColor, lineWidth]);
+
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     const context = canvas?.getContext('2d');
