@@ -74,12 +74,15 @@ export const NotesHeader: React.FC<NotesHeaderProps> = ({
 
   const clearFilters = () => {
     onTagsChange([]);
-    onColorChange('');
-    onVisibilityChange('');
-    onCaseChange('');
+    onColorChange('all-colors');
+    onVisibilityChange('all-visibility');
+    onCaseChange('all-cases');
   };
 
-  const hasActiveFilters = selectedTags.length > 0 || selectedColor || selectedVisibility || selectedCase;
+  const hasActiveFilters = selectedTags.length > 0 || 
+    selectedColor !== 'all-colors' || 
+    selectedVisibility !== 'all-visibility' || 
+    selectedCase !== 'all-cases';
 
   return (
     <div className="space-y-4">

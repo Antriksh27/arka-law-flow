@@ -11,20 +11,20 @@ const Notes = () => {
   const [editingNote, setEditingNote] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [selectedColor, setSelectedColor] = useState<string>('');
-  const [selectedVisibility, setSelectedVisibility] = useState<string>('');
-  const [selectedCase, setSelectedCase] = useState<string>('');
+  const [selectedColor, setSelectedColor] = useState<string>('all-colors');
+  const [selectedVisibility, setSelectedVisibility] = useState<string>('all-visibility');
+  const [selectedCase, setSelectedCase] = useState<string>('all-cases');
 
   const handleColorChange = (value: string) => {
-    setSelectedColor(value === 'all-colors' ? '' : value);
+    setSelectedColor(value);
   };
 
   const handleVisibilityChange = (value: string) => {
-    setSelectedVisibility(value === 'all-visibility' ? '' : value);
+    setSelectedVisibility(value);
   };
 
   const handleCaseChange = (value: string) => {
-    setSelectedCase(value === 'all-cases' ? '' : value);
+    setSelectedCase(value);
   };
 
   return (

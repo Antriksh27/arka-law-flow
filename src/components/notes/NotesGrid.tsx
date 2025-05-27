@@ -118,18 +118,20 @@ export const NotesGrid: React.FC<NotesGridProps> = ({
     );
   }
 
+  const hasActiveFilters = searchQuery || selectedTags.length > 0 || 
+    (selectedColor && selectedColor !== 'all-colors') || 
+    (selectedVisibility && selectedVisibility !== 'all-visibility') || 
+    (selectedCase && selectedCase !== 'all-cases');
+
   if (notes.length === 0) {
     return (
       <div className="text-center py-12">
         <StickyNote className="w-12 h-12 mx-auto mb-4 text-gray-300" />
         <h3 className="text-lg font-medium text-gray-900 mb-2">
-          {searchQuery || selectedTags.length > 0 || (selectedColor && selectedColor !== 'all-colors') || (selectedVisibility && selectedVisibility !== 'all-visibility') || (selectedCase && selectedCase !== 'all-cases')
-            ? 'No notes found'
-            : 'No notes yet'
-          }
+          {hasActiveFilters ? 'No notes found' : 'No notes yet'}
         </h3>
         <p className="text-gray-500 mb-4">
-          {searchQuery || selectedTags.length > 0 || (selectedColor && selectedColor !== 'all-colors') || (selectedVisibility && selectedVisibility !== 'all-visibility') || (selectedCase && selectedCase !== 'all-cases')
+          {hasActiveFilters
             ? 'Try adjusting your search or filters'
             : 'Start by creating your first note'
           }
