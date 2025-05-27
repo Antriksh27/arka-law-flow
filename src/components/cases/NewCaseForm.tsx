@@ -73,26 +73,28 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
 
   const createCaseMutation = useMutation({
     mutationFn: async (data: CaseFormData) => {
+      const caseData = {
+        title: data.case_title,
+        description: data.description || null,
+        client_id: data.client_id || null,
+        case_type: data.case_type as any,
+        status: data.status as any,
+        priority: data.priority as any,
+        case_number: data.case_number || null,
+        filing_date: data.filing_date ? new Date(data.filing_date).toISOString().split('T')[0] : null,
+        court: data.court || null,
+        cnr_number: data.cnr_number || null,
+        filing_number: data.filing_number || null,
+        petitioner: data.petitioner || null,
+        respondent: data.respondent || null,
+        advocate_name: data.advocate_name || null,
+        district: data.district || null,
+        created_by: (await supabase.auth.getUser()).data.user?.id
+      };
+
       const { error } = await supabase
         .from('cases')
-        .insert({
-          title: data.case_title, // Fix: Map case_title to title
-          description: data.description || null,
-          client_id: data.client_id || null,
-          case_type: data.case_type,
-          status: data.status,
-          priority: data.priority,
-          case_number: data.case_number || null,
-          filing_date: data.filing_date ? new Date(data.filing_date).toISOString().split('T')[0] : null,
-          court: data.court || null,
-          cnr_number: data.cnr_number || null,
-          filing_number: data.filing_number || null,
-          petitioner: data.petitioner || null,
-          respondent: data.respondent || null,
-          advocate_name: data.advocate_name || null,
-          district: data.district || null,
-          created_by: (await supabase.auth.getUser()).data.user?.id
-        });
+        .insert(caseData);
       if (error) throw error;
     },
     onSuccess: () => {
