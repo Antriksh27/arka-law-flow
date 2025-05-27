@@ -23,7 +23,7 @@ export const ClientQuickActions: React.FC<ClientQuickActionsProps> = ({
       <div className="flex items-center gap-3">
         <Button 
           size="sm" 
-          className="bg-primary hover:bg-primary/90 text-white"
+          className="bg-slate-800 hover:bg-slate-700 text-white"
           onClick={() => setShowAssignDialog(true)}
         >
           <Plus className="w-4 h-4 mr-2" />
