@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../components/layout/DashboardLayout';
 import { CasesHeader } from '../components/cases/CasesHeader';
 import { CasesFilters } from '../components/cases/CasesFilters';
@@ -14,6 +15,15 @@ const Cases = () => {
   const [assignedFilter, setAssignedFilter] = useState('all');
   const [showAddDialog, setShowAddDialog] = useState(false);
 
+  useEffect(() => {
+    console.log('Cases component mounted');
+    console.log('Filters state:', { statusFilter, typeFilter, assignedFilter });
+  }, []);
+
+  useEffect(() => {
+    console.log('Filter values changed:', { statusFilter, typeFilter, assignedFilter });
+  }, [statusFilter, typeFilter, assignedFilter]);
+
   return (
     <DashboardLayout>
       <div className="space-y-6 p-6">
@@ -27,11 +37,20 @@ const Cases = () => {
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           statusFilter={statusFilter}
-          onStatusChange={setStatusFilter}
+          onStatusChange={(value) => {
+            console.log('Status filter changing to:', value);
+            setStatusFilter(value);
+          }}
           typeFilter={typeFilter}
-          onTypeChange={setTypeFilter}
+          onTypeChange={(value) => {
+            console.log('Type filter changing to:', value);
+            setTypeFilter(value);
+          }}
           assignedFilter={assignedFilter}
-          onAssignedChange={setAssignedFilter}
+          onAssignedChange={(value) => {
+            console.log('Assigned filter changing to:', value);
+            setAssignedFilter(value);
+          }}
         />
 
         {viewMode === 'grid' ? (
