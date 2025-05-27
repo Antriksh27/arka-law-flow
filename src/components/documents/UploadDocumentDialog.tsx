@@ -71,23 +71,34 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
     mutationFn: async (data: UploadFormData) => {
       const user = await supabase.auth.getUser();
       if (!user.data.user) throw new Error('Not authenticated');
+      
+      console.log('Starting upload for files:', selectedFiles.length);
+      console.log('Case ID:', data.case_id);
+      console.log('Is Important:', data.is_evidence);
+      
       const uploadPromises = selectedFiles.map(async file => {
         // Generate unique filename
         const timestamp = Date.now();
         const fileExtension = file.name.split('.').pop();
         const filename = `${timestamp}-${file.name}`;
 
+        console.log(`Uploading file: ${file.name} as ${filename}`);
+
         // Upload file to storage
         const {
           data: uploadData,
           error: uploadError
         } = await supabase.storage.from('documents').upload(filename, file);
-        if (uploadError) throw uploadError;
+        
+        if (uploadError) {
+          console.error('Storage upload error:', uploadError);
+          throw uploadError;
+        }
 
-        // Create document record
-        const {
-          error: insertError
-        } = await supabase.from('documents').insert({
+        console.log('File uploaded to storage:', uploadData.path);
+
+        // Prepare document record
+        const documentData = {
           file_name: file.name,
           file_url: uploadData.path,
           file_type: fileExtension,
@@ -95,12 +106,32 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
           case_id: data.case_id === 'all' ? null : data.case_id,
           uploaded_by: user.data.user.id,
           is_evidence: data.is_evidence
-        });
-        if (insertError) throw insertError;
+        };
+
+        console.log('Creating document record:', documentData);
+
+        // Create document record
+        const {
+          data: insertData,
+          error: insertError
+        } = await supabase.from('documents').insert(documentData).select();
+        
+        if (insertError) {
+          console.error('Database insert error:', insertError);
+          throw insertError;
+        }
+
+        console.log('Document record created:', insertData);
+        return insertData;
       });
-      await Promise.all(uploadPromises);
+      
+      const results = await Promise.all(uploadPromises);
+      console.log('All uploads completed:', results);
+      return results;
     },
-    onSuccess: () => {
+    onSuccess: (results) => {
+      console.log('Upload mutation successful, invalidating queries');
+      
       // Invalidate all document-related queries
       queryClient.invalidateQueries({
         queryKey: ['documents']
@@ -113,11 +144,13 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
       });
       
       toast({
-        title: "Documents uploaded successfully"
+        title: "Documents uploaded successfully",
+        description: `${selectedFiles.length} document(s) uploaded`
       });
       
       // Call the callback to refresh parent component
       if (onUploadSuccess) {
+        console.log('Calling onUploadSuccess callback');
         onUploadSuccess();
       }
       
@@ -126,6 +159,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
       onClose();
     },
     onError: error => {
+      console.error('Upload mutation failed:', error);
       toast({
         title: "Failed to upload documents",
         description: error.message,
@@ -136,6 +170,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
+    console.log('Files selected:', files.length);
     setSelectedFiles(files);
   };
 
@@ -153,6 +188,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
       return;
     }
 
+    console.log('Form submitted with data:', data);
     uploadMutation.mutate(data);
   };
 
