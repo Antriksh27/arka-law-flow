@@ -1672,12 +1672,15 @@ export type Database = {
           description: string | null
           due_date: string | null
           end_time: string | null
+          firm_id: string | null
           id: string
           matter_id: string | null
-          priority: string | null
+          priority: Database["public"]["Enums"]["task_priority"] | null
           start_time: string | null
-          status: string
+          status: Database["public"]["Enums"]["task_status"] | null
+          tags: string[] | null
           title: string
+          updated_at: string | null
         }
         Insert: {
           assigned_to?: string | null
@@ -1686,12 +1689,15 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           end_time?: string | null
+          firm_id?: string | null
           id?: string
           matter_id?: string | null
-          priority?: string | null
+          priority?: Database["public"]["Enums"]["task_priority"] | null
           start_time?: string | null
-          status?: string
+          status?: Database["public"]["Enums"]["task_status"] | null
+          tags?: string[] | null
           title: string
+          updated_at?: string | null
         }
         Update: {
           assigned_to?: string | null
@@ -1700,12 +1706,15 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           end_time?: string | null
+          firm_id?: string | null
           id?: string
           matter_id?: string | null
-          priority?: string | null
+          priority?: Database["public"]["Enums"]["task_priority"] | null
           start_time?: string | null
-          status?: string
+          status?: Database["public"]["Enums"]["task_status"] | null
+          tags?: string[] | null
           title?: string
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -2229,6 +2238,8 @@ export type Database = {
         | "other"
       invoice_status: "unpaid" | "paid" | "overdue" | "cancelled"
       pipeline_type: "litigation" | "advisory" | "corporate" | "regulatory"
+      task_priority: "low" | "medium" | "high"
+      task_status: "todo" | "in_progress" | "completed"
       team_member_role:
         | "lawyer"
         | "junior"
@@ -2399,6 +2410,8 @@ export const Constants = {
       ],
       invoice_status: ["unpaid", "paid", "overdue", "cancelled"],
       pipeline_type: ["litigation", "advisory", "corporate", "regulatory"],
+      task_priority: ["low", "medium", "high"],
+      task_status: ["todo", "in_progress", "completed"],
       team_member_role: [
         "lawyer",
         "junior",
