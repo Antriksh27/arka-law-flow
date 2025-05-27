@@ -11,6 +11,7 @@ export type Database = {
     Tables: {
       appointments: {
         Row: {
+          case_id: string | null
           client_id: string | null
           created_at: string | null
           created_by: string | null
@@ -21,7 +22,6 @@ export type Database = {
           is_visible_to_team: boolean | null
           lawyer_id: string | null
           location: string | null
-          matter_id: string | null
           notes: string | null
           reminder_minutes: number | null
           start_time: string
@@ -29,6 +29,7 @@ export type Database = {
           type: Database["public"]["Enums"]["appointment_type"]
         }
         Insert: {
+          case_id?: string | null
           client_id?: string | null
           created_at?: string | null
           created_by?: string | null
@@ -39,7 +40,6 @@ export type Database = {
           is_visible_to_team?: boolean | null
           lawyer_id?: string | null
           location?: string | null
-          matter_id?: string | null
           notes?: string | null
           reminder_minutes?: number | null
           start_time: string
@@ -47,6 +47,7 @@ export type Database = {
           type: Database["public"]["Enums"]["appointment_type"]
         }
         Update: {
+          case_id?: string | null
           client_id?: string | null
           created_at?: string | null
           created_by?: string | null
@@ -57,7 +58,6 @@ export type Database = {
           is_visible_to_team?: boolean | null
           lawyer_id?: string | null
           location?: string | null
-          matter_id?: string | null
           notes?: string | null
           reminder_minutes?: number | null
           start_time?: string
@@ -65,6 +65,20 @@ export type Database = {
           type?: Database["public"]["Enums"]["appointment_type"]
         }
         Relationships: [
+          {
+            foreignKeyName: "appointments_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "case_details"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "appointments_client_id_fkey"
             columns: ["client_id"]
@@ -77,13 +91,6 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "appointments_matter_id_fkey"
-            columns: ["matter_id"]
-            isOneToOne: false
-            referencedRelation: "matters"
             referencedColumns: ["id"]
           },
         ]
@@ -712,6 +719,7 @@ export type Database = {
       }
       court_hearings: {
         Row: {
+          case_id: string | null
           courtroom: string | null
           created_at: string | null
           end_time: string | null
@@ -719,12 +727,12 @@ export type Database = {
           id: string
           judge_name: string | null
           lawyer_id: string | null
-          matter_id: string | null
           notes: string | null
           start_time: string
           status: string | null
         }
         Insert: {
+          case_id?: string | null
           courtroom?: string | null
           created_at?: string | null
           end_time?: string | null
@@ -732,12 +740,12 @@ export type Database = {
           id?: string
           judge_name?: string | null
           lawyer_id?: string | null
-          matter_id?: string | null
           notes?: string | null
           start_time: string
           status?: string | null
         }
         Update: {
+          case_id?: string | null
           courtroom?: string | null
           created_at?: string | null
           end_time?: string | null
@@ -745,12 +753,25 @@ export type Database = {
           id?: string
           judge_name?: string | null
           lawyer_id?: string | null
-          matter_id?: string | null
           notes?: string | null
           start_time?: string
           status?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "court_hearings_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "case_details"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "court_hearings_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "court_hearings_lawyer_id_fkey"
             columns: ["lawyer_id"]
@@ -763,13 +784,6 @@ export type Database = {
             columns: ["lawyer_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "court_hearings_matter_id_fkey"
-            columns: ["matter_id"]
-            isOneToOne: false
-            referencedRelation: "matters"
             referencedColumns: ["id"]
           },
         ]
@@ -788,7 +802,6 @@ export type Database = {
           id: string
           is_evidence: boolean | null
           is_shared_with_client: boolean | null
-          matter_id: string | null
           title: string | null
           uploaded_at: string | null
           uploaded_by: string | null
@@ -806,7 +819,6 @@ export type Database = {
           id?: string
           is_evidence?: boolean | null
           is_shared_with_client?: boolean | null
-          matter_id?: string | null
           title?: string | null
           uploaded_at?: string | null
           uploaded_by?: string | null
@@ -824,7 +836,6 @@ export type Database = {
           id?: string
           is_evidence?: boolean | null
           is_shared_with_client?: boolean | null
-          matter_id?: string | null
           title?: string | null
           uploaded_at?: string | null
           uploaded_by?: string | null
@@ -856,13 +867,6 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "documents_matter_id_fkey"
-            columns: ["matter_id"]
-            isOneToOne: false
-            referencedRelation: "matters"
             referencedColumns: ["id"]
           },
           {
@@ -1119,77 +1123,6 @@ export type Database = {
           },
         ]
       }
-      matters: {
-        Row: {
-          case_number: string | null
-          client_id: string | null
-          court_name: string | null
-          created_at: string | null
-          created_by: string | null
-          description: string | null
-          id: string
-          lawyer_id: string | null
-          status: string
-          title: string
-          type: string | null
-        }
-        Insert: {
-          case_number?: string | null
-          client_id?: string | null
-          court_name?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          description?: string | null
-          id?: string
-          lawyer_id?: string | null
-          status?: string
-          title: string
-          type?: string | null
-        }
-        Update: {
-          case_number?: string | null
-          client_id?: string | null
-          court_name?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          description?: string | null
-          id?: string
-          lawyer_id?: string | null
-          status?: string
-          title?: string
-          type?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "matters_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "client_stats"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "matters_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "matters_lawyer_id_fkey"
-            columns: ["lawyer_id"]
-            isOneToOne: false
-            referencedRelation: "firm_statistics"
-            referencedColumns: ["admin_id"]
-          },
-          {
-            foreignKeyName: "matters_lawyer_id_fkey"
-            columns: ["lawyer_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       message_threads: {
         Row: {
           created_at: string
@@ -1307,23 +1240,23 @@ export type Database = {
       notes: {
         Row: {
           author_id: string | null
+          case_id: string | null
           created_at: string | null
           id: string
-          matter_id: string | null
           note: string
         }
         Insert: {
           author_id?: string | null
+          case_id?: string | null
           created_at?: string | null
           id?: string
-          matter_id?: string | null
           note: string
         }
         Update: {
           author_id?: string | null
+          case_id?: string | null
           created_at?: string | null
           id?: string
-          matter_id?: string | null
           note?: string
         }
         Relationships: [
@@ -1342,10 +1275,17 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "notes_matter_id_fkey"
-            columns: ["matter_id"]
+            foreignKeyName: "notes_case_id_fkey"
+            columns: ["case_id"]
             isOneToOne: false
-            referencedRelation: "matters"
+            referencedRelation: "case_details"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notes_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
             referencedColumns: ["id"]
           },
         ]
@@ -1502,10 +1442,10 @@ export type Database = {
       payments: {
         Row: {
           amount: number
+          case_id: string | null
           client_id: string | null
           created_by: string | null
           id: string
-          matter_id: string | null
           mode: string | null
           notes: string | null
           status: string
@@ -1514,10 +1454,10 @@ export type Database = {
         }
         Insert: {
           amount: number
+          case_id?: string | null
           client_id?: string | null
           created_by?: string | null
           id?: string
-          matter_id?: string | null
           mode?: string | null
           notes?: string | null
           status?: string
@@ -1526,10 +1466,10 @@ export type Database = {
         }
         Update: {
           amount?: number
+          case_id?: string | null
           client_id?: string | null
           created_by?: string | null
           id?: string
-          matter_id?: string | null
           mode?: string | null
           notes?: string | null
           status?: string
@@ -1537,6 +1477,20 @@ export type Database = {
           transaction_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "payments_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "case_details"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "payments_client_id_fkey"
             columns: ["client_id"]
@@ -1563,13 +1517,6 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "payments_matter_id_fkey"
-            columns: ["matter_id"]
-            isOneToOne: false
-            referencedRelation: "matters"
             referencedColumns: ["id"]
           },
         ]
@@ -1676,6 +1623,7 @@ export type Database = {
       tasks: {
         Row: {
           assigned_to: string | null
+          case_id: string | null
           client_id: string | null
           created_at: string | null
           created_by: string | null
@@ -1684,7 +1632,6 @@ export type Database = {
           end_time: string | null
           firm_id: string | null
           id: string
-          matter_id: string | null
           priority: Database["public"]["Enums"]["task_priority"] | null
           start_time: string | null
           status: Database["public"]["Enums"]["task_status"] | null
@@ -1694,6 +1641,7 @@ export type Database = {
         }
         Insert: {
           assigned_to?: string | null
+          case_id?: string | null
           client_id?: string | null
           created_at?: string | null
           created_by?: string | null
@@ -1702,7 +1650,6 @@ export type Database = {
           end_time?: string | null
           firm_id?: string | null
           id?: string
-          matter_id?: string | null
           priority?: Database["public"]["Enums"]["task_priority"] | null
           start_time?: string | null
           status?: Database["public"]["Enums"]["task_status"] | null
@@ -1712,6 +1659,7 @@ export type Database = {
         }
         Update: {
           assigned_to?: string | null
+          case_id?: string | null
           client_id?: string | null
           created_at?: string | null
           created_by?: string | null
@@ -1720,7 +1668,6 @@ export type Database = {
           end_time?: string | null
           firm_id?: string | null
           id?: string
-          matter_id?: string | null
           priority?: Database["public"]["Enums"]["task_priority"] | null
           start_time?: string | null
           status?: Database["public"]["Enums"]["task_status"] | null
@@ -1741,6 +1688,20 @@ export type Database = {
             columns: ["assigned_to"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "case_details"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
             referencedColumns: ["id"]
           },
           {
@@ -1769,13 +1730,6 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tasks_matter_id_fkey"
-            columns: ["matter_id"]
-            isOneToOne: false
-            referencedRelation: "matters"
             referencedColumns: ["id"]
           },
         ]
