@@ -46,6 +46,10 @@ export const NoteCard: React.FC<NoteCardProps> = ({
     return content.substring(0, maxLength) + '...';
   };
 
+  console.log('Note data in card:', note);
+  console.log('Drawing data:', note.drawing_data);
+  console.log('Audio data:', note.audio_data);
+
   return (
     <Card className={`relative bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border-t-4 ${getColorClasses(note.color)} hover:scale-[1.02]`}>
       <CardContent className="p-5">
@@ -81,15 +85,29 @@ export const NoteCard: React.FC<NoteCardProps> = ({
           </div>
         )}
 
-        {/* Drawing Preview */}
-        {note.drawing_data && (
-          <div className="mb-3 border border-gray-200 rounded-lg overflow-hidden">
+        {/* Drawing Preview - Updated logic */}
+        {note.drawing_data && note.drawing_data.trim() !== '' && (
+          <div className="mb-3 border border-gray-200 rounded-lg overflow-hidden bg-white">
             <img 
               src={note.drawing_data} 
               alt="Drawing preview" 
               className="w-full h-32 object-cover cursor-pointer hover:opacity-90 transition-opacity" 
-              onClick={onView} 
+              onClick={onView}
+              onError={(e) => {
+                console.error('Failed to load drawing image:', e);
+                e.currentTarget.style.display = 'none';
+              }}
+              onLoad={() => {
+                console.log('Drawing image loaded successfully');
+              }}
             />
+          </div>
+        )}
+
+        {/* Fallback text for debugging */}
+        {note.drawing_data && note.drawing_data.trim() === '' && (
+          <div className="mb-3 text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded">
+            Drawing data is empty
           </div>
         )}
 
