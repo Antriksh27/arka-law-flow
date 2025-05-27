@@ -42,11 +42,11 @@ const Tasks = () => {
       }
 
       if (statusFilter !== 'all') {
-        query = query.eq('status', statusFilter);
+        query = query.eq('status', statusFilter as 'todo' | 'in_progress' | 'completed');
       }
 
       if (priorityFilter !== 'all') {
-        query = query.eq('priority', priorityFilter);
+        query = query.eq('priority', priorityFilter as 'low' | 'medium' | 'high');
       }
 
       if (assigneeFilter !== 'all') {
@@ -78,7 +78,7 @@ const Tasks = () => {
   });
 
   const updateTaskMutation = useMutation({
-    mutationFn: async ({ taskId, status }: { taskId: string, status: string }) => {
+    mutationFn: async ({ taskId, status }: { taskId: string, status: 'todo' | 'in_progress' | 'completed' }) => {
       const { error } = await supabase
         .from('tasks')
         .update({ status })
@@ -100,7 +100,7 @@ const Tasks = () => {
       case 'high':
         return 'bg-red-100 text-red-700 border-red-200';
       case 'medium':
-        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+        return 'bg-gray-100 text-gray-700 border-gray-200';
       case 'low':
         return 'bg-green-100 text-green-700 border-green-200';
       default:
@@ -114,7 +114,7 @@ const Tasks = () => {
     completed: tasks.filter(task => task.status === 'completed')
   };
 
-  const handleStatusChange = (taskId: string, newStatus: string) => {
+  const handleStatusChange = (taskId: string, newStatus: 'todo' | 'in_progress' | 'completed') => {
     updateTaskMutation.mutate({ taskId, status: newStatus });
   };
 
@@ -291,7 +291,7 @@ const Tasks = () => {
           </Card>
           <Card>
             <CardContent className="p-4">
-              <div className="text-2xl font-bold text-yellow-600">{tasksByStatus.in_progress.length}</div>
+              <div className="text-2xl font-bold text-gray-600">{tasksByStatus.in_progress.length}</div>
               <div className="text-sm text-gray-600">In Progress</div>
             </CardContent>
           </Card>

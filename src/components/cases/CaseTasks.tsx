@@ -38,7 +38,7 @@ export const CaseTasks: React.FC<CaseTasksProps> = ({ caseId }) => {
   });
 
   const updateTaskMutation = useMutation({
-    mutationFn: async ({ taskId, status }: { taskId: string, status: string }) => {
+    mutationFn: async ({ taskId, status }: { taskId: string, status: 'todo' | 'in_progress' | 'completed' }) => {
       const { error } = await supabase
         .from('tasks')
         .update({ status })
@@ -60,7 +60,7 @@ export const CaseTasks: React.FC<CaseTasksProps> = ({ caseId }) => {
       case 'high':
         return 'bg-red-100 text-red-700 border-red-200';
       case 'medium':
-        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+        return 'bg-gray-100 text-gray-700 border-gray-200';
       case 'low':
         return 'bg-green-100 text-green-700 border-green-200';
       default:
@@ -87,7 +87,7 @@ export const CaseTasks: React.FC<CaseTasksProps> = ({ caseId }) => {
     completed: tasks?.filter(task => task.status === 'completed') || []
   };
 
-  const handleStatusChange = (taskId: string, newStatus: string) => {
+  const handleStatusChange = (taskId: string, newStatus: 'todo' | 'in_progress' | 'completed') => {
     updateTaskMutation.mutate({ taskId, status: newStatus });
   };
 
