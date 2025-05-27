@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -7,13 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-
 interface FetchCaseDialogProps {
   open: boolean;
   onClose: () => void;
   onSuccess: (data: any) => void;
 }
-
 interface FetchFormData {
   cnr_number?: string;
   case_number?: string;
@@ -22,25 +19,26 @@ interface FetchFormData {
   year?: string;
   case_type?: string;
 }
-
 export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
   open,
   onClose,
   onSuccess
 }) => {
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [fetchMethod, setFetchMethod] = useState<'cnr' | 'case_number'>('cnr');
-
   const {
     register,
     handleSubmit,
     setValue,
     watch,
     reset,
-    formState: { errors }
+    formState: {
+      errors
+    }
   } = useForm<FetchFormData>();
-
   const handleFetch = async (data: FetchFormData) => {
     setIsLoading(true);
     try {
@@ -63,7 +61,6 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
         case_type: data.case_type || "civil",
         status: "open"
       };
-      
       onSuccess(mockData);
       reset();
     } catch (error) {
@@ -76,14 +73,11 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
       setIsLoading(false);
     }
   };
-
   const handleClose = () => {
     reset();
     onClose();
   };
-
-  return (
-    <Dialog open={open} onOpenChange={handleClose}>
+  return <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-md bg-white border border-gray-200">
         <DialogHeader>
           <DialogTitle className="text-gray-900">Fetch Case Details from eCourts</DialogTitle>
@@ -103,61 +97,37 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
             </Select>
           </div>
 
-          {fetchMethod === 'cnr' ? (
-            <div>
+          {fetchMethod === 'cnr' ? <div>
               <Label htmlFor="cnr_number" className="text-gray-700">CNR Number *</Label>
-              <Input 
-                id="cnr_number" 
-                {...register('cnr_number', {
-                  required: fetchMethod === 'cnr' ? 'CNR Number is required' : false
-                })} 
-                className="mt-2 bg-white border-gray-300" 
-                placeholder="Enter CNR number..." 
-              />
+              <Input id="cnr_number" {...register('cnr_number', {
+            required: fetchMethod === 'cnr' ? 'CNR Number is required' : false
+          })} className="mt-2 bg-white border-gray-300" placeholder="Enter CNR number..." />
               {errors.cnr_number && <p className="text-sm text-red-600 mt-1">{errors.cnr_number.message}</p>}
-            </div>
-          ) : (
-            <>
+            </div> : <>
               <div>
                 <Label htmlFor="case_number" className="text-gray-700">Case Number *</Label>
-                <Input 
-                  id="case_number" 
-                  {...register('case_number', {
-                    required: fetchMethod === 'case_number' ? 'Case Number is required' : false
-                  })} 
-                  className="mt-2 bg-white border-gray-300" 
-                  placeholder="Enter case number..." 
-                />
+                <Input id="case_number" {...register('case_number', {
+              required: fetchMethod === 'case_number' ? 'Case Number is required' : false
+            })} className="mt-2 bg-white border-gray-300" placeholder="Enter case number..." />
                 {errors.case_number && <p className="text-sm text-red-600 mt-1">{errors.case_number.message}</p>}
               </div>
 
               <div>
                 <Label htmlFor="court_code" className="text-gray-700">Court Code *</Label>
-                <Input 
-                  id="court_code" 
-                  {...register('court_code', {
-                    required: fetchMethod === 'case_number' ? 'Court Code is required' : false
-                  })} 
-                  className="mt-2 bg-white border-gray-300" 
-                  placeholder="Enter court code..." 
-                />
+                <Input id="court_code" {...register('court_code', {
+              required: fetchMethod === 'case_number' ? 'Court Code is required' : false
+            })} className="mt-2 bg-white border-gray-300" placeholder="Enter court code..." />
                 {errors.court_code && <p className="text-sm text-red-600 mt-1">{errors.court_code.message}</p>}
               </div>
 
               <div>
                 <Label htmlFor="year" className="text-gray-700">Year *</Label>
-                <Input 
-                  id="year" 
-                  {...register('year', {
-                    required: fetchMethod === 'case_number' ? 'Year is required' : false
-                  })} 
-                  className="mt-2 bg-white border-gray-300" 
-                  placeholder="Enter year..." 
-                />
+                <Input id="year" {...register('year', {
+              required: fetchMethod === 'case_number' ? 'Year is required' : false
+            })} className="mt-2 bg-white border-gray-300" placeholder="Enter year..." />
                 {errors.year && <p className="text-sm text-red-600 mt-1">{errors.year.message}</p>}
               </div>
-            </>
-          )}
+            </>}
 
           <div>
             <Label htmlFor="case_type" className="text-gray-700">Case Type</Label>
@@ -179,12 +149,11 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
             <Button type="button" variant="outline" onClick={handleClose} className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50">
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading} className="bg-primary text-white hover:bg-primary/90">
+            <Button type="submit" disabled={isLoading} className="text-white bg-slate-800 hover:bg-slate-700">
               {isLoading ? 'Fetching...' : 'Fetch Details'}
             </Button>
           </div>
         </form>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 };
