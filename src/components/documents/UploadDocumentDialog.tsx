@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -42,7 +41,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
     formState: { isSubmitting }
   } = useForm<UploadFormData>({
     defaultValues: {
-      case_id: caseId || '',
+      case_id: caseId || 'all',
       is_evidence: false
     }
   });
@@ -136,7 +135,13 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
       return;
     }
 
-    uploadMutation.mutate(data);
+    // Convert "all" back to empty string for the mutation
+    const submitData = {
+      ...data,
+      case_id: data.case_id === 'all' ? '' : data.case_id
+    };
+
+    uploadMutation.mutate(submitData);
   };
 
   const formatFileSize = (bytes: number) => {
@@ -218,12 +223,12 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
             <Label htmlFor="case_id" className="text-sm font-medium text-gray-700">
               Assign to Case (Optional)
             </Label>
-            <Select onValueChange={(value) => setValue('case_id', value)} defaultValue={caseId}>
+            <Select onValueChange={(value) => setValue('case_id', value)} defaultValue={caseId || 'all'}>
               <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                 <SelectValue placeholder="Select a case..." />
               </SelectTrigger>
               <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                <SelectItem value="" className="hover:bg-gray-50">No Case (General Documents)</SelectItem>
+                <SelectItem value="all" className="hover:bg-gray-50">No Case (General Documents)</SelectItem>
                 {cases.map((case_item) => (
                   <SelectItem key={case_item.id} value={case_item.id} className="hover:bg-gray-50">
                     {case_item.title}

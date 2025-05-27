@@ -59,7 +59,7 @@ export const DocumentsHeader: React.FC<DocumentsHeaderProps> = ({
                   <SelectValue placeholder="File Type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Types</SelectItem>
+                  <SelectItem value="all">All Types</SelectItem>
                   <SelectItem value="pdf">PDF</SelectItem>
                   <SelectItem value="docx">Word</SelectItem>
                   <SelectItem value="jpg">Images</SelectItem>
@@ -75,7 +75,7 @@ export const DocumentsHeader: React.FC<DocumentsHeaderProps> = ({
                   <SelectValue placeholder="Case" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Cases</SelectItem>
+                  <SelectItem value="all">All Cases</SelectItem>
                 </SelectContent>
               </Select>
             </div>

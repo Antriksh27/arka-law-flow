@@ -49,11 +49,11 @@ export const DocumentsMainView: React.FC<DocumentsMainViewProps> = ({
         query = query.ilike('file_name', `%${searchQuery}%`);
       }
 
-      // Apply filters
-      if (selectedFilters.fileType) {
+      // Apply filters - handle "all" values properly
+      if (selectedFilters.fileType && selectedFilters.fileType !== 'all') {
         query = query.ilike('file_type', `%${selectedFilters.fileType}%`);
       }
-      if (selectedFilters.caseId) {
+      if (selectedFilters.caseId && selectedFilters.caseId !== 'all') {
         query = query.eq('case_id', selectedFilters.caseId);
       }
 
@@ -81,7 +81,7 @@ export const DocumentsMainView: React.FC<DocumentsMainViewProps> = ({
           <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No documents found</h3>
           <p className="text-gray-500 mb-4">
-            {searchQuery || selectedFilters.fileType || selectedFilters.caseId
+            {searchQuery || (selectedFilters.fileType && selectedFilters.fileType !== 'all') || (selectedFilters.caseId && selectedFilters.caseId !== 'all')
               ? 'Try adjusting your search or filters'
               : 'Upload your first document to get started'
             }

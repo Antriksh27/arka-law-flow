@@ -10,9 +10,9 @@ const Documents = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilters, setSelectedFilters] = useState({
-    fileType: '',
-    uploadedBy: '',
-    caseId: ''
+    fileType: 'all',
+    uploadedBy: 'all',
+    caseId: 'all'
   });
 
   return (
