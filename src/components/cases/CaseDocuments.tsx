@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { FileText, Upload, Download, Eye, Star, StarOff } from 'lucide-react';
 import { format } from 'date-fns';
 import { UploadDocumentDialog } from '../documents/UploadDocumentDialog';
+import { FileViewer } from '../documents/FileViewer';
 import { useToast } from '@/hooks/use-toast';
 import { getFileIcon } from '@/lib/fileUtils';
 
@@ -19,6 +20,8 @@ export const CaseDocuments: React.FC<CaseDocumentsProps> = ({
   caseId
 }) => {
   const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState<any>(null);
+  const [showFileViewer, setShowFileViewer] = useState(false);
   const { toast } = useToast();
 
   // Fetch documents for this case
@@ -78,6 +81,11 @@ export const CaseDocuments: React.FC<CaseDocumentsProps> = ({
   const handleUploadSuccess = () => {
     console.log('Upload successful, refreshing documents');
     refetch();
+  };
+
+  const handleViewDocument = (document: any) => {
+    setSelectedDocument(document);
+    setShowFileViewer(true);
   };
 
   const handleDownload = async (document: any) => {
@@ -204,7 +212,11 @@ export const CaseDocuments: React.FC<CaseDocumentsProps> = ({
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1">
-                          <Button variant="ghost" size="sm">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleViewDocument(doc)}
+                          >
                             <Eye className="w-4 h-4" />
                           </Button>
                           <Button variant="ghost" size="sm" onClick={() => handleDownload(doc)}>
@@ -235,6 +247,12 @@ export const CaseDocuments: React.FC<CaseDocumentsProps> = ({
         onClose={() => setShowUploadDialog(false)} 
         caseId={caseId} 
         onUploadSuccess={handleUploadSuccess} 
+      />
+
+      <FileViewer
+        open={showFileViewer}
+        onClose={() => setShowFileViewer(false)}
+        document={selectedDocument}
       />
     </>
   );

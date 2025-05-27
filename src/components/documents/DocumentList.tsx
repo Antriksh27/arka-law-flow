@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +8,7 @@ import { format } from 'date-fns';
 import { getFileIcon } from '@/lib/fileUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { FileViewer } from './FileViewer';
 
 interface DocumentListProps {
   documents: any[];
@@ -14,7 +16,14 @@ interface DocumentListProps {
 }
 
 export const DocumentList: React.FC<DocumentListProps> = ({ documents, onRefresh }) => {
+  const [selectedDocument, setSelectedDocument] = useState<any>(null);
+  const [showFileViewer, setShowFileViewer] = useState(false);
   const { toast } = useToast();
+
+  const handleViewDocument = (document: any) => {
+    setSelectedDocument(document);
+    setShowFileViewer(true);
+  };
 
   const handleDownload = async (document: any) => {
     try {
@@ -73,94 +82,107 @@ export const DocumentList: React.FC<DocumentListProps> = ({ documents, onRefresh
   };
 
   return (
-    <div className="p-6">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>Case</TableHead>
-            <TableHead>Uploaded By</TableHead>
-            <TableHead>Date</TableHead>
-            <TableHead>Size</TableHead>
-            <TableHead>Important</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {documents.map((doc) => {
-            const FileIcon = getFileIcon(doc.file_type);
-            
-            return (
-              <TableRow key={doc.id} className="hover:bg-gray-50">
-                <TableCell>
-                  <div className="flex items-center gap-3">
-                    <FileIcon className="w-8 h-8 text-gray-500" />
-                    <div>
-                      <p className="font-medium text-gray-900">{doc.file_name}</p>
-                      <p className="text-sm text-gray-500">{doc.folder_name}</p>
+    <>
+      <div className="p-6">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Case</TableHead>
+              <TableHead>Uploaded By</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead>Size</TableHead>
+              <TableHead>Important</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {documents.map((doc) => {
+              const FileIcon = getFileIcon(doc.file_type);
+              
+              return (
+                <TableRow key={doc.id} className="hover:bg-gray-50">
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <FileIcon className="w-8 h-8 text-gray-500" />
+                      <div>
+                        <p className="font-medium text-gray-900">{doc.file_name}</p>
+                        <p className="text-sm text-gray-500">{doc.folder_name}</p>
+                      </div>
                     </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline" className="text-xs">
-                    {doc.file_type?.toUpperCase() || 'Unknown'}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <span className="text-sm text-gray-600">
-                    {doc.cases?.title || 'General'}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <span className="text-sm text-gray-600">
-                    {doc.profiles?.full_name || 'Unknown'}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <span className="text-sm text-gray-600">
-                    {format(new Date(doc.uploaded_at), 'MMM d, yyyy')}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <span className="text-sm text-gray-600">
-                    {formatFileSize(doc.file_size)}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => toggleImportant(doc)}
-                    className="p-1"
-                  >
-                    {doc.is_evidence ? (
-                      <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                    ) : (
-                      <StarOff className="w-4 h-4 text-gray-400" />
-                    )}
-                  </Button>
-                </TableCell>
-                <TableCell>
-                  <div className="flex gap-1">
-                    <Button variant="ghost" size="sm" className="p-1">
-                      <Eye className="w-4 h-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="text-xs">
+                      {doc.file_type?.toUpperCase() || 'Unknown'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-sm text-gray-600">
+                      {doc.cases?.title || 'General'}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-sm text-gray-600">
+                      {doc.profiles?.full_name || 'Unknown'}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-sm text-gray-600">
+                      {format(new Date(doc.uploaded_at), 'MMM d, yyyy')}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-sm text-gray-600">
+                      {formatFileSize(doc.file_size)}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => toggleImportant(doc)}
                       className="p-1"
-                      onClick={() => handleDownload(doc)}
                     >
-                      <Download className="w-4 h-4" />
+                      {doc.is_evidence ? (
+                        <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                      ) : (
+                        <StarOff className="w-4 h-4 text-gray-400" />
+                      )}
                     </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-1">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="p-1"
+                        onClick={() => handleViewDocument(doc)}
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="p-1"
+                        onClick={() => handleDownload(doc)}
+                      >
+                        <Download className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+
+      <FileViewer
+        open={showFileViewer}
+        onClose={() => setShowFileViewer(false)}
+        document={selectedDocument}
+      />
+    </>
   );
 };

@@ -7,6 +7,7 @@ import { getFileIcon } from '@/lib/fileUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { FileViewer } from './FileViewer';
 
 interface DocumentCardProps {
   document: any;
@@ -15,8 +16,13 @@ interface DocumentCardProps {
 
 export const DocumentCard: React.FC<DocumentCardProps> = ({ document, onRefresh }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [showFileViewer, setShowFileViewer] = useState(false);
   const { toast } = useToast();
   const FileIcon = getFileIcon(document.file_type);
+
+  const handleViewDocument = () => {
+    setShowFileViewer(true);
+  };
 
   const handleDownload = async () => {
     try {
@@ -75,83 +81,96 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({ document, onRefresh 
   };
 
   return (
-    <div
-      className={cn(
-        "bg-white rounded-xl border border-gray-200 p-4 transition-all duration-200 cursor-pointer group",
-        isHovered && "shadow-lg border-gray-300 scale-105"
-      )}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      {/* File Icon */}
-      <div className="flex flex-col items-center mb-3">
-        <div className="relative">
-          <FileIcon className="w-12 h-12 text-gray-500 mb-2" />
-          {document.is_evidence && (
-            <Star className="w-4 h-4 text-yellow-500 fill-current absolute -top-1 -right-1" />
-          )}
+    <>
+      <div
+        className={cn(
+          "bg-white rounded-xl border border-gray-200 p-4 transition-all duration-200 cursor-pointer group",
+          isHovered && "shadow-lg border-gray-300 scale-105"
+        )}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        {/* File Icon */}
+        <div className="flex flex-col items-center mb-3">
+          <div className="relative">
+            <FileIcon className="w-12 h-12 text-gray-500 mb-2" />
+            {document.is_evidence && (
+              <Star className="w-4 h-4 text-yellow-500 fill-current absolute -top-1 -right-1" />
+            )}
+          </div>
+          
+          {/* File Name */}
+          <h3 className="text-sm font-medium text-gray-900 text-center line-clamp-2 leading-tight">
+            {document.file_name}
+          </h3>
         </div>
-        
-        {/* File Name */}
-        <h3 className="text-sm font-medium text-gray-900 text-center line-clamp-2 leading-tight">
-          {document.file_name}
-        </h3>
-      </div>
 
-      {/* File Info */}
-      <div className="space-y-2 mb-3">
-        <div className="flex items-center justify-center">
-          <Badge variant="outline" className="text-xs">
-            {document.file_type?.toUpperCase() || 'Unknown'}
-          </Badge>
+        {/* File Info */}
+        <div className="space-y-2 mb-3">
+          <div className="flex items-center justify-center">
+            <Badge variant="outline" className="text-xs">
+              {document.file_type?.toUpperCase() || 'Unknown'}
+            </Badge>
+          </div>
+          
+          <div className="text-center">
+            <p className="text-xs text-gray-500">
+              {format(new Date(document.uploaded_at), 'MMM d, yyyy')}
+            </p>
+            <p className="text-xs text-gray-500">
+              {formatFileSize(document.file_size)}
+            </p>
+          </div>
         </div>
-        
-        <div className="text-center">
-          <p className="text-xs text-gray-500">
-            {format(new Date(document.uploaded_at), 'MMM d, yyyy')}
+
+        {/* Actions - Show on hover */}
+        <div className={cn(
+          "flex items-center justify-center gap-1 transition-opacity duration-200",
+          isHovered ? "opacity-100" : "opacity-0"
+        )}>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-8 w-8 p-0"
+            onClick={handleViewDocument}
+          >
+            <Eye className="w-4 h-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-8 w-8 p-0"
+            onClick={handleDownload}
+          >
+            <Download className="w-4 h-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-8 w-8 p-0"
+            onClick={toggleImportant}
+          >
+            {document.is_evidence ? (
+              <Star className="w-4 h-4 text-yellow-500 fill-current" />
+            ) : (
+              <StarOff className="w-4 h-4 text-gray-400" />
+            )}
+          </Button>
+        </div>
+
+        {/* Folder/Case Info */}
+        <div className="mt-2 pt-2 border-t border-gray-100">
+          <p className="text-xs text-gray-500 text-center truncate">
+            {document.folder_name || 'General'}
           </p>
-          <p className="text-xs text-gray-500">
-            {formatFileSize(document.file_size)}
-          </p>
         </div>
       </div>
 
-      {/* Actions - Show on hover */}
-      <div className={cn(
-        "flex items-center justify-center gap-1 transition-opacity duration-200",
-        isHovered ? "opacity-100" : "opacity-0"
-      )}>
-        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-          <Eye className="w-4 h-4" />
-        </Button>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="h-8 w-8 p-0"
-          onClick={handleDownload}
-        >
-          <Download className="w-4 h-4" />
-        </Button>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="h-8 w-8 p-0"
-          onClick={toggleImportant}
-        >
-          {document.is_evidence ? (
-            <Star className="w-4 h-4 text-yellow-500 fill-current" />
-          ) : (
-            <StarOff className="w-4 h-4 text-gray-400" />
-          )}
-        </Button>
-      </div>
-
-      {/* Folder/Case Info */}
-      <div className="mt-2 pt-2 border-t border-gray-100">
-        <p className="text-xs text-gray-500 text-center truncate">
-          {document.folder_name || 'General'}
-        </p>
-      </div>
-    </div>
+      <FileViewer
+        open={showFileViewer}
+        onClose={() => setShowFileViewer(false)}
+        document={document}
+      />
+    </>
   );
 };
