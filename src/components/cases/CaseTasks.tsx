@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckSquare, Plus, Calendar, User, Tag, Clock } from 'lucide-react';
+import { CheckSquare, Plus, Calendar, User, Tag } from 'lucide-react';
 import { format } from 'date-fns';
 import { CreateTaskDialog } from '../tasks/CreateTaskDialog';
 import { useToast } from '@/hooks/use-toast';
@@ -22,6 +21,7 @@ export const CaseTasks: React.FC<CaseTasksProps> = ({ caseId }) => {
   const { data: tasks, isLoading } = useQuery({
     queryKey: ['case-tasks', caseId],
     queryFn: async () => {
+      console.log('Fetching case tasks for caseId:', caseId);
       const { data, error } = await supabase
         .from('tasks')
         .select(`
@@ -32,7 +32,11 @@ export const CaseTasks: React.FC<CaseTasksProps> = ({ caseId }) => {
         .eq('matter_id', caseId)
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching case tasks:', error);
+        throw error;
+      }
+      console.log('Fetched case tasks:', data);
       return data || [];
     }
   });
@@ -48,6 +52,7 @@ export const CaseTasks: React.FC<CaseTasksProps> = ({ caseId }) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['case-tasks', caseId] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
       toast({ title: "Task updated successfully" });
     },
     onError: () => {
