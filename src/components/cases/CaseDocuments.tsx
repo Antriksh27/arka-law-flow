@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -61,7 +60,7 @@ export const CaseDocuments: React.FC<CaseDocumentsProps> = ({ caseId }) => {
     }
   };
 
-  const toggleEvidence = async (document: any) => {
+  const toggleImportant = async (document: any) => {
     try {
       const { error } = await supabase
         .from('documents')
@@ -71,8 +70,8 @@ export const CaseDocuments: React.FC<CaseDocumentsProps> = ({ caseId }) => {
       if (error) throw error;
       
       toast({
-        title: document.is_evidence ? "Removed from evidence" : "Marked as evidence",
-        description: `Document ${document.is_evidence ? 'unmarked' : 'marked'} as evidence`
+        title: document.is_evidence ? "Removed from important" : "Marked as important",
+        description: `Document ${document.is_evidence ? 'unmarked' : 'marked'} as important`
       });
       
       refetch();
@@ -110,7 +109,7 @@ export const CaseDocuments: React.FC<CaseDocumentsProps> = ({ caseId }) => {
                   <TableHead>Uploaded By</TableHead>
                   <TableHead>Upload Date</TableHead>
                   <TableHead>Size</TableHead>
-                  <TableHead>Evidence</TableHead>
+                  <TableHead>Important</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -140,7 +139,7 @@ export const CaseDocuments: React.FC<CaseDocumentsProps> = ({ caseId }) => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => toggleEvidence(doc)}
+                          onClick={() => toggleImportant(doc)}
                           className="p-1"
                         >
                           {doc.is_evidence ? (

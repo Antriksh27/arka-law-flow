@@ -45,7 +45,7 @@ export const DocumentsSidebar: React.FC<DocumentsSidebarProps> = ({
   const sidebarItems = [
     { id: 'all', name: 'All Documents', icon: Folder, count: null },
     { id: 'recent', name: 'Recently Added', icon: Clock, count: null },
-    { id: 'starred', name: 'Evidence', icon: Star, count: null }
+    { id: 'starred', name: 'Important', icon: Star, count: null }
   ];
 
   return (

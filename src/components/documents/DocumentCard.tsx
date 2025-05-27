@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -44,7 +43,7 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({ document, onRefresh 
     }
   };
 
-  const toggleEvidence = async () => {
+  const toggleImportant = async () => {
     try {
       const { error } = await supabase
         .from('documents')
@@ -54,8 +53,8 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({ document, onRefresh 
       if (error) throw error;
       
       toast({
-        title: document.is_evidence ? "Removed from evidence" : "Marked as evidence",
-        description: `Document ${document.is_evidence ? 'unmarked' : 'marked'} as evidence`
+        title: document.is_evidence ? "Removed from important" : "Marked as important",
+        description: `Document ${document.is_evidence ? 'unmarked' : 'marked'} as important`
       });
       
       onRefresh();
@@ -137,7 +136,7 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({ document, onRefresh 
           variant="ghost" 
           size="sm" 
           className="h-8 w-8 p-0"
-          onClick={toggleEvidence}
+          onClick={toggleImportant}
         >
           {document.is_evidence ? (
             <Star className="w-4 h-4 text-yellow-500 fill-current" />

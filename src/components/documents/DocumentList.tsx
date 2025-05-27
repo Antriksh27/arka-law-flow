@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -42,7 +41,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({ documents, onRefresh
     }
   };
 
-  const toggleEvidence = async (document: any) => {
+  const toggleImportant = async (document: any) => {
     try {
       const { error } = await supabase
         .from('documents')
@@ -52,8 +51,8 @@ export const DocumentList: React.FC<DocumentListProps> = ({ documents, onRefresh
       if (error) throw error;
       
       toast({
-        title: document.is_evidence ? "Removed from evidence" : "Marked as evidence",
-        description: `Document ${document.is_evidence ? 'unmarked' : 'marked'} as evidence`
+        title: document.is_evidence ? "Removed from important" : "Marked as important",
+        description: `Document ${document.is_evidence ? 'unmarked' : 'marked'} as important`
       });
       
       onRefresh();
@@ -84,7 +83,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({ documents, onRefresh
             <TableHead>Uploaded By</TableHead>
             <TableHead>Date</TableHead>
             <TableHead>Size</TableHead>
-            <TableHead>Evidence</TableHead>
+            <TableHead>Important</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -132,7 +131,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({ documents, onRefresh
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => toggleEvidence(doc)}
+                    onClick={() => toggleImportant(doc)}
                     className="p-1"
                   >
                     {doc.is_evidence ? (

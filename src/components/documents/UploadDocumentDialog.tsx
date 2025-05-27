@@ -10,43 +10,44 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Upload, X, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+
 interface UploadDocumentDialogProps {
   open: boolean;
   onClose: () => void;
   caseId?: string;
 }
+
 interface UploadFormData {
   files: FileList;
   case_id?: string;
   is_evidence: boolean;
 }
+
 export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
   open,
   onClose,
   caseId
 }) => {
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  
   const {
     register,
     handleSubmit,
     setValue,
     watch,
     reset,
-    formState: {
-      isSubmitting
-    }
+    formState: { isSubmitting }
   } = useForm<UploadFormData>({
     defaultValues: {
       case_id: caseId || 'all',
       is_evidence: false
     }
   });
+  
   const selectedCaseId = watch('case_id');
-  const isEvidence = watch('is_evidence');
+  const isImportant = watch('is_evidence');
 
   // Fetch cases for dropdown
   const {
@@ -146,7 +147,8 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
     if (kb < 1024) return `${kb.toFixed(1)} KB`;
     return `${(kb / 1024).toFixed(1)} MB`;
   };
-  return <Dialog open={open} onOpenChange={onClose}>
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl bg-white border border-gray-200 shadow-lg">
         <DialogHeader className="pb-4 border-b border-gray-100">
           <DialogTitle className="text-xl font-semibold text-gray-900 flex items-center gap-2">
@@ -207,18 +209,24 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
               </SelectTrigger>
               <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
                 <SelectItem value="all" className="hover:bg-gray-50">No Case (General Documents)</SelectItem>
-                {cases.map(case_item => <SelectItem key={case_item.id} value={case_item.id} className="hover:bg-gray-50">
+                {cases.map(case_item => (
+                  <SelectItem key={case_item.id} value={case_item.id} className="hover:bg-gray-50">
                     {case_item.title}
-                  </SelectItem>)}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
 
-          {/* Evidence Toggle */}
+          {/* Important Toggle */}
           <div className="flex items-center space-x-2">
-            <Checkbox id="is_evidence" checked={isEvidence} onCheckedChange={checked => setValue('is_evidence', !!checked)} />
+            <Checkbox 
+              id="is_evidence" 
+              checked={isImportant} 
+              onCheckedChange={checked => setValue('is_evidence', !!checked)} 
+            />
             <Label htmlFor="is_evidence" className="text-sm font-medium text-gray-700">
-              Mark as Evidence
+              Mark as Important
             </Label>
           </div>
 
@@ -233,5 +241,6 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
           </div>
         </form>
       </DialogContent>
-    </Dialog>;
+    </Dialog>
+  );
 };
