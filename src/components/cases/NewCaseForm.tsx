@@ -1,0 +1,331 @@
+
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+
+interface NewCaseFormProps {
+  onSuccess: () => void;
+  onCancel: () => void;
+  preSelectedClientId?: string;
+}
+
+interface CaseFormData {
+  title: string;
+  description?: string;
+  client_id?: string;
+  case_type: string;
+  status: string;
+  priority: string;
+  case_number?: string;
+  filing_date?: string;
+  court?: string;
+  cnr_number?: string;
+  filing_number?: string;
+  petitioner?: string;
+  respondent?: string;
+  advocate_name?: string;
+  district?: string;
+}
+
+export const NewCaseForm: React.FC<NewCaseFormProps> = ({
+  onSuccess,
+  onCancel,
+  preSelectedClientId
+}) => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors, isSubmitting }
+  } = useForm<CaseFormData>({
+    defaultValues: {
+      case_type: 'civil',
+      status: 'open',
+      priority: 'medium',
+      client_id: preSelectedClientId || ''
+    }
+  });
+
+  // Watch form values for controlled components
+  const watchedValues = watch(['case_type', 'status', 'priority', 'client_id']);
+
+  // Fetch clients for assignment
+  const { data: clients = [] } = useQuery({
+    queryKey: ['clients-for-cases'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('id, full_name')
+        .order('full_name');
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
+  const createCaseMutation = useMutation({
+    mutationFn: async (data: CaseFormData) => {
+      const { error } = await supabase
+        .from('cases')
+        .insert([{
+          title: data.title,
+          description: data.description || null,
+          client_id: data.client_id || null,
+          case_type: data.case_type,
+          status: data.status,
+          priority: data.priority,
+          case_number: data.case_number || null,
+          filing_date: data.filing_date ? new Date(data.filing_date).toISOString().split('T')[0] : null,
+          court: data.court || null,
+          cnr_number: data.cnr_number || null,
+          filing_number: data.filing_number || null,
+          petitioner: data.petitioner || null,
+          respondent: data.respondent || null,
+          advocate_name: data.advocate_name || null,
+          district: data.district || null,
+          created_by: (await supabase.auth.getUser()).data.user?.id
+        }]);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cases'] });
+      queryClient.invalidateQueries({ queryKey: ['client-cases'] });
+      toast({
+        title: "Success",
+        description: "Case created successfully"
+      });
+      onSuccess();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to create case",
+        variant: "destructive"
+      });
+      console.error('Error creating case:', error);
+    }
+  });
+
+  const onSubmit = (data: CaseFormData) => {
+    if (!data.title.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a case title",
+        variant: "destructive"
+      });
+      return;
+    }
+    createCaseMutation.mutate(data);
+  };
+
+  return (
+    <div className="max-w-full h-screen p-8 bg-slate-50 overflow-y-auto">
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-6">
+          <h1 className="text-2xl font-semibold text-gray-900">Add New Case</h1>
+          <p className="text-gray-600 mt-2">Enter the case information below.</p>
+        </div>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="md:col-span-2">
+              <Label htmlFor="title">Case Title *</Label>
+              <Input 
+                id="title" 
+                {...register('title', { required: 'Case title is required' })} 
+                className="mt-2"
+                placeholder="Enter case title..."
+              />
+              {errors.title && <p className="text-sm text-red-600 mt-1">{errors.title.message}</p>}
+            </div>
+
+            <div>
+              <Label htmlFor="client_id">Client</Label>
+              <select 
+                id="client_id" 
+                {...register('client_id')} 
+                className="w-full px-3 py-2 mt-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={!!preSelectedClientId}
+              >
+                <option value="">Select a client...</option>
+                {clients.map(client => (
+                  <option key={client.id} value={client.id}>
+                    {client.full_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <Label htmlFor="case_type">Case Type</Label>
+              <select 
+                id="case_type" 
+                {...register('case_type')} 
+                className="w-full px-3 py-2 mt-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="civil">Civil</option>
+                <option value="criminal">Criminal</option>
+                <option value="corporate">Corporate</option>
+                <option value="family">Family</option>
+                <option value="tax">Tax</option>
+                <option value="labor">Labor</option>
+                <option value="intellectual_property">Intellectual Property</option>
+                <option value="real_estate">Real Estate</option>
+                <option value="immigration">Immigration</option>
+                <option value="constitutional">Constitutional</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <div>
+              <Label htmlFor="status">Status</Label>
+              <select 
+                id="status" 
+                {...register('status')} 
+                className="w-full px-3 py-2 mt-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="open">Open</option>
+                <option value="in_court">In Court</option>
+                <option value="on_hold">On Hold</option>
+                <option value="closed">Closed</option>
+              </select>
+            </div>
+
+            <div>
+              <Label htmlFor="priority">Priority</Label>
+              <select 
+                id="priority" 
+                {...register('priority')} 
+                className="w-full px-3 py-2 mt-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+
+            <div>
+              <Label htmlFor="case_number">Case Number</Label>
+              <Input 
+                id="case_number" 
+                {...register('case_number')} 
+                className="mt-2"
+                placeholder="Enter case number..."
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="filing_date">Filing Date</Label>
+              <Input 
+                id="filing_date" 
+                type="date"
+                {...register('filing_date')} 
+                className="mt-2"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="court">Court</Label>
+              <Input 
+                id="court" 
+                {...register('court')} 
+                className="mt-2"
+                placeholder="Enter court name..."
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="cnr_number">CNR Number</Label>
+              <Input 
+                id="cnr_number" 
+                {...register('cnr_number')} 
+                className="mt-2"
+                placeholder="Enter CNR number..."
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="filing_number">Filing Number</Label>
+              <Input 
+                id="filing_number" 
+                {...register('filing_number')} 
+                className="mt-2"
+                placeholder="Enter filing number..."
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="petitioner">Petitioner</Label>
+              <Input 
+                id="petitioner" 
+                {...register('petitioner')} 
+                className="mt-2"
+                placeholder="Enter petitioner name..."
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="respondent">Respondent</Label>
+              <Input 
+                id="respondent" 
+                {...register('respondent')} 
+                className="mt-2"
+                placeholder="Enter respondent name..."
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="advocate_name">Advocate Name</Label>
+              <Input 
+                id="advocate_name" 
+                {...register('advocate_name')} 
+                className="mt-2"
+                placeholder="Enter advocate name..."
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="district">District</Label>
+              <Input 
+                id="district" 
+                {...register('district')} 
+                className="mt-2"
+                placeholder="Enter district..."
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <Label htmlFor="description">Case Description</Label>
+              <textarea 
+                id="description" 
+                {...register('description')} 
+                className="w-full px-3 py-2 mt-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                rows={4}
+                placeholder="Enter case description..."
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-4 pt-6 border-t">
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Creating...' : 'Create Case'}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
