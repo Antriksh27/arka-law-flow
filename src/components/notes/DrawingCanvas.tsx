@@ -20,9 +20,10 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange })
     const context = canvas.getContext('2d');
     if (!context) return;
 
-    // Set canvas size
-    canvas.width = 600;
-    canvas.height = 400;
+    // Set canvas size to match display size
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
 
     // Set default styles
     context.strokeStyle = currentColor;
@@ -45,18 +46,29 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange })
     context.lineWidth = lineWidth;
   }, [currentColor, lineWidth]);
 
+  const getMousePos = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY
+    };
+  };
+
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     const context = canvas?.getContext('2d');
     if (!canvas || !context) return;
 
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
+    const pos = getMousePos(e);
     setIsDrawing(true);
     context.beginPath();
-    context.moveTo(x, y);
+    context.moveTo(pos.x, pos.y);
   };
 
   const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -66,11 +78,8 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange })
     const context = canvas?.getContext('2d');
     if (!canvas || !context) return;
 
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    context.lineTo(x, y);
+    const pos = getMousePos(e);
+    context.lineTo(pos.x, pos.y);
     context.stroke();
 
     // Update the drawing data
@@ -160,12 +169,11 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange })
       <div className="border border-gray-300 rounded-lg overflow-hidden">
         <canvas
           ref={canvasRef}
-          className="block cursor-crosshair bg-white"
+          className="block cursor-crosshair bg-white w-full h-96"
           onMouseDown={startDrawing}
           onMouseMove={draw}
           onMouseUp={stopDrawing}
           onMouseLeave={stopDrawing}
-          style={{ width: '100%', height: '400px' }}
         />
       </div>
     </div>
