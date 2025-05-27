@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -26,7 +25,7 @@ interface TaskFormData {
   due_date?: string;
   tags?: string;
   link_type?: 'case' | 'client' | 'none';
-  matter_id?: string;
+  case_id?: string;
   client_id?: string;
 }
 
@@ -50,7 +49,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       priority: 'medium',
       status: 'todo',
       link_type: caseId ? 'case' : 'none',
-      matter_id: caseId || ''
+      case_id: caseId || ''
     }
   });
 
@@ -112,7 +111,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
         priority: data.priority,
         status: data.status,
         due_date: data.due_date ? new Date(data.due_date).toISOString().split('T')[0] : null,
-        matter_id: data.link_type === 'case' ? data.matter_id || null : null,
+        matter_id: data.link_type === 'case' ? data.case_id || null : null,
         client_id: data.link_type === 'client' ? data.client_id || null : null,
         created_by: user.data.user.id,
         tags: data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(Boolean) : []
@@ -196,10 +195,10 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
 
           {linkType === 'case' && (
             <div className="space-y-2">
-              <Label htmlFor="matter_id" className="text-sm font-medium text-gray-700">
+              <Label htmlFor="case_id" className="text-sm font-medium text-gray-700">
                 Select Case
               </Label>
-              <Select onValueChange={(value) => setValue('matter_id', value)}>
+              <Select onValueChange={(value) => setValue('case_id', value)}>
                 <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                   <SelectValue placeholder="Select a case..." />
                 </SelectTrigger>
