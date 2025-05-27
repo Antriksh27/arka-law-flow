@@ -1,13 +1,15 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Download, Eye, Star, StarOff, MoreVertical } from 'lucide-react';
+import { Download, Eye, Star, StarOff, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { getFileIcon } from '@/lib/fileUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { FileViewer } from './FileViewer';
+import { DeleteDocumentDialog } from './DeleteDocumentDialog';
 
 interface DocumentCardProps {
   document: any;
@@ -17,6 +19,7 @@ interface DocumentCardProps {
 export const DocumentCard: React.FC<DocumentCardProps> = ({ document, onRefresh }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [showFileViewer, setShowFileViewer] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { toast } = useToast();
   const FileIcon = getFileIcon(document.file_type);
 
@@ -156,6 +159,14 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({ document, onRefresh 
               <StarOff className="w-4 h-4 text-gray-400" />
             )}
           </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-8 w-8 p-0 hover:text-red-600"
+            onClick={() => setShowDeleteDialog(true)}
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
         </div>
 
         {/* Folder/Case Info */}
@@ -170,6 +181,13 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({ document, onRefresh 
         open={showFileViewer}
         onClose={() => setShowFileViewer(false)}
         document={document}
+      />
+
+      <DeleteDocumentDialog
+        open={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        document={document}
+        onDeleted={onRefresh}
       />
     </>
   );

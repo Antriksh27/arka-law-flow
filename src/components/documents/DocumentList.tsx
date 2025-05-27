@@ -2,22 +2,26 @@ import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Download, Eye, Star, StarOff } from 'lucide-react';
+import { Download, Eye, Star, StarOff, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { getFileIcon } from '@/lib/fileUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { FileViewer } from './FileViewer';
+import { DeleteDocumentDialog } from './DeleteDocumentDialog';
+
 interface DocumentListProps {
   documents: any[];
   onRefresh: () => void;
 }
+
 export const DocumentList: React.FC<DocumentListProps> = ({
   documents,
   onRefresh
 }) => {
   const [selectedDocument, setSelectedDocument] = useState<any>(null);
   const [showFileViewer, setShowFileViewer] = useState(false);
+  const [documentToDelete, setDocumentToDelete] = useState<any>(null);
   const {
     toast
   } = useToast();
@@ -75,7 +79,8 @@ export const DocumentList: React.FC<DocumentListProps> = ({
     if (kb < 1024) return `${kb.toFixed(1)} KB`;
     return `${(kb / 1024).toFixed(1)} MB`;
   };
-  return <>
+  return (
+    <>
       <div className="p-6">
         <Table>
           <TableHeader>
@@ -92,8 +97,9 @@ export const DocumentList: React.FC<DocumentListProps> = ({
           </TableHeader>
           <TableBody>
             {documents.map(doc => {
-            const FileIcon = getFileIcon(doc.file_type);
-            return <TableRow key={doc.id} className="hover:bg-gray-50">
+              const FileIcon = getFileIcon(doc.file_type);
+              return (
+                <TableRow key={doc.id} className="hover:bg-gray-50">
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <FileIcon className="w-8 h-8 text-gray-500" />
@@ -130,7 +136,11 @@ export const DocumentList: React.FC<DocumentListProps> = ({
                   </TableCell>
                   <TableCell>
                     <Button variant="ghost" size="sm" onClick={() => toggleImportant(doc)} className="p-1">
-                      {doc.is_evidence ? <Star className="w-4 h-4 text-yellow-500 fill-current" /> : <StarOff className="w-4 h-4 text-gray-400" />}
+                      {doc.is_evidence ? (
+                        <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                      ) : (
+                        <StarOff className="w-4 h-4 text-gray-400" />
+                      )}
                     </Button>
                   </TableCell>
                   <TableCell>
@@ -141,14 +151,35 @@ export const DocumentList: React.FC<DocumentListProps> = ({
                       <Button variant="ghost" size="sm" className="p-1" onClick={() => handleDownload(doc)}>
                         <Download className="w-4 h-4" />
                       </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="p-1 hover:text-red-600" 
+                        onClick={() => setDocumentToDelete(doc)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     </div>
                   </TableCell>
-                </TableRow>;
-          })}
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>
 
-      <FileViewer open={showFileViewer} onClose={() => setShowFileViewer(false)} document={selectedDocument} />
-    </>;
+      <FileViewer
+        open={showFileViewer}
+        onClose={() => setShowFileViewer(false)}
+        document={selectedDocument}
+      />
+
+      <DeleteDocumentDialog
+        open={!!documentToDelete}
+        onClose={() => setDocumentToDelete(null)}
+        document={documentToDelete}
+        onDeleted={onRefresh}
+      />
+    </>
+  );
 };
