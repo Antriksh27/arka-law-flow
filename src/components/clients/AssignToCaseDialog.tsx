@@ -101,8 +101,8 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
   return (
     <>
       <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent className="max-w-2xl max-h-[80vh] bg-white">
-          <DialogHeader>
+        <DialogContent className="max-w-4xl w-full max-h-[90vh] bg-white flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle className="text-xl font-semibold">
               {view === 'selection' && `Link ${clientName} to Case`}
               {view === 'existing' && 'Select Existing Case'}
@@ -110,104 +110,110 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
             </DialogTitle>
           </DialogHeader>
 
-          {view === 'selection' && (
-            <div className="space-y-4 py-6">
-              <Button
-                onClick={() => setView('existing')}
-                className="w-full h-20 flex items-center justify-start gap-4 text-left bg-white border border-gray-200 hover:bg-gray-50 text-gray-900"
-                variant="outline"
-              >
-                <FileText className="w-8 h-8 text-blue-600" />
-                <div>
-                  <div className="text-lg font-medium">Link Existing Case</div>
-                  <div className="text-sm text-gray-500">Choose from existing cases in your system</div>
-                </div>
-              </Button>
-
-              <Button
-                onClick={() => setShowAddCaseDialog(true)}
-                className="w-full h-20 flex items-center justify-start gap-4 text-left bg-white border border-gray-200 hover:bg-gray-50 text-gray-900"
-                variant="outline"
-              >
-                <Plus className="w-8 h-8 text-green-600" />
-                <div>
-                  <div className="text-lg font-medium">Add New Case</div>
-                  <div className="text-sm text-gray-500">Create a new case for this client</div>
-                </div>
-              </Button>
-            </div>
-          )}
-
-          {view === 'existing' && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
+          <div className="flex-1 overflow-hidden">
+            {view === 'selection' && (
+              <div className="space-y-4 py-6">
                 <Button
+                  onClick={() => setView('existing')}
+                  className="w-full h-20 flex items-center justify-start gap-4 text-left bg-white border border-gray-200 hover:bg-gray-50 text-gray-900"
                   variant="outline"
-                  onClick={() => setView('selection')}
-                  size="sm"
-                  className="flex items-center gap-2"
                 >
-                  <ArrowLeft className="w-4 h-4" />
-                  Back
+                  <FileText className="w-8 h-8 text-blue-600" />
+                  <div>
+                    <div className="text-lg font-medium">Link Existing Case</div>
+                    <div className="text-sm text-gray-500">Choose from existing cases in your system</div>
+                  </div>
+                </Button>
+
+                <Button
+                  onClick={() => setShowAddCaseDialog(true)}
+                  className="w-full h-20 flex items-center justify-start gap-4 text-left bg-white border border-gray-200 hover:bg-gray-50 text-gray-900"
+                  variant="outline"
+                >
+                  <Plus className="w-8 h-8 text-green-600" />
+                  <div>
+                    <div className="text-lg font-medium">Add New Case</div>
+                    <div className="text-sm text-gray-500">Create a new case for this client</div>
+                  </div>
                 </Button>
               </div>
+            )}
 
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  placeholder="Search cases by title, type, or client..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+            {view === 'existing' && (
+              <div className="space-y-4 h-full flex flex-col">
+                <div className="flex items-center justify-between flex-shrink-0">
+                  <Button
+                    variant="outline"
+                    onClick={() => setView('selection')}
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    Back
+                  </Button>
+                </div>
 
-              <ScrollArea className="h-96 w-full rounded-md border p-4">
-                {isLoading ? (
-                  <div className="text-center py-8 text-gray-500">
-                    Loading cases...
-                  </div>
-                ) : filteredCases.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    {searchQuery ? 'No cases found matching your search' : 'No cases found'}
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {filteredCases.map((case_item) => (
-                      <div
-                        key={case_item.id}
-                        className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors"
-                        onClick={() => handleAssignToCase(case_item.id)}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <h3 className="font-medium text-gray-900 mb-2">
-                              {case_item.title}
-                            </h3>
-                            <div className="flex items-center gap-4 text-sm text-gray-500">
-                              <Badge
-                                variant="secondary"
-                                className={getStatusColor(case_item.status)}
-                              >
-                                {case_item.status?.replace('_', ' ')}
-                              </Badge>
-                              <span className="capitalize">{case_item.case_type}</span>
-                              {case_item.clients && (
-                                <span>Current client: {case_item.clients.full_name}</span>
-                              )}
-                            </div>
-                          </div>
-                          <Button size="sm" variant="outline">
-                            Link Case
-                          </Button>
+                <div className="relative flex-shrink-0">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    placeholder="Search cases by title, type, or client..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+
+                <div className="flex-1 min-h-0">
+                  <ScrollArea className="h-full w-full rounded-md border">
+                    <div className="p-4">
+                      {isLoading ? (
+                        <div className="text-center py-8 text-gray-500">
+                          Loading cases...
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </ScrollArea>
-            </div>
-          )}
+                      ) : filteredCases.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">
+                          {searchQuery ? 'No cases found matching your search' : 'No cases found'}
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {filteredCases.map((case_item) => (
+                            <div
+                              key={case_item.id}
+                              className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors"
+                              onClick={() => handleAssignToCase(case_item.id)}
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <h3 className="font-medium text-gray-900 mb-2">
+                                    {case_item.title}
+                                  </h3>
+                                  <div className="flex items-center gap-4 text-sm text-gray-500">
+                                    <Badge
+                                      variant="secondary"
+                                      className={getStatusColor(case_item.status)}
+                                    >
+                                      {case_item.status?.replace('_', ' ')}
+                                    </Badge>
+                                    <span className="capitalize">{case_item.case_type}</span>
+                                    {case_item.clients && (
+                                      <span>Current client: {case_item.clients.full_name}</span>
+                                    )}
+                                  </div>
+                                </div>
+                                <Button size="sm" variant="outline">
+                                  Link Case
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </ScrollArea>
+                </div>
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 
