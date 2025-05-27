@@ -52,7 +52,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
   const selectedCaseId = watch('case_id');
   const isImportant = watch('is_evidence');
 
-  // Fetch cases for dropdown - simple query without joins
+  // Fetch cases for dropdown
   const { data: cases = [] } = useQuery({
     queryKey: ['cases-for-upload'],
     queryFn: async () => {
@@ -102,7 +102,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
 
             console.log('File uploaded to storage:', uploadData.path);
 
-            // Insert document record with minimal data to avoid triggers
+            // Insert document record directly without relying on triggers
             const documentData = {
               file_name: file.name,
               file_url: uploadData.path,
@@ -112,14 +112,12 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
               uploaded_by: user.id,
               is_evidence: data.is_evidence,
               uploaded_at: new Date().toISOString(),
-              // Set these explicitly to avoid trigger issues
-              firm_id: null,
+              firm_id: null, // Set explicitly
               folder_name: data.case_id === 'all' ? 'General Documents' : null
             };
 
             console.log('Creating document record:', documentData);
 
-            // Use a direct insert to bypass any problematic triggers
             const { data: insertData, error: insertError } = await supabase
               .from('documents')
               .insert(documentData)

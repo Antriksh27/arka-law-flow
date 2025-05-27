@@ -21,14 +21,14 @@ export const CaseDocuments: React.FC<CaseDocumentsProps> = ({
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const { toast } = useToast();
 
-  // Fetch documents with a simple query - no joins to avoid recursion
+  // Fetch documents for this case
   const { data: documents = [], isLoading, refetch } = useQuery({
     queryKey: ['case-documents', caseId],
     queryFn: async () => {
       try {
         console.log('Fetching documents for case:', caseId);
         
-        // Simple query - just get the documents
+        // Get documents for this case
         const { data: docs, error: docsError } = await supabase
           .from('documents')
           .select('*')
@@ -42,10 +42,31 @@ export const CaseDocuments: React.FC<CaseDocumentsProps> = ({
         
         console.log('Documents fetched successfully:', docs?.length || 0);
         
-        // Return documents with a default uploader name to avoid profile lookups
+        // Get uploader names separately
+        if (docs && docs.length > 0) {
+          const uploaderIds = [...new Set(docs.map(doc => doc.uploaded_by).filter(Boolean))];
+          
+          if (uploaderIds.length > 0) {
+            const { data: profiles } = await supabase
+              .from('profiles')
+              .select('id, full_name')
+              .in('id', uploaderIds);
+            
+            const profileMap = profiles?.reduce((acc, profile) => {
+              acc[profile.id] = profile.full_name;
+              return acc;
+            }, {} as Record<string, string>) || {};
+            
+            return docs.map(doc => ({
+              ...doc,
+              uploader_name: profileMap[doc.uploaded_by] || 'Unknown User'
+            }));
+          }
+        }
+        
         return docs?.map(doc => ({ 
           ...doc, 
-          uploader_name: 'User' // Simple fallback to avoid profile queries
+          uploader_name: 'Unknown User'
         })) || [];
       } catch (error) {
         console.error('Error in document query:', error);
