@@ -291,7 +291,7 @@ const Tasks = () => {
             <CheckSquare className="w-12 h-12 mx-auto mb-4 text-gray-300" />
             <p className="text-lg font-medium">No tasks found</p>
             <p className="text-gray-400 mb-6">Get started by creating your first task</p>
-            <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => setShowCreateDialog(true)}>
+            <Button onClick={() => setShowCreateDialog(true)} className="bg-slate-800 hover:bg-slate-700">
               <Plus className="w-4 h-4 mr-2" />
               Create First Task
             </Button>
