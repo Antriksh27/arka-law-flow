@@ -21,14 +21,14 @@ export const CaseDocuments: React.FC<CaseDocumentsProps> = ({
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const { toast } = useToast();
 
-  // Fetch documents without profile joins to avoid recursion
+  // Fetch documents with a simple query - no joins to avoid recursion
   const { data: documents = [], isLoading, refetch } = useQuery({
     queryKey: ['case-documents', caseId],
     queryFn: async () => {
       try {
         console.log('Fetching documents for case:', caseId);
         
-        // First, get documents without any joins
+        // Simple query - just get the documents
         const { data: docs, error: docsError } = await supabase
           .from('documents')
           .select('*')
@@ -40,31 +40,13 @@ export const CaseDocuments: React.FC<CaseDocumentsProps> = ({
           throw docsError;
         }
         
-        console.log('Documents fetched:', docs);
+        console.log('Documents fetched successfully:', docs?.length || 0);
         
-        // Then fetch profile names separately to avoid recursion
-        if (docs && docs.length > 0) {
-          const uploaderIds = [...new Set(docs.map(doc => doc.uploaded_by).filter(Boolean))];
-          
-          if (uploaderIds.length > 0) {
-            const { data: profiles, error: profilesError } = await supabase
-              .from('profiles')
-              .select('id, full_name')
-              .in('id', uploaderIds);
-            
-            if (!profilesError && profiles) {
-              // Map profile names to documents
-              const profileMap = new Map(profiles.map(p => [p.id, p.full_name]));
-              return docs.map(doc => ({
-                ...doc,
-                uploader_name: profileMap.get(doc.uploaded_by) || 'Unknown'
-              }));
-            }
-          }
-        }
-        
-        // Return documents with default uploader name if profile fetch fails
-        return docs?.map(doc => ({ ...doc, uploader_name: 'Unknown' })) || [];
+        // Return documents with a default uploader name to avoid profile lookups
+        return docs?.map(doc => ({ 
+          ...doc, 
+          uploader_name: 'User' // Simple fallback to avoid profile queries
+        })) || [];
       } catch (error) {
         console.error('Error in document query:', error);
         throw error;

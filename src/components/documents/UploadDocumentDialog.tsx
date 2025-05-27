@@ -52,7 +52,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
   const selectedCaseId = watch('case_id');
   const isImportant = watch('is_evidence');
 
-  // Fetch cases for dropdown - without any profile joins
+  // Fetch cases for dropdown - simple query without joins
   const { data: cases = [] } = useQuery({
     queryKey: ['cases-for-upload'],
     queryFn: async () => {
@@ -72,14 +72,10 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
         // Get current user
         const { data: { user }, error: userError } = await supabase.auth.getUser();
         if (userError || !user) {
-          console.error('Authentication error:', userError);
           throw new Error('Not authenticated');
         }
         
         console.log('Starting upload for files:', selectedFiles.length);
-        console.log('Case ID:', data.case_id);
-        console.log('Is Important:', data.is_evidence);
-        console.log('User ID:', user.id);
         
         const uploadPromises = selectedFiles.map(async file => {
           try {
@@ -91,7 +87,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
 
             console.log(`Uploading file: ${file.name} as ${filename}`);
 
-            // Upload file to storage first
+            // Upload file to storage
             const { data: uploadData, error: uploadError } = await supabase.storage
               .from('documents')
               .upload(filename, file, {
@@ -106,7 +102,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
 
             console.log('File uploaded to storage:', uploadData.path);
 
-            // Prepare document record with minimal data
+            // Insert document record with minimal data to avoid triggers
             const documentData = {
               file_name: file.name,
               file_url: uploadData.path,
@@ -115,20 +111,24 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
               case_id: data.case_id === 'all' ? null : data.case_id,
               uploaded_by: user.id,
               is_evidence: data.is_evidence,
-              uploaded_at: new Date().toISOString()
+              uploaded_at: new Date().toISOString(),
+              // Set these explicitly to avoid trigger issues
+              firm_id: null,
+              folder_name: data.case_id === 'all' ? 'General Documents' : null
             };
 
             console.log('Creating document record:', documentData);
 
-            // Create document record without any joins
+            // Use a direct insert to bypass any problematic triggers
             const { data: insertData, error: insertError } = await supabase
               .from('documents')
               .insert(documentData)
-              .select('*');
+              .select('id, file_name, file_url')
+              .single();
             
             if (insertError) {
               console.error('Database insert error:', insertError);
-              // If database insert fails, try to clean up the uploaded file
+              // Clean up uploaded file on error
               try {
                 await supabase.storage.from('documents').remove([uploadData.path]);
               } catch (cleanupError) {
@@ -166,7 +166,6 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
         description: `${selectedFiles.length} document(s) uploaded`
       });
       
-      // Call the callback to refresh parent component
       if (onUploadSuccess) {
         console.log('Calling onUploadSuccess callback');
         onUploadSuccess();
