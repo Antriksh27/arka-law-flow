@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -53,15 +52,14 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
   const isImportant = watch('is_evidence');
 
   // Fetch cases for dropdown
-  const {
-    data: cases = []
-  } = useQuery({
+  const { data: cases = [] } = useQuery({
     queryKey: ['cases-for-upload'],
     queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from('cases').select('id, title').eq('status', 'open').order('title');
+      const { data, error } = await supabase
+        .from('cases')
+        .select('id, title')
+        .eq('status', 'open')
+        .order('title');
       if (error) throw error;
       return data || [];
     }
@@ -69,60 +67,71 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
 
   const uploadMutation = useMutation({
     mutationFn: async (data: UploadFormData) => {
-      const user = await supabase.auth.getUser();
-      if (!user.data.user) throw new Error('Not authenticated');
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        console.error('Authentication error:', userError);
+        throw new Error('Not authenticated');
+      }
       
       console.log('Starting upload for files:', selectedFiles.length);
       console.log('Case ID:', data.case_id);
       console.log('Is Important:', data.is_evidence);
       
       const uploadPromises = selectedFiles.map(async file => {
-        // Generate unique filename
-        const timestamp = Date.now();
-        const fileExtension = file.name.split('.').pop();
-        const filename = `${timestamp}-${file.name}`;
+        try {
+          // Generate unique filename
+          const timestamp = Date.now();
+          const randomId = Math.random().toString(36).substring(2);
+          const fileExtension = file.name.split('.').pop();
+          const filename = `${timestamp}-${randomId}.${fileExtension}`;
 
-        console.log(`Uploading file: ${file.name} as ${filename}`);
+          console.log(`Uploading file: ${file.name} as ${filename}`);
 
-        // Upload file to storage
-        const {
-          data: uploadData,
-          error: uploadError
-        } = await supabase.storage.from('documents').upload(filename, file);
-        
-        if (uploadError) {
-          console.error('Storage upload error:', uploadError);
-          throw uploadError;
+          // Upload file to storage
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('documents')
+            .upload(filename, file, {
+              cacheControl: '3600',
+              upsert: false
+            });
+          
+          if (uploadError) {
+            console.error('Storage upload error:', uploadError);
+            throw uploadError;
+          }
+
+          console.log('File uploaded to storage:', uploadData.path);
+
+          // Prepare document record
+          const documentData = {
+            file_name: file.name,
+            file_url: uploadData.path,
+            file_type: fileExtension?.toLowerCase(),
+            file_size: file.size,
+            case_id: data.case_id === 'all' ? null : data.case_id,
+            uploaded_by: user.id,
+            is_evidence: data.is_evidence
+          };
+
+          console.log('Creating document record:', documentData);
+
+          // Create document record
+          const { data: insertData, error: insertError } = await supabase
+            .from('documents')
+            .insert(documentData)
+            .select();
+          
+          if (insertError) {
+            console.error('Database insert error:', insertError);
+            throw insertError;
+          }
+
+          console.log('Document record created:', insertData);
+          return insertData;
+        } catch (error) {
+          console.error('Error uploading file:', file.name, error);
+          throw error;
         }
-
-        console.log('File uploaded to storage:', uploadData.path);
-
-        // Prepare document record
-        const documentData = {
-          file_name: file.name,
-          file_url: uploadData.path,
-          file_type: fileExtension,
-          file_size: file.size,
-          case_id: data.case_id === 'all' ? null : data.case_id,
-          uploaded_by: user.data.user.id,
-          is_evidence: data.is_evidence
-        };
-
-        console.log('Creating document record:', documentData);
-
-        // Create document record
-        const {
-          data: insertData,
-          error: insertError
-        } = await supabase.from('documents').insert(documentData).select();
-        
-        if (insertError) {
-          console.error('Database insert error:', insertError);
-          throw insertError;
-        }
-
-        console.log('Document record created:', insertData);
-        return insertData;
       });
       
       const results = await Promise.all(uploadPromises);
@@ -133,15 +142,9 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
       console.log('Upload mutation successful, invalidating queries');
       
       // Invalidate all document-related queries
-      queryClient.invalidateQueries({
-        queryKey: ['documents']
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['document-folders']
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['case-documents']
-      });
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
+      queryClient.invalidateQueries({ queryKey: ['document-folders'] });
+      queryClient.invalidateQueries({ queryKey: ['case-documents'] });
       
       toast({
         title: "Documents uploaded successfully",
@@ -158,7 +161,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
       setSelectedFiles([]);
       onClose();
     },
-    onError: error => {
+    onError: (error: any) => {
       console.error('Upload mutation failed:', error);
       toast({
         title: "Failed to upload documents",

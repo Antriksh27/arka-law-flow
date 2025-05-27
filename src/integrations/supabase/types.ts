@@ -2068,6 +2068,15 @@ export type Database = {
           role: string
         }[]
       }
+      get_current_user_profile: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          full_name: string
+          email: string
+          role: string
+        }[]
+      }
       get_profile_by_id: {
         Args: { user_id: string }
         Returns: {
