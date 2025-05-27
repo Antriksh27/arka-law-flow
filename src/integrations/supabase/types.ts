@@ -783,7 +783,10 @@ export type Database = {
           file_size: number | null
           file_type: string | null
           file_url: string
+          firm_id: string | null
+          folder_name: string | null
           id: string
+          is_evidence: boolean | null
           is_shared_with_client: boolean | null
           matter_id: string | null
           title: string | null
@@ -798,7 +801,10 @@ export type Database = {
           file_size?: number | null
           file_type?: string | null
           file_url: string
+          firm_id?: string | null
+          folder_name?: string | null
           id?: string
+          is_evidence?: boolean | null
           is_shared_with_client?: boolean | null
           matter_id?: string | null
           title?: string | null
@@ -813,7 +819,10 @@ export type Database = {
           file_size?: number | null
           file_type?: string | null
           file_url?: string
+          firm_id?: string | null
+          folder_name?: string | null
           id?: string
+          is_evidence?: boolean | null
           is_shared_with_client?: boolean | null
           matter_id?: string | null
           title?: string | null
