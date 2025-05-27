@@ -1,8 +1,9 @@
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Eye, EyeOff, Pin, Calendar, User, FileText } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Eye, EyeOff, Pin, Calendar, User, FileText, Play, Pause, Download } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface NoteViewDialogProps {
@@ -16,6 +17,9 @@ export const NoteViewDialog: React.FC<NoteViewDialogProps> = ({
   open,
   onClose,
 }) => {
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [isPlaying, setIsPlaying] = React.useState(false);
+
   if (!note) return null;
 
   const getColorClasses = (color: string) => {
@@ -37,6 +41,30 @@ export const NoteViewDialog: React.FC<NoteViewDialogProps> = ({
     return note.visibility === 'private' ? 
       <EyeOff className="w-4 h-4 text-gray-500" /> : 
       <Eye className="w-4 h-4 text-gray-500" />;
+  };
+
+  const handlePlayPause = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const handleAudioEnded = () => {
+    setIsPlaying(false);
+  };
+
+  const downloadAudio = () => {
+    if (note.audio_data) {
+      const link = document.createElement('a');
+      link.href = note.audio_data;
+      link.download = `note-audio-${note.id}.wav`;
+      link.click();
+    }
   };
 
   return (
@@ -63,10 +91,44 @@ export const NoteViewDialog: React.FC<NoteViewDialogProps> = ({
             </div>
           )}
 
+          {/* Audio Recording */}
+          {note.audio_data && (
+            <div className="mb-6">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">Audio Recording</h3>
+              <div className="bg-white p-4 rounded border border-gray-200">
+                <div className="flex items-center gap-3">
+                  <Button
+                    onClick={handlePlayPause}
+                    size="sm"
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                  </Button>
+                  <div className="flex-1">
+                    <audio
+                      ref={audioRef}
+                      src={note.audio_data}
+                      onEnded={handleAudioEnded}
+                      className="w-full"
+                      controls
+                    />
+                  </div>
+                  <Button
+                    onClick={downloadAudio}
+                    size="sm"
+                    variant="outline"
+                  >
+                    <Download className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Drawing */}
           {note.drawing_data && (
             <div className="mb-6">
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Drawing</h3>
+              <h3 className="text-sm font-medium text-gray-700 mb-3">Drawing</h3>
               <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
                 <img 
                   src={note.drawing_data} 
