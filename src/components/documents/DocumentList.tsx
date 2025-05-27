@@ -85,9 +85,9 @@ export const DocumentList: React.FC<DocumentListProps> = ({
               <TableHead className="bg-slate-800">Case</TableHead>
               <TableHead className="bg-slate-800">Uploaded By</TableHead>
               <TableHead className="bg-slate-800">Date</TableHead>
-              <TableHead>Size</TableHead>
-              <TableHead>Important</TableHead>
-              <TableHead>Actions</TableHead>
+              <TableHead className="bg-slate-800">Size</TableHead>
+              <TableHead className="bg-slate-800">Important</TableHead>
+              <TableHead className="bg-slate-800">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
