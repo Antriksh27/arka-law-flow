@@ -44,15 +44,18 @@ export const NotesGrid: React.FC<NotesGridProps> = ({
         query = query.or(`title.ilike.%${searchQuery}%,content.ilike.%${searchQuery}%`);
       }
 
-      if (selectedColor) {
+      // Handle color filter - ignore "all-colors" value
+      if (selectedColor && selectedColor !== 'all-colors') {
         query = query.eq('color', selectedColor);
       }
 
-      if (selectedVisibility) {
+      // Handle visibility filter - ignore "all-visibility" value
+      if (selectedVisibility && selectedVisibility !== 'all-visibility') {
         query = query.eq('visibility', selectedVisibility);
       }
 
-      if (selectedCase) {
+      // Handle case filter - ignore "all-cases" value
+      if (selectedCase && selectedCase !== 'all-cases') {
         query = query.eq('case_id', selectedCase);
       }
 
@@ -120,13 +123,13 @@ export const NotesGrid: React.FC<NotesGridProps> = ({
       <div className="text-center py-12">
         <StickyNote className="w-12 h-12 mx-auto mb-4 text-gray-300" />
         <h3 className="text-lg font-medium text-gray-900 mb-2">
-          {searchQuery || selectedTags.length > 0 || selectedColor || selectedVisibility || selectedCase
+          {searchQuery || selectedTags.length > 0 || (selectedColor && selectedColor !== 'all-colors') || (selectedVisibility && selectedVisibility !== 'all-visibility') || (selectedCase && selectedCase !== 'all-cases')
             ? 'No notes found'
             : 'No notes yet'
           }
         </h3>
         <p className="text-gray-500 mb-4">
-          {searchQuery || selectedTags.length > 0 || selectedColor || selectedVisibility || selectedCase
+          {searchQuery || selectedTags.length > 0 || (selectedColor && selectedColor !== 'all-colors') || (selectedVisibility && selectedVisibility !== 'all-visibility') || (selectedCase && selectedCase !== 'all-cases')
             ? 'Try adjusting your search or filters'
             : 'Start by creating your first note'
           }

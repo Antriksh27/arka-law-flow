@@ -15,6 +15,18 @@ const Notes = () => {
   const [selectedVisibility, setSelectedVisibility] = useState<string>('');
   const [selectedCase, setSelectedCase] = useState<string>('');
 
+  const handleColorChange = (value: string) => {
+    setSelectedColor(value === 'all-colors' ? '' : value);
+  };
+
+  const handleVisibilityChange = (value: string) => {
+    setSelectedVisibility(value === 'all-visibility' ? '' : value);
+  };
+
+  const handleCaseChange = (value: string) => {
+    setSelectedCase(value === 'all-cases' ? '' : value);
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -25,11 +37,11 @@ const Notes = () => {
           selectedTags={selectedTags}
           onTagsChange={setSelectedTags}
           selectedColor={selectedColor}
-          onColorChange={setSelectedColor}
+          onColorChange={handleColorChange}
           selectedVisibility={selectedVisibility}
-          onVisibilityChange={setSelectedVisibility}
+          onVisibilityChange={handleVisibilityChange}
           selectedCase={selectedCase}
-          onCaseChange={setSelectedCase}
+          onCaseChange={handleCaseChange}
         />
         
         <NotesGrid

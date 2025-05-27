@@ -117,7 +117,7 @@ export const NotesHeader: React.FC<NotesHeaderProps> = ({
               <SelectValue placeholder="Color" />
             </SelectTrigger>
             <SelectContent className="bg-white border border-gray-200 shadow-lg">
-              <SelectItem value="">All Colors</SelectItem>
+              <SelectItem value="all-colors">All Colors</SelectItem>
               <SelectItem value="yellow">Yellow</SelectItem>
               <SelectItem value="blue">Blue</SelectItem>
               <SelectItem value="green">Green</SelectItem>
@@ -131,7 +131,7 @@ export const NotesHeader: React.FC<NotesHeaderProps> = ({
               <SelectValue placeholder="Visibility" />
             </SelectTrigger>
             <SelectContent className="bg-white border border-gray-200 shadow-lg">
-              <SelectItem value="">All</SelectItem>
+              <SelectItem value="all-visibility">All</SelectItem>
               <SelectItem value="private">Private</SelectItem>
               <SelectItem value="team">Team</SelectItem>
             </SelectContent>
@@ -142,7 +142,7 @@ export const NotesHeader: React.FC<NotesHeaderProps> = ({
               <SelectValue placeholder="Linked Case" />
             </SelectTrigger>
             <SelectContent className="bg-white border border-gray-200 shadow-lg max-h-60">
-              <SelectItem value="">All Cases</SelectItem>
+              <SelectItem value="all-cases">All Cases</SelectItem>
               {cases.map(caseItem => (
                 <SelectItem key={caseItem.id} value={caseItem.id}>
                   {caseItem.title}
