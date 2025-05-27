@@ -74,19 +74,26 @@ export const DeleteDocumentDialog: React.FC<DeleteDocumentDialogProps> = ({
 
   return (
     <AlertDialog open={open} onOpenChange={onClose}>
-      <AlertDialogContent>
+      <AlertDialogContent className="bg-white border border-gray-200">
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete Document</AlertDialogTitle>
-          <AlertDialogDescription>
+          <AlertDialogTitle className="text-lg font-semibold text-gray-900">
+            Delete Document
+          </AlertDialogTitle>
+          <AlertDialogDescription className="text-sm text-gray-600">
             Are you sure you want to delete "{document?.file_name}"? This action cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel 
+            disabled={isDeleting}
+            className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+          >
+            Cancel
+          </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDelete}
             disabled={isDeleting}
-            className="bg-red-600 hover:bg-red-700"
+            className="bg-red-600 hover:bg-red-700 text-white"
           >
             {isDeleting ? 'Deleting...' : 'Delete'}
           </AlertDialogAction>
