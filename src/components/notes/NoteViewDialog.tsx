@@ -63,6 +63,20 @@ export const NoteViewDialog: React.FC<NoteViewDialogProps> = ({
             </div>
           )}
 
+          {/* Drawing */}
+          {note.drawing_data && (
+            <div className="mb-6">
+              <h3 className="text-sm font-medium text-gray-700 mb-2">Drawing</h3>
+              <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+                <img 
+                  src={note.drawing_data} 
+                  alt="Note drawing" 
+                  className="w-full max-h-96 object-contain"
+                />
+              </div>
+            </div>
+          )}
+
           {/* Content */}
           {note.content && (
             <div className="mb-6">

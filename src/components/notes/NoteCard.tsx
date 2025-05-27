@@ -93,6 +93,18 @@ export const NoteCard: React.FC<NoteCardProps> = ({
           {note.title}
         </h3>
 
+        {/* Drawing Preview */}
+        {note.drawing_data && (
+          <div className="mb-3 border border-gray-200 rounded-lg overflow-hidden">
+            <img 
+              src={note.drawing_data} 
+              alt="Drawing preview" 
+              className="w-full h-32 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+              onClick={onView}
+            />
+          </div>
+        )}
+
         {/* Content Preview */}
         {note.content && (
           <p className="text-sm text-gray-600 mb-3 line-clamp-3">
