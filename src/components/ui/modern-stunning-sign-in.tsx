@@ -1,12 +1,9 @@
-
 "use client";
 
 import * as React from "react";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Scale } from "lucide-react";
-
 const SignIn1 = () => {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -64,9 +61,11 @@ const SignIn1 = () => {
       {/* Centered glass card */}
       <div className="relative z-10 w-full max-w-sm rounded-3xl bg-gradient-to-r from-[#ffffff10] to-slate-800 backdrop-blur-sm shadow-2xl p-8 flex flex-col items-center">
         {/* Logo */}
-        <div className="flex items-center justify-center w-16 h-16 rounded-full bg-white/20 mb-6 shadow-lg">
-          <Scale className="w-8 h-8 text-white" />
-        </div>
+        
+        {/* Title */}
+        <h2 className="text-2xl font-semibold text-white mb-6 text-center">
+          Arka Legal
+        </h2>
         {/* Form */}
         <div className="flex flex-col w-full gap-4">
           <div className="w-full flex flex-col gap-3">
@@ -80,34 +79,15 @@ const SignIn1 = () => {
               {isLoading ? "Signing in..." : "Sign in"}
             </button>
             {/* Google Sign In */}
-            <button className="w-full flex items-center justify-center gap-2 bg-gradient-to-b from-[#232526] to-[#2d2e30] rounded-full px-5 py-3 font-medium text-white shadow hover:brightness-110 transition mb-2 text-sm">
-              <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-5 h-5" />
-              Continue with Google
-            </button>
+            
             <div className="w-full text-center mt-2">
-              <span className="text-xs text-gray-400">
-                Don&apos;t have an account?{" "}
-                <a href="#" className="underline text-white/80 hover:text-white">
-                  Sign up, it&apos;s free!
-                </a>
-              </span>
+              
             </div>
           </div>
         </div>
       </div>
       {/* User count and avatars */}
-      <div className="relative z-10 mt-12 flex flex-col items-center text-center">
-        <p className="text-gray-400 text-sm mb-2">
-          Join <span className="font-medium text-white">thousands</span> of
-          legal professionals who trust Arka Legal.
-        </p>
-        <div className="flex">
-          <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="user" className="w-8 h-8 rounded-full border-2 border-slate-800 object-cover" />
-          <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="user" className="w-8 h-8 rounded-full border-2 border-slate-800 object-cover" />
-          <img src="https://randomuser.me/api/portraits/men/54.jpg" alt="user" className="w-8 h-8 rounded-full border-2 border-slate-800 object-cover" />
-          <img src="https://randomuser.me/api/portraits/women/68.jpg" alt="user" className="w-8 h-8 rounded-full border-2 border-slate-800 object-cover" />
-        </div>
-      </div>
+      
     </div>;
 };
 export { SignIn1 };
