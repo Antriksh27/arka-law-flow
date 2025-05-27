@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -51,7 +52,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
   const selectedCaseId = watch('case_id');
   const isImportant = watch('is_evidence');
 
-  // Fetch cases for dropdown
+  // Fetch cases for dropdown - without any profile joins
   const { data: cases = [] } = useQuery({
     queryKey: ['cases-for-upload'],
     queryFn: async () => {
@@ -67,76 +68,90 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
 
   const uploadMutation = useMutation({
     mutationFn: async (data: UploadFormData) => {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) {
-        console.error('Authentication error:', userError);
-        throw new Error('Not authenticated');
-      }
-      
-      console.log('Starting upload for files:', selectedFiles.length);
-      console.log('Case ID:', data.case_id);
-      console.log('Is Important:', data.is_evidence);
-      
-      const uploadPromises = selectedFiles.map(async file => {
-        try {
-          // Generate unique filename
-          const timestamp = Date.now();
-          const randomId = Math.random().toString(36).substring(2);
-          const fileExtension = file.name.split('.').pop();
-          const filename = `${timestamp}-${randomId}.${fileExtension}`;
-
-          console.log(`Uploading file: ${file.name} as ${filename}`);
-
-          // Upload file to storage
-          const { data: uploadData, error: uploadError } = await supabase.storage
-            .from('documents')
-            .upload(filename, file, {
-              cacheControl: '3600',
-              upsert: false
-            });
-          
-          if (uploadError) {
-            console.error('Storage upload error:', uploadError);
-            throw uploadError;
-          }
-
-          console.log('File uploaded to storage:', uploadData.path);
-
-          // Prepare document record
-          const documentData = {
-            file_name: file.name,
-            file_url: uploadData.path,
-            file_type: fileExtension?.toLowerCase(),
-            file_size: file.size,
-            case_id: data.case_id === 'all' ? null : data.case_id,
-            uploaded_by: user.id,
-            is_evidence: data.is_evidence
-          };
-
-          console.log('Creating document record:', documentData);
-
-          // Create document record
-          const { data: insertData, error: insertError } = await supabase
-            .from('documents')
-            .insert(documentData)
-            .select();
-          
-          if (insertError) {
-            console.error('Database insert error:', insertError);
-            throw insertError;
-          }
-
-          console.log('Document record created:', insertData);
-          return insertData;
-        } catch (error) {
-          console.error('Error uploading file:', file.name, error);
-          throw error;
+      try {
+        // Get current user
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError || !user) {
+          console.error('Authentication error:', userError);
+          throw new Error('Not authenticated');
         }
-      });
-      
-      const results = await Promise.all(uploadPromises);
-      console.log('All uploads completed:', results);
-      return results;
+        
+        console.log('Starting upload for files:', selectedFiles.length);
+        console.log('Case ID:', data.case_id);
+        console.log('Is Important:', data.is_evidence);
+        console.log('User ID:', user.id);
+        
+        const uploadPromises = selectedFiles.map(async file => {
+          try {
+            // Generate unique filename
+            const timestamp = Date.now();
+            const randomId = Math.random().toString(36).substring(2);
+            const fileExtension = file.name.split('.').pop();
+            const filename = `${timestamp}-${randomId}.${fileExtension}`;
+
+            console.log(`Uploading file: ${file.name} as ${filename}`);
+
+            // Upload file to storage first
+            const { data: uploadData, error: uploadError } = await supabase.storage
+              .from('documents')
+              .upload(filename, file, {
+                cacheControl: '3600',
+                upsert: false
+              });
+            
+            if (uploadError) {
+              console.error('Storage upload error:', uploadError);
+              throw uploadError;
+            }
+
+            console.log('File uploaded to storage:', uploadData.path);
+
+            // Prepare document record with minimal data
+            const documentData = {
+              file_name: file.name,
+              file_url: uploadData.path,
+              file_type: fileExtension?.toLowerCase() || null,
+              file_size: file.size,
+              case_id: data.case_id === 'all' ? null : data.case_id,
+              uploaded_by: user.id,
+              is_evidence: data.is_evidence,
+              uploaded_at: new Date().toISOString()
+            };
+
+            console.log('Creating document record:', documentData);
+
+            // Create document record without any joins
+            const { data: insertData, error: insertError } = await supabase
+              .from('documents')
+              .insert(documentData)
+              .select('*');
+            
+            if (insertError) {
+              console.error('Database insert error:', insertError);
+              // If database insert fails, try to clean up the uploaded file
+              try {
+                await supabase.storage.from('documents').remove([uploadData.path]);
+              } catch (cleanupError) {
+                console.error('Failed to cleanup uploaded file:', cleanupError);
+              }
+              throw insertError;
+            }
+
+            console.log('Document record created successfully:', insertData);
+            return insertData;
+          } catch (error) {
+            console.error('Error uploading file:', file.name, error);
+            throw error;
+          }
+        });
+        
+        const results = await Promise.all(uploadPromises);
+        console.log('All uploads completed successfully:', results);
+        return results;
+      } catch (error) {
+        console.error('Upload mutation error:', error);
+        throw error;
+      }
     },
     onSuccess: (results) => {
       console.log('Upload mutation successful, invalidating queries');
@@ -165,7 +180,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
       console.error('Upload mutation failed:', error);
       toast({
         title: "Failed to upload documents",
-        description: error.message,
+        description: error.message || 'An error occurred during upload',
         variant: "destructive"
       });
     }
@@ -192,6 +207,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
     }
 
     console.log('Form submitted with data:', data);
+    console.log('Selected files:', selectedFiles);
     uploadMutation.mutate(data);
   };
 
@@ -218,7 +234,14 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
               Select Files
             </Label>
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
-              <input type="file" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.txt" onChange={handleFileSelect} className="hidden" id="file-upload" />
+              <input 
+                type="file" 
+                multiple 
+                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.txt" 
+                onChange={handleFileSelect} 
+                className="hidden" 
+                id="file-upload" 
+              />
               <label htmlFor="file-upload" className="cursor-pointer">
                 <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
                 <p className="text-sm text-gray-600">
@@ -231,12 +254,14 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
             </div>
 
             {/* Selected Files */}
-            {selectedFiles.length > 0 && <div className="space-y-2">
+            {selectedFiles.length > 0 && (
+              <div className="space-y-2">
                 <Label className="text-sm font-medium text-gray-700">
                   Selected Files ({selectedFiles.length})
                 </Label>
                 <div className="max-h-40 overflow-y-auto border border-gray-200 rounded-lg">
-                  {selectedFiles.map((file, index) => <div key={index} className="flex items-center justify-between p-3 border-b border-gray-100 last:border-b-0">
+                  {selectedFiles.map((file, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 border-b border-gray-100 last:border-b-0">
                       <div className="flex items-center gap-3">
                         <FileText className="w-4 h-4 text-gray-500" />
                         <div>
@@ -244,12 +269,20 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                           <p className="text-xs text-gray-500">{formatFileSize(file.size)}</p>
                         </div>
                       </div>
-                      <Button type="button" variant="ghost" size="sm" onClick={() => removeFile(index)} className="h-8 w-8 p-0 text-gray-400 hover:text-red-600">
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => removeFile(index)} 
+                        className="h-8 w-8 p-0 text-gray-400 hover:text-red-600"
+                      >
                         <X className="w-4 h-4" />
                       </Button>
-                    </div>)}
+                    </div>
+                  ))}
                 </div>
-              </div>}
+              </div>
+            )}
           </div>
 
           {/* Case Assignment */}
@@ -286,10 +319,19 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
 
           {/* Actions */}
           <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
-            <Button type="button" variant="outline" onClick={onClose} className="px-6 py-2 border-gray-300 text-slate-50 bg-red-700 hover:bg-red-600">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onClose} 
+              className="px-6 py-2 border-gray-300 text-gray-700 hover:bg-gray-50"
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting || selectedFiles.length === 0} className="px-6 py-2 bg-primary hover:bg-primary/90 text-white">
+            <Button 
+              type="submit" 
+              disabled={isSubmitting || selectedFiles.length === 0} 
+              className="px-6 py-2 bg-primary hover:bg-primary/90 text-white"
+            >
               {isSubmitting ? 'Uploading...' : `Upload ${selectedFiles.length} File${selectedFiles.length !== 1 ? 's' : ''}`}
             </Button>
           </div>

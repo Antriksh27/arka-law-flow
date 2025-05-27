@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,46 +10,81 @@ import { format } from 'date-fns';
 import { UploadDocumentDialog } from '../documents/UploadDocumentDialog';
 import { useToast } from '@/hooks/use-toast';
 import { getFileIcon } from '@/lib/fileUtils';
+
 interface CaseDocumentsProps {
   caseId: string;
 }
+
 export const CaseDocuments: React.FC<CaseDocumentsProps> = ({
   caseId
 }) => {
   const [showUploadDialog, setShowUploadDialog] = useState(false);
-  const {
-    toast
-  } = useToast();
-  const {
-    data: documents = [],
-    isLoading,
-    refetch
-  } = useQuery({
+  const { toast } = useToast();
+
+  // Fetch documents without profile joins to avoid recursion
+  const { data: documents = [], isLoading, refetch } = useQuery({
     queryKey: ['case-documents', caseId],
     queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from('documents').select(`
-          *,
-          profiles!documents_uploaded_by_fkey(full_name)
-        `).eq('case_id', caseId).order('uploaded_at', {
-        ascending: false
-      });
-      if (error) throw error;
-      return data || [];
+      try {
+        console.log('Fetching documents for case:', caseId);
+        
+        // First, get documents without any joins
+        const { data: docs, error: docsError } = await supabase
+          .from('documents')
+          .select('*')
+          .eq('case_id', caseId)
+          .order('uploaded_at', { ascending: false });
+        
+        if (docsError) {
+          console.error('Error fetching documents:', docsError);
+          throw docsError;
+        }
+        
+        console.log('Documents fetched:', docs);
+        
+        // Then fetch profile names separately to avoid recursion
+        if (docs && docs.length > 0) {
+          const uploaderIds = [...new Set(docs.map(doc => doc.uploaded_by).filter(Boolean))];
+          
+          if (uploaderIds.length > 0) {
+            const { data: profiles, error: profilesError } = await supabase
+              .from('profiles')
+              .select('id, full_name')
+              .in('id', uploaderIds);
+            
+            if (!profilesError && profiles) {
+              // Map profile names to documents
+              const profileMap = new Map(profiles.map(p => [p.id, p.full_name]));
+              return docs.map(doc => ({
+                ...doc,
+                uploader_name: profileMap.get(doc.uploaded_by) || 'Unknown'
+              }));
+            }
+          }
+        }
+        
+        // Return documents with default uploader name if profile fetch fails
+        return docs?.map(doc => ({ ...doc, uploader_name: 'Unknown' })) || [];
+      } catch (error) {
+        console.error('Error in document query:', error);
+        throw error;
+      }
     }
   });
+
   const handleUploadSuccess = () => {
+    console.log('Upload successful, refreshing documents');
     refetch();
   };
+
   const handleDownload = async (document: any) => {
     try {
-      const {
-        data,
-        error
-      } = await supabase.storage.from('documents').download(document.file_url);
+      const { data, error } = await supabase.storage
+        .from('documents')
+        .download(document.file_url);
+      
       if (error) throw error;
+      
       const url = URL.createObjectURL(data);
       const a = window.document.createElement('a');
       a.href = url;
@@ -58,6 +94,7 @@ export const CaseDocuments: React.FC<CaseDocumentsProps> = ({
       window.document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (error) {
+      console.error('Download error:', error);
       toast({
         title: "Download failed",
         description: "Failed to download the document",
@@ -65,20 +102,24 @@ export const CaseDocuments: React.FC<CaseDocumentsProps> = ({
       });
     }
   };
+
   const toggleImportant = async (document: any) => {
     try {
-      const {
-        error
-      } = await supabase.from('documents').update({
-        is_evidence: !document.is_evidence
-      }).eq('id', document.id);
+      const { error } = await supabase
+        .from('documents')
+        .update({ is_evidence: !document.is_evidence })
+        .eq('id', document.id);
+      
       if (error) throw error;
+      
       toast({
         title: document.is_evidence ? "Removed from important" : "Marked as important",
         description: `Document ${document.is_evidence ? 'unmarked' : 'marked'} as important`
       });
+      
       refetch();
     } catch (error) {
+      console.error('Toggle important error:', error);
       toast({
         title: "Failed to update document",
         description: "Please try again",
@@ -86,17 +127,29 @@ export const CaseDocuments: React.FC<CaseDocumentsProps> = ({
       });
     }
   };
+
   if (isLoading) {
-    return <div className="text-center py-8">Loading documents...</div>;
+    return (
+      <div className="text-center py-8">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p className="text-gray-500">Loading documents...</p>
+      </div>
+    );
   }
-  return <>
+
+  return (
+    <>
       <div className="space-y-4">
         <div className="flex justify-between items-center">
           <h3 className="text-lg font-semibold">Documents</h3>
-          
+          <Button onClick={() => setShowUploadDialog(true)}>
+            <Upload className="w-4 h-4 mr-2" />
+            Upload Document
+          </Button>
         </div>
 
-        {documents && documents.length > 0 ? <div className="border border-gray-200 rounded-lg overflow-hidden">
+        {documents && documents.length > 0 ? (
+          <div className="border border-gray-200 rounded-lg overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -111,8 +164,9 @@ export const CaseDocuments: React.FC<CaseDocumentsProps> = ({
               </TableHeader>
               <TableBody>
                 {documents.map(doc => {
-              const FileIcon = getFileIcon(doc.file_type);
-              return <TableRow key={doc.id}>
+                  const FileIcon = getFileIcon(doc.file_type);
+                  return (
+                    <TableRow key={doc.id}>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <FileIcon className="w-4 h-4 text-gray-500" />
@@ -124,14 +178,25 @@ export const CaseDocuments: React.FC<CaseDocumentsProps> = ({
                           {doc.file_type?.toUpperCase() || 'Unknown'}
                         </Badge>
                       </TableCell>
-                      <TableCell>{doc.profiles?.full_name || 'Unknown'}</TableCell>
-                      <TableCell>{format(new Date(doc.uploaded_at), 'MMM d, yyyy')}</TableCell>
+                      <TableCell>{doc.uploader_name}</TableCell>
+                      <TableCell>
+                        {doc.uploaded_at ? format(new Date(doc.uploaded_at), 'MMM d, yyyy') : 'Unknown'}
+                      </TableCell>
                       <TableCell>
                         {doc.file_size ? `${(doc.file_size / 1024).toFixed(1)} KB` : 'Unknown'}
                       </TableCell>
                       <TableCell>
-                        <Button variant="ghost" size="sm" onClick={() => toggleImportant(doc)} className="p-1">
-                          {doc.is_evidence ? <Star className="w-4 h-4 text-yellow-500 fill-current" /> : <StarOff className="w-4 h-4 text-gray-400" />}
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => toggleImportant(doc)} 
+                          className="p-1"
+                        >
+                          {doc.is_evidence ? (
+                            <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                          ) : (
+                            <StarOff className="w-4 h-4 text-gray-400" />
+                          )}
                         </Button>
                       </TableCell>
                       <TableCell>
@@ -144,20 +209,30 @@ export const CaseDocuments: React.FC<CaseDocumentsProps> = ({
                           </Button>
                         </div>
                       </TableCell>
-                    </TableRow>;
-            })}
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
-          </div> : <div className="text-center py-12 text-gray-500">
+          </div>
+        ) : (
+          <div className="text-center py-12 text-gray-500">
             <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
             <p>No documents uploaded yet</p>
             <Button className="mt-4" onClick={() => setShowUploadDialog(true)}>
               <Upload className="w-4 h-4 mr-2" />
               Upload First Document
             </Button>
-          </div>}
+          </div>
+        )}
       </div>
 
-      <UploadDocumentDialog open={showUploadDialog} onClose={() => setShowUploadDialog(false)} caseId={caseId} onUploadSuccess={handleUploadSuccess} />
-    </>;
+      <UploadDocumentDialog 
+        open={showUploadDialog} 
+        onClose={() => setShowUploadDialog(false)} 
+        caseId={caseId} 
+        onUploadSuccess={handleUploadSuccess} 
+      />
+    </>
+  );
 };
