@@ -1,24 +1,23 @@
-
 "use client";
 
 import * as React from "react";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-
 const SignIn1 = () => {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);
-
-  const { signIn } = useAuth();
-  const { toast } = useToast();
-
+  const {
+    signIn
+  } = useAuth();
+  const {
+    toast
+  } = useToast();
   const validateEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
-
   const handleSignIn = async () => {
     if (!email || !password) {
       setError("Please enter both email and password.");
@@ -30,9 +29,10 @@ const SignIn1 = () => {
     }
     setError("");
     setIsLoading(true);
-
     try {
-      const { error } = await signIn(email, password);
+      const {
+        error
+      } = await signIn(email, password);
       if (error) {
         setError(error.message || "Sign in failed. Please try again.");
         toast({
@@ -57,9 +57,7 @@ const SignIn1 = () => {
       setIsLoading(false);
     }
   };
-
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-800 relative overflow-hidden w-full rounded-xl">
+  return <div className="min-h-screen flex flex-col items-center justify-center bg-slate-800 relative overflow-hidden w-full rounded-xl">
       {/* Centered glass card */}
       <div className="relative z-10 w-full max-w-sm rounded-3xl bg-gradient-to-r from-[#ffffff10] to-slate-800 backdrop-blur-sm shadow-2xl p-8 flex flex-col items-center">
         {/* Logo */}
@@ -73,54 +71,21 @@ const SignIn1 = () => {
         {/* Form */}
         <div className="flex flex-col w-full gap-4">
           <div className="w-full flex flex-col gap-3">
-            <input
-              placeholder="Email"
-              type="email"
-              value={email}
-              className="w-full px-5 py-3 rounded-xl bg-white/10 text-white placeholder-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400"
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={isLoading}
-            />
-            <input
-              placeholder="Password"
-              type="password"
-              value={password}
-              className="w-full px-5 py-3 rounded-xl bg-white/10 text-white placeholder-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400"
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={isLoading}
-            />
-            {error && (
-              <div className="text-sm text-red-400 text-left">{error}</div>
-            )}
+            <input placeholder="Email" type="email" value={email} className="w-full px-5 py-3 rounded-xl bg-white/10 text-white placeholder-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400" onChange={e => setEmail(e.target.value)} disabled={isLoading} />
+            <input placeholder="Password" type="password" value={password} className="w-full px-5 py-3 rounded-xl bg-white/10 text-white placeholder-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400" onChange={e => setPassword(e.target.value)} disabled={isLoading} />
+            {error && <div className="text-sm text-red-400 text-left">{error}</div>}
           </div>
           <hr className="opacity-10" />
           <div>
-            <button
-              onClick={handleSignIn}
-              disabled={isLoading}
-              className="w-full bg-white/10 text-white font-medium px-5 py-3 rounded-full shadow hover:bg-white/20 transition mb-3 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+            <button onClick={handleSignIn} disabled={isLoading} className="w-full bg-white/10 text-white font-medium px-5 py-3 rounded-full shadow hover:bg-white/20 transition mb-3 text-sm disabled:opacity-50 disabled:cursor-not-allowed">
               {isLoading ? "Signing in..." : "Sign in"}
             </button>
             {/* Google Sign In */}
-            <button
-              className="w-full flex items-center justify-center gap-2 bg-gradient-to-b from-[#232526] to-[#2d2e30] rounded-full px-5 py-3 font-medium text-white shadow hover:brightness-110 transition mb-2 text-sm"
-              disabled={isLoading}
-            >
-              <img
-                src="https://www.svgrepo.com/show/475656/google-color.svg"
-                alt="Google"
-                className="w-5 h-5"
-              />
-              Continue with Google
-            </button>
+            
             <div className="w-full text-center mt-2">
               <span className="text-xs text-gray-400">
                 Don&apos;t have an account?{" "}
-                <a
-                  href="#"
-                  className="underline text-white/80 hover:text-white"
-                >
+                <a href="#" className="underline text-white/80 hover:text-white">
                   Sign up, it&apos;s free!
                 </a>
               </span>
@@ -130,8 +95,6 @@ const SignIn1 = () => {
       </div>
       {/* User count and avatars */}
       
-    </div>
-  );
+    </div>;
 };
-
 export { SignIn1 };
