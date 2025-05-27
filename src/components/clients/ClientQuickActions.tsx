@@ -10,11 +10,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { 
   MoreHorizontal, 
-  Plus, 
   Calendar, 
   FileText, 
   StickyNote,
-  Briefcase,
+  Link2,
   Edit,
   Trash2
 } from 'lucide-react';
@@ -36,9 +35,13 @@ export const ClientQuickActions: React.FC<ClientQuickActionsProps> = ({
   return (
     <>
       <div className="flex items-center gap-3">
-        <Button size="sm" className="bg-primary hover:bg-primary/90 text-white">
-          <Plus className="w-4 h-4 mr-2" />
-          New Case
+        <Button 
+          size="sm" 
+          className="bg-primary hover:bg-primary/90 text-white"
+          onClick={() => setShowAssignDialog(true)}
+        >
+          <Link2 className="w-4 h-4 mr-2" />
+          Link to Case
         </Button>
         
         <DropdownMenu>
@@ -48,13 +51,6 @@ export const ClientQuickActions: React.FC<ClientQuickActionsProps> = ({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56 bg-white border border-gray-200 rounded-xl shadow-sm">
-            <DropdownMenuItem 
-              className="hover:bg-gray-50"
-              onClick={() => setShowAssignDialog(true)}
-            >
-              <Briefcase className="w-4 h-4 mr-3 text-gray-400" />
-              <span>Assign to Case</span>
-            </DropdownMenuItem>
             <DropdownMenuItem className="hover:bg-gray-50">
               <Calendar className="w-4 h-4 mr-3 text-gray-400" />
               <span>Schedule Appointment</span>

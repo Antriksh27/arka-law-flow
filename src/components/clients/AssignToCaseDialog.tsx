@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -5,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { AddCaseDialog } from '@/components/cases/AddCaseDialog';
-import { Plus, FileText } from 'lucide-react';
+import { Plus, FileText, ArrowLeft } from 'lucide-react';
 
 interface AssignToCaseDialogProps {
   open: boolean;
@@ -89,10 +90,10 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
   return (
     <>
       <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent className="max-w-2xl max-h-[80vh]">
+        <DialogContent className="max-w-2xl max-h-[80vh] bg-white">
           <DialogHeader>
-            <DialogTitle>
-              {view === 'selection' && `Assign ${clientName} to Case`}
+            <DialogTitle className="text-xl font-semibold">
+              {view === 'selection' && `Link ${clientName} to Case`}
               {view === 'existing' && 'Select Existing Case'}
               {view === 'new' && 'Create New Case'}
             </DialogTitle>
@@ -102,25 +103,25 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
             <div className="space-y-4 py-6">
               <Button
                 onClick={() => setView('existing')}
-                className="w-full h-20 flex flex-col items-center gap-2 text-left"
+                className="w-full h-20 flex items-center justify-start gap-4 text-left bg-white border border-gray-200 hover:bg-gray-50 text-gray-900"
                 variant="outline"
               >
-                <FileText className="w-6 h-6" />
+                <FileText className="w-8 h-8 text-blue-600" />
                 <div>
-                  <div className="font-medium">Assign to Existing Case</div>
-                  <div className="text-sm text-gray-500">Choose from existing cases</div>
+                  <div className="text-lg font-medium">Link Existing Case</div>
+                  <div className="text-sm text-gray-500">Choose from existing cases in your system</div>
                 </div>
               </Button>
 
               <Button
                 onClick={() => setShowAddCaseDialog(true)}
-                className="w-full h-20 flex flex-col items-center gap-2 text-left"
+                className="w-full h-20 flex items-center justify-start gap-4 text-left bg-white border border-gray-200 hover:bg-gray-50 text-gray-900"
                 variant="outline"
               >
-                <Plus className="w-6 h-6" />
+                <Plus className="w-8 h-8 text-green-600" />
                 <div>
-                  <div className="font-medium">Create New Case</div>
-                  <div className="text-sm text-gray-500">Add a new case for this client</div>
+                  <div className="text-lg font-medium">Add New Case</div>
+                  <div className="text-sm text-gray-500">Create a new case for this client</div>
                 </div>
               </Button>
             </div>
@@ -133,8 +134,10 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
                   variant="outline"
                   onClick={() => setView('selection')}
                   size="sm"
+                  className="flex items-center gap-2"
                 >
-                  ← Back
+                  <ArrowLeft className="w-4 h-4" />
+                  Back
                 </Button>
               </div>
 
@@ -151,7 +154,7 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
                   cases.map((case_item) => (
                     <div
                       key={case_item.id}
-                      className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer"
+                      className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors"
                       onClick={() => handleAssignToCase(case_item.id)}
                     >
                       <div className="flex items-start justify-between">
@@ -173,7 +176,7 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
                           </div>
                         </div>
                         <Button size="sm" variant="outline">
-                          Assign
+                          Link Case
                         </Button>
                       </div>
                     </div>
