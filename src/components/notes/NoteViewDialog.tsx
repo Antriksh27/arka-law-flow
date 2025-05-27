@@ -22,6 +22,20 @@ export const NoteViewDialog: React.FC<NoteViewDialogProps> = ({
 
   if (!note) return null;
 
+  // Helper function to get actual data value
+  const getDataValue = (data: any) => {
+    if (!data) return null;
+    if (typeof data === 'string') return data;
+    if (typeof data === 'object' && data.value && data.value !== 'undefined') return data.value;
+    return null;
+  };
+
+  const drawingData = getDataValue(note.drawing_data);
+  const audioData = getDataValue(note.audio_data);
+
+  console.log('Drawing data in view dialog:', drawingData);
+  console.log('Audio data in view dialog:', audioData);
+
   const getColorClasses = (color: string) => {
     switch (color) {
       case 'yellow':
@@ -59,9 +73,9 @@ export const NoteViewDialog: React.FC<NoteViewDialogProps> = ({
   };
 
   const downloadAudio = () => {
-    if (note.audio_data) {
+    if (audioData) {
       const link = document.createElement('a');
-      link.href = note.audio_data;
+      link.href = audioData;
       link.download = `note-audio-${note.id}.wav`;
       link.click();
     }
@@ -92,7 +106,7 @@ export const NoteViewDialog: React.FC<NoteViewDialogProps> = ({
           )}
 
           {/* Audio Recording */}
-          {note.audio_data && (
+          {audioData && audioData.startsWith('data:audio') && (
             <div className="mb-6">
               <h3 className="text-sm font-medium text-gray-700 mb-3">Audio Recording</h3>
               <div className="bg-white p-4 rounded border border-gray-200">
@@ -107,7 +121,7 @@ export const NoteViewDialog: React.FC<NoteViewDialogProps> = ({
                   <div className="flex-1">
                     <audio
                       ref={audioRef}
-                      src={note.audio_data}
+                      src={audioData}
                       onEnded={handleAudioEnded}
                       className="w-full"
                       controls
@@ -126,21 +140,24 @@ export const NoteViewDialog: React.FC<NoteViewDialogProps> = ({
           )}
 
           {/* Drawing */}
-          {note.drawing_data && (
+          {drawingData && drawingData.startsWith('data:image') && (
             <div className="mb-6">
               <h3 className="text-sm font-medium text-gray-700 mb-3">Drawing</h3>
               <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
                 <img 
-                  src={note.drawing_data} 
+                  src={drawingData} 
                   alt="Note drawing" 
                   className="w-full max-h-96 object-contain"
+                  onError={(e) => {
+                    console.error('Failed to load drawing in view dialog:', e);
+                  }}
                 />
               </div>
             </div>
           )}
 
           {/* Content */}
-          {note.content && (
+          {note.content && !note.content.includes('[Drawing attached]') && !note.content.includes('[Audio attached]') && (
             <div className="mb-6">
               <h3 className="text-sm font-medium text-gray-700 mb-2">Content</h3>
               <div className="text-gray-800 whitespace-pre-wrap bg-white p-4 rounded border">

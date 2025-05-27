@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -71,6 +72,8 @@ export const NotesGrid: React.FC<NotesGridProps> = ({
           note.tags && selectedTags.every(tag => note.tags.includes(tag))
         );
       }
+
+      console.log('Fetched notes with drawing/audio data:', filteredData);
 
       return filteredData;
     }
