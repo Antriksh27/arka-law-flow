@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -34,6 +35,10 @@ export const CaseDocuments: React.FC<CaseDocumentsProps> = ({ caseId }) => {
       return data || [];
     }
   });
+
+  const handleUploadSuccess = () => {
+    refetch();
+  };
 
   const handleDownload = async (document: any) => {
     try {
@@ -185,6 +190,7 @@ export const CaseDocuments: React.FC<CaseDocumentsProps> = ({ caseId }) => {
         open={showUploadDialog}
         onClose={() => setShowUploadDialog(false)}
         caseId={caseId}
+        onUploadSuccess={handleUploadSuccess}
       />
     </>
   );

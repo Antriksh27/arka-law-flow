@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -15,6 +16,7 @@ interface UploadDocumentDialogProps {
   open: boolean;
   onClose: () => void;
   caseId?: string;
+  onUploadSuccess?: () => void;
 }
 
 interface UploadFormData {
@@ -26,7 +28,8 @@ interface UploadFormData {
 export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
   open,
   onClose,
-  caseId
+  caseId,
+  onUploadSuccess
 }) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -63,6 +66,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
       return data || [];
     }
   });
+
   const uploadMutation = useMutation({
     mutationFn: async (data: UploadFormData) => {
       const user = await supabase.auth.getUser();
@@ -88,7 +92,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
           file_url: uploadData.path,
           file_type: fileExtension,
           file_size: file.size,
-          case_id: data.case_id || null,
+          case_id: data.case_id === 'all' ? null : data.case_id,
           uploaded_by: user.data.user.id,
           is_evidence: data.is_evidence
         });
@@ -97,15 +101,26 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
       await Promise.all(uploadPromises);
     },
     onSuccess: () => {
+      // Invalidate all document-related queries
       queryClient.invalidateQueries({
         queryKey: ['documents']
       });
       queryClient.invalidateQueries({
         queryKey: ['document-folders']
       });
+      queryClient.invalidateQueries({
+        queryKey: ['case-documents']
+      });
+      
       toast({
         title: "Documents uploaded successfully"
       });
+      
+      // Call the callback to refresh parent component
+      if (onUploadSuccess) {
+        onUploadSuccess();
+      }
+      
       reset();
       setSelectedFiles([]);
       onClose();
@@ -118,13 +133,16 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
       });
     }
   });
+
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
     setSelectedFiles(files);
   };
+
   const removeFile = (index: number) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
+
   const onSubmit = (data: UploadFormData) => {
     if (selectedFiles.length === 0) {
       toast({
@@ -135,18 +153,15 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
       return;
     }
 
-    // Convert "all" back to empty string for the mutation
-    const submitData = {
-      ...data,
-      case_id: data.case_id === 'all' ? '' : data.case_id
-    };
-    uploadMutation.mutate(submitData);
+    uploadMutation.mutate(data);
   };
+
   const formatFileSize = (bytes: number) => {
     const kb = bytes / 1024;
     if (kb < 1024) return `${kb.toFixed(1)} KB`;
     return `${(kb / 1024).toFixed(1)} MB`;
   };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl bg-white border border-gray-200 shadow-lg">
