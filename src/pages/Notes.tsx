@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import DashboardLayout from '../components/layout/DashboardLayout';
 import { NotesGrid } from '../components/notes/NotesGrid';
 import { NotesHeader } from '../components/notes/NotesHeader';
-import { CreateNoteDialog } from '../components/notes/CreateNoteDialog';
+import { CreateNoteMultiModal } from '../components/notes/CreateNoteMultiModal';
 import { EditNoteDialog } from '../components/notes/EditNoteDialog';
 
 const Notes = () => {
@@ -53,7 +53,7 @@ const Notes = () => {
           onEditNote={setEditingNote}
         />
 
-        <CreateNoteDialog
+        <CreateNoteMultiModal
           open={showCreateDialog}
           onClose={() => setShowCreateDialog(false)}
         />
