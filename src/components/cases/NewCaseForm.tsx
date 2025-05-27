@@ -1,14 +1,14 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { FetchCaseDialog } from './FetchCaseDialog';
 
 interface NewCaseFormProps {
   onSuccess: () => void;
@@ -41,6 +41,7 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
 }) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [showFetchDialog, setShowFetchDialog] = useState(false);
 
   const {
     register,
@@ -56,9 +57,6 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
       client_id: preSelectedClientId || ''
     }
   });
-
-  // Watch form values for controlled components
-  const watchedValues = watch(['case_type', 'status', 'priority', 'client_id']);
 
   // Fetch clients for assignment
   const { data: clients = [] } = useQuery({
@@ -77,7 +75,7 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
     mutationFn: async (data: CaseFormData) => {
       const { error } = await supabase
         .from('cases')
-        .insert([{
+        .insert({
           title: data.title,
           description: data.description || null,
           client_id: data.client_id || null,
@@ -94,7 +92,7 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
           advocate_name: data.advocate_name || null,
           district: data.district || null,
           created_by: (await supabase.auth.getUser()).data.user?.id
-        }]);
+        });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -128,12 +126,42 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
     createCaseMutation.mutate(data);
   };
 
+  const handleFetchSuccess = (fetchedData: any) => {
+    // Populate form with fetched data
+    if (fetchedData.title) setValue('title', fetchedData.title);
+    if (fetchedData.case_number) setValue('case_number', fetchedData.case_number);
+    if (fetchedData.court) setValue('court', fetchedData.court);
+    if (fetchedData.cnr_number) setValue('cnr_number', fetchedData.cnr_number);
+    if (fetchedData.filing_number) setValue('filing_number', fetchedData.filing_number);
+    if (fetchedData.petitioner) setValue('petitioner', fetchedData.petitioner);
+    if (fetchedData.respondent) setValue('respondent', fetchedData.respondent);
+    if (fetchedData.advocate_name) setValue('advocate_name', fetchedData.advocate_name);
+    if (fetchedData.district) setValue('district', fetchedData.district);
+    if (fetchedData.filing_date) setValue('filing_date', fetchedData.filing_date);
+    
+    setShowFetchDialog(false);
+    toast({
+      title: "Success",
+      description: "Case details fetched successfully"
+    });
+  };
+
   return (
     <div className="max-w-full h-screen p-8 bg-slate-50 overflow-y-auto">
       <div className="max-w-4xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-gray-900">Add New Case</h1>
-          <p className="text-gray-600 mt-2">Enter the case information below.</p>
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900">Add New Case</h1>
+            <p className="text-gray-600 mt-2">Enter the case information below.</p>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setShowFetchDialog(true)}
+            className="bg-blue-600 text-white hover:bg-blue-700"
+          >
+            Fetch Case Details
+          </Button>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -325,6 +353,12 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
             </Button>
           </div>
         </form>
+
+        <FetchCaseDialog
+          open={showFetchDialog}
+          onClose={() => setShowFetchDialog(false)}
+          onSuccess={handleFetchSuccess}
+        />
       </div>
     </div>
   );
