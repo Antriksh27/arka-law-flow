@@ -13,11 +13,13 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { X, Plus, Mic, MicOff, Square, Play, Pause, Trash2 } from 'lucide-react';
 import { DrawingCanvas } from './DrawingCanvas';
+
 interface CreateNoteMultiModalProps {
   open: boolean;
   onClose: () => void;
   caseId?: string;
 }
+
 interface NoteFormData {
   title: string;
   content?: string;
@@ -26,14 +28,13 @@ interface NoteFormData {
   color: 'yellow' | 'blue' | 'green' | 'red' | 'gray';
   tags: string[];
 }
+
 export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
   open,
   onClose,
   caseId
 }) => {
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [newTag, setNewTag] = useState('');
   const [activeTab, setActiveTab] = useState('write');
@@ -45,16 +46,14 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+
   const {
     register,
     handleSubmit,
     setValue,
     watch,
     reset,
-    formState: {
-      errors,
-      isSubmitting
-    }
+    formState: { errors, isSubmitting }
   } = useForm<NoteFormData>({
     defaultValues: {
       visibility: 'private',
@@ -63,6 +62,7 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
       case_id: caseId || 'no-case'
     }
   });
+
   const watchedTags = watch('tags') || [];
 
   // Fetch cases for linking
@@ -79,47 +79,56 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
       return data || [];
     }
   });
+
   const createNoteMutation = useMutation({
     mutationFn: async (data: NoteFormData) => {
       const user = await supabase.auth.getUser();
       if (!user.data.user) throw new Error('Not authenticated');
+
       let finalContent = data.content || '';
+
+      // Convert audio blob to base64 if available
+      let audioDataUrl = null;
+      if (audioBlob) {
+        audioDataUrl = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(audioBlob);
+        });
+        finalContent += '\n\n[Audio recording attached]';
+      }
 
       // Add drawing data if available
       if (drawingData) {
         finalContent += '\n\n[Drawing attached]';
-        // In a real implementation, you'd upload the drawing to storage
       }
 
-      // Add audio note if available
-      if (audioBlob) {
-        finalContent += '\n\n[Audio recording attached]';
-        // In a real implementation, you'd upload the audio to storage
-      }
       const noteData = {
         title: data.title,
         content: finalContent,
         case_id: data.case_id === 'no-case' ? null : data.case_id,
         visibility: data.visibility,
         color: data.color,
-        tags: data.tags
+        tags: data.tags,
+        drawing_data: drawingData,
+        audio_data: audioDataUrl
       };
-      const {
-        error
-      } = await supabase.from('notes_v2').insert(noteData);
+
+      console.log('Saving note with data:', noteData);
+
+      const { error } = await supabase
+        .from('notes_v2')
+        .insert(noteData);
+      
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['notes']
-      });
-      toast({
-        title: "Note created successfully"
-      });
+      queryClient.invalidateQueries({ queryKey: ['notes'] });
+      toast({ title: "Note created successfully" });
       handleReset();
       onClose();
     },
-    onError: error => {
+    onError: (error) => {
       console.error('Note creation error:', error);
       toast({
         title: "Failed to create note",
@@ -128,6 +137,7 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
       });
     }
   });
+
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -159,12 +169,14 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
       });
     }
   };
+
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
     }
   };
+
   const playAudio = () => {
     if (audioUrl && audioRef.current) {
       if (isPlaying) {
@@ -176,20 +188,24 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
       }
     }
   };
+
   const deleteRecording = () => {
     setAudioBlob(null);
     setAudioUrl(null);
     setIsPlaying(false);
   };
+
   const addTag = () => {
     if (newTag.trim() && !watchedTags.includes(newTag.trim())) {
       setValue('tags', [...watchedTags, newTag.trim()]);
       setNewTag('');
     }
   };
+
   const removeTag = (tagToRemove: string) => {
     setValue('tags', watchedTags.filter(tag => tag !== tagToRemove));
   };
+
   const handleReset = () => {
     reset();
     setDrawingData(null);
@@ -199,9 +215,11 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
     setNewTag('');
     setActiveTab('write');
   };
+
   const onSubmit = (data: NoteFormData) => {
     createNoteMutation.mutate(data);
   };
+
   const colorOptions = [{
     value: 'gray',
     label: 'Gray',
@@ -223,11 +241,13 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
     label: 'Red',
     class: 'bg-red-100'
   }];
+
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.onended = () => setIsPlaying(false);
     }
   }, [audioUrl]);
+
   return <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white">
         <DialogHeader className="pb-4 border-b border-gray-100">
