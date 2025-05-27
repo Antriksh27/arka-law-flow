@@ -17,7 +17,7 @@ interface NewCaseFormProps {
 }
 
 interface CaseFormData {
-  title: string;
+  case_title: string;
   description?: string;
   client_id?: string;
   case_type: string;
@@ -76,7 +76,7 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
       const { error } = await supabase
         .from('cases')
         .insert({
-          title: data.title,
+          case_title: data.case_title,
           description: data.description || null,
           client_id: data.client_id || null,
           case_type: data.case_type,
@@ -115,7 +115,7 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
   });
 
   const onSubmit = (data: CaseFormData) => {
-    if (!data.title.trim()) {
+    if (!data.case_title.trim()) {
       toast({
         title: "Error",
         description: "Please enter a case title",
@@ -128,7 +128,7 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
 
   const handleFetchSuccess = (fetchedData: any) => {
     // Populate form with fetched data
-    if (fetchedData.title) setValue('title', fetchedData.title);
+    if (fetchedData.title) setValue('case_title', fetchedData.title);
     if (fetchedData.case_number) setValue('case_number', fetchedData.case_number);
     if (fetchedData.court) setValue('court', fetchedData.court);
     if (fetchedData.cnr_number) setValue('cnr_number', fetchedData.cnr_number);
@@ -158,7 +158,7 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
             type="button"
             variant="outline"
             onClick={() => setShowFetchDialog(true)}
-            className="bg-blue-600 text-white hover:bg-blue-700"
+            className="bg-primary text-white hover:bg-primary/90 border-primary"
           >
             Fetch Case Details
           </Button>
@@ -167,14 +167,14 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="md:col-span-2">
-              <Label htmlFor="title">Case Title *</Label>
+              <Label htmlFor="case_title">Case Title *</Label>
               <Input 
-                id="title" 
-                {...register('title', { required: 'Case title is required' })} 
+                id="case_title" 
+                {...register('case_title', { required: 'Case title is required' })} 
                 className="mt-2"
                 placeholder="Enter case title..."
               />
-              {errors.title && <p className="text-sm text-red-600 mt-1">{errors.title.message}</p>}
+              {errors.case_title && <p className="text-sm text-red-600 mt-1">{errors.case_title.message}</p>}
             </div>
 
             <div>
@@ -182,7 +182,7 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
               <select 
                 id="client_id" 
                 {...register('client_id')} 
-                className="w-full px-3 py-2 mt-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 mt-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white"
                 disabled={!!preSelectedClientId}
               >
                 <option value="">Select a client...</option>
@@ -199,7 +199,7 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
               <select 
                 id="case_type" 
                 {...register('case_type')} 
-                className="w-full px-3 py-2 mt-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 mt-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white"
               >
                 <option value="civil">Civil</option>
                 <option value="criminal">Criminal</option>
@@ -220,7 +220,7 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
               <select 
                 id="status" 
                 {...register('status')} 
-                className="w-full px-3 py-2 mt-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 mt-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white"
               >
                 <option value="open">Open</option>
                 <option value="in_court">In Court</option>
@@ -234,7 +234,7 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
               <select 
                 id="priority" 
                 {...register('priority')} 
-                className="w-full px-3 py-2 mt-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 mt-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white"
               >
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
@@ -337,7 +337,7 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
               <textarea 
                 id="description" 
                 {...register('description')} 
-                className="w-full px-3 py-2 mt-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                className="w-full px-3 py-2 mt-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white" 
                 rows={4}
                 placeholder="Enter case description..."
               />
@@ -348,7 +348,7 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
             <Button type="button" variant="outline" onClick={onCancel}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting} className="bg-primary hover:bg-primary/90">
               {isSubmitting ? 'Creating...' : 'Create Case'}
             </Button>
           </div>
