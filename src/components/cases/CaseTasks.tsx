@@ -111,15 +111,15 @@ export const CaseTasks: React.FC<CaseTasksProps> = ({ caseId }) => {
       {tasks && tasks.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {Object.entries(tasksByStatus).map(([status, statusTasks]) => (
-            <Card key={status} className="h-fit">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-gray-600 uppercase tracking-wide">
+            <Card key={status} className="h-fit bg-white border-gray-200 shadow-sm">
+              <CardHeader className="pb-3 bg-gray-50 border-b border-gray-100">
+                <CardTitle className="text-sm font-medium text-gray-700 uppercase tracking-wide">
                   {status.replace('_', ' ')} ({statusTasks.length})
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-3 p-4">
                 {statusTasks.map((task) => (
-                  <div key={task.id} className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                  <div key={task.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200 shadow-sm hover:shadow-md transition-shadow hover:bg-white">
                     <div className="flex items-start justify-between mb-3">
                       <h4 className="font-medium text-sm text-gray-900 line-clamp-2">{task.title}</h4>
                       <Badge className={`${getPriorityColor(task.priority)} text-xs rounded-full border`}>
@@ -149,7 +149,7 @@ export const CaseTasks: React.FC<CaseTasksProps> = ({ caseId }) => {
                         <Tag className="w-3 h-3 text-gray-400" />
                         <div className="flex flex-wrap gap-1">
                           {task.tags.slice(0, 2).map((tag: string) => (
-                            <span key={tag} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                            <span key={tag} className="text-xs bg-white text-gray-600 px-2 py-1 rounded border border-gray-200">
                               {tag}
                             </span>
                           ))}
@@ -167,7 +167,7 @@ export const CaseTasks: React.FC<CaseTasksProps> = ({ caseId }) => {
                             size="sm"
                             variant="outline"
                             onClick={() => handleStatusChange(task.id, 'in_progress')}
-                            className="text-xs"
+                            className="text-xs bg-white hover:bg-gray-50 border-gray-300"
                           >
                             Start
                           </Button>
@@ -177,7 +177,7 @@ export const CaseTasks: React.FC<CaseTasksProps> = ({ caseId }) => {
                             size="sm"
                             variant="outline"
                             onClick={() => handleStatusChange(task.id, 'completed')}
-                            className="text-xs"
+                            className="text-xs bg-white hover:bg-gray-50 border-gray-300"
                           >
                             Complete
                           </Button>

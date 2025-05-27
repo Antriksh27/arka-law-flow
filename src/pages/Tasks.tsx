@@ -119,7 +119,7 @@ const Tasks = () => {
   };
 
   const TaskCard = ({ task }: { task: any }) => (
-    <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 shadow-sm hover:shadow-md transition-shadow hover:bg-white">
       <div className="flex items-start justify-between mb-3">
         <h4 className="font-medium text-sm text-gray-900 line-clamp-2">{task.title}</h4>
         <Badge className={`${getPriorityColor(task.priority)} text-xs rounded-full border`}>
@@ -155,7 +155,7 @@ const Tasks = () => {
           <Tag className="w-3 h-3 text-gray-400" />
           <div className="flex flex-wrap gap-1">
             {task.tags.slice(0, 2).map((tag: string) => (
-              <span key={tag} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+              <span key={tag} className="text-xs bg-white text-gray-600 px-2 py-1 rounded border border-gray-200">
                 {tag}
               </span>
             ))}
@@ -173,7 +173,7 @@ const Tasks = () => {
               size="sm"
               variant="outline"
               onClick={() => handleStatusChange(task.id, 'in_progress')}
-              className="text-xs"
+              className="text-xs bg-white hover:bg-gray-50 border-gray-300"
             >
               Start
             </Button>
@@ -183,7 +183,7 @@ const Tasks = () => {
               size="sm"
               variant="outline"
               onClick={() => handleStatusChange(task.id, 'completed')}
-              className="text-xs"
+              className="text-xs bg-white hover:bg-gray-50 border-gray-300"
             >
               Complete
             </Button>
@@ -220,7 +220,7 @@ const Tasks = () => {
         </div>
 
         {/* Filters */}
-        <Card>
+        <Card className="bg-white border-gray-200">
           <CardContent className="p-4">
             <div className="flex flex-wrap gap-4 items-center">
               <div className="flex items-center gap-2">
@@ -229,15 +229,15 @@ const Tasks = () => {
                   placeholder="Search tasks..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-64"
+                  className="w-64 bg-white border-gray-300"
                 />
               </div>
               
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-40">
+                <SelectTrigger className="w-40 bg-white border-gray-300">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white">
                   <SelectItem value="all">All Status</SelectItem>
                   <SelectItem value="todo">To Do</SelectItem>
                   <SelectItem value="in_progress">In Progress</SelectItem>
@@ -246,10 +246,10 @@ const Tasks = () => {
               </Select>
 
               <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-                <SelectTrigger className="w-40">
+                <SelectTrigger className="w-40 bg-white border-gray-300">
                   <SelectValue placeholder="Priority" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white">
                   <SelectItem value="all">All Priority</SelectItem>
                   <SelectItem value="high">High</SelectItem>
                   <SelectItem value="medium">Medium</SelectItem>
@@ -258,10 +258,10 @@ const Tasks = () => {
               </Select>
 
               <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="w-48 bg-white border-gray-300">
                   <SelectValue placeholder="Assignee" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white">
                   <SelectItem value="all">All Assignees</SelectItem>
                   <SelectItem value="unassigned">Unassigned</SelectItem>
                   {teamMembers.map((member) => (
@@ -277,25 +277,25 @@ const Tasks = () => {
 
         {/* Task Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
+          <Card className="bg-white border-gray-200">
             <CardContent className="p-4">
               <div className="text-2xl font-bold text-gray-900">{tasks.length}</div>
               <div className="text-sm text-gray-600">Total Tasks</div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="bg-white border-gray-200">
             <CardContent className="p-4">
               <div className="text-2xl font-bold text-blue-600">{tasksByStatus.todo.length}</div>
               <div className="text-sm text-gray-600">To Do</div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="bg-white border-gray-200">
             <CardContent className="p-4">
               <div className="text-2xl font-bold text-gray-600">{tasksByStatus.in_progress.length}</div>
               <div className="text-sm text-gray-600">In Progress</div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="bg-white border-gray-200">
             <CardContent className="p-4">
               <div className="text-2xl font-bold text-green-600">{tasksByStatus.completed.length}</div>
               <div className="text-sm text-gray-600">Completed</div>
@@ -307,13 +307,13 @@ const Tasks = () => {
         {tasks.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {Object.entries(tasksByStatus).map(([status, statusTasks]) => (
-              <Card key={status} className="h-fit">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-gray-600 uppercase tracking-wide">
+              <Card key={status} className="h-fit bg-white border-gray-200 shadow-sm">
+                <CardHeader className="pb-3 bg-gray-50 border-b border-gray-100">
+                  <CardTitle className="text-sm font-medium text-gray-700 uppercase tracking-wide">
                     {status.replace('_', ' ')} ({statusTasks.length})
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="space-y-3 p-4">
                   {statusTasks.map((task) => (
                     <TaskCard key={task.id} task={task} />
                   ))}
