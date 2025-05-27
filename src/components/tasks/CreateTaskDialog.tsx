@@ -99,75 +99,85 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Create New Task</DialogTitle>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white border border-gray-200 shadow-lg">
+        <DialogHeader className="pb-4 border-b border-gray-100">
+          <DialogTitle className="text-xl font-semibold text-gray-900">Create New Task</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <Label htmlFor="title">Task Title *</Label>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 pt-4">
+          <div className="space-y-2">
+            <Label htmlFor="title" className="text-sm font-medium text-gray-700">
+              Task Title *
+            </Label>
             <Input
               id="title"
               {...register('title', { required: 'Task title is required' })}
               placeholder="Enter task title..."
-              className="mt-1"
+              className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
             />
             {errors.title && (
-              <p className="text-sm text-red-600 mt-1">{errors.title.message}</p>
+              <p className="text-sm text-red-600">{errors.title.message}</p>
             )}
           </div>
 
-          <div>
-            <Label htmlFor="description">Description</Label>
+          <div className="space-y-2">
+            <Label htmlFor="description" className="text-sm font-medium text-gray-700">
+              Description
+            </Label>
             <Textarea
               id="description"
               {...register('description')}
               placeholder="Enter task description..."
-              className="mt-1"
-              rows={3}
+              className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 min-h-[100px]"
+              rows={4}
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="priority">Priority</Label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="priority" className="text-sm font-medium text-gray-700">
+                Priority
+              </Label>
               <Select onValueChange={(value) => setValue('priority', value as any)} defaultValue="medium">
-                <SelectTrigger className="mt-1">
+                <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
+                <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                  <SelectItem value="low" className="hover:bg-gray-50">Low</SelectItem>
+                  <SelectItem value="medium" className="hover:bg-gray-50">Medium</SelectItem>
+                  <SelectItem value="high" className="hover:bg-gray-50">High</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            <div>
-              <Label htmlFor="status">Status</Label>
+            <div className="space-y-2">
+              <Label htmlFor="status" className="text-sm font-medium text-gray-700">
+                Status
+              </Label>
               <Select onValueChange={(value) => setValue('status', value as any)} defaultValue="todo">
-                <SelectTrigger className="mt-1">
+                <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todo">To Do</SelectItem>
-                  <SelectItem value="in_progress">In Progress</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
+                <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                  <SelectItem value="todo" className="hover:bg-gray-50">To Do</SelectItem>
+                  <SelectItem value="in_progress" className="hover:bg-gray-50">In Progress</SelectItem>
+                  <SelectItem value="completed" className="hover:bg-gray-50">Completed</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="assigned_to">Assign To</Label>
+          <div className="space-y-2">
+            <Label htmlFor="assigned_to" className="text-sm font-medium text-gray-700">
+              Assign To
+            </Label>
             <Select onValueChange={(value) => setValue('assigned_to', value)}>
-              <SelectTrigger className="mt-1">
+              <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                 <SelectValue placeholder="Select team member..." />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
                 {teamMembers.map((member) => (
-                  <SelectItem key={member.id} value={member.id}>
+                  <SelectItem key={member.id} value={member.id} className="hover:bg-gray-50">
                     {member.full_name} ({member.role})
                   </SelectItem>
                 ))}
@@ -175,32 +185,45 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
             </Select>
           </div>
 
-          <div>
-            <Label htmlFor="due_date">Due Date</Label>
+          <div className="space-y-2">
+            <Label htmlFor="due_date" className="text-sm font-medium text-gray-700">
+              Due Date
+            </Label>
             <Input
               id="due_date"
               type="date"
               {...register('due_date')}
-              className="mt-1"
+              className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
 
-          <div>
-            <Label htmlFor="tags">Tags</Label>
+          <div className="space-y-2">
+            <Label htmlFor="tags" className="text-sm font-medium text-gray-700">
+              Tags
+            </Label>
             <Input
               id="tags"
               {...register('tags')}
               placeholder="Enter tags separated by commas..."
-              className="mt-1"
+              className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
             />
-            <p className="text-xs text-gray-500 mt-1">Separate multiple tags with commas</p>
+            <p className="text-xs text-gray-500">Separate multiple tags with commas</p>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>
+          <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onClose}
+              className="px-6 py-2 border-gray-300 text-gray-700 hover:bg-gray-50"
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting} className="bg-blue-600 hover:bg-blue-700">
+            <Button 
+              type="submit" 
+              disabled={isSubmitting} 
+              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white"
+            >
               {isSubmitting ? 'Creating...' : 'Create Task'}
             </Button>
           </div>
