@@ -76,7 +76,7 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
       const { error } = await supabase
         .from('cases')
         .insert({
-          case_title: data.case_title,
+          title: data.case_title, // Fix: Map case_title to title
           description: data.description || null,
           client_id: data.client_id || null,
           case_type: data.case_type,
@@ -171,7 +171,7 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
               <Input 
                 id="case_title" 
                 {...register('case_title', { required: 'Case title is required' })} 
-                className="mt-2"
+                className="mt-2 bg-white border-gray-300"
                 placeholder="Enter case title..."
               />
               {errors.case_title && <p className="text-sm text-red-600 mt-1">{errors.case_title.message}</p>}
@@ -247,7 +247,7 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
               <Input 
                 id="case_number" 
                 {...register('case_number')} 
-                className="mt-2"
+                className="mt-2 bg-white border-gray-300"
                 placeholder="Enter case number..."
               />
             </div>
@@ -258,7 +258,7 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
                 id="filing_date" 
                 type="date"
                 {...register('filing_date')} 
-                className="mt-2"
+                className="mt-2 bg-white border-gray-300"
               />
             </div>
 
@@ -267,7 +267,7 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
               <Input 
                 id="court" 
                 {...register('court')} 
-                className="mt-2"
+                className="mt-2 bg-white border-gray-300"
                 placeholder="Enter court name..."
               />
             </div>
@@ -277,7 +277,7 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
               <Input 
                 id="cnr_number" 
                 {...register('cnr_number')} 
-                className="mt-2"
+                className="mt-2 bg-white border-gray-300"
                 placeholder="Enter CNR number..."
               />
             </div>
@@ -287,7 +287,7 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
               <Input 
                 id="filing_number" 
                 {...register('filing_number')} 
-                className="mt-2"
+                className="mt-2 bg-white border-gray-300"
                 placeholder="Enter filing number..."
               />
             </div>
@@ -297,7 +297,7 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
               <Input 
                 id="petitioner" 
                 {...register('petitioner')} 
-                className="mt-2"
+                className="mt-2 bg-white border-gray-300"
                 placeholder="Enter petitioner name..."
               />
             </div>
@@ -307,7 +307,7 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
               <Input 
                 id="respondent" 
                 {...register('respondent')} 
-                className="mt-2"
+                className="mt-2 bg-white border-gray-300"
                 placeholder="Enter respondent name..."
               />
             </div>
@@ -317,7 +317,7 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
               <Input 
                 id="advocate_name" 
                 {...register('advocate_name')} 
-                className="mt-2"
+                className="mt-2 bg-white border-gray-300"
                 placeholder="Enter advocate name..."
               />
             </div>
@@ -327,7 +327,7 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
               <Input 
                 id="district" 
                 {...register('district')} 
-                className="mt-2"
+                className="mt-2 bg-white border-gray-300"
                 placeholder="Enter district..."
               />
             </div>
