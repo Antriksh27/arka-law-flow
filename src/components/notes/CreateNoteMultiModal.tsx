@@ -247,9 +247,9 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-3 bg-slate-800">
-              <TabsTrigger value="write">✏️ Write</TabsTrigger>
-              <TabsTrigger value="draw">🎨 Draw</TabsTrigger>
-              <TabsTrigger value="record">🎤 Record</TabsTrigger>
+              <TabsTrigger value="write" className="text-slate-600 bg-slate-400 hover:bg-slate-300">✏️ Write</TabsTrigger>
+              <TabsTrigger value="draw" className="bg-slate-400 hover:bg-slate-300 text-slate-500">🎨 Draw</TabsTrigger>
+              <TabsTrigger value="record" className="bg-slate-400 hover:bg-slate-300 text-slate-500">🎤 Record</TabsTrigger>
             </TabsList>
             
             <TabsContent value="write" className="space-y-4">
