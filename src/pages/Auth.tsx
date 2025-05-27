@@ -1,9 +1,9 @@
 
 import React from 'react';
-import LoginPage from '@/components/ui/animated-sign-in';
+import { SignIn1 } from '@/components/ui/modern-stunning-sign-in';
 
 const Auth = () => {
-  return <LoginPage />;
+  return <SignIn1 />;
 };
 
 export default Auth;
