@@ -3,10 +3,12 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { AddCaseDialog } from '@/components/cases/AddCaseDialog';
-import { Plus, FileText, ArrowLeft } from 'lucide-react';
+import { Plus, FileText, ArrowLeft, Search } from 'lucide-react';
 
 interface AssignToCaseDialogProps {
   open: boolean;
@@ -23,6 +25,7 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
 }) => {
   const [view, setView] = useState<'selection' | 'existing' | 'new'>('selection');
   const [showAddCaseDialog, setShowAddCaseDialog] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { data: cases = [], isLoading } = useQuery({
     queryKey: ['all-cases'],
@@ -45,6 +48,13 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
     },
     enabled: view === 'existing'
   });
+
+  // Filter cases based on search query
+  const filteredCases = cases.filter(case_item =>
+    case_item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    case_item.case_type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (case_item.clients?.full_name || '').toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleAssignToCase = async (caseId: string) => {
     try {
@@ -80,6 +90,7 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
   const handleClose = () => {
     onOpenChange(false);
     setView('selection');
+    setSearchQuery('');
   };
 
   const handleNewCaseSuccess = () => {
@@ -141,48 +152,60 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
                 </Button>
               </div>
 
-              <div className="max-h-96 overflow-y-auto space-y-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Search cases by title, type, or client..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+
+              <ScrollArea className="h-96 w-full rounded-md border p-4">
                 {isLoading ? (
                   <div className="text-center py-8 text-gray-500">
                     Loading cases...
                   </div>
-                ) : cases.length === 0 ? (
+                ) : filteredCases.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
-                    No cases found
+                    {searchQuery ? 'No cases found matching your search' : 'No cases found'}
                   </div>
                 ) : (
-                  cases.map((case_item) => (
-                    <div
-                      key={case_item.id}
-                      className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors"
-                      onClick={() => handleAssignToCase(case_item.id)}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h3 className="font-medium text-gray-900 mb-2">
-                            {case_item.title}
-                          </h3>
-                          <div className="flex items-center gap-4 text-sm text-gray-500">
-                            <Badge
-                              variant="secondary"
-                              className={getStatusColor(case_item.status)}
-                            >
-                              {case_item.status?.replace('_', ' ')}
-                            </Badge>
-                            <span className="capitalize">{case_item.case_type}</span>
-                            {case_item.clients && (
-                              <span>Current client: {case_item.clients.full_name}</span>
-                            )}
+                  <div className="space-y-3">
+                    {filteredCases.map((case_item) => (
+                      <div
+                        key={case_item.id}
+                        className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors"
+                        onClick={() => handleAssignToCase(case_item.id)}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h3 className="font-medium text-gray-900 mb-2">
+                              {case_item.title}
+                            </h3>
+                            <div className="flex items-center gap-4 text-sm text-gray-500">
+                              <Badge
+                                variant="secondary"
+                                className={getStatusColor(case_item.status)}
+                              >
+                                {case_item.status?.replace('_', ' ')}
+                              </Badge>
+                              <span className="capitalize">{case_item.case_type}</span>
+                              {case_item.clients && (
+                                <span>Current client: {case_item.clients.full_name}</span>
+                              )}
+                            </div>
                           </div>
+                          <Button size="sm" variant="outline">
+                            Link Case
+                          </Button>
                         </div>
-                        <Button size="sm" variant="outline">
-                          Link Case
-                        </Button>
                       </div>
-                    </div>
-                  ))
+                    ))}
+                  </div>
                 )}
-              </div>
+              </ScrollArea>
             </div>
           )}
         </DialogContent>
