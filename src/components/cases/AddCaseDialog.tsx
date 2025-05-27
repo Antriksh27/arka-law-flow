@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -13,9 +13,14 @@ import { toast } from 'sonner';
 interface AddCaseDialogProps {
   open: boolean;
   onClose: () => void;
+  preSelectedClientId?: string;
 }
 
-export const AddCaseDialog: React.FC<AddCaseDialogProps> = ({ open, onClose }) => {
+export const AddCaseDialog: React.FC<AddCaseDialogProps> = ({ 
+  open, 
+  onClose, 
+  preSelectedClientId 
+}) => {
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
     title: '',
@@ -25,6 +30,13 @@ export const AddCaseDialog: React.FC<AddCaseDialogProps> = ({ open, onClose }) =
     status: 'open',
     priority: 'medium'
   });
+
+  // Set pre-selected client when dialog opens
+  useEffect(() => {
+    if (preSelectedClientId && open) {
+      setFormData(prev => ({ ...prev, client_id: preSelectedClientId }));
+    }
+  }, [preSelectedClientId, open]);
 
   const { data: clients } = useQuery({
     queryKey: ['clients-for-cases'],
@@ -51,6 +63,7 @@ export const AddCaseDialog: React.FC<AddCaseDialogProps> = ({ open, onClose }) =
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cases'] });
+      queryClient.invalidateQueries({ queryKey: ['client-cases'] });
       toast.success('Case created successfully');
       onClose();
       setFormData({
@@ -99,7 +112,11 @@ export const AddCaseDialog: React.FC<AddCaseDialogProps> = ({ open, onClose }) =
 
             <div>
               <Label htmlFor="client">Client</Label>
-              <Select value={formData.client_id} onValueChange={(value) => setFormData({ ...formData, client_id: value })}>
+              <Select 
+                value={formData.client_id} 
+                onValueChange={(value) => setFormData({ ...formData, client_id: value })}
+                disabled={!!preSelectedClientId}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select client" />
                 </SelectTrigger>

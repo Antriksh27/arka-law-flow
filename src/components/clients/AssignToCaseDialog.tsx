@@ -1,0 +1,195 @@
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/integrations/supabase/client';
+import { AddCaseDialog } from '@/components/cases/AddCaseDialog';
+import { Plus, FileText } from 'lucide-react';
+
+interface AssignToCaseDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  clientId: string;
+  clientName: string;
+}
+
+export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
+  open,
+  onOpenChange,
+  clientId,
+  clientName
+}) => {
+  const [view, setView] = useState<'selection' | 'existing' | 'new'>('selection');
+  const [showAddCaseDialog, setShowAddCaseDialog] = useState(false);
+
+  const { data: cases = [], isLoading } = useQuery({
+    queryKey: ['all-cases'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('cases')
+        .select(`
+          id,
+          title,
+          status,
+          case_type,
+          created_at,
+          client_id,
+          clients(full_name)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: view === 'existing'
+  });
+
+  const handleAssignToCase = async (caseId: string) => {
+    try {
+      const { error } = await supabase
+        .from('cases')
+        .update({ client_id: clientId })
+        .eq('id', caseId);
+
+      if (error) throw error;
+
+      onOpenChange(false);
+      setView('selection');
+    } catch (error) {
+      console.error('Error assigning client to case:', error);
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'open':
+        return 'bg-blue-100 text-blue-800';
+      case 'in_court':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'on_hold':
+        return 'bg-orange-100 text-orange-800';
+      case 'closed':
+        return 'bg-gray-100 text-gray-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const handleClose = () => {
+    onOpenChange(false);
+    setView('selection');
+  };
+
+  const handleNewCaseSuccess = () => {
+    setShowAddCaseDialog(false);
+    handleClose();
+  };
+
+  return (
+    <>
+      <Dialog open={open} onOpenChange={handleClose}>
+        <DialogContent className="max-w-2xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>
+              {view === 'selection' && `Assign ${clientName} to Case`}
+              {view === 'existing' && 'Select Existing Case'}
+              {view === 'new' && 'Create New Case'}
+            </DialogTitle>
+          </DialogHeader>
+
+          {view === 'selection' && (
+            <div className="space-y-4 py-6">
+              <Button
+                onClick={() => setView('existing')}
+                className="w-full h-20 flex flex-col items-center gap-2 text-left"
+                variant="outline"
+              >
+                <FileText className="w-6 h-6" />
+                <div>
+                  <div className="font-medium">Assign to Existing Case</div>
+                  <div className="text-sm text-gray-500">Choose from existing cases</div>
+                </div>
+              </Button>
+
+              <Button
+                onClick={() => setShowAddCaseDialog(true)}
+                className="w-full h-20 flex flex-col items-center gap-2 text-left"
+                variant="outline"
+              >
+                <Plus className="w-6 h-6" />
+                <div>
+                  <div className="font-medium">Create New Case</div>
+                  <div className="text-sm text-gray-500">Add a new case for this client</div>
+                </div>
+              </Button>
+            </div>
+          )}
+
+          {view === 'existing' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Button
+                  variant="outline"
+                  onClick={() => setView('selection')}
+                  size="sm"
+                >
+                  ← Back
+                </Button>
+              </div>
+
+              <div className="max-h-96 overflow-y-auto space-y-3">
+                {isLoading ? (
+                  <div className="text-center py-8 text-gray-500">
+                    Loading cases...
+                  </div>
+                ) : cases.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    No cases found
+                  </div>
+                ) : (
+                  cases.map((case_item) => (
+                    <div
+                      key={case_item.id}
+                      className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer"
+                      onClick={() => handleAssignToCase(case_item.id)}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h3 className="font-medium text-gray-900 mb-2">
+                            {case_item.title}
+                          </h3>
+                          <div className="flex items-center gap-4 text-sm text-gray-500">
+                            <Badge
+                              variant="secondary"
+                              className={getStatusColor(case_item.status)}
+                            >
+                              {case_item.status?.replace('_', ' ')}
+                            </Badge>
+                            <span className="capitalize">{case_item.case_type}</span>
+                            {case_item.clients && (
+                              <span>Current client: {case_item.clients.full_name}</span>
+                            )}
+                          </div>
+                        </div>
+                        <Button size="sm" variant="outline">
+                          Assign
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <AddCaseDialog
+        open={showAddCaseDialog}
+        onClose={handleNewCaseSuccess}
+        preSelectedClientId={clientId}
+      />
+    </>
+  );
+};

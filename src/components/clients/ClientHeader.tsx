@@ -1,8 +1,10 @@
+
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Edit, Link2, Briefcase } from 'lucide-react';
+import { ClientQuickActions } from './ClientQuickActions';
 
 interface ClientHeaderProps {
   client: any;
@@ -64,10 +66,11 @@ export const ClientHeader: React.FC<ClientHeaderProps> = ({
             Enable Portal
           </Button>
           
-          <Button size="sm">
-            <Briefcase className="w-4 h-4 mr-2" />
-            Assign to Case
-          </Button>
+          <ClientQuickActions 
+            clientId={client.id} 
+            clientName={client.full_name}
+            onAction={onUpdate} 
+          />
         </div>
       </div>
     </div>
