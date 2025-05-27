@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -9,30 +8,30 @@ import { getFileIcon } from '@/lib/fileUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { FileViewer } from './FileViewer';
-
 interface DocumentListProps {
   documents: any[];
   onRefresh: () => void;
 }
-
-export const DocumentList: React.FC<DocumentListProps> = ({ documents, onRefresh }) => {
+export const DocumentList: React.FC<DocumentListProps> = ({
+  documents,
+  onRefresh
+}) => {
   const [selectedDocument, setSelectedDocument] = useState<any>(null);
   const [showFileViewer, setShowFileViewer] = useState(false);
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   const handleViewDocument = (document: any) => {
     setSelectedDocument(document);
     setShowFileViewer(true);
   };
-
   const handleDownload = async (document: any) => {
     try {
-      const { data, error } = await supabase.storage
-        .from('documents')
-        .download(document.file_url);
-
+      const {
+        data,
+        error
+      } = await supabase.storage.from('documents').download(document.file_url);
       if (error) throw error;
-
       const url = URL.createObjectURL(data);
       const a = document.createElement('a');
       a.href = url;
@@ -49,21 +48,18 @@ export const DocumentList: React.FC<DocumentListProps> = ({ documents, onRefresh
       });
     }
   };
-
   const toggleImportant = async (document: any) => {
     try {
-      const { error } = await supabase
-        .from('documents')
-        .update({ is_evidence: !document.is_evidence })
-        .eq('id', document.id);
-
+      const {
+        error
+      } = await supabase.from('documents').update({
+        is_evidence: !document.is_evidence
+      }).eq('id', document.id);
       if (error) throw error;
-      
       toast({
         title: document.is_evidence ? "Removed from important" : "Marked as important",
         description: `Document ${document.is_evidence ? 'unmarked' : 'marked'} as important`
       });
-      
       onRefresh();
     } catch (error) {
       toast({
@@ -73,21 +69,18 @@ export const DocumentList: React.FC<DocumentListProps> = ({ documents, onRefresh
       });
     }
   };
-
   const formatFileSize = (bytes: number) => {
     if (!bytes) return 'Unknown';
     const kb = bytes / 1024;
     if (kb < 1024) return `${kb.toFixed(1)} KB`;
     return `${(kb / 1024).toFixed(1)} MB`;
   };
-
-  return (
-    <>
+  return <>
       <div className="p-6">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
+              <TableHead className="bg-slate-800">Name</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Case</TableHead>
               <TableHead>Uploaded By</TableHead>
@@ -98,11 +91,9 @@ export const DocumentList: React.FC<DocumentListProps> = ({ documents, onRefresh
             </TableRow>
           </TableHeader>
           <TableBody>
-            {documents.map((doc) => {
-              const FileIcon = getFileIcon(doc.file_type);
-              
-              return (
-                <TableRow key={doc.id} className="hover:bg-gray-50">
+            {documents.map(doc => {
+            const FileIcon = getFileIcon(doc.file_type);
+            return <TableRow key={doc.id} className="hover:bg-gray-50">
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <FileIcon className="w-8 h-8 text-gray-500" />
@@ -138,51 +129,26 @@ export const DocumentList: React.FC<DocumentListProps> = ({ documents, onRefresh
                     </span>
                   </TableCell>
                   <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => toggleImportant(doc)}
-                      className="p-1"
-                    >
-                      {doc.is_evidence ? (
-                        <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                      ) : (
-                        <StarOff className="w-4 h-4 text-gray-400" />
-                      )}
+                    <Button variant="ghost" size="sm" onClick={() => toggleImportant(doc)} className="p-1">
+                      {doc.is_evidence ? <Star className="w-4 h-4 text-yellow-500 fill-current" /> : <StarOff className="w-4 h-4 text-gray-400" />}
                     </Button>
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-1">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="p-1"
-                        onClick={() => handleViewDocument(doc)}
-                      >
+                      <Button variant="ghost" size="sm" className="p-1" onClick={() => handleViewDocument(doc)}>
                         <Eye className="w-4 h-4" />
                       </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="p-1"
-                        onClick={() => handleDownload(doc)}
-                      >
+                      <Button variant="ghost" size="sm" className="p-1" onClick={() => handleDownload(doc)}>
                         <Download className="w-4 h-4" />
                       </Button>
                     </div>
                   </TableCell>
-                </TableRow>
-              );
-            })}
+                </TableRow>;
+          })}
           </TableBody>
         </Table>
       </div>
 
-      <FileViewer
-        open={showFileViewer}
-        onClose={() => setShowFileViewer(false)}
-        document={selectedDocument}
-      />
-    </>
-  );
+      <FileViewer open={showFileViewer} onClose={() => setShowFileViewer(false)} document={selectedDocument} />
+    </>;
 };
