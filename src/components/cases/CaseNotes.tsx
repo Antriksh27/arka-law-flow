@@ -1,9 +1,9 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { NoteCard } from '../notes/NoteCard';
+import { NoteViewDialog } from '../notes/NoteViewDialog';
 import { CreateNoteDialog } from '../notes/CreateNoteDialog';
 import { EditNoteDialog } from '../notes/EditNoteDialog';
 import { StickyNote, Plus } from 'lucide-react';
@@ -15,6 +15,7 @@ interface CaseNotesProps {
 export const CaseNotes: React.FC<CaseNotesProps> = ({ caseId }) => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingNote, setEditingNote] = useState<any>(null);
+  const [viewingNote, setViewingNote] = useState<any>(null);
 
   const { data: notes, isLoading } = useQuery({
     queryKey: ['case-notes', caseId],
@@ -64,6 +65,7 @@ export const CaseNotes: React.FC<CaseNotesProps> = ({ caseId }) => {
               onTogglePin={() => {
                 // Handle toggle pin - this will be handled by the NoteCard component
               }}
+              onView={() => setViewingNote(note)}
             />
           ))}
         </div>
@@ -94,6 +96,12 @@ export const CaseNotes: React.FC<CaseNotesProps> = ({ caseId }) => {
           onClose={() => setEditingNote(null)}
         />
       )}
+
+      <NoteViewDialog
+        note={viewingNote}
+        open={!!viewingNote}
+        onClose={() => setViewingNote(null)}
+      />
     </div>
   );
 };

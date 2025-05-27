@@ -11,6 +11,7 @@ interface NoteCardProps {
   onEdit: () => void;
   onDelete: () => void;
   onTogglePin: (isPinned: boolean) => void;
+  onView: () => void;
 }
 
 export const NoteCard: React.FC<NoteCardProps> = ({
@@ -18,6 +19,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
   onEdit,
   onDelete,
   onTogglePin,
+  onView,
 }) => {
   const getColorClasses = (color: string) => {
     switch (color) {
@@ -38,6 +40,12 @@ export const NoteCard: React.FC<NoteCardProps> = ({
     return note.visibility === 'private' ? 
       <EyeOff className="w-4 h-4 text-gray-500" /> : 
       <Eye className="w-4 h-4 text-gray-500" />;
+  };
+
+  const getContentPreview = (content: string, maxLength: number = 120) => {
+    if (!content) return '';
+    if (content.length <= maxLength) return content;
+    return content.substring(0, maxLength) + '...';
   };
 
   return (
@@ -77,15 +85,18 @@ export const NoteCard: React.FC<NoteCardProps> = ({
           </div>
         </div>
 
-        {/* Title */}
-        <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 text-base">
+        {/* Clickable Title */}
+        <h3 
+          className="font-semibold text-gray-900 mb-2 line-clamp-2 text-base cursor-pointer hover:text-blue-600 transition-colors"
+          onClick={onView}
+        >
           {note.title}
         </h3>
 
         {/* Content Preview */}
         {note.content && (
           <p className="text-sm text-gray-600 mb-3 line-clamp-3">
-            {note.content}
+            {getContentPreview(note.content)}
           </p>
         )}
 

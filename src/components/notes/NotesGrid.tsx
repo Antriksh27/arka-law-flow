@@ -1,8 +1,8 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { NoteCard } from './NoteCard';
+import { NoteViewDialog } from './NoteViewDialog';
 import { StickyNote, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -25,6 +25,7 @@ export const NotesGrid: React.FC<NotesGridProps> = ({
 }) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [viewingNote, setViewingNote] = useState<any>(null);
 
   const { data: notes = [], isLoading } = useQuery({
     queryKey: ['notes', searchQuery, selectedTags, selectedColor, selectedVisibility, selectedCase],
@@ -141,16 +142,25 @@ export const NotesGrid: React.FC<NotesGridProps> = ({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {notes.map((note) => (
-        <NoteCard
-          key={note.id}
-          note={note}
-          onEdit={() => onEditNote(note)}
-          onDelete={() => deleteNoteMutation.mutate(note.id)}
-          onTogglePin={(isPinned) => togglePinMutation.mutate({ noteId: note.id, isPinned })}
-        />
-      ))}
-    </div>
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {notes.map((note) => (
+          <NoteCard
+            key={note.id}
+            note={note}
+            onEdit={() => onEditNote(note)}
+            onDelete={() => deleteNoteMutation.mutate(note.id)}
+            onTogglePin={(isPinned) => togglePinMutation.mutate({ noteId: note.id, isPinned })}
+            onView={() => setViewingNote(note)}
+          />
+        ))}
+      </div>
+
+      <NoteViewDialog
+        note={viewingNote}
+        open={!!viewingNote}
+        onClose={() => setViewingNote(null)}
+      />
+    </>
   );
 };
