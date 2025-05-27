@@ -1,9 +1,11 @@
+
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Eye, EyeOff, Pin, Edit, Trash2, FileText, Calendar, User } from 'lucide-react';
+import { Eye, EyeOff, Pin, Edit, Trash2, FileText, Calendar, User, Mic } from 'lucide-react';
 import { format } from 'date-fns';
+
 interface NoteCardProps {
   note: any;
   onEdit: () => void;
@@ -11,6 +13,7 @@ interface NoteCardProps {
   onTogglePin: (isPinned: boolean) => void;
   onView: () => void;
 }
+
 export const NoteCard: React.FC<NoteCardProps> = ({
   note,
   onEdit,
@@ -32,15 +35,19 @@ export const NoteCard: React.FC<NoteCardProps> = ({
         return 'border-t-gray-400 bg-gray-50';
     }
   };
+
   const getVisibilityIcon = () => {
     return note.visibility === 'private' ? <EyeOff className="w-4 h-4 text-gray-500" /> : <Eye className="w-4 h-4 text-gray-500" />;
   };
+
   const getContentPreview = (content: string, maxLength: number = 120) => {
     if (!content) return '';
     if (content.length <= maxLength) return content;
     return content.substring(0, maxLength) + '...';
   };
-  return <Card className={`relative bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border-t-4 ${getColorClasses(note.color)} hover:scale-[1.02]`}>
+
+  return (
+    <Card className={`relative bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border-t-4 ${getColorClasses(note.color)} hover:scale-[1.02]`}>
       <CardContent className="p-5">
         {/* Header with pin and visibility */}
         <div className="flex items-start justify-between mb-3">
@@ -66,31 +73,56 @@ export const NoteCard: React.FC<NoteCardProps> = ({
           {note.title}
         </h3>
 
+        {/* Audio Recording Preview */}
+        {note.audio_data && (
+          <div className="mb-3 flex items-center gap-2 text-xs text-purple-600 bg-purple-50 px-2 py-1 rounded">
+            <Mic className="w-3 h-3" />
+            <span>Audio recording</span>
+          </div>
+        )}
+
         {/* Drawing Preview */}
-        {note.drawing_data && <div className="mb-3 border border-gray-200 rounded-lg overflow-hidden">
-            <img src={note.drawing_data} alt="Drawing preview" className="w-full h-32 object-cover cursor-pointer hover:opacity-90 transition-opacity" onClick={onView} />
-          </div>}
+        {note.drawing_data && (
+          <div className="mb-3 border border-gray-200 rounded-lg overflow-hidden">
+            <img 
+              src={note.drawing_data} 
+              alt="Drawing preview" 
+              className="w-full h-32 object-cover cursor-pointer hover:opacity-90 transition-opacity" 
+              onClick={onView} 
+            />
+          </div>
+        )}
 
         {/* Content Preview */}
-        {note.content && <p className="text-sm text-gray-600 mb-3 line-clamp-3">
+        {note.content && (
+          <p className="text-sm text-gray-600 mb-3 line-clamp-3">
             {getContentPreview(note.content)}
-          </p>}
+          </p>
+        )}
 
         {/* Linked Case */}
-        {note.cases && <div className="flex items-center gap-1 mb-3 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
+        {note.cases && (
+          <div className="flex items-center gap-1 mb-3 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
             <FileText className="w-3 h-3" />
             <span className="truncate">{note.cases.title}</span>
-          </div>}
+          </div>
+        )}
 
         {/* Tags */}
-        {note.tags && note.tags.length > 0 && <div className="flex flex-wrap gap-1 mb-3">
-            {note.tags.slice(0, 3).map((tag: string, index: number) => <Badge key={index} variant="outline" className="text-xs bg-white">
+        {note.tags && note.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1 mb-3">
+            {note.tags.slice(0, 3).map((tag: string, index: number) => (
+              <Badge key={index} variant="outline" className="text-xs bg-white">
                 {tag}
-              </Badge>)}
-            {note.tags.length > 3 && <Badge variant="outline" className="text-xs bg-white">
+              </Badge>
+            ))}
+            {note.tags.length > 3 && (
+              <Badge variant="outline" className="text-xs bg-white">
                 +{note.tags.length - 3}
-              </Badge>}
-          </div>}
+              </Badge>
+            )}
+          </div>
+        )}
 
         {/* Footer */}
         <div className="flex items-center justify-between text-xs text-gray-500 pt-2 border-t border-gray-100">
@@ -104,5 +136,6 @@ export const NoteCard: React.FC<NoteCardProps> = ({
           </div>
         </div>
       </CardContent>
-    </Card>;
+    </Card>
+  );
 };
