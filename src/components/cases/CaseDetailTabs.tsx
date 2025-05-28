@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Calendar, CheckSquare, StickyNote, MessageSquare, Activity, Filter, Search, Upload, Plus, BarChart3, FileSearch, Clock, Bot } from 'lucide-react';
+import { FileText, Calendar, CheckSquare, StickyNote, MessageSquare, Activity, Filter, Search, Plus, BarChart3, FileSearch, Clock, Bot } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { CaseDocuments } from './CaseDocuments';
@@ -167,10 +167,6 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
                         Filter
                       </Button>
                     </div>
-                    <Button>
-                      <Upload className="w-4 h-4 mr-2" />
-                      Upload Document
-                    </Button>
                   </div>
                   <CaseDocuments caseId={caseId} />
                 </div>
@@ -216,10 +212,6 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
             >
               <StickyNote className="w-4 h-4 mr-2" />
               New Note
-            </Button>
-            <Button className="w-full justify-start">
-              <Upload className="w-4 h-4 mr-2" />
-              Upload Document
             </Button>
           </div>
         </div>
