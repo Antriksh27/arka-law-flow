@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileText, Calendar, CheckSquare, StickyNote, MessageSquare, Activity, Filter, Search, Upload, Plus, BarChart3, FileSearch, Clock, Bot } from 'lucide-react';
@@ -14,11 +15,13 @@ import { CaseDetails } from './CaseDetails';
 import { CaseTimeline } from './CaseTimeline';
 import { CaseResearch } from './CaseResearch';
 import { CreateNoteMultiModal } from '../notes/CreateNoteMultiModal';
+
 interface CaseDetailTabsProps {
   caseId: string;
   activeTab: string;
   onTabChange: (tab: string) => void;
 }
+
 export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
   caseId,
   activeTab,
@@ -26,97 +29,99 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
 }) => {
   const [showCreateNoteModal, setShowCreateNoteModal] = useState(false);
 
-  // Organize tabs into two rows
-  const primaryTabs = [{
-    value: 'overview',
-    label: 'Overview',
-    icon: BarChart3
-  }, {
-    value: 'details',
-    label: 'Details',
-    icon: FileSearch
-  }, {
-    value: 'timeline',
-    label: 'Timeline',
-    icon: Clock
-  }, {
-    value: 'research',
-    label: 'Research',
-    icon: Bot
-  }, {
-    value: 'documents',
-    label: 'Documents',
-    icon: FileText
-  }];
-  const secondaryTabs = [{
-    value: 'hearings',
-    label: 'Hearings',
-    icon: Calendar
-  }, {
-    value: 'tasks',
-    label: 'Tasks',
-    icon: CheckSquare
-  }, {
-    value: 'notes',
-    label: 'Notes',
-    icon: StickyNote
-  }, {
-    value: 'messages',
-    label: 'Messages',
-    icon: MessageSquare
-  }, {
-    value: 'activity',
-    label: 'Activity',
-    icon: Activity
-  }];
-  return <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+  const allTabs = [
+    {
+      value: 'overview',
+      label: 'Overview',
+      icon: BarChart3
+    },
+    {
+      value: 'details',
+      label: 'Details',
+      icon: FileSearch
+    },
+    {
+      value: 'timeline',
+      label: 'Timeline',
+      icon: Clock
+    },
+    {
+      value: 'research',
+      label: 'Research',
+      icon: Bot
+    },
+    {
+      value: 'documents',
+      label: 'Documents',
+      icon: FileText
+    },
+    {
+      value: 'hearings',
+      label: 'Hearings',
+      icon: Calendar
+    },
+    {
+      value: 'tasks',
+      label: 'Tasks',
+      icon: CheckSquare
+    },
+    {
+      value: 'notes',
+      label: 'Notes',
+      icon: StickyNote
+    },
+    {
+      value: 'messages',
+      label: 'Messages',
+      icon: MessageSquare
+    },
+    {
+      value: 'activity',
+      label: 'Activity',
+      icon: Activity
+    }
+  ];
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
       {/* Main Content */}
       <div className="lg:col-span-3">
         <div className="bg-white border border-gray-200 rounded-2xl shadow-sm">
-          <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
-            {/* Two-layer tab navigation */}
-            <div className="border-b border-gray-200">
-              {/* Primary tabs row */}
-              <div className="flex border-b border-gray-100">
-                {primaryTabs.map(tab => {
+          <Tabs value={activeTab} onValueChange={onTabChange} orientation="vertical" className="flex w-full gap-2 p-6">
+            <TabsList className="flex-col gap-1 bg-transparent py-0 w-48">
+              {allTabs.map(tab => {
                 const IconComponent = tab.icon;
-                return <button key={tab.value} onClick={() => onTabChange(tab.value)} className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors flex-1 justify-center border-b-2 ${activeTab === tab.value ? 'border-primary text-primary bg-blue-50' : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'}`}>
-                      <IconComponent className="w-4 h-4" />
-                      {tab.label}
-                    </button>;
+                return (
+                  <TabsTrigger
+                    key={tab.value}
+                    value={tab.value}
+                    className="w-full justify-start gap-2 data-[state=active]:bg-muted data-[state=active]:shadow-none"
+                  >
+                    <IconComponent className="w-4 h-4" />
+                    {tab.label}
+                  </TabsTrigger>
+                );
               })}
-              </div>
-              
-              {/* Secondary tabs row */}
-              <div className="flex">
-                {secondaryTabs.map(tab => {
-                const IconComponent = tab.icon;
-                return <button key={tab.value} onClick={() => onTabChange(tab.value)} className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors flex-1 justify-center border-b-2 ${activeTab === tab.value ? 'border-primary text-primary bg-blue-50' : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'}`}>
-                      <IconComponent className="w-4 h-4" />
-                      {tab.label}
-                    </button>;
-              })}
-              </div>
-            </div>
+            </TabsList>
 
-            <div className="p-6">
-              <TabsContent value="overview" className="m-0">
+            <div className="grow rounded-lg border border-border">
+              <TabsContent value="overview" className="m-0 p-6">
                 <CaseOverview caseId={caseId} />
               </TabsContent>
 
-              <TabsContent value="details" className="m-0">
+              <TabsContent value="details" className="m-0 p-6">
                 <CaseDetails caseId={caseId} />
               </TabsContent>
 
-              <TabsContent value="timeline" className="m-0">
+              <TabsContent value="timeline" className="m-0 p-6">
                 <CaseTimeline caseId={caseId} />
               </TabsContent>
 
-              <TabsContent value="research" className="m-0">
+              <TabsContent value="research" className="m-0 p-6">
                 <CaseResearch caseId={caseId} />
               </TabsContent>
 
-              <TabsContent value="documents" className="m-0">
+              <TabsContent value="documents" className="m-0 p-6">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
@@ -129,29 +134,28 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
                         Filter
                       </Button>
                     </div>
-                    
                   </div>
                   <CaseDocuments caseId={caseId} />
                 </div>
               </TabsContent>
 
-              <TabsContent value="hearings" className="m-0">
+              <TabsContent value="hearings" className="m-0 p-6">
                 <CaseHearings caseId={caseId} />
               </TabsContent>
 
-              <TabsContent value="tasks" className="m-0">
+              <TabsContent value="tasks" className="m-0 p-6">
                 <CaseTasks caseId={caseId} />
               </TabsContent>
 
-              <TabsContent value="notes" className="m-0">
+              <TabsContent value="notes" className="m-0 p-6">
                 <CaseNotes caseId={caseId} />
               </TabsContent>
 
-              <TabsContent value="messages" className="m-0">
+              <TabsContent value="messages" className="m-0 p-6">
                 <CaseMessages caseId={caseId} />
               </TabsContent>
 
-              <TabsContent value="activity" className="m-0">
+              <TabsContent value="activity" className="m-0 p-6">
                 <CaseActivity caseId={caseId} />
               </TabsContent>
             </div>
@@ -207,5 +211,6 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
       </div>
 
       <CreateNoteMultiModal open={showCreateNoteModal} onClose={() => setShowCreateNoteModal(false)} caseId={caseId} />
-    </div>;
+    </div>
+  );
 };
