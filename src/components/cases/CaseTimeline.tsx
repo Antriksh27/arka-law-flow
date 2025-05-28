@@ -1,63 +1,55 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, FileText, Gavel, Users, Clock, AlertCircle } from 'lucide-react';
-
 interface CaseTimelineProps {
   caseId: string;
 }
-
-export const CaseTimeline: React.FC<CaseTimelineProps> = ({ caseId }) => {
+export const CaseTimeline: React.FC<CaseTimelineProps> = ({
+  caseId
+}) => {
   // Mock timeline data - in real implementation, this would come from the database
-  const timelineEvents = [
-    {
-      id: 1,
-      date: '2024-01-15',
-      title: 'Case Filed',
-      description: 'Initial case filing submitted to court',
-      type: 'filing',
-      icon: FileText,
-      status: 'completed'
-    },
-    {
-      id: 2,
-      date: '2024-01-20',
-      title: 'First Hearing Scheduled',
-      description: 'Initial hearing date set for January 30, 2024',
-      type: 'hearing',
-      icon: Calendar,
-      status: 'completed'
-    },
-    {
-      id: 3,
-      date: '2024-01-30',
-      title: 'First Hearing',
-      description: 'Arguments presented, next hearing scheduled',
-      type: 'hearing',
-      icon: Gavel,
-      status: 'completed'
-    },
-    {
-      id: 4,
-      date: '2024-02-15',
-      title: 'Document Submission',
-      description: 'Additional evidence submitted to court',
-      type: 'document',
-      icon: FileText,
-      status: 'completed'
-    },
-    {
-      id: 5,
-      date: '2024-03-01',
-      title: 'Next Hearing',
-      description: 'Scheduled for final arguments',
-      type: 'hearing',
-      icon: Calendar,
-      status: 'upcoming'
-    }
-  ];
-
+  const timelineEvents = [{
+    id: 1,
+    date: '2024-01-15',
+    title: 'Case Filed',
+    description: 'Initial case filing submitted to court',
+    type: 'filing',
+    icon: FileText,
+    status: 'completed'
+  }, {
+    id: 2,
+    date: '2024-01-20',
+    title: 'First Hearing Scheduled',
+    description: 'Initial hearing date set for January 30, 2024',
+    type: 'hearing',
+    icon: Calendar,
+    status: 'completed'
+  }, {
+    id: 3,
+    date: '2024-01-30',
+    title: 'First Hearing',
+    description: 'Arguments presented, next hearing scheduled',
+    type: 'hearing',
+    icon: Gavel,
+    status: 'completed'
+  }, {
+    id: 4,
+    date: '2024-02-15',
+    title: 'Document Submission',
+    description: 'Additional evidence submitted to court',
+    type: 'document',
+    icon: FileText,
+    status: 'completed'
+  }, {
+    id: 5,
+    date: '2024-03-01',
+    title: 'Next Hearing',
+    description: 'Scheduled for final arguments',
+    type: 'hearing',
+    icon: Calendar,
+    status: 'upcoming'
+  }];
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed':
@@ -70,9 +62,7 @@ export const CaseTimeline: React.FC<CaseTimelineProps> = ({ caseId }) => {
         return 'bg-gray-100 text-gray-700';
     }
   };
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       {/* Timeline Header */}
       <Card>
         <CardHeader>
@@ -81,11 +71,7 @@ export const CaseTimeline: React.FC<CaseTimelineProps> = ({ caseId }) => {
             Smart Timeline
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <p className="text-gray-600">
-            This timeline shows important updates and milestones in your case, automatically organized by date and significance.
-          </p>
-        </CardContent>
+        
       </Card>
 
       {/* Timeline Events */}
@@ -94,18 +80,11 @@ export const CaseTimeline: React.FC<CaseTimelineProps> = ({ caseId }) => {
         <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gray-200"></div>
 
         {timelineEvents.map((event, index) => {
-          const IconComponent = event.icon;
-          return (
-            <div key={event.id} className="relative flex items-start gap-6 pb-8">
+        const IconComponent = event.icon;
+        return <div key={event.id} className="relative flex items-start gap-6 pb-8">
               {/* Timeline Dot */}
-              <div className={`relative z-10 w-16 h-16 rounded-full flex items-center justify-center ${
-                event.status === 'completed' ? 'bg-green-100' : 
-                event.status === 'upcoming' ? 'bg-blue-100' : 'bg-gray-100'
-              }`}>
-                <IconComponent className={`w-6 h-6 ${
-                  event.status === 'completed' ? 'text-green-600' : 
-                  event.status === 'upcoming' ? 'text-blue-600' : 'text-gray-600'
-                }`} />
+              <div className={`relative z-10 w-16 h-16 rounded-full flex items-center justify-center ${event.status === 'completed' ? 'bg-green-100' : event.status === 'upcoming' ? 'bg-blue-100' : 'bg-gray-100'}`}>
+                <IconComponent className={`w-6 h-6 ${event.status === 'completed' ? 'text-green-600' : event.status === 'upcoming' ? 'text-blue-600' : 'text-gray-600'}`} />
               </div>
 
               {/* Event Card */}
@@ -116,11 +95,11 @@ export const CaseTimeline: React.FC<CaseTimelineProps> = ({ caseId }) => {
                       <h3 className="font-semibold text-gray-900">{event.title}</h3>
                       <p className="text-sm text-gray-500">
                         {new Date(event.date).toLocaleDateString('en-US', {
-                          weekday: 'long',
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
                       </p>
                     </div>
                     <Badge className={getStatusColor(event.status)}>
@@ -130,9 +109,8 @@ export const CaseTimeline: React.FC<CaseTimelineProps> = ({ caseId }) => {
                   <p className="text-gray-700">{event.description}</p>
                 </CardContent>
               </Card>
-            </div>
-          );
-        })}
+            </div>;
+      })}
       </div>
 
       {/* Timeline Stats */}
@@ -179,6 +157,5 @@ export const CaseTimeline: React.FC<CaseTimelineProps> = ({ caseId }) => {
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
+    </div>;
 };
