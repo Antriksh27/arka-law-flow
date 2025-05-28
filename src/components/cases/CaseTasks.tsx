@@ -8,9 +8,11 @@ import { CheckSquare, Plus, Calendar, User, Tag } from 'lucide-react';
 import { format } from 'date-fns';
 import { CreateTaskDialog } from '../tasks/CreateTaskDialog';
 import { useToast } from '@/hooks/use-toast';
+
 interface CaseTasksProps {
   caseId: string;
 }
+
 export const CaseTasks: React.FC<CaseTasksProps> = ({
   caseId
 }) => {
@@ -112,13 +114,28 @@ export const CaseTasks: React.FC<CaseTasksProps> = ({
       status: newStatus
     });
   };
+  const getStatusDisplayName = (status: string) => {
+    switch (status) {
+      case 'todo':
+        return 'To do';
+      case 'in_progress':
+        return 'In Progress';
+      case 'completed':
+        return 'Completed';
+      default:
+        return status;
+    }
+  };
   if (isLoading) {
     return <div className="text-center py-8">Loading tasks...</div>;
   }
   return <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-xl font-semibold text-gray-900">Tasks</h3>
-        <Button onClick={() => setShowCreateDialog(true)} className="bg-slate-800 hover:bg-slate-700">
+        <Button 
+          onClick={() => setShowCreateDialog(true)} 
+          className="bg-slate-800 hover:bg-slate-700"
+        >
           <Plus className="w-4 h-4 mr-2" />
           Add Task
         </Button>
@@ -128,7 +145,7 @@ export const CaseTasks: React.FC<CaseTasksProps> = ({
           {Object.entries(tasksByStatus).map(([status, statusTasks]) => <Card key={status} className="h-fit bg-white border-gray-200 shadow-sm">
               <CardHeader className="pb-3 bg-gray-50 border-b border-gray-100">
                 <CardTitle className="text-sm font-medium text-gray-700 uppercase tracking-wide">
-                  {status.replace('_', ' ')} ({statusTasks.length})
+                  {getStatusDisplayName(status)} ({statusTasks.length})
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 p-4">
@@ -175,7 +192,7 @@ export const CaseTasks: React.FC<CaseTasksProps> = ({
                 
                 {statusTasks.length === 0 && <div className="text-center py-8 text-gray-400">
                     <CheckSquare className="w-8 h-8 mx-auto mb-2" />
-                    <p className="text-xs">No {status.replace('_', ' ')} tasks</p>
+                    <p className="text-xs">No {getStatusDisplayName(status).toLowerCase()} tasks</p>
                   </div>}
               </CardContent>
             </Card>)}
