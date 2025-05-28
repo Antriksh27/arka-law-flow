@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileText, Calendar, CheckSquare, StickyNote, MessageSquare, Activity, Filter, Search, Upload, Plus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -9,16 +9,21 @@ import { CaseTasks } from './CaseTasks';
 import { CaseNotes } from './CaseNotes';
 import { CaseMessages } from './CaseMessages';
 import { CaseActivity } from './CaseActivity';
+import { CreateNoteMultiModal } from '../notes/CreateNoteMultiModal';
+
 interface CaseDetailTabsProps {
   caseId: string;
   activeTab: string;
   onTabChange: (tab: string) => void;
 }
+
 export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
   caseId,
   activeTab,
   onTabChange
 }) => {
+  const [showCreateNoteModal, setShowCreateNoteModal] = useState(false);
+
   const tabs = [{
     value: 'documents',
     label: 'Documents',
@@ -44,7 +49,9 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
     label: 'Activity',
     icon: Activity
   }];
-  return <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
       {/* Main Content */}
       <div className="lg:col-span-3">
         <div className="bg-white border border-gray-200 rounded-2xl shadow-sm">
@@ -118,7 +125,10 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
               <Plus className="w-4 h-4 mr-2" />
               Add Task
             </Button>
-            <Button className="w-full justify-start">
+            <Button 
+              className="w-full justify-start"
+              onClick={() => setShowCreateNoteModal(true)}
+            >
               <StickyNote className="w-4 h-4 mr-2" />
               New Note
             </Button>
@@ -154,5 +164,12 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
           </div>
         </div>
       </div>
-    </div>;
+
+      <CreateNoteMultiModal
+        open={showCreateNoteModal}
+        onClose={() => setShowCreateNoteModal(false)}
+        caseId={caseId}
+      />
+    </div>
+  );
 };

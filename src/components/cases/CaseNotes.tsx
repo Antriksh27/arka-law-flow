@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { NoteCard } from '../notes/NoteCard';
 import { NoteViewDialog } from '../notes/NoteViewDialog';
-import { CreateNoteDialog } from '../notes/CreateNoteDialog';
+import { CreateNoteMultiModal } from '../notes/CreateNoteMultiModal';
 import { EditNoteDialog } from '../notes/EditNoteDialog';
 import { StickyNote, Plus } from 'lucide-react';
 
@@ -83,7 +83,7 @@ export const CaseNotes: React.FC<CaseNotesProps> = ({ caseId }) => {
         </div>
       )}
 
-      <CreateNoteDialog
+      <CreateNoteMultiModal
         open={showCreateDialog}
         onClose={() => setShowCreateDialog(false)}
         caseId={caseId}
