@@ -181,12 +181,18 @@ export const CaseTasks: React.FC<CaseTasksProps> = ({
                       </div>}
 
                     {status !== 'completed' && <div className="flex gap-2 mt-3">
-                        {status === 'todo' && <Button size="sm" variant="outline" onClick={() => handleStatusChange(task.id, 'in_progress')} className="text-xs bg-white hover:bg-gray-50 border-gray-300">
+                        {status === 'todo' && <button
+                            onClick={() => handleStatusChange(task.id, 'in_progress')}
+                            className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-b from-green-400 to-green-600 border border-green-600 rounded-lg shadow-lg hover:from-green-500 hover:to-green-700 hover:shadow-xl active:scale-95 transition-all duration-150 transform hover:-translate-y-0.5"
+                          >
                             Start
-                          </Button>}
-                        {status === 'in_progress' && <Button size="sm" variant="outline" onClick={() => handleStatusChange(task.id, 'completed')} className="text-xs bg-white hover:bg-gray-50 border-gray-300">
+                          </button>}
+                        {status === 'in_progress' && <button
+                            onClick={() => handleStatusChange(task.id, 'completed')}
+                            className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-b from-red-400 to-red-600 border border-red-600 rounded-lg shadow-lg hover:from-red-500 hover:to-red-700 hover:shadow-xl active:scale-95 transition-all duration-150 transform hover:-translate-y-0.5"
+                          >
                             Complete
-                          </Button>}
+                          </button>}
                       </div>}
                   </div>)}
                 
