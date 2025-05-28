@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -9,7 +8,7 @@ import { CaseDetailTabs } from '../components/cases/CaseDetailTabs';
 
 const CaseDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const [activeTab, setActiveTab] = useState('documents');
+  const [activeTab, setActiveTab] = useState('overview');
 
   const { data: caseData, isLoading } = useQuery({
     queryKey: ['case-detail', id],

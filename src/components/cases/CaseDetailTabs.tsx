@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Calendar, CheckSquare, StickyNote, MessageSquare, Activity, Filter, Search, Upload, Plus } from 'lucide-react';
+import { FileText, Calendar, CheckSquare, StickyNote, MessageSquare, Activity, Filter, Search, Upload, Plus, BarChart3, FileSearch, Clock, Bot } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { CaseDocuments } from './CaseDocuments';
@@ -9,6 +10,10 @@ import { CaseTasks } from './CaseTasks';
 import { CaseNotes } from './CaseNotes';
 import { CaseMessages } from './CaseMessages';
 import { CaseActivity } from './CaseActivity';
+import { CaseOverview } from './CaseOverview';
+import { CaseDetails } from './CaseDetails';
+import { CaseTimeline } from './CaseTimeline';
+import { CaseResearch } from './CaseResearch';
 import { CreateNoteMultiModal } from '../notes/CreateNoteMultiModal';
 
 interface CaseDetailTabsProps {
@@ -25,6 +30,22 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
   const [showCreateNoteModal, setShowCreateNoteModal] = useState(false);
 
   const tabs = [{
+    value: 'overview',
+    label: 'Overview',
+    icon: BarChart3
+  }, {
+    value: 'details',
+    label: 'Details',
+    icon: FileSearch
+  }, {
+    value: 'timeline',
+    label: 'Timeline',
+    icon: Clock
+  }, {
+    value: 'research',
+    label: 'Research',
+    icon: Bot
+  }, {
     value: 'documents',
     label: 'Documents',
     icon: FileText
@@ -69,6 +90,22 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
             </TabsList>
 
             <div className="p-6">
+              <TabsContent value="overview" className="m-0">
+                <CaseOverview caseId={caseId} />
+              </TabsContent>
+
+              <TabsContent value="details" className="m-0">
+                <CaseDetails caseId={caseId} />
+              </TabsContent>
+
+              <TabsContent value="timeline" className="m-0">
+                <CaseTimeline caseId={caseId} />
+              </TabsContent>
+
+              <TabsContent value="research" className="m-0">
+                <CaseResearch caseId={caseId} />
+              </TabsContent>
+
               <TabsContent value="documents" className="m-0">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
