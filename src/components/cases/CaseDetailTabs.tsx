@@ -29,7 +29,8 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
 }) => {
   const [showCreateNoteModal, setShowCreateNoteModal] = useState(false);
 
-  const allTabs = [
+  // Organize tabs into two rows
+  const primaryTabs = [
     {
       value: 'overview',
       label: 'Overview',
@@ -54,7 +55,10 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
       value: 'documents',
       label: 'Documents',
       icon: FileText
-    },
+    }
+  ];
+
+  const secondaryTabs = [
     {
       value: 'hearings',
       label: 'Hearings',
@@ -87,41 +91,70 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
       {/* Main Content */}
       <div className="lg:col-span-3">
         <div className="bg-white border border-gray-200 rounded-2xl shadow-sm">
-          <Tabs value={activeTab} onValueChange={onTabChange} orientation="vertical" className="flex w-full gap-2 p-6">
-            <TabsList className="flex-col gap-1 bg-transparent py-0 w-48">
-              {allTabs.map(tab => {
-                const IconComponent = tab.icon;
-                return (
-                  <TabsTrigger
-                    key={tab.value}
-                    value={tab.value}
-                    className="w-full justify-start gap-2 data-[state=active]:bg-muted data-[state=active]:shadow-none"
-                  >
-                    <IconComponent className="w-4 h-4" />
-                    {tab.label}
-                  </TabsTrigger>
-                );
-              })}
-            </TabsList>
+          <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
+            {/* Two-layer tab navigation */}
+            <div className="border-b border-gray-200">
+              {/* Primary tabs row */}
+              <div className="flex border-b border-gray-100">
+                {primaryTabs.map(tab => {
+                  const IconComponent = tab.icon;
+                  return (
+                    <button
+                      key={tab.value}
+                      onClick={() => onTabChange(tab.value)}
+                      className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors flex-1 justify-center border-b-2 ${
+                        activeTab === tab.value
+                          ? 'border-primary text-primary bg-blue-50'
+                          : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      }`}
+                    >
+                      <IconComponent className="w-4 h-4" />
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
+              
+              {/* Secondary tabs row */}
+              <div className="flex">
+                {secondaryTabs.map(tab => {
+                  const IconComponent = tab.icon;
+                  return (
+                    <button
+                      key={tab.value}
+                      onClick={() => onTabChange(tab.value)}
+                      className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors flex-1 justify-center border-b-2 ${
+                        activeTab === tab.value
+                          ? 'border-primary text-primary bg-blue-50'
+                          : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      }`}
+                    >
+                      <IconComponent className="w-4 h-4" />
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
-            <div className="grow rounded-lg border border-border">
-              <TabsContent value="overview" className="m-0 p-6">
+            <div className="p-6">
+              <TabsContent value="overview" className="m-0">
                 <CaseOverview caseId={caseId} />
               </TabsContent>
 
-              <TabsContent value="details" className="m-0 p-6">
+              <TabsContent value="details" className="m-0">
                 <CaseDetails caseId={caseId} />
               </TabsContent>
 
-              <TabsContent value="timeline" className="m-0 p-6">
+              <TabsContent value="timeline" className="m-0">
                 <CaseTimeline caseId={caseId} />
               </TabsContent>
 
-              <TabsContent value="research" className="m-0 p-6">
+              <TabsContent value="research" className="m-0">
                 <CaseResearch caseId={caseId} />
               </TabsContent>
 
-              <TabsContent value="documents" className="m-0 p-6">
+              <TabsContent value="documents" className="m-0">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
@@ -134,28 +167,32 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
                         Filter
                       </Button>
                     </div>
+                    <Button>
+                      <Upload className="w-4 h-4 mr-2" />
+                      Upload Document
+                    </Button>
                   </div>
                   <CaseDocuments caseId={caseId} />
                 </div>
               </TabsContent>
 
-              <TabsContent value="hearings" className="m-0 p-6">
+              <TabsContent value="hearings" className="m-0">
                 <CaseHearings caseId={caseId} />
               </TabsContent>
 
-              <TabsContent value="tasks" className="m-0 p-6">
+              <TabsContent value="tasks" className="m-0">
                 <CaseTasks caseId={caseId} />
               </TabsContent>
 
-              <TabsContent value="notes" className="m-0 p-6">
+              <TabsContent value="notes" className="m-0">
                 <CaseNotes caseId={caseId} />
               </TabsContent>
 
-              <TabsContent value="messages" className="m-0 p-6">
+              <TabsContent value="messages" className="m-0">
                 <CaseMessages caseId={caseId} />
               </TabsContent>
 
-              <TabsContent value="activity" className="m-0 p-6">
+              <TabsContent value="activity" className="m-0">
                 <CaseActivity caseId={caseId} />
               </TabsContent>
             </div>
@@ -173,7 +210,10 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
               <Plus className="w-4 h-4 mr-2" />
               Add Task
             </Button>
-            <Button className="w-full justify-start" onClick={() => setShowCreateNoteModal(true)}>
+            <Button 
+              className="w-full justify-start"
+              onClick={() => setShowCreateNoteModal(true)}
+            >
               <StickyNote className="w-4 h-4 mr-2" />
               New Note
             </Button>
@@ -210,7 +250,11 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
         </div>
       </div>
 
-      <CreateNoteMultiModal open={showCreateNoteModal} onClose={() => setShowCreateNoteModal(false)} caseId={caseId} />
+      <CreateNoteMultiModal
+        open={showCreateNoteModal}
+        onClose={() => setShowCreateNoteModal(false)}
+        caseId={caseId}
+      />
     </div>
   );
 };
