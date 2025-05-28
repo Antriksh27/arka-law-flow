@@ -1,10 +1,10 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Brain, AlertCircle, Calendar, FileText, Users, Gavel } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Brain, Calendar, FileText, Users, TrendingUp, Clock, AlertCircle, CheckCircle, User } from 'lucide-react';
 
 interface CaseOverviewProps {
   caseId: string;
@@ -14,47 +14,89 @@ export const CaseOverview: React.FC<CaseOverviewProps> = ({ caseId }) => {
   const { data: caseData, isLoading } = useQuery({
     queryKey: ['case-overview', caseId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: caseResult, error: caseError } = await supabase
         .from('cases')
-        .select(`
-          *,
-          clients(full_name),
-          profiles(full_name)
-        `)
+        .select('*')
         .eq('id', caseId)
         .single();
       
-      if (error) throw error;
-      return data;
+      if (caseError) throw caseError;
+      
+      // Get client data separately
+      let clientData = null;
+      if (caseResult.client_id) {
+        const { data: client, error: clientError } = await supabase
+          .from('clients')
+          .select('full_name')
+          .eq('id', caseResult.client_id)
+          .single();
+        
+        if (!clientError && client) {
+          clientData = client;
+        }
+      }
+      
+      // Get creator data separately
+      let creatorData = null;
+      if (caseResult.created_by) {
+        const { data: creator, error: creatorError } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', caseResult.created_by)
+          .single();
+        
+        if (!creatorError && creator) {
+          creatorData = creator;
+        }
+      }
+      
+      return {
+        ...caseResult,
+        client: clientData,
+        creator: creatorData
+      };
     }
   });
 
   if (isLoading) {
-    return <div className="animate-pulse p-6">Loading overview...</div>;
+    return (
+      <div className="space-y-6">
+        <div className="animate-pulse">
+          <div className="h-32 bg-gray-200 rounded-lg mb-4"></div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="h-24 bg-gray-200 rounded-lg"></div>
+            <div className="h-24 bg-gray-200 rounded-lg"></div>
+            <div className="h-24 bg-gray-200 rounded-lg"></div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (!caseData) {
-    return <div className="text-center py-8">Case not found</div>;
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-500">Case data not found</p>
+      </div>
+    );
   }
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'open':
-        return 'bg-blue-100 text-blue-700';
-      case 'in_court':
+    switch (status?.toLowerCase()) {
+      case 'active':
+        return 'bg-green-100 text-green-700';
+      case 'pending':
         return 'bg-yellow-100 text-yellow-700';
-      case 'on_hold':
-        return 'bg-orange-100 text-orange-700';
       case 'closed':
         return 'bg-gray-100 text-gray-700';
       default:
-        return 'bg-gray-100 text-gray-700';
+        return 'bg-blue-100 text-blue-700';
     }
   };
 
   return (
     <div className="space-y-6">
-      {/* AI Summary Card */}
+      {/* AI Case Summary */}
       <Card className="border-blue-200 bg-blue-50">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-blue-800">
@@ -63,31 +105,35 @@ export const CaseOverview: React.FC<CaseOverviewProps> = ({ caseId }) => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-blue-700 leading-relaxed">
-            This is a {caseData.case_type?.replace('_', ' ')} case with {caseData.priority} priority. 
-            The case is currently <Badge className={getStatusColor(caseData.status)}>{caseData.status}</Badge> and 
-            {caseData.next_hearing_date 
-              ? ` has a hearing scheduled for ${new Date(caseData.next_hearing_date).toLocaleDateString()}.`
-              : ' has no upcoming hearings scheduled.'
-            }
-            {caseData.description && ` Case involves: ${caseData.description}`}
-          </p>
+          <div className="space-y-4">
+            <p className="text-blue-700">
+              This is an AI-generated summary of the case based on available information. 
+              The case "{caseData.title}" is currently in {caseData.status} status and was filed on{' '}
+              {caseData.created_at ? new Date(caseData.created_at).toLocaleDateString() : 'Unknown date'}.
+            </p>
+            <div className="flex items-center gap-2">
+              <Badge className={getStatusColor(caseData.status)}>
+                {caseData.status || 'Unknown'}
+              </Badge>
+              <span className="text-sm text-blue-600">
+                Last updated: {caseData.updated_at ? new Date(caseData.updated_at).toLocaleDateString() : 'Unknown'}
+              </span>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
-      {/* Case Status Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Case Status & Key Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                <AlertCircle className="w-5 h-5 text-blue-600" />
+                <CheckCircle className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-500">Current Status</p>
-                <Badge className={getStatusColor(caseData.status)}>
-                  {caseData.status?.replace('_', ' ')}
-                </Badge>
+                <p className="text-sm text-gray-500">Case Status</p>
+                <p className="text-lg font-semibold text-gray-900">{caseData.status || 'Unknown'}</p>
               </div>
             </div>
           </CardContent>
@@ -100,11 +146,11 @@ export const CaseOverview: React.FC<CaseOverviewProps> = ({ caseId }) => {
                 <Calendar className="w-5 h-5 text-green-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-500">Next Hearing</p>
-                <p className="font-medium">
-                  {caseData.next_hearing_date 
-                    ? new Date(caseData.next_hearing_date).toLocaleDateString()
-                    : 'Not scheduled'
+                <p className="text-sm text-gray-500">Days Since Filing</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {caseData.created_at 
+                    ? Math.floor((new Date().getTime() - new Date(caseData.created_at).getTime()) / (1000 * 60 * 60 * 24))
+                    : 'Unknown'
                   }
                 </p>
               </div>
@@ -115,77 +161,94 @@ export const CaseOverview: React.FC<CaseOverviewProps> = ({ caseId }) => {
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                <Gavel className="w-5 h-5 text-purple-600" />
+              <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                <TrendingUp className="w-5 h-5 text-yellow-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-500">Case Type</p>
-                <p className="font-medium capitalize">
-                  {caseData.case_type?.replace('_', ' ') || 'Not specified'}
-                </p>
+                <p className="text-sm text-gray-500">Priority</p>
+                <p className="text-lg font-semibold text-gray-900">{caseData.priority || 'Medium'}</p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Key Information */}
+      {/* Case Information */}
       <Card>
         <CardHeader>
-          <CardTitle>Key Information</CardTitle>
+          <CardTitle>Case Information</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div>
+                <p className="text-sm text-gray-500">Case Title</p>
+                <p className="font-medium">{caseData.title}</p>
+              </div>
+              <div>
                 <p className="text-sm text-gray-500">Client</p>
-                <p className="font-medium">{caseData.clients?.full_name || 'No client assigned'}</p>
+                <p className="font-medium">{caseData.client?.full_name || 'Not assigned'}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Case Number</p>
-                <p className="font-medium">{caseData.case_number || 'Not assigned'}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Court</p>
-                <p className="font-medium">{caseData.court || 'Not specified'}</p>
+                <p className="text-sm text-gray-500">Case Type</p>
+                <p className="font-medium">{caseData.case_type || 'Not specified'}</p>
               </div>
             </div>
             <div className="space-y-4">
               <div>
-                <p className="text-sm text-gray-500">Filing Date</p>
-                <p className="font-medium">
-                  {caseData.filing_date 
-                    ? new Date(caseData.filing_date).toLocaleDateString()
-                    : 'Not specified'
-                  }
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Priority</p>
-                <Badge variant="outline" className="capitalize">
-                  {caseData.priority} Priority
-                </Badge>
+                <p className="text-sm text-gray-500">Description</p>
+                <p className="font-medium">{caseData.description || 'No description available'}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Created By</p>
-                <p className="font-medium">{caseData.profiles?.full_name || 'Unknown'}</p>
+                <p className="font-medium">{caseData.creator?.full_name || 'Unknown'}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Created Date</p>
+                <p className="font-medium">
+                  {caseData.created_at ? new Date(caseData.created_at).toLocaleDateString() : 'Unknown'}
+                </p>
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Case Description */}
-      {caseData.description && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Case Description</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-700 leading-relaxed">{caseData.description}</p>
-          </CardContent>
-        </Card>
-      )}
+      {/* Recent Activity Preview */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>Recent Activity</span>
+            <Button variant="outline" size="sm">View All</Button>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <FileText className="w-4 h-4 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium">Case created</p>
+                <p className="text-xs text-gray-500">
+                  {caseData.created_at ? new Date(caseData.created_at).toLocaleDateString() : 'Unknown date'}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                <Users className="w-4 h-4 text-green-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium">Client assigned</p>
+                <p className="text-xs text-gray-500">
+                  {caseData.client?.full_name ? `${caseData.client.full_name} assigned to case` : 'No client assigned'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
