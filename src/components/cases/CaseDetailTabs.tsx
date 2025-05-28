@@ -47,9 +47,9 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
       icon: Clock
     },
     {
-      value: 'research',
-      label: 'Research',
-      icon: Bot
+      value: 'hearings',
+      label: 'Hearings',
+      icon: Calendar
     },
     {
       value: 'documents',
@@ -59,11 +59,6 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
   ];
 
   const secondaryTabs = [
-    {
-      value: 'hearings',
-      label: 'Hearings',
-      icon: Calendar
-    },
     {
       value: 'tasks',
       label: 'Tasks',
@@ -78,6 +73,11 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
       value: 'messages',
       label: 'Messages',
       icon: MessageSquare
+    },
+    {
+      value: 'research',
+      label: 'Research',
+      icon: Bot
     },
     {
       value: 'activity',
@@ -150,8 +150,8 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
                 <CaseTimeline caseId={caseId} />
               </TabsContent>
 
-              <TabsContent value="research" className="m-0">
-                <CaseResearch caseId={caseId} />
+              <TabsContent value="hearings" className="m-0">
+                <CaseHearings caseId={caseId} />
               </TabsContent>
 
               <TabsContent value="documents" className="m-0">
@@ -172,10 +172,6 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
                 </div>
               </TabsContent>
 
-              <TabsContent value="hearings" className="m-0">
-                <CaseHearings caseId={caseId} />
-              </TabsContent>
-
               <TabsContent value="tasks" className="m-0">
                 <CaseTasks caseId={caseId} />
               </TabsContent>
@@ -186,6 +182,10 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
 
               <TabsContent value="messages" className="m-0">
                 <CaseMessages caseId={caseId} />
+              </TabsContent>
+
+              <TabsContent value="research" className="m-0">
+                <CaseResearch caseId={caseId} />
               </TabsContent>
 
               <TabsContent value="activity" className="m-0">
