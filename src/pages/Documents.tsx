@@ -17,7 +17,7 @@ const Documents = () => {
 
   return (
     <DashboardLayout>
-      <div className="h-[calc(100vh-120px)] bg-legal-background">
+      <div className="space-y-6">
         <DocumentsHeader 
           viewMode={viewMode}
           onViewModeChange={setViewMode}
@@ -27,7 +27,7 @@ const Documents = () => {
           onFiltersChange={setSelectedFilters}
         />
         
-        <div className="flex h-full border-t border-gray-200">
+        <div className="h-[calc(100vh-200px)] flex border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-sm">
           <DocumentsSidebar
             selectedFolder={selectedFolder}
             onFolderSelect={setSelectedFolder}

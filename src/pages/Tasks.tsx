@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import DashboardLayout from '../components/layout/DashboardLayout';
@@ -175,24 +174,20 @@ const Tasks = () => {
       {task.status !== 'completed' && (
         <div className="flex gap-2 mt-3">
           {task.status === 'todo' && (
-            <Button
-              size="sm"
-              variant="outline"
+            <button
               onClick={() => handleStatusChange(task.id, 'in_progress')}
-              className="text-xs bg-white hover:bg-gray-50 border-gray-300"
+              className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-b from-green-400 to-green-600 border border-green-600 rounded-lg shadow-lg hover:from-green-500 hover:to-green-700 hover:shadow-xl active:scale-95 transition-all duration-150 transform hover:-translate-y-0.5"
             >
               Start
-            </Button>
+            </button>
           )}
           {task.status === 'in_progress' && (
-            <Button
-              size="sm"
-              variant="outline"
+            <button
               onClick={() => handleStatusChange(task.id, 'completed')}
-              className="text-xs bg-white hover:bg-gray-50 border-gray-300"
+              className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-b from-red-400 to-red-600 border border-red-600 rounded-lg shadow-lg hover:from-red-500 hover:to-red-700 hover:shadow-xl active:scale-95 transition-all duration-150 transform hover:-translate-y-0.5"
             >
               Complete
-            </Button>
+            </button>
           )}
         </div>
       )}
@@ -209,7 +204,7 @@ const Tasks = () => {
 
   return (
     <DashboardLayout>
-      <div className="p-6 space-y-6">
+      <div className="space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
@@ -224,7 +219,7 @@ const Tasks = () => {
 
         {/* Filters */}
         <Card className="bg-white border-gray-200">
-          <CardContent className="p-4">
+          <CardContent className="p-6">
             <div className="flex flex-wrap gap-4 items-center">
               <div className="flex items-center gap-2">
                 <Search className="w-4 h-4 text-gray-400" />
@@ -279,27 +274,27 @@ const Tasks = () => {
         </Card>
 
         {/* Task Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card className="bg-white border-gray-200">
-            <CardContent className="p-4">
+            <CardContent className="p-6">
               <div className="text-2xl font-bold text-gray-900">{tasks.length}</div>
               <div className="text-sm text-gray-600">Total Tasks</div>
             </CardContent>
           </Card>
           <Card className="bg-white border-gray-200">
-            <CardContent className="p-4">
+            <CardContent className="p-6">
               <div className="text-2xl font-bold text-blue-600">{tasksByStatus.todo.length}</div>
               <div className="text-sm text-gray-600">To Do</div>
             </CardContent>
           </Card>
           <Card className="bg-white border-gray-200">
-            <CardContent className="p-4">
+            <CardContent className="p-6">
               <div className="text-2xl font-bold text-gray-600">{tasksByStatus.in_progress.length}</div>
               <div className="text-sm text-gray-600">In Progress</div>
             </CardContent>
           </Card>
           <Card className="bg-white border-gray-200">
-            <CardContent className="p-4">
+            <CardContent className="p-6">
               <div className="text-2xl font-bold text-green-600">{tasksByStatus.completed.length}</div>
               <div className="text-sm text-gray-600">Completed</div>
             </CardContent>
