@@ -433,7 +433,9 @@ export type Database = {
           advocate_name: string | null
           assigned_to: string | null
           assigned_users: string[] | null
+          bench_type: string | null
           case_number: string | null
+          case_title: string
           case_type: Database["public"]["Enums"]["case_type_enum"] | null
           category: string | null
           client_id: string | null
@@ -441,19 +443,26 @@ export type Database = {
           cnr_number: string | null
           coram: string | null
           court: string | null
+          court_complex: string | null
+          court_name: string | null
           created_at: string
           created_by: string | null
           description: string | null
           district: string | null
+          district_1: string | null
           docket_number: string | null
+          document_links: string[] | null
           fetch_message: string | null
           fetch_status: string | null
           fetched_data: Json | null
           filing_date: string | null
           filing_number: string | null
           firm_id: string | null
+          first_hearing_date: string | null
+          hearing_notes: string | null
           id: string
           is_auto_fetched: boolean | null
+          judicial_branch: string | null
           next_hearing_date: string | null
           objection: string | null
           order_link: string | null
@@ -465,18 +474,26 @@ export type Database = {
           registration_number: string | null
           respondent: string | null
           respondent_advocate: string | null
+          sections: string[] | null
+          stage: string | null
+          state: string | null
+          state_1: string | null
           status: Database["public"]["Enums"]["case_status_enum"] | null
+          sub_category: string | null
           tags: string[] | null
           team_name: string | null
           title: string
           updated_at: string
+          vs: string | null
         }
         Insert: {
           acts?: string[] | null
           advocate_name?: string | null
           assigned_to?: string | null
           assigned_users?: string[] | null
+          bench_type?: string | null
           case_number?: string | null
+          case_title: string
           case_type?: Database["public"]["Enums"]["case_type_enum"] | null
           category?: string | null
           client_id?: string | null
@@ -484,19 +501,26 @@ export type Database = {
           cnr_number?: string | null
           coram?: string | null
           court?: string | null
+          court_complex?: string | null
+          court_name?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
           district?: string | null
+          district_1?: string | null
           docket_number?: string | null
+          document_links?: string[] | null
           fetch_message?: string | null
           fetch_status?: string | null
           fetched_data?: Json | null
           filing_date?: string | null
           filing_number?: string | null
           firm_id?: string | null
+          first_hearing_date?: string | null
+          hearing_notes?: string | null
           id?: string
           is_auto_fetched?: boolean | null
+          judicial_branch?: string | null
           next_hearing_date?: string | null
           objection?: string | null
           order_link?: string | null
@@ -508,18 +532,26 @@ export type Database = {
           registration_number?: string | null
           respondent?: string | null
           respondent_advocate?: string | null
+          sections?: string[] | null
+          stage?: string | null
+          state?: string | null
+          state_1?: string | null
           status?: Database["public"]["Enums"]["case_status_enum"] | null
+          sub_category?: string | null
           tags?: string[] | null
           team_name?: string | null
           title: string
           updated_at?: string
+          vs?: string | null
         }
         Update: {
           acts?: string[] | null
           advocate_name?: string | null
           assigned_to?: string | null
           assigned_users?: string[] | null
+          bench_type?: string | null
           case_number?: string | null
+          case_title?: string
           case_type?: Database["public"]["Enums"]["case_type_enum"] | null
           category?: string | null
           client_id?: string | null
@@ -527,19 +559,26 @@ export type Database = {
           cnr_number?: string | null
           coram?: string | null
           court?: string | null
+          court_complex?: string | null
+          court_name?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
           district?: string | null
+          district_1?: string | null
           docket_number?: string | null
+          document_links?: string[] | null
           fetch_message?: string | null
           fetch_status?: string | null
           fetched_data?: Json | null
           filing_date?: string | null
           filing_number?: string | null
           firm_id?: string | null
+          first_hearing_date?: string | null
+          hearing_notes?: string | null
           id?: string
           is_auto_fetched?: boolean | null
+          judicial_branch?: string | null
           next_hearing_date?: string | null
           objection?: string | null
           order_link?: string | null
@@ -551,11 +590,17 @@ export type Database = {
           registration_number?: string | null
           respondent?: string | null
           respondent_advocate?: string | null
+          sections?: string[] | null
+          stage?: string | null
+          state?: string | null
+          state_1?: string | null
           status?: Database["public"]["Enums"]["case_status_enum"] | null
+          sub_category?: string | null
           tags?: string[] | null
           team_name?: string | null
           title?: string
           updated_at?: string
+          vs?: string | null
         }
         Relationships: [
           {
