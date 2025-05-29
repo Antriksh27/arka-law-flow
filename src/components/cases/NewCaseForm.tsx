@@ -75,7 +75,8 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
   const createCaseMutation = useMutation({
     mutationFn: async (data: CaseFormData) => {
       const caseData = {
-        case_title: data.case_title, // Use case_title instead of title
+        title: data.case_title, // Keep the existing title field for backward compatibility
+        case_title: data.case_title, // Add the new case_title field
         description: data.description || null,
         client_id: data.client_id || null,
         case_type: data.case_type as any,
@@ -83,7 +84,7 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
         priority: data.priority as any,
         case_number: data.case_number || null,
         filing_date: data.filing_date ? new Date(data.filing_date).toISOString().split('T')[0] : null,
-        court_name: data.court_name || null, // Use court_name instead of court
+        court_name: data.court_name || null,
         cnr_number: data.cnr_number || null,
         filing_number: data.filing_number || null,
         petitioner: data.petitioner || null,
