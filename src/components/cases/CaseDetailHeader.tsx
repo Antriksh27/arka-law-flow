@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -41,8 +42,24 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
   };
 
   const formatCaseType = (type: string) => {
+    if (!type) return 'Not specified';
     return type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
+
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return 'Not scheduled';
+    try {
+      return format(new Date(dateString), 'MMM d, yyyy');
+    } catch (error) {
+      return 'Invalid date';
+    }
+  };
+
+  // Use case_title first, then fall back to title
+  const caseTitle = caseData?.case_title || caseData?.title || 'Untitled Case';
+  
+  // Use court_name first, then fall back to court
+  const courtName = caseData?.court_name || caseData?.court || 'Not specified';
 
   return (
     <div className="bg-white border border-gray-200 rounded-2xl shadow-sm mb-6">
@@ -52,13 +69,13 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-3">
               <h1 className="text-2xl font-semibold text-gray-900">
-                {caseData.title}
+                {caseTitle}
               </h1>
-              <Badge className={`${getStatusColor(caseData.status)} rounded-full`}>
-                {caseData.status === 'in_court' ? 'In Court' : caseData.status?.replace('_', ' ')}
+              <Badge className={`${getStatusColor(caseData?.status)} rounded-full`}>
+                {caseData?.status === 'in_court' ? 'In Court' : caseData?.status?.replace('_', ' ') || 'Unknown'}
               </Badge>
               <Badge variant="outline" className="text-xs">
-                {formatCaseType(caseData.case_type)}
+                {formatCaseType(caseData?.case_type)}
               </Badge>
             </div>
           </div>
@@ -68,7 +85,7 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
               <Edit className="w-4 h-4 mr-2" />
               Edit Case
             </Button>
-            <Button variant="closeCase" size="sm">
+            <Button variant="outline" size="sm">
               <Ban className="w-4 h-4 mr-2" />
               Close Case
             </Button>
@@ -82,7 +99,7 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
             <div>
               <p className="text-sm text-gray-500">Client</p>
               <p className="font-medium text-gray-900">
-                {caseData.clients?.full_name || 'No client assigned'}
+                {caseData?.clients?.full_name || 'No client assigned'}
               </p>
             </div>
           </div>
@@ -90,17 +107,23 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
           <div className="flex items-center gap-3">
             <Users className="w-4 h-4 text-gray-400" />
             <div>
-              <p className="text-sm text-gray-500">Team</p>
+              <p className="text-sm text-gray-500">Assigned Lawyer</p>
               <div className="flex items-center gap-1 mt-1">
-                <Avatar className="w-6 h-6">
-                  <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">A</AvatarFallback>
-                </Avatar>
-                <Avatar className="w-6 h-6">
-                  <AvatarFallback className="bg-primary-100 text-primary-600 text-xs">B</AvatarFallback>
-                </Avatar>
-                <Button variant="ghost" size="sm" className="w-6 h-6 p-0 rounded-full border border-dashed border-gray-300">
-                  <Plus className="w-3 h-3" />
-                </Button>
+                {caseData?.advocate_name ? (
+                  <p className="font-medium text-gray-900">{caseData.advocate_name}</p>
+                ) : (
+                  <>
+                    <Avatar className="w-6 h-6">
+                      <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">A</AvatarFallback>
+                    </Avatar>
+                    <Avatar className="w-6 h-6">
+                      <AvatarFallback className="bg-primary-100 text-primary-600 text-xs">B</AvatarFallback>
+                    </Avatar>
+                    <Button variant="ghost" size="sm" className="w-6 h-6 p-0 rounded-full border border-dashed border-gray-300">
+                      <Plus className="w-3 h-3" />
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -109,9 +132,13 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
             <Flag className="w-4 h-4 text-gray-400" />
             <div>
               <p className="text-sm text-gray-500">Priority</p>
-              <Badge className={`${getPriorityColor(caseData.priority)} rounded-full text-xs mt-1`}>
-                {caseData.priority} Priority
-              </Badge>
+              {caseData?.priority ? (
+                <Badge className={`${getPriorityColor(caseData.priority)} rounded-full text-xs mt-1`}>
+                  {caseData.priority} Priority
+                </Badge>
+              ) : (
+                <p className="font-medium text-gray-900">Not set</p>
+              )}
             </div>
           </div>
 
@@ -120,7 +147,7 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
             <div>
               <p className="text-sm text-gray-500">Next Hearing</p>
               <p className="font-medium text-gray-900">
-                {caseData.next_hearing_date ? format(new Date(caseData.next_hearing_date), 'MMM d, yyyy') : 'Not scheduled'}
+                {formatDate(caseData?.next_hearing_date)}
               </p>
             </div>
           </div>
@@ -133,7 +160,7 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
             <div>
               <p className="text-sm text-gray-500">Filed Date</p>
               <p className="font-medium text-gray-900">
-                {caseData.filing_date ? format(new Date(caseData.filing_date), 'MMM d, yyyy') : 'Not specified'}
+                {formatDate(caseData?.filing_date)}
               </p>
             </div>
           </div>
@@ -143,7 +170,7 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
             <div>
               <p className="text-sm text-gray-500">Court</p>
               <p className="font-medium text-gray-900">
-                {caseData.court || 'Not specified'}
+                {courtName}
               </p>
             </div>
           </div>
@@ -153,7 +180,7 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
             <div>
               <p className="text-sm text-gray-500">Case Number</p>
               <p className="font-medium text-gray-900">
-                {caseData.case_number || 'Not assigned'}
+                {caseData?.case_number || caseData?.filing_number || caseData?.registration_number || caseData?.cnr_number || 'Not assigned'}
               </p>
             </div>
           </div>
