@@ -8,11 +8,9 @@ import { CheckSquare, Plus, Calendar, User, Tag } from 'lucide-react';
 import { format } from 'date-fns';
 import { CreateTaskDialog } from '../tasks/CreateTaskDialog';
 import { useToast } from '@/hooks/use-toast';
-
 interface CaseTasksProps {
   caseId: string;
 }
-
 export const CaseTasks: React.FC<CaseTasksProps> = ({
   caseId
 }) => {
@@ -132,10 +130,7 @@ export const CaseTasks: React.FC<CaseTasksProps> = ({
   return <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-xl font-semibold text-gray-900">Tasks</h3>
-        <Button 
-          onClick={() => setShowCreateDialog(true)} 
-          className="bg-slate-800 hover:bg-slate-700"
-        >
+        <Button onClick={() => setShowCreateDialog(true)} className="bg-slate-800 hover:bg-slate-700">
           <Plus className="w-4 h-4 mr-2" />
           Add Task
         </Button>
@@ -181,16 +176,10 @@ export const CaseTasks: React.FC<CaseTasksProps> = ({
                       </div>}
 
                     {status !== 'completed' && <div className="flex gap-2 mt-3">
-                        {status === 'todo' && <button
-                            onClick={() => handleStatusChange(task.id, 'in_progress')}
-                            className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-b from-green-400 to-green-600 border border-green-600 rounded-lg shadow-lg hover:from-green-500 hover:to-green-700 hover:shadow-xl active:scale-95 transition-all duration-150 transform hover:-translate-y-0.5"
-                          >
+                        {status === 'todo' && <button onClick={() => handleStatusChange(task.id, 'in_progress')} className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-b from-green-400 to-green-600 border border-green-600 rounded-lg shadow-lg hover:from-green-500 hover:to-green-700 hover:shadow-xl active:scale-95 transition-all duration-150 transform hover:-translate-y-0.5">
                             Start
                           </button>}
-                        {status === 'in_progress' && <button
-                            onClick={() => handleStatusChange(task.id, 'completed')}
-                            className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-b from-red-400 to-red-600 border border-red-600 rounded-lg shadow-lg hover:from-red-500 hover:to-red-700 hover:shadow-xl active:scale-95 transition-all duration-150 transform hover:-translate-y-0.5"
-                          >
+                        {status === 'in_progress' && <button onClick={() => handleStatusChange(task.id, 'completed')} className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-b from-red-400 to-red-600 border border-red-600 rounded-lg shadow-lg hover:from-red-500 hover:to-red-700 hover:shadow-xl active:scale-95 transition-all duration-150 transform hover:-translate-y-0.5">
                             Complete
                           </button>}
                       </div>}
@@ -205,7 +194,7 @@ export const CaseTasks: React.FC<CaseTasksProps> = ({
         </div> : <div className="text-center py-12 text-gray-500">
           <CheckSquare className="w-12 h-12 mx-auto mb-4 text-gray-300" />
           <p>No tasks created yet</p>
-          <Button className="mt-4 bg-blue-600 hover:bg-blue-700" onClick={() => setShowCreateDialog(true)}>
+          <Button onClick={() => setShowCreateDialog(true)} className="mt-4 bg-slate-800 hover:bg-slate-700">
             <Plus className="w-4 h-4 mr-2" />
             Create First Task
           </Button>
