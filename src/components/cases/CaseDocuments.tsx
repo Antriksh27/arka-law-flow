@@ -148,13 +148,13 @@ export const CaseDocuments: React.FC<CaseDocumentsProps> = ({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="bg-slate-900">Document Name</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Uploaded By</TableHead>
-                  <TableHead>Upload Date</TableHead>
-                  <TableHead>Size</TableHead>
-                  <TableHead>Important</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead className="bg-slate-800">Document Name</TableHead>
+                  <TableHead className="bg-slate-800">Type</TableHead>
+                  <TableHead className="bg-slate-800">Uploaded By</TableHead>
+                  <TableHead className="bg-slate-800">Upload Date</TableHead>
+                  <TableHead className="bg-slate-800">Size</TableHead>
+                  <TableHead className="bg-slate-800">Important</TableHead>
+                  <TableHead className="bg-slate-800">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
