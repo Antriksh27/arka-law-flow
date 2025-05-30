@@ -4,6 +4,7 @@ import * as React from "react";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+
 const SignIn1 = () => {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -74,7 +75,7 @@ const SignIn1 = () => {
           </div>
           <hr className="opacity-10" />
           <div>
-            <button onClick={handleSignIn} disabled={isLoading} className="w-full bg-white/10 font-medium px-5 py-3 rounded-full shadow hover:bg-white/20 transition mb-3 text-sm disabled:opacity-50 disabled:cursor-not-allowed text-yellow-500">
+            <button onClick={handleSignIn} disabled={isLoading} className="w-full bg-white/10 font-medium px-5 py-3 rounded-full shadow hover:bg-white/20 transition mb-3 text-sm disabled:opacity-50 disabled:cursor-not-allowed text-white">
               {isLoading ? "Signing in..." : "Sign in"}
             </button>
             {/* Google Sign In */}
@@ -89,4 +90,5 @@ const SignIn1 = () => {
       
     </div>;
 };
+
 export { SignIn1 };

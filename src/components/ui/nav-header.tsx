@@ -1,4 +1,3 @@
-
 "use client"; 
 
 import React, { useRef, useState } from "react";
@@ -73,7 +72,7 @@ const Tab = ({
       <Link 
         to={href}
         className={`block px-3 py-1.5 text-xs uppercase mix-blend-difference md:px-5 md:py-3 md:text-sm transition-colors ${
-          isActive ? 'text-yellow-500' : 'text-slate-700 hover:text-white'
+          isActive ? 'text-white' : 'text-slate-700 hover:text-white'
         }`}
       >
         {children}
