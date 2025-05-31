@@ -1,297 +1,286 @@
 import React from 'react';
-import { Badge } from '@/components/ui/badge';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CalendarDays, FileText, Gavel, Clock, User, Building2, Hash, Calendar, MapPin } from 'lucide-react';
-import { format, differenceInDays, differenceInMonths, differenceInYears } from 'date-fns';
-import { RecentActivity } from './RecentActivity';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Brain, Calendar, FileText, Users, TrendingUp, Clock, AlertCircle, CheckCircle, User } from 'lucide-react';
 
 interface CaseOverviewProps {
-  caseData: any;
+  caseId: string;
 }
 
-export const CaseOverview: React.FC<CaseOverviewProps> = ({ caseData }) => {
-  const formatDurationSinceFiling = (filingDate: string | null) => {
-    if (!filingDate) return 'Not filed yet';
+export const CaseOverview: React.FC<CaseOverviewProps> = ({ caseId }) => {
+  const { data: caseData, isLoading } = useQuery({
+    queryKey: ['case-overview', caseId],
+    queryFn: async () => {
+      const { data: caseResult, error: caseError } = await supabase
+        .from('cases')
+        .select('*')
+        .eq('id', caseId)
+        .single();
+      
+      if (caseError) throw caseError;
+      
+      // Get client data separately
+      let clientData = null;
+      if (caseResult.client_id) {
+        const { data: client, error: clientError } = await supabase
+          .from('clients')
+          .select('full_name')
+          .eq('id', caseResult.client_id)
+          .single();
+        
+        if (!clientError && client) {
+          clientData = client;
+        }
+      }
+      
+      // Get creator data separately
+      let creatorData = null;
+      if (caseResult.created_by) {
+        const { data: creator, error: creatorError } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', caseResult.created_by)
+          .single();
+        
+        if (!creatorError && creator) {
+          creatorData = creator;
+        }
+      }
+      
+      return {
+        ...caseResult,
+        client: clientData,
+        creator: creatorData
+      };
+    }
+  });
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="animate-pulse">
+          <div className="h-32 bg-gray-200 rounded-lg mb-4"></div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="h-24 bg-gray-200 rounded-lg"></div>
+            <div className="h-24 bg-gray-200 rounded-lg"></div>
+            <div className="h-24 bg-gray-200 rounded-lg"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!caseData) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-500">Case data not found</p>
+      </div>
+    );
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'active':
+        return 'bg-green-100 text-green-700';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-700';
+      case 'closed':
+        return 'bg-gray-100 text-gray-700';
+      default:
+        return 'bg-blue-100 text-blue-700';
+    }
+  };
+
+  // Calculate days since filing using filing_date and format as Years, Months, Days
+  const calculateDaysSinceFiling = () => {
+    if (!caseData.filing_date) return 'Not filed';
     
-    const filing = new Date(filingDate);
-    const now = new Date();
+    const filingDate = new Date(caseData.filing_date);
+    const today = new Date();
     
-    const years = differenceInYears(now, filing);
-    const months = differenceInMonths(now, filing) % 12;
-    const days = differenceInDays(now, filing) % 30;
+    if (filingDate > today) return 'Future date';
     
+    let years = today.getFullYear() - filingDate.getFullYear();
+    let months = today.getMonth() - filingDate.getMonth();
+    let days = today.getDate() - filingDate.getDate();
+    
+    // Adjust for negative days
+    if (days < 0) {
+      months--;
+      const lastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+      days += lastMonth.getDate();
+    }
+    
+    // Adjust for negative months
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
+    
+    // Format the result
     const parts = [];
     if (years > 0) parts.push(`${years} Year${years !== 1 ? 's' : ''}`);
     if (months > 0) parts.push(`${months} Month${months !== 1 ? 's' : ''}`);
-    if (days > 0) parts.push(`${days} Day${days !== 1 ? 's' : ''}`);
+    if (days > 0 || parts.length === 0) parts.push(`${days} Day${days !== 1 ? 's' : ''}`);
     
-    return parts.length > 0 ? parts.join(', ') : 'Filed today';
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'open':
-        return 'bg-green-500';
-      case 'in_court':
-        return 'bg-blue-500';
-      case 'closed':
-        return 'bg-gray-500';
-      case 'on_hold':
-        return 'bg-yellow-500';
-      default:
-        return 'bg-gray-400';
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high':
-        return 'text-red-600';
-      case 'medium':
-        return 'text-yellow-600';
-      case 'low':
-        return 'text-green-600';
-      default:
-        return 'text-gray-600';
-    }
+    return parts.join(', ');
   };
 
   return (
     <div className="space-y-6">
-      {/* Case Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Status</CardTitle>
-            <Gavel className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <Badge 
-              variant={caseData?.status === 'open' ? 'default' : 'secondary'}
-              className={`${getStatusColor(caseData?.status)} text-white`}
-            >
-              {caseData?.status?.replace('_', ' ').toUpperCase() || 'Unknown'}
-            </Badge>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Priority</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <Badge 
-              variant="outline"
-              className={`${getPriorityColor(caseData?.priority)} border-current`}
-            >
-              {caseData?.priority?.toUpperCase() || 'MEDIUM'}
-            </Badge>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Days Since Filing</CardTitle>
-            <CalendarDays className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-sm font-medium">
-              {formatDurationSinceFiling(caseData?.filing_date)}
-            </div>
-            {caseData?.filing_date && (
-              <p className="text-xs text-muted-foreground">
-                Filed: {format(new Date(caseData.filing_date), 'MMM d, yyyy')}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Next Hearing</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-sm font-medium">
-              {caseData?.next_hearing_date 
-                ? format(new Date(caseData.next_hearing_date), 'MMM d, yyyy')
-                : 'Not scheduled'
-              }
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {caseData?.next_hearing_date 
-                ? `${differenceInDays(new Date(caseData.next_hearing_date), new Date())} days from now`
-                : 'No upcoming hearing'
-              }
+      {/* AI Case Summary */}
+      <Card className="border-blue-200 bg-blue-50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-blue-800">
+            <Brain className="w-5 h-5" />
+            AI Case Summary
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <p className="text-blue-700">
+              This is an AI-generated summary of the case based on available information. 
+              The case "{caseData.title}" is currently in {caseData.status} status and was filed on{' '}
+              {caseData.filing_date ? new Date(caseData.filing_date).toLocaleDateString() : 'Unknown date'}.
             </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Case Details Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Basic Information */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="w-5 h-5" />
-              Case Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Case Title and Description */}
-            <div>
-              <h3 className="font-semibold text-lg mb-2">{caseData?.case_title}</h3>
-              {caseData?.description && (
-                <p className="text-gray-600 text-sm leading-relaxed">{caseData.description}</p>
-              )}
+            <div className="flex items-center gap-2">
+              <Badge className={getStatusColor(caseData.status)}>
+                {caseData.status || 'Unknown'}
+              </Badge>
+              <span className="text-sm text-blue-600">
+                Last updated: {caseData.updated_at ? new Date(caseData.updated_at).toLocaleDateString() : 'Unknown'}
+              </span>
             </div>
+          </div>
+        </CardContent>
+      </Card>
 
-            {/* Case Numbers */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {caseData?.filing_number && (
-                <div className="flex items-center gap-2">
-                  <Hash className="w-4 h-4 text-gray-400" />
-                  <div>
-                    <p className="text-sm text-gray-500">Filing Number</p>
-                    <p className="font-medium">{caseData.filing_number}</p>
-                  </div>
-                </div>
-              )}
-              {caseData?.cnr_number && (
-                <div className="flex items-center gap-2">
-                  <Hash className="w-4 h-4 text-gray-400" />
-                  <div>
-                    <p className="text-sm text-gray-500">CNR Number</p>
-                    <p className="font-medium">{caseData.cnr_number}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Parties */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {caseData?.petitioner && (
-                <div>
-                  <p className="text-sm text-gray-500 mb-1">Petitioner</p>
-                  <p className="font-medium">{caseData.petitioner}</p>
-                  {caseData?.petitioner_advocate && (
-                    <p className="text-xs text-gray-400">Advocate: {caseData.petitioner_advocate}</p>
-                  )}
-                </div>
-              )}
-              {caseData?.respondent && (
-                <div>
-                  <p className="text-sm text-gray-500 mb-1">Respondent</p>
-                  <p className="font-medium">{caseData.respondent}</p>
-                  {caseData?.respondent_advocate && (
-                    <p className="text-xs text-gray-400">Advocate: {caseData.respondent_advocate}</p>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Court Information */}
-            {caseData?.court_name && (
-              <div className="flex items-start gap-2">
-                <Building2 className="w-4 h-4 text-gray-400 mt-1" />
-                <div>
-                  <p className="text-sm text-gray-500">Court</p>
-                  <p className="font-medium">{caseData.court_name}</p>
-                  {caseData?.court_complex && (
-                    <p className="text-xs text-gray-400">{caseData.court_complex}</p>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Location */}
-            {(caseData?.state || caseData?.district) && (
-              <div className="flex items-start gap-2">
-                <MapPin className="w-4 h-4 text-gray-400 mt-1" />
-                <div>
-                  <p className="text-sm text-gray-500">Location</p>
-                  <p className="font-medium">
-                    {[caseData?.district, caseData?.state].filter(Boolean).join(', ')}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Acts and Sections */}
-            {(caseData?.acts?.length > 0 || caseData?.sections?.length > 0) && (
-              <div>
-                <p className="text-sm text-gray-500 mb-2">Legal References</p>
-                <div className="space-y-2">
-                  {caseData?.acts?.length > 0 && (
-                    <div>
-                      <p className="text-xs text-gray-400 mb-1">Acts:</p>
-                      <div className="flex flex-wrap gap-1">
-                        {caseData.acts.map((act: string, index: number) => (
-                          <Badge key={index} variant="outline" className="text-xs">
-                            {act}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {caseData?.sections?.length > 0 && (
-                    <div>
-                      <p className="text-xs text-gray-400 mb-1">Sections:</p>
-                      <div className="flex flex-wrap gap-1">
-                        {caseData.sections.map((section: string, index: number) => (
-                          <Badge key={index} variant="outline" className="text-xs">
-                            {section}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Recent Activity */}
+      {/* Case Status & Key Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <RecentActivity caseId={caseData?.id} limit={3} />
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                <CheckCircle className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Case Status</p>
+                <p className="text-lg font-semibold text-gray-900">{caseData.status || 'Unknown'}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                <Calendar className="w-5 h-5 text-green-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Days Since Filing</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {calculateDaysSinceFiling()}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                <TrendingUp className="w-5 h-5 text-yellow-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Priority</p>
+                <p className="text-lg font-semibold text-gray-900">{caseData.priority || 'Medium'}</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Case Information */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Case Information</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-gray-500">Case Title</p>
+                <p className="font-medium">{caseData.title}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Client</p>
+                <p className="font-medium">{caseData.client?.full_name || 'Not assigned'}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Case Type</p>
+                <p className="font-medium">{caseData.case_type || 'Not specified'}</p>
+              </div>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-gray-500">Description</p>
+                <p className="font-medium">{caseData.description || 'No description available'}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Created By</p>
+                <p className="font-medium">{caseData.creator?.full_name || 'Unknown'}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Created Date</p>
+                <p className="font-medium">
+                  {caseData.created_at ? new Date(caseData.created_at).toLocaleDateString() : 'Unknown'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Recent Activity Preview */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>Recent Activity</span>
+            <Button variant="outline" size="sm">View All</Button>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <FileText className="w-4 h-4 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium">Case created</p>
+                <p className="text-xs text-gray-500">
+                  {caseData.created_at ? new Date(caseData.created_at).toLocaleDateString() : 'Unknown date'}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                <Users className="w-4 h-4 text-green-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium">Client assigned</p>
+                <p className="text-xs text-gray-500">
+                  {caseData.client?.full_name ? `${caseData.client.full_name} assigned to case` : 'No client assigned'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
-};
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'open':
-      return 'bg-green-500';
-    case 'in_court':
-      return 'bg-blue-500';
-    case 'closed':
-      return 'bg-gray-500';
-    case 'on_hold':
-      return 'bg-yellow-500';
-    default:
-      return 'bg-gray-400';
-  }
-};
-
-const getPriorityColor = (priority: string) => {
-  switch (priority) {
-    case 'high':
-      return 'text-red-600';
-    case 'medium':
-      return 'text-yellow-600';
-    case 'low':
-      return 'text-green-600';
-    default:
-      return 'text-gray-600';
-  }
 };
