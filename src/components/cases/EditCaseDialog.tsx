@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -92,11 +93,15 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
         .eq('id', caseId);
       
       if (error) throw error;
+      
+      // The database triggers will automatically log all the changes
+      console.log('Case updated successfully, activity logs will be generated automatically');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['case-details-full', caseId] });
       queryClient.invalidateQueries({ queryKey: ['case-detail', caseId] });
-      toast.success('Case updated successfully');
+      queryClient.invalidateQueries({ queryKey: ['case-activities', caseId] }); // Refresh activity logs
+      toast.success('Case updated successfully. All changes have been logged in the activity feed.');
       onClose();
     },
     onError: (error) => {
