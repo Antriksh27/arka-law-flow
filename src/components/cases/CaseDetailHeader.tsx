@@ -1,15 +1,12 @@
-
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Edit, Calendar, FileText, Users, Clock, Plus, Ban, User, Building2, Gavel, Flag } from 'lucide-react';
 import { format } from 'date-fns';
-
 interface CaseDetailHeaderProps {
   case: any;
 }
-
 export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
   case: caseData
 }) => {
@@ -27,7 +24,6 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
         return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
-
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
@@ -40,12 +36,10 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
         return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
-
   const formatCaseType = (type: string) => {
     if (!type) return 'Not specified';
     return type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
-
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'Not scheduled';
     try {
@@ -57,12 +51,10 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
 
   // Use case_title first, then fall back to title
   const caseTitle = caseData?.case_title || caseData?.title || 'Untitled Case';
-  
+
   // Use court_name first, then fall back to court
   const courtName = caseData?.court_name || caseData?.court || 'Not specified';
-
-  return (
-    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm mb-6">
+  return <div className="bg-white border border-gray-200 rounded-2xl shadow-sm mb-6">
       {/* Header Section */}
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-start justify-between mb-6">
@@ -85,7 +77,7 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
               <Edit className="w-4 h-4 mr-2" />
               Edit Case
             </Button>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="bg-red-700 hover:bg-red-600">
               <Ban className="w-4 h-4 mr-2" />
               Close Case
             </Button>
@@ -109,10 +101,7 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
             <div>
               <p className="text-sm text-gray-500">Assigned Lawyer</p>
               <div className="flex items-center gap-1 mt-1">
-                {caseData?.advocate_name ? (
-                  <p className="font-medium text-gray-900">{caseData.advocate_name}</p>
-                ) : (
-                  <>
+                {caseData?.advocate_name ? <p className="font-medium text-gray-900">{caseData.advocate_name}</p> : <>
                     <Avatar className="w-6 h-6">
                       <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">A</AvatarFallback>
                     </Avatar>
@@ -122,8 +111,7 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
                     <Button variant="ghost" size="sm" className="w-6 h-6 p-0 rounded-full border border-dashed border-gray-300">
                       <Plus className="w-3 h-3" />
                     </Button>
-                  </>
-                )}
+                  </>}
               </div>
             </div>
           </div>
@@ -132,13 +120,9 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
             <Flag className="w-4 h-4 text-gray-400" />
             <div>
               <p className="text-sm text-gray-500">Priority</p>
-              {caseData?.priority ? (
-                <Badge className={`${getPriorityColor(caseData.priority)} rounded-full text-xs mt-1`}>
+              {caseData?.priority ? <Badge className={`${getPriorityColor(caseData.priority)} rounded-full text-xs mt-1`}>
                   {caseData.priority} Priority
-                </Badge>
-              ) : (
-                <p className="font-medium text-gray-900">Not set</p>
-              )}
+                </Badge> : <p className="font-medium text-gray-900">Not set</p>}
             </div>
           </div>
 
@@ -186,6 +170,5 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
