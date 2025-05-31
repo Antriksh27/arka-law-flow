@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -95,16 +94,39 @@ export const CaseOverview: React.FC<CaseOverviewProps> = ({ caseId }) => {
     }
   };
 
-  // Calculate days since filing using filing_date
+  // Calculate days since filing using filing_date and format as Years, Months, Days
   const calculateDaysSinceFiling = () => {
     if (!caseData.filing_date) return 'Not filed';
     
     const filingDate = new Date(caseData.filing_date);
     const today = new Date();
-    const timeDiff = today.getTime() - filingDate.getTime();
-    const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
     
-    return daysDiff >= 0 ? daysDiff : 'Invalid date';
+    if (filingDate > today) return 'Future date';
+    
+    let years = today.getFullYear() - filingDate.getFullYear();
+    let months = today.getMonth() - filingDate.getMonth();
+    let days = today.getDate() - filingDate.getDate();
+    
+    // Adjust for negative days
+    if (days < 0) {
+      months--;
+      const lastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+      days += lastMonth.getDate();
+    }
+    
+    // Adjust for negative months
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
+    
+    // Format the result
+    const parts = [];
+    if (years > 0) parts.push(`${years} Year${years !== 1 ? 's' : ''}`);
+    if (months > 0) parts.push(`${months} Month${months !== 1 ? 's' : ''}`);
+    if (days > 0 || parts.length === 0) parts.push(`${days} Day${days !== 1 ? 's' : ''}`);
+    
+    return parts.join(', ');
   };
 
   return (
