@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -94,6 +95,18 @@ export const CaseOverview: React.FC<CaseOverviewProps> = ({ caseId }) => {
     }
   };
 
+  // Calculate days since filing using filing_date
+  const calculateDaysSinceFiling = () => {
+    if (!caseData.filing_date) return 'Not filed';
+    
+    const filingDate = new Date(caseData.filing_date);
+    const today = new Date();
+    const timeDiff = today.getTime() - filingDate.getTime();
+    const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+    
+    return daysDiff >= 0 ? daysDiff : 'Invalid date';
+  };
+
   return (
     <div className="space-y-6">
       {/* AI Case Summary */}
@@ -109,7 +122,7 @@ export const CaseOverview: React.FC<CaseOverviewProps> = ({ caseId }) => {
             <p className="text-blue-700">
               This is an AI-generated summary of the case based on available information. 
               The case "{caseData.title}" is currently in {caseData.status} status and was filed on{' '}
-              {caseData.created_at ? new Date(caseData.created_at).toLocaleDateString() : 'Unknown date'}.
+              {caseData.filing_date ? new Date(caseData.filing_date).toLocaleDateString() : 'Unknown date'}.
             </p>
             <div className="flex items-center gap-2">
               <Badge className={getStatusColor(caseData.status)}>
@@ -148,10 +161,7 @@ export const CaseOverview: React.FC<CaseOverviewProps> = ({ caseId }) => {
               <div>
                 <p className="text-sm text-gray-500">Days Since Filing</p>
                 <p className="text-lg font-semibold text-gray-900">
-                  {caseData.created_at 
-                    ? Math.floor((new Date().getTime() - new Date(caseData.created_at).getTime()) / (1000 * 60 * 60 * 24))
-                    : 'Unknown'
-                  }
+                  {calculateDaysSinceFiling()}
                 </p>
               </div>
             </div>
