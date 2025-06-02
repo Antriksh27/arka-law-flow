@@ -4,6 +4,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileText, Calendar, CheckSquare, StickyNote, MessageSquare, Activity, Filter, Search, Plus, BarChart3, FileSearch, Clock, Bot } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { format } from 'date-fns';
 import { CaseDocuments } from './CaseDocuments';
 import { CaseHearings } from './CaseHearings';
 import { CaseTasks } from './CaseTasks';
@@ -28,6 +31,53 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
   onTabChange
 }) => {
   const [showCreateNoteModal, setShowCreateNoteModal] = useState(false);
+
+  // Fetch latest 3 activities for the sidebar
+  const { data: recentActivities } = useQuery({
+    queryKey: ['recent-activities', caseId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('case_activities')
+        .select(`
+          *,
+          profiles!case_activities_created_by_fkey(full_name)
+        `)
+        .eq('case_id', caseId)
+        .order('created_at', { ascending: false })
+        .limit(3);
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
+  const getActivityTypeLabel = (type: string) => {
+    const labels: Record<string, string> = {
+      'case_created': 'Case Created',
+      'case_title_changed': 'Title Changed',
+      'status_changed': 'Status Updated',
+      'priority_changed': 'Priority Changed',
+      'client_assigned': 'Client Assignment',
+      'assignment_changed': 'Assignment Changed',
+      'filing_date_changed': 'Filing Date Updated',
+      'next_hearing_changed': 'Next Hearing Updated',
+      'description_updated': 'Description Updated',
+      'court_changed': 'Court Information',
+      'petitioner_changed': 'Petitioner Updated',
+      'respondent_changed': 'Respondent Updated',
+      'filing_number_changed': 'Filing Number Updated',
+      'cnr_number_changed': 'CNR Number Updated',
+      'document_uploaded': 'Document Upload',
+      'document_deleted': 'Document Deleted',
+      'hearing_scheduled': 'Hearing Scheduled',
+      'hearing_rescheduled': 'Hearing Rescheduled',
+      'hearing_status_changed': 'Hearing Status',
+      'task_created': 'Task Created',
+      'task_status_changed': 'Task Updated',
+      'message_sent': 'Message Sent'
+    };
+    return labels[type] || 'Activity';
+  };
 
   // Organize tabs into two rows
   const primaryTabs = [
@@ -220,24 +270,25 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
         <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
           <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
           <div className="space-y-4">
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                <FileText className="w-4 h-4 text-blue-600" />
+            {recentActivities && recentActivities.length > 0 ? (
+              recentActivities.map((activity) => (
+                <div key={activity.id} className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                    <Activity className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{getActivityTypeLabel(activity.activity_type)}</p>
+                    <p className="text-xs text-gray-500">
+                      {format(new Date(activity.created_at), 'MMM d, h:mm a')}
+                    </p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-sm text-gray-500">No recent activity</p>
               </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium">Document uploaded</p>
-                <p className="text-xs text-gray-500">Added by Priya Sharma • 2 hours ago</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                <Calendar className="w-4 h-4 text-blue-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium">Hearing scheduled</p>
-                <p className="text-xs text-gray-500">Added by Admin • 4 hours ago</p>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
