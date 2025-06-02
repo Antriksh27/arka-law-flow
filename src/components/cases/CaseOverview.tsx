@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Brain, Calendar, FileText, Users, TrendingUp, Clock, AlertCircle, CheckCircle, User } from 'lucide-react';
+import { RecentActivity } from './RecentActivity';
 
 export interface CaseOverviewProps {
   caseId: string;
@@ -255,30 +256,7 @@ export const CaseOverview: React.FC<CaseOverviewProps> = ({ caseId }) => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                <FileText className="w-4 h-4 text-blue-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium">Case created</p>
-                <p className="text-xs text-gray-500">
-                  {caseData.created_at ? new Date(caseData.created_at).toLocaleDateString() : 'Unknown date'}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                <Users className="w-4 h-4 text-green-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium">Client assigned</p>
-                <p className="text-xs text-gray-500">
-                  {caseData.client?.full_name ? `${caseData.client.full_name} assigned to case` : 'No client assigned'}
-                </p>
-              </div>
-            </div>
-          </div>
+          <RecentActivity caseId={caseId} />
         </CardContent>
       </Card>
     </div>
