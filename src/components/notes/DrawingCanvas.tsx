@@ -13,6 +13,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange })
   const [currentColor, setCurrentColor] = useState('#000000');
   const [lineWidth, setLineWidth] = useState(3);
   const lastPointRef = useRef<{ x: number; y: number } | null>(null);
+  const pathRef = useRef<{ x: number; y: number }[]>([]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -80,20 +81,30 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange })
     };
   }, []);
 
-  const drawSmoothLine = useCallback((fromX: number, fromY: number, toX: number, toY: number) => {
+  const drawSmoothLine = useCallback((points: { x: number; y: number }[]) => {
     const canvas = canvasRef.current;
     const context = canvas?.getContext('2d');
-    if (!canvas || !context) return;
-
-    // Calculate control points for smoother curves
-    const cp1x = fromX + (toX - fromX) * 0.3;
-    const cp1y = fromY + (toY - fromY) * 0.3;
-    const cp2x = fromX + (toX - fromX) * 0.7;
-    const cp2y = fromY + (toY - fromY) * 0.7;
+    if (!canvas || !context || points.length < 2) return;
 
     context.beginPath();
-    context.moveTo(fromX, fromY);
-    context.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, toX, toY);
+    context.moveTo(points[0].x, points[0].y);
+
+    // Use quadratic curves for smoother lines
+    for (let i = 1; i < points.length - 1; i++) {
+      const currentPoint = points[i];
+      const nextPoint = points[i + 1];
+      const controlPointX = (currentPoint.x + nextPoint.x) / 2;
+      const controlPointY = (currentPoint.y + nextPoint.y) / 2;
+      
+      context.quadraticCurveTo(currentPoint.x, currentPoint.y, controlPointX, controlPointY);
+    }
+
+    // Draw to the last point
+    if (points.length > 1) {
+      const lastPoint = points[points.length - 1];
+      context.lineTo(lastPoint.x, lastPoint.y);
+    }
+
     context.stroke();
   }, []);
 
@@ -106,15 +117,14 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange })
     const pos = getEventPos(e);
     setIsDrawing(true);
     lastPointRef.current = pos;
+    pathRef.current = [pos];
 
-    // Start a new path
+    // Start a new path and draw a dot for single clicks
     context.beginPath();
     context.moveTo(pos.x, pos.y);
-    
-    // Draw a small dot for single clicks
-    context.arc(pos.x, pos.y, lineWidth / 4, 0, Math.PI * 2);
-    context.fill();
-  }, [getEventPos, lineWidth]);
+    context.lineTo(pos.x, pos.y);
+    context.stroke();
+  }, [getEventPos]);
 
   const draw = useCallback((e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     e.preventDefault();
@@ -125,33 +135,18 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange })
     if (!canvas || !context) return;
 
     const currentPos = getEventPos(e);
-    const lastPos = lastPointRef.current;
+    
+    // Add current position to path
+    pathRef.current.push(currentPos);
+    
+    // Always draw a line from last point to current point for continuous strokes
+    context.beginPath();
+    context.moveTo(lastPointRef.current.x, lastPointRef.current.y);
+    context.lineTo(currentPos.x, currentPos.y);
+    context.stroke();
 
-    // Calculate distance for smoother drawing
-    const distance = Math.sqrt(
-      Math.pow(currentPos.x - lastPos.x, 2) + 
-      Math.pow(currentPos.y - lastPos.y, 2)
-    );
-
-    // Only draw if the distance is significant enough (reduces jitter)
-    if (distance > 1) {
-      // Use quadratic curve for smoother lines
-      const midPointX = (lastPos.x + currentPos.x) / 2;
-      const midPointY = (lastPos.y + currentPos.y) / 2;
-
-      context.beginPath();
-      context.moveTo(lastPos.x, lastPos.y);
-      context.quadraticCurveTo(lastPos.x, lastPos.y, midPointX, midPointY);
-      context.stroke();
-
-      lastPointRef.current = currentPos;
-
-      // Throttle the drawing data updates for better performance
-      if (Math.random() < 0.1) { // Update only 10% of the time during drawing
-        onDrawingChange(canvas.toDataURL());
-      }
-    }
-  }, [isDrawing, getEventPos, onDrawingChange]);
+    lastPointRef.current = currentPos;
+  }, [isDrawing, getEventPos]);
 
   const stopDrawing = useCallback((e?: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (e) e.preventDefault();
@@ -159,8 +154,9 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange })
     if (isDrawing) {
       setIsDrawing(false);
       lastPointRef.current = null;
+      pathRef.current = [];
       
-      // Final update of the drawing data
+      // Update the drawing data
       const canvas = canvasRef.current;
       if (canvas) {
         onDrawingChange(canvas.toDataURL());
@@ -273,8 +269,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange })
           ref={canvasRef}
           className="block cursor-crosshair bg-white w-full h-96 touch-none"
           style={{ 
-            touchAction: 'none',
-            imageRendering: 'pixelated'
+            touchAction: 'none'
           }}
           onMouseDown={startDrawing}
           onMouseMove={draw}
