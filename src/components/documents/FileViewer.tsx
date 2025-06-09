@@ -98,7 +98,7 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
   const renderFileContent = () => {
     if (loading) {
       return (
-        <div className="flex items-center justify-center h-96">
+        <div className="flex items-center justify-center h-full">
           <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
         </div>
       );
@@ -106,7 +106,7 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
 
     if (!fileUrl) {
       return (
-        <div className="flex items-center justify-center h-96">
+        <div className="flex items-center justify-center h-full">
           <p className="text-gray-500">Failed to load file</p>
         </div>
       );
@@ -117,11 +117,11 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
     switch (fileType) {
       case 'image':
         return (
-          <div className="flex justify-center items-center min-h-96 bg-gray-50 rounded-lg">
+          <div className="flex justify-center items-center h-full bg-gray-50 rounded-lg">
             <img
               src={fileUrl}
               alt={document.file_name}
-              className="max-w-full max-h-96 object-contain transition-transform duration-200"
+              className="max-w-full max-h-full object-contain transition-transform duration-200"
               style={{ 
                 transform: `scale(${zoom / 100}) rotate(${rotation}deg)`,
                 transformOrigin: 'center'
@@ -132,7 +132,7 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
 
       case 'pdf':
         return (
-          <div className="w-full h-96 bg-gray-50 rounded-lg">
+          <div className="w-full h-full bg-gray-50 rounded-lg">
             <iframe
               src={`${fileUrl}#view=FitH`}
               className="w-full h-full rounded-lg"
@@ -143,7 +143,7 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
 
       case 'document':
         return (
-          <div className="flex flex-col items-center justify-center h-96 bg-gray-50 rounded-lg">
+          <div className="flex flex-col items-center justify-center h-full bg-gray-50 rounded-lg">
             <p className="text-gray-600 mb-4">Word documents can't be previewed directly</p>
             <Button onClick={handleDownload}>
               <Download className="w-4 h-4 mr-2" />
@@ -154,7 +154,7 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
 
       case 'text':
         return (
-          <div className="w-full h-96 bg-gray-50 rounded-lg overflow-auto">
+          <div className="w-full h-full bg-gray-50 rounded-lg overflow-auto">
             <iframe
               src={fileUrl}
               className="w-full h-full rounded-lg"
@@ -165,11 +165,11 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
 
       case 'video':
         return (
-          <div className="w-full bg-gray-50 rounded-lg">
+          <div className="w-full h-full bg-gray-50 rounded-lg flex items-center justify-center">
             <video
               src={fileUrl}
               controls
-              className="w-full max-h-96 rounded-lg"
+              className="max-w-full max-h-full rounded-lg"
             >
               Your browser does not support the video tag.
             </video>
@@ -178,7 +178,7 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
 
       case 'audio':
         return (
-          <div className="flex justify-center items-center h-96 bg-gray-50 rounded-lg">
+          <div className="flex justify-center items-center h-full bg-gray-50 rounded-lg">
             <audio
               src={fileUrl}
               controls
@@ -191,7 +191,7 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
 
       default:
         return (
-          <div className="flex flex-col items-center justify-center h-96 bg-gray-50 rounded-lg">
+          <div className="flex flex-col items-center justify-center h-full bg-gray-50 rounded-lg">
             <p className="text-gray-600 mb-4">This file type cannot be previewed</p>
             <Button onClick={handleDownload}>
               <Download className="w-4 h-4 mr-2" />
@@ -206,8 +206,8 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] bg-white">
-        <DialogHeader className="flex flex-row items-center justify-between pb-4 border-b">
+      <DialogContent className="w-screen h-screen max-w-none max-h-none bg-white p-0 m-0 rounded-none">
+        <DialogHeader className="flex flex-row items-center justify-between p-6 pb-4 border-b">
           <DialogTitle className="text-lg font-semibold truncate pr-4">
             {document?.file_name || 'File Viewer'}
           </DialogTitle>
@@ -237,12 +237,12 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
           </div>
         </DialogHeader>
 
-        <div className="overflow-auto max-h-[calc(90vh-120px)]">
+        <div className="flex-1 p-6 pt-4 overflow-auto" style={{ height: 'calc(100vh - 120px)' }}>
           {renderFileContent()}
         </div>
 
         {document && (
-          <div className="pt-4 border-t text-sm text-gray-500">
+          <div className="p-6 pt-4 border-t text-sm text-gray-500">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <span className="font-medium">File Type:</span> {document.file_type?.toUpperCase() || 'Unknown'}
