@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -43,7 +44,7 @@ export const EditHearingDialog: React.FC<EditHearingDialogProps> = ({ hearingId 
     queryFn: async () => {
       const { data, error } = await supabase
         .from('hearings')
-        .select('*')
+        .select('id, case_id, hearing_date, hearing_time, court_name, bench, coram, hearing_type, status, outcome, notes, created_by, created_at, assigned_to')
         .eq('id', hearingId)
         .single();
       
