@@ -1,27 +1,13 @@
 
-import React, { useEffect } from 'react';
-import { DateRange } from 'react-day-picker';
-import { format } from 'date-fns';
-import { Search, CalendarIcon, Filter, X } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import React from 'react';
 import { Button } from '@/components/ui/button';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { CalendarIcon, Filter, Search, X } from 'lucide-react';
+import { format } from 'date-fns';
 import { FilterState, HearingStatus } from './types';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 
 interface HearingsFiltersProps {
   filters: FilterState;
@@ -30,79 +16,14 @@ interface HearingsFiltersProps {
 
 export const HearingsFilters: React.FC<HearingsFiltersProps> = ({
   filters,
-  onFilterChange,
+  onFilterChange
 }) => {
-  // Fetch cases for dropdown
-  const { data: cases } = useQuery({
-    queryKey: ['cases-list-minimal'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('cases')
-        .select('id, case_title')
-        .order('case_title');
-      
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
-  // Fetch courts for dropdown
-  const { data: courts } = useQuery({
-    queryKey: ['courts-list'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('hearings')
-        .select('court_name')
-        .not('court_name', 'is', null)
-        .order('court_name');
-      
-      if (error) throw error;
-      
-      // Get unique court names
-      const uniqueCourts = [...new Set(data.map(item => item.court_name))];
-      return uniqueCourts.map(court => ({ name: court }));
-    },
-  });
-
-  // Fetch team members for assigned user filter
-  const { data: teamMembers } = useQuery({
-    queryKey: ['team-members-minimal'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name')
-        .order('full_name');
-      
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
-  const handleStatusChange = (status: HearingStatus) => {
-    if (filters.status.includes(status)) {
-      onFilterChange({
-        ...filters,
-        status: filters.status.filter(s => s !== status),
-      });
-    } else {
-      onFilterChange({
-        ...filters,
-        status: [...filters.status, status],
-      });
-    }
+  
+  const updateFilter = (key: keyof FilterState, value: any) => {
+    onFilterChange({ ...filters, [key]: value });
   };
 
-  const handleDateRangeChange = (range: DateRange | undefined) => {
-    onFilterChange({
-      ...filters,
-      dateRange: {
-        from: range?.from,
-        to: range?.to,
-      },
-    });
-  };
-
-  const handleReset = () => {
+  const clearFilters = () => {
     onFilterChange({
       dateRange: { from: undefined, to: undefined },
       status: [],
@@ -113,238 +34,121 @@ export const HearingsFilters: React.FC<HearingsFiltersProps> = ({
     });
   };
 
-  const hasFilters = filters.status.length > 0 || 
-    filters.dateRange.from || filters.dateRange.to || 
-    filters.case || filters.court || filters.assignedUser;
+  const hasActiveFilters = 
+    filters.dateRange.from || 
+    filters.dateRange.to || 
+    filters.status.length > 0 || 
+    filters.case || 
+    filters.court || 
+    filters.assignedUser || 
+    filters.searchQuery;
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="relative flex-grow">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <Input
-            placeholder="Search cases, courts, or hearing types..."
-            className="pl-10"
-            value={filters.searchQuery}
-            onChange={(e) => onFilterChange({ ...filters, searchQuery: e.target.value })}
-          />
+    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Filter className="w-5 h-5 text-gray-500" />
+          <h3 className="font-medium text-gray-900">Filters</h3>
         </div>
-
-        <div className="flex flex-wrap gap-2">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="flex gap-2 items-center">
-                <CalendarIcon className="h-4 w-4" />
-                <span>
-                  {filters.dateRange.from ? (
-                    filters.dateRange.to ? (
-                      <>
-                        {format(filters.dateRange.from, "MMM d, y")} -{" "}
-                        {format(filters.dateRange.to, "MMM d, y")}
-                      </>
-                    ) : (
-                      format(filters.dateRange.from, "MMM d, y")
-                    )
-                  ) : (
-                    "Date Range"
-                  )}
-                </span>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="range"
-                selected={{
-                  from: filters.dateRange.from,
-                  to: filters.dateRange.to,
-                }}
-                onSelect={handleDateRangeChange}
-                numberOfMonths={2}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-
-          <Select
-            value={filters.case}
-            onValueChange={(value) => onFilterChange({ ...filters, case: value })}
-          >
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="Case" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">All Cases</SelectItem>
-              {cases?.map(item => (
-                <SelectItem key={item.id} value={item.id}>
-                  {item.case_title}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select
-            value={filters.court}
-            onValueChange={(value) => onFilterChange({ ...filters, court: value })}
-          >
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="Court" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">All Courts</SelectItem>
-              {courts?.map((court, index) => (
-                <SelectItem key={index} value={court.name}>
-                  {court.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select
-            value={filters.assignedUser}
-            onValueChange={(value) => onFilterChange({ ...filters, assignedUser: value })}
-          >
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="Assigned To" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">All Users</SelectItem>
-              {teamMembers?.map(member => (
-                <SelectItem key={member.id} value={member.id}>
-                  {member.full_name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="flex gap-2 items-center">
-                <Filter className="h-4 w-4" />
-                Status
-                {filters.status.length > 0 && (
-                  <Badge variant="secondary" className="ml-1 rounded-full">
-                    {filters.status.length}
-                  </Badge>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-56">
-              <div className="space-y-2 p-2">
-                <div
-                  className={`flex items-center px-2 py-1.5 rounded-md cursor-pointer ${
-                    filters.status.includes("scheduled") ? "bg-blue-100" : "hover:bg-gray-100"
-                  }`}
-                  onClick={() => handleStatusChange("scheduled")}
-                >
-                  <div className={`h-3 w-3 rounded-full bg-blue-500 mr-2`} />
-                  <span>Scheduled</span>
-                </div>
-                <div
-                  className={`flex items-center px-2 py-1.5 rounded-md cursor-pointer ${
-                    filters.status.includes("adjourned") ? "bg-orange-100" : "hover:bg-gray-100"
-                  }`}
-                  onClick={() => handleStatusChange("adjourned")}
-                >
-                  <div className={`h-3 w-3 rounded-full bg-orange-500 mr-2`} />
-                  <span>Adjourned</span>
-                </div>
-                <div
-                  className={`flex items-center px-2 py-1.5 rounded-md cursor-pointer ${
-                    filters.status.includes("completed") ? "bg-green-100" : "hover:bg-gray-100"
-                  }`}
-                  onClick={() => handleStatusChange("completed")}
-                >
-                  <div className={`h-3 w-3 rounded-full bg-green-500 mr-2`} />
-                  <span>Completed</span>
-                </div>
-                <div
-                  className={`flex items-center px-2 py-1.5 rounded-md cursor-pointer ${
-                    filters.status.includes("cancelled") ? "bg-red-100" : "hover:bg-gray-100"
-                  }`}
-                  onClick={() => handleStatusChange("cancelled")}
-                >
-                  <div className={`h-3 w-3 rounded-full bg-red-500 mr-2`} />
-                  <span>Cancelled</span>
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
-
-          {hasFilters && (
-            <Button variant="ghost" onClick={handleReset}>
-              <X className="h-4 w-4 mr-1" /> Clear
-            </Button>
-          )}
-        </div>
+        {hasActiveFilters && (
+          <Button variant="outline" size="sm" onClick={clearFilters}>
+            <X className="w-4 h-4 mr-2" />
+            Clear All
+          </Button>
+        )}
       </div>
 
-      {/* Active filters */}
-      {hasFilters && (
-        <div className="mt-3 flex flex-wrap gap-2">
-          {filters.status.map((status) => (
-            <Badge
-              key={status}
-              variant="outline"
-              className="rounded-full bg-gray-100 py-1.5 px-3"
-            >
-              {status.charAt(0).toUpperCase() + status.slice(1)}
-              <X
-                className="ml-1 h-3 w-3 cursor-pointer"
-                onClick={() => handleStatusChange(status)}
-              />
-            </Badge>
-          ))}
-          {filters.dateRange.from && (
-            <Badge
-              variant="outline"
-              className="rounded-full bg-gray-100 py-1.5 px-3"
-            >
-              {format(filters.dateRange.from, "MMM d, y")}
-              {filters.dateRange.to && ` - ${format(filters.dateRange.to, "MMM d, y")}`}
-              <X
-                className="ml-1 h-3 w-3 cursor-pointer"
-                onClick={() => handleDateRangeChange(undefined)}
-              />
-            </Badge>
-          )}
-          {filters.case && cases && (
-            <Badge
-              variant="outline"
-              className="rounded-full bg-gray-100 py-1.5 px-3"
-            >
-              Case: {cases.find(c => c.id === filters.case)?.case_title}
-              <X
-                className="ml-1 h-3 w-3 cursor-pointer"
-                onClick={() => onFilterChange({ ...filters, case: '' })}
-              />
-            </Badge>
-          )}
-          {filters.court && (
-            <Badge
-              variant="outline"
-              className="rounded-full bg-gray-100 py-1.5 px-3"
-            >
-              Court: {filters.court}
-              <X
-                className="ml-1 h-3 w-3 cursor-pointer"
-                onClick={() => onFilterChange({ ...filters, court: '' })}
-              />
-            </Badge>
-          )}
-          {filters.assignedUser && teamMembers && (
-            <Badge
-              variant="outline"
-              className="rounded-full bg-gray-100 py-1.5 px-3"
-            >
-              Assigned to: {teamMembers.find(m => m.id === filters.assignedUser)?.full_name}
-              <X
-                className="ml-1 h-3 w-3 cursor-pointer"
-                onClick={() => onFilterChange({ ...filters, assignedUser: '' })}
-              />
-            </Badge>
-          )}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Search */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700">Search</label>
+          <div className="relative">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <Input
+              placeholder="Search hearings..."
+              value={filters.searchQuery}
+              onChange={(e) => updateFilter('searchQuery', e.target.value)}
+              className="pl-10"
+            />
+          </div>
         </div>
-      )}
+
+        {/* Date Range */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700">Date Range</label>
+          <div className="flex gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="flex-1">
+                  <CalendarIcon className="w-4 h-4 mr-2" />
+                  {filters.dateRange.from ? format(filters.dateRange.from, 'MMM d') : 'From'}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={filters.dateRange.from}
+                  onSelect={(date) => updateFilter('dateRange', { ...filters.dateRange, from: date })}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+            
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="flex-1">
+                  <CalendarIcon className="w-4 h-4 mr-2" />
+                  {filters.dateRange.to ? format(filters.dateRange.to, 'MMM d') : 'To'}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={filters.dateRange.to}
+                  onSelect={(date) => updateFilter('dateRange', { ...filters.dateRange, to: date })}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+        </div>
+
+        {/* Status */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700">Status</label>
+          <Select
+            value={filters.status.length === 1 ? filters.status[0] : ''}
+            onValueChange={(value: HearingStatus) => {
+              if (value) {
+                updateFilter('status', [value]);
+              } else {
+                updateFilter('status', []);
+              }
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="All statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">All statuses</SelectItem>
+              <SelectItem value="scheduled">Scheduled</SelectItem>
+              <SelectItem value="adjourned">Adjourned</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+              <SelectItem value="cancelled">Cancelled</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Court */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700">Court</label>
+          <Input
+            placeholder="Filter by court..."
+            value={filters.court}
+            onChange={(e) => updateFilter('court', e.target.value)}
+          />
+        </div>
+      </div>
     </div>
   );
 };

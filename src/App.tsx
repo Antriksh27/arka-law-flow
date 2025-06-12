@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   BrowserRouter,
@@ -7,18 +8,14 @@ import {
   useLocation,
 } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ThemeProvider } from './components/theme-provider';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
 import Cases from './pages/Cases';
 import Clients from './pages/Clients';
 import Tasks from './pages/Tasks';
 import Documents from './pages/Documents';
-import Settings from './pages/Settings';
 import CaseDetail from './pages/CaseDetail';
-import { Toaster } from "@/components/ui/toaster"
+import Hearings from './pages/Hearings';
+import { Toaster } from "@/components/ui/sonner"
 
 // Import DialogProvider
 import { DialogProvider } from './hooks/use-dialog';
@@ -28,76 +25,64 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="light" storageKey="arka-theme">
-        <DialogProvider>
-          <AuthProvider>
-            <BrowserRouter>
-              <Routes>
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route
-                  path="/dashboard"
-                  element={
-                    <RequireAuth>
-                      <Dashboard />
-                    </RequireAuth>
-                  }
-                />
-                <Route
-                  path="/cases"
-                  element={
-                    <RequireAuth>
-                      <Cases />
-                    </RequireAuth>
-                  }
-                />
-                <Route
-                  path="/cases/:caseId"
-                  element={
-                    <RequireAuth>
-                      <CaseDetail />
-                    </RequireAuth>
-                  }
-                />
-                <Route
-                  path="/clients"
-                  element={
-                    <RequireAuth>
-                      <Clients />
-                    </RequireAuth>
-                  }
-                />
-                <Route
-                  path="/tasks"
-                  element={
-                    <RequireAuth>
-                      <Tasks />
-                    </RequireAuth>
-                  }
-                />
-                <Route
-                  path="/documents"
-                  element={
-                    <RequireAuth>
-                      <Documents />
-                    </RequireAuth>
-                  }
-                />
-                <Route
-                  path="/settings"
-                  element={
-                    <RequireAuth>
-                      <Settings />
-                    </RequireAuth>
-                  }
-                />
-                <Route path="/" element={<Navigate to="/dashboard" />} />
-              </Routes>
-              <Toaster position="top-right" />
-            </BrowserRouter>
-          </AuthProvider>
-        </DialogProvider>
-      </ThemeProvider>
+      <DialogProvider>
+        <AuthProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route
+                path="/cases"
+                element={
+                  <RequireAuth>
+                    <Cases />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/cases/:caseId"
+                element={
+                  <RequireAuth>
+                    <CaseDetail />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/clients"
+                element={
+                  <RequireAuth>
+                    <Clients />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/tasks"
+                element={
+                  <RequireAuth>
+                    <Tasks />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/hearings"
+                element={
+                  <RequireAuth>
+                    <Hearings />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/documents"
+                element={
+                  <RequireAuth>
+                    <Documents />
+                  </RequireAuth>
+                }
+              />
+              <Route path="/" element={<Navigate to="/cases" />} />
+            </Routes>
+            <Toaster />
+          </BrowserRouter>
+        </AuthProvider>
+      </DialogProvider>
     </QueryClientProvider>
   );
 }
@@ -107,7 +92,6 @@ function RequireAuth({ children }: { children: JSX.Element }) {
   const location = useLocation();
 
   useEffect(() => {
-    // Log the user and loading values on each render
     console.log('User:', user);
     console.log('Loading:', loading);
   }, [user, loading]);
@@ -117,7 +101,7 @@ function RequireAuth({ children }: { children: JSX.Element }) {
   }
 
   if (!user) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to="/cases" state={{ from: location }} replace />;
   }
 
   return children;
