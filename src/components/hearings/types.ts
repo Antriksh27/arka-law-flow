@@ -3,7 +3,7 @@ export type ViewType = 'timeline' | 'table';
 
 export type HearingStatus = 'scheduled' | 'adjourned' | 'completed' | 'cancelled';
 
-// Updated to match database schema
+// Updated to match database schema exactly
 export type HearingType = 'order' | 'evidence' | 'judgment' | 'other' | 'preliminary' | 'bail' | 'arguments' | 'cross_examination';
 
 export interface FilterState {

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -206,7 +205,6 @@ export const EditHearingDialog: React.FC<EditHearingDialogProps> = ({ hearingId 
                   <SelectItem value="bail">Bail</SelectItem>
                   <SelectItem value="order">Order</SelectItem>
                   <SelectItem value="cross_examination">Cross Examination</SelectItem>
-                  <SelectItem value="first_hearing">First Hearing</SelectItem>
                   <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
