@@ -1,110 +1,126 @@
+import React, { useState, useEffect } from 'react';
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ThemeProvider } from './components/theme-provider';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
+import Cases from './pages/Cases';
+import Clients from './pages/Clients';
+import Tasks from './pages/Tasks';
+import Documents from './pages/Documents';
+import Settings from './pages/Settings';
+import CaseDetail from './pages/CaseDetail';
+import { Toaster } from "@/components/ui/toaster"
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import Index from "./pages/Index";
-import Cases from "./pages/Cases";
-import CaseDetail from "./pages/CaseDetail";
-import Clients from "./pages/Clients";
-import ClientInfo from "./pages/ClientInfo";
-import Appointments from "./pages/Appointments";
-import Hearings from "./pages/Hearings";
-import Tasks from "./pages/Tasks";
-import Invoices from "./pages/Invoices";
-import Notes from "./pages/Notes";
-import Documents from "./pages/Documents";
-import Messages from "./pages/Messages";
-import Team from "./pages/Team";
-import Auth from "./pages/Auth";
-import NotFound from "./pages/NotFound";
+// Import DialogProvider
+import { DialogProvider } from './hooks/use-dialog';
 
-const queryClient = new QueryClient();
+function App() {
+  const [queryClient] = useState(() => new QueryClient());
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <AuthProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/" element={
-              <ProtectedRoute>
-                <Index />
-              </ProtectedRoute>
-            } />
-            <Route path="/cases" element={
-              <ProtectedRoute>
-                <Cases />
-              </ProtectedRoute>
-            } />
-            <Route path="/cases/:id" element={
-              <ProtectedRoute>
-                <CaseDetail />
-              </ProtectedRoute>
-            } />
-            <Route path="/clients" element={
-              <ProtectedRoute>
-                <Clients />
-              </ProtectedRoute>
-            } />
-            <Route path="/clients/:id" element={
-              <ProtectedRoute>
-                <ClientInfo />
-              </ProtectedRoute>
-            } />
-            <Route path="/appointments" element={
-              <ProtectedRoute>
-                <Appointments />
-              </ProtectedRoute>
-            } />
-            <Route path="/hearings" element={
-              <ProtectedRoute>
-                <Hearings />
-              </ProtectedRoute>
-            } />
-            <Route path="/tasks" element={
-              <ProtectedRoute>
-                <Tasks />
-              </ProtectedRoute>
-            } />
-            <Route path="/invoices" element={
-              <ProtectedRoute>
-                <Invoices />
-              </ProtectedRoute>
-            } />
-            <Route path="/notes" element={
-              <ProtectedRoute>
-                <Notes />
-              </ProtectedRoute>
-            } />
-            <Route path="/documents" element={
-              <ProtectedRoute>
-                <Documents />
-              </ProtectedRoute>
-            } />
-            <Route path="/messages" element={
-              <ProtectedRoute>
-                <Messages />
-              </ProtectedRoute>
-            } />
-            <Route path="/team" element={
-              <ProtectedRoute>
-                <Team />
-              </ProtectedRoute>
-            } />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider defaultTheme="light" storageKey="arka-theme">
+        <DialogProvider>
+          <AuthProvider>
+            <BrowserRouter>
+              <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route
+                  path="/dashboard"
+                  element={
+                    <RequireAuth>
+                      <Dashboard />
+                    </RequireAuth>
+                  }
+                />
+                <Route
+                  path="/cases"
+                  element={
+                    <RequireAuth>
+                      <Cases />
+                    </RequireAuth>
+                  }
+                />
+                <Route
+                  path="/cases/:caseId"
+                  element={
+                    <RequireAuth>
+                      <CaseDetail />
+                    </RequireAuth>
+                  }
+                />
+                <Route
+                  path="/clients"
+                  element={
+                    <RequireAuth>
+                      <Clients />
+                    </RequireAuth>
+                  }
+                />
+                <Route
+                  path="/tasks"
+                  element={
+                    <RequireAuth>
+                      <Tasks />
+                    </RequireAuth>
+                  }
+                />
+                <Route
+                  path="/documents"
+                  element={
+                    <RequireAuth>
+                      <Documents />
+                    </RequireAuth>
+                  }
+                />
+                <Route
+                  path="/settings"
+                  element={
+                    <RequireAuth>
+                      <Settings />
+                    </RequireAuth>
+                  }
+                />
+                <Route path="/" element={<Navigate to="/dashboard" />} />
+              </Routes>
+              <Toaster position="top-right" />
+            </BrowserRouter>
+          </AuthProvider>
+        </DialogProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+}
+
+function RequireAuth({ children }: { children: JSX.Element }) {
+  const { user, loading } = useAuth();
+  const location = useLocation();
+
+  useEffect(() => {
+    // Log the user and loading values on each render
+    console.log('User:', user);
+    console.log('Loading:', loading);
+  }, [user, loading]);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return children;
+}
 
 export default App;

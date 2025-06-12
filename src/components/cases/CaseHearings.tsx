@@ -1,16 +1,26 @@
+
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Plus, Clock, MapPin } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
+import { Hearing } from '../hearings/types';
+import { getHearingStatusBadge } from '../hearings/utils';
+import { useDialog } from '@/hooks/use-dialog';
+import { CreateHearingDialog } from '../hearings/CreateHearingDialog';
+import { EditHearingDialog } from '../hearings/EditHearingDialog';
+
 interface CaseHearingsProps {
   caseId: string;
 }
+
 export const CaseHearings: React.FC<CaseHearingsProps> = ({
   caseId
 }) => {
+  const { openDialog } = useDialog();
+  
   const {
     data: hearings,
     isLoading
@@ -20,37 +30,44 @@ export const CaseHearings: React.FC<CaseHearingsProps> = ({
       const {
         data,
         error
-      } = await supabase.from('hearings').select(`
+      } = await supabase
+        .from('hearings')
+        .select(`
           *,
           profiles!hearings_created_by_fkey(full_name)
-        `).eq('case_id', caseId).order('hearing_date', {
-        ascending: true
-      });
+        `)
+        .eq('case_id', caseId)
+        .order('hearing_date', {
+          ascending: true
+        });
+      
       if (error) throw error;
       return data || [];
     }
   });
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'scheduled':
-        return 'bg-blue-100 text-blue-700';
-      case 'completed':
-        return 'bg-green-100 text-green-700';
-      case 'adjourned':
-        return 'bg-yellow-100 text-yellow-700';
-      case 'cancelled':
-        return 'bg-red-100 text-red-700';
-      default:
-        return 'bg-gray-100 text-gray-700';
-    }
+
+  // Function to format the hearing type string
+  const formatHearingType = (type: string) => {
+    return type
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
   };
+
   if (isLoading) {
     return <div className="text-center py-8">Loading hearings...</div>;
   }
+
   return <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Hearings</h3>
-        <Button className="bg-slate-800 hover:bg-slate-700">
+        <Button 
+          className="bg-slate-800 hover:bg-slate-700"
+          onClick={() => {
+            const createDialog = <CreateHearingDialog />;
+            openDialog(createDialog);
+          }}
+        >
           <Plus className="w-4 h-4 mr-2" />
           Add Hearing
         </Button>
@@ -65,12 +82,12 @@ export const CaseHearings: React.FC<CaseHearingsProps> = ({
                   </div>
                   <div>
                     <h4 className="font-medium text-gray-900">
-                      {hearing.hearing_type?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      {formatHearingType(hearing.hearing_type)}
                     </h4>
                     <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
                       <div className="flex items-center gap-1">
                         <Calendar className="w-4 h-4" />
-                        {format(new Date(hearing.hearing_date), 'MMM d, yyyy')}
+                        {format(parseISO(hearing.hearing_date), 'MMM d, yyyy')}
                       </div>
                       {hearing.hearing_time && <div className="flex items-center gap-1">
                           <Clock className="w-4 h-4" />
@@ -83,9 +100,7 @@ export const CaseHearings: React.FC<CaseHearingsProps> = ({
                     </div>
                   </div>
                 </div>
-                <Badge className={`${getStatusColor(hearing.status)} rounded-full`}>
-                  {hearing.status}
-                </Badge>
+                {getHearingStatusBadge(hearing.status)}
               </div>
               
               {hearing.notes && <div className="mt-3 p-3 bg-gray-50 rounded-lg">
@@ -96,11 +111,30 @@ export const CaseHearings: React.FC<CaseHearingsProps> = ({
                   <p className="text-sm font-medium text-gray-900">Outcome:</p>
                   <p className="text-sm text-gray-700">{hearing.outcome}</p>
                 </div>}
+
+              <div className="mt-4 pt-3 border-t border-gray-100 flex justify-end">
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const editDialog = <EditHearingDialog hearingId={hearing.id} />;
+                    openDialog(editDialog);
+                  }}
+                >
+                  Edit
+                </Button>
+              </div>
             </div>)}
         </div> : <div className="text-center py-12 text-gray-500">
           <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-300" />
           <p>No hearings scheduled yet</p>
-          <Button className="mt-4 bg-blue-600 hover:bg-blue-700">
+          <Button 
+            className="mt-4 bg-blue-600 hover:bg-blue-700"
+            onClick={() => {
+              const createDialog = <CreateHearingDialog />;
+              openDialog(createDialog);
+            }}
+          >
             <Plus className="w-4 h-4 mr-2" />
             Schedule First Hearing
           </Button>
