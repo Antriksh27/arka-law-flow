@@ -92,10 +92,7 @@ export const HearingsFilters: React.FC<HearingsFiltersProps> = ({
       <div className="flex flex-wrap gap-4">
         {/* Search */}
         <div className="flex-1 min-w-[200px]">
-          <Input placeholder="Search hearings..." value={filters.searchQuery} onChange={e => onFilterChange({
-          ...filters,
-          searchQuery: e.target.value
-        })} className="bg-white border-gray-900 text-gray-900" />
+          
         </div>
 
         {/* Date Range */}
