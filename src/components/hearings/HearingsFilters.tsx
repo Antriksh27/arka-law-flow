@@ -91,9 +91,7 @@ export const HearingsFilters: React.FC<HearingsFiltersProps> = ({
   return <div className="border border-gray-900 rounded-2xl p-6 space-y-4 bg-slate-900">
       <div className="flex flex-wrap gap-4">
         {/* Search */}
-        <div className="flex-1 min-w-[200px]">
-          
-        </div>
+        
 
         {/* Date Range */}
         <div className="flex gap-2">
