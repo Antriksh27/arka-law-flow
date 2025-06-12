@@ -111,7 +111,7 @@ export const HearingsFilters: React.FC<HearingsFiltersProps> = ({
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-6 space-y-4">
+    <div className="bg-white border border-gray-900 rounded-2xl p-6 space-y-4">
       <div className="flex flex-wrap gap-4">
         {/* Search */}
         <div className="flex-1 min-w-[200px]">
@@ -122,6 +122,7 @@ export const HearingsFilters: React.FC<HearingsFiltersProps> = ({
               ...filters,
               searchQuery: e.target.value,
             })}
+            className="bg-white border-gray-900 text-gray-900"
           />
         </div>
 
@@ -129,12 +130,12 @@ export const HearingsFilters: React.FC<HearingsFiltersProps> = ({
         <div className="flex gap-2">
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="justify-start text-left">
+              <Button variant="outline" className="justify-start text-left bg-white border-gray-900 text-gray-900 hover:bg-gray-50">
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {filters.dateRange.from ? format(filters.dateRange.from, 'PPP') : 'From date'}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
+            <PopoverContent className="w-auto p-0 bg-white border-gray-900">
               <Calendar
                 mode="single"
                 selected={filters.dateRange.from}
@@ -143,18 +144,19 @@ export const HearingsFilters: React.FC<HearingsFiltersProps> = ({
                   dateRange: { ...filters.dateRange, from: date },
                 })}
                 initialFocus
+                className="bg-white"
               />
             </PopoverContent>
           </Popover>
 
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="justify-start text-left">
+              <Button variant="outline" className="justify-start text-left bg-white border-gray-900 text-gray-900 hover:bg-gray-50">
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {filters.dateRange.to ? format(filters.dateRange.to, 'PPP') : 'To date'}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
+            <PopoverContent className="w-auto p-0 bg-white border-gray-900">
               <Calendar
                 mode="single"
                 selected={filters.dateRange.to}
@@ -163,6 +165,7 @@ export const HearingsFilters: React.FC<HearingsFiltersProps> = ({
                   dateRange: { ...filters.dateRange, to: date },
                 })}
                 initialFocus
+                className="bg-white"
               />
             </PopoverContent>
           </Popover>
@@ -176,13 +179,13 @@ export const HearingsFilters: React.FC<HearingsFiltersProps> = ({
             case: value,
           })}
         >
-          <SelectTrigger className="w-[200px]">
+          <SelectTrigger className="w-[200px] bg-white border-gray-900 text-gray-900">
             <SelectValue placeholder="Select case" />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Cases</SelectItem>
+          <SelectContent className="bg-white border-gray-900">
+            <SelectItem value="all" className="text-gray-900">All Cases</SelectItem>
             {cases?.map((case_item) => (
-              <SelectItem key={case_item.id} value={case_item.id}>
+              <SelectItem key={case_item.id} value={case_item.id} className="text-gray-900">
                 {case_item.case_title}
               </SelectItem>
             ))}
@@ -197,13 +200,13 @@ export const HearingsFilters: React.FC<HearingsFiltersProps> = ({
             court: value,
           })}
         >
-          <SelectTrigger className="w-[200px]">
+          <SelectTrigger className="w-[200px] bg-white border-gray-900 text-gray-900">
             <SelectValue placeholder="Select court" />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Courts</SelectItem>
+          <SelectContent className="bg-white border-gray-900">
+            <SelectItem value="all" className="text-gray-900">All Courts</SelectItem>
             {courts?.map((court) => (
-              <SelectItem key={court} value={court}>
+              <SelectItem key={court} value={court} className="text-gray-900">
                 {court}
               </SelectItem>
             ))}
@@ -218,13 +221,13 @@ export const HearingsFilters: React.FC<HearingsFiltersProps> = ({
             assignedUser: value,
           })}
         >
-          <SelectTrigger className="w-[200px]">
+          <SelectTrigger className="w-[200px] bg-white border-gray-900 text-gray-900">
             <SelectValue placeholder="Assigned to" />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Users</SelectItem>
+          <SelectContent className="bg-white border-gray-900">
+            <SelectItem value="all" className="text-gray-900">All Users</SelectItem>
             {users?.map((user) => (
-              <SelectItem key={user.id} value={user.id}>
+              <SelectItem key={user.id} value={user.id} className="text-gray-900">
                 {user.full_name}
               </SelectItem>
             ))}
@@ -232,7 +235,7 @@ export const HearingsFilters: React.FC<HearingsFiltersProps> = ({
         </Select>
 
         {/* Clear Filters */}
-        <Button variant="outline" onClick={clearFilters}>
+        <Button variant="outline" onClick={clearFilters} className="bg-white border-gray-900 text-gray-900 hover:bg-gray-50">
           <X className="mr-2 h-4 w-4" />
           Clear
         </Button>
@@ -240,16 +243,16 @@ export const HearingsFilters: React.FC<HearingsFiltersProps> = ({
 
       {/* Status Checkboxes */}
       <div className="flex gap-4">
-        <span className="text-sm font-medium">Status:</span>
+        <span className="text-sm font-medium text-gray-900">Status:</span>
         {(['scheduled', 'adjourned', 'completed', 'cancelled'] as HearingStatus[]).map((status) => (
           <label key={status} className="flex items-center gap-2 text-sm">
             <input
               type="checkbox"
               checked={filters.status.includes(status)}
               onChange={(e) => handleStatusChange(status, e.target.checked)}
-              className="rounded border-gray-300"
+              className="rounded border-gray-900"
             />
-            <span className="capitalize">{status}</span>
+            <span className="capitalize text-gray-900">{status}</span>
           </label>
         ))}
       </div>

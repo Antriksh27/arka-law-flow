@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -151,9 +152,9 @@ export const EditHearingDialog: React.FC<EditHearingDialogProps> = ({ hearingId 
   if (isLoading) {
     return (
       <Dialog open onOpenChange={closeDialog}>
-        <DialogContent>
+        <DialogContent className="bg-white border-gray-900">
           <div className="flex items-center justify-center p-8">
-            <div>Loading hearing data...</div>
+            <div className="text-gray-900">Loading hearing data...</div>
           </div>
         </DialogContent>
       </Dialog>
@@ -162,25 +163,25 @@ export const EditHearingDialog: React.FC<EditHearingDialogProps> = ({ hearingId 
 
   return (
     <Dialog open onOpenChange={closeDialog}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl bg-white border-gray-900">
         <DialogHeader>
-          <DialogTitle>Edit Hearing</DialogTitle>
+          <DialogTitle className="text-gray-900">Edit Hearing</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="case">Case *</Label>
+              <Label htmlFor="case" className="text-gray-900">Case *</Label>
               <Select
                 value={formData.case_id}
                 onValueChange={(value) => handleInputChange('case_id', value)}
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-white border-gray-900 text-gray-900">
                   <SelectValue placeholder="Select a case" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white border-gray-900">
                   {cases?.map((case_item) => (
-                    <SelectItem key={case_item.id} value={case_item.id}>
+                    <SelectItem key={case_item.id} value={case_item.id} className="text-gray-900">
                       {case_item.case_title}
                     </SelectItem>
                   ))}
@@ -189,23 +190,23 @@ export const EditHearingDialog: React.FC<EditHearingDialogProps> = ({ hearingId 
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="hearing_type">Hearing Type</Label>
+              <Label htmlFor="hearing_type" className="text-gray-900">Hearing Type</Label>
               <Select
                 value={formData.hearing_type}
                 onValueChange={(value: HearingType) => handleInputChange('hearing_type', value)}
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-white border-gray-900 text-gray-900">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="preliminary">Preliminary</SelectItem>
-                  <SelectItem value="evidence">Evidence</SelectItem>
-                  <SelectItem value="arguments">Arguments</SelectItem>
-                  <SelectItem value="judgment">Judgment</SelectItem>
-                  <SelectItem value="bail">Bail</SelectItem>
-                  <SelectItem value="order">Order</SelectItem>
-                  <SelectItem value="cross_examination">Cross Examination</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                <SelectContent className="bg-white border-gray-900">
+                  <SelectItem value="preliminary" className="text-gray-900">Preliminary</SelectItem>
+                  <SelectItem value="evidence" className="text-gray-900">Evidence</SelectItem>
+                  <SelectItem value="arguments" className="text-gray-900">Arguments</SelectItem>
+                  <SelectItem value="judgment" className="text-gray-900">Judgment</SelectItem>
+                  <SelectItem value="bail" className="text-gray-900">Bail</SelectItem>
+                  <SelectItem value="order" className="text-gray-900">Order</SelectItem>
+                  <SelectItem value="cross_examination" className="text-gray-900">Cross Examination</SelectItem>
+                  <SelectItem value="other" className="text-gray-900">Other</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -213,10 +214,10 @@ export const EditHearingDialog: React.FC<EditHearingDialogProps> = ({ hearingId 
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Hearing Date *</Label>
+              <Label className="text-gray-900">Hearing Date *</Label>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start text-left">
+                  <Button variant="outline" className="w-full justify-start text-left bg-white border-gray-900 text-gray-900 hover:bg-gray-50">
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {formData.hearing_date ? format(
                       typeof formData.hearing_date === 'string' 
@@ -226,7 +227,7 @@ export const EditHearingDialog: React.FC<EditHearingDialogProps> = ({ hearingId 
                     ) : 'Select date'}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
+                <PopoverContent className="w-auto p-0 bg-white border-gray-900">
                   <Calendar
                     mode="single"
                     selected={typeof formData.hearing_date === 'string' 
@@ -234,101 +235,108 @@ export const EditHearingDialog: React.FC<EditHearingDialogProps> = ({ hearingId 
                       : formData.hearing_date}
                     onSelect={(date) => handleInputChange('hearing_date', date || new Date())}
                     initialFocus
+                    className="bg-white"
                   />
                 </PopoverContent>
               </Popover>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="hearing_time">Time</Label>
+              <Label htmlFor="hearing_time" className="text-gray-900">Time</Label>
               <Input
                 id="hearing_time"
                 type="time"
                 value={formData.hearing_time || ''}
                 onChange={(e) => handleInputChange('hearing_time', e.target.value)}
+                className="bg-white border-gray-900 text-gray-900"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="court_name">Court Name *</Label>
+            <Label htmlFor="court_name" className="text-gray-900">Court Name *</Label>
             <Input
               id="court_name"
               value={formData.court_name}
               onChange={(e) => handleInputChange('court_name', e.target.value)}
               placeholder="Enter court name"
+              className="bg-white border-gray-900 text-gray-900"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="bench">Bench</Label>
+              <Label htmlFor="bench" className="text-gray-900">Bench</Label>
               <Input
                 id="bench"
                 value={formData.bench || ''}
                 onChange={(e) => handleInputChange('bench', e.target.value)}
                 placeholder="Enter bench details"
+                className="bg-white border-gray-900 text-gray-900"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="coram">Coram</Label>
+              <Label htmlFor="coram" className="text-gray-900">Coram</Label>
               <Input
                 id="coram"
                 value={formData.coram || ''}
                 onChange={(e) => handleInputChange('coram', e.target.value)}
                 placeholder="Enter coram details"
+                className="bg-white border-gray-900 text-gray-900"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="status">Status</Label>
+            <Label htmlFor="status" className="text-gray-900">Status</Label>
             <Select
               value={formData.status}
               onValueChange={(value: HearingStatus) => handleInputChange('status', value)}
             >
-              <SelectTrigger>
+              <SelectTrigger className="bg-white border-gray-900 text-gray-900">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="scheduled">Scheduled</SelectItem>
-                <SelectItem value="adjourned">Adjourned</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
+              <SelectContent className="bg-white border-gray-900">
+                <SelectItem value="scheduled" className="text-gray-900">Scheduled</SelectItem>
+                <SelectItem value="adjourned" className="text-gray-900">Adjourned</SelectItem>
+                <SelectItem value="completed" className="text-gray-900">Completed</SelectItem>
+                <SelectItem value="cancelled" className="text-gray-900">Cancelled</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="outcome">Outcome</Label>
+            <Label htmlFor="outcome" className="text-gray-900">Outcome</Label>
             <Textarea
               id="outcome"
               value={formData.outcome || ''}
               onChange={(e) => handleInputChange('outcome', e.target.value)}
               placeholder="Enter hearing outcome"
               rows={3}
+              className="bg-white border-gray-900 text-gray-900"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
+            <Label htmlFor="notes" className="text-gray-900">Notes</Label>
             <Textarea
               id="notes"
               value={formData.notes || ''}
               onChange={(e) => handleInputChange('notes', e.target.value)}
               placeholder="Enter additional notes"
               rows={3}
+              className="bg-white border-gray-900 text-gray-900"
             />
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={closeDialog}>
+            <Button type="button" variant="outline" onClick={closeDialog} className="bg-white border-gray-900 text-gray-900 hover:bg-gray-50">
               Cancel
             </Button>
             <Button 
               type="submit" 
-              className="bg-blue-700 hover:bg-blue-800"
+              className="bg-blue-700 hover:bg-blue-800 text-white"
               disabled={updateHearingMutation.isPending}
             >
               {updateHearingMutation.isPending ? 'Updating...' : 'Update Hearing'}
