@@ -3,7 +3,8 @@ export type ViewType = 'timeline' | 'table';
 
 export type HearingStatus = 'scheduled' | 'adjourned' | 'completed' | 'cancelled';
 
-export type HearingType = 'first_hearing' | 'evidence' | 'argument' | 'judgment' | 'other';
+// Updated to match database schema
+export type HearingType = 'order' | 'evidence' | 'judgment' | 'other' | 'preliminary' | 'bail' | 'arguments' | 'cross_examination';
 
 export interface FilterState {
   dateRange: {

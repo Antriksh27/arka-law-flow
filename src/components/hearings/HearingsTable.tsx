@@ -4,8 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { format, parseISO } from 'date-fns';
-import { Edit, Eye } from 'lucide-react';
-import { FilterState, Hearing } from './types';
+import { Edit } from 'lucide-react';
+import { FilterState } from './types';
 import { getHearingStatusBadge, formatHearingType } from './utils';
 import { useDialog } from '@/hooks/use-dialog';
 import { EditHearingDialog } from './EditHearingDialog';
@@ -54,7 +54,7 @@ export const HearingsTable: React.FC<HearingsTableProps> = ({ filters }) => {
       const { data, error } = await query.order('hearing_date', { ascending: true });
       
       if (error) throw error;
-      return (data || []) as Hearing[];
+      return data || [];
     }
   });
 
@@ -94,8 +94,8 @@ export const HearingsTable: React.FC<HearingsTableProps> = ({ filters }) => {
                   </td>
                   <td className="py-3 px-4">
                     <div>
-                      <div className="font-medium">{hearing.case_title}</div>
-                      <div className="text-sm text-gray-500">{hearing.case_number}</div>
+                      <div className="font-medium">{hearing.cases?.case_title}</div>
+                      <div className="text-sm text-gray-500">{hearing.cases?.case_number}</div>
                     </div>
                   </td>
                   <td className="py-3 px-4">{hearing.court_name}</td>

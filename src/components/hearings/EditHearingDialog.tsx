@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,7 +13,7 @@ import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { useDialog } from '@/hooks/use-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { HearingFormData, HearingType, HearingStatus, Hearing } from './types';
+import { HearingFormData, HearingType, HearingStatus } from './types';
 
 interface EditHearingDialogProps {
   hearingId: string;
@@ -32,7 +31,7 @@ export const EditHearingDialog: React.FC<EditHearingDialogProps> = ({ hearingId 
     court_name: '',
     bench: '',
     coram: '',
-    hearing_type: 'first_hearing',
+    hearing_type: 'preliminary',
     status: 'scheduled',
     outcome: '',
     notes: '',
@@ -49,7 +48,7 @@ export const EditHearingDialog: React.FC<EditHearingDialogProps> = ({ hearingId 
         .single();
       
       if (error) throw error;
-      return data as Hearing;
+      return data;
     }
   });
 
@@ -199,10 +198,13 @@ export const EditHearingDialog: React.FC<EditHearingDialogProps> = ({ hearingId 
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="first_hearing">First Hearing</SelectItem>
+                  <SelectItem value="preliminary">Preliminary</SelectItem>
                   <SelectItem value="evidence">Evidence</SelectItem>
-                  <SelectItem value="argument">Argument</SelectItem>
+                  <SelectItem value="arguments">Arguments</SelectItem>
                   <SelectItem value="judgment">Judgment</SelectItem>
+                  <SelectItem value="bail">Bail</SelectItem>
+                  <SelectItem value="order">Order</SelectItem>
+                  <SelectItem value="cross_examination">Cross Examination</SelectItem>
                   <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>

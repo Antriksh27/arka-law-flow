@@ -4,8 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Calendar, Clock, MapPin, Edit } from 'lucide-react';
-import { format, parseISO, isSameDay } from 'date-fns';
-import { FilterState, Hearing } from './types';
+import { format, parseISO } from 'date-fns';
+import { FilterState } from './types';
 import { getHearingStatusBadge, formatHearingType } from './utils';
 import { useDialog } from '@/hooks/use-dialog';
 import { EditHearingDialog } from './EditHearingDialog';
@@ -53,7 +53,7 @@ export const HearingsTimeline: React.FC<HearingsTimelineProps> = ({ filters }) =
       const { data, error } = await query.order('hearing_date', { ascending: true });
       
       if (error) throw error;
-      return (data || []) as Hearing[];
+      return data || [];
     }
   });
 
@@ -73,7 +73,7 @@ export const HearingsTimeline: React.FC<HearingsTimelineProps> = ({ filters }) =
     }
     groups[date].push(hearing);
     return groups;
-  }, {} as Record<string, Hearing[]>);
+  }, {} as Record<string, any[]>);
 
   return (
     <div className="p-6">
@@ -133,11 +133,11 @@ export const HearingsTimeline: React.FC<HearingsTimelineProps> = ({ filters }) =
                       {/* Case info */}
                       <div className="mb-3">
                         <div className="text-sm font-medium text-gray-900">
-                          {hearing.case_title}
+                          {hearing.cases?.case_title}
                         </div>
-                        {hearing.case_number && (
+                        {hearing.cases?.case_number && (
                           <div className="text-sm text-gray-500">
-                            {hearing.case_number}
+                            {hearing.cases.case_number}
                           </div>
                         )}
                       </div>

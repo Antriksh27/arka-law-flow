@@ -28,7 +28,7 @@ export const CreateHearingDialog: React.FC = () => {
     court_name: '',
     bench: '',
     coram: '',
-    hearing_type: 'first_hearing',
+    hearing_type: 'preliminary',
     status: 'scheduled',
     outcome: '',
     notes: '',
@@ -70,7 +70,7 @@ export const CreateHearingDialog: React.FC = () => {
 
       const { data: result, error } = await supabase
         .from('hearings')
-        .insert([hearingData])
+        .insert(hearingData)
         .select()
         .single();
       
@@ -151,10 +151,13 @@ export const CreateHearingDialog: React.FC = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="first_hearing">First Hearing</SelectItem>
+                  <SelectItem value="preliminary">Preliminary</SelectItem>
                   <SelectItem value="evidence">Evidence</SelectItem>
-                  <SelectItem value="argument">Argument</SelectItem>
+                  <SelectItem value="arguments">Arguments</SelectItem>
                   <SelectItem value="judgment">Judgment</SelectItem>
+                  <SelectItem value="bail">Bail</SelectItem>
+                  <SelectItem value="order">Order</SelectItem>
+                  <SelectItem value="cross_examination">Cross Examination</SelectItem>
                   <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
