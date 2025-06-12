@@ -194,10 +194,10 @@ export const HearingsFilters: React.FC<HearingsFiltersProps> = ({
 
       {/* Status Checkboxes */}
       <div className="flex gap-4">
-        <span className="text-sm font-medium text-gray-900">Status:</span>
+        <span className="text-sm font-medium text-slate-50">Status:</span>
         {(['scheduled', 'adjourned', 'completed', 'cancelled'] as HearingStatus[]).map(status => <label key={status} className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={filters.status.includes(status)} onChange={e => handleStatusChange(status, e.target.checked)} className="rounded border-gray-900" />
-            <span className="capitalize text-gray-900">{status}</span>
+            <span className="capitalize text-slate-50">{status}</span>
           </label>)}
       </div>
     </div>;
