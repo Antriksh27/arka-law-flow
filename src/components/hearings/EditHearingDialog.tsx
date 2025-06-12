@@ -44,7 +44,7 @@ export const EditHearingDialog: React.FC<EditHearingDialogProps> = ({ hearingId 
     queryFn: async () => {
       const { data, error } = await supabase
         .from('hearings')
-        .select('id, case_id, hearing_date, hearing_time, court_name, bench, coram, hearing_type, status, outcome, notes, created_by, created_at, assigned_to')
+        .select('id, case_id, hearing_date, hearing_time, court_name, bench, coram, hearing_type, status, outcome, notes, created_by, created_at, assigned_to, firm_id')
         .eq('id', hearingId)
         .single();
       
@@ -206,6 +206,7 @@ export const EditHearingDialog: React.FC<EditHearingDialogProps> = ({ hearingId 
                   <SelectItem value="bail">Bail</SelectItem>
                   <SelectItem value="order">Order</SelectItem>
                   <SelectItem value="cross_examination">Cross Examination</SelectItem>
+                  <SelectItem value="first_hearing">First Hearing</SelectItem>
                   <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>

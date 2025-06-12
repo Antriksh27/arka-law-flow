@@ -933,10 +933,13 @@ export type Database = {
       hearings: {
         Row: {
           assigned_to: string | null
+          bench: string | null
           case_id: string | null
+          coram: string | null
           court_name: string
           created_at: string
           created_by: string | null
+          firm_id: string | null
           hearing_date: string
           hearing_time: string | null
           hearing_type: Database["public"]["Enums"]["hearing_type"]
@@ -948,10 +951,13 @@ export type Database = {
         }
         Insert: {
           assigned_to?: string | null
+          bench?: string | null
           case_id?: string | null
+          coram?: string | null
           court_name: string
           created_at?: string
           created_by?: string | null
+          firm_id?: string | null
           hearing_date: string
           hearing_time?: string | null
           hearing_type: Database["public"]["Enums"]["hearing_type"]
@@ -963,10 +969,13 @@ export type Database = {
         }
         Update: {
           assigned_to?: string | null
+          bench?: string | null
           case_id?: string | null
+          coram?: string | null
           court_name?: string
           created_at?: string
           created_by?: string | null
+          firm_id?: string | null
           hearing_date?: string
           hearing_time?: string | null
           hearing_type?: Database["public"]["Enums"]["hearing_type"]
