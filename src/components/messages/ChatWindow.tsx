@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,9 +41,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // --- FIX: Avoid deep type inference for React Query ---
-  // DO NOT add types to useQuery or queryFn
-  // (Allow TS to infer "any", and cast below)
+  //--- DO NOT annotate any types for useQuery or queryFn!
   const { data, refetch, isFetching } = useQuery({
     queryKey: [
       "messages-thread",
@@ -51,6 +50,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         ? selectedThread.userId
         : selectedThread.caseId,
     ],
+    // No type annotations here. Let it infer "any".
     queryFn: async () => {
       let query = supabase
         .from("messages")
@@ -72,8 +72,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     refetchInterval: false,
   });
 
-  // --- FIX: Explicit type cast AFTER fetching, breaking deep inference ---
-  const messages = Array.isArray(data)
+  // Do any needed type-casting only *after* fetch.
+  const messages: MessageWithProfile[] = Array.isArray(data)
     ? (data as MessageWithProfile[])
     : [];
 
@@ -236,3 +236,5 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     </div>
   );
 };
+
+// ... end of file
