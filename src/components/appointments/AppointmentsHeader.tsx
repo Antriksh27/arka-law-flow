@@ -1,9 +1,12 @@
+
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '../ui/button';
-import { Plus, Calendar, List } from 'lucide-react';
+import { Plus, Calendar, List, ArrowRight } from 'lucide-react';
 import { useDialog } from '@/hooks/use-dialog';
 import { CreateAppointmentDialog } from './CreateAppointmentDialog';
 import { ViewType } from '../../pages/Appointments';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface AppointmentsHeaderProps {
   currentView: ViewType;
@@ -15,6 +18,7 @@ export const AppointmentsHeader: React.FC<AppointmentsHeaderProps> = ({
   onViewChange
 }) => {
   const { openDialog } = useDialog();
+  const { user } = useAuth();
 
   return (
     <div className="flex w-full flex-col items-start gap-4">
@@ -27,13 +31,23 @@ export const AppointmentsHeader: React.FC<AppointmentsHeaderProps> = ({
             Schedule and manage client appointments
           </span>
         </div>
-        <Button 
-          onClick={() => openDialog(<CreateAppointmentDialog />)} 
-          className="bg-gray-800 hover:bg-gray-700 text-white flex items-center gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          New Appointment
-        </Button>
+        <div className="flex items-center gap-2">
+          {user && user.id && (
+            <Button asChild variant="outline" className="border-primary text-primary hover:bg-primary/10">
+              <Link to={`/book/${user.id}`} target="_blank" rel="noopener noreferrer">
+                My Booking Page
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </Button>
+          )}
+          <Button 
+            onClick={() => openDialog(<CreateAppointmentDialog />)} 
+            className="bg-primary hover:bg-primary/90 text-primary-foreground"
+          >
+            <Plus className="w-4 h-4" />
+            New Appointment
+          </Button>
+        </div>
       </div>
       <div className="flex w-full flex-wrap items-center gap-4 justify-end">
         <div className="bg-gray-100 rounded-lg flex p-1">
@@ -64,3 +78,4 @@ export const AppointmentsHeader: React.FC<AppointmentsHeaderProps> = ({
     </div>
   );
 };
+
