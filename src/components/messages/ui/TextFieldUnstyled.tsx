@@ -13,7 +13,7 @@ export const TextFieldUnstyled: React.FC<TextFieldUnstyledProps> & {
 
 TextFieldUnstyled.Input = ({ className = "", ...props }) => (
   <input
-    className={`w-full border-none outline-none bg-transparent text-base focus:ring-0 ${className}`}
+    className={`w-full border-none outline-none bg-transparent text-base focus:ring-0 placeholder:text-gray-500 ${className}`}
     {...props}
   />
 );
