@@ -1,174 +1,145 @@
-
-import React, { useState, useEffect } from 'react';
-import {
-  BrowserRouter,
-  Routes,
-  Route,
-  Navigate,
-  useLocation,
-} from 'react-router-dom';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import Index from './pages/Index';
-import Cases from './pages/Cases';
-import Clients from './pages/Clients';
-import ClientInfo from './pages/ClientInfo';
-import Tasks from './pages/Tasks';
-import Documents from './pages/Documents';
-import CaseDetail from './pages/CaseDetail';
-import Hearings from './pages/Hearings';
-import Notes from './pages/Notes';
-import Appointments from './pages/Appointments';
-import Invoices from './pages/Invoices';
-import Messages from './pages/Messages';
-import Auth from './pages/Auth';
-import { Toaster } from "@/components/ui/sonner"
+import { AuthProvider } from './contexts/AuthContext';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { DashboardLayout } from './components/layout/DashboardLayout';
+import { Auth } from './pages/Auth';
+import { Index } from './pages/Index';
+import { Cases } from './pages/Cases';
+import { CaseDetail } from './pages/CaseDetail';
+import { Clients } from './pages/Clients';
+import { ClientInfo } from './pages/ClientInfo';
+import { Appointments } from './pages/Appointments';
+import { Tasks } from './pages/Tasks';
+import { Hearings } from './pages/Hearings';
+import { Documents } from './pages/Documents';
+import { Notes } from './pages/Notes';
+import { Invoices } from './pages/Invoices';
+import { Messages } from './pages/Messages';
+import { Team } from './pages/Team';
+import { NotFound } from './pages/NotFound';
+import { BookingPage } from './pages/BookingPage';
 
-// Import DialogProvider
-import { DialogProvider } from './hooks/use-dialog';
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: false,
+    },
+  },
+});
 
 function App() {
-  const [queryClient] = useState(() => new QueryClient());
-
   return (
-    <QueryClientProvider client={queryClient}>
-      <DialogProvider>
-        <AuthProvider>
-          <BrowserRouter>
+    <div className="min-h-screen bg-gray-50">
+      <Router>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
             <Routes>
+              {/* Public booking route - no authentication required */}
+              <Route path="/book/:lawyerId" element={<BookingPage />} />
+              
+              {/* Existing authenticated routes */}
               <Route path="/auth" element={<Auth />} />
-              <Route
-                path="/"
-                element={
-                  <RequireAuth>
+              <Route path="/" element={
+                <ProtectedRoute>
+                  <DashboardLayout>
                     <Index />
-                  </RequireAuth>
-                }
-              />
-              <Route
-                path="/cases"
-                element={
-                  <RequireAuth>
+                  </DashboardLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/cases" element={
+                <ProtectedRoute>
+                  <DashboardLayout>
                     <Cases />
-                  </RequireAuth>
-                }
-              />
-              <Route
-                path="/cases/:caseId"
-                element={
-                  <RequireAuth>
+                  </DashboardLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/cases/:id" element={
+                <ProtectedRoute>
+                  <DashboardLayout>
                     <CaseDetail />
-                  </RequireAuth>
-                }
-              />
-              <Route
-                path="/clients"
-                element={
-                  <RequireAuth>
+                  </DashboardLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/clients" element={
+                <ProtectedRoute>
+                  <DashboardLayout>
                     <Clients />
-                  </RequireAuth>
-                }
-              />
-              <Route
-                path="/clients/:id"
-                element={
-                  <RequireAuth>
+                  </DashboardLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/clients/:id" element={
+                <ProtectedRoute>
+                  <DashboardLayout>
                     <ClientInfo />
-                  </RequireAuth>
-                }
-              />
-              <Route
-                path="/tasks"
-                element={
-                  <RequireAuth>
-                    <Tasks />
-                  </RequireAuth>
-                }
-              />
-              <Route
-                path="/hearings"
-                element={
-                  <RequireAuth>
-                    <Hearings />
-                  </RequireAuth>
-                }
-              />
-              <Route
-                path="/documents"
-                element={
-                  <RequireAuth>
-                    <Documents />
-                  </RequireAuth>
-                }
-              />
-              <Route
-                path="/notes"
-                element={
-                  <RequireAuth>
-                    <Notes />
-                  </RequireAuth>
-                }
-              />
-              <Route
-                path="/appointments"
-                element={
-                  <RequireAuth>
+                  </DashboardLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/appointments" element={
+                <ProtectedRoute>
+                  <DashboardLayout>
                     <Appointments />
-                  </RequireAuth>
-                }
-              />
-              <Route
-                path="/invoices"
-                element={
-                  <RequireAuth>
+                  </DashboardLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/tasks" element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <Tasks />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/hearings" element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <Hearings />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/documents" element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <Documents />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/notes" element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <Notes />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/invoices" element={
+                <ProtectedRoute>
+                  <DashboardLayout>
                     <Invoices />
-                  </RequireAuth>
-                }
-              />
-              <Route
-                path="/messages"
-                element={
-                  <RequireAuth>
+                  </DashboardLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/messages" element={
+                <ProtectedRoute>
+                  <DashboardLayout>
                     <Messages />
-                  </RequireAuth>
-                }
-              />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/team" element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <Team />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="*" element={<NotFound />} />
             </Routes>
-            <Toaster />
-          </BrowserRouter>
-        </AuthProvider>
-      </DialogProvider>
-    </QueryClientProvider>
+          </AuthProvider>
+        </QueryClientProvider>
+      </Router>
+    </div>
   );
-}
-
-function RequireAuth({ children }: { children: JSX.Element }) {
-  const { user, loading } = useAuth();
-  const location = useLocation();
-
-  useEffect(() => {
-    console.log('RequireAuth - User:', user);
-    console.log('RequireAuth - Loading:', loading);
-    console.log('RequireAuth - Location:', location.pathname);
-  }, [user, loading, location.pathname]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-legal-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    console.log('RequireAuth - No user, redirecting to /auth');
-    return <Navigate to="/auth" state={{ from: location }} replace />;
-  }
-
-  return children;
 }
 
 export default App;

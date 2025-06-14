@@ -1713,6 +1713,57 @@ export type Database = {
         }
         Relationships: []
       }
+      public_appointments: {
+        Row: {
+          appointment_date: string
+          appointment_time: string
+          case_title: string | null
+          client_email: string
+          client_name: string
+          client_phone: string | null
+          created_at: string
+          duration_minutes: number
+          firm_id: string | null
+          id: string
+          lawyer_id: string
+          reason: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          appointment_date: string
+          appointment_time: string
+          case_title?: string | null
+          client_email: string
+          client_name: string
+          client_phone?: string | null
+          created_at?: string
+          duration_minutes?: number
+          firm_id?: string | null
+          id?: string
+          lawyer_id: string
+          reason?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          appointment_date?: string
+          appointment_time?: string
+          case_title?: string | null
+          client_email?: string
+          client_name?: string
+          client_phone?: string | null
+          created_at?: string
+          duration_minutes?: number
+          firm_id?: string | null
+          id?: string
+          lawyer_id?: string
+          reason?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           assigned_to: string | null
