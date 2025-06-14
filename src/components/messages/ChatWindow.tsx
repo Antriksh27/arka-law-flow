@@ -40,7 +40,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // RELAX useQuery TYPE INFERENCE
+  // UseQuery with explicit any type to avoid TS2589 recursion error
   const { data, refetch, isFetching } = useQuery<any>({
     queryKey: [
       "messages-thread",
@@ -70,8 +70,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     refetchInterval: false,
   });
 
-  // Safely cast data result into MessageWithProfile[]
-  const messages: MessageWithProfile[] = Array.isArray(data) ? data : [];
+  const messages: MessageWithProfile[] = Array.isArray(data) ? (data as MessageWithProfile[]) : [];
 
   // --- USER NAME MAP LOGIC ---
   // We keep a mapping of userId -> full_name for the current thread
