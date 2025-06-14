@@ -11,6 +11,8 @@ export type Database = {
     Tables: {
       appointments: {
         Row: {
+          appointment_date: string | null
+          appointment_time: string | null
           case_id: string | null
           client_id: string | null
           created_at: string | null
@@ -18,35 +20,21 @@ export type Database = {
           document_url: string | null
           duration_minutes: number
           end_time: string | null
+          firm_id: string | null
           id: string
           is_visible_to_team: boolean | null
           lawyer_id: string | null
           location: string | null
           notes: string | null
           reminder_minutes: number | null
-          start_time: string
+          start_time: string | null
           status: string | null
+          title: string | null
           type: Database["public"]["Enums"]["appointment_type"]
         }
         Insert: {
-          case_id?: string | null
-          client_id?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          document_url?: string | null
-          duration_minutes: number
-          end_time?: string | null
-          id?: string
-          is_visible_to_team?: boolean | null
-          lawyer_id?: string | null
-          location?: string | null
-          notes?: string | null
-          reminder_minutes?: number | null
-          start_time: string
-          status?: string | null
-          type: Database["public"]["Enums"]["appointment_type"]
-        }
-        Update: {
+          appointment_date?: string | null
+          appointment_time?: string | null
           case_id?: string | null
           client_id?: string | null
           created_at?: string | null
@@ -54,14 +42,38 @@ export type Database = {
           document_url?: string | null
           duration_minutes?: number
           end_time?: string | null
+          firm_id?: string | null
           id?: string
           is_visible_to_team?: boolean | null
           lawyer_id?: string | null
           location?: string | null
           notes?: string | null
           reminder_minutes?: number | null
-          start_time?: string
+          start_time?: string | null
           status?: string | null
+          title?: string | null
+          type: Database["public"]["Enums"]["appointment_type"]
+        }
+        Update: {
+          appointment_date?: string | null
+          appointment_time?: string | null
+          case_id?: string | null
+          client_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          document_url?: string | null
+          duration_minutes?: number
+          end_time?: string | null
+          firm_id?: string | null
+          id?: string
+          is_visible_to_team?: boolean | null
+          lawyer_id?: string | null
+          location?: string | null
+          notes?: string | null
+          reminder_minutes?: number | null
+          start_time?: string | null
+          status?: string | null
+          title?: string | null
           type?: Database["public"]["Enums"]["appointment_type"]
         }
         Relationships: [
@@ -91,6 +103,20 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firm_statistics"
+            referencedColumns: ["firm_id"]
+          },
+          {
+            foreignKeyName: "appointments_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "law_firms"
             referencedColumns: ["id"]
           },
         ]
@@ -1404,6 +1430,13 @@ export type Database = {
             foreignKeyName: "notes_v2_appointment_id_fkey"
             columns: ["appointment_id"]
             isOneToOne: false
+            referencedRelation: "appointment_details"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notes_v2_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
             referencedRelation: "appointments"
             referencedColumns: ["id"]
           },
@@ -1863,6 +1896,78 @@ export type Database = {
           new_license_count: number | null
         }
         Relationships: []
+      }
+      appointment_details: {
+        Row: {
+          appointment_date: string | null
+          appointment_time: string | null
+          assigned_user_name: string | null
+          case_id: string | null
+          case_number: string | null
+          case_title: string | null
+          client_id: string | null
+          client_name: string | null
+          created_at: string | null
+          created_by: string | null
+          document_url: string | null
+          duration_minutes: number | null
+          end_time: string | null
+          firm_id: string | null
+          id: string | null
+          is_visible_to_team: boolean | null
+          lawyer_id: string | null
+          location: string | null
+          notes: string | null
+          reminder_minutes: number | null
+          start_time: string | null
+          status: string | null
+          title: string | null
+          type: Database["public"]["Enums"]["appointment_type"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "case_details"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firm_statistics"
+            referencedColumns: ["firm_id"]
+          },
+          {
+            foreignKeyName: "appointments_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "law_firms"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       case_details: {
         Row: {
