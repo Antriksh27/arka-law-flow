@@ -11,7 +11,7 @@ const TimelineDivider: React.FC<TimelineDividerProps> = ({ children }) => (
       <div className="w-full border-t border-gray-200" />
     </div>
     <div className="relative flex justify-center">
-      <span className="bg-legal-background px-3 text-sm font-medium text-gray-500">{children}</span>
+      <span className="bg-gray-50 px-3 text-sm font-medium text-gray-500">{children}</span>
     </div>
   </div>
 );

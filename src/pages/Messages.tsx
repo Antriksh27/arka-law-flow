@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { Edit, Search, Paperclip, Phone, Send } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -25,7 +24,7 @@ type Profile = {
 };
 
 type Participant = {
-  profile: Profile;
+  profile: Profile | null;
 };
 
 type Message = {
@@ -147,10 +146,10 @@ const Messages = () => {
     if (!user) return { name: '', avatar: '' };
 
     if (thread.is_private) {
-      const otherParticipant = thread.participants.find(p => p.profile.id !== user.id);
+      const otherParticipant = thread.participants.find(p => p.profile?.id !== user.id);
       return {
-        name: otherParticipant?.profile.full_name || 'Direct Message',
-        avatar: otherParticipant?.profile.profile_pic || '',
+        name: otherParticipant?.profile?.full_name || 'Direct Message',
+        avatar: otherParticipant?.profile?.profile_pic || '',
       };
     }
     return {
@@ -187,7 +186,7 @@ const Messages = () => {
                   return (
                     <div key={thread.id} onClick={() => setSelectedThreadId(thread.id)}>
                       <ChatList.ChatListItem
-                        avatar={info.avatar}
+                        avatar={info.avatar || ''}
                         name={info.name}
                         message={lastMessage?.message_text || 'No messages yet'}
                         timestamp={lastMessage ? formatDistanceToNow(new Date(lastMessage.created_at), { addSuffix: true }) : ''}
@@ -200,7 +199,7 @@ const Messages = () => {
             )}
           </div>
         </div>
-        <div className="flex flex-1 flex-col items-start self-stretch bg-legal-background">
+        <div className="flex flex-1 flex-col items-start self-stretch bg-gray-50">
           {selectedThread ? (
             <>
               <ChatHeader

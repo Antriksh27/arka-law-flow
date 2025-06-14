@@ -6,7 +6,7 @@ interface DefaultPageLayoutProps {
 }
 
 const DefaultPageLayout: React.FC<DefaultPageLayoutProps> = ({ children }) => {
-  return <div className="h-screen w-screen bg-legal-background">{children}</div>;
+  return <div className="h-screen w-screen bg-gray-50">{children}</div>;
 };
 
 export default DefaultPageLayout;
