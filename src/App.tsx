@@ -9,12 +9,18 @@ import {
 } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import Index from './pages/Index';
 import Cases from './pages/Cases';
 import Clients from './pages/Clients';
+import ClientInfo from './pages/ClientInfo';
 import Tasks from './pages/Tasks';
 import Documents from './pages/Documents';
 import CaseDetail from './pages/CaseDetail';
 import Hearings from './pages/Hearings';
+import Notes from './pages/Notes';
+import Appointments from './pages/Appointments';
+import Invoices from './pages/Invoices';
+import Messages from './pages/Messages';
 import Auth from './pages/Auth';
 import { Toaster } from "@/components/ui/sonner"
 
@@ -31,6 +37,14 @@ function App() {
           <BrowserRouter>
             <Routes>
               <Route path="/auth" element={<Auth />} />
+              <Route
+                path="/"
+                element={
+                  <RequireAuth>
+                    <Index />
+                  </RequireAuth>
+                }
+              />
               <Route
                 path="/cases"
                 element={
@@ -52,6 +66,14 @@ function App() {
                 element={
                   <RequireAuth>
                     <Clients />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/clients/:id"
+                element={
+                  <RequireAuth>
+                    <ClientInfo />
                   </RequireAuth>
                 }
               />
@@ -79,7 +101,38 @@ function App() {
                   </RequireAuth>
                 }
               />
-              <Route path="/" element={<Navigate to="/cases" replace />} />
+              <Route
+                path="/notes"
+                element={
+                  <RequireAuth>
+                    <Notes />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/appointments"
+                element={
+                  <RequireAuth>
+                    <Appointments />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/invoices"
+                element={
+                  <RequireAuth>
+                    <Invoices />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/messages"
+                element={
+                  <RequireAuth>
+                    <Messages />
+                  </RequireAuth>
+                }
+              />
             </Routes>
             <Toaster />
           </BrowserRouter>
