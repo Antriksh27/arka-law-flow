@@ -40,7 +40,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  //--- DO NOT annotate any types for useQuery or queryFn!
+  //--- DO NOT annotate any types for useQuery or queryFn! Let all be implicit.
   const { data, refetch, isFetching } = useQuery({
     queryKey: [
       "messages-thread",
@@ -49,7 +49,6 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         ? selectedThread.userId
         : selectedThread.caseId,
     ],
-    // No type annotations here. Let it infer "any".
     queryFn: async () => {
       let query = supabase
         .from("messages")
@@ -71,10 +70,11 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     refetchInterval: false,
   });
 
-  // Avoid type annotation to prevent deep inference issues
+  // Do *not* cast or use a type here—let it remain as-is to avoid TS recursion hell.
+  // Only access `data` as-is, and if you need types for rendering, cast *within map*.
   const messages = Array.isArray(data) ? data : [];
 
-  // --- USER NAME MAP LOGIC ---
+  // --- userNameMap and user name fetching (keep unchanged)
   // We keep a mapping of userId -> full_name for the current thread
   const [userNameMap, setUserNameMap] = useState<{ [id: string]: string }>({});
 
@@ -163,9 +163,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
             No messages yet. Start the conversation!
           </div>
         ) : (
-          messages.map((msgRaw: any) => {
-            // Cast inline, not outside
-            const msg = msgRaw as MessageWithProfile;
+          // Only cast each message *inside the render* as needed.
+          messages.map((msgAny, idx: number) => {
+            const msg = msgAny as MessageWithProfile;
             const isSender = msg.sender_id === currentUserId;
             const senderName =
               isSender
