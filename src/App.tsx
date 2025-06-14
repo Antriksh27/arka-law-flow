@@ -1,9 +1,9 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { DialogProvider } from './hooks/use-dialog';
 import DashboardLayout from './components/layout/DashboardLayout';
 import Auth from './pages/Auth';
 import Index from './pages/Index';
@@ -37,105 +37,107 @@ function App() {
       <Router>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
-            <Routes>
-              {/* Public booking route - no authentication required */}
-              <Route path="/book/:lawyerId" element={<BookingPage />} />
-              
-              {/* Existing authenticated routes */}
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/" element={
-                <ProtectedRoute>
-                  <DashboardLayout>
-                    <Index />
-                  </DashboardLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/cases" element={
-                <ProtectedRoute>
-                  <DashboardLayout>
-                    <Cases />
-                  </DashboardLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/cases/:id" element={
-                <ProtectedRoute>
-                  <DashboardLayout>
-                    <CaseDetail />
-                  </DashboardLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/clients" element={
-                <ProtectedRoute>
-                  <DashboardLayout>
-                    <Clients />
-                  </DashboardLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/clients/:id" element={
-                <ProtectedRoute>
-                  <DashboardLayout>
-                    <ClientInfo />
-                  </DashboardLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/appointments" element={
-                <ProtectedRoute>
-                  <DashboardLayout>
-                    <Appointments />
-                  </DashboardLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/tasks" element={
-                <ProtectedRoute>
-                  <DashboardLayout>
-                    <Tasks />
-                  </DashboardLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/hearings" element={
-                <ProtectedRoute>
-                  <DashboardLayout>
-                    <Hearings />
-                  </DashboardLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/documents" element={
-                <ProtectedRoute>
-                  <DashboardLayout>
-                    <Documents />
-                  </DashboardLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/notes" element={
-                <ProtectedRoute>
-                  <DashboardLayout>
-                    <Notes />
-                  </DashboardLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/invoices" element={
-                <ProtectedRoute>
-                  <DashboardLayout>
-                    <Invoices />
-                  </DashboardLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/messages" element={
-                <ProtectedRoute>
-                  <DashboardLayout>
-                    <Messages />
-                  </DashboardLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/team" element={
-                <ProtectedRoute>
-                  <DashboardLayout>
-                    <Team />
-                  </DashboardLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <DialogProvider>
+              <Routes>
+                {/* Public booking route - no authentication required */}
+                <Route path="/book/:lawyerId" element={<BookingPage />} />
+                
+                {/* Existing authenticated routes */}
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/" element={
+                  <ProtectedRoute>
+                    <DashboardLayout>
+                      <Index />
+                    </DashboardLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/cases" element={
+                  <ProtectedRoute>
+                    <DashboardLayout>
+                      <Cases />
+                    </DashboardLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/cases/:id" element={
+                  <ProtectedRoute>
+                    <DashboardLayout>
+                      <CaseDetail />
+                    </DashboardLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/clients" element={
+                  <ProtectedRoute>
+                    <DashboardLayout>
+                      <Clients />
+                    </DashboardLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/clients/:id" element={
+                  <ProtectedRoute>
+                    <DashboardLayout>
+                      <ClientInfo />
+                    </DashboardLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/appointments" element={
+                  <ProtectedRoute>
+                    <DashboardLayout>
+                      <Appointments />
+                    </DashboardLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/tasks" element={
+                  <ProtectedRoute>
+                    <DashboardLayout>
+                      <Tasks />
+                    </DashboardLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/hearings" element={
+                  <ProtectedRoute>
+                    <DashboardLayout>
+                      <Hearings />
+                    </DashboardLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/documents" element={
+                  <ProtectedRoute>
+                    <DashboardLayout>
+                      <Documents />
+                    </DashboardLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/notes" element={
+                  <ProtectedRoute>
+                    <DashboardLayout>
+                      <Notes />
+                    </DashboardLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/invoices" element={
+                  <ProtectedRoute>
+                    <DashboardLayout>
+                      <Invoices />
+                    </DashboardLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/messages" element={
+                  <ProtectedRoute>
+                    <DashboardLayout>
+                      <Messages />
+                    </DashboardLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/team" element={
+                  <ProtectedRoute>
+                    <DashboardLayout>
+                      <Team />
+                    </DashboardLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </DialogProvider>
           </AuthProvider>
         </QueryClientProvider>
       </Router>
