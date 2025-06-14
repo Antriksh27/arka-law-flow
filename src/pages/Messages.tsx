@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { Edit, Search, Paperclip, Phone, Send } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -7,7 +8,6 @@ import DefaultPageLayout from '@/components/messages/ui/DefaultPageLayout';
 import { IconButton } from '@/components/messages/ui/IconButton';
 import ChatList from '@/components/messages/ui/ChatList';
 import ChatHeader from '@/components/messages/ui/ChatHeader';
-import TimelineDivider from '@/components/messages/ui/TimelineDivider';
 import ChatReceived from '@/components/messages/ui/ChatReceived';
 import ChatSent from '@/components/messages/ui/ChatSent';
 import { TextFieldUnstyled } from '@/components/messages/ui/TextFieldUnstyled';
