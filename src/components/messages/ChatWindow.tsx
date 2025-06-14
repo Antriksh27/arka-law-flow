@@ -40,7 +40,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // EXPLICITLY break type inference for React Query (fix TS2589)
+  // --- FIX: Avoid deep type inference for React Query ---
+  // DO NOT add types to useQuery or queryFn
+  // (Allow TS to infer "any", and cast below)
   const { data, refetch, isFetching } = useQuery({
     queryKey: [
       "messages-thread",
@@ -49,7 +51,6 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         ? selectedThread.userId
         : selectedThread.caseId,
     ],
-    // Don't add types here! Let TS infer "any"
     queryFn: async () => {
       let query = supabase
         .from("messages")
@@ -71,8 +72,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     refetchInterval: false,
   });
 
-  // Move type assertion here, after we have received data
-  const messages: MessageWithProfile[] = Array.isArray(data)
+  // --- FIX: Explicit type cast AFTER fetching, breaking deep inference ---
+  const messages = Array.isArray(data)
     ? (data as MessageWithProfile[])
     : [];
 
