@@ -60,22 +60,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('AuthContext: useEffect mounting. Subscribing to onAuthStateChange.');
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
+      (event, currentSession) => { // Callback is now synchronous
         console.log('AuthContext: onAuthStateChange event:', event, 'Session:', !!currentSession);
         setSession(currentSession);
         const currentUser = currentSession?.user ?? null;
         setUser(currentUser);
 
         if (currentUser) {
-          console.log(`AuthContext: User (id: ${currentUser.id}) present in onAuthStateChange. Fetching firm_id.`);
-          await fetchFirmIdLocal(currentUser.id);
+          console.log(`AuthContext: User (id: ${currentUser.id}) present. Scheduling firm_id fetch.`);
+          // setLoading(true) is already active from the start of useEffect.
+          // We will set setLoading(false) after firm_id fetch completes.
+          setTimeout(async () => { // Defer async operations
+            console.log(`AuthContext: setTimeout: Fetching firm_id for user ${currentUser.id}`);
+            await fetchFirmIdLocal(currentUser.id);
+            console.log('AuthContext: setTimeout: firm_id fetch complete. Setting loading to false.');
+            setLoading(false);
+          }, 0);
         } else {
-          console.log('AuthContext: No user in onAuthStateChange. Setting firm_id to undefined.');
+          console.log('AuthContext: No user in onAuthStateChange. Setting firm_id to undefined and loading to false.');
           setFirmId(undefined);
+          setLoading(false); // Set loading to false if no user
         }
-        
-        console.log('AuthContext: onAuthStateChange processing complete. Setting loading to false.');
-        setLoading(false);
       }
     );
 
