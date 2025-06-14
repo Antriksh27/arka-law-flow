@@ -40,7 +40,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // Make sure useQuery is not passed a type generic
+  // EXPLICITLY break type inference for React Query (fix TS2589)
   const { data, refetch, isFetching } = useQuery({
     queryKey: [
       "messages-thread",
@@ -49,7 +49,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         ? selectedThread.userId
         : selectedThread.caseId,
     ],
-    queryFn: async () => {
+    queryFn: async (): Promise<any> => {
       let query = supabase
         .from("messages")
         .select("id, sender_id, message_text, attachments, created_at")
@@ -70,12 +70,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     refetchInterval: false,
   });
 
-  /**
-   * The crucial step: force data to unknown and then to MessageWithProfile[]
-   * This prevents TS from attempting deep type inference which causes the error
-   */
+  // Type cast to avoid deep inference
   const messages: MessageWithProfile[] = Array.isArray(data)
-    ? (data as unknown as MessageWithProfile[])
+    ? (data as MessageWithProfile[])
     : [];
 
   // --- USER NAME MAP LOGIC ---
