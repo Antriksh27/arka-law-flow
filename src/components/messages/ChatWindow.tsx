@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -49,7 +50,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         ? selectedThread.userId
         : selectedThread.caseId,
     ],
-    queryFn: async (): Promise<any[]> => {
+    queryFn: async () => {
       let query = supabase
         .from("messages")
         .select("id, sender_id, message_text, attachments, created_at")
@@ -64,7 +65,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       }
       const { data, error } = await query;
       if (error) throw error;
-      return data;
+      return data as any[];
     },
     refetchOnWindowFocus: false,
     refetchInterval: false,
