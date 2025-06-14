@@ -1,8 +1,8 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 interface DialogContextType {
-  dialogContent: ReactNode | null;
   openDialog: (content: ReactNode) => void;
   closeDialog: () => void;
 }
@@ -21,9 +21,14 @@ export const DialogProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   };
 
   return (
-    <DialogContext.Provider value={{ dialogContent, openDialog, closeDialog }}>
+    <DialogContext.Provider value={{ openDialog, closeDialog }}>
       {children}
-      {dialogContent}
+      {/* This Dialog provides the required context/portal */}
+      <Dialog open={!!dialogContent} onOpenChange={(open) => { if (!open) closeDialog(); }}>
+        <DialogContent>
+          {dialogContent}
+        </DialogContent>
+      </Dialog>
     </DialogContext.Provider>
   );
 };

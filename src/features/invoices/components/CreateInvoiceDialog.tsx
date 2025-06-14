@@ -1,24 +1,23 @@
 
 import React from 'react';
 import {
-  Dialog,
-  DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { useDialog } from '@/hooks/use-dialog';
 
 interface CreateInvoiceDialogProps {
   invoiceId?: string; // For editing
 }
 
 export const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({ invoiceId }) => {
-  // Placeholder content
-  // Form logic will go here
+  const { closeDialog } = useDialog();
+
   return (
-    <DialogContent className="sm:max-w-2xl">
+    <>
       <DialogHeader>
         <DialogTitle>{invoiceId ? 'Edit Invoice' : 'Create New Invoice'}</DialogTitle>
         <DialogDescription>
@@ -30,11 +29,11 @@ export const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({ invoic
         {/* Form fields for client, case, items, dates, etc. */}
       </div>
       <DialogFooter>
-        <Button type="button" variant="outline" onClick={() => { /* close dialog */ }}>Cancel</Button>
+        <Button type="button" variant="outline" onClick={closeDialog}>Cancel</Button>
         <Button type="submit" className="bg-primary-blue hover:bg-primary-blue/90 text-white">
           {invoiceId ? 'Save Changes' : 'Create Invoice'}
         </Button>
       </DialogFooter>
-    </DialogContent>
+    </>
   );
 };
