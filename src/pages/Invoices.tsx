@@ -6,7 +6,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { InvoicesHeader } from '@/features/invoices/components/InvoicesHeader';
 import { InvoicesTable } from '@/features/invoices/components/InvoicesTable';
 import type { InvoiceListData } from '@/features/invoices/types';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle, Search, Plus, Download, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 
 const fetchInvoices = async (firmId: string | undefined): Promise<InvoiceListData[]> => {
   if (!firmId) {
@@ -31,6 +34,78 @@ const fetchInvoices = async (firmId: string | undefined): Promise<InvoiceListDat
   return data as InvoiceListData[];
 };
 
+const InvoiceStats = () => {
+  // These numbers would usually be calculated from real data.
+  return (
+    <div className="flex w-full flex-wrap items-start gap-4 mobile:flex-col">
+      <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-2xl border border-border bg-white px-6 py-6 shadow-sm">
+        <span className="text-sm font-medium text-muted-foreground">Outstanding</span>
+        <span className="text-2xl font-semibold text-primary">₹4.2L</span>
+      </div>
+      <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-2xl border border-border bg-white px-6 py-6 shadow-sm">
+        <span className="text-sm font-medium text-muted-foreground">Overdue</span>
+        <span className="text-2xl font-semibold text-red-600">₹1.8L</span>
+      </div>
+      <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-2xl border border-border bg-white px-6 py-6 shadow-sm">
+        <span className="text-sm font-medium text-muted-foreground">Paid this month</span>
+        <span className="text-2xl font-semibold text-green-600">₹2.6L</span>
+      </div>
+      <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-2xl border border-border bg-white px-6 py-6 shadow-sm">
+        <span className="text-sm font-medium text-muted-foreground">Draft</span>
+        <span className="text-2xl font-semibold text-primary">12</span>
+      </div>
+    </div>
+  );
+};
+
+const InvoiceToolbar = ({ total = 0 }: { total: number }) => {
+  return (
+    <div className="flex w-full flex-wrap items-center gap-4 mb-2">
+      <div className="flex grow shrink-0 basis-0 items-center gap-3">
+        <Input
+          className="max-w-xs bg-white rounded-lg border border-border text-base focus:ring-2 focus:ring-primary outline-none"
+          startIcon={<Search className="w-4 h-4 text-muted-foreground" />}
+          placeholder="Search invoices..."
+          // Currently not working, you can connect to state/filter logic later.
+        />
+        <Button variant="outline" className="flex items-center gap-2">
+          Status
+        </Button>
+        <Button variant="outline" className="flex items-center gap-2">
+          Date Range
+        </Button>
+        <Button variant="outline" className="flex items-center gap-2">
+          Case
+        </Button>
+      </div>
+      <div className="flex items-center gap-2">
+        <Button variant="secondary" size="icon">
+          <Download className="w-4 h-4" />
+          <span className="sr-only">Download as CSV</span>
+        </Button>
+        <Button variant="secondary" size="icon">
+          <RefreshCw className="w-4 h-4" />
+          <span className="sr-only">Refresh</span>
+        </Button>
+        <Button
+          className="bg-primary hover:bg-primary/90 text-white px-4"
+        >
+          <Plus className="w-4 h-4 mr-1" />
+          New Invoice
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+const Breadcrumbs = () => (
+  <nav className="mb-4 flex items-center space-x-3 text-sm text-muted-foreground" aria-label="Breadcrumb">
+    <span className="font-medium">Arka</span>
+    <span className="mx-1">/</span>
+    <span className="text-primary font-semibold">Invoices</span>
+  </nav>
+);
+
 const Invoices: React.FC = () => {
   const { firmId, loading, firmError } = useAuth();
 
@@ -41,18 +116,39 @@ const Invoices: React.FC = () => {
   });
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <InvoicesHeader />
-      
+    <div className="min-h-[calc(100vh-64px)] bg-legal-background flex flex-col gap-6 p-6 max-w-7xl mx-auto">
+      <div className="flex w-full flex-col items-start">
+        <Breadcrumbs />
+      </div>
+      <div className="flex w-full flex-wrap items-center gap-4">
+        <div className="flex grow shrink-0 basis-0 items-center gap-2">
+          <h1 className="text-2xl font-semibold text-gray-900">Invoices</h1>
+          <Badge variant="secondary">{invoices ? `${invoices.length} total` : "--"}</Badge>
+        </div>
+        <Button
+          className="bg-primary hover:bg-primary/90 text-white"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          New Invoice
+        </Button>
+      </div>
+
+      {/* Invoice Stats Row */}
+      <InvoiceStats />
+
+      {/* Filters/Search Bar */}
+      <InvoiceToolbar total={invoices?.length || 0} />
+
+      {/* Table and loading/error indicators */}
       {(isLoading || loading) && (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-primary-blue" />
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <span className="ml-2 text-gray-600">Loading invoices...</span>
         </div>
       )}
 
       {error && (
-        <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
+        <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md mt-4">
           <div className="flex">
             <div className="flex-shrink-0">
               <AlertCircle className="h-5 w-5 text-red-400" aria-hidden="true" />
@@ -67,7 +163,7 @@ const Invoices: React.FC = () => {
       )}
 
       {!isLoading && !loading && !error && invoices && (
-        <div className="bg-white shadow-sm rounded-2xl p-0">
+        <div className="bg-white shadow-sm rounded-2xl p-0 mt-2">
           <InvoicesTable invoices={invoices} isLoading={isLoading} />
         </div>
       )}
