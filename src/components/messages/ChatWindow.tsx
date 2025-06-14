@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,7 +18,7 @@ interface MessageWithProfile {
   id: string;
   sender_id: string;
   message_text: string;
-  attachments?: any; // JSON or null
+  attachments?: any;
   created_at: string;
   [key: string]: any;
 }
@@ -34,6 +35,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
+  // Do not provide a generic parameter to useQuery!
   const {
     data,
     refetch,
@@ -67,7 +69,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     refetchInterval: false,
   });
 
-  // Safely assert the type to MessageWithProfile[]
+  // --> Explicitly assert here, so if data is not an array fallback to []
   const messages: MessageWithProfile[] = Array.isArray(data) ? (data as MessageWithProfile[]) : [];
 
   // Listen for new messages in real time via Supabase channel
