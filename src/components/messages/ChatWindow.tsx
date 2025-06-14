@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -35,8 +34,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // Remove explicit/complex typings to avoid deep/infinite inference
-  const { data, refetch, isFetching } = useQuery({
+  // Explicitly declare the query's data type to break TypeScript recursion:
+  const { data, refetch, isFetching } = useQuery<MessageWithProfile[]>({
     queryKey: [
       "messages-thread",
       selectedThread.type,
@@ -65,8 +64,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     refetchInterval: false,
   });
 
-  // Avoid deep inference: just use any[]
-  const messages: any[] = Array.isArray(data) ? data : [];
+  // Use query result (with fallback to []).
+  const messages = data ?? [];
 
   // Listen for new messages in real time via Supabase channel
   useEffect(() => {
