@@ -3,12 +3,19 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Calendar, Clock, MapPin, Edit } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Calendar, Clock, MapPin, Users, FileText, MoreVertical, Edit2, Trash } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { FilterState } from './types';
-import { getHearingStatusBadge, formatHearingType } from './utils';
+import { formatHearingType } from './utils';
 import { useDialog } from '@/hooks/use-dialog';
 import { EditHearingDialog } from './EditHearingDialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface HearingsTimelineProps {
   filters: FilterState;
@@ -27,7 +34,7 @@ export const HearingsTimeline: React.FC<HearingsTimelineProps> = ({ filters }) =
           cases!hearings_case_id_fkey(case_title, case_number)
         `);
 
-      // Apply date range filter only if both dates are provided
+      // Apply filters
       if (filters.dateRange.from && filters.dateRange.to) {
         query = query
           .gte('hearing_date', format(filters.dateRange.from, 'yyyy-MM-dd'))
@@ -38,27 +45,22 @@ export const HearingsTimeline: React.FC<HearingsTimelineProps> = ({ filters }) =
         query = query.lte('hearing_date', format(filters.dateRange.to, 'yyyy-MM-dd'));
       }
 
-      // Apply status filter only if there are selected statuses
       if (filters.status.length > 0) {
         query = query.in('status', filters.status);
       }
 
-      // Apply case filter only if a specific case is selected
       if (filters.case && filters.case !== 'all' && filters.case.trim() !== '') {
         query = query.eq('case_id', filters.case);
       }
 
-      // Apply court filter only if a specific court is selected
       if (filters.court && filters.court !== 'all' && filters.court.trim() !== '') {
         query = query.ilike('court_name', `%${filters.court}%`);
       }
 
-      // Apply assigned user filter only if a specific user is selected
       if (filters.assignedUser && filters.assignedUser !== 'all' && filters.assignedUser.trim() !== '') {
         query = query.eq('assigned_to', filters.assignedUser);
       }
 
-      // Apply search query filter only if there's a search term
       if (filters.searchQuery && filters.searchQuery.trim() !== '') {
         query = query.or(
           `court_name.ilike.%${filters.searchQuery}%,` +
@@ -74,15 +76,44 @@ export const HearingsTimeline: React.FC<HearingsTimelineProps> = ({ filters }) =
         throw error;
       }
       
-      console.log('Fetched hearings:', data);
       return data || [];
     }
   });
 
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'scheduled':
+        return <Badge className="bg-blue-100 text-blue-800 border-blue-200"><Clock className="w-3 h-3 mr-1" />Scheduled</Badge>;
+      case 'adjourned':
+        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200"><Clock className="w-3 h-3 mr-1" />Adjourned</Badge>;
+      case 'completed':
+        return <Badge className="bg-green-100 text-green-800 border-green-200"><Clock className="w-3 h-3 mr-1" />Completed</Badge>;
+      case 'cancelled':
+        return <Badge className="bg-red-100 text-red-800 border-red-200"><Clock className="w-3 h-3 mr-1" />Cancelled</Badge>;
+      default:
+        return <Badge className="bg-gray-100 text-gray-800 border-gray-200"><Clock className="w-3 h-3 mr-1" />{status}</Badge>;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'scheduled':
+        return 'bg-blue-600';
+      case 'adjourned':
+        return 'bg-yellow-600';
+      case 'completed':
+        return 'bg-green-600';
+      case 'cancelled':
+        return 'bg-red-600';
+      default:
+        return 'bg-gray-600';
+    }
+  };
+
   if (isLoading) {
     return (
-      <div className="p-6">
-        <div className="text-center">Loading hearings...</div>
+      <div className="w-full text-center py-8">
+        <div className="text-gray-600">Loading hearings...</div>
       </div>
     );
   }
@@ -98,117 +129,112 @@ export const HearingsTimeline: React.FC<HearingsTimelineProps> = ({ filters }) =
   }, {} as Record<string, any[]>);
 
   return (
-    <div className="p-6">
+    <div className="w-full space-y-6">
       {groupedHearings && Object.keys(groupedHearings).length > 0 ? (
-        <div className="space-y-6">
-          {Object.entries(groupedHearings).map(([date, dateHearings]) => (
-            <div key={date} className="relative">
-              {/* Date header */}
-              <div className="flex items-center gap-4 mb-3">
-                <div className="flex items-center gap-2 bg-blue-50 px-3 py-1 rounded-full">
-                  <Calendar className="w-4 h-4 text-blue-600" />
-                  <span className="text-sm font-medium text-blue-900">
-                    {format(parseISO(date), 'EEEE, MMMM d, yyyy')}
-                  </span>
-                </div>
-                <div className="flex-1 h-px bg-gray-200"></div>
-              </div>
+        Object.entries(groupedHearings).map(([date, dateHearings]) => (
+          <div key={date} className="flex w-full items-start gap-2">
+            {/* Date sidebar */}
+            <div className="flex w-32 flex-none flex-col items-start gap-1 rounded-md bg-gray-50 px-6 py-6">
+              <span className="text-lg font-semibold text-gray-900">
+                {format(parseISO(date), 'EEEE').split(',')[0]}
+              </span>
+              <span className="text-sm text-gray-600">
+                {format(parseISO(date), 'MMM d, yyyy')}
+              </span>
+            </div>
 
-              {/* Hearings for this date */}
-              <div className="space-y-3 ml-4">
-                {dateHearings.map((hearing, index) => (
-                  <div key={hearing.id} className="relative">
-                    {/* Timeline connector */}
-                    <div className="absolute left-[-20px] top-3 w-2 h-2 bg-blue-600 rounded-full"></div>
-                    {index < dateHearings.length - 1 && (
-                      <div className="absolute left-[-16px] top-5 w-px h-full bg-gray-200"></div>
-                    )}
-
-                    {/* Hearing card */}
-                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <Calendar className="w-4 h-4 text-blue-600" />
-                          </div>
-                          <div>
-                            <h4 className="font-medium text-gray-900 text-sm">
-                              {formatHearingType(hearing.hearing_type)}
-                            </h4>
-                            <div className="flex items-center gap-3 text-xs text-gray-600 mt-1">
-                              {hearing.hearing_time && (
-                                <div className="flex items-center gap-1">
-                                  <Clock className="w-3 h-3" />
-                                  {hearing.hearing_time}
-                                </div>
-                              )}
-                              <div className="flex items-center gap-1">
-                                <MapPin className="w-3 h-3" />
-                                {hearing.court_name}
-                              </div>
-                            </div>
-                          </div>
+            {/* Hearings for this date */}
+            <div className="flex flex-1 flex-col items-start gap-2">
+              {dateHearings.map((hearing) => (
+                <div key={hearing.id} className="flex w-full items-center gap-4 rounded-md border border-gray-200 bg-white px-6 py-6 shadow-sm">
+                  {/* Status indicator line */}
+                  <div className={`flex w-1 flex-none flex-col items-center gap-2 self-stretch overflow-hidden rounded-md ${getStatusColor(hearing.status)}`} />
+                  
+                  {/* Hearing content */}
+                  <div className="flex flex-1 flex-col items-start gap-4">
+                    <div className="flex w-full items-start justify-between">
+                      <div className="flex flex-col items-start gap-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold text-gray-900">
+                            {hearing.hearing_time || 'Time not set'}
+                          </span>
+                          {getStatusBadge(hearing.status)}
                         </div>
+                        <span className="text-lg font-semibold text-gray-900">
+                          {hearing.cases?.case_title || 'Case title not available'}
+                        </span>
                       </div>
+                      
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="bg-white border-gray-200">
+                          <DropdownMenuItem 
+                            onClick={() => openDialog(<EditHearingDialog hearingId={hearing.id} />)}
+                            className="cursor-pointer"
+                          >
+                            <Edit2 className="w-4 h-4 mr-2" />
+                            Edit Hearing
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="cursor-pointer">
+                            <FileText className="w-4 h-4 mr-2" />
+                            Add Notes
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="cursor-pointer text-red-600">
+                            <Trash className="w-4 h-4 mr-2" />
+                            Cancel Hearing
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
 
-                      {/* Case info */}
-                      <div className="mb-2">
-                        <div className="text-sm font-medium text-gray-900">
-                          {hearing.cases?.case_title}
-                        </div>
-                        {hearing.cases?.case_number && (
-                          <div className="text-xs text-gray-500">
-                            {hearing.cases.case_number}
-                          </div>
-                        )}
+                    {/* Hearing details */}
+                    <div className="flex w-full flex-wrap items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="w-4 h-4 text-gray-500" />
+                        <span className="text-sm text-gray-600">Court:</span>
+                        <span className="text-sm text-gray-900">{hearing.court_name}</span>
                       </div>
-
-                      {/* Additional details */}
-                      {(hearing.bench || hearing.coram) && (
-                        <div className="mb-2 text-xs text-gray-600">
-                          {hearing.bench && <div>Bench: {hearing.bench}</div>}
-                          {hearing.coram && <div>Coram: {hearing.coram}</div>}
+                      
+                      {hearing.bench && (
+                        <div className="flex items-center gap-2">
+                          <Users className="w-4 h-4 text-gray-500" />
+                          <span className="text-sm text-gray-600">Bench:</span>
+                          <span className="text-sm text-gray-900">{hearing.bench}</span>
                         </div>
                       )}
-
-                      {/* Notes */}
-                      {hearing.notes && (
-                        <div className="mb-2 p-2 bg-white rounded-lg">
-                          <p className="text-xs text-gray-700">{hearing.notes}</p>
-                        </div>
-                      )}
-
-                      {/* Outcome */}
-                      {hearing.outcome && (
-                        <div className="mb-2">
-                          <p className="text-xs font-medium text-gray-900">Outcome:</p>
-                          <p className="text-xs text-gray-700">{hearing.outcome}</p>
-                        </div>
-                      )}
-
-                      {/* Status and Edit button */}
-                      <div className="flex items-center justify-between">
-                        {getHearingStatusBadge(hearing.status)}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            openDialog(<EditHearingDialog hearingId={hearing.id} />);
-                          }}
-                        >
-                          <Edit className="w-3 h-3 mr-1" />
-                          Edit
-                        </Button>
+                      
+                      <div className="flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-gray-500" />
+                        <span className="text-sm text-gray-600">Type:</span>
+                        <span className="text-sm text-gray-900">{formatHearingType(hearing.hearing_type)}</span>
                       </div>
                     </div>
+
+                    {/* Notes and outcome */}
+                    {hearing.notes && (
+                      <div className="w-full p-3 bg-gray-50 rounded-lg">
+                        <p className="text-sm text-gray-700">{hearing.notes}</p>
+                      </div>
+                    )}
+                    
+                    {hearing.outcome && (
+                      <div className="w-full">
+                        <p className="text-sm font-medium text-gray-900 mb-1">Outcome:</p>
+                        <p className="text-sm text-gray-700">{hearing.outcome}</p>
+                      </div>
+                    )}
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </div>
+        ))
       ) : (
-        <div className="text-center py-12 text-gray-500">
+        <div className="w-full text-center py-12 text-gray-500">
           <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-300" />
           <p>No hearings found</p>
           <p className="text-sm mt-2">Try adjusting your filters to see more results</p>

@@ -20,17 +20,17 @@ const Hearings = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="container max-w-none flex h-full w-full flex-col items-start gap-6 bg-gray-50 py-12">
         <HearingsHeader onViewChange={setViewType} currentView={viewType} />
         <HearingsFilters filters={filters} onFilterChange={setFilters} />
         
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm">
-          {viewType === 'timeline' ? (
-            <HearingsTimeline filters={filters} />
-          ) : (
+        {viewType === 'timeline' ? (
+          <HearingsTimeline filters={filters} />
+        ) : (
+          <div className="bg-white border border-gray-200 rounded-2xl shadow-sm w-full">
             <HearingsTable filters={filters} />
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );
