@@ -242,7 +242,7 @@ export function FullScreenCalendar({
                         .map((event) => (
                           <span
                             key={event.id}
-                            className="mx-0.5 mt-1 h-1.5 w-1.5 rounded-full bg-sky-500" // Changed dot color
+                            className="mx-0.5 mt-1 h-1.5 w-1.5 rounded-full bg-primary" // Changed from bg-sky-500 to bg-primary
                           />
                         ))}
                     </div>
@@ -283,10 +283,10 @@ export function FullScreenCalendar({
                       .map((event) => (
                         <div
                           key={event.id}
-                          className="flex flex-col items-start gap-0.5 rounded-md border bg-sky-50 p-1.5 text-xs leading-tight text-sky-700"
+                          className="flex flex-col items-start gap-0.5 rounded-md border bg-blue-50 p-1.5 text-xs leading-tight text-blue-700" // Changed from sky colors to blue
                         >
                           <p className="font-medium leading-none truncate w-full">{event.name}</p>
-                          <p className="leading-none text-sky-600">{event.time}</p>
+                          <p className="leading-none text-blue-600">{event.time}</p> {/* Changed from sky-600 to blue-600 */}
                         </div>
                       ))}
                       {data.filter(eventData => isSameDay(eventData.day, day)).reduce((sum, d) => sum + d.events.length, 0) > 2 && (
@@ -332,7 +332,7 @@ export function FullScreenCalendar({
                       .map((event) => (
                         <span
                           key={event.id}
-                          className="mx-0.5 mt-1 h-1.5 w-1.5 rounded-full bg-sky-500"
+                          className="mx-0.5 mt-1 h-1.5 w-1.5 rounded-full bg-primary" // Changed from bg-sky-500 to bg-primary
                         />
                       ))}
                   </div>
