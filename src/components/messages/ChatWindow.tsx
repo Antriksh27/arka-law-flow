@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -63,9 +62,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       } else if (selectedThread.type === "case") {
         query = query.eq("case_id", selectedThread.caseId);
       }
-      const { data, error } = await query;
+      const { data, error } = (await query) as { data: any[]; error: any };
       if (error) throw error;
-      return data as any[];
+      return data;
     },
     refetchOnWindowFocus: false,
     refetchInterval: false,
