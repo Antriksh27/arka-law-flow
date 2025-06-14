@@ -49,7 +49,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         ? selectedThread.userId
         : selectedThread.caseId,
     ],
-    queryFn: async (): Promise<any> => {
+    // Don't add types here! Let TS infer "any"
+    queryFn: async () => {
       let query = supabase
         .from("messages")
         .select("id, sender_id, message_text, attachments, created_at")
@@ -70,7 +71,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     refetchInterval: false,
   });
 
-  // Type cast to avoid deep inference
+  // Move type assertion here, after we have received data
   const messages: MessageWithProfile[] = Array.isArray(data)
     ? (data as MessageWithProfile[])
     : [];
