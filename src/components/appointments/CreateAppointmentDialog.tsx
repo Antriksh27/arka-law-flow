@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -41,7 +40,11 @@ interface User {
   full_name: string;
 }
 
-export const CreateAppointmentDialog: React.FC = () => {
+interface CreateAppointmentDialogProps {
+  preSelectedDate?: Date;
+}
+
+export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = ({ preSelectedDate }) => {
   const { closeDialog } = useDialog();
   const [loading, setLoading] = useState(false);
   const [clients, setClients] = useState<Client[]>([]);
@@ -49,7 +52,7 @@ export const CreateAppointmentDialog: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   
   const [formData, setFormData] = useState({
-    appointment_date: new Date(),
+    appointment_date: preSelectedDate || new Date(),
     appointment_time: '',
     duration_minutes: 60,
     client_id: '',

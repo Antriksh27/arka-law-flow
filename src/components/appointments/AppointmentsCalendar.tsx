@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -159,9 +158,8 @@ export const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({
   
   const handleDateSelect = (date: Date) => {
     console.log("Date selected:", date);
-    openDialog(<CreateAppointmentDialog />);
+    openDialog(<CreateAppointmentDialog preSelectedDate={date} />);
   };
-
 
   if (isLoading) {
     return (
