@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,7 +20,6 @@ interface MessageWithProfile {
   message_text: string;
   attachments?: any; // JSON or null
   created_at: string;
-  // profiles?: { full_name?: string | null; profile_pic?: string | null; };
   [key: string]: any;
 }
 
@@ -35,9 +35,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // Explicitly type the return value to break deep inference recursion
+  // To avoid naming conflict, use messagesRaw for the query data
   const {
-    data: messages = [],
+    data: messagesRaw = [],
     refetch,
     isFetching,
   } = useQuery<MessageWithProfile[], Error>({
@@ -71,8 +71,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   });
 
   // Safely coerce to the expected type at runtime, with fallback to []
-  const messages: MessageWithProfile[] = Array.isArray(messages)
-    ? (messages as MessageWithProfile[])
+  const messages: MessageWithProfile[] = Array.isArray(messagesRaw)
+    ? (messagesRaw as MessageWithProfile[])
     : [];
 
   // Listen for new messages in real time via Supabase channel
@@ -115,10 +115,6 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     selectedThread.type === "dm"
       ? selectedThread.name
       : selectedThread.title;
-
-  // Since we no longer have the profile name, let's just show initials from sender_id,
-  // or if you want, just fallback to "U". Optionally you can fetch profile information, 
-  // but that's outside this fix.
 
   return (
     <div className="flex flex-col h-full">
