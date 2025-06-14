@@ -41,8 +41,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // --- React Query: never use generics here; let data be untyped
-  const { data: rawData, refetch, isFetching } = useQuery({
+  // --- React Query: Pass explicit types to useQuery to avoid deep type inference issue
+  const { data: rawData, refetch, isFetching } = useQuery<any[], Error>({
     queryKey: [
       "messages-thread",
       selectedThread.type,
@@ -50,7 +50,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         ? selectedThread.userId
         : selectedThread.caseId,
     ],
-    queryFn: async (): Promise<any[]> => {
+    queryFn: async () => {
       let query = supabase
         .from("messages")
         .select("id, sender_id, message_text, attachments, created_at")
