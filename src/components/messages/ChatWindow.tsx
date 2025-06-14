@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -72,10 +71,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     refetchInterval: false,
   });
 
-  // Do any needed type-casting only *after* fetch.
-  const messages: MessageWithProfile[] = Array.isArray(data)
-    ? (data as MessageWithProfile[])
-    : [];
+  // Avoid type annotation to prevent deep inference issues
+  const messages = Array.isArray(data) ? data : [];
 
   // --- USER NAME MAP LOGIC ---
   // We keep a mapping of userId -> full_name for the current thread
@@ -154,7 +151,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       {/* Chat header */}
       <div className="flex items-center px-6 py-4 border-b border-gray-100 min-h-16">
         <span className="text-lg font-semibold text-gray-900 truncate">
-          {headerLabel}
+          {selectedThread.type === "dm" ? selectedThread.name : selectedThread.title}
         </span>
       </div>
       {/* Messages feed */}
@@ -166,7 +163,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
             No messages yet. Start the conversation!
           </div>
         ) : (
-          messages.map((msg: MessageWithProfile) => {
+          messages.map((msgRaw: any) => {
+            // Cast inline, not outside
+            const msg = msgRaw as MessageWithProfile;
             const isSender = msg.sender_id === currentUserId;
             const senderName =
               isSender
@@ -236,5 +235,3 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     </div>
   );
 };
-
-// ... end of file
