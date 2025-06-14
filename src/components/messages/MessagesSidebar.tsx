@@ -30,8 +30,9 @@ export const MessagesSidebar: React.FC<MessagesSidebarProps> = ({
         .select("user_id, full_name, role")
         .neq("user_id", currentUserId);
       if (error) throw error;
-      // Exclude clients and super admins by role
+      // Exclude clients and super admins by role (role may be untyped, so use string check)
       return data.filter(
+        // @ts-ignore
         (u) => u.role !== "client" && u.role !== "super_admin"
       );
     },

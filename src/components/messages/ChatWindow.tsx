@@ -48,9 +48,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 
       if (selectedThread.type === "dm") {
         // Only show messages between both users (as sender or receiver)
+        // .or() takes a single string with comma separated filters
         query = query.or(
-          `(sender_id.eq.${currentUserId},receiver_id.eq.${selectedThread.userId})`,
-          `(sender_id.eq.${selectedThread.userId},receiver_id.eq.${currentUserId})`
+          `and(sender_id.eq.${currentUserId},receiver_id.eq.${selectedThread.userId}),and(sender_id.eq.${selectedThread.userId},receiver_id.eq.${currentUserId})`
         );
       } else if (selectedThread.type === "case") {
         query = query.eq("case_id", selectedThread.caseId);
