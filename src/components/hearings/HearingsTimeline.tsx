@@ -100,11 +100,11 @@ export const HearingsTimeline: React.FC<HearingsTimelineProps> = ({ filters }) =
   return (
     <div className="p-6">
       {groupedHearings && Object.keys(groupedHearings).length > 0 ? (
-        <div className="space-y-8">
+        <div className="space-y-6">
           {Object.entries(groupedHearings).map(([date, dateHearings]) => (
             <div key={date} className="relative">
               {/* Date header */}
-              <div className="flex items-center gap-4 mb-4">
+              <div className="flex items-center gap-4 mb-3">
                 <div className="flex items-center gap-2 bg-blue-50 px-3 py-1 rounded-full">
                   <Calendar className="w-4 h-4 text-blue-600" />
                   <span className="text-sm font-medium text-blue-900">
@@ -115,50 +115,49 @@ export const HearingsTimeline: React.FC<HearingsTimelineProps> = ({ filters }) =
               </div>
 
               {/* Hearings for this date */}
-              <div className="space-y-4 ml-4">
+              <div className="space-y-3 ml-4">
                 {dateHearings.map((hearing, index) => (
                   <div key={hearing.id} className="relative">
                     {/* Timeline connector */}
-                    <div className="absolute left-[-20px] top-4 w-2 h-2 bg-blue-600 rounded-full"></div>
+                    <div className="absolute left-[-20px] top-3 w-2 h-2 bg-blue-600 rounded-full"></div>
                     {index < dateHearings.length - 1 && (
-                      <div className="absolute left-[-16px] top-6 w-px h-full bg-gray-200"></div>
+                      <div className="absolute left-[-16px] top-5 w-px h-full bg-gray-200"></div>
                     )}
 
                     {/* Hearing card */}
                     <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
-                      <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-start justify-between mb-2">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <Calendar className="w-5 h-5 text-blue-600" />
+                          <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <Calendar className="w-4 h-4 text-blue-600" />
                           </div>
                           <div>
-                            <h4 className="font-medium text-gray-900">
+                            <h4 className="font-medium text-gray-900 text-sm">
                               {formatHearingType(hearing.hearing_type)}
                             </h4>
-                            <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
+                            <div className="flex items-center gap-3 text-xs text-gray-600 mt-1">
                               {hearing.hearing_time && (
                                 <div className="flex items-center gap-1">
-                                  <Clock className="w-4 h-4" />
+                                  <Clock className="w-3 h-3" />
                                   {hearing.hearing_time}
                                 </div>
                               )}
                               <div className="flex items-center gap-1">
-                                <MapPin className="w-4 h-4" />
+                                <MapPin className="w-3 h-3" />
                                 {hearing.court_name}
                               </div>
                             </div>
                           </div>
                         </div>
-                        {getHearingStatusBadge(hearing.status)}
                       </div>
 
                       {/* Case info */}
-                      <div className="mb-3">
+                      <div className="mb-2">
                         <div className="text-sm font-medium text-gray-900">
                           {hearing.cases?.case_title}
                         </div>
                         {hearing.cases?.case_number && (
-                          <div className="text-sm text-gray-500">
+                          <div className="text-xs text-gray-500">
                             {hearing.cases.case_number}
                           </div>
                         )}
@@ -166,7 +165,7 @@ export const HearingsTimeline: React.FC<HearingsTimelineProps> = ({ filters }) =
 
                       {/* Additional details */}
                       {(hearing.bench || hearing.coram) && (
-                        <div className="mb-3 text-sm text-gray-600">
+                        <div className="mb-2 text-xs text-gray-600">
                           {hearing.bench && <div>Bench: {hearing.bench}</div>}
                           {hearing.coram && <div>Coram: {hearing.coram}</div>}
                         </div>
@@ -174,21 +173,22 @@ export const HearingsTimeline: React.FC<HearingsTimelineProps> = ({ filters }) =
 
                       {/* Notes */}
                       {hearing.notes && (
-                        <div className="mb-3 p-3 bg-white rounded-lg">
-                          <p className="text-sm text-gray-700">{hearing.notes}</p>
+                        <div className="mb-2 p-2 bg-white rounded-lg">
+                          <p className="text-xs text-gray-700">{hearing.notes}</p>
                         </div>
                       )}
 
                       {/* Outcome */}
                       {hearing.outcome && (
-                        <div className="mb-3">
-                          <p className="text-sm font-medium text-gray-900">Outcome:</p>
-                          <p className="text-sm text-gray-700">{hearing.outcome}</p>
+                        <div className="mb-2">
+                          <p className="text-xs font-medium text-gray-900">Outcome:</p>
+                          <p className="text-xs text-gray-700">{hearing.outcome}</p>
                         </div>
                       )}
 
-                      {/* Actions */}
-                      <div className="flex justify-end pt-3 border-t border-gray-200">
+                      {/* Status and Edit button */}
+                      <div className="flex items-center justify-between">
+                        {getHearingStatusBadge(hearing.status)}
                         <Button
                           variant="outline"
                           size="sm"
@@ -196,7 +196,7 @@ export const HearingsTimeline: React.FC<HearingsTimelineProps> = ({ filters }) =
                             openDialog(<EditHearingDialog hearingId={hearing.id} />);
                           }}
                         >
-                          <Edit className="w-4 h-4 mr-2" />
+                          <Edit className="w-3 h-3 mr-1" />
                           Edit
                         </Button>
                       </div>
