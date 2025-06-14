@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -30,7 +29,30 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
 
   const handleEdit = () => {
     closeDialog();
-    openDialog(<EditAppointmentDialog appointmentId={appointment.id} />);
+    // Convert the appointment to match EditAppointmentDialog's expected format
+    const editAppointment = {
+      id: appointment.id,
+      title: appointment.title || '',
+      appointment_date: appointment.appointment_date || '',
+      appointment_time: appointment.appointment_time || '',
+      duration_minutes: 60, // Default duration
+      client_id: undefined,
+      lawyer_id: appointment.lawyer_id || '',
+      case_id: undefined,
+      location: appointment.location || 'in_person',
+      notes: appointment.notes || '',
+      status: appointment.status || 'upcoming'
+    };
+    
+    openDialog(
+      <EditAppointmentDialog 
+        appointment={editAppointment} 
+        onSuccess={() => {
+          // Optionally refresh the calendar or show success message
+          console.log('Appointment updated successfully');
+        }} 
+      />
+    );
   };
 
   const getStatusColor = (status: string | null) => {
