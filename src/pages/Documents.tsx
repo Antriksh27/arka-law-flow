@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import DashboardLayout from '../components/layout/DashboardLayout';
 import { DocumentsSidebar } from '../components/documents/DocumentsSidebar';
 import { DocumentsMainView } from '../components/documents/DocumentsMainView';
 import { DocumentsHeader } from '../components/documents/DocumentsHeader';
@@ -16,32 +15,30 @@ const Documents = () => {
   });
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        <DocumentsHeader 
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          selectedFilters={selectedFilters}
-          onFiltersChange={setSelectedFilters}
+    <div className="space-y-6">
+      <DocumentsHeader 
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        selectedFilters={selectedFilters}
+        onFiltersChange={setSelectedFilters}
+      />
+      
+      <div className="h-[calc(100vh-200px)] flex border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-sm">
+        <DocumentsSidebar
+          selectedFolder={selectedFolder}
+          onFolderSelect={setSelectedFolder}
         />
         
-        <div className="h-[calc(100vh-200px)] flex border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-sm">
-          <DocumentsSidebar
-            selectedFolder={selectedFolder}
-            onFolderSelect={setSelectedFolder}
-          />
-          
-          <DocumentsMainView
-            selectedFolder={selectedFolder}
-            viewMode={viewMode}
-            searchQuery={searchQuery}
-            selectedFilters={selectedFilters}
-          />
-        </div>
+        <DocumentsMainView
+          selectedFolder={selectedFolder}
+          viewMode={viewMode}
+          searchQuery={searchQuery}
+          selectedFilters={selectedFilters}
+        />
       </div>
-    </DashboardLayout>
+    </div>
   );
 };
 
