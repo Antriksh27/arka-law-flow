@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,9 +35,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // Fetch messages for the selected thread
+  // Explicit type for messages
   const {
-    data: messagesRaw,
+    data: messagesRaw = [],
     refetch,
     isFetching,
   } = useQuery<MessageWithProfile[]>({
@@ -49,12 +48,10 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         ? selectedThread.userId
         : selectedThread.caseId,
     ],
-    queryFn: async () => {
+    queryFn: async (): Promise<MessageWithProfile[]> => {
       let query = supabase
         .from("messages")
-        .select(
-          "id, sender_id, message_text, attachments, created_at"
-        )
+        .select("id, sender_id, message_text, attachments, created_at")
         .order("created_at", { ascending: true });
 
       if (selectedThread.type === "dm") {
@@ -64,16 +61,15 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       } else if (selectedThread.type === "case") {
         query = query.eq("case_id", selectedThread.caseId);
       }
+      // Disable any type inference: always cast as MessageWithProfile[]
       const { data, error } = await query;
       if (error) throw error;
-      // Always return array (never null)
-      return data ?? [];
+      return (data as any[]) as MessageWithProfile[];
     },
     refetchOnWindowFocus: false,
     refetchInterval: false,
   });
 
-  // Always work with array
   const messages: MessageWithProfile[] = Array.isArray(messagesRaw)
     ? messagesRaw
     : [];
