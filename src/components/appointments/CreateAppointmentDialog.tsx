@@ -55,7 +55,7 @@ export const CreateAppointmentDialog: React.FC = () => {
     location: 'in_person',
     notes: '',
     status: 'upcoming',
-    type: 'consultation' as 'consultation' | 'follow-up' | 'hearing' | 'in-person' | 'online' | 'other'
+    type: 'in-person' as 'in-person' | 'other' | 'call' | 'video-call'
   });
 
   useEffect(() => {
@@ -197,6 +197,24 @@ export const CreateAppointmentDialog: React.FC = () => {
             </div>
             
             <div>
+              <Label htmlFor="type">Type</Label>
+              <Select
+                value={formData.type}
+                onValueChange={(value) => setFormData({ ...formData, type: value as 'in-person' | 'other' | 'call' | 'video-call' })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="in-person">In-Person Meeting</SelectItem>
+                  <SelectItem value="video-call">Video Call</SelectItem>
+                  <SelectItem value="call">Phone Call</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
               <Label htmlFor="client_id">Client</Label>
               <Select
                 value={formData.client_id}
@@ -250,23 +268,6 @@ export const CreateAppointmentDialog: React.FC = () => {
                       {case_.case_title} ({case_.case_number})
                     </SelectItem>
                   ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <Label htmlFor="location">Location</Label>
-              <Select
-                value={formData.location}
-                onValueChange={(value) => setFormData({ ...formData, location: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="in_person">Office / In-Person</SelectItem>
-                  <SelectItem value="online">Video Call</SelectItem>
-                  <SelectItem value="phone">Phone Call</SelectItem>
                 </SelectContent>
               </Select>
             </div>
