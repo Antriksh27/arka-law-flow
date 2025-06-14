@@ -8,26 +8,24 @@ import { format } from "date-fns";
 import { FilePreview } from "./FilePreview";
 import { ChatInput } from "./ChatInput";
 
-// Define thread type again for prop
+// Thread type for prop
 type Thread =
   | { type: "dm"; userId: string; name: string }
   | { type: "case"; caseId: string; title: string };
 
-// ---- ADD TYPE HERE ----
+// Message type (now with attachments)
 interface MessageWithProfile {
   id: string;
   sender_id: string;
   message_text: string;
-  file_url?: string | null;
+  attachments?: any; // JSON or null
   created_at: string;
   profiles?: {
     full_name?: string | null;
     profile_pic?: string | null;
   };
-  // Allow any additional keys for forward compatibility
   [key: string]: any;
 }
-// ---- END TYPE ----
 
 interface ChatWindowProps {
   selectedThread: Thread;
@@ -41,12 +39,12 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // Fetch the messages for the selected thread
+  // Fetch messages for the selected thread
   const {
-    data: messages = [],
+    data: messagesRaw,
     refetch,
     isFetching,
-  } = useQuery< MessageWithProfile[] >({
+  } = useQuery<MessageWithProfile[]>({
     queryKey: [
       "messages-thread",
       selectedThread.type,
@@ -58,12 +56,11 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       let query = supabase
         .from("messages")
         .select(
-          "id, sender_id, message_text, file_url, created_at, profiles:sender_id(full_name, profile_pic)"
+          "id, sender_id, message_text, attachments, created_at, profiles:sender_id(full_name, profile_pic)"
         )
         .order("created_at", { ascending: true });
 
       if (selectedThread.type === "dm") {
-        // Only show messages between both users (as sender or receiver)
         query = query.or(
           `and(sender_id.eq.${currentUserId},receiver_id.eq.${selectedThread.userId}),and(sender_id.eq.${selectedThread.userId},receiver_id.eq.${currentUserId})`
         );
@@ -72,11 +69,17 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       }
       const { data, error } = await query;
       if (error) throw error;
-      return data || [];
+      // Always return array (never null)
+      return data ?? [];
     },
     refetchOnWindowFocus: false,
     refetchInterval: false,
   });
+
+  // Always work with array
+  const messages: MessageWithProfile[] = Array.isArray(messagesRaw)
+    ? messagesRaw
+    : [];
 
   // Listen for new messages in real time via Supabase channel
   useEffect(() => {
@@ -90,7 +93,6 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
           table: "messages",
         },
         (payload) => {
-          // Only refetch if for selected thread
           refetch();
         }
       )
@@ -114,7 +116,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     }
   }, [messages.length]);
 
-  // Header label (user or case)
+  // Header label
   const headerLabel =
     selectedThread.type === "dm"
       ? selectedThread.name
@@ -149,7 +151,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                     isSender ? "flex-row-reverse" : "flex-row"
                   }`}
                 >
-                  {/* Optional avatar for left/bottom bubble */}
+                  {/* Avatar */}
                   <Avatar className="w-8 h-8 shrink-0">
                     <AvatarFallback className="bg-gray-100 text-xs">
                       {msg.profiles?.full_name
@@ -168,9 +170,12 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                     <div className="whitespace-pre-line break-words">
                       {msg.message_text}
                     </div>
-                    {msg.file_url && (
+                    {/* File attachment preview */}
+                    {msg.attachments && Array.isArray(msg.attachments) && msg.attachments.length > 0 && (
                       <div className="mt-2">
-                        <FilePreview fileUrl={msg.file_url} />
+                        {msg.attachments.map((att: any, idx: number) => (
+                          <FilePreview key={att.file_url || idx} fileUrl={att.file_url} />
+                        ))}
                       </div>
                     )}
                     <div className="mt-1 text-xs text-muted-foreground text-right">
