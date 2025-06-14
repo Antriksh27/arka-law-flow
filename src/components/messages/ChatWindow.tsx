@@ -40,8 +40,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // --- KEY CHANGE: data is fully unknown, disable all inference.
-  // This defeats deep type inference for react-query and supabase together!
+  // --- Do NOT use generics or typing at the useQuery level, disable all inference.
   const { data: rawData, refetch, isFetching } = useQuery({
     queryKey: [
       "messages-thread",
@@ -50,7 +49,6 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         ? selectedThread.userId
         : selectedThread.caseId,
     ],
-    // Do NOT type queryFn or anything, let it be fully untyped
     queryFn: async () => {
       let query = supabase
         .from("messages")
@@ -72,8 +70,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     refetchInterval: false,
   });
 
-  // Treat as completely unsafe array, only cast on render!
-  const messages: unknown[] = Array.isArray(rawData) ? rawData : [];
+  // Only treat as unknown[], don't type further.
+  const messages = Array.isArray(rawData) ? rawData : [];
 
   // --- userNameMap and user name fetching (keep unchanged)
   // We keep a mapping of userId -> full_name for the current thread
@@ -167,15 +165,16 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
           </div>
         ) : (
           // Only cast each message as MessageWithProfile *inside* the map here
-          messages.map((msgAny, idx: number) => {
+          (messages as unknown[]).map((msgAny, idx: number) => {
             const msg = msgAny as MessageWithProfile;
             const isSender = msg.sender_id === currentUserId;
             const senderName =
               isSender
                 ? "You"
                 : userNameMap[msg.sender_id] ||
-                  msg.sender_id?.slice(0, 8) ||
-                  "User";
+                  (typeof msg.sender_id === "string"
+                    ? msg.sender_id?.slice(0, 8)
+                    : "User");
             return (
               <div
                 key={msg.id}
@@ -216,7 +215,10 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                       msg.attachments.length > 0 && (
                         <div className="mt-2">
                           {msg.attachments.map((att: any, idx: number) => (
-                            <FilePreview key={att.file_url || idx} fileUrl={att.file_url} />
+                            <FilePreview
+                              key={att.file_url || idx}
+                              fileUrl={att.file_url}
+                            />
                           ))}
                         </div>
                       )}
