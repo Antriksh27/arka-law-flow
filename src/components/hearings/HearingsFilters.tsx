@@ -161,14 +161,14 @@ export const HearingsFilters: React.FC<HearingsFiltersProps> = ({
 
         {/* Case Filter */}
         <Select 
-          value={filters.case} 
-          onValueChange={(value) => onFilterChange({ ...filters, case: value })}
+          value={filters.case || 'all'} 
+          onValueChange={(value) => onFilterChange({ ...filters, case: value === 'all' ? '' : value })}
         >
           <SelectTrigger className="w-[200px] bg-white border-gray-300 text-gray-900">
             <SelectValue placeholder="Select case" />
           </SelectTrigger>
           <SelectContent className="bg-white border-gray-300">
-            <SelectItem value="" className="text-gray-900">All Cases</SelectItem>
+            <SelectItem value="all" className="text-gray-900">All Cases</SelectItem>
             {cases?.map((case_item) => (
               <SelectItem key={case_item.id} value={case_item.id} className="text-gray-900">
                 {case_item.case_title}
@@ -179,14 +179,14 @@ export const HearingsFilters: React.FC<HearingsFiltersProps> = ({
 
         {/* Court Filter */}
         <Select 
-          value={filters.court} 
-          onValueChange={(value) => onFilterChange({ ...filters, court: value })}
+          value={filters.court || 'all'} 
+          onValueChange={(value) => onFilterChange({ ...filters, court: value === 'all' ? '' : value })}
         >
           <SelectTrigger className="w-[200px] bg-white border-gray-300 text-gray-900">
             <SelectValue placeholder="Select court" />
           </SelectTrigger>
           <SelectContent className="bg-white border-gray-300">
-            <SelectItem value="" className="text-gray-900">All Courts</SelectItem>
+            <SelectItem value="all" className="text-gray-900">All Courts</SelectItem>
             {courts?.map((court) => (
               <SelectItem key={court} value={court} className="text-gray-900">
                 {court}
@@ -197,14 +197,14 @@ export const HearingsFilters: React.FC<HearingsFiltersProps> = ({
 
         {/* Assigned User Filter */}
         <Select 
-          value={filters.assignedUser} 
-          onValueChange={(value) => onFilterChange({ ...filters, assignedUser: value })}
+          value={filters.assignedUser || 'all'} 
+          onValueChange={(value) => onFilterChange({ ...filters, assignedUser: value === 'all' ? '' : value })}
         >
           <SelectTrigger className="w-[200px] bg-white border-gray-300 text-gray-900">
             <SelectValue placeholder="Assigned to" />
           </SelectTrigger>
           <SelectContent className="bg-white border-gray-300">
-            <SelectItem value="" className="text-gray-900">All Users</SelectItem>
+            <SelectItem value="all" className="text-gray-900">All Users</SelectItem>
             {users?.map((user) => (
               <SelectItem key={user.id} value={user.id} className="text-gray-900">
                 {user.full_name}
