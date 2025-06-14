@@ -35,9 +35,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // Use a unique name for data to avoid conflicts
+  // Remove default value from destructure; default to [] only after assignment
   const {
-    data: messagesRaw = [],
+    data,
     refetch,
     isFetching,
   } = useQuery<MessageWithProfile[], Error>({
@@ -69,6 +69,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     refetchOnWindowFocus: false,
     refetchInterval: false,
   });
+
+  // Assign default [] here instead of destructure
+  const messagesRaw = data || [];
 
   // Use a derived variable for messages
   const messages: MessageWithProfile[] = Array.isArray(messagesRaw)
