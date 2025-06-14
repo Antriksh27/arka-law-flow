@@ -1,8 +1,8 @@
+
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { FilterState } from '../../pages/Appointments'; // Kept for future use if filters apply to calendar
-// import { Button } from '@/components/ui/button'; // Original Button for header controls - no longer used directly here
 import { FullScreenCalendar } from '@/components/ui/fullscreen-calendar';
 import { useDialog } from '@/hooks/use-dialog';
 import { CreateAppointmentDialog } from './CreateAppointmentDialog';
@@ -33,7 +33,7 @@ interface SupabaseAppointment {
   status: string | null;
   type: string | null;
   lawyer_id: string | null;
-  lawyer_profile: Array<{ full_name: string | null; }> | null; // Updated to expect an array of profiles or null
+  lawyer_name: string | null; // Changed to a simple string field
 }
 
 // Define types for FullScreenCalendar data transformation
@@ -61,7 +61,8 @@ export const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({
   const { data: rawAppointments, isLoading, error } = useQuery<SupabaseAppointment[], Error>({
     queryKey: ['appointments', format(currentDisplayMonth, 'yyyy-MM')],
     queryFn: async () => {
-      const { data, error: dbError } = await supabase
+      // Use a more explicit approach with a separate query for lawyer names
+      const { data: appointmentsData, error: appointmentsError } = await supabase
         .from('appointments')
         .select(`
           id,
@@ -69,20 +70,51 @@ export const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({
           start_time,
           status,
           type,
-          lawyer_id,
-          lawyer_profile:profiles ( full_name ) 
+          lawyer_id
         `) 
         .gte('start_time', firstDayOfSelectedMonth.toISOString())
         .lte('start_time', lastDayOfSelectedMonth.toISOString())
         .order('start_time', { ascending: true });
 
-      if (dbError) {
-        console.error('Error fetching appointments:', dbError);
-        throw dbError;
+      if (appointmentsError) {
+        console.error('Error fetching appointments:', appointmentsError);
+        throw appointmentsError;
       }
-      // The type assertion here is what was causing the error if SupabaseAppointment didn't match data's structure.
-      // By updating SupabaseAppointment, this cast should now be valid.
-      return (data as SupabaseAppointment[]) || [];
+
+      if (!appointmentsData || appointmentsData.length === 0) {
+        return [];
+      }
+
+      // Get unique lawyer IDs
+      const lawyerIds = [...new Set(appointmentsData
+        .map(app => app.lawyer_id)
+        .filter(id => id !== null))] as string[];
+
+      // Fetch lawyer names separately if there are any lawyer IDs
+      let lawyerNames: Record<string, string> = {};
+      if (lawyerIds.length > 0) {
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, full_name')
+          .in('id', lawyerIds);
+
+        if (profilesError) {
+          console.error('Error fetching lawyer profiles:', profilesError);
+          // Don't throw here, just continue without names
+        } else if (profilesData) {
+          lawyerNames = Object.fromEntries(
+            profilesData.map(profile => [profile.id, profile.full_name || 'Unknown'])
+          );
+        }
+      }
+
+      // Combine appointments with lawyer names
+      const enrichedAppointments: SupabaseAppointment[] = appointmentsData.map(appointment => ({
+        ...appointment,
+        lawyer_name: appointment.lawyer_id ? lawyerNames[appointment.lawyer_id] || 'Unknown' : null
+      }));
+
+      return enrichedAppointments;
     },
   });
 
@@ -101,12 +133,7 @@ export const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({
         eventsByDay[dayKey] = [];
       }
       
-      let assigneeName = 'N/A';
-      // Use lawyer_profile to get the name, checking if it's an array and has elements
-      if (app.lawyer_profile && app.lawyer_profile.length > 0 && app.lawyer_profile[0]?.full_name) {
-        assigneeName = app.lawyer_profile[0].full_name;
-      }
-
+      const assigneeName = app.lawyer_name || 'N/A';
 
       eventsByDay[dayKey].push({
         id: app.id,
