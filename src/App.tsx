@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -42,100 +43,32 @@ function App() {
                 {/* Public booking route - no authentication required */}
                 <Route path="/book/:lawyerId" element={<BookingPage />} />
                 
-                {/* Existing authenticated routes */}
+                {/* Auth route */}
                 <Route path="/auth" element={<Auth />} />
-                <Route path="/" element={
+                
+                {/* Protected routes with dashboard layout */}
+                <Route path="/*" element={
                   <ProtectedRoute>
                     <DashboardLayout>
-                      <Index />
+                      <Routes>
+                        <Route path="/" element={<Index />} />
+                        <Route path="/cases" element={<Cases />} />
+                        <Route path="/cases/:id" element={<CaseDetail />} />
+                        <Route path="/clients" element={<Clients />} />
+                        <Route path="/clients/:id" element={<ClientInfo />} />
+                        <Route path="/appointments" element={<Appointments />} />
+                        <Route path="/tasks" element={<Tasks />} />
+                        <Route path="/hearings" element={<Hearings />} />
+                        <Route path="/documents" element={<Documents />} />
+                        <Route path="/notes" element={<Notes />} />
+                        <Route path="/invoices" element={<Invoices />} />
+                        <Route path="/messages" element={<Messages />} />
+                        <Route path="/team" element={<Team />} />
+                        <Route path="*" element={<NotFound />} />
+                      </Routes>
                     </DashboardLayout>
                   </ProtectedRoute>
                 } />
-                <Route path="/cases" element={
-                  <ProtectedRoute>
-                    <DashboardLayout>
-                      <Cases />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/cases/:id" element={
-                  <ProtectedRoute>
-                    <DashboardLayout>
-                      <CaseDetail />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/clients" element={
-                  <ProtectedRoute>
-                    <DashboardLayout>
-                      <Clients />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/clients/:id" element={
-                  <ProtectedRoute>
-                    <DashboardLayout>
-                      <ClientInfo />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/appointments" element={
-                  <ProtectedRoute>
-                    <DashboardLayout>
-                      <Appointments />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/tasks" element={
-                  <ProtectedRoute>
-                    <DashboardLayout>
-                      <Tasks />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/hearings" element={
-                  <ProtectedRoute>
-                    <DashboardLayout>
-                      <Hearings />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/documents" element={
-                  <ProtectedRoute>
-                    <DashboardLayout>
-                      <Documents />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/notes" element={
-                  <ProtectedRoute>
-                    <DashboardLayout>
-                      <Notes />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/invoices" element={
-                  <ProtectedRoute>
-                    <DashboardLayout>
-                      <Invoices />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/messages" element={
-                  <ProtectedRoute>
-                    <DashboardLayout>
-                      <Messages />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/team" element={
-                  <ProtectedRoute>
-                    <DashboardLayout>
-                      <Team />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="*" element={<NotFound />} />
               </Routes>
             </DialogProvider>
           </AuthProvider>
