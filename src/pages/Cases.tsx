@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import DashboardLayout from '../components/layout/DashboardLayout';
 import { CasesHeader } from '../components/cases/CasesHeader';
 import { CasesFilters } from '../components/cases/CasesFilters';
 import { CasesGrid } from '../components/cases/CasesGrid';
@@ -25,56 +24,54 @@ const Cases = () => {
   }, [statusFilter, typeFilter, assignedFilter]);
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6 p-6">
-        <CasesHeader 
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-          onAddCase={() => setShowAddDialog(true)}
-        />
-        
-        <CasesFilters
+    <div className="space-y-6 p-6">
+      <CasesHeader 
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        onAddCase={() => setShowAddDialog(true)}
+      />
+      
+      <CasesFilters
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        statusFilter={statusFilter}
+        onStatusChange={(value) => {
+          console.log('Status filter changing to:', value);
+          setStatusFilter(value);
+        }}
+        typeFilter={typeFilter}
+        onTypeChange={(value) => {
+          console.log('Type filter changing to:', value);
+          setTypeFilter(value);
+        }}
+        assignedFilter={assignedFilter}
+        onAssignedChange={(value) => {
+          console.log('Assigned filter changing to:', value);
+          setAssignedFilter(value);
+        }}
+      />
+
+      {viewMode === 'grid' ? (
+        <CasesGrid 
           searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
           statusFilter={statusFilter}
-          onStatusChange={(value) => {
-            console.log('Status filter changing to:', value);
-            setStatusFilter(value);
-          }}
           typeFilter={typeFilter}
-          onTypeChange={(value) => {
-            console.log('Type filter changing to:', value);
-            setTypeFilter(value);
-          }}
           assignedFilter={assignedFilter}
-          onAssignedChange={(value) => {
-            console.log('Assigned filter changing to:', value);
-            setAssignedFilter(value);
-          }}
         />
-
-        {viewMode === 'grid' ? (
-          <CasesGrid 
-            searchQuery={searchQuery}
-            statusFilter={statusFilter}
-            typeFilter={typeFilter}
-            assignedFilter={assignedFilter}
-          />
-        ) : (
-          <CasesTable 
-            searchQuery={searchQuery}
-            statusFilter={statusFilter}
-            typeFilter={typeFilter}
-            assignedFilter={assignedFilter}
-          />
-        )}
-
-        <AddCaseDialog 
-          open={showAddDialog}
-          onClose={() => setShowAddDialog(false)}
+      ) : (
+        <CasesTable 
+          searchQuery={searchQuery}
+          statusFilter={statusFilter}
+          typeFilter={typeFilter}
+          assignedFilter={assignedFilter}
         />
-      </div>
-    </DashboardLayout>
+      )}
+
+      <AddCaseDialog 
+        open={showAddDialog}
+        onClose={() => setShowAddDialog(false)}
+      />
+    </div>
   );
 };
 

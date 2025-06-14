@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import DashboardLayout from '../components/layout/DashboardLayout';
 import { NotesGrid } from '../components/notes/NotesGrid';
 import { NotesHeader } from '../components/notes/NotesHeader';
 import { CreateNoteMultiModal } from '../components/notes/CreateNoteMultiModal';
@@ -28,45 +27,43 @@ const Notes = () => {
   };
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        <NotesHeader
-          onCreateNote={() => setShowCreateDialog(true)}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          selectedTags={selectedTags}
-          onTagsChange={setSelectedTags}
-          selectedColor={selectedColor}
-          onColorChange={handleColorChange}
-          selectedVisibility={selectedVisibility}
-          onVisibilityChange={handleVisibilityChange}
-          selectedCase={selectedCase}
-          onCaseChange={handleCaseChange}
-        />
-        
-        <NotesGrid
-          searchQuery={searchQuery}
-          selectedTags={selectedTags}
-          selectedColor={selectedColor}
-          selectedVisibility={selectedVisibility}
-          selectedCase={selectedCase}
-          onEditNote={setEditingNote}
-        />
+    <div className="space-y-6">
+      <NotesHeader
+        onCreateNote={() => setShowCreateDialog(true)}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        selectedTags={selectedTags}
+        onTagsChange={setSelectedTags}
+        selectedColor={selectedColor}
+        onColorChange={handleColorChange}
+        selectedVisibility={selectedVisibility}
+        onVisibilityChange={handleVisibilityChange}
+        selectedCase={selectedCase}
+        onCaseChange={handleCaseChange}
+      />
+      
+      <NotesGrid
+        searchQuery={searchQuery}
+        selectedTags={selectedTags}
+        selectedColor={selectedColor}
+        selectedVisibility={selectedVisibility}
+        selectedCase={selectedCase}
+        onEditNote={setEditingNote}
+      />
 
-        <CreateNoteMultiModal
-          open={showCreateDialog}
-          onClose={() => setShowCreateDialog(false)}
-        />
+      <CreateNoteMultiModal
+        open={showCreateDialog}
+        onClose={() => setShowCreateDialog(false)}
+      />
 
-        {editingNote && (
-          <EditNoteDialog
-            note={editingNote}
-            open={!!editingNote}
-            onClose={() => setEditingNote(null)}
-          />
-        )}
-      </div>
-    </DashboardLayout>
+      {editingNote && (
+        <EditNoteDialog
+          note={editingNote}
+          open={!!editingNote}
+          onClose={() => setEditingNote(null)}
+        />
+      )}
+    </div>
   );
 };
 
