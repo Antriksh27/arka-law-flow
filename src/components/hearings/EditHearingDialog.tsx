@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -152,7 +151,7 @@ export const EditHearingDialog: React.FC<EditHearingDialogProps> = ({ hearingId 
   if (isLoading) {
     return (
       <Dialog open onOpenChange={closeDialog}>
-        <DialogContent className="bg-white border-gray-900">
+        <DialogContent className="bg-white border-gray-900 max-w-md">
           <div className="flex items-center justify-center p-8">
             <div className="text-gray-900">Loading hearing data...</div>
           </div>
@@ -163,13 +162,13 @@ export const EditHearingDialog: React.FC<EditHearingDialogProps> = ({ hearingId 
 
   return (
     <Dialog open onOpenChange={closeDialog}>
-      <DialogContent className="max-w-2xl bg-white border-gray-900">
-        <DialogHeader>
+      <DialogContent className="max-w-4xl max-h-[90vh] bg-white border-gray-900 overflow-y-auto p-6">
+        <DialogHeader className="pb-4">
           <DialogTitle className="text-gray-900">Edit Hearing</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="case" className="text-gray-900">Case *</Label>
               <Select
@@ -179,7 +178,7 @@ export const EditHearingDialog: React.FC<EditHearingDialogProps> = ({ hearingId 
                 <SelectTrigger className="bg-white border-gray-900 text-gray-900">
                   <SelectValue placeholder="Select a case" />
                 </SelectTrigger>
-                <SelectContent className="bg-white border-gray-900">
+                <SelectContent className="bg-white border-gray-900 z-50">
                   {cases?.map((case_item) => (
                     <SelectItem key={case_item.id} value={case_item.id} className="text-gray-900">
                       {case_item.case_title}
@@ -198,7 +197,7 @@ export const EditHearingDialog: React.FC<EditHearingDialogProps> = ({ hearingId 
                 <SelectTrigger className="bg-white border-gray-900 text-gray-900">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-white border-gray-900">
+                <SelectContent className="bg-white border-gray-900 z-50">
                   <SelectItem value="preliminary" className="text-gray-900">Preliminary</SelectItem>
                   <SelectItem value="evidence" className="text-gray-900">Evidence</SelectItem>
                   <SelectItem value="arguments" className="text-gray-900">Arguments</SelectItem>
@@ -212,7 +211,7 @@ export const EditHearingDialog: React.FC<EditHearingDialogProps> = ({ hearingId 
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label className="text-gray-900">Hearing Date *</Label>
               <Popover>
@@ -227,7 +226,7 @@ export const EditHearingDialog: React.FC<EditHearingDialogProps> = ({ hearingId 
                     ) : 'Select date'}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 bg-white border-gray-900">
+                <PopoverContent className="w-auto p-0 bg-white border-gray-900 z-50">
                   <Calendar
                     mode="single"
                     selected={typeof formData.hearing_date === 'string' 
@@ -264,7 +263,7 @@ export const EditHearingDialog: React.FC<EditHearingDialogProps> = ({ hearingId 
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="bench" className="text-gray-900">Bench</Label>
               <Input
@@ -297,7 +296,7 @@ export const EditHearingDialog: React.FC<EditHearingDialogProps> = ({ hearingId 
               <SelectTrigger className="bg-white border-gray-900 text-gray-900">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-white border-gray-900">
+              <SelectContent className="bg-white border-gray-900 z-50">
                 <SelectItem value="scheduled" className="text-gray-900">Scheduled</SelectItem>
                 <SelectItem value="adjourned" className="text-gray-900">Adjourned</SelectItem>
                 <SelectItem value="completed" className="text-gray-900">Completed</SelectItem>
@@ -313,8 +312,8 @@ export const EditHearingDialog: React.FC<EditHearingDialogProps> = ({ hearingId 
               value={formData.outcome || ''}
               onChange={(e) => handleInputChange('outcome', e.target.value)}
               placeholder="Enter hearing outcome"
-              rows={3}
-              className="bg-white border-gray-900 text-gray-900"
+              rows={2}
+              className="bg-white border-gray-900 text-gray-900 resize-none"
             />
           </div>
 
@@ -325,12 +324,12 @@ export const EditHearingDialog: React.FC<EditHearingDialogProps> = ({ hearingId 
               value={formData.notes || ''}
               onChange={(e) => handleInputChange('notes', e.target.value)}
               placeholder="Enter additional notes"
-              rows={3}
-              className="bg-white border-gray-900 text-gray-900"
+              rows={2}
+              className="bg-white border-gray-900 text-gray-900 resize-none"
             />
           </div>
 
-          <div className="flex justify-end gap-3 pt-4">
+          <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t">
             <Button type="button" variant="outline" onClick={closeDialog} className="bg-white border-gray-900 text-gray-900 hover:bg-gray-50">
               Cancel
             </Button>
