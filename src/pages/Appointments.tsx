@@ -30,28 +30,18 @@ const Appointments = () => {
 
   return (
     <DashboardLayout>
-      {viewType === 'calendar' ? (
-        <div className="fixed inset-0 top-[64px] bg-gray-50">
-          <div className="h-full flex flex-col">
-            <div className="flex-shrink-0 p-4 space-y-4">
-              <AppointmentsHeader onViewChange={setViewType} currentView={viewType} />
-              <AppointmentsFilters filters={filters} onFilterChange={setFilters} />
-            </div>
-            <div className="flex-1 min-h-0 px-4 pb-4">
-              <AppointmentsCalendar filters={filters} />
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="container max-w-none flex h-full w-full flex-col items-start gap-6 bg-gray-50 py-12">
-          <AppointmentsHeader onViewChange={setViewType} currentView={viewType} />
-          <AppointmentsFilters filters={filters} onFilterChange={setFilters} />
-          
-          <div className="bg-white border border-gray-200 rounded-2xl shadow-sm w-full">
+      <div className="container max-w-none flex h-full w-full flex-col items-start gap-6 bg-gray-50 py-12">
+        <AppointmentsHeader onViewChange={setViewType} currentView={viewType} />
+        <AppointmentsFilters filters={filters} onFilterChange={setFilters} />
+        
+        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm w-full flex-1">
+          {viewType === 'calendar' ? (
+            <AppointmentsCalendar filters={filters} />
+          ) : (
             <AppointmentsTable filters={filters} />
-          </div>
+          )}
         </div>
-      )}
+      </div>
     </DashboardLayout>
   );
 };
