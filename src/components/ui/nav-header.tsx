@@ -1,4 +1,3 @@
-
 "use client"; 
 
 import React, { useRef, useState } from "react";
@@ -15,7 +14,6 @@ const navigation = [
   { name: 'Invoices', href: '/invoices' },
   { name: 'Notes', href: '/notes' },
   { name: 'Documents', href: '/documents' },
-  { name: 'Messages', href: '/messages' },
   { name: 'Team', href: '/team' },
 ];
 

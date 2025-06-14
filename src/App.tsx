@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -18,7 +17,6 @@ import Hearings from './pages/Hearings';
 import Documents from './pages/Documents';
 import Notes from './pages/Notes';
 import Invoices from './pages/Invoices';
-import Messages from './pages/Messages';
 import Team from './pages/Team';
 import NotFound from './pages/NotFound';
 import { BookingPage } from './pages/BookingPage';
@@ -62,7 +60,6 @@ function App() {
                         <Route path="/documents" element={<Documents />} />
                         <Route path="/notes" element={<Notes />} />
                         <Route path="/invoices" element={<Invoices />} />
-                        <Route path="/messages" element={<Messages />} />
                         <Route path="/team" element={<Team />} />
                         <Route path="*" element={<NotFound />} />
                       </Routes>
