@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -35,7 +34,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // Remove generic to break deep type inference; cast after fetching
+  // Don't specify a generic; let it default to unknown, then cast:
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const { data, refetch, isFetching } = useQuery({
     queryKey: [
       "messages-thread",
@@ -65,8 +65,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     refetchInterval: false,
   });
 
-  // Explicit cast avoids deep type inference problems
-  const messages: MessageWithProfile[] = Array.isArray(data) ? data : [];
+  // Safely cast the data to MessageWithProfile[] after retrieval for rendering.
+  const messages: MessageWithProfile[] = Array.isArray(data) ? data as MessageWithProfile[] : [];
 
   // Listen for new messages in real time via Supabase channel
   useEffect(() => {
