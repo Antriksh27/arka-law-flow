@@ -34,12 +34,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // Remove any generic from useQuery and simply let it infer
-  const {
-    data,
-    refetch,
-    isFetching,
-  } = useQuery({
+  // UseQuery as 'any', no explicit or asserted types
+  const { data, refetch, isFetching } = useQuery({
     queryKey: [
       "messages-thread",
       selectedThread.type,
@@ -68,8 +64,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     refetchInterval: false,
   });
 
-  // Explicitly cast when using the data
-  const messages: MessageWithProfile[] = Array.isArray(data) ? (data as MessageWithProfile[]) : [];
+  // No type assertion here; will treat messages as 'any[]'
+  const messages = Array.isArray(data) ? data : [];
 
   // Listen for new messages in real time via Supabase channel
   useEffect(() => {
