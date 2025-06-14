@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,9 +35,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // Remove all explicit type arguments from useQuery.
-  // Let it default to 'unknown'; cast when accessing.
-  const { data, refetch, isFetching } = useQuery({
+  // UseQuery workaround: destructure as any, cast at use
+  const queryResult: any = useQuery({
     queryKey: [
       "messages-thread",
       selectedThread.type,
@@ -65,7 +65,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     refetchInterval: false,
   });
 
-  // Only cast here, after retrieval
+  const { data, refetch, isFetching } = queryResult;
+
+  // Ensure type safety for messages
   const messages: MessageWithProfile[] = Array.isArray(data) ? (data as MessageWithProfile[]) : [];
 
   // Listen for new messages in real time via Supabase channel
@@ -126,7 +128,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
             No messages yet. Start the conversation!
           </div>
         ) : (
-          messages.map((msg: any) => {
+          messages.map((msg: MessageWithProfile) => {
             const isSender = msg.sender_id === currentUserId;
             return (
               <div
