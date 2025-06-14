@@ -32,8 +32,7 @@ const fetchInvoices = async (firmId: string | undefined): Promise<InvoiceListDat
 };
 
 const Invoices: React.FC = () => {
--  const { firmId } = useAuth();
-+  const { firmId, loading, firmError } = useAuth();
+  const { firmId, loading, firmError } = useAuth();
 
   const { data: invoices, isLoading, error } = useQuery({
     queryKey: ['invoices', firmId],
@@ -67,37 +66,28 @@ const Invoices: React.FC = () => {
         </div>
       )}
 
-      {!isLoading && !error && invoices && (
+      {!isLoading && !loading && !error && invoices && (
         <div className="bg-white shadow-sm rounded-2xl p-0">
           <InvoicesTable invoices={invoices} isLoading={isLoading} />
         </div>
       )}
--       {!isLoading && !error && !invoices && firmId && (
--         <div className="text-center py-12">
--            <p className="text-gray-500">No invoices found for this firm.</p>
--          </div>
--       )}
--        {!firmId && !isLoading && (
--           <div className="text-center py-12">
--            <p className="text-gray-500">Firm information not available. Cannot load invoices.</p>
--          </div>
--        )}
-+      {!isLoading && !loading && !error && !invoices && firmId && (
-+         <div className="text-center py-12">
-+           <p className="text-gray-500">No invoices found for this firm.</p>
-+         </div>
-+      )}
-+      {!isLoading && !loading && !firmId && (
-+         <div className="text-center py-12">
-+           <p className="text-gray-500">Firm information not available. Cannot load invoices.</p>
-+           {firmError && (
-+              <p className="mt-2 text-red-400 text-sm">{firmError}</p>
-+           )}
-+         </div>
-+      )}
+
+      {!isLoading && !loading && !error && (!invoices || invoices.length === 0) && firmId && (
+        <div className="text-center py-12">
+          <p className="text-gray-500">No invoices found for this firm.</p>
+        </div>
+      )}
+
+      {!isLoading && !loading && !firmId && (
+        <div className="text-center py-12">
+          <p className="text-gray-500">Firm information not available. Cannot load invoices.</p>
+          {firmError && (
+            <p className="mt-2 text-red-400 text-sm">{firmError}</p>
+          )}
+        </div>
+      )}
     </div>
   );
 };
 
 export default Invoices;
-
