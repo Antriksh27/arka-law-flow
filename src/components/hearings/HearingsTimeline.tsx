@@ -28,29 +28,38 @@ export const HearingsTimeline: React.FC<HearingsTimelineProps> = ({ filters }) =
           profiles!hearings_created_by_fkey(full_name)
         `);
 
-      // Apply filters only if they have values
+      // Apply date range filter only if both dates are provided
       if (filters.dateRange.from && filters.dateRange.to) {
         query = query
           .gte('hearing_date', format(filters.dateRange.from, 'yyyy-MM-dd'))
           .lte('hearing_date', format(filters.dateRange.to, 'yyyy-MM-dd'));
+      } else if (filters.dateRange.from) {
+        query = query.gte('hearing_date', format(filters.dateRange.from, 'yyyy-MM-dd'));
+      } else if (filters.dateRange.to) {
+        query = query.lte('hearing_date', format(filters.dateRange.to, 'yyyy-MM-dd'));
       }
 
+      // Apply status filter only if there are selected statuses
       if (filters.status.length > 0) {
         query = query.in('status', filters.status);
       }
 
-      if (filters.case && filters.case.trim() !== '') {
+      // Apply case filter only if a specific case is selected
+      if (filters.case && filters.case !== 'all' && filters.case.trim() !== '') {
         query = query.eq('case_id', filters.case);
       }
 
-      if (filters.court && filters.court.trim() !== '') {
+      // Apply court filter only if a specific court is selected
+      if (filters.court && filters.court !== 'all' && filters.court.trim() !== '') {
         query = query.ilike('court_name', `%${filters.court}%`);
       }
 
-      if (filters.assignedUser && filters.assignedUser.trim() !== '') {
+      // Apply assigned user filter only if a specific user is selected
+      if (filters.assignedUser && filters.assignedUser !== 'all' && filters.assignedUser.trim() !== '') {
         query = query.eq('assigned_to', filters.assignedUser);
       }
 
+      // Apply search query filter only if there's a search term
       if (filters.searchQuery && filters.searchQuery.trim() !== '') {
         query = query.or(
           `court_name.ilike.%${filters.searchQuery}%,` +
@@ -61,7 +70,12 @@ export const HearingsTimeline: React.FC<HearingsTimelineProps> = ({ filters }) =
 
       const { data, error } = await query.order('hearing_date', { ascending: true });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching hearings:', error);
+        throw error;
+      }
+      
+      console.log('Fetched hearings:', data);
       return data || [];
     }
   });
