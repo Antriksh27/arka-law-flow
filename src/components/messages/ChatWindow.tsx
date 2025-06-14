@@ -40,8 +40,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // Fetch messages (type cast after fetch for simplicity)
-  const { data: rawMessages, refetch, isFetching } = useQuery({
+  // RELAX useQuery TYPE INFERENCE
+  const { data, refetch, isFetching } = useQuery<any>({
     queryKey: [
       "messages-thread",
       selectedThread.type,
@@ -70,7 +70,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     refetchInterval: false,
   });
 
-  const messages: MessageWithProfile[] = Array.isArray(rawMessages) ? rawMessages : [];
+  // Safely cast data result into MessageWithProfile[]
+  const messages: MessageWithProfile[] = Array.isArray(data) ? data : [];
 
   // --- USER NAME MAP LOGIC ---
   // We keep a mapping of userId -> full_name for the current thread
