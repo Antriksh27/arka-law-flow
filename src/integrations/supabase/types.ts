@@ -1028,45 +1028,95 @@ export type Database = {
           },
         ]
       }
+      invoice_items: {
+        Row: {
+          amount: number | null
+          created_at: string
+          description: string
+          id: string
+          invoice_id: string
+          quantity: number
+          rate: number
+          updated_at: string
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          description: string
+          id?: string
+          invoice_id: string
+          quantity: number
+          rate: number
+          updated_at?: string
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          description?: string
+          id?: string
+          invoice_id?: string
+          quantity?: number
+          rate?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoices: {
         Row: {
-          amount: number
           case_id: string | null
           client_id: string
           created_at: string
-          created_by: string | null
+          created_by: string
           due_date: string
+          firm_id: string
           id: string
           invoice_number: string
           issue_date: string
-          payment_url: string | null
-          status: Database["public"]["Enums"]["invoice_status"]
+          notes: string | null
+          status: Database["public"]["Enums"]["invoice_status_enum"]
+          title: string | null
+          total_amount: number | null
+          updated_at: string
         }
         Insert: {
-          amount: number
           case_id?: string | null
           client_id: string
           created_at?: string
-          created_by?: string | null
+          created_by: string
           due_date: string
+          firm_id: string
           id?: string
           invoice_number: string
           issue_date: string
-          payment_url?: string | null
-          status?: Database["public"]["Enums"]["invoice_status"]
+          notes?: string | null
+          status?: Database["public"]["Enums"]["invoice_status_enum"]
+          title?: string | null
+          total_amount?: number | null
+          updated_at?: string
         }
         Update: {
-          amount?: number
           case_id?: string | null
           client_id?: string
           created_at?: string
-          created_by?: string | null
+          created_by?: string
           due_date?: string
+          firm_id?: string
           id?: string
           invoice_number?: string
           issue_date?: string
-          payment_url?: string | null
-          status?: Database["public"]["Enums"]["invoice_status"]
+          notes?: string | null
+          status?: Database["public"]["Enums"]["invoice_status_enum"]
+          title?: string | null
+          total_amount?: number | null
+          updated_at?: string
         }
         Relationships: [
           {
@@ -1095,6 +1145,20 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firm_statistics"
+            referencedColumns: ["firm_id"]
+          },
+          {
+            foreignKeyName: "invoices_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "law_firms"
             referencedColumns: ["id"]
           },
         ]
@@ -2441,7 +2505,7 @@ export type Database = {
         | "healthcare"
         | "retail"
         | "other"
-      invoice_status: "unpaid" | "paid" | "overdue" | "cancelled"
+      invoice_status_enum: "draft" | "sent" | "paid" | "overdue" | "cancelled"
       pipeline_type: "litigation" | "advisory" | "corporate" | "regulatory"
       task_priority: "low" | "medium" | "high"
       task_status: "todo" | "in_progress" | "completed"
@@ -2613,7 +2677,7 @@ export const Constants = {
         "retail",
         "other",
       ],
-      invoice_status: ["unpaid", "paid", "overdue", "cancelled"],
+      invoice_status_enum: ["draft", "sent", "paid", "overdue", "cancelled"],
       pipeline_type: ["litigation", "advisory", "corporate", "regulatory"],
       task_priority: ["low", "medium", "high"],
       task_status: ["todo", "in_progress", "completed"],
