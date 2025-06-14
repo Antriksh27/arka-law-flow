@@ -13,6 +13,22 @@ type Thread =
   | { type: "dm"; userId: string; name: string }
   | { type: "case"; caseId: string; title: string };
 
+// ---- ADD TYPE HERE ----
+interface MessageWithProfile {
+  id: string;
+  sender_id: string;
+  message_text: string;
+  file_url?: string | null;
+  created_at: string;
+  profiles?: {
+    full_name?: string | null;
+    profile_pic?: string | null;
+  };
+  // Allow any additional keys for forward compatibility
+  [key: string]: any;
+}
+// ---- END TYPE ----
+
 interface ChatWindowProps {
   selectedThread: Thread;
   currentUserId?: string;
@@ -30,7 +46,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     data: messages = [],
     refetch,
     isFetching,
-  } = useQuery({
+  } = useQuery< MessageWithProfile[] >({
     queryKey: [
       "messages-thread",
       selectedThread.type,
@@ -48,7 +64,6 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 
       if (selectedThread.type === "dm") {
         // Only show messages between both users (as sender or receiver)
-        // .or() takes a single string with comma separated filters
         query = query.or(
           `and(sender_id.eq.${currentUserId},receiver_id.eq.${selectedThread.userId}),and(sender_id.eq.${selectedThread.userId},receiver_id.eq.${currentUserId})`
         );
@@ -122,7 +137,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
             No messages yet. Start the conversation!
           </div>
         ) : (
-          messages.map((msg: any) => {
+          messages.map((msg) => {
             const isSender = msg.sender_id === currentUserId;
             return (
               <div
