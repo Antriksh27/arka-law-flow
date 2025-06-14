@@ -31,13 +31,13 @@ const Appointments = () => {
   return (
     <DashboardLayout>
       {viewType === 'calendar' ? (
-        <div className="fixed inset-0 top-[120px] bg-gray-50 p-4">
-          <div className="h-full flex flex-col gap-4">
-            <div className="flex-shrink-0">
+        <div className="fixed inset-0 top-[64px] bg-gray-50">
+          <div className="h-full flex flex-col">
+            <div className="flex-shrink-0 p-4 space-y-4">
               <AppointmentsHeader onViewChange={setViewType} currentView={viewType} />
               <AppointmentsFilters filters={filters} onFilterChange={setFilters} />
             </div>
-            <div className="flex-1 min-h-0">
+            <div className="flex-1 min-h-0 px-4 pb-4">
               <AppointmentsCalendar filters={filters} />
             </div>
           </div>
