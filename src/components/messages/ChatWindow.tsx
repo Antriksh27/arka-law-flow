@@ -49,7 +49,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         ? selectedThread.userId
         : selectedThread.caseId,
     ],
-    queryFn: async () => {
+    queryFn: async (): Promise<any[]> => {
       let query = supabase
         .from("messages")
         .select("id, sender_id, message_text, attachments, created_at")
