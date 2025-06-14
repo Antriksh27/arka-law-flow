@@ -28,11 +28,11 @@ const Appointments = () => {
   });
 
   return (
-    <div className="flex h-full w-full flex-col gap-6">
+    <div className="space-y-6">
       <AppointmentsHeader onViewChange={setViewType} currentView={viewType} />
       <AppointmentsFilters filters={filters} onFilterChange={setFilters} />
       
-      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm w-full flex-1">
+      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm w-full">
         {viewType === 'calendar' ? (
           <AppointmentsCalendar filters={filters} />
         ) : (
