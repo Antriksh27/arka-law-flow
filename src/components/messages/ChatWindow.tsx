@@ -40,8 +40,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // To prevent deep type inference recursion, explicitly type data as unknown at boundary.
-  // DO NOT type annotate queryFn or pass a <TData> generic to useQuery.
+  // --- KEY CHANGE: data is fully unknown, disable all inference.
+  // This defeats deep type inference for react-query and supabase together!
   const { data: rawData, refetch, isFetching } = useQuery({
     queryKey: [
       "messages-thread",
@@ -50,6 +50,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         ? selectedThread.userId
         : selectedThread.caseId,
     ],
+    // Do NOT type queryFn or anything, let it be fully untyped
     queryFn: async () => {
       let query = supabase
         .from("messages")
@@ -71,8 +72,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     refetchInterval: false,
   });
 
-  // Make messages just "any[]". All further casting occurs inside render.
-  const messages: any[] = Array.isArray(rawData) ? rawData : [];
+  // Treat as completely unsafe array, only cast on render!
+  const messages: unknown[] = Array.isArray(rawData) ? rawData : [];
 
   // --- userNameMap and user name fetching (keep unchanged)
   // We keep a mapping of userId -> full_name for the current thread
