@@ -30,27 +30,29 @@ const fetchInvoices = async (firmId: string | undefined): Promise<InvoiceListDat
     console.error('Error fetching invoices:', error);
     throw new Error(error.message);
   }
-  // Explicitly cast to InvoiceListData[]
   return data as InvoiceListData[];
 };
 
 const InvoiceStats = () => {
-  // These numbers would usually be calculated from real data.
   return (
     <div className="flex w-full flex-wrap items-start gap-4 mobile:flex-col">
-      <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-2xl border border-border bg-white px-6 py-6 shadow-sm">
+      {/* Outstanding */}
+      <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-2xl border border-gray-200 bg-white px-6 py-6 shadow-sm hover:shadow-md transition-shadow">
         <span className="text-sm font-medium text-muted-foreground">Outstanding</span>
         <span className="text-2xl font-semibold text-primary">₹4.2L</span>
       </div>
-      <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-2xl border border-border bg-white px-6 py-6 shadow-sm">
+      {/* Overdue */}
+      <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-2xl border border-gray-200 bg-white px-6 py-6 shadow-sm hover:shadow-md transition-shadow">
         <span className="text-sm font-medium text-muted-foreground">Overdue</span>
         <span className="text-2xl font-semibold text-red-600">₹1.8L</span>
       </div>
-      <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-2xl border border-border bg-white px-6 py-6 shadow-sm">
+      {/* Paid this month */}
+      <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-2xl border border-gray-200 bg-white px-6 py-6 shadow-sm hover:shadow-md transition-shadow">
         <span className="text-sm font-medium text-muted-foreground">Paid this month</span>
         <span className="text-2xl font-semibold text-green-600">₹2.6L</span>
       </div>
-      <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-2xl border border-border bg-white px-6 py-6 shadow-sm">
+      {/* Draft */}
+      <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-2xl border border-gray-200 bg-white px-6 py-6 shadow-sm hover:shadow-md transition-shadow">
         <span className="text-sm font-medium text-muted-foreground">Draft</span>
         <span className="text-2xl font-semibold text-primary">12</span>
       </div>
@@ -62,28 +64,30 @@ const InvoiceToolbar = ({ total = 0 }: { total: number }) => {
   return (
     <div className="flex w-full flex-wrap items-center gap-4 mb-2">
       <div className="flex grow shrink-0 basis-0 items-center gap-3">
-        <Input
-          className="max-w-xs bg-white rounded-lg border border-border text-base focus:ring-2 focus:ring-primary outline-none"
-          startIcon={<Search className="w-4 h-4 text-muted-foreground" />}
-          placeholder="Search invoices..."
-          // Currently not working, you can connect to state/filter logic later.
-        />
-        <Button variant="outline" className="flex items-center gap-2">
+        {/* Make search styling match hearings -- bg-white, border, text-base */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+          <Input
+            className="max-w-xs pl-10 bg-white rounded-lg border border-gray-200 text-base focus:ring-2 focus:ring-primary outline-none"
+            placeholder="Search invoices..."
+          />
+        </div>
+        <Button variant="outline" className="flex items-center gap-2 border-gray-200 text-gray-700">
           Status
         </Button>
-        <Button variant="outline" className="flex items-center gap-2">
+        <Button variant="outline" className="flex items-center gap-2 border-gray-200 text-gray-700">
           Date Range
         </Button>
-        <Button variant="outline" className="flex items-center gap-2">
+        <Button variant="outline" className="flex items-center gap-2 border-gray-200 text-gray-700">
           Case
         </Button>
       </div>
       <div className="flex items-center gap-2">
-        <Button variant="secondary" size="icon">
+        <Button variant="secondary" size="icon" className="border-gray-200">
           <Download className="w-4 h-4" />
           <span className="sr-only">Download as CSV</span>
         </Button>
-        <Button variant="secondary" size="icon">
+        <Button variant="secondary" size="icon" className="border-gray-200">
           <RefreshCw className="w-4 h-4" />
           <span className="sr-only">Refresh</span>
         </Button>
@@ -117,36 +121,34 @@ const Invoices: React.FC = () => {
 
   return (
     <div className="min-h-[calc(100vh-64px)] bg-legal-background flex flex-col gap-6 p-6 max-w-7xl mx-auto">
+      {/* Breadcrumbs */}
       <div className="flex w-full flex-col items-start">
         <Breadcrumbs />
       </div>
+      {/* Header */}
       <div className="flex w-full flex-wrap items-center gap-4">
         <div className="flex grow shrink-0 basis-0 items-center gap-2">
           <h1 className="text-2xl font-semibold text-gray-900">Invoices</h1>
           <Badge variant="secondary">{invoices ? `${invoices.length} total` : "--"}</Badge>
         </div>
         <Button
-          className="bg-primary hover:bg-primary/90 text-white"
+          className="bg-primary hover:bg-primary/90 text-white px-4"
         >
           <Plus className="w-4 h-4 mr-2" />
           New Invoice
         </Button>
       </div>
-
-      {/* Invoice Stats Row */}
+      {/* Stats Row (cards) */}
       <InvoiceStats />
-
       {/* Filters/Search Bar */}
       <InvoiceToolbar total={invoices?.length || 0} />
-
-      {/* Table and loading/error indicators */}
+      {/* Table / Loading / Error */}
       {(isLoading || loading) && (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <span className="ml-2 text-gray-600">Loading invoices...</span>
         </div>
       )}
-
       {error && (
         <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md mt-4">
           <div className="flex">
@@ -161,19 +163,16 @@ const Invoices: React.FC = () => {
           </div>
         </div>
       )}
-
       {!isLoading && !loading && !error && invoices && (
-        <div className="bg-white shadow-sm rounded-2xl p-0 mt-2">
+        <div className="bg-white shadow-sm rounded-2xl border border-gray-200 p-0 mt-2">
           <InvoicesTable invoices={invoices} isLoading={isLoading} />
         </div>
       )}
-
       {!isLoading && !loading && !error && (!invoices || invoices.length === 0) && firmId && (
         <div className="text-center py-12">
           <p className="text-gray-500">No invoices found for this firm.</p>
         </div>
       )}
-
       {!isLoading && !loading && !firmId && (
         <div className="text-center py-12">
           <p className="text-gray-500">Firm information not available. Cannot load invoices.</p>
