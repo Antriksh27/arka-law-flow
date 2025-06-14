@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,8 +41,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // UseQuery with explicit any type to avoid TS2589 recursion error
-  const { data, refetch, isFetching } = useQuery<any>({
+  // Remove type parameter from useQuery to avoid deep type instantiation
+  const { data, refetch, isFetching } = useQuery({
     queryKey: [
       "messages-thread",
       selectedThread.type,
@@ -70,6 +71,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     refetchInterval: false,
   });
 
+  // Now handle the cast safely after useQuery
   const messages: MessageWithProfile[] = Array.isArray(data) ? (data as MessageWithProfile[]) : [];
 
   // --- USER NAME MAP LOGIC ---
