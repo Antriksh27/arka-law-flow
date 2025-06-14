@@ -65,26 +65,26 @@ const InvoiceToolbar = ({
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
           <Input className="max-w-xs pl-10 bg-white rounded-lg border border-gray-200 text-base focus:ring-2 focus:ring-primary outline-none" placeholder="Search invoices..." />
         </div>
-        <Button variant="outline" className="flex items-center gap-2 border-gray-200 text-gray-700">
+        <Button variant="outline" className="flex items-center gap-2 border-gray-200 text-slate-50 bg-slate-900 hover:bg-slate-800">
           Status
         </Button>
-        <Button variant="outline" className="flex items-center gap-2 border-gray-200 text-gray-700">
+        <Button variant="outline" className="flex items-center gap-2 border-gray-200 text-slate-50 bg-slate-900 hover:bg-slate-800">
           Date Range
         </Button>
-        <Button variant="outline" className="flex items-center gap-2 border-gray-200 text-gray-700">
+        <Button variant="outline" className="flex items-center gap-2 border-gray-200 text-slate-50 bg-slate-900 hover:bg-slate-800">
           Case
         </Button>
       </div>
       <div className="flex items-center gap-2">
-        <Button variant="secondary" size="icon" className="border-gray-200">
+        <Button variant="secondary" size="icon" className="border-gray-200 text-slate-50 bg-slate-900 hover:bg-slate-800">
           <Download className="w-4 h-4" />
           <span className="sr-only">Download as CSV</span>
         </Button>
-        <Button variant="secondary" size="icon" className="border-gray-200">
+        <Button variant="secondary" size="icon" className="border-gray-200 text-slate-50 bg-slate-900 hover:bg-slate-800">
           <RefreshCw className="w-4 h-4" />
           <span className="sr-only">Refresh</span>
         </Button>
-        <Button className="bg-primary hover:bg-primary/90 text-white px-4">
+        <Button className="text-white px-4 bg-slate-900 hover:bg-slate-800">
           <Plus className="w-4 h-4 mr-1" />
           New Invoice
         </Button>
