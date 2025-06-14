@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Plus, Search, MoreHorizontal, Eye } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -37,6 +36,7 @@ export const ClientList = () => {
   const [viewingClient, setViewingClient] = useState<Client | null>(null);
 
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const {
     data: clients = [],
@@ -109,6 +109,10 @@ export const ClientList = () => {
         variant: "destructive"
       });
     }
+  };
+
+  const handleClientNameClick = (clientId: string) => {
+    navigate(`/clients/${clientId}`);
   };
 
   console.log('ClientList render state:', { isLoading, error, clientsCount: clients.length });
@@ -198,11 +202,14 @@ export const ClientList = () => {
             </TableHeader>
             <TableBody>
               {clients.map(client => (
-                <TableRow key={client.id} className="cursor-pointer hover:bg-gray-50">
+                <TableRow key={client.id} className="hover:bg-gray-50">
                   <TableCell className="font-medium">
-                    <div className="text-gray-900">
+                    <button
+                      onClick={() => handleClientNameClick(client.id)}
+                      className="text-gray-900 hover:text-blue-600 hover:underline text-left font-medium cursor-pointer"
+                    >
                       {client.full_name}
-                    </div>
+                    </button>
                   </TableCell>
                   <TableCell>
                     <div className="text-sm text-gray-900">{client.email || '-'}</div>
