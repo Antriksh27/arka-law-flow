@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import DashboardLayout from '../components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -196,151 +195,147 @@ const Tasks = () => {
 
   if (isLoading) {
     return (
-      <DashboardLayout>
-        <div className="text-center py-8">Loading tasks...</div>
-      </DashboardLayout>
+      <div className="text-center py-8">Loading tasks...</div>
     );
   }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900">Task Management</h1>
-            <p className="text-gray-600 mt-1">Manage and track all tasks across your cases</p>
-          </div>
-          <Button onClick={() => setShowCreateDialog(true)} className="bg-slate-800 hover:bg-slate-700">
-            <Plus className="w-4 h-4 mr-2" />
-            New Task
-          </Button>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900">Task Management</h1>
+          <p className="text-gray-600 mt-1">Manage and track all tasks across your cases</p>
         </div>
+        <Button onClick={() => setShowCreateDialog(true)} className="bg-slate-800 hover:bg-slate-700">
+          <Plus className="w-4 h-4 mr-2" />
+          New Task
+        </Button>
+      </div>
 
-        {/* Filters */}
+      {/* Filters */}
+      <Card className="bg-white border-gray-200">
+        <CardContent className="p-6">
+          <div className="flex flex-wrap gap-4 items-center">
+            <div className="flex items-center gap-2">
+              <Search className="w-4 h-4 text-gray-400" />
+              <Input
+                placeholder="Search tasks..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-64 bg-white border-gray-300"
+              />
+            </div>
+            
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-40 bg-white border-gray-300">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent className="bg-white">
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="todo">To Do</SelectItem>
+                <SelectItem value="in_progress">In Progress</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+              <SelectTrigger className="w-40 bg-white border-gray-300">
+                <SelectValue placeholder="Priority" />
+              </SelectTrigger>
+              <SelectContent className="bg-white">
+                <SelectItem value="all">All Priority</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="low">Low</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
+              <SelectTrigger className="w-48 bg-white border-gray-300">
+                <SelectValue placeholder="Assignee" />
+              </SelectTrigger>
+              <SelectContent className="bg-white">
+                <SelectItem value="all">All Assignees</SelectItem>
+                <SelectItem value="unassigned">Unassigned</SelectItem>
+                {teamMembers.map((member) => (
+                  <SelectItem key={member.id} value={member.id}>
+                    {member.full_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Task Statistics */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card className="bg-white border-gray-200">
           <CardContent className="p-6">
-            <div className="flex flex-wrap gap-4 items-center">
-              <div className="flex items-center gap-2">
-                <Search className="w-4 h-4 text-gray-400" />
-                <Input
-                  placeholder="Search tasks..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-64 bg-white border-gray-300"
-                />
-              </div>
-              
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-40 bg-white border-gray-300">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent className="bg-white">
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="todo">To Do</SelectItem>
-                  <SelectItem value="in_progress">In Progress</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-                <SelectTrigger className="w-40 bg-white border-gray-300">
-                  <SelectValue placeholder="Priority" />
-                </SelectTrigger>
-                <SelectContent className="bg-white">
-                  <SelectItem value="all">All Priority</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="low">Low</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
-                <SelectTrigger className="w-48 bg-white border-gray-300">
-                  <SelectValue placeholder="Assignee" />
-                </SelectTrigger>
-                <SelectContent className="bg-white">
-                  <SelectItem value="all">All Assignees</SelectItem>
-                  <SelectItem value="unassigned">Unassigned</SelectItem>
-                  {teamMembers.map((member) => (
-                    <SelectItem key={member.id} value={member.id}>
-                      {member.full_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <div className="text-2xl font-bold text-gray-900">{tasks.length}</div>
+            <div className="text-sm text-gray-600">Total Tasks</div>
           </CardContent>
         </Card>
-
-        {/* Task Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card className="bg-white border-gray-200">
-            <CardContent className="p-6">
-              <div className="text-2xl font-bold text-gray-900">{tasks.length}</div>
-              <div className="text-sm text-gray-600">Total Tasks</div>
-            </CardContent>
-          </Card>
-          <Card className="bg-white border-gray-200">
-            <CardContent className="p-6">
-              <div className="text-2xl font-bold text-blue-600">{tasksByStatus.todo.length}</div>
-              <div className="text-sm text-gray-600">To Do</div>
-            </CardContent>
-          </Card>
-          <Card className="bg-white border-gray-200">
-            <CardContent className="p-6">
-              <div className="text-2xl font-bold text-gray-600">{tasksByStatus.in_progress.length}</div>
-              <div className="text-sm text-gray-600">In Progress</div>
-            </CardContent>
-          </Card>
-          <Card className="bg-white border-gray-200">
-            <CardContent className="p-6">
-              <div className="text-2xl font-bold text-green-600">{tasksByStatus.completed.length}</div>
-              <div className="text-sm text-gray-600">Completed</div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Tasks Display */}
-        {tasks.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {Object.entries(tasksByStatus).map(([status, statusTasks]) => (
-              <Card key={status} className="h-fit bg-white border-gray-200 shadow-sm">
-                <CardHeader className="pb-3 bg-gray-50 border-b border-gray-100">
-                  <CardTitle className="text-sm font-medium text-gray-700 uppercase tracking-wide">
-                    {status.replace('_', ' ')} ({statusTasks.length})
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3 p-4">
-                  {statusTasks.map((task) => (
-                    <TaskCard key={task.id} task={task} />
-                  ))}
-                  
-                  {statusTasks.length === 0 && (
-                    <div className="text-center py-8 text-gray-400">
-                      <CheckSquare className="w-8 h-8 mx-auto mb-2" />
-                      <p className="text-xs">No {status.replace('_', ' ')} tasks</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-12 text-gray-500">
-            <CheckSquare className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-            <p className="text-lg font-medium">No tasks found</p>
-            <p className="text-gray-400 mb-6">Get started by creating your first task</p>
-            <Button onClick={() => setShowCreateDialog(true)} className="bg-slate-800 hover:bg-slate-700">
-              <Plus className="w-4 h-4 mr-2" />
-              Create First Task
-            </Button>
-          </div>
-        )}
-
-        <CreateTaskDialog open={showCreateDialog} onClose={() => setShowCreateDialog(false)} />
+        <Card className="bg-white border-gray-200">
+          <CardContent className="p-6">
+            <div className="text-2xl font-bold text-blue-600">{tasksByStatus.todo.length}</div>
+            <div className="text-sm text-gray-600">To Do</div>
+          </CardContent>
+        </Card>
+        <Card className="bg-white border-gray-200">
+          <CardContent className="p-6">
+            <div className="text-2xl font-bold text-gray-600">{tasksByStatus.in_progress.length}</div>
+            <div className="text-sm text-gray-600">In Progress</div>
+          </CardContent>
+        </Card>
+        <Card className="bg-white border-gray-200">
+          <CardContent className="p-6">
+            <div className="text-2xl font-bold text-green-600">{tasksByStatus.completed.length}</div>
+            <div className="text-sm text-gray-600">Completed</div>
+          </CardContent>
+        </Card>
       </div>
-    </DashboardLayout>
+
+      {/* Tasks Display */}
+      {tasks.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {Object.entries(tasksByStatus).map(([status, statusTasks]) => (
+            <Card key={status} className="h-fit bg-white border-gray-200 shadow-sm">
+              <CardHeader className="pb-3 bg-gray-50 border-b border-gray-100">
+                <CardTitle className="text-sm font-medium text-gray-700 uppercase tracking-wide">
+                  {status.replace('_', ' ')} ({statusTasks.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 p-4">
+                {statusTasks.map((task) => (
+                  <TaskCard key={task.id} task={task} />
+                ))}
+                
+                {statusTasks.length === 0 && (
+                  <div className="text-center py-8 text-gray-400">
+                    <CheckSquare className="w-8 h-8 mx-auto mb-2" />
+                    <p className="text-xs">No {status.replace('_', ' ')} tasks</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-12 text-gray-500">
+          <CheckSquare className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+          <p className="text-lg font-medium">No tasks found</p>
+          <p className="text-gray-400 mb-6">Get started by creating your first task</p>
+          <Button onClick={() => setShowCreateDialog(true)} className="bg-slate-800 hover:bg-slate-700">
+            <Plus className="w-4 h-4 mr-2" />
+            Create First Task
+          </Button>
+        </div>
+      )}
+
+      <CreateTaskDialog open={showCreateDialog} onClose={() => setShowCreateDialog(false)} />
+    </div>
   );
 };
 
