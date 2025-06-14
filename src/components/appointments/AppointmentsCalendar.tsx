@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -28,7 +29,8 @@ interface AppointmentsCalendarProps {
 interface SupabaseAppointment {
   id: string;
   title: string | null;
-  start_time: string | null;
+  appointment_date: string | null;
+  appointment_time: string | null;
   status: string | null;
   type: string | null;
   lawyer_id: string | null;
@@ -60,20 +62,21 @@ export const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({
   const { data: rawAppointments, isLoading, error } = useQuery<SupabaseAppointment[], Error>({
     queryKey: ['appointments', format(currentDisplayMonth, 'yyyy-MM')],
     queryFn: async () => {
-      // Use a more explicit approach with a separate query for lawyer names
+      // Query appointments with separate date and time fields
       const { data: appointmentsData, error: appointmentsError } = await supabase
         .from('appointments')
         .select(`
           id,
           title,
-          start_time,
+          appointment_date,
+          appointment_time,
           status,
           type,
           lawyer_id
         `) 
-        .gte('start_time', firstDayOfSelectedMonth.toISOString())
-        .lte('start_time', lastDayOfSelectedMonth.toISOString())
-        .order('start_time', { ascending: true });
+        .gte('appointment_date', format(firstDayOfSelectedMonth, 'yyyy-MM-dd'))
+        .lte('appointment_date', format(lastDayOfSelectedMonth, 'yyyy-MM-dd'))
+        .order('appointment_date', { ascending: true });
 
       if (appointmentsError) {
         console.error('Error fetching appointments:', appointmentsError);
@@ -123,22 +126,28 @@ export const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({
     const eventsByDay: Record<string, CalendarEvent[]> = {};
 
     rawAppointments.forEach((app) => {
-      if (!app.start_time || !app.id) return;
+      if (!app.appointment_date || !app.id) return;
 
-      const startTime = parseISO(app.start_time);
-      const dayKey = format(startTime, "yyyy-MM-dd");
+      const appointmentDate = parseISO(app.appointment_date);
+      const dayKey = format(appointmentDate, "yyyy-MM-dd");
 
       if (!eventsByDay[dayKey]) {
         eventsByDay[dayKey] = [];
       }
       
       const assigneeName = app.lawyer_name || 'N/A';
+      const timeDisplay = app.appointment_time ? format(parseISO(`2000-01-01T${app.appointment_time}`), 'p') : 'No time';
+      
+      // Construct datetime for the event
+      const datetime = app.appointment_time 
+        ? `${app.appointment_date}T${app.appointment_time}` 
+        : `${app.appointment_date}T00:00:00`;
 
       eventsByDay[dayKey].push({
         id: app.id,
         name: `${app.title || 'No Title'} (${assigneeName})`,
-        time: format(startTime, 'p'), // e.g., 2:00 PM
-        datetime: app.start_time,
+        time: timeDisplay,
+        datetime: datetime,
       });
     });
 
