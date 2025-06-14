@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import DashboardLayout from '../components/layout/DashboardLayout';
 import { AppointmentsHeader } from '../components/appointments/AppointmentsHeader';
 import { AppointmentsFilters } from '../components/appointments/AppointmentsFilters';
 import { AppointmentsTable } from '../components/appointments/AppointmentsTable';
@@ -29,20 +28,18 @@ const Appointments = () => {
   });
 
   return (
-    <DashboardLayout>
-      <div className="container max-w-none flex h-full w-full flex-col items-start gap-6 bg-gray-50 py-12">
-        <AppointmentsHeader onViewChange={setViewType} currentView={viewType} />
-        <AppointmentsFilters filters={filters} onFilterChange={setFilters} />
-        
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm w-full flex-1">
-          {viewType === 'calendar' ? (
-            <AppointmentsCalendar filters={filters} />
-          ) : (
-            <AppointmentsTable filters={filters} />
-          )}
-        </div>
+    <div className="container max-w-none flex h-full w-full flex-col items-start gap-6 bg-gray-50 py-12">
+      <AppointmentsHeader onViewChange={setViewType} currentView={viewType} />
+      <AppointmentsFilters filters={filters} onFilterChange={setFilters} />
+      
+      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm w-full flex-1">
+        {viewType === 'calendar' ? (
+          <AppointmentsCalendar filters={filters} />
+        ) : (
+          <AppointmentsTable filters={filters} />
+        )}
       </div>
-    </DashboardLayout>
+    </div>
   );
 };
 
