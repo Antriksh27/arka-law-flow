@@ -3,7 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { FilterState } from '../../pages/Appointments'; // Kept for future use if filters apply to calendar
-import { Button } from '@/components/ui/button'; // Original Button for header controls
+// import { Button } from '@/components/ui/button'; // Original Button for header controls - no longer used directly here
 import { FullScreenCalendar } from '@/components/ui/fullscreen-calendar';
 import { useDialog } from '@/hooks/use-dialog';
 import { CreateAppointmentDialog } from './CreateAppointmentDialog';
@@ -19,6 +19,7 @@ import {
   startOfMonth, 
   endOfMonth,
   add,
+  startOfToday, // Added import for startOfToday
 } from 'date-fns';
 
 interface AppointmentsCalendarProps {
@@ -53,7 +54,7 @@ export const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({
   filters,
 }) => {
   const { openDialog } = useDialog();
-  const [currentDisplayMonth, setCurrentDisplayMonth] = useState<Date>(startOfToday());
+  const [currentDisplayMonth, setCurrentDisplayMonth] = useState<Date>(startOfToday()); // Used startOfToday
 
   const firstDayOfSelectedMonth = startOfMonth(currentDisplayMonth);
   const lastDayOfSelectedMonth = endOfMonth(currentDisplayMonth);
@@ -99,13 +100,11 @@ export const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({
         eventsByDay[dayKey] = [];
       }
       
-      // Resolve potential full_name access issue more robustly
       let assigneeName = 'N/A';
       if (app.profiles) {
         if (Array.isArray(app.profiles) && app.profiles.length > 0) {
           assigneeName = app.profiles[0]?.full_name || 'N/A';
         } else if (!Array.isArray(app.profiles)) {
-          // This case handles if profiles is an object
           assigneeName = (app.profiles as { full_name: string | null })?.full_name || 'N/A';
         }
       }
@@ -134,16 +133,16 @@ export const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({
   };
   
   const handleDateSelect = (date: Date) => {
-    // Placeholder for what happens when a date is selected, e.g., open day view or create event for this day
     console.log("Date selected:", date);
     // Potentially open CreateAppointmentDialog with the date pre-filled
-    openDialog(<CreateAppointmentDialog selectedDate={date} />);
+    // Removed selectedDate prop as it's not defined on CreateAppointmentDialog
+    openDialog(<CreateAppointmentDialog />);
   };
 
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center p-10 bg-white border border-borderGray rounded-2xl shadow-sm">
+      <div className="flex items-center justify-center p-10 bg-white border border-borderGray rounded-2xl shadow-sm min-h-[calc(100vh-300px)]">
         <Loader2 className="h-12 w-12 animate-spin text-primaryBlue" />
         <span className="ml-4 text-lg text-textBase">Loading appointments...</span>
       </div>
@@ -152,7 +151,7 @@ export const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center p-10 bg-red-50 border border-red-200 rounded-2xl shadow-sm">
+      <div className="flex flex-col items-center justify-center p-10 bg-red-50 border border-red-200 rounded-2xl shadow-sm min-h-[calc(100vh-300px)]">
         <AlertCircle className="h-12 w-12 text-red-500" />
         <span className="mt-4 text-lg text-red-700">Error loading appointments.</span>
         <p className="text-sm text-red-600">{error.message}</p>
