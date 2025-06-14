@@ -17,6 +17,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../ui/select';
+import { Calendar } from '../ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useDialog } from '@/hooks/use-dialog';
 import { toast } from 'sonner';
@@ -46,13 +50,12 @@ export const CreateAppointmentDialog: React.FC = () => {
   
   const [formData, setFormData] = useState({
     title: '',
-    appointment_date: '',
+    appointment_date: new Date(),
     appointment_time: '',
     duration_minutes: 60,
     client_id: '',
     lawyer_id: '',
     case_id: '',
-    location: 'in_person',
     notes: '',
     status: 'upcoming',
     type: 'in-person' as 'in-person' | 'other' | 'call' | 'video-call'
@@ -106,13 +109,14 @@ export const CreateAppointmentDialog: React.FC = () => {
 
       const appointmentData = {
         title: formData.title,
-        appointment_date: formData.appointment_date,
+        appointment_date: typeof formData.appointment_date === 'string' 
+          ? formData.appointment_date 
+          : format(formData.appointment_date, 'yyyy-MM-dd'),
         appointment_time: formData.appointment_time,
         duration_minutes: Number(formData.duration_minutes),
         client_id: formData.client_id || null,
         lawyer_id: formData.lawyer_id,
         case_id: formData.case_id || null,
-        location: formData.location,
         notes: formData.notes,
         status: formData.status,
         type: formData.type,
@@ -136,135 +140,164 @@ export const CreateAppointmentDialog: React.FC = () => {
     }
   };
 
+  const handleInputChange = (field: keyof typeof formData, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
   return (
     <Dialog open onOpenChange={closeDialog}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Create New Appointment</DialogTitle>
+      <DialogContent className="max-w-2xl max-h-[90vh] bg-white border-gray-900 overflow-hidden">
+        <DialogHeader className="pb-4">
+          <DialogTitle className="text-gray-900">Create New Appointment</DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <Label htmlFor="title">Title</Label>
+        <div className="overflow-y-auto px-1 max-h-[calc(90vh-120px)]">
+          <form onSubmit={handleSubmit} className="space-y-4 pr-3">
+            <div className="space-y-2">
+              <Label htmlFor="title" className="text-gray-900">Title *</Label>
               <Input
                 id="title"
                 value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                onChange={(e) => handleInputChange('title', e.target.value)}
                 placeholder="Appointment title"
                 required
+                className="bg-white border-gray-900 text-gray-900"
               />
             </div>
             
-            <div>
-              <Label htmlFor="appointment_date">Date</Label>
-              <Input
-                id="appointment_date"
-                type="date"
-                value={formData.appointment_date}
-                onChange={(e) => setFormData({ ...formData, appointment_date: e.target.value })}
-                required
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-gray-900">Date *</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start text-left bg-white border-gray-900 text-gray-900 hover:bg-gray-50">
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {formData.appointment_date ? format(
+                        typeof formData.appointment_date === 'string' 
+                          ? new Date(formData.appointment_date) 
+                          : formData.appointment_date, 
+                        'PPP'
+                      ) : 'Select date'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 bg-white border-gray-900">
+                    <Calendar
+                      mode="single"
+                      selected={typeof formData.appointment_date === 'string' 
+                        ? new Date(formData.appointment_date) 
+                        : formData.appointment_date}
+                      onSelect={(date) => handleInputChange('appointment_date', date || new Date())}
+                      initialFocus
+                      className="bg-white"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="appointment_time" className="text-gray-900">Time</Label>
+                <Input
+                  id="appointment_time"
+                  type="time"
+                  value={formData.appointment_time}
+                  onChange={(e) => handleInputChange('appointment_time', e.target.value)}
+                  required
+                  className="bg-white border-gray-900 text-gray-900"
+                />
+              </div>
             </div>
             
-            <div>
-              <Label htmlFor="appointment_time">Time</Label>
-              <Input
-                id="appointment_time"
-                type="time"
-                value={formData.appointment_time}
-                onChange={(e) => setFormData({ ...formData, appointment_time: e.target.value })}
-                required
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="duration_minutes" className="text-gray-900">Duration (minutes)</Label>
+                <Select
+                  value={formData.duration_minutes.toString()}
+                  onValueChange={(value) => handleInputChange('duration_minutes', parseInt(value))}
+                >
+                  <SelectTrigger className="bg-white border-gray-900 text-gray-900">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border-gray-900">
+                    <SelectItem value="30" className="text-gray-900">30 minutes</SelectItem>
+                    <SelectItem value="60" className="text-gray-900">1 hour</SelectItem>
+                    <SelectItem value="90" className="text-gray-900">1.5 hours</SelectItem>
+                    <SelectItem value="120" className="text-gray-900">2 hours</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="type" className="text-gray-900">Type</Label>
+                <Select
+                  value={formData.type}
+                  onValueChange={(value) => handleInputChange('type', value as 'in-person' | 'other' | 'call' | 'video-call')}
+                >
+                  <SelectTrigger className="bg-white border-gray-900 text-gray-900">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border-gray-900">
+                    <SelectItem value="in-person" className="text-gray-900">In-Person Meeting</SelectItem>
+                    <SelectItem value="video-call" className="text-gray-900">Video Call</SelectItem>
+                    <SelectItem value="call" className="text-gray-900">Phone Call</SelectItem>
+                    <SelectItem value="other" className="text-gray-900">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             
-            <div>
-              <Label htmlFor="duration_minutes">Duration (minutes)</Label>
-              <Select
-                value={formData.duration_minutes.toString()}
-                onValueChange={(value) => setFormData({ ...formData, duration_minutes: parseInt(value) })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="30">30 minutes</SelectItem>
-                  <SelectItem value="60">1 hour</SelectItem>
-                  <SelectItem value="90">1.5 hours</SelectItem>
-                  <SelectItem value="120">2 hours</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="client_id" className="text-gray-900">Client</Label>
+                <Select
+                  value={formData.client_id}
+                  onValueChange={(value) => handleInputChange('client_id', value)}
+                >
+                  <SelectTrigger className="bg-white border-gray-900 text-gray-900">
+                    <SelectValue placeholder="Select client" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border-gray-900">
+                    {clients.map((client) => (
+                      <SelectItem key={client.id} value={client.id} className="text-gray-900">
+                        {client.full_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="lawyer_id" className="text-gray-900">Assigned To *</Label>
+                <Select
+                  value={formData.lawyer_id}
+                  onValueChange={(value) => handleInputChange('lawyer_id', value)}
+                  required
+                >
+                  <SelectTrigger className="bg-white border-gray-900 text-gray-900">
+                    <SelectValue placeholder="Select user" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border-gray-900">
+                    {users.map((user) => (
+                      <SelectItem key={user.id} value={user.id} className="text-gray-900">
+                        {user.full_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             
-            <div>
-              <Label htmlFor="type">Type</Label>
-              <Select
-                value={formData.type}
-                onValueChange={(value) => setFormData({ ...formData, type: value as 'in-person' | 'other' | 'call' | 'video-call' })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="in-person">In-Person Meeting</SelectItem>
-                  <SelectItem value="video-call">Video Call</SelectItem>
-                  <SelectItem value="call">Phone Call</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <Label htmlFor="client_id">Client</Label>
-              <Select
-                value={formData.client_id}
-                onValueChange={(value) => setFormData({ ...formData, client_id: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select client" />
-                </SelectTrigger>
-                <SelectContent>
-                  {clients.map((client) => (
-                    <SelectItem key={client.id} value={client.id}>
-                      {client.full_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <Label htmlFor="lawyer_id">Assigned To</Label>
-              <Select
-                value={formData.lawyer_id}
-                onValueChange={(value) => setFormData({ ...formData, lawyer_id: value })}
-                required
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select user" />
-                </SelectTrigger>
-                <SelectContent>
-                  {users.map((user) => (
-                    <SelectItem key={user.id} value={user.id}>
-                      {user.full_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <Label htmlFor="case_id">Related Case (Optional)</Label>
+            <div className="space-y-2">
+              <Label htmlFor="case_id" className="text-gray-900">Related Case (Optional)</Label>
               <Select
                 value={formData.case_id}
-                onValueChange={(value) => setFormData({ ...formData, case_id: value })}
+                onValueChange={(value) => handleInputChange('case_id', value)}
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-white border-gray-900 text-gray-900">
                   <SelectValue placeholder="Select case" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white border-gray-900">
                   {cases.map((case_) => (
-                    <SelectItem key={case_.id} value={case_.id}>
+                    <SelectItem key={case_.id} value={case_.id} className="text-gray-900">
                       {case_.case_title} ({case_.case_number})
                     </SelectItem>
                   ))}
@@ -272,27 +305,32 @@ export const CreateAppointmentDialog: React.FC = () => {
               </Select>
             </div>
             
-            <div className="col-span-2">
-              <Label htmlFor="notes">Notes</Label>
+            <div className="space-y-2">
+              <Label htmlFor="notes" className="text-gray-900">Notes</Label>
               <Textarea
                 id="notes"
                 value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                onChange={(e) => handleInputChange('notes', e.target.value)}
                 placeholder="Additional notes or agenda items..."
                 rows={3}
+                className="bg-white border-gray-900 text-gray-900"
               />
             </div>
-          </div>
-          
-          <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={closeDialog}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? 'Creating...' : 'Create Appointment'}
-            </Button>
-          </div>
-        </form>
+
+            <div className="flex justify-end gap-3 pt-4 sticky bottom-0 bg-white border-t border-gray-200 pb-2">
+              <Button type="button" variant="outline" onClick={closeDialog} className="bg-white border-gray-900 text-gray-900 hover:bg-gray-50">
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                className="bg-blue-700 hover:bg-blue-800 text-white"
+                disabled={loading}
+              >
+                {loading ? 'Creating...' : 'Create Appointment'}
+              </Button>
+            </div>
+          </form>
+        </div>
       </DialogContent>
     </Dialog>
   );
