@@ -19,7 +19,7 @@ import {
   startOfMonth, 
   endOfMonth,
   add,
-  startOfToday, // Added import for startOfToday
+  startOfToday,
 } from 'date-fns';
 
 interface AppointmentsCalendarProps {
@@ -34,7 +34,7 @@ interface SupabaseAppointment {
   status: string | null;
   type: string | null;
   lawyer_id: string | null;
-  profiles: { full_name: string | null; }[] | { full_name: string | null; } | null; // Adjusted to handle array or object
+  lawyer_profile: { full_name: string | null; } | null; // Changed from profiles to lawyer_profile
 }
 
 // Define types for FullScreenCalendar data transformation
@@ -54,7 +54,7 @@ export const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({
   filters,
 }) => {
   const { openDialog } = useDialog();
-  const [currentDisplayMonth, setCurrentDisplayMonth] = useState<Date>(startOfToday()); // Used startOfToday
+  const [currentDisplayMonth, setCurrentDisplayMonth] = useState<Date>(startOfToday());
 
   const firstDayOfSelectedMonth = startOfMonth(currentDisplayMonth);
   const lastDayOfSelectedMonth = endOfMonth(currentDisplayMonth);
@@ -71,8 +71,8 @@ export const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({
           status,
           type,
           lawyer_id,
-          profiles ( full_name )
-        `)
+          lawyer_profile:profiles ( full_name ) 
+        `) // Changed to lawyer_profile:profiles ( full_name )
         .gte('start_time', firstDayOfSelectedMonth.toISOString())
         .lte('start_time', lastDayOfSelectedMonth.toISOString())
         .order('start_time', { ascending: true });
@@ -101,12 +101,9 @@ export const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({
       }
       
       let assigneeName = 'N/A';
-      if (app.profiles) {
-        if (Array.isArray(app.profiles) && app.profiles.length > 0) {
-          assigneeName = app.profiles[0]?.full_name || 'N/A';
-        } else if (!Array.isArray(app.profiles)) {
-          assigneeName = (app.profiles as { full_name: string | null })?.full_name || 'N/A';
-        }
+      // Use lawyer_profile to get the name
+      if (app.lawyer_profile && app.lawyer_profile.full_name) {
+        assigneeName = app.lawyer_profile.full_name;
       }
 
 
@@ -135,7 +132,6 @@ export const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({
   const handleDateSelect = (date: Date) => {
     console.log("Date selected:", date);
     // Potentially open CreateAppointmentDialog with the date pre-filled
-    // Removed selectedDate prop as it's not defined on CreateAppointmentDialog
     openDialog(<CreateAppointmentDialog />);
   };
 
@@ -169,3 +165,4 @@ export const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({
     />
   );
 };
+
