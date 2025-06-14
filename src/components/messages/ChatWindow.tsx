@@ -81,7 +81,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     // Fetch full names for both users in DM, or all case participants
     async function fetchUserNames() {
       if (!messages || messages.length === 0) return setUserNameMap({});
-      let userIds = Array.from(new Set(messages.map((m) => m.sender_id)));
+      let userIds = Array.from(
+        new Set(messages.map((m) => (m as MessageWithProfile).sender_id))
+      );
       if (userIds.length === 0) return setUserNameMap({});
 
       const { data, error } = await supabase
