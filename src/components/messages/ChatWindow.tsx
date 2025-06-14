@@ -40,7 +40,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // --- NO generics at useQuery; let TypeScript infer nothing. See explanation above.
+  // --- React Query: never use generics here; let data be untyped
   const { data: rawData, refetch, isFetching } = useQuery({
     queryKey: [
       "messages-thread",
@@ -70,8 +70,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     refetchInterval: false,
   });
 
-  // ---- FIX: Immediately cast "messages" to unknown[] only, never a shape, and never as MessageWithProfile[]
-  const messages = (rawData ?? []) as unknown[];
+  // --- Ensure messages is always unknown[] at this step, only cast inside map
+  const messages: unknown[] = rawData ?? [];
 
   // --- userNameMap and user name fetching (keep unchanged)
   // We keep a mapping of userId -> full_name for the current thread
@@ -162,7 +162,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
             No messages yet. Start the conversation!
           </div>
         ) : (
-          // --- CAST EACH ITEM INDIVIDUALLY to MessageWithProfile during rendering.
+          // Only cast to MessageWithProfile inside this map
           messages.map((msgAny, idx: number) => {
             const msg = msgAny as MessageWithProfile;
             const isSender = msg.sender_id === currentUserId;
@@ -183,7 +183,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                     isSender ? "flex-row-reverse" : "flex-row"
                   }`}
                 >
-                  {/* Avatar - fallback only. Show initials if no name */}
+                  {/* Avatar */}
                   <Avatar className="w-8 h-8 shrink-0">
                     <AvatarFallback className="bg-gray-100 text-xs">
                       {senderName
@@ -200,21 +200,19 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                         : "bg-gray-100 text-gray-900"
                     }`}
                   >
-                    {/* Show sender name */}
                     <div className="text-xs font-semibold text-primary mb-1">
                       {senderName}
                     </div>
                     <div className="whitespace-pre-line break-words">
                       {msg.message_text}
                     </div>
-                    {/* File attachment preview */}
                     {msg.attachments &&
                       Array.isArray(msg.attachments) &&
                       msg.attachments.length > 0 && (
                         <div className="mt-2">
-                          {msg.attachments.map((att: any, idx: number) => (
+                          {msg.attachments.map((att: any, attIdx: number) => (
                             <FilePreview
-                              key={att.file_url || idx}
+                              key={att.file_url || attIdx}
                               fileUrl={att.file_url}
                             />
                           ))}
