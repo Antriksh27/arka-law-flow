@@ -28,7 +28,7 @@ const Appointments = () => {
   });
 
   return (
-    <div className="container max-w-none flex h-full w-full flex-col items-start gap-6 bg-gray-50 py-12">
+    <div className="flex h-full w-full flex-col gap-6">
       <AppointmentsHeader onViewChange={setViewType} currentView={viewType} />
       <AppointmentsFilters filters={filters} onFilterChange={setFilters} />
       
