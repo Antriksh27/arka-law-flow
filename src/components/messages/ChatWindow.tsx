@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -35,7 +34,6 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // Remove default value from destructure; default to [] only after assignment
   const {
     data,
     refetch,
@@ -63,20 +61,14 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       }
       const { data, error } = await query;
       if (error) throw error;
-      // Assume data is compatible, force type assertion (safe from trusted API structure)
       return (data || []) as MessageWithProfile[];
     },
     refetchOnWindowFocus: false,
     refetchInterval: false,
   });
 
-  // Assign default [] here instead of destructure
-  const messagesRaw = data || [];
-
-  // Use a derived variable for messages
-  const messages: MessageWithProfile[] = Array.isArray(messagesRaw)
-    ? (messagesRaw as MessageWithProfile[])
-    : [];
+  // Use a derived variable for messages with non-recursive type
+  const messages: MessageWithProfile[] = data ?? [];
 
   // Listen for new messages in real time via Supabase channel
   useEffect(() => {
