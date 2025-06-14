@@ -35,12 +35,12 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // Explicitly avoid complex generic typing to prevent deep type instantiation
+  // Explicitly type the return value to break deep inference recursion
   const {
-    data: messagesRaw = [],
+    data: messages = [],
     refetch,
     isFetching,
-  } = useQuery({
+  } = useQuery<MessageWithProfile[], Error>({
     queryKey: [
       "messages-thread",
       selectedThread.type,
@@ -63,16 +63,16 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       }
       const { data, error } = await query;
       if (error) throw error;
-      // Cast to any[] to avoid type recursion, then filter/validate at usage below
-      return data as any[];
+      // Assume data is compatible, force type assertion (safe from trusted API structure)
+      return (data || []) as MessageWithProfile[];
     },
     refetchOnWindowFocus: false,
     refetchInterval: false,
   });
 
   // Safely coerce to the expected type at runtime, with fallback to []
-  const messages: MessageWithProfile[] = Array.isArray(messagesRaw)
-    ? (messagesRaw as MessageWithProfile[])
+  const messages: MessageWithProfile[] = Array.isArray(messages)
+    ? (messages as MessageWithProfile[])
     : [];
 
   // Listen for new messages in real time via Supabase channel
