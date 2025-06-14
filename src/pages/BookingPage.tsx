@@ -20,6 +20,9 @@ interface LawyerInfo {
 // Basic UUID regex (simplified)
 const UUID_REGEX = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 
+// Roles that are allowed to have a public booking page
+const ALLOWED_BOOKING_ROLES = ['lawyer', 'admin', 'partner', 'associate', 'paralegal'];
+
 export const BookingPage: React.FC = () => {
   const { lawyerId } = useParams<{ lawyerId: string }>();
   const [lawyer, setLawyer] = useState<LawyerInfo | null>(null);
@@ -36,7 +39,6 @@ export const BookingPage: React.FC = () => {
         return;
       }
 
-      // Check if lawyerId is a placeholder or not a valid UUID format
       if (lawyerId.startsWith(':') || !UUID_REGEX.test(lawyerId)) {
         setError(`Invalid lawyer ID format: "${lawyerId}". Please check the URL.`);
         console.error('Invalid lawyerId:', lawyerId);
@@ -44,28 +46,26 @@ export const BookingPage: React.FC = () => {
         return;
       }
 
-      setLoading(true); // Ensure loading is true before fetch
+      setLoading(true); 
       try {
         const { data, error: dbError } = await supabase
           .from('profiles')
           .select('id, full_name, email, profile_pic, role, specializations, location, bio')
           .eq('id', lawyerId)
-          .eq('role', 'lawyer') // Ensure we are only fetching lawyers
+          .in('role', ALLOWED_BOOKING_ROLES) // Use 'in' to check against multiple roles
           .single();
 
         if (dbError) {
-          console.error('Error fetching lawyer:', dbError);
-          setError('Could not find the lawyer. They may not exist or are not available for booking.');
+          console.error('Error fetching profile for booking:', dbError);
+          setError('Could not find the professional. They may not exist or are not available for booking.');
         } else if (data) {
           setLawyer(data);
         } else {
-          // This case might be redundant if .single() throws an error for no rows,
-          // but good for explicit handling.
-          setError('Lawyer not found.');
+          setError('Professional not found or not eligible for booking.');
         }
       } catch (err) {
-        console.error('Exception fetching lawyer:', err);
-        setError('An unexpected error occurred while loading lawyer information.');
+        console.error('Exception fetching professional for booking:', err);
+        setError('An unexpected error occurred while loading professional information.');
       } finally {
         setLoading(false);
       }
@@ -95,8 +95,8 @@ export const BookingPage: React.FC = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center p-6 bg-white shadow-lg rounded-xl">
           <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h1 className="text-2xl font-semibold text-gray-900 mb-2">Lawyer Not Found</h1>
-          <p className="text-gray-600 max-w-md mx-auto">{error || 'The requested lawyer could not be found. Please ensure the link is correct or try again later.'}</p>
+          <h1 className="text-2xl font-semibold text-gray-900 mb-2">Professional Not Found</h1>
+          <p className="text-gray-600 max-w-md mx-auto">{error || 'The requested professional could not be found or is not eligible for booking. Please ensure the link is correct or try again later.'}</p>
         </div>
       </div>
     );
