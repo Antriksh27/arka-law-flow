@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,7 +40,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // Remove type parameter from useQuery to avoid deep type instantiation
+  // Make sure useQuery is not passed a type generic
   const { data, refetch, isFetching } = useQuery({
     queryKey: [
       "messages-thread",
@@ -71,8 +70,13 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     refetchInterval: false,
   });
 
-  // Now handle the cast safely after useQuery
-  const messages: MessageWithProfile[] = Array.isArray(data) ? (data as MessageWithProfile[]) : [];
+  /**
+   * The crucial step: force data to unknown and then to MessageWithProfile[]
+   * This prevents TS from attempting deep type inference which causes the error
+   */
+  const messages: MessageWithProfile[] = Array.isArray(data)
+    ? (data as unknown as MessageWithProfile[])
+    : [];
 
   // --- USER NAME MAP LOGIC ---
   // We keep a mapping of userId -> full_name for the current thread
