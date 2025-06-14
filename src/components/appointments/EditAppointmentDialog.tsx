@@ -101,8 +101,7 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
     setCases(data || []);
   };
 
-  const fetch
-Users = async () => {
+  const fetchUsers = async () => {
     const { data } = await supabase
       .from('profiles')
       .select('id, full_name')
@@ -117,8 +116,16 @@ Users = async () => {
 
     try {
       const updateData = {
-        ...formData,
-        duration_minutes: Number(formData.duration_minutes)
+        title: formData.title,
+        appointment_date: formData.appointment_date,
+        appointment_time: formData.appointment_time,
+        duration_minutes: Number(formData.duration_minutes),
+        client_id: formData.client_id || null,
+        lawyer_id: formData.lawyer_id,
+        case_id: formData.case_id || null,
+        location: formData.location,
+        notes: formData.notes,
+        status: formData.status
       };
 
       const { error } = await supabase

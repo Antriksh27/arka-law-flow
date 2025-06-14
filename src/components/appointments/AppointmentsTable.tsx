@@ -118,8 +118,8 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({ filters })
     }
   };
 
-  const formatDateTime = (date: string, time: string) => {
-    if (!date) return 'Not set';
+  const formatDateTime = (date: string, time: string): { date: string; time: string } => {
+    if (!date) return { date: 'Not set', time: '' };
     
     try {
       const dateObj = new Date(date);
@@ -207,14 +207,14 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({ filters })
             </TableRow>
           ) : (
             appointments.map((appointment) => {
-              const { date, time } = formatDateTime(appointment.appointment_date, appointment.appointment_time);
+              const dateTime = formatDateTime(appointment.appointment_date, appointment.appointment_time);
               
               return (
                 <TableRow key={appointment.id}>
                   <TableCell>
                     <div className="flex flex-col items-start gap-1">
                       <span className="text-sm font-semibold text-gray-700">
-                        {date}, {time}
+                        {dateTime.date}, {dateTime.time}
                       </span>
                       <span className="text-xs text-gray-500">
                         {appointment.duration_minutes} minutes

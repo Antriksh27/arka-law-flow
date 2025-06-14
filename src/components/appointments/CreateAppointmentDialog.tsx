@@ -54,7 +54,8 @@ export const CreateAppointmentDialog: React.FC = () => {
     case_id: '',
     location: 'in_person',
     notes: '',
-    status: 'upcoming'
+    status: 'upcoming',
+    type: 'consultation' as 'consultation' | 'follow-up' | 'hearing' | 'in-person' | 'online' | 'other'
   });
 
   useEffect(() => {
@@ -104,10 +105,19 @@ export const CreateAppointmentDialog: React.FC = () => {
         .single();
 
       const appointmentData = {
-        ...formData,
+        title: formData.title,
+        appointment_date: formData.appointment_date,
+        appointment_time: formData.appointment_time,
+        duration_minutes: Number(formData.duration_minutes),
+        client_id: formData.client_id || null,
+        lawyer_id: formData.lawyer_id,
+        case_id: formData.case_id || null,
+        location: formData.location,
+        notes: formData.notes,
+        status: formData.status,
+        type: formData.type,
         firm_id: firmData?.law_firm_id,
-        created_by: currentUser.user.id,
-        duration_minutes: Number(formData.duration_minutes)
+        created_by: currentUser.user.id
       };
 
       const { error } = await supabase
