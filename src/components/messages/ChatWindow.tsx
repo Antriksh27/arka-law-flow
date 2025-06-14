@@ -40,7 +40,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // --- Do NOT use generics or typing at the useQuery level, disable all inference.
+  // --- NO generics at useQuery; let TypeScript infer nothing. See explanation above.
   const { data: rawData, refetch, isFetching } = useQuery({
     queryKey: [
       "messages-thread",
@@ -70,8 +70,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     refetchInterval: false,
   });
 
-  // Only treat as unknown[], don't type further.
-  const messages = Array.isArray(rawData) ? rawData : [];
+  // ---- FIX: Immediately cast "messages" to unknown[] only, never a shape, and never as MessageWithProfile[]
+  const messages = (rawData ?? []) as unknown[];
 
   // --- userNameMap and user name fetching (keep unchanged)
   // We keep a mapping of userId -> full_name for the current thread
@@ -150,9 +150,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       {/* Chat header */}
       <div className="flex items-center px-6 py-4 border-b border-gray-100 min-h-16">
         <span className="text-lg font-semibold text-gray-900 truncate">
-          {selectedThread.type === "dm"
-            ? selectedThread.name
-            : selectedThread.title}
+          {headerLabel}
         </span>
       </div>
       {/* Messages feed */}
@@ -164,8 +162,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
             No messages yet. Start the conversation!
           </div>
         ) : (
-          // Only cast each message as MessageWithProfile *inside* the map here
-          (messages as unknown[]).map((msgAny, idx: number) => {
+          // --- CAST EACH ITEM INDIVIDUALLY to MessageWithProfile during rendering.
+          messages.map((msgAny, idx: number) => {
             const msg = msgAny as MessageWithProfile;
             const isSender = msg.sender_id === currentUserId;
             const senderName =
