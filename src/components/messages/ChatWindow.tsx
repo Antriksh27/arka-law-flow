@@ -35,7 +35,6 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // Do not provide a generic parameter to useQuery!
   const {
     data,
     refetch,
@@ -69,8 +68,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     refetchInterval: false,
   });
 
-  // --> Explicitly assert here, so if data is not an array fallback to []
-  const messages: MessageWithProfile[] = Array.isArray(data) ? (data as MessageWithProfile[]) : [];
+  // Ensure array and fallback
+  const messages = Array.isArray(data) ? data : [];
 
   // Listen for new messages in real time via Supabase channel
   useEffect(() => {
@@ -83,7 +82,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
           schema: "public",
           table: "messages",
         },
-        (payload) => {
+        () => {
           refetch();
         }
       )
@@ -130,7 +129,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
             No messages yet. Start the conversation!
           </div>
         ) : (
-          messages.map((msg) => {
+          messages.map((msg: any) => {
             const isSender = msg.sender_id === currentUserId;
             return (
               <div
