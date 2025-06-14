@@ -28,81 +28,62 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [firmId, setFirmId] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchFirmIdLocal = async (userId: string) => {
-      if (!userId) {
+  const fetchFirmIdLocal = async (userId: string) => {
+    if (!userId) {
+      console.log('AuthContext: fetchFirmIdLocal called with no userId. Setting firmId to undefined.');
+      setFirmId(undefined);
+      return;
+    }
+    try {
+      console.log(`AuthContext: Fetching firm_id for user: ${userId}`);
+      const { data, error } = await supabase
+        .from('team_members')
+        .select('firm_id')
+        .eq('user_id', userId)
+        .single();
+
+      if (error) {
+        console.error('AuthContext: Error fetching firm_id:', error.message);
         setFirmId(undefined);
         return;
       }
-      try {
-        console.log(`AuthContext: Fetching firm_id for user: ${userId}`);
-        const { data, error } = await supabase
-          .from('team_members')
-          .select('firm_id')
-          .eq('user_id', userId)
-          .single();
+      console.log('AuthContext: Firm ID data fetched:', data);
+      setFirmId(data?.firm_id || undefined);
+    } catch (e: any) {
+      console.error('AuthContext: Exception fetching firm_id:', e.message);
+      setFirmId(undefined);
+    }
+  };
 
-        if (error) {
-          console.error('AuthContext: Error fetching firm_id:', error);
-          setFirmId(undefined);
-          return;
-        }
-        console.log('AuthContext: Firm ID data fetched:', data);
-        setFirmId(data?.firm_id || undefined);
-      } catch (e) {
-        console.error('AuthContext: Exception fetching firm_id:', e);
-        setFirmId(undefined);
-      }
-    };
+  useEffect(() => {
+    setLoading(true);
+    console.log('AuthContext: useEffect mounting. Subscribing to onAuthStateChange.');
 
-    const handleAuthStateChangeLocal = async (event: string | null, currentSession: Session | null) => {
-      console.log('AuthContext: onAuthStateChange event:', event, 'Session:', !!currentSession);
-      setSession(currentSession);
-      const currentUser = currentSession?.user ?? null;
-      setUser(currentUser);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, currentSession) => {
+        console.log('AuthContext: onAuthStateChange event:', event, 'Session:', !!currentSession);
+        setSession(currentSession);
+        const currentUser = currentSession?.user ?? null;
+        setUser(currentUser);
 
-      if (currentUser) {
-        await fetchFirmIdLocal(currentUser.id);
-      } else {
-        setFirmId(undefined);
-      }
-      setLoading(false);
-    };
-
-    console.log('AuthContext: useEffect mounting. Subscribing to onAuthStateChange and calling getSession.');
-    // Subscribe to auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChangeLocal);
-
-    // Check initial session state
-    supabase.auth.getSession().then(async ({ data: { session: currentInitialSession } }) => {
-      console.log('AuthContext: getSession resolved. Initial session:', !!currentInitialSession);
-      // Only process if auth state hasn't been set by onAuthStateChange yet (user and session are still initial null)
-      // This helps avoid redundant processing if onAuthStateChange(INITIAL_SESSION) fires very quickly.
-      if (!user && !session) { 
-        console.log('AuthContext: getSession processing. Current component user/session state is null.');
-        const initialUser = currentInitialSession?.user ?? null;
-        setSession(currentInitialSession);
-        setUser(initialUser);
-
-        if (initialUser) {
-          await fetchFirmIdLocal(initialUser.id);
+        if (currentUser) {
+          console.log(`AuthContext: User (id: ${currentUser.id}) present in onAuthStateChange. Fetching firm_id.`);
+          await fetchFirmIdLocal(currentUser.id);
         } else {
+          console.log('AuthContext: No user in onAuthStateChange. Setting firm_id to undefined.');
           setFirmId(undefined);
         }
+        
+        console.log('AuthContext: onAuthStateChange processing complete. Setting loading to false.');
+        setLoading(false);
       }
-      // Ensure loading is set to false after initial check.
-      // onAuthStateChange also sets loading to false. This covers cases where onAuthStateChange might not fire for an empty initial session.
-      setLoading(false); 
-    }).catch(error => {
-      console.error("AuthContext: Error in getSession:", error);
-      setLoading(false); 
-    });
+    );
 
     return () => {
       console.log('AuthContext: useEffect unmounting. Unsubscribing from onAuthStateChange.');
       subscription.unsubscribe();
     };
-  }, []); // Empty dependency array: ensures this effect runs only on mount and unmount
+  }, []); // Empty dependency array ensures this runs only on mount and unmount
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -139,11 +120,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       
       if (error) throw error;
-      
-      // Note: After sign-up, the user usually needs to confirm their email.
-      // The onAuthStateChange listener will handle setting the user and firmId
-      // once they log in after confirmation.
-      // If auto-confirmation is enabled in Supabase, they might be logged in directly.
       
       return { error: null };
     } catch (error) {
