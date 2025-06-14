@@ -40,8 +40,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  //--- DO NOT annotate any types for useQuery or queryFn! Let all be implicit.
-  const { data, refetch, isFetching } = useQuery({
+  // To prevent deep type inference recursion, explicitly type data as unknown at boundary.
+  // DO NOT type annotate queryFn or pass a <TData> generic to useQuery.
+  const { data: rawData, refetch, isFetching } = useQuery({
     queryKey: [
       "messages-thread",
       selectedThread.type,
@@ -70,9 +71,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     refetchInterval: false,
   });
 
-  // Do *not* cast or use a type here—let it remain as-is to avoid TS recursion hell.
-  // Only access `data` as-is, and if you need types for rendering, cast *within map*.
-  const messages = Array.isArray(data) ? data : [];
+  // Make messages just "any[]". All further casting occurs inside render.
+  const messages: any[] = Array.isArray(rawData) ? rawData : [];
 
   // --- userNameMap and user name fetching (keep unchanged)
   // We keep a mapping of userId -> full_name for the current thread
@@ -151,7 +151,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       {/* Chat header */}
       <div className="flex items-center px-6 py-4 border-b border-gray-100 min-h-16">
         <span className="text-lg font-semibold text-gray-900 truncate">
-          {selectedThread.type === "dm" ? selectedThread.name : selectedThread.title}
+          {selectedThread.type === "dm"
+            ? selectedThread.name
+            : selectedThread.title}
         </span>
       </div>
       {/* Messages feed */}
@@ -163,7 +165,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
             No messages yet. Start the conversation!
           </div>
         ) : (
-          // Only cast each message *inside the render* as needed.
+          // Only cast each message as MessageWithProfile *inside* the map here
           messages.map((msgAny, idx: number) => {
             const msg = msgAny as MessageWithProfile;
             const isSender = msg.sender_id === currentUserId;
