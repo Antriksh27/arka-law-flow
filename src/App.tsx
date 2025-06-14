@@ -15,6 +15,7 @@ import Tasks from './pages/Tasks';
 import Documents from './pages/Documents';
 import CaseDetail from './pages/CaseDetail';
 import Hearings from './pages/Hearings';
+import Auth from './pages/Auth';
 import { Toaster } from "@/components/ui/sonner"
 
 // Import DialogProvider
@@ -29,6 +30,7 @@ function App() {
         <AuthProvider>
           <BrowserRouter>
             <Routes>
+              <Route path="/auth" element={<Auth />} />
               <Route
                 path="/cases"
                 element={
@@ -77,7 +79,7 @@ function App() {
                   </RequireAuth>
                 }
               />
-              <Route path="/" element={<Navigate to="/cases" />} />
+              <Route path="/" element={<Navigate to="/cases" replace />} />
             </Routes>
             <Toaster />
           </BrowserRouter>
@@ -92,16 +94,25 @@ function RequireAuth({ children }: { children: JSX.Element }) {
   const location = useLocation();
 
   useEffect(() => {
-    console.log('User:', user);
-    console.log('Loading:', loading);
-  }, [user, loading]);
+    console.log('RequireAuth - User:', user);
+    console.log('RequireAuth - Loading:', loading);
+    console.log('RequireAuth - Location:', location.pathname);
+  }, [user, loading, location.pathname]);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="min-h-screen bg-legal-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
   }
 
   if (!user) {
-    return <Navigate to="/cases" state={{ from: location }} replace />;
+    console.log('RequireAuth - No user, redirecting to /auth');
+    return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
   return children;
