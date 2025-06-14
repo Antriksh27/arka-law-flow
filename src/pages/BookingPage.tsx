@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,6 +17,9 @@ interface LawyerInfo {
   bio: string | null;
 }
 
+// Basic UUID regex (simplified)
+const UUID_REGEX = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+
 export const BookingPage: React.FC = () => {
   const { lawyerId } = useParams<{ lawyerId: string }>();
   const [lawyer, setLawyer] = useState<LawyerInfo | null>(null);
@@ -29,30 +31,41 @@ export const BookingPage: React.FC = () => {
   useEffect(() => {
     const fetchLawyer = async () => {
       if (!lawyerId) {
-        setError('No lawyer ID provided');
+        setError('No lawyer ID provided in the URL.');
         setLoading(false);
         return;
       }
 
+      // Check if lawyerId is a placeholder or not a valid UUID format
+      if (lawyerId.startsWith(':') || !UUID_REGEX.test(lawyerId)) {
+        setError(`Invalid lawyer ID format: "${lawyerId}". Please check the URL.`);
+        console.error('Invalid lawyerId:', lawyerId);
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true); // Ensure loading is true before fetch
       try {
-        const { data, error } = await supabase
+        const { data, error: dbError } = await supabase
           .from('profiles')
           .select('id, full_name, email, profile_pic, role, specializations, location, bio')
           .eq('id', lawyerId)
-          .eq('role', 'lawyer')
+          .eq('role', 'lawyer') // Ensure we are only fetching lawyers
           .single();
 
-        if (error) {
-          console.error('Error fetching lawyer:', error);
-          setError('Lawyer not found');
+        if (dbError) {
+          console.error('Error fetching lawyer:', dbError);
+          setError('Could not find the lawyer. They may not exist or are not available for booking.');
         } else if (data) {
           setLawyer(data);
         } else {
-          setError('Lawyer not found');
+          // This case might be redundant if .single() throws an error for no rows,
+          // but good for explicit handling.
+          setError('Lawyer not found.');
         }
       } catch (err) {
-        console.error('Error fetching lawyer:', err);
-        setError('Failed to load lawyer information');
+        console.error('Exception fetching lawyer:', err);
+        setError('An unexpected error occurred while loading lawyer information.');
       } finally {
         setLoading(false);
       }
@@ -80,10 +93,10 @@ export const BookingPage: React.FC = () => {
   if (error || !lawyer) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
+        <div className="text-center p-6 bg-white shadow-lg rounded-xl">
           <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
           <h1 className="text-2xl font-semibold text-gray-900 mb-2">Lawyer Not Found</h1>
-          <p className="text-gray-600">{error || 'The requested lawyer could not be found.'}</p>
+          <p className="text-gray-600 max-w-md mx-auto">{error || 'The requested lawyer could not be found. Please ensure the link is correct or try again later.'}</p>
         </div>
       </div>
     );
