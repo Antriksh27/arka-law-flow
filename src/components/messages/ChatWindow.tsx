@@ -34,7 +34,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // Remove all type arguments from useQuery (DO NOT pass <MessageWithProfile[]> or any similar generic!)
+  // Remove all explicit type arguments from useQuery.
+  // Let it default to 'unknown'; cast when accessing.
   const { data, refetch, isFetching } = useQuery({
     queryKey: [
       "messages-thread",
@@ -64,7 +65,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     refetchInterval: false,
   });
 
-  // Cast the data to MessageWithProfile[] only after retrieval (at runtime, not via generic)
+  // Only cast here, after retrieval
   const messages: MessageWithProfile[] = Array.isArray(data) ? (data as MessageWithProfile[]) : [];
 
   // Listen for new messages in real time via Supabase channel
