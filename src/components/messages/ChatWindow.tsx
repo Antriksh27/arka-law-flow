@@ -38,7 +38,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     data,
     refetch,
     isFetching,
-  } = useQuery<MessageWithProfile[], Error>({
+  } = useQuery({
     queryKey: [
       "messages-thread",
       selectedThread.type,
@@ -61,14 +61,14 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       }
       const { data, error } = await query;
       if (error) throw error;
-      return (data || []) as MessageWithProfile[];
+      return data;
     },
     refetchOnWindowFocus: false,
     refetchInterval: false,
   });
 
-  // Use a derived variable for messages with non-recursive type
-  const messages: MessageWithProfile[] = data ?? [];
+  // Safely assert the type to MessageWithProfile[]
+  const messages: MessageWithProfile[] = Array.isArray(data) ? (data as MessageWithProfile[]) : [];
 
   // Listen for new messages in real time via Supabase channel
   useEffect(() => {
