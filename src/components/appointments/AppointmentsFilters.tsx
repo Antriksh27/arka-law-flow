@@ -35,7 +35,7 @@ export const AppointmentsFilters: React.FC<AppointmentsFiltersProps> = ({
       
       <Button 
         variant="outline" 
-        className="flex items-center gap-2"
+        className="flex items-center gap-2 border-gray-300 text-gray-700 hover:bg-gray-50"
       >
         <Calendar className="h-4 w-4" />
         Date Range
@@ -43,7 +43,7 @@ export const AppointmentsFilters: React.FC<AppointmentsFiltersProps> = ({
       
       <Button 
         variant="outline" 
-        className="flex items-center gap-2"
+        className="flex items-center gap-2 border-gray-300 text-gray-700 hover:bg-gray-50"
       >
         <Users className="h-4 w-4" />
         Status
@@ -51,7 +51,7 @@ export const AppointmentsFilters: React.FC<AppointmentsFiltersProps> = ({
       
       <Button 
         variant="outline" 
-        className="flex items-center gap-2"
+        className="flex items-center gap-2 border-gray-300 text-gray-700 hover:bg-gray-50"
       >
         <User className="h-4 w-4" />
         Assigned To
@@ -59,7 +59,7 @@ export const AppointmentsFilters: React.FC<AppointmentsFiltersProps> = ({
       
       <Button 
         variant="outline" 
-        className="flex items-center gap-2"
+        className="flex items-center gap-2 border-gray-300 text-gray-700 hover:bg-gray-50"
       >
         <FileText className="h-4 w-4" />
         Client

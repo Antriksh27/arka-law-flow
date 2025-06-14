@@ -30,7 +30,7 @@ export const AppointmentsHeader: React.FC<AppointmentsHeaderProps> = ({
         </div>
         <Button 
           onClick={() => openDialog(<CreateAppointmentDialog />)} 
-          className="bg-slate-800 hover:bg-slate-700 flex items-center gap-2"
+          className="bg-gray-800 hover:bg-gray-700 text-white flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
           New Appointment
@@ -41,7 +41,7 @@ export const AppointmentsHeader: React.FC<AppointmentsHeaderProps> = ({
           <button 
             className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 ${
               currentView === 'list' 
-                ? 'bg-white shadow-sm text-blue-600' 
+                ? 'bg-white shadow-sm text-gray-800' 
                 : 'text-gray-600 hover:text-gray-900'
             }`} 
             onClick={() => onViewChange('list')}
@@ -52,7 +52,7 @@ export const AppointmentsHeader: React.FC<AppointmentsHeaderProps> = ({
           <button 
             className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 ${
               currentView === 'calendar' 
-                ? 'bg-white shadow-sm text-blue-600' 
+                ? 'bg-white shadow-sm text-gray-800' 
                 : 'text-gray-600 hover:text-gray-900'
             }`} 
             onClick={() => onViewChange('calendar')}
