@@ -24,8 +24,7 @@ export const HearingsTable: React.FC<HearingsTableProps> = ({ filters }) => {
         .from('hearings')
         .select(`
           *,
-          cases!hearings_case_id_fkey(case_title, case_number),
-          profiles!hearings_created_by_fkey(full_name)
+          cases!hearings_case_id_fkey(case_title, case_number)
         `);
 
       // Apply date range filter only if both dates are provided
