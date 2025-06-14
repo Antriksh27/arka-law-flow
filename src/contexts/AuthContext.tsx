@@ -7,6 +7,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   firmId: string | undefined;
+  firmError: string | null;
   signIn: (email: string, password: string) => Promise<{ error?: any }>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error?: any }>;
   signOut: () => Promise<void>;
@@ -27,11 +28,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [firmId, setFirmId] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(true);
+  const [firmError, setFirmError] = useState<string | null>(null);
 
   const fetchFirmIdLocal = async (userId: string) => {
     if (!userId) {
       console.log('AuthContext: fetchFirmIdLocal called with no userId. Setting firmId to undefined.');
       setFirmId(undefined);
+      setFirmError("No userId present.");
       return;
     }
     try {
@@ -40,18 +43,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .from('team_members')
         .select('firm_id')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('AuthContext: Error fetching firm_id:', error.message);
         setFirmId(undefined);
+        setFirmError(error.message || "Unknown error fetching firm_id.");
+        return;
+      }
+      if (!data || !data.firm_id) {
+        console.warn(`AuthContext: No firm_id found in team_members for user: ${userId}`);
+        setFirmId(undefined);
+        setFirmError('No firm_id found for user.');
         return;
       }
       console.log('AuthContext: Firm ID data fetched:', data);
-      setFirmId(data?.firm_id || undefined);
+      setFirmId(data.firm_id);
+      setFirmError(null);
     } catch (e: any) {
       console.error('AuthContext: Exception fetching firm_id:', e.message);
       setFirmId(undefined);
+      setFirmError('Exception: ' + (e.message || 'Unknown'));
     }
   };
 
@@ -60,26 +72,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('AuthContext: useEffect mounting. Subscribing to onAuthStateChange.');
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => { // Callback is now synchronous
+      (event, currentSession) => {
         console.log('AuthContext: onAuthStateChange event:', event, 'Session:', !!currentSession);
         setSession(currentSession);
         const currentUser = currentSession?.user ?? null;
         setUser(currentUser);
 
         if (currentUser) {
-          console.log(`AuthContext: User (id: ${currentUser.id}) present. Scheduling firm_id fetch.`);
-          // setLoading(true) is already active from the start of useEffect.
-          // We will set setLoading(false) after firm_id fetch completes.
-          setTimeout(async () => { // Defer async operations
-            console.log(`AuthContext: setTimeout: Fetching firm_id for user ${currentUser.id}`);
+          console.log(`AuthContext: User (id: ${currentUser.id}) present in onAuthStateChange. Fetching firm_id.`);
+          setTimeout(async () => {
             await fetchFirmIdLocal(currentUser.id);
-            console.log('AuthContext: setTimeout: firm_id fetch complete. Setting loading to false.');
             setLoading(false);
           }, 0);
         } else {
-          console.log('AuthContext: No user in onAuthStateChange. Setting firm_id to undefined and loading to false.');
           setFirmId(undefined);
-          setLoading(false); // Set loading to false if no user
+          setFirmError(null);
+          setLoading(false);
         }
       }
     );
@@ -88,7 +96,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('AuthContext: useEffect unmounting. Unsubscribing from onAuthStateChange.');
       subscription.unsubscribe();
     };
-  }, []); // Empty dependency array ensures this runs only on mount and unmount
+  }, []);
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -153,6 +161,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signIn,
     signUp,
     signOut,
+    firmError,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
