@@ -28,7 +28,7 @@ export const HearingsTimeline: React.FC<HearingsTimelineProps> = ({ filters }) =
           profiles!hearings_created_by_fkey(full_name)
         `);
 
-      // Apply filters
+      // Apply filters only if they have values
       if (filters.dateRange.from && filters.dateRange.to) {
         query = query
           .gte('hearing_date', format(filters.dateRange.from, 'yyyy-MM-dd'))
@@ -39,14 +39,23 @@ export const HearingsTimeline: React.FC<HearingsTimelineProps> = ({ filters }) =
         query = query.in('status', filters.status);
       }
 
-      if (filters.court) {
+      if (filters.case && filters.case.trim() !== '') {
+        query = query.eq('case_id', filters.case);
+      }
+
+      if (filters.court && filters.court.trim() !== '') {
         query = query.ilike('court_name', `%${filters.court}%`);
       }
 
-      if (filters.searchQuery) {
+      if (filters.assignedUser && filters.assignedUser.trim() !== '') {
+        query = query.eq('assigned_to', filters.assignedUser);
+      }
+
+      if (filters.searchQuery && filters.searchQuery.trim() !== '') {
         query = query.or(
           `court_name.ilike.%${filters.searchQuery}%,` +
-          `hearing_type.ilike.%${filters.searchQuery}%`
+          `hearing_type.ilike.%${filters.searchQuery}%,` +
+          `notes.ilike.%${filters.searchQuery}%`
         );
       }
 
