@@ -1,24 +1,25 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
-import { DashboardLayout } from './components/layout/DashboardLayout';
-import { Auth } from './pages/Auth';
-import { Index } from './pages/Index';
-import { Cases } from './pages/Cases';
-import { CaseDetail } from './pages/CaseDetail';
-import { Clients } from './pages/Clients';
-import { ClientInfo } from './pages/ClientInfo';
-import { Appointments } from './pages/Appointments';
-import { Tasks } from './pages/Tasks';
-import { Hearings } from './pages/Hearings';
-import { Documents } from './pages/Documents';
-import { Notes } from './pages/Notes';
-import { Invoices } from './pages/Invoices';
-import { Messages } from './pages/Messages';
-import { Team } from './pages/Team';
-import { NotFound } from './pages/NotFound';
+import DashboardLayout from './components/layout/DashboardLayout';
+import Auth from './pages/Auth';
+import Index from './pages/Index';
+import Cases from './pages/Cases';
+import CaseDetail from './pages/CaseDetail';
+import Clients from './pages/Clients';
+import ClientInfo from './pages/ClientInfo';
+import Appointments from './pages/Appointments';
+import Tasks from './pages/Tasks';
+import Hearings from './pages/Hearings';
+import Documents from './pages/Documents';
+import Notes from './pages/Notes';
+import Invoices from './pages/Invoices';
+import Messages from './pages/Messages';
+import Team from './pages/Team';
+import NotFound from './pages/NotFound';
 import { BookingPage } from './pages/BookingPage';
 
 const queryClient = new QueryClient({
