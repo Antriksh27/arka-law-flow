@@ -6,7 +6,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  firmId: string | undefined; // Added firmId
+  firmId: string | undefined;
   signIn: (email: string, password: string) => Promise<{ error?: any }>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error?: any }>;
   signOut: () => Promise<void>;
@@ -25,16 +25,17 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [firmId, setFirmId] = useState<string | undefined>(undefined); // Added firmId state
+  const [firmId, setFirmId] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchFirmId = async (userId: string) => {
+    const fetchFirmIdLocal = async (userId: string) => {
       if (!userId) {
         setFirmId(undefined);
         return;
       }
       try {
+        console.log(`AuthContext: Fetching firm_id for user: ${userId}`);
         const { data, error } = await supabase
           .from('team_members')
           .select('firm_id')
@@ -42,52 +43,66 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .single();
 
         if (error) {
-          console.error('Error fetching firm_id:', error);
+          console.error('AuthContext: Error fetching firm_id:', error);
           setFirmId(undefined);
           return;
         }
+        console.log('AuthContext: Firm ID data fetched:', data);
         setFirmId(data?.firm_id || undefined);
       } catch (e) {
-        console.error('Exception fetching firm_id:', e);
+        console.error('AuthContext: Exception fetching firm_id:', e);
         setFirmId(undefined);
       }
     };
 
-    const handleAuthStateChange = async (event: string | null, currentSession: Session | null) => {
+    const handleAuthStateChangeLocal = async (event: string | null, currentSession: Session | null) => {
+      console.log('AuthContext: onAuthStateChange event:', event, 'Session:', !!currentSession);
       setSession(currentSession);
       const currentUser = currentSession?.user ?? null;
       setUser(currentUser);
 
       if (currentUser) {
-        await fetchFirmId(currentUser.id);
+        await fetchFirmIdLocal(currentUser.id);
       } else {
         setFirmId(undefined);
       }
       setLoading(false);
     };
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
+    console.log('AuthContext: useEffect mounting. Subscribing to onAuthStateChange and calling getSession.');
+    // Subscribe to auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChangeLocal);
 
-    supabase.auth.getSession().then(async ({ data: { session: currentSession } }) => {
-      // This check is important to avoid race conditions with onAuthStateChange
-      // Only set initial state if the listener hasn't already run for the initial load
-      if (!session && !user) { // Check if state hasn't been set by onAuthStateChange yet
-        setSession(currentSession);
-        const currentUser = currentSession?.user ?? null;
-        setUser(currentUser);
-        if (currentUser) {
-          await fetchFirmId(currentUser.id);
+    // Check initial session state
+    supabase.auth.getSession().then(async ({ data: { session: currentInitialSession } }) => {
+      console.log('AuthContext: getSession resolved. Initial session:', !!currentInitialSession);
+      // Only process if auth state hasn't been set by onAuthStateChange yet (user and session are still initial null)
+      // This helps avoid redundant processing if onAuthStateChange(INITIAL_SESSION) fires very quickly.
+      if (!user && !session) { 
+        console.log('AuthContext: getSession processing. Current component user/session state is null.');
+        const initialUser = currentInitialSession?.user ?? null;
+        setSession(currentInitialSession);
+        setUser(initialUser);
+
+        if (initialUser) {
+          await fetchFirmIdLocal(initialUser.id);
         } else {
           setFirmId(undefined);
         }
       }
-      setLoading(false);
+      // Ensure loading is set to false after initial check.
+      // onAuthStateChange also sets loading to false. This covers cases where onAuthStateChange might not fire for an empty initial session.
+      setLoading(false); 
+    }).catch(error => {
+      console.error("AuthContext: Error in getSession:", error);
+      setLoading(false); 
     });
 
     return () => {
+      console.log('AuthContext: useEffect unmounting. Unsubscribing from onAuthStateChange.');
       subscription.unsubscribe();
     };
-  }, [session, user]); // Added dependencies to re-evaluate if session/user changes from other means, though unlikely
+  }, []); // Empty dependency array: ensures this effect runs only on mount and unmount
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -153,7 +168,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     session,
     loading,
-    firmId, // Added firmId to context value
+    firmId,
     signIn,
     signUp,
     signOut,
