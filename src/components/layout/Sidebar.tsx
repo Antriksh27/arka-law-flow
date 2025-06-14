@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { 
@@ -5,7 +6,8 @@ import {
   Users, 
   File, 
   Folder, 
-  Inbox 
+  Inbox,
+  MessageSquare,
 } from 'lucide-react';
 
 const navigation = [
@@ -17,6 +19,7 @@ const navigation = [
   { name: 'Tasks', href: '/tasks', icon: File },
   { name: 'Invoices', href: '/invoices', icon: File },
   { name: 'Notes', href: '/notes', icon: File },
+  { name: 'Messages', href: '/messages', icon: MessageSquare },
   { name: 'Documents', href: '/documents', icon: Folder },
   { name: 'Team', href: '/team', icon: Users },
 ];

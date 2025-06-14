@@ -1,3 +1,4 @@
+
 "use client"; 
 
 import React, { useRef, useState } from "react";
@@ -13,6 +14,7 @@ const navigation = [
   { name: 'Tasks', href: '/tasks' },
   { name: 'Invoices', href: '/invoices' },
   { name: 'Notes', href: '/notes' },
+  { name: 'Messages', href: '/messages' },
   { name: 'Documents', href: '/documents' },
   { name: 'Team', href: '/team' },
 ];
