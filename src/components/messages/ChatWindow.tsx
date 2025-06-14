@@ -1,5 +1,4 @@
-
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,6 +22,12 @@ interface MessageWithProfile {
   [key: string]: any;
 }
 
+// User info for sender names
+interface UserInfo {
+  id: string;
+  full_name: string;
+}
+
 interface ChatWindowProps {
   selectedThread: Thread;
   currentUserId?: string;
@@ -35,8 +40,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // UseQuery workaround: destructure as any, cast at use
-  const queryResult: any = useQuery({
+  // Fetch messages (type cast after fetch for simplicity)
+  const { data: rawMessages, refetch, isFetching } = useQuery({
     queryKey: [
       "messages-thread",
       selectedThread.type,
@@ -65,10 +70,38 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     refetchInterval: false,
   });
 
-  const { data, refetch, isFetching } = queryResult;
+  const messages: MessageWithProfile[] = Array.isArray(rawMessages) ? rawMessages : [];
 
-  // Ensure type safety for messages
-  const messages: MessageWithProfile[] = Array.isArray(data) ? (data as MessageWithProfile[]) : [];
+  // --- USER NAME MAP LOGIC ---
+  // We keep a mapping of userId -> full_name for the current thread
+  const [userNameMap, setUserNameMap] = useState<{ [id: string]: string }>({});
+
+  useEffect(() => {
+    // Fetch full names for both users in DM, or all case participants
+    async function fetchUserNames() {
+      if (!messages || messages.length === 0) return setUserNameMap({});
+      let userIds = Array.from(new Set(messages.map((m) => m.sender_id)));
+      if (userIds.length === 0) return setUserNameMap({});
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, full_name")
+        .in("id", userIds);
+
+      if (error || !Array.isArray(data)) {
+        setUserNameMap({});
+      } else {
+        const map: { [id: string]: string } = {};
+        for (let user of data) {
+          if (user && user.id && user.full_name) {
+            map[user.id] = user.full_name;
+          }
+        }
+        setUserNameMap(map);
+      }
+    }
+    fetchUserNames();
+  }, [messages]);
 
   // Listen for new messages in real time via Supabase channel
   useEffect(() => {
@@ -130,6 +163,12 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         ) : (
           messages.map((msg: MessageWithProfile) => {
             const isSender = msg.sender_id === currentUserId;
+            const senderName =
+              isSender
+                ? "You"
+                : userNameMap[msg.sender_id] ||
+                  msg.sender_id?.slice(0, 8) ||
+                  "User";
             return (
               <div
                 key={msg.id}
@@ -140,11 +179,13 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                     isSender ? "flex-row-reverse" : "flex-row"
                   }`}
                 >
-                  {/* Avatar - fallback only. Optionally implement a profile resolver here */}
+                  {/* Avatar - fallback only. Show initials if no name */}
                   <Avatar className="w-8 h-8 shrink-0">
                     <AvatarFallback className="bg-gray-100 text-xs">
-                      {msg.sender_id
-                        ?.slice(0, 2)
+                      {senderName
+                        ?.split(" ")
+                        .map((n: string) => n[0])
+                        .join("")
                         .toUpperCase() || "U"}
                     </AvatarFallback>
                   </Avatar>
@@ -155,6 +196,10 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                         : "bg-gray-100 text-gray-900"
                     }`}
                   >
+                    {/* Show sender name */}
+                    <div className="text-xs font-semibold text-primary mb-1">
+                      {senderName}
+                    </div>
                     <div className="whitespace-pre-line break-words">
                       {msg.message_text}
                     </div>
