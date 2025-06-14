@@ -194,7 +194,7 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Avatar className="h-6 w-6">
-                        <AvatarFallback className="text-xs">
+                        <AvatarFallback className="text-xs text-slate-950">
                           {appointment.assigned_user_name?.split(' ').map(n => n[0]).join('') || 'U'}
                         </AvatarFallback>
                       </Avatar>
