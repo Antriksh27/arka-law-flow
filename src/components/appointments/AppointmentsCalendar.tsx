@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -34,7 +33,7 @@ interface SupabaseAppointment {
   status: string | null;
   type: string | null;
   lawyer_id: string | null;
-  lawyer_profile: { full_name: string | null; } | null; // Changed from profiles to lawyer_profile
+  lawyer_profile: Array<{ full_name: string | null; }> | null; // Updated to expect an array of profiles or null
 }
 
 // Define types for FullScreenCalendar data transformation
@@ -72,7 +71,7 @@ export const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({
           type,
           lawyer_id,
           lawyer_profile:profiles ( full_name ) 
-        `) // Changed to lawyer_profile:profiles ( full_name )
+        `) 
         .gte('start_time', firstDayOfSelectedMonth.toISOString())
         .lte('start_time', lastDayOfSelectedMonth.toISOString())
         .order('start_time', { ascending: true });
@@ -81,6 +80,8 @@ export const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({
         console.error('Error fetching appointments:', dbError);
         throw dbError;
       }
+      // The type assertion here is what was causing the error if SupabaseAppointment didn't match data's structure.
+      // By updating SupabaseAppointment, this cast should now be valid.
       return (data as SupabaseAppointment[]) || [];
     },
   });
@@ -101,9 +102,9 @@ export const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({
       }
       
       let assigneeName = 'N/A';
-      // Use lawyer_profile to get the name
-      if (app.lawyer_profile && app.lawyer_profile.full_name) {
-        assigneeName = app.lawyer_profile.full_name;
+      // Use lawyer_profile to get the name, checking if it's an array and has elements
+      if (app.lawyer_profile && app.lawyer_profile.length > 0 && app.lawyer_profile[0]?.full_name) {
+        assigneeName = app.lawyer_profile[0].full_name;
       }
 
 
@@ -131,7 +132,6 @@ export const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({
   
   const handleDateSelect = (date: Date) => {
     console.log("Date selected:", date);
-    // Potentially open CreateAppointmentDialog with the date pre-filled
     openDialog(<CreateAppointmentDialog />);
   };
 
@@ -165,4 +165,3 @@ export const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({
     />
   );
 };
-
