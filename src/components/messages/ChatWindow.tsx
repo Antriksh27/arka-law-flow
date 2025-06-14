@@ -35,7 +35,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // To avoid naming conflict, use messagesRaw for the query data
+  // Use a unique name for data to avoid conflicts
   const {
     data: messagesRaw = [],
     refetch,
@@ -70,7 +70,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     refetchInterval: false,
   });
 
-  // Safely coerce to the expected type at runtime, with fallback to []
+  // Use a derived variable for messages
   const messages: MessageWithProfile[] = Array.isArray(messagesRaw)
     ? (messagesRaw as MessageWithProfile[])
     : [];

@@ -1,7 +1,7 @@
 
 import React from "react";
 import DefaultPageLayout from "@/components/messages/ui/DefaultPageLayout";
-import { FeatherEdit, FeatherSearch, FeatherPaperclip, FeatherPhone, FeatherSend } from "lucide-react";
+import { Edit, Search, Paperclip, Phone, Send } from "lucide-react";
 import { IconButton } from "@/components/messages/ui/IconButton";
 import { TextField } from "@/components/messages/ui/TextField";
 import { ChatList } from "@/components/messages/ui/ChatList";
@@ -24,7 +24,7 @@ const MessagesPage = () => {
             </div>
             <IconButton
               variant="brand-tertiary"
-              icon={<FeatherEdit size={18} />}
+              icon={<Edit size={18} />}
               onClick={() => {}}
             />
           </div>
@@ -33,7 +33,7 @@ const MessagesPage = () => {
             variant="filled"
             label=""
             helpText=""
-            icon={<FeatherSearch size={16} />}
+            icon={<Search size={16} />}
           >
             <TextField.Input
               placeholder="Search users or cases"
@@ -101,12 +101,12 @@ const MessagesPage = () => {
               <>
                 <IconButton
                   variant="brand-tertiary"
-                  icon={<FeatherPaperclip size={18} />}
+                  icon={<Paperclip size={18} />}
                   onClick={() => {}}
                 />
                 <IconButton
                   variant="brand-tertiary"
-                  icon={<FeatherPhone size={18} />}
+                  icon={<Phone size={18} />}
                   onClick={() => {}}
                 />
               </>
@@ -152,7 +152,7 @@ const MessagesPage = () => {
           <div className="flex w-full items-center gap-2 border-t border-solid border-gray-200 px-6 py-6">
             <IconButton
               variant="brand-tertiary"
-              icon={<FeatherPaperclip size={18} />}
+              icon={<Paperclip size={18} />}
               onClick={() => {}}
             />
             <TextFieldUnstyled className="h-auto grow">
@@ -164,7 +164,7 @@ const MessagesPage = () => {
             </TextFieldUnstyled>
             <IconButton
               variant="brand-primary"
-              icon={<FeatherSend size={18} />}
+              icon={<Send size={18} />}
               onClick={() => {}}
             />
           </div>
