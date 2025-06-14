@@ -1,0 +1,152 @@
+
+import React from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { useDialog } from '@/hooks/use-dialog';
+import { EditAppointmentDialog } from './EditAppointmentDialog';
+import { format, parseISO } from 'date-fns';
+import { Calendar, Clock, User, MapPin, FileText, Edit } from 'lucide-react';
+
+interface ViewAppointmentDialogProps {
+  appointment: {
+    id: string;
+    title: string | null;
+    appointment_date: string | null;
+    appointment_time: string | null;
+    status: string | null;
+    type: string | null;
+    lawyer_id: string | null;
+    lawyer_name: string | null;
+    location: string | null;
+    notes: string | null;
+  };
+}
+
+export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
+  appointment,
+}) => {
+  const { closeDialog, openDialog } = useDialog();
+
+  const handleEdit = () => {
+    closeDialog();
+    openDialog(<EditAppointmentDialog appointmentId={appointment.id} />);
+  };
+
+  const getStatusColor = (status: string | null) => {
+    switch (status?.toLowerCase()) {
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800';
+      case 'upcoming':
+        return 'bg-blue-100 text-blue-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const formatDate = (date: string | null) => {
+    if (!date) return 'No date';
+    return format(parseISO(date), 'EEEE, MMMM d, yyyy');
+  };
+
+  const formatTime = (time: string | null) => {
+    if (!time) return 'No time';
+    return format(parseISO(`2000-01-01T${time}`), 'h:mm a');
+  };
+
+  return (
+    <Dialog open={true} onOpenChange={closeDialog}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-semibold text-gray-900 flex items-center justify-between">
+            Appointment Details
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleEdit}
+              className="ml-2"
+            >
+              <Edit className="h-4 w-4 mr-1" />
+              Edit
+            </Button>
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-6">
+          {/* Title */}
+          <div>
+            <h3 className="text-lg font-medium text-gray-900">
+              {appointment.title || 'Untitled Appointment'}
+            </h3>
+            {appointment.status && (
+              <Badge className={`mt-2 ${getStatusColor(appointment.status)}`}>
+                {appointment.status}
+              </Badge>
+            )}
+          </div>
+
+          {/* Date & Time */}
+          <div className="grid grid-cols-1 gap-4">
+            <div className="flex items-center gap-3">
+              <Calendar className="h-5 w-5 text-gray-500" />
+              <div>
+                <p className="text-sm font-medium text-gray-700">Date</p>
+                <p className="text-sm text-gray-600">{formatDate(appointment.appointment_date)}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Clock className="h-5 w-5 text-gray-500" />
+              <div>
+                <p className="text-sm font-medium text-gray-700">Time</p>
+                <p className="text-sm text-gray-600">{formatTime(appointment.appointment_time)}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Assigned Lawyer */}
+          {appointment.lawyer_name && (
+            <div className="flex items-center gap-3">
+              <User className="h-5 w-5 text-gray-500" />
+              <div>
+                <p className="text-sm font-medium text-gray-700">Assigned Lawyer</p>
+                <p className="text-sm text-gray-600">{appointment.lawyer_name}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Type */}
+          {appointment.type && (
+            <div>
+              <p className="text-sm font-medium text-gray-700">Type</p>
+              <p className="text-sm text-gray-600 capitalize">{appointment.type.replace('_', ' ')}</p>
+            </div>
+          )}
+
+          {/* Location */}
+          {appointment.location && (
+            <div className="flex items-center gap-3">
+              <MapPin className="h-5 w-5 text-gray-500" />
+              <div>
+                <p className="text-sm font-medium text-gray-700">Location</p>
+                <p className="text-sm text-gray-600">{appointment.location}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Notes */}
+          {appointment.notes && (
+            <div className="flex items-start gap-3">
+              <FileText className="h-5 w-5 text-gray-500 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-gray-700">Notes</p>
+                <p className="text-sm text-gray-600 whitespace-pre-wrap">{appointment.notes}</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};

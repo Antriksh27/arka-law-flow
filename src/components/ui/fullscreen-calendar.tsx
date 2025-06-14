@@ -30,6 +30,7 @@ interface FullScreenCalendarProps {
   onMonthChange?: (newMonthFirstDay: Date) => void;
   onDateSelect?: (date: Date) => void;
   onNewEventClick?: () => void;
+  onEventClick?: (eventId: string) => void;
 }
 const colStartClasses = ["", "col-start-2", "col-start-3", "col-start-4", "col-start-5", "col-start-6", "col-start-7"];
 export function FullScreenCalendar({
@@ -37,7 +38,8 @@ export function FullScreenCalendar({
   initialMonth,
   onMonthChange,
   onDateSelect,
-  onNewEventClick
+  onNewEventClick,
+  onEventClick
 }: FullScreenCalendarProps) {
   const today = startOfToday();
   const [selectedDay, setSelectedDay] = React.useState(today);
@@ -85,6 +87,12 @@ export function FullScreenCalendar({
     setSelectedDay(day);
     if (onDateSelect) {
       onDateSelect(day);
+    }
+  };
+  const handleEventClick = (eventId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onEventClick) {
+      onEventClick(eventId);
     }
   };
   return <div className="flex flex-1 flex-col bg-white border border-borderGray rounded-2xl shadow-sm">

@@ -2,10 +2,11 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { FilterState } from '../../pages/Appointments'; // Kept for future use if filters apply to calendar
+import { FilterState } from '../../pages/Appointments';
 import { FullScreenCalendar } from '@/components/ui/fullscreen-calendar';
 import { useDialog } from '@/hooks/use-dialog';
 import { CreateAppointmentDialog } from './CreateAppointmentDialog';
+import { ViewAppointmentDialog } from './ViewAppointmentDialog';
 
 import {
   Loader2,
@@ -22,7 +23,7 @@ import {
 } from 'date-fns';
 
 interface AppointmentsCalendarProps {
-  filters: FilterState; // Kept for potential future use
+  filters: FilterState;
 }
 
 // Define a type for Supabase appointment data
@@ -34,12 +35,14 @@ interface SupabaseAppointment {
   status: string | null;
   type: string | null;
   lawyer_id: string | null;
-  lawyer_name: string | null; // Changed to a simple string field
+  lawyer_name: string | null;
+  location: string | null;
+  notes: string | null;
 }
 
 // Define types for FullScreenCalendar data transformation
 interface CalendarEvent {
-  id: string; // Using string for UUIDs
+  id: string;
   name: string;
   time: string;
   datetime: string;
@@ -72,7 +75,9 @@ export const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({
           appointment_time,
           status,
           type,
-          lawyer_id
+          lawyer_id,
+          location,
+          notes
         `) 
         .gte('appointment_date', format(firstDayOfSelectedMonth, 'yyyy-MM-dd'))
         .lte('appointment_date', format(lastDayOfSelectedMonth, 'yyyy-MM-dd'))
@@ -119,6 +124,14 @@ export const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({
       return enrichedAppointments;
     },
   });
+
+  // Store appointments by ID for easy lookup
+  const appointmentsById = useMemo(() => {
+    if (!rawAppointments) return {};
+    return Object.fromEntries(
+      rawAppointments.map(appointment => [appointment.id, appointment])
+    );
+  }, [rawAppointments]);
 
   const calendarDataForFullScreen = useMemo((): CalendarDayData[] => {
     if (!rawAppointments) return [];
@@ -170,6 +183,13 @@ export const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({
     openDialog(<CreateAppointmentDialog preSelectedDate={date} />);
   };
 
+  const handleEventClick = (eventId: string) => {
+    const appointment = appointmentsById[eventId];
+    if (appointment) {
+      openDialog(<ViewAppointmentDialog appointment={appointment} />);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-10 bg-white border border-borderGray rounded-2xl shadow-sm min-h-[calc(100vh-300px)]">
@@ -196,6 +216,7 @@ export const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({
       onMonthChange={handleMonthChange}
       onNewEventClick={handleNewEvent}
       onDateSelect={handleDateSelect}
+      onEventClick={handleEventClick}
     />
   );
 };
