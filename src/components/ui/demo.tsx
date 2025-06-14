@@ -1,6 +1,5 @@
 
-import React from "react";
-import RuixenCard04 from "./ruixen-mono-chat";
+import RuixenCard04 from "@/components/ui/ruixen-mono-chat";
 
 const DemoOne = () => {
   return <RuixenCard04 />;

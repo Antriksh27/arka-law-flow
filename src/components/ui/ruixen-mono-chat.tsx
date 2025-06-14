@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Message/reaction type definitions
 interface Message {
     id: string;
     content: string;
@@ -33,41 +32,39 @@ interface RuixenCard04Props {
     messages?: Message[];
 }
 
-const defaultMessages: Message[] = [
-    {
-        id: "1",
-        content: "Just pushed the latest design system updates ✨",
-        sender: {
-            name: "Alex Chen",
-            avatar:
-                "https://github.com/shadcn.png",
-            isOnline: true,
-        },
-        timestamp: "10:24 AM",
-        status: "read",
-        reactions: [
-            { emoji: "🙌", count: 2, reacted: true },
-            { emoji: "✨", count: 1, reacted: false },
-        ],
-    },
-    {
-        id: "2",
-        content:
-            "The new components look amazing! Great work on the animations.",
-        sender: {
-            name: "Sarah Kim",
-            avatar:
-                "https://github.com/evilrabbit.png",
-            isOnline: true,
-        },
-        timestamp: "10:26 AM",
-        status: "delivered",
-    },
-];
-
 export default function RuixenCard04({
     chatName = "Software Team",
-    messages = defaultMessages,
+    messages = [
+        {
+            id: "1",
+            content: "Just pushed the latest design system updates ✨",
+            sender: {
+                name: "Alex Chen",
+                avatar:
+                    "https://github.com/shadcn.png",
+                isOnline: true,
+            },
+            timestamp: "10:24 AM",
+            status: "read",
+            reactions: [
+                { emoji: "🙌", count: 2, reacted: true },
+                { emoji: "✨", count: 1, reacted: false },
+            ],
+        },
+        {
+            id: "2",
+            content:
+                "The new components look amazing! Great work on the animations.",
+            sender: {
+                name: "Sarah Kim",
+                avatar:
+                    "https://github.com/evilrabbit.png",
+                isOnline: true,
+            },
+            timestamp: "10:26 AM",
+            status: "delivered",
+        },
+    ],
 }: RuixenCard04Props) {
     const [selectedSender, setSelectedSender] = useState<string | null>(null);
 
