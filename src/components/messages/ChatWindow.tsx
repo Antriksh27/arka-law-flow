@@ -13,17 +13,14 @@ type Thread =
   | { type: "dm"; userId: string; name: string }
   | { type: "case"; caseId: string; title: string };
 
-// Message type (now with attachments)
+// Message type (without profiles field)
 interface MessageWithProfile {
   id: string;
   sender_id: string;
   message_text: string;
   attachments?: any; // JSON or null
   created_at: string;
-  profiles?: {
-    full_name?: string | null;
-    profile_pic?: string | null;
-  };
+  // profiles?: { full_name?: string | null; profile_pic?: string | null; };
   [key: string]: any;
 }
 
@@ -56,7 +53,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       let query = supabase
         .from("messages")
         .select(
-          "id, sender_id, message_text, attachments, created_at, profiles:sender_id(full_name, profile_pic)"
+          "id, sender_id, message_text, attachments, created_at"
         )
         .order("created_at", { ascending: true });
 
@@ -122,6 +119,10 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       ? selectedThread.name
       : selectedThread.title;
 
+  // Since we no longer have the profile name, let's just show initials from sender_id,
+  // or if you want, just fallback to "U". Optionally you can fetch profile information, 
+  // but that's outside this fix.
+
   return (
     <div className="flex flex-col h-full">
       {/* Chat header */}
@@ -151,13 +152,12 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                     isSender ? "flex-row-reverse" : "flex-row"
                   }`}
                 >
-                  {/* Avatar */}
+                  {/* Avatar - fallback only. Optionally implement a profile resolver here */}
                   <Avatar className="w-8 h-8 shrink-0">
                     <AvatarFallback className="bg-gray-100 text-xs">
-                      {msg.profiles?.full_name
-                        ?.split(" ")
-                        .map((n: string) => n[0])
-                        .join("") ?? "U"}
+                      {msg.sender_id
+                        ?.slice(0, 2)
+                        .toUpperCase() || "U"}
                     </AvatarFallback>
                   </Avatar>
                   <div
@@ -171,13 +171,15 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                       {msg.message_text}
                     </div>
                     {/* File attachment preview */}
-                    {msg.attachments && Array.isArray(msg.attachments) && msg.attachments.length > 0 && (
-                      <div className="mt-2">
-                        {msg.attachments.map((att: any, idx: number) => (
-                          <FilePreview key={att.file_url || idx} fileUrl={att.file_url} />
-                        ))}
-                      </div>
-                    )}
+                    {msg.attachments &&
+                      Array.isArray(msg.attachments) &&
+                      msg.attachments.length > 0 && (
+                        <div className="mt-2">
+                          {msg.attachments.map((att: any, idx: number) => (
+                            <FilePreview key={att.file_url || idx} fileUrl={att.file_url} />
+                          ))}
+                        </div>
+                      )}
                     <div className="mt-1 text-xs text-muted-foreground text-right">
                       {format(new Date(msg.created_at), "MMM d, h:mm a")}
                     </div>
