@@ -46,7 +46,7 @@ function NavHeader() {
   return <ul onMouseLeave={() => setPosition(pv => ({
     ...pv,
     opacity: 0
-  }))} className="relative mx-auto flex w-fit rounded-full border-2 border-[#F3F4F6] p-1 shadow-sm bg-slate-300">
+  }))} className="relative mx-auto flex w-fit rounded-full border-2 border-[#F3F4F6] p-1 shadow-sm bg-slate-900">
       {navigation.map(item => <Tab key={item.name} setPosition={setPosition} href={item.href}>
           {item.name}
         </Tab>)}
@@ -67,22 +67,20 @@ const Tab = ({
   const isActive = location.pathname === href;
   return <li ref={ref} onMouseEnter={() => {
     if (!ref.current) return;
-    const { width } = ref.current.getBoundingClientRect();
+    const {
+      width
+    } = ref.current.getBoundingClientRect();
     setPosition({
       width,
       opacity: 1,
       left: ref.current.offsetLeft
     });
   }} className="relative z-10 block cursor-pointer">
-      <Link
-        to={href}
-        className={`block px-4 py-2 md:px-6 md:py-3 text-sm font-medium rounded-full transition-colors
+      <Link to={href} className={`block px-4 py-2 md:px-6 md:py-3 text-sm font-medium rounded-full transition-colors
           ${isActive ? 'bg-[#111827] text-white shadow' : 'text-[#111827] hover:bg-[#F3F4F6] hover:text-[#111827]'}
-        `}
-        style={{
-          letterSpacing: "0.05em"
-        }}
-      >
+        `} style={{
+      letterSpacing: "0.05em"
+    }}>
         {children}
       </Link>
     </li>;
