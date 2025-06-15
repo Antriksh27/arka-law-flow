@@ -42,12 +42,7 @@ export const useThreads = () => {
             created_at
           ),
           thread_participants (
-            user_id,
-            profiles!user_id (
-              id,
-              full_name,
-              profile_pic
-            )
+            user_id
           )
         `)
         .order('created_at', { foreignTable: 'messages', ascending: false, nullsFirst: false });
@@ -57,11 +52,32 @@ export const useThreads = () => {
         throw error;
       }
       
+      const allParticipantUserIds = data.flatMap(thread => thread.thread_participants.map(p => p.user_id));
+      const uniqueUserIds = [...new Set(allParticipantUserIds)];
+
+      let profilesMap = new Map();
+      if (uniqueUserIds.length > 0) {
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, full_name, profile_pic, role')
+          .in('id', uniqueUserIds);
+        
+        if (profilesError) {
+            console.error('Error fetching profiles for threads:', profilesError);
+            throw profilesError;
+        }
+        profilesMap = new Map((profiles || []).map(p => [p.id, p]));
+      }
+
       const processedThreads = data.map(thread => {
         const lastMessage = thread.messages.length > 0 ? thread.messages[0] : null;
-        const otherParticipants = thread.thread_participants
-          .map(p => p.profiles)
-          .filter((p): p is NonNullable<typeof p> => p !== null && p.id !== user.id);
+        
+        const participantProfiles = thread.thread_participants
+            .map(p => profilesMap.get(p.user_id))
+            .filter((p): p is NonNullable<typeof p> => p !== null && p !== undefined);
+
+        const otherParticipants = participantProfiles
+          .filter(p => p.id !== user.id);
 
         const isPrivate = thread.is_private;
         
@@ -73,7 +89,10 @@ export const useThreads = () => {
                 title = otherParticipants.map(p => p.full_name).join(', ');
                 avatar = otherParticipants[0].profile_pic || '';
             } else {
-                title = 'Yourself'; // Chat with yourself
+                // It's a chat with only the current user.
+                const currentUserProfile = profilesMap.get(user.id);
+                title = currentUserProfile?.full_name || 'Yourself';
+                avatar = currentUserProfile?.profile_pic || '';
             }
         }
 

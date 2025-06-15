@@ -1,4 +1,3 @@
-
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -45,7 +44,7 @@ export const useMessages = (threadId: string | null) => {
           .order('created_at', { ascending: true }),
         supabase
           .from('thread_participants')
-          .select('user_id, profiles!user_id(id, full_name, profile_pic)')
+          .select('user_id')
           .eq('thread_id', threadId)
       ]);
       
@@ -55,10 +54,22 @@ export const useMessages = (threadId: string | null) => {
       if (messagesError) throw messagesError;
       if (participantsError) throw participantsError;
 
-      const participants = (participantsData || []).map(p => p.profiles).filter(Boolean);
-      const participantsMap = new Map(participants.map(p => [p!.id, p!]));
+      const userIds = (participantsData || []).map(p => p.user_id);
 
-      return messagesData.map(message => ({
+      if (userIds.length === 0) {
+        return (messagesData || []).map(message => ({ ...message, sender: undefined }));
+      }
+      
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, full_name, profile_pic')
+        .in('id', userIds);
+
+      if (profilesError) throw profilesError;
+
+      const participantsMap = new Map((profilesData || []).map(p => [p.id, p]));
+
+      return (messagesData || []).map(message => ({
         ...message,
         sender: participantsMap.get(message.sender_id),
       }));
