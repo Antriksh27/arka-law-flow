@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -69,13 +70,13 @@ export const CasesTable: React.FC<CasesTableProps> = ({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="bg-slate-800">Case Title</TableHead>
-            <TableHead className="bg-slate-800">Client</TableHead>
-            <TableHead className="bg-slate-800">Type</TableHead>
-            <TableHead className="bg-slate-800">Status</TableHead>
-            <TableHead className="bg-slate-800">Priority</TableHead>
-            <TableHead className="bg-slate-800">Created By</TableHead>
-            <TableHead className="bg-slate-800">Updated</TableHead>
+            <TableHead className="bg-slate-800 text-white">Case Title</TableHead>
+            <TableHead className="bg-slate-800 text-white">Client</TableHead>
+            <TableHead className="bg-slate-800 text-white">Type</TableHead>
+            <TableHead className="bg-slate-800 text-white">Status</TableHead>
+            <TableHead className="bg-slate-800 text-white">Priority</TableHead>
+            <TableHead className="bg-slate-800 text-white">Created By</TableHead>
+            <TableHead className="bg-slate-800 text-white">Updated</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
