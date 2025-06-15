@@ -9,6 +9,13 @@ import { Dialog, DialogHeader, DialogContent, DialogTitle } from "@/components/u
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/AuthContext";
 import { JoinHruLegal } from "@/components/team/JoinHruLegal";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 // FIXED: Updated icon imports to available names in lucide-react
 import { UserPlus, Search, Check, Mail, Phone, MoreHorizontal, User, Briefcase, CheckSquare, Settings, X, Calendar } from "lucide-react";
@@ -121,11 +128,11 @@ function TeamDirectory() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="bg-slate-900">Team Member</TableHead>
-                  <TableHead className="bg-slate-900">Role</TableHead>
-                  <TableHead className="bg-slate-900">Status</TableHead>
-                  <TableHead className="bg-slate-900">Cases</TableHead>
-                  <TableHead className="bg-slate-900">Contact</TableHead>
+                  <TableHead>Team Member</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Cases</TableHead>
+                  <TableHead>Contact</TableHead>
                   <TableHead />
                 </TableRow>
               </TableHeader>
@@ -138,7 +145,7 @@ function TeamDirectory() {
                     <TableCell colSpan={6}>
                       <span className="text-sm block px-2 py-6 text-center text-slate-900">No team members found.</span>
                     </TableCell>
-                  </TableRow> : filtered.map((member: any) => <TableRow key={member.id} className="cursor-pointer" onClick={() => setSidebarMember(member)} data-selected={detailMember?.id === member.id}>
+                  </TableRow> : filtered.map((member: any) => <TableRow key={member.id} className="cursor-pointer data-[selected=true]:bg-accent" onClick={() => setSidebarMember(member)} data-selected={detailMember?.id === member.id}>
                       {/* Member Avatar, Name, Email */}
                       <TableCell>
                         <div className="flex items-center gap-3">
