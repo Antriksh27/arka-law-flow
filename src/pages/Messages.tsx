@@ -248,7 +248,12 @@ const Messages = () => {
                     onChange={(e) => setMessage(e.target.value)}
                   />
                 </TextFieldUnstyled>
-                <IconButton type="submit" variant="brand-primary" icon={<Send className="w-5 h-5 />} disabled={sendMessageMutation.isPending} />
+                <IconButton
+                  type="submit"
+                  variant="brand-primary"
+                  icon={<Send className="w-5 h-5" />}
+                  disabled={sendMessageMutation.isPending}
+                />
               </form>
             </>
           ) : (
@@ -263,3 +268,4 @@ const Messages = () => {
 };
 
 export default Messages;
+
