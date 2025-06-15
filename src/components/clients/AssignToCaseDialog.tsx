@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -189,7 +188,7 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
                                   </h3>
                                   <div className="flex items-center gap-4 text-sm text-gray-500">
                                     <Badge
-                                      variant="secondary"
+                                      variant="default"
                                       className={getStatusColor(case_item.status)}
                                     >
                                       {case_item.status?.replace('_', ' ')}

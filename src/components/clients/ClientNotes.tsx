@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -97,7 +96,7 @@ export const ClientNotes: React.FC<ClientNotesProps> = ({ clientId }) => {
                 {note.tags && note.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1 mb-3">
                     {note.tags.map((tag: string, index: number) => (
-                      <Badge key={index} variant="secondary" className="text-xs">
+                      <Badge key={index} variant="default" className="text-xs">
                         {tag}
                       </Badge>
                     ))}

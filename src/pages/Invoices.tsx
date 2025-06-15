@@ -118,7 +118,7 @@ const Invoices: React.FC = () => {
       <div className="flex w-full flex-wrap items-center gap-4">
         <div className="flex grow shrink-0 basis-0 items-center gap-2">
           <h1 className="text-2xl font-semibold text-gray-900">Invoices</h1>
-          <Badge variant="secondary">{invoices ? `${invoices.length} total` : "--"}</Badge>
+          <Badge variant="default">{invoices ? `${invoices.length} total` : "--"}</Badge>
         </div>
         <Button className="bg-primary hover:bg-primary/90 text-white px-4">
           <Plus className="w-4 h-4 mr-2" />

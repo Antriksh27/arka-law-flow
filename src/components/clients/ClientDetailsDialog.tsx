@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
@@ -26,12 +27,12 @@ export const ClientDetailsDialog: React.FC<ClientDetailsDialogProps> = ({
   open,
   onOpenChange,
 }) => {
-  const getStatusBadgeVariant = (status: string) => {
+  const getStatusBadgeVariant = (status: string): "default" | "outline" | "success" | "error" | "warning" => {
     switch (status) {
-      case 'active': return 'default';
-      case 'inactive': return 'secondary';
-      case 'lead': return 'outline';
-      case 'prospect': return 'destructive';
+      case 'active': return 'success';
+      case 'inactive': return 'outline';
+      case 'lead': return 'warning';
+      case 'prospect': return 'error';
       default: return 'default';
     }
   };
@@ -42,7 +43,6 @@ export const ClientDetailsDialog: React.FC<ClientDetailsDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Client Details</DialogTitle>
         </DialogHeader>
-
         <div className="space-y-6">
           {/* Basic Information */}
           <Card className="bg-white">

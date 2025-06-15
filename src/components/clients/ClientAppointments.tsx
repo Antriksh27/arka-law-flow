@@ -114,7 +114,7 @@ export const ClientAppointments: React.FC<ClientAppointmentsProps> = ({ clientId
                     </div>
                     <div className="flex items-center gap-4 text-sm text-gray-500">
                       <Badge 
-                        variant="secondary" 
+                        variant="default" 
                         className={getStatusColor(appointment.status)}
                       >
                         {appointment.status}

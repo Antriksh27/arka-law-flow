@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -79,7 +78,7 @@ export const ClientCases: React.FC<ClientCasesProps> = ({ clientId }) => {
                     </h3>
                     <div className="flex items-center gap-4 text-sm text-gray-500">
                       <Badge 
-                        variant="secondary" 
+                        variant="default" 
                         className={getStatusColor(case_item.status)}
                       >
                         {case_item.status?.replace('_', ' ')}

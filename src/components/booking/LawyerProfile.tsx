@@ -77,7 +77,7 @@ export const LawyerProfile: React.FC<LawyerProfileProps> = ({ lawyer }) => {
           <h3 className="text-sm font-medium text-gray-900 mb-3">Specializations</h3>
           <div className="flex flex-wrap gap-2">
             {getSpecializations().map((spec, index) => (
-              <Badge key={index} variant="secondary" className="text-xs">
+              <Badge key={index} variant="default" className="text-xs">
                 {spec}
               </Badge>
             ))}

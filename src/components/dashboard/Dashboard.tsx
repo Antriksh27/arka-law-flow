@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { Calendar, Users, File, Folder, Plus, Upload, Download, Clock, User, FileText, CheckCircle, MoreHorizontal, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -135,7 +134,7 @@ const Dashboard = () => {
                       {day.date}
                     </span>
                     {day.eventCount > 0 && (
-                      <Badge variant={isCurrentDay ? 'default' : 'secondary'}>
+                      <Badge variant={isCurrentDay ? 'default' : 'default'}>
                           {day.eventCount} {day.eventCount === 1 ? 'Event' : 'Events'}
                       </Badge>
                     )}
