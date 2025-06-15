@@ -1,4 +1,3 @@
-
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -54,7 +53,7 @@ export const useMessages = (threadId: string | null) => {
       const [messagesRes, participantsRes] = await Promise.all([
         supabase
           .from('messages')
-          .select('id, created_at, message_text, sender_id')
+          .select('id, created_at, message_text, sender_id, thread_id, attachments')
           .eq('thread_id', threadId)
           .order('created_at', { ascending: true }),
         supabase
