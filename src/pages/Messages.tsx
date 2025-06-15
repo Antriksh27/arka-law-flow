@@ -51,56 +51,74 @@ const Messages = () => {
   const [message, setMessage] = useState('');
   const [search, setSearch] = useState('');
 
-  // Fetch threads for the left sidebar
+  // Fetch threads for the left sidebar (no deep select)
   const { data: threads, isLoading: isLoadingThreads } = useQuery<Thread[]>({
     queryKey: ['threads', user?.id],
     queryFn: async () => {
       if (!user) return [];
 
+      // Step 1: Get threads user participates in
       const { data: participantData, error: participantError } = await supabase
         .from('message_thread_participants')
         .select('thread_id')
         .eq('user_id', user.id);
 
       if (participantError) throw participantError;
-      const threadIds = participantData.map(p => p.thread_id);
+      const threadIds = participantData.map((p: any) => p.thread_id);
 
+      if (!threadIds.length) return [];
+
+      // Step 2: Fetch threads -- direct columns only
       const { data: threadsData, error: threadsError } = await supabase
         .from('message_threads')
-        .select(`
-          id,
-          title,
-          is_private,
-          participants:message_thread_participants(
-            profile:profiles(id, full_name, profile_pic)
-          ),
-          messages (
-            message_text,
-            created_at
-          )
-        `)
-        .in('id', threadIds)
-        .order('created_at', { referencedTable: 'messages', ascending: false })
-        .limit(1, { referencedTable: 'messages' });
+        .select('id, title, is_private, created_at')
+        .in('id', threadIds);
 
       if (threadsError) throw threadsError;
-      return threadsData || [];
+
+      // Step 3: For each thread, fetch shallow messages (last) and shallow participants
+      // (It's acceptable for now to do this on the client for limited numbers. For optimization, use a view/custom function.)
+      const threadsWithData = await Promise.all((threadsData || []).map(async (thread: any) => {
+        // Get last message in thread
+        const { data: messagesData } = await supabase
+          .from('messages')
+          .select('message_text, created_at')
+          .eq('thread_id', thread.id)
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        // Get participants (user_id as id)
+        const { data: participantsData } = await supabase
+          .from('message_thread_participants')
+          .select('user_id')
+          .eq('thread_id', thread.id);
+
+        return {
+          ...thread,
+          participants: participantsData?.map((p: any) => ({ profile: { id: p.user_id } })),
+          messages: messagesData || [],
+        };
+      }));
+
+      return threadsWithData as Thread[];
     },
     enabled: !!user,
   });
 
-  // Fetch messages for the selected thread
+  // Fetch messages for the selected thread (no deep select)
   const { data: messages, isLoading: isLoadingMessages } = useQuery<Message[]>({
     queryKey: ['messages', selectedThreadId],
     queryFn: async () => {
       if (!selectedThreadId) return [];
+      // Select direct columns; skip senderProfile deep join for now
       const { data, error } = await supabase
         .from('messages')
-        .select(`*, senderProfile:profiles(id, full_name, profile_pic)`)
+        .select('*')
         .eq('thread_id', selectedThreadId)
         .order('created_at', { ascending: true });
       
       if (error) throw error;
+      // To render senderProfile, add logic here for parallel fetching of profile if wanted
       return data || [];
     },
     enabled: !!selectedThreadId,
@@ -142,14 +160,16 @@ const Messages = () => {
     return threads?.find(t => t.id === selectedThreadId);
   }, [threads, selectedThreadId]);
 
+  // Simplified getThreadInfo — can't show participant profile data here now
   const getThreadInfo = (thread: Thread) => {
     if (!user) return { name: '', avatar: '' };
 
     if (thread.is_private) {
-      const otherParticipant = thread.participants.find(p => p.profile?.id !== user.id);
+      // Find participant other than current user
+      const otherP = thread.participants?.find((p) => p.profile?.id !== user.id);
       return {
-        name: otherParticipant?.profile?.full_name || 'Direct Message',
-        avatar: otherParticipant?.profile?.profile_pic || '',
+        name: otherP?.profile?.id ? `User ${otherP.profile.id.slice(0, 6)}` : 'Direct Message',
+        avatar: '', // No avatar if not available
       };
     }
     return {
