@@ -7,24 +7,32 @@ interface ChatListProps {
 }
 
 interface ChatListItemProps {
-  avatar: string;
+  avatar: string | React.ReactNode;
   name: string;
   message: string;
   timestamp: string;
   selected?: boolean;
   unread?: boolean;
+  onClick?: () => void;
 }
 
-const ChatListItem: React.FC<ChatListItemProps> = ({ avatar, name, message, timestamp, selected = false, unread = false }) => (
+const ChatListItem: React.FC<ChatListItemProps> = ({ avatar, name, message, timestamp, selected = false, unread = false, onClick }) => (
   <li
     className={`flex items-start gap-3 p-2 rounded-lg cursor-pointer transition-colors w-full ${
       selected ? 'bg-accent' : 'hover:bg-gray-100'
     }`}
+    onClick={onClick}
   >
-    <Avatar className="h-10 w-10 flex-shrink-0">
-      <AvatarImage src={avatar} alt={name} />
-      <AvatarFallback>{name.charAt(0)}</AvatarFallback>
-    </Avatar>
+    {typeof avatar === 'string' ? (
+      <Avatar className="h-10 w-10 flex-shrink-0">
+        <AvatarImage src={avatar} alt={name} />
+        <AvatarFallback>{name.charAt(0)}</AvatarFallback>
+      </Avatar>
+    ) : (
+        <div className="h-10 w-10 flex-shrink-0 flex items-center justify-center">
+            {avatar}
+        </div>
+    )}
     <div className="flex-1 min-w-0">
       <div className="flex justify-between items-center">
         <p className={`font-semibold text-sm truncate ${selected ? 'text-accent-foreground' : 'text-gray-900'}`}>{name}</p>
@@ -46,3 +54,4 @@ const ChatList: React.FC<ChatListProps> & { ChatListItem: React.FC<ChatListItemP
 ChatList.ChatListItem = ChatListItem;
 
 export default ChatList;
+

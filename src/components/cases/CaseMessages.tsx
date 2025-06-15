@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Paperclip, Send } from 'lucide-react';
 import TimelineDivider from '@/components/messages/ui/TimelineDivider';
@@ -16,6 +15,9 @@ interface CaseMessagesProps {
 export const CaseMessages: React.FC<CaseMessagesProps> = ({
   caseId
 }) => {
+  // TODO: This component needs to be updated to use the new messaging hooks.
+  // It should fetch the message thread associated with `caseId`, or create one if it doesn't exist.
+  // It will then use the ChatView component or a similar implementation to display and send messages.
   return (
     <div className="border border-gray-200 rounded-lg h-[600px] flex flex-col bg-white">
       <div className="p-4 border-b border-gray-200 flex justify-between items-center">
@@ -27,21 +29,12 @@ export const CaseMessages: React.FC<CaseMessagesProps> = ({
         </Button>
       </div>
       <div className="flex-grow overflow-y-auto p-6 space-y-6 bg-gray-50">
-        <TimelineDivider>Yesterday</TimelineDivider>
-        <ChatReceived
-          avatar="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d"
-          initials="RM"
-          name="Rahul Mehta"
-          message="Hi, I've reviewed the property documents for this case. There are a few concerns we need to address."
-          time="2:30 PM"
-        />
-        <ChatSent
-          name="You"
-          message="Could you highlight the specific areas that need attention?"
-          timestamp="2:35 PM"
-        />
+        <div className="text-center text-gray-500 p-8">
+            <p>Case messaging is being upgraded.</p>
+            <p>Please use the main Messages page for now.</p>
+        </div>
       </div>
-      <div className="flex w-full items-center gap-4 border-t border-solid border-gray-200 bg-white px-4 py-3">
+      <div className="flex w-full items-center gap-4 border-t border-solid border-gray-200 bg-white px-4 py-3 opacity-50 pointer-events-none">
         <IconButton
           variant="brand-tertiary"
           icon={<Paperclip className="w-5 h-5" />}
@@ -59,4 +52,3 @@ export const CaseMessages: React.FC<CaseMessagesProps> = ({
     </div>
   );
 };
-
