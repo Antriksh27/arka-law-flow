@@ -2615,7 +2615,7 @@ export type Database = {
       pipeline_type: "litigation" | "advisory" | "corporate" | "regulatory"
       task_priority: "low" | "medium" | "high"
       task_status: "todo" | "in_progress" | "completed"
-      team_member_status: "active" | "invited" | "suspended"
+      team_member_status: "active" | "invited" | "suspended" | "pending"
       team_role_enum:
         | "lawyer"
         | "junior"
@@ -2787,7 +2787,7 @@ export const Constants = {
       pipeline_type: ["litigation", "advisory", "corporate", "regulatory"],
       task_priority: ["low", "medium", "high"],
       task_status: ["todo", "in_progress", "completed"],
-      team_member_status: ["active", "invited", "suspended"],
+      team_member_status: ["active", "invited", "suspended", "pending"],
       team_role_enum: [
         "lawyer",
         "junior",
