@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState, useEffect } from "react";
 import { useTeamMembers } from "@/components/team/useTeamMembers";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
@@ -8,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogHeader, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/AuthContext";
+import { SetupFirm } from "@/components/team/SetupFirm";
 
 // FIXED: Updated icon imports to available names in lucide-react
 import { UserPlus, Search, Check, Mail, Phone, MoreHorizontal, User, Briefcase, CheckSquare, Settings, X, Calendar } from "lucide-react";
@@ -24,38 +26,9 @@ function TeamDirectory() {
     data = [],
     isLoading
   } = useTeamMembers();
-  const { user, firmId } = useAuth();
+  const { user, firmId, loading: authLoading } = useAuth();
   const [search, setSearch] = useState("");
   const [sidebarMember, setSidebarMember] = useState<any | null>(null);
-
-  useEffect(() => {
-    if (user && firmId) {
-      console.log("--- TEAM MEMBER INSERT SCRIPT ---");
-      console.log("Your User ID:", user.id);
-      console.log("Your Firm ID:", firmId);
-      console.log(
-        "✅ Copy and run this SQL in your Supabase project to ensure you are a team member:"
-      );
-      console.log(`
-INSERT INTO public.team_members (user_id, firm_id, role, status, full_name, email, joined_at)
-VALUES (
-  '${user.id}',
-  '${firmId}',
-  'admin',
-  'active',
-  '${user.user_metadata?.full_name || "Admin User"}',
-  '${user.email}',
-  now()
-)
-ON CONFLICT (user_id, firm_id) DO NOTHING;
-      `);
-      console.log("---------------------------------");
-    } else if (user && !firmId) {
-        console.warn("⚠️ Auth user found, but no firmId is associated in the app. This means your user is not linked to a firm in the 'team_members' table. Please run the generated SQL script once you find your firm_id, or ask me to create a firm for you.")
-    } else {
-        console.log("User not logged in. Cannot generate team member script.")
-    }
-  }, [user, firmId]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -79,6 +52,34 @@ ON CONFLICT (user_id, firm_id) DO NOTHING;
 
   // Show selected member details (null = none)
   const detailMember = sidebarMember || filtered[0] || null;
+
+  if (authLoading) {
+    return (
+      <div className="container max-w-none flex h-full w-full flex-col items-start gap-6 py-12 bg-slate-50">
+        <div className="flex w-full items-center justify-between">
+          <div className="flex flex-col items-start gap-2">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-6 w-72" />
+          </div>
+          <Skeleton className="h-10 w-40" />
+        </div>
+        <div className="flex w-full items-start gap-6">
+          <div className="flex-grow space-y-2">
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-16 w-full" />
+          </div>
+          <Skeleton className="w-80 h-96" />
+        </div>
+      </div>
+    );
+  }
+
+  if (user && !firmId) {
+    return <SetupFirm user={user} />;
+  }
+
   return <div className="container max-w-none flex h-full w-full flex-col items-start gap-6 py-12 bg-slate-50">
       {/* Header + Actions */}
       <div className="flex w-full flex-col items-start gap-4">
