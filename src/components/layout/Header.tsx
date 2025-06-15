@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Bell, Settings, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -26,7 +27,7 @@ const Header = () => {
           {/* User Profile Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-[#111827] hover:bg-[#F3F4F6] focus:ring-[#111827]">
+              <Button variant="ghost" size="icon" className="text-slate-50 bg-amber-600 hover:bg-amber-500 focus:ring-[#111827]">
                 <User className="w-5 h-5" />
               </Button>
             </DropdownMenuTrigger>
