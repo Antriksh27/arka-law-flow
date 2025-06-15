@@ -28,7 +28,7 @@ function NavHeader() {
 
   return (
     <ul
-      className="relative mx-auto flex w-fit rounded-full border-2 border-[#E0E7FF] bg-white p-1 shadow-sm"
+      className="relative mx-auto flex w-fit rounded-full border-2 border-[#F3F4F6] bg-white p-1 shadow-sm"
       onMouseLeave={() => setPosition((pv) => ({ ...pv, opacity: 0 }))}
     >
       {navigation.map((item) => (
@@ -74,8 +74,8 @@ const Tab = ({
         to={href}
         className={`block px-4 py-2 md:px-6 md:py-3 text-sm font-medium rounded-full transition-colors ${
           isActive
-            ? 'bg-[#1E3A8A] text-white shadow'
-            : 'text-[#1E3A8A] hover:bg-[#E0E7FF] hover:text-[#1E3A8A]'
+            ? 'bg-[#111827] text-white shadow'
+            : 'text-[#111827] hover:bg-[#F3F4F6] hover:text-[#111827]'
         }`}
         style={{ letterSpacing: "0.05em" }}
       >
@@ -89,7 +89,7 @@ const Cursor = ({ position }: { position: any }) => {
   return (
     <motion.li
       animate={position}
-      className="absolute z-0 h-8 md:h-12 rounded-full bg-[#E0E7FF]"
+      className="absolute z-0 h-8 md:h-12 rounded-full bg-[#F3F4F6]"
       style={{ top: 2 }}
     />
   );

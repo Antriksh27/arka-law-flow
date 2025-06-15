@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Bell, Settings, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,7 +9,7 @@ const Header = () => {
     user,
     signOut
   } = useAuth();
-  return <header className="border-b border-[#E5E7EB] px-8 py-4 bg-slate-900">
+  return <header className="border-b border-[#E5E7EB] px-8 py-4 bg-white">
       <div className="flex items-center justify-between">
         {/* Logo Section */}
         <div className="flex items-center gap-4">
@@ -16,17 +17,17 @@ const Header = () => {
         </div>
         {/* Right Side Actions */}
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" className="text-[#1E3A8A] hover:bg-blue-50 focus:ring-[#1E3A8A] relative">
+          <Button variant="ghost" size="icon" className="text-[#111827] hover:bg-[#F3F4F6] focus:ring-[#111827] relative">
             <Bell className="w-5 h-5" />
-            <span className="absolute -top-1 -right-1 w-3 h-3 bg-[#3B82F6] border-2 border-white rounded-full"></span>
+            <span className="absolute -top-1 -right-1 w-3 h-3 bg-[#6B7280] border-2 border-white rounded-full"></span>
           </Button>
-          <Button variant="ghost" size="icon" className="text-[#1E3A8A] hover:bg-blue-50 focus:ring-[#1E3A8A]">
+          <Button variant="ghost" size="icon" className="text-[#111827] hover:bg-[#F3F4F6] focus:ring-[#111827]">
             <Settings className="w-5 h-5" />
           </Button>
           {/* User Profile Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-[#1E3A8A] hover:bg-blue-50 focus:ring-[#1E3A8A]">
+              <Button variant="ghost" size="icon" className="text-[#111827] hover:bg-[#F3F4F6] focus:ring-[#111827]">
                 <User className="w-5 h-5" />
               </Button>
             </DropdownMenuTrigger>

@@ -23,30 +23,30 @@ export default {
 			},
 			colors: {
 				background: '#F9FAFB',
-				foreground: '#1F2937',
+				foreground: '#111827', // Gray-900 for main text
 				primary: {
-					DEFAULT: '#1E3A8A',
-					50: '#EFF6FF',
-					100: '#DBEAFE',
-					200: '#BFDBFE',
-					300: '#93C5FD',
-					400: '#60A5FA',
-					500: '#3B82F6',
-					600: '#2563EB',
-					700: '#1D4ED8',
-					800: '#1E40AF',
-					900: '#1E3A8A',
+					DEFAULT: '#111827',   // Gray-900 instead of blue
+					50:   '#F9FAFB',      // very light
+					100:  '#F3F4F6',
+					200:  '#E5E7EB',
+					300:  '#D1D5DB',
+					400:  '#9CA3AF',
+					500:  '#6B7280',
+					600:  '#4B5563',
+					700:  '#374151',
+					800:  '#1F2937',
+					900:  '#111827',      // Gray-900 (primary)
 					foreground: '#FFFFFF'
 				},
 				accent: {
-					DEFAULT: '#E0E7FF',
-					50: '#EEF2FF'
+					DEFAULT: '#F3F4F6',   // lighter gray for accent
+					50: '#F9FAFB'
 				},
 				secondary: {
 					DEFAULT: '#F3F4F6',
 					100: '#F3F4F6',
 					200: '#E5E7EB',
-					foreground: '#1E3A8A'
+					foreground: '#111827' // text color to Gray-900
 				},
 				destructive: {
 					DEFAULT: '#EF4444',
@@ -63,18 +63,18 @@ export default {
 					800: '#92400E',
 				},
 				info: {
-					DEFAULT: '#3B82F6',
-					50: '#EFF6FF',
-					800: '#1E40AF',
+					DEFAULT: '#6B7280', // info to muted gray
+					50: '#F9FAFB',
+					800: '#1F2937',
 				},
 				muted: {
 					DEFAULT: '#6B7280'
 				},
 				legal: {
-					blue: '#1E3A8A',
-					'blue-light': '#E0E7FF',
+					blue: '#111827',  // override to Gray-900
+					'blue-light': '#F3F4F6',
 					background: '#F9FAFB',
-					text: '#1F2937',
+					text: '#111827',
 					'text-light': '#6B7280'
 				},
 				card: {

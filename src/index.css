@@ -7,50 +7,50 @@
 @layer base {
   :root {
     --background: 249 250 251;
-    --foreground: 31 41 55;
+    --foreground: 17 24 39;
 
     --card: 255 255 255;
-    --card-foreground: 31 41 55;
+    --card-foreground: 17 24 39;
 
-    --primary: 30 58 138;
-    --primary-hover: 29 78 216;
+    --primary: 17 24 39;         /* #111827 Gray-900 */
+    --primary-hover: 31 41 55;   /* #1F2937 Gray-800 */
     --primary-foreground: 255 255 255;
 
     --secondary: 243 244 246;
-    --secondary-foreground: 30 58 138;
+    --secondary-foreground: 17 24 39;
 
-    --accent: 224 231 255;
+    --accent: 243 244 246;
     --destructive: 239 68 68;
     --success: 16 185 129;
     --warning: 245 158 11;
-    --info: 59 130 246;
+    --info: 107 114 128;
 
     --border: 229 231 235;
     --input: 229 231 235;
-    --ring: 30 58 138;
+    --ring: 17 24 39;
 
     --radius: 0.75rem;
   }
 
   body {
-    @apply bg-[#F9FAFB] text-[#1F2937] font-sans antialiased;
+    @apply bg-[#F9FAFB] text-[#111827] font-sans antialiased;
   }
-  h1 { @apply text-3xl font-bold text-[#1F2937]; }
-  h2 { @apply text-2xl font-semibold text-[#1F2937]; }
-  h3 { @apply text-xl font-semibold text-[#1F2937]; }
-  h4 { @apply text-lg font-semibold text-[#1F2937]; }
-  h5, h6 { @apply font-medium text-[#1F2937]; }
+  h1 { @apply text-3xl font-bold text-[#111827]; }
+  h2 { @apply text-2xl font-semibold text-[#111827]; }
+  h3 { @apply text-xl font-semibold text-[#111827]; }
+  h4 { @apply text-lg font-semibold text-[#111827]; }
+  h5, h6 { @apply font-medium text-[#111827]; }
   p, span, label {
-    @apply font-normal text-[#1F2937];
+    @apply font-normal text-[#111827];
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-[#1E3A8A] text-white font-medium rounded-lg px-4 py-2 shadow-sm hover:bg-[#1D4ED8] focus:ring-2 focus:ring-[#1E3A8A];
+    @apply bg-[#111827] text-white font-medium rounded-lg px-4 py-2 shadow-sm hover:bg-[#1F2937] focus:ring-2 focus:ring-[#111827];
   }
   .btn-secondary {
-    @apply bg-[#F3F4F6] text-[#1E3A8A] font-medium rounded-lg px-4 py-2 hover:bg-[#E5E7EB] shadow-sm;
+    @apply bg-[#F3F4F6] text-[#111827] font-medium rounded-lg px-4 py-2 hover:bg-[#E5E7EB] shadow-sm;
   }
   .card {
     @apply bg-white rounded-2xl shadow-sm p-6 border border-[#E5E7EB];
@@ -58,12 +58,12 @@
   .card-interactive {
     @apply hover:shadow-md transition-shadow duration-100;
   }
-  .badge-info { @apply bg-[#EFF6FF] text-[#3B82F6]; }
+  .badge-info { @apply bg-[#F3F4F6] text-[#111827]; }
   .badge-success { @apply bg-green-100 text-green-800; }
   .badge-error { @apply bg-red-50 text-red-500; }
   .badge-warning { @apply bg-yellow-50 text-yellow-800; }
   .table-header {
-    @apply bg-[#E0E7FF] text-[#1E3A8A] text-xs font-bold uppercase;
+    @apply bg-[#F3F4F6] text-[#111827] text-xs font-bold uppercase;
   }
   .border-default { @apply border-[#E5E7EB]; }
 }
@@ -78,4 +78,3 @@
 .dialog-overlay {
   background: rgba(0,0,0,0.3);
 }
-
