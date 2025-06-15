@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -17,7 +16,6 @@ import Tasks from './pages/Tasks';
 import Hearings from './pages/Hearings';
 import Documents from './pages/Documents';
 import Notes from './pages/Notes';
-import Messages from './pages/Messages';
 import Invoices from './pages/Invoices';
 import Team from './pages/Team';
 import NotFound from './pages/NotFound';
@@ -61,7 +59,7 @@ function App() {
                         <Route path="/hearings" element={<Hearings />} />
                         <Route path="/documents" element={<Documents />} />
                         <Route path="/notes" element={<Notes />} />
-                        <Route path="/messages" element={<Messages />} />
+                        {/* <Route path="/messages" element={<Messages />} /> */} {/* Message module removed */}
                         <Route path="/invoices" element={<Invoices />} />
                         <Route path="/team" element={<Team />} />
                         <Route path="*" element={<NotFound />} />
