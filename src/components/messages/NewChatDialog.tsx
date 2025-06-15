@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -35,9 +34,8 @@ export const NewChatDialog: React.FC<NewChatDialogProps> = ({ open, onOpenChange
     setIsCreating(true);
 
     try {
-      // For now, we will create a new thread every time.
-      // A better implementation would check for an existing thread first.
-      const { data: newThreadId, error } = await supabase.rpc('create_private_thread', {
+      // The new function `create_private_thread` handles checking for existing threads.
+      const { data: newThreadId, error } = await supabase.rpc('create_private_thread' as any, {
         p_other_user_id: selectedUserId,
       });
 
@@ -45,7 +43,7 @@ export const NewChatDialog: React.FC<NewChatDialogProps> = ({ open, onOpenChange
       
       toast({ title: "Success", description: "New chat created." });
       await queryClient.invalidateQueries({ queryKey: ['threads'] });
-      onChatCreated(newThreadId);
+      onChatCreated(newThreadId as string);
     } catch (error: any) {
       console.error('Error creating chat:', error);
       toast({ variant: 'destructive', title: "Error", description: error.message });

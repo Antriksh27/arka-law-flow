@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -43,7 +42,8 @@ export const useThreads = () => {
             created_at
           ),
           thread_participants (
-            profiles (
+            user_id,
+            profiles!user_id (
               id,
               full_name,
               profile_pic
@@ -69,7 +69,7 @@ export const useThreads = () => {
         let avatar: string | React.ReactNode = <Briefcase className="w-10 h-10 p-2 bg-gray-200 rounded-full" />;
 
         if (isPrivate) {
-            if (otherParticipants.length > 0) {
+            if (otherParticipants.length > 0 && otherParticipants[0]) {
                 title = otherParticipants.map(p => p.full_name).join(', ');
                 avatar = otherParticipants[0].profile_pic || '';
             } else {
@@ -99,4 +99,3 @@ export const useThreads = () => {
 
   return query;
 };
-

@@ -45,7 +45,7 @@ export const useMessages = (threadId: string | null) => {
           .order('created_at', { ascending: true }),
         supabase
           .from('thread_participants')
-          .select('profiles(id, full_name, profile_pic)')
+          .select('user_id, profiles!user_id(id, full_name, profile_pic)')
           .eq('thread_id', threadId)
       ]);
       

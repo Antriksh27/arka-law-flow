@@ -2438,6 +2438,10 @@ export type Database = {
             }
         Returns: string
       }
+      create_private_thread: {
+        Args: { p_other_user_id: string }
+        Returns: string
+      }
       get_all_lawyers_and_admin: {
         Args: Record<PropertyKey, never>
         Returns: {
