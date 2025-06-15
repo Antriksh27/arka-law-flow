@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
@@ -18,22 +17,28 @@ export function JoinHruLegal({ user }: JoinHruLegalProps) {
       if (!user) return;
 
       try {
+        console.log("JoinHruLegal: Starting join process...");
         // 1. Get HRU LEGAL firm ID
+        console.log("JoinHruLegal: Fetching firm ID for HRU LEGAL...");
         const { data: firm, error: firmError } = await supabase
           .from('law_firms')
           .select('id')
           .eq('name', 'HRU LEGAL')
           .single();
 
-        if (firmError || !firm) {
-          console.error('Error fetching firm:', firmError);
-          toast.error('Could not find the default law firm. Please contact support.');
+        if (firmError) throw firmError;
+        if (!firm) {
+          const err = new Error('Could not find the default law firm. Please contact support.');
+          console.error('Error fetching firm:', err);
+          toast.error(err.message);
           setStatus('error');
           return;
         }
         const firmId = firm.id;
+        console.log("JoinHruLegal: Firm ID found:", firmId);
 
         // 2. Check if a request already exists
+        console.log("JoinHruLegal: Checking for existing team member request...");
         const { data: existingMember, error: existingMemberError } = await supabase
           .from('team_members')
           .select('id, status')
@@ -42,17 +47,21 @@ export function JoinHruLegal({ user }: JoinHruLegalProps) {
           .maybeSingle();
 
         if (existingMemberError) {
+          console.error("JoinHruLegal: Error checking for existing member:", existingMemberError);
           throw existingMemberError;
         }
 
         if (existingMember) {
+          console.log("JoinHruLegal: Existing member found with status:", existingMember.status);
           setStatus('pending_approval');
           return;
         }
+        console.log("JoinHruLegal: No existing member found. Creating new request.");
 
         // 3. Create a join request
         setStatus('creating_request');
         toast.info('Sending join request to HRU LEGAL...');
+        console.log("JoinHruLegal: Inserting new team member request...");
         const { error: insertError } = await supabase.from('team_members').insert({
           user_id: user.id,
           firm_id: firmId,
@@ -63,9 +72,11 @@ export function JoinHruLegal({ user }: JoinHruLegalProps) {
         });
 
         if (insertError) {
+          console.error("JoinHruLegal: Error inserting new member:", insertError);
           throw insertError;
         }
 
+        console.log("JoinHruLegal: Join request successful.");
         toast.success('Your request has been sent for approval.');
         setStatus('pending_approval');
 

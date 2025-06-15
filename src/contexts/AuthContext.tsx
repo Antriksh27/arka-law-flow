@@ -38,32 +38,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
     try {
-      console.log(`AuthContext: Fetching firm_id for user: ${userId}`);
-      const { data, error } = await supabase
+      console.log(`AuthContext: START: Fetching firm_id for user: ${userId}`);
+      const { data, error, status } = await supabase
         .from('team_members')
         .select('firm_id')
         .eq('user_id', userId)
         .maybeSingle();
+      
+      console.log(`AuthContext: DB RESPONSE: data:`, data, `error:`, error, `status:`, status);
 
       if (error) {
         console.error('AuthContext: Error fetching firm_id:', error.message);
         setFirmId(undefined);
         setFirmError(error.message || "Unknown error fetching firm_id.");
+        console.log(`AuthContext: END (error): firm_id fetch failed for user: ${userId}`);
         return;
       }
       if (!data || !data.firm_id) {
         console.warn(`AuthContext: No firm_id found in team_members for user: ${userId}`);
         setFirmId(undefined);
         setFirmError('No firm_id found for user.');
+        console.log(`AuthContext: END (no data): No firm_id found for user: ${userId}`);
         return;
       }
       console.log('AuthContext: Firm ID data fetched:', data);
       setFirmId(data.firm_id);
       setFirmError(null);
+      console.log(`AuthContext: END (success): firm_id set to ${data.firm_id} for user: ${userId}`);
     } catch (e: any) {
       console.error('AuthContext: Exception fetching firm_id:', e.message);
       setFirmId(undefined);
       setFirmError('Exception: ' + (e.message || 'Unknown'));
+      console.log(`AuthContext: END (exception): firm_id fetch failed for user: ${userId}`);
     }
   };
 

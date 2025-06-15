@@ -2500,6 +2500,10 @@ export type Database = {
         Args: { hearing_id: string }
         Returns: boolean
       }
+      is_current_user_active_member: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       is_lawyer: {
         Args: { user_id: string }
         Returns: boolean
