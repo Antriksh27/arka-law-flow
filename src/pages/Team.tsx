@@ -330,46 +330,6 @@ function FilterBadge({
       {label} <span className="ml-1 opacity-75">{count}</span>
     </button>;
 }
-function DropdownMenu({
-  children
-}: {
-  children: React.ReactNode;
-}) {
-  // Simple dropdown stub; replace with shadcn/ui dropdown if available.
-  return <div className="relative">{children}</div>;
-}
-function DropdownMenuTrigger({
-  asChild,
-  children
-}: {
-  asChild?: boolean;
-  children: React.ReactNode;
-}) {
-  return children;
-}
-function DropdownMenuContent({
-  align,
-  children
-}: {
-  align?: string;
-  children: React.ReactNode;
-}) {
-  return <div className="absolute right-0 mt-2 min-w-[170px] z-50 bg-white rounded-xl shadow border px-1 py-2">{children}</div>;
-}
-function DropdownMenuItem({
-  children,
-  ...props
-}: {
-  children: React.ReactNode;
-  onClick?: () => void;
-}) {
-  return <div className="flex items-center px-3 py-2 rounded-lg hover:bg-accent hover:text-primary cursor-pointer text-sm" {...props}>
-      {children}
-    </div>;
-}
-function DropdownMenuSeparator() {
-  return <div className="my-1 border-t border-gray-100"></div>;
-}
 
 // Utility: Initials from name
 function getInitials(name?: string): string {
