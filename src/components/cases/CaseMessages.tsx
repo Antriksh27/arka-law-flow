@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Paperclip, Send } from 'lucide-react';
 import TimelineDivider from '@/components/messages/ui/TimelineDivider';
@@ -36,7 +37,7 @@ export const CaseMessages: React.FC<CaseMessagesProps> = ({
       </div>
       <div className="flex w-full items-center gap-4 border-t border-solid border-gray-200 bg-white px-4 py-3 opacity-50 pointer-events-none">
         <IconButton
-          variant="brand-tertiary"
+          variant="ghost"
           icon={<Paperclip className="w-5 h-5" />}
         />
         <TextFieldUnstyled className="h-auto grow shrink-0 basis-0">
@@ -45,7 +46,7 @@ export const CaseMessages: React.FC<CaseMessagesProps> = ({
           />
         </TextFieldUnstyled>
         <IconButton
-          variant="brand-primary"
+          variant="default"
           icon={<Send className="w-5 h-5" />}
         />
       </div>
