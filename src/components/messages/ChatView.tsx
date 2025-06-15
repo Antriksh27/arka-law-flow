@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
+import { useSendMessage } from '@/hooks/use-send-message';
 
 interface ChatViewProps {
   threadId: string | null;
@@ -23,6 +24,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ threadId, threadData }) => {
   const { user } = useAuth();
   const [newMessage, setNewMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { mutate: sendMessage, isPending: isSendingMessage } = useSendMessage(threadId);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -30,21 +32,17 @@ export const ChatView: React.FC<ChatViewProps> = ({ threadId, threadData }) => {
 
   useEffect(scrollToBottom, [messages]);
   
-  const handleSendMessage = async () => {
-    if (!newMessage.trim() || !threadId || !user) return;
-    const messageText = newMessage;
-    setNewMessage('');
+  const handleSendMessage = () => {
+    const messageText = newMessage.trim();
+    if (!messageText || isSendingMessage) return;
     
-    const { error } = await supabase.from('messages').insert({
-      thread_id: threadId,
-      sender_id: user.id,
-      message_text: messageText,
+    setNewMessage('');
+    sendMessage(messageText, {
+      onError: () => {
+        // Restore message on error
+        setNewMessage(messageText);
+      },
     });
-    if (error) {
-      console.error('Error sending message:', error);
-      // Re-set message on error to allow user to retry
-      setNewMessage(messageText);
-    }
   };
 
   if (!threadId) {
@@ -127,16 +125,22 @@ export const ChatView: React.FC<ChatViewProps> = ({ threadId, threadData }) => {
             placeholder="Type your message..."
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSendMessage();
+              }
+            }}
+            disabled={isSendingMessage}
           />
         </TextFieldUnstyled>
         <IconButton
           variant="brand-primary"
           icon={<Send className="w-5 h-5" />}
           onClick={handleSendMessage}
+          disabled={isSendingMessage || !newMessage.trim()}
         />
       </div>
     </div>
   );
 };
-

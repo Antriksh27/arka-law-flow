@@ -1,6 +1,21 @@
+
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+
+export type MessageWithSender = {
+  id: string;
+  created_at: string;
+  message_text: string;
+  sender_id: string;
+  attachments?: any;
+  thread_id: string;
+  sender?: {
+    id: string;
+    full_name: string | null;
+    profile_pic: string | null;
+  };
+};
 
 export const useMessages = (threadId: string | null) => {
   const queryClient = useQueryClient();
@@ -30,7 +45,7 @@ export const useMessages = (threadId: string | null) => {
     };
   }, [threadId, queryClient, queryKey]);
 
-  return useQuery({
+  return useQuery<MessageWithSender[]>({
     queryKey,
     queryFn: async () => {
       if (!threadId) return [];
