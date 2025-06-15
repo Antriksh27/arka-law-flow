@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
@@ -52,21 +53,24 @@ export function JoinHruLegal({ user }: JoinHruLegalProps) {
         }
 
         if (existingMember) {
-          console.log("JoinHruLegal: Existing member found with status:", existingMember.status);
-          setStatus('pending_approval');
+          // If member exists but is not active, we might want to handle that.
+          // For now, if they exist in any state, we assume the process is handled.
+          // A reload will ensure AuthContext picks up the firmId if they are active.
+          console.log("JoinHruLegal: Existing member found. Status:", existingMember.status, ". Reloading to ensure correct state.");
+          window.location.reload();
           return;
         }
-        console.log("JoinHruLegal: No existing member found. Creating new request.");
+        console.log("JoinHruLegal: No existing member found. Creating new active member.");
 
-        // 3. Create a join request
+        // 3. Create an active member record
         setStatus('creating_request');
-        toast.info('Sending join request to HRU LEGAL...');
-        console.log("JoinHruLegal: Inserting new team member request...");
+        toast.info('Automatically joining HRU LEGAL...');
+        console.log("JoinHruLegal: Inserting new team member as 'active'...");
         const { error: insertError } = await supabase.from('team_members').insert({
           user_id: user.id,
           firm_id: firmId,
           role: 'junior',
-          status: 'pending',
+          status: 'active', // Auto-confirm by setting status to active
           full_name: user.user_metadata?.full_name || user.email,
           email: user.email,
         });
@@ -76,9 +80,11 @@ export function JoinHruLegal({ user }: JoinHruLegalProps) {
           throw insertError;
         }
 
-        console.log("JoinHruLegal: Join request successful.");
-        toast.success('Your request has been sent for approval.');
-        setStatus('pending_approval');
+        console.log("JoinHruLegal: Join successful, user is now active.");
+        toast.success('You have successfully joined HRU LEGAL! Refreshing...');
+        
+        // Force a page reload to re-initialize AuthContext and load the team page
+        setTimeout(() => window.location.reload(), 1500);
 
       } catch (e: any) {
         console.error('Error during join process:', e);
@@ -93,12 +99,14 @@ export function JoinHruLegal({ user }: JoinHruLegalProps) {
   let content;
   if (status === 'initializing' || status === 'creating_request') {
     content = (
-        <div className="space-y-2">
+        <div className="space-y-4">
+            <p className="text-muted-foreground">Finalizing your account setup...</p>
             <Skeleton className="h-4 w-3/4" />
             <Skeleton className="h-4 w-1/2" />
         </div>
     );
   } else if (status === 'pending_approval') {
+    // This state will be brief before reload
     content = (
       <>
         <p className="text-muted-foreground">Your request to join HRU LEGAL has been sent.</p>
