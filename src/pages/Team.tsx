@@ -1,27 +1,27 @@
-
 import React, { useMemo, useState } from "react";
 import { useTeamMembers } from "@/components/team/useTeamMembers";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Avatar } from "@/components/ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogHeader, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 
+// FIXED: Updated icon imports to available names in lucide-react
 import {
-  FeatherUserPlus,
-  FeatherSearch,
-  FeatherCheck,
-  FeatherMail,
-  FeatherPhone,
-  FeatherMoreHorizontal,
-  FeatherUser,
-  FeatherBriefcase,
-  FeatherCheckSquare,
-  FeatherSettings,
-  FeatherX,
-  FeatherCalendar
+  UserPlus,
+  Search,
+  Check,
+  Mail,
+  Phone,
+  MoreHorizontal,
+  User,
+  Briefcase,
+  CheckSquare,
+  Settings,
+  X,
+  Calendar
 } from "lucide-react";
 
 const roleLabels: Record<string, string> = {
@@ -77,7 +77,7 @@ function TeamDirectory() {
             </span>
           </div>
           <Button variant="default" className="gap-2" size="default">
-            <FeatherUserPlus className="w-5 h-5" />
+            <UserPlus className="w-5 h-5" />
             Add New Member
           </Button>
         </div>
@@ -85,7 +85,7 @@ function TeamDirectory() {
           {/* Search */}
           <div className="h-auto w-80 flex-none">
             <div className="relative">
-              <FeatherSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
               <input
                 type="text"
                 className="w-full rounded-lg bg-gray-100 pl-10 pr-4 py-2 text-sm border border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition placeholder:text-gray-500"
@@ -164,8 +164,11 @@ function TeamDirectory() {
                       {/* Member Avatar, Name, Email */}
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <Avatar className="w-8 h-8" src={member.avatar_url} alt={member.full_name}>
-                            {getInitials(member.full_name)}
+                          <Avatar className="w-8 h-8">
+                            <AvatarImage src={member.avatar_url} alt={member.full_name} />
+                            <AvatarFallback>
+                              {getInitials(member.full_name)}
+                            </AvatarFallback>
                           </Avatar>
                           <div className="flex flex-col items-start">
                             <span className="font-medium text-gray-900">{member.full_name}</span>
@@ -209,7 +212,7 @@ function TeamDirectory() {
                                 window.open(`mailto:${member.email}`);
                               }}
                             >
-                              <FeatherMail className="w-4 h-4" />
+                              <Mail className="w-4 h-4" />
                             </Button>
                           )}
                           {member.phone_number && (
@@ -221,7 +224,7 @@ function TeamDirectory() {
                                 window.open(`tel:${member.phone_number}`);
                               }}
                             >
-                              <FeatherPhone className="w-4 h-4" />
+                              <Phone className="w-4 h-4" />
                             </Button>
                           )}
                         </div>
@@ -236,22 +239,22 @@ function TeamDirectory() {
                                 size="icon"
                                 onClick={e => e.stopPropagation()}
                               >
-                                <FeatherMoreHorizontal className="w-4 h-4" />
+                                <MoreHorizontal className="w-4 h-4" />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem onClick={() => setSidebarMember(member)}>
-                                <FeatherUser className="w-4 h-4 mr-2" /> View Profile
+                                <User className="w-4 h-4 mr-2" /> View Profile
                               </DropdownMenuItem>
                               <DropdownMenuItem>
-                                <FeatherBriefcase className="w-4 h-4 mr-2" /> Assign to Case
+                                <Briefcase className="w-4 h-4 mr-2" /> Assign to Case
                               </DropdownMenuItem>
                               <DropdownMenuItem>
-                                <FeatherCheckSquare className="w-4 h-4 mr-2" /> Assign Task
+                                <CheckSquare className="w-4 h-4 mr-2" /> Assign Task
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem>
-                                <FeatherSettings className="w-4 h-4 mr-2" /> Manage Role
+                                <Settings className="w-4 h-4 mr-2" /> Manage Role
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -279,13 +282,16 @@ function TeamDirectory() {
                   size="icon"
                   onClick={() => setSidebarMember(null)}
                 >
-                  <FeatherX className="w-5 h-5" />
+                  <X className="w-5 h-5" />
                 </Button>
               </div>
               <div className="flex w-full flex-col items-start gap-4">
                 <div className="flex w-full items-center gap-4">
-                  <Avatar className="w-12 h-12" src={detailMember.avatar_url} alt={detailMember.full_name}>
-                    {getInitials(detailMember.full_name)}
+                  <Avatar className="w-12 h-12">
+                    <AvatarImage src={detailMember.avatar_url} alt={detailMember.full_name} />
+                    <AvatarFallback>
+                      {getInitials(detailMember.full_name)}
+                    </AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col items-start">
                     <span className="font-medium text-gray-900">
@@ -295,17 +301,17 @@ function TeamDirectory() {
                   </div>
                 </div>
                 <div className="flex w-full flex-col items-start gap-2">
-                  <DataFieldHorizontal icon={<FeatherMail className="w-4 h-4" />} label="Email">
+                  <DataFieldHorizontal icon={<Mail className="w-4 h-4" />} label="Email">
                     <span className="text-sm text-gray-900">
                       {detailMember.email}
                     </span>
                   </DataFieldHorizontal>
-                  <DataFieldHorizontal icon={<FeatherPhone className="w-4 h-4" />} label="Phone">
+                  <DataFieldHorizontal icon={<Phone className="w-4 h-4" />} label="Phone">
                     <span className="text-sm text-gray-900">
                       {detailMember.phone_number || "-"}
                     </span>
                   </DataFieldHorizontal>
-                  <DataFieldHorizontal icon={<FeatherCalendar className="w-4 h-4" />} label="Joined">
+                  <DataFieldHorizontal icon={<Calendar className="w-4 h-4" />} label="Joined">
                     <span className="text-sm text-gray-900">
                       {detailMember.join_date || (detailMember.joined_at ? new Date(detailMember.joined_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short' }) : "-")}
                     </span>
@@ -415,4 +421,3 @@ function DataFieldHorizontal({ icon, label, children }: { icon: React.ReactNode;
 }
 
 export default TeamDirectory;
-
