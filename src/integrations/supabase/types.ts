@@ -2541,6 +2541,10 @@ export type Database = {
         Args: { user_id: string }
         Returns: boolean
       }
+      is_participant: {
+        Args: { p_user_id: string; p_thread_id: string }
+        Returns: boolean
+      }
       is_super_admin: {
         Args: { user_id: string }
         Returns: boolean
