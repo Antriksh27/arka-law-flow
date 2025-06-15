@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ClientOverview } from './ClientOverview';
@@ -6,6 +5,7 @@ import { ClientCases } from './ClientCases';
 import { ClientAppointments } from './ClientAppointments';
 import { ClientDocuments } from './ClientDocuments';
 import { ClientNotes } from './ClientNotes';
+import { ClientTasks } from './ClientTasks';
 import { 
   BarChart3, 
   CheckSquare, 
@@ -66,9 +66,7 @@ export const ClientTabs: React.FC<ClientTabsProps> = ({
           </TabsContent>
 
           <TabsContent value="tasks" className="m-0">
-            <div className="text-center py-8 text-gray-500">
-              Tasks content coming soon
-            </div>
+            <ClientTasks clientId={clientId} />
           </TabsContent>
 
           <TabsContent value="appointments" className="m-0">
