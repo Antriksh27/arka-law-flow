@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useTeamMembers } from "@/components/team/useTeamMembers";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogHeader, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useAuth } from "@/contexts/AuthContext";
 
 // FIXED: Updated icon imports to available names in lucide-react
 import { UserPlus, Search, Check, Mail, Phone, MoreHorizontal, User, Briefcase, CheckSquare, Settings, X, Calendar } from "lucide-react";
@@ -23,8 +24,39 @@ function TeamDirectory() {
     data = [],
     isLoading
   } = useTeamMembers();
+  const { user, firmId } = useAuth();
   const [search, setSearch] = useState("");
   const [sidebarMember, setSidebarMember] = useState<any | null>(null);
+
+  useEffect(() => {
+    if (user && firmId) {
+      console.log("--- TEAM MEMBER INSERT SCRIPT ---");
+      console.log("Your User ID:", user.id);
+      console.log("Your Firm ID:", firmId);
+      console.log(
+        "✅ Copy and run this SQL in your Supabase project to ensure you are a team member:"
+      );
+      console.log(`
+INSERT INTO public.team_members (user_id, firm_id, role, status, full_name, email, joined_at)
+VALUES (
+  '${user.id}',
+  '${firmId}',
+  'admin',
+  'active',
+  '${user.user_metadata?.full_name || "Admin User"}',
+  '${user.email}',
+  now()
+)
+ON CONFLICT (user_id, firm_id) DO NOTHING;
+      `);
+      console.log("---------------------------------");
+    } else if (user && !firmId) {
+        console.warn("⚠️ Auth user found, but no firmId is associated in the app. This means your user is not linked to a firm in the 'team_members' table. Please run the generated SQL script once you find your firm_id, or ask me to create a firm for you.")
+    } else {
+        console.log("User not logged in. Cannot generate team member script.")
+    }
+  }, [user, firmId]);
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return !q ? data : data.filter((m: any) => m.full_name?.toLowerCase().includes(q) || m.email?.toLowerCase().includes(q));
