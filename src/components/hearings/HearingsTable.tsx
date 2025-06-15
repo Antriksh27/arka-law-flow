@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -27,6 +26,10 @@ export const HearingsTable: React.FC<HearingsTableProps> = ({ filters }) => {
           cases!hearings_case_id_fkey(case_title, case_number)
         `);
 
+      // Always filter for today and after
+      const today = format(new Date(), 'yyyy-MM-dd');
+      query = query.gte('hearing_date', today);
+
       // Apply date range filter only if both dates are provided
       if (filters.dateRange.from && filters.dateRange.to) {
         query = query
@@ -38,27 +41,18 @@ export const HearingsTable: React.FC<HearingsTableProps> = ({ filters }) => {
         query = query.lte('hearing_date', format(filters.dateRange.to, 'yyyy-MM-dd'));
       }
 
-      // Apply status filter only if there are selected statuses
       if (filters.status.length > 0) {
         query = query.in('status', filters.status);
       }
-
-      // Apply case filter only if a specific case is selected
       if (filters.case && filters.case !== 'all' && filters.case.trim() !== '') {
         query = query.eq('case_id', filters.case);
       }
-
-      // Apply court filter only if a specific court is selected
       if (filters.court && filters.court !== 'all' && filters.court.trim() !== '') {
         query = query.ilike('court_name', `%${filters.court}%`);
       }
-
-      // Apply assigned user filter only if a specific user is selected
       if (filters.assignedUser && filters.assignedUser !== 'all' && filters.assignedUser.trim() !== '') {
         query = query.eq('assigned_to', filters.assignedUser);
       }
-
-      // Apply search query filter only if there's a search term
       if (filters.searchQuery && filters.searchQuery.trim() !== '') {
         query = query.or(
           `court_name.ilike.%${filters.searchQuery}%,` +
@@ -68,13 +62,10 @@ export const HearingsTable: React.FC<HearingsTableProps> = ({ filters }) => {
       }
 
       const { data, error } = await query.order('hearing_date', { ascending: true });
-      
       if (error) {
         console.error('Error fetching hearings:', error);
         throw error;
       }
-      
-      console.log('Fetched hearings:', data);
       return data || [];
     }
   });

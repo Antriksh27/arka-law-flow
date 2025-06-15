@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -34,6 +33,10 @@ export const HearingsTimeline: React.FC<HearingsTimelineProps> = ({ filters }) =
           cases!hearings_case_id_fkey(case_title, case_number)
         `);
 
+      // Always filter for today and after
+      const today = format(new Date(), 'yyyy-MM-dd');
+      query = query.gte('hearing_date', today);
+
       // Apply filters
       if (filters.dateRange.from && filters.dateRange.to) {
         query = query
@@ -48,19 +51,15 @@ export const HearingsTimeline: React.FC<HearingsTimelineProps> = ({ filters }) =
       if (filters.status.length > 0) {
         query = query.in('status', filters.status);
       }
-
       if (filters.case && filters.case !== 'all' && filters.case.trim() !== '') {
         query = query.eq('case_id', filters.case);
       }
-
       if (filters.court && filters.court !== 'all' && filters.court.trim() !== '') {
         query = query.ilike('court_name', `%${filters.court}%`);
       }
-
       if (filters.assignedUser && filters.assignedUser !== 'all' && filters.assignedUser.trim() !== '') {
         query = query.eq('assigned_to', filters.assignedUser);
       }
-
       if (filters.searchQuery && filters.searchQuery.trim() !== '') {
         query = query.or(
           `court_name.ilike.%${filters.searchQuery}%,` +
@@ -70,12 +69,10 @@ export const HearingsTimeline: React.FC<HearingsTimelineProps> = ({ filters }) =
       }
 
       const { data, error } = await query.order('hearing_date', { ascending: true });
-      
       if (error) {
         console.error('Error fetching hearings:', error);
         throw error;
       }
-      
       return data || [];
     }
   });
