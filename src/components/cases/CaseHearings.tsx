@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,16 +10,15 @@ import { getHearingStatusBadge } from '../hearings/utils';
 import { useDialog } from '@/hooks/use-dialog';
 import { CreateHearingDialog } from '../hearings/CreateHearingDialog';
 import { EditHearingDialog } from '../hearings/EditHearingDialog';
-
 interface CaseHearingsProps {
   caseId: string;
 }
-
 export const CaseHearings: React.FC<CaseHearingsProps> = ({
   caseId
 }) => {
-  const { openDialog } = useDialog();
-  
+  const {
+    openDialog
+  } = useDialog();
   const {
     data: hearings,
     isLoading
@@ -30,17 +28,12 @@ export const CaseHearings: React.FC<CaseHearingsProps> = ({
       const {
         data,
         error
-      } = await supabase
-        .from('hearings')
-        .select(`
+      } = await supabase.from('hearings').select(`
           *,
           profiles!hearings_created_by_fkey(full_name)
-        `)
-        .eq('case_id', caseId)
-        .order('hearing_date', {
-          ascending: true
-        });
-      
+        `).eq('case_id', caseId).order('hearing_date', {
+        ascending: true
+      });
       if (error) throw error;
       return data || [];
     }
@@ -48,26 +41,18 @@ export const CaseHearings: React.FC<CaseHearingsProps> = ({
 
   // Function to format the hearing type string
   const formatHearingType = (type: string) => {
-    return type
-      .split('_')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+    return type.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
   };
-
   if (isLoading) {
     return <div className="text-center py-8">Loading hearings...</div>;
   }
-
   return <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Hearings</h3>
-        <Button 
-          className="bg-slate-800 hover:bg-slate-700"
-          onClick={() => {
-            const createDialog = <CreateHearingDialog />;
-            openDialog(createDialog);
-          }}
-        >
+        <Button className="bg-slate-800 hover:bg-slate-700" onClick={() => {
+        const createDialog = <CreateHearingDialog />;
+        openDialog(createDialog);
+      }}>
           <Plus className="w-4 h-4 mr-2" />
           Add Hearing
         </Button>
@@ -113,14 +98,10 @@ export const CaseHearings: React.FC<CaseHearingsProps> = ({
                 </div>}
 
               <div className="mt-4 pt-3 border-t border-gray-100 flex justify-end">
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const editDialog = <EditHearingDialog hearingId={hearing.id} />;
-                    openDialog(editDialog);
-                  }}
-                >
+                <Button variant="outline" size="sm" onClick={() => {
+            const editDialog = <EditHearingDialog hearingId={hearing.id} />;
+            openDialog(editDialog);
+          }}>
                   Edit
                 </Button>
               </div>
@@ -128,13 +109,10 @@ export const CaseHearings: React.FC<CaseHearingsProps> = ({
         </div> : <div className="text-center py-12 text-gray-500">
           <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-300" />
           <p>No hearings scheduled yet</p>
-          <Button 
-            className="mt-4 bg-blue-600 hover:bg-blue-700"
-            onClick={() => {
-              const createDialog = <CreateHearingDialog />;
-              openDialog(createDialog);
-            }}
-          >
+          <Button onClick={() => {
+        const createDialog = <CreateHearingDialog />;
+        openDialog(createDialog);
+      }} className="mt-4 bg-slate-900 hover:bg-slate-800">
             <Plus className="w-4 h-4 mr-2" />
             Schedule First Hearing
           </Button>
