@@ -2417,6 +2417,10 @@ export type Database = {
           role: string
         }[]
       }
+      get_current_user_firm_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_current_user_profile: {
         Args: Record<PropertyKey, never>
         Returns: {
