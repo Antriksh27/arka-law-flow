@@ -16,27 +16,29 @@ interface SetupFirmProps {
 export function SetupFirm({ user }: SetupFirmProps) {
   const { data: firms, isLoading } = useFirms();
   const [isCreateFirmDialogOpen, setIsCreateFirmDialogOpen] = useState(false);
+  const [joiningFirmId, setJoiningFirmId] = useState<string | null>(null);
 
   const handleJoinFirm = async (firmId: string) => {
     if (!user) return;
 
-    toast.info("Attempting to join firm...");
+    setJoiningFirmId(firmId);
+    toast.info("Sending request to join firm...");
 
     const { error } = await supabase.from("team_members").insert({
       user_id: user.id,
       firm_id: firmId,
-      role: "admin",
-      status: "active",
+      role: "junior",
+      status: "pending",
       full_name: user.user_metadata?.full_name || user.email,
       email: user.email,
     });
 
     if (error) {
       console.error("Error joining firm:", error);
-      toast.error(`Failed to join firm: ${error.message}`);
+      toast.error(`Failed to send request: ${error.message}`);
+      setJoiningFirmId(null);
     } else {
-      toast.success("Successfully joined firm! Reloading page to apply changes...");
-      setTimeout(() => window.location.reload(), 1500);
+      toast.success("Request sent! An admin must approve it before you can continue.");
     }
   };
   
@@ -67,7 +69,9 @@ export function SetupFirm({ user }: SetupFirmProps) {
                     <h3 className="font-semibold text-primary">{firm.name}</h3>
                     <p className="text-sm text-muted-foreground">{firm.address || 'No address provided'}</p>
                   </div>
-                  <Button onClick={() => handleJoinFirm(firm.id)}>Join this Firm</Button>
+                  <Button onClick={() => handleJoinFirm(firm.id)} disabled={joiningFirmId === firm.id}>
+                    {joiningFirmId === firm.id ? "Sending..." : "Join this Firm"}
+                  </Button>
                 </div>
               ))
             ) : (
