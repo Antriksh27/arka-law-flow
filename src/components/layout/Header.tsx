@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Bell, Settings, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,7 +8,7 @@ const Header = () => {
     user,
     signOut
   } = useAuth();
-  return <header className="border-b border-[#E5E7EB] px-8 py-4 bg-white">
+  return <header className="border-b border-[#E5E7EB] px-8 py-4 bg-slate-900">
       <div className="flex items-center justify-between">
         {/* Logo Section */}
         <div className="flex items-center gap-4">
