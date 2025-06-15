@@ -1952,7 +1952,7 @@ export type Database = {
           id: string
           joined_at: string | null
           phone_number: string | null
-          role: Database["public"]["Enums"]["team_member_role"]
+          role: Database["public"]["Enums"]["team_role_enum"]
           status: Database["public"]["Enums"]["team_member_status"]
           updated_at: string | null
           user_id: string
@@ -1966,7 +1966,7 @@ export type Database = {
           id?: string
           joined_at?: string | null
           phone_number?: string | null
-          role: Database["public"]["Enums"]["team_member_role"]
+          role: Database["public"]["Enums"]["team_role_enum"]
           status?: Database["public"]["Enums"]["team_member_status"]
           updated_at?: string | null
           user_id: string
@@ -1980,7 +1980,7 @@ export type Database = {
           id?: string
           joined_at?: string | null
           phone_number?: string | null
-          role?: Database["public"]["Enums"]["team_member_role"]
+          role?: Database["public"]["Enums"]["team_role_enum"]
           status?: Database["public"]["Enums"]["team_member_status"]
           updated_at?: string | null
           user_id?: string
@@ -2509,13 +2509,13 @@ export type Database = {
       pipeline_type: "litigation" | "advisory" | "corporate" | "regulatory"
       task_priority: "low" | "medium" | "high"
       task_status: "todo" | "in_progress" | "completed"
-      team_member_role:
+      team_member_status: "active" | "invited" | "suspended"
+      team_role_enum:
         | "lawyer"
         | "junior"
         | "paralegal"
         | "admin"
         | "office_staff"
-      team_member_status: "active" | "invited" | "suspended"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2681,14 +2681,14 @@ export const Constants = {
       pipeline_type: ["litigation", "advisory", "corporate", "regulatory"],
       task_priority: ["low", "medium", "high"],
       task_status: ["todo", "in_progress", "completed"],
-      team_member_role: [
+      team_member_status: ["active", "invited", "suspended"],
+      team_role_enum: [
         "lawyer",
         "junior",
         "paralegal",
         "admin",
         "office_staff",
       ],
-      team_member_status: ["active", "invited", "suspended"],
     },
   },
 } as const
