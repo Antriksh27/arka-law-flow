@@ -273,6 +273,59 @@ export type Database = {
           },
         ]
       }
+      case_assignments: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          case_id: string
+          id: string
+          team_member_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          case_id: string
+          id?: string
+          team_member_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          case_id?: string
+          id?: string
+          team_member_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_assignments_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_assignments_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "case_details"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_assignments_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_assignments_team_member_id_fkey"
+            columns: ["team_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       case_emails: {
         Row: {
           attachments: Json | null
@@ -1942,14 +1995,55 @@ export type Database = {
           },
         ]
       }
+      team_member_notes: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          note: string | null
+          team_member_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          note?: string | null
+          team_member_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          note?: string | null
+          team_member_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_member_notes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_member_notes_team_member_id_fkey"
+            columns: ["team_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       team_members: {
         Row: {
           added_by: string | null
+          avatar_url: string | null
           created_at: string | null
           email: string
           firm_id: string
           full_name: string
           id: string
+          join_date: string | null
           joined_at: string | null
           phone_number: string | null
           role: Database["public"]["Enums"]["team_role_enum"]
@@ -1959,11 +2053,13 @@ export type Database = {
         }
         Insert: {
           added_by?: string | null
+          avatar_url?: string | null
           created_at?: string | null
           email: string
           firm_id: string
           full_name: string
           id?: string
+          join_date?: string | null
           joined_at?: string | null
           phone_number?: string | null
           role: Database["public"]["Enums"]["team_role_enum"]
@@ -1973,11 +2069,13 @@ export type Database = {
         }
         Update: {
           added_by?: string | null
+          avatar_url?: string | null
           created_at?: string | null
           email?: string
           firm_id?: string
           full_name?: string
           id?: string
+          join_date?: string | null
           joined_at?: string | null
           phone_number?: string | null
           role?: Database["public"]["Enums"]["team_role_enum"]
