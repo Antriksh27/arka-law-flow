@@ -20,6 +20,7 @@ import Invoices from './pages/Invoices';
 import Team from './pages/Team';
 import NotFound from './pages/NotFound';
 import { BookingPage } from './pages/BookingPage';
+import Messages from './pages/Messages';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -59,7 +60,7 @@ function App() {
                         <Route path="/hearings" element={<Hearings />} />
                         <Route path="/documents" element={<Documents />} />
                         <Route path="/notes" element={<Notes />} />
-                        {/* <Route path="/messages" element={<Messages />} /> */} {/* Message module removed */}
+                        <Route path="/messages" element={<Messages />} />
                         <Route path="/invoices" element={<Invoices />} />
                         <Route path="/team" element={<Team />} />
                         <Route path="*" element={<NotFound />} />
