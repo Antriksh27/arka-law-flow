@@ -6,8 +6,8 @@
 
 @layer base {
   :root {
-    --background: 249 250 251; /* #F9FAFB */
-    --foreground: 31 41 55; /* #1F2937 */
+    --background: 249 250 251;
+    --foreground: 31 41 55;
 
     --card: 255 255 255;
     --card-foreground: 31 41 55;
@@ -15,55 +15,74 @@
     --popover: 255 255 255;
     --popover-foreground: 31 41 55;
 
-    --primary: 30 58 138; /* #1E3A8A */
+    --primary: 30 58 138;
     --primary-foreground: 255 255 255;
 
-    --secondary: 243 244 246; /* #F3F4F6 */
-    --secondary-foreground: 30 58 138; /* #1E3A8A */
+    --secondary: 243 244 246;
+    --secondary-foreground: 31 41 55;
 
     --muted: 243 244 246;
-    --muted-foreground: 107 114 128; /* #6B7280 */
+    --muted-foreground: 107 114 128;
 
-    --accent: 224 231 255; /* #E0E7FF */
-    --accent-foreground: 30 58 138; /* #1E3A8A */
+    --accent: 224 231 255;
+    --accent-foreground: 30 58 138;
 
-    --destructive: 239 68 68; /* #EF4444 */
+    --destructive: 239 68 68;
     --destructive-foreground: 255 255 255;
 
-    --success: 16 185 129; /* #10B981 */
-    --success-foreground: 255 255 255;
-
-    --warning: 245 158 11; /* #F59E0B */
-    --warning-foreground: 255 255 255;
-
-    --border: 229 231 235; /* #E5E7EB */
+    --border: 229 231 235;
     --input: 229 231 235;
     --ring: 30 58 138;
 
     --radius: 0.5rem;
+
+    --sidebar-background: 255 255 255;
+    --sidebar-foreground: 31 41 55;
+    --sidebar-primary: 30 58 138;
+    --sidebar-primary-foreground: 255 255 255;
+    --sidebar-accent: 243 244 246;
+    --sidebar-accent-foreground: 31 41 55;
+    --sidebar-border: 229 231 235;
+    --sidebar-ring: 30 58 138;
   }
 
   .dark {
-    /* Keeping dark mode variables, but the app will primarily use light mode */
     --background: 15 23 42;
     --foreground: 248 250 252;
+
     --card: 30 41 59;
     --card-foreground: 248 250 252;
+
     --popover: 30 41 59;
     --popover-foreground: 248 250 252;
+
     --primary: 59 130 246;
     --primary-foreground: 15 23 42;
+
     --secondary: 51 65 85;
     --secondary-foreground: 248 250 252;
+
     --muted: 51 65 85;
     --muted-foreground: 148 163 184;
+
     --accent: 51 65 85;
     --accent-foreground: 248 250 252;
+
     --destructive: 220 38 38;
     --destructive-foreground: 248 250 252;
+
     --border: 51 65 85;
     --input: 51 65 85;
     --ring: 59 130 246;
+
+    --sidebar-background: 30 41 59;
+    --sidebar-foreground: 248 250 252;
+    --sidebar-primary: 59 130 246;
+    --sidebar-primary-foreground: 15 23 42;
+    --sidebar-accent: 51 65 85;
+    --sidebar-accent-foreground: 248 250 252;
+    --sidebar-border: 51 65 85;
+    --sidebar-ring: 59 130 246;
   }
 }
 
@@ -73,56 +92,113 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply bg-legal-background text-legal-text font-sans antialiased;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold tracking-tight text-foreground;
+    @apply font-semibold tracking-tight;
   }
 }
 
 @layer components {
   .metric-card {
-    @apply bg-white rounded-2xl border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200;
+    @apply bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200;
   }
 
   .nav-item {
-    @apply flex items-center gap-3 px-3 py-2 rounded-lg text-foreground hover:bg-gray-100 transition-colors duration-200;
+    @apply flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors duration-200;
   }
 
   .nav-item.active {
-    @apply bg-accent text-accent-foreground font-medium;
+    @apply bg-primary text-white hover:bg-primary/90;
   }
 
   .btn-primary {
-    @apply bg-primary hover:bg-primary/90 text-primary-foreground font-medium px-4 py-2 rounded-lg transition-colors duration-200 shadow-sm;
+    @apply bg-primary hover:bg-primary/90 text-white font-medium px-4 py-2 rounded-lg transition-colors duration-200;
   }
 
   .btn-secondary {
-    @apply bg-secondary hover:bg-gray-200 text-secondary-foreground font-medium px-4 py-2 rounded-lg transition-colors duration-200;
+    @apply bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-4 py-2 rounded-lg transition-colors duration-200;
   }
 }
 
-/* Updated Login Page Styles for light, professional theme */
+/* Animated Login Page Styles - Updated to match legal theme */
 .login-container {
+  position: relative;
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 2rem;
-  background-color: var(--background);
+  background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 50%, #E0E7FF 100%);
+  overflow: hidden;
+}
+
+.login-container.dark {
+  background: linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #334155 100%);
+}
+
+.particles-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.theme-toggle {
+  position: absolute;
+  top: 2rem;
+  right: 2rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  z-index: 10;
+}
+
+.theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
 }
 
 .login-card {
-  background: white;
-  border-radius: 1.5rem; /* 24px */
-  padding: 2.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 24px;
+  padding: 2rem;
   width: 100%;
-  max-width: 420px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+  max-width: 400px;
+  box-shadow: 0 8px 32px rgba(30, 58, 138, 0.1);
   position: relative;
   z-index: 2;
-  animation: fadeIn 0.5s ease-out;
+  animation: slideUp 0.6s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.login-card-inner {
+  color: white;
 }
 
 .login-header {
@@ -134,11 +210,14 @@
   font-size: 2rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
-  color: var(--foreground);
+  background: linear-gradient(45deg, #fff, #E0E7FF);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .login-header p {
-  color: var(--muted-foreground);
+  opacity: 0.8;
   font-size: 0.95rem;
 }
 
@@ -148,62 +227,338 @@
   gap: 1.5rem;
 }
 
+.form-field {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
 .form-field input {
   width: 100%;
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--border);
-  border-radius: 0.5rem; /* 8px */
-  background: white;
-  color: var(--foreground);
+  padding: 1rem 1rem 1rem 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
   font-size: 1rem;
-  transition: all 0.2s ease-in-out;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
 }
 
 .form-field input:focus {
   outline: none;
-  border-color: hsl(var(--ring));
-  box-shadow: 0 0 0 2px hsla(var(--ring), 0.2);
+  border-color: rgba(224, 231, 255, 0.8);
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 0 3px rgba(224, 231, 255, 0.1);
+}
+
+.form-field input::placeholder {
+  color: transparent;
+}
+
+.form-field label {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1rem;
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+
+.form-field.active label,
+.form-field input:focus + label {
+  top: -0.5rem;
+  left: 0.75rem;
+  font-size: 0.75rem;
+  color: #E0E7FF;
+  background: rgba(30, 58, 138, 0.5);
+  padding: 0 0.5rem;
+  border-radius: 4px;
+}
+
+.form-field.invalid {
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.form-field.invalid input {
+  border-color: #ff6b6b;
+}
+
+.error-message {
+  position: absolute;
+  bottom: -1.5rem;
+  left: 0;
+  color: #ff6b6b;
+  font-size: 0.75rem;
+  opacity: 0;
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+.toggle-password {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.toggle-password:hover {
+  color: #E0E7FF;
+}
+
+.form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+.remember-me {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.remember-me input[type="checkbox"] {
+  display: none;
+}
+
+.checkmark {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.remember-me input:checked + .checkmark {
+  background: #E0E7FF;
+  border-color: #E0E7FF;
+}
+
+.remember-me input:checked + .checkmark::after {
+  content: '✓';
+  position: absolute;
+  top: -2px;
+  left: 2px;
+  color: #1E3A8A;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.forgot-password {
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.forgot-password:hover {
+  color: #E0E7FF;
+  text-decoration: underline;
 }
 
 .login-button {
   width: 100%;
-  padding: 0.75rem;
-  background-color: hsl(var(--primary));
+  padding: 1rem;
+  background: linear-gradient(45deg, #1E3A8A, #3B82F6);
   border: none;
-  border-radius: 0.5rem;
-  color: hsl(var(--primary-foreground));
+  border-radius: 12px;
+  color: white;
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(224, 231, 255, 0.3), transparent);
+  transition: left 0.5s ease;
+}
+
+.login-button:hover::before {
+  left: 100%;
 }
 
 .login-button:hover {
-  background-color: hsl(var(--primary) / 0.9);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(30, 58, 138, 0.3);
+  background: linear-gradient(45deg, #1D4ED8, #2563EB);
 }
 
 .login-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
+}
+
+.separator {
+  text-align: center;
+  position: relative;
+  margin: 1.5rem 0;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+}
+
+.separator::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.2);
+  z-index: 1;
+}
+
+.separator span {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0 1rem;
+  position: relative;
+  z-index: 2;
+  backdrop-filter: blur(10px);
+}
+
+.social-login {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
 }
 
 .social-button {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid var(--border);
-  border-radius: 0.5rem;
-  background: white;
-  color: var(--foreground);
+  width: 50px;
+  height: 50px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
+  backdrop-filter: blur(10px);
 }
 
 .social-button:hover {
-  background-color: hsl(var(--secondary));
+  background: rgba(224, 231, 255, 0.2);
+  transform: translateY(-2px);
+  border-color: rgba(224, 231, 255, 0.4);
 }
 
-/* Remove other complex login styles */
+.social-button.github:hover {
+  background: #333;
+  border-color: #333;
+}
+
+.social-button.twitter:hover {
+  background: #1da1f2;
+  border-color: #1da1f2;
+}
+
+.social-button.linkedin:hover {
+  background: #0077b5;
+  border-color: #0077b5;
+}
+
+.signup-prompt {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+}
+
+.signup-prompt a {
+  color: #E0E7FF;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+.signup-prompt a:hover {
+  color: white;
+  text-decoration: underline;
+}
+
+.form-success {
+  animation: successPulse 1.5s ease-out;
+}
+
+@keyframes successPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+/* Dark mode specific styles */
+.dark-mode .login-container {
+  background: linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #334155 100%);
+}
+
+.dark-mode .login-card {
+  background: rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .form-field input {
+  background: rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .form-field input:focus {
+  background: rgba(0, 0, 0, 0.3);
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.dark-mode .form-field.active label,
+.dark-mode .form-field input:focus + label {
+  color: #93C5FD;
+  background: rgba(59, 130, 246, 0.3);
+}
+
+/* Responsive design */
+@media (max-width: 480px) {
+  .login-container {
+    padding: 1rem;
+  }
+  
+  .login-card {
+    padding: 1.5rem;
+  }
+  
+  .theme-toggle {
+    top: 1rem;
+    right: 1rem;
+    width: 40px;
+    height: 40px;
+  }
+}

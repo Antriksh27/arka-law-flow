@@ -229,9 +229,9 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader className="pb-4 border-b">
-          <DialogTitle className="text-xl flex items-center gap-2">
+      <DialogContent className="max-w-2xl bg-white border border-gray-200 shadow-lg">
+        <DialogHeader className="pb-4 border-b border-gray-100">
+          <DialogTitle className="text-xl font-semibold text-gray-900 flex items-center gap-2">
             <Upload className="w-5 h-5" />
             Upload Documents
           </DialogTitle>
@@ -240,10 +240,10 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 pt-4">
           {/* File Upload Area */}
           <div className="space-y-2">
-            <Label className="font-medium text-foreground">
+            <Label className="text-sm font-medium text-gray-700">
               Select Files
             </Label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition-colors">
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
               <input 
                 type="file" 
                 multiple 
@@ -253,8 +253,8 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                 id="file-upload" 
               />
               <label htmlFor="file-upload" className="cursor-pointer">
-                <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">
+                <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                <p className="text-sm text-gray-600">
                   Click to select files or drag and drop
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
@@ -266,17 +266,17 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
             {/* Selected Files */}
             {selectedFiles.length > 0 && (
               <div className="space-y-2">
-                <Label className="font-medium text-foreground">
+                <Label className="text-sm font-medium text-gray-700">
                   Selected Files ({selectedFiles.length})
                 </Label>
-                <div className="max-h-40 overflow-y-auto border rounded-lg">
+                <div className="max-h-40 overflow-y-auto border border-gray-200 rounded-lg">
                   {selectedFiles.map((file, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 border-b last:border-b-0">
+                    <div key={index} className="flex items-center justify-between p-3 border-b border-gray-100 last:border-b-0">
                       <div className="flex items-center gap-3">
-                        <FileText className="w-4 h-4 text-muted-foreground" />
+                        <FileText className="w-4 h-4 text-gray-500" />
                         <div>
-                          <p className="text-sm font-medium text-foreground">{file.name}</p>
-                          <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
+                          <p className="text-sm font-medium text-gray-900">{file.name}</p>
+                          <p className="text-xs text-gray-500">{formatFileSize(file.size)}</p>
                         </div>
                       </div>
                       <Button 
@@ -284,7 +284,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                         variant="ghost" 
                         size="sm" 
                         onClick={() => removeFile(index)} 
-                        className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                        className="h-8 w-8 p-0 text-gray-400 hover:text-red-600"
                       >
                         <X className="w-4 h-4" />
                       </Button>
@@ -297,17 +297,17 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
 
           {/* Case Assignment */}
           <div className="space-y-2">
-            <Label htmlFor="case_id" className="font-medium text-foreground">
+            <Label htmlFor="case_id" className="text-sm font-medium text-gray-700">
               Assign to Case (Optional)
             </Label>
             <Select onValueChange={value => setValue('case_id', value)} defaultValue={caseId || 'all'}>
-              <SelectTrigger>
+              <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                 <SelectValue placeholder="Select a case..." />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">No Case (General Documents)</SelectItem>
+              <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                <SelectItem value="all" className="hover:bg-gray-50">No Case (General Documents)</SelectItem>
                 {cases.map(case_item => (
-                  <SelectItem key={case_item.id} value={case_item.id}>
+                  <SelectItem key={case_item.id} value={case_item.id} className="hover:bg-gray-50">
                     {case_item.title}
                   </SelectItem>
                 ))}
@@ -316,29 +316,31 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
           </div>
 
           {/* Important Toggle */}
-          <div className="flex items-center space-x-3 pt-2">
+          <div className="flex items-center space-x-2">
             <Checkbox 
               id="is_evidence" 
               checked={isImportant} 
               onCheckedChange={checked => setValue('is_evidence', !!checked)} 
             />
-            <Label htmlFor="is_evidence" className="font-medium text-foreground cursor-pointer">
+            <Label htmlFor="is_evidence" className="text-sm font-medium text-gray-700">
               Mark as Important
             </Label>
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end gap-3 pt-6 border-t">
+          <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
             <Button 
               type="button" 
               variant="outline" 
               onClick={onClose} 
+              className="px-6 py-2 border-gray-300 text-gray-700 hover:bg-gray-50"
             >
               Cancel
             </Button>
             <Button 
               type="submit" 
-              disabled={isSubmitting || selectedFiles.length === 0}
+              disabled={isSubmitting || selectedFiles.length === 0} 
+              className="px-6 py-2 bg-primary hover:bg-primary/90 text-white"
             >
               {isSubmitting ? 'Uploading...' : `Upload ${selectedFiles.length} File${selectedFiles.length !== 1 ? 's' : ''}`}
             </Button>

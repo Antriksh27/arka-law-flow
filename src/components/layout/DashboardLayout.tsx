@@ -9,15 +9,13 @@ interface DashboardLayoutProps {
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-legal-background">
       <Header />
-      <div className="border-b border-gray-200 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <NavHeader />
-        </div>
+      <div className="border-b border-gray-200 py-4">
+        <NavHeader />
       </div>
       <main className="flex-1">
-        <div className="p-6 max-w-7xl mx-auto">
+        <div className="p-8">
           {children}
         </div>
       </main>

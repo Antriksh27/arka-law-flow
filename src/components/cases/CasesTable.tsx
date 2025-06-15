@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -46,18 +45,18 @@ export const CasesTable: React.FC<CasesTableProps> = ({
       return data || [];
     }
   });
-  const getStatusBadgeVariant = (status: string): "info" | "warning" | "default" | "secondary" => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case 'open':
-        return 'info';
+        return 'bg-blue-100 text-blue-700 border-blue-200';
       case 'in_court':
-        return 'info';
+        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
       case 'on_hold':
-        return 'warning';
+        return 'bg-orange-100 text-orange-700 border-orange-200';
       case 'closed':
-        return 'secondary';
+        return 'bg-gray-100 text-gray-700 border-gray-200';
       default:
-        return 'secondary';
+        return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
   const formatCaseType = (type: string) => {
@@ -66,49 +65,49 @@ export const CasesTable: React.FC<CasesTableProps> = ({
   if (isLoading) {
     return <div className="text-center py-8">Loading cases...</div>;
   }
-  return <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+  return <div className="bg-white rounded-2xl shadow-sm border border-gray-200">
       <Table>
         <TableHeader>
-          <TableRow className="bg-gray-50 hover:bg-gray-50">
-            <TableHead className="font-semibold text-foreground">Case Title</TableHead>
-            <TableHead className="font-semibold text-foreground">Client</TableHead>
-            <TableHead className="font-semibold text-foreground">Type</TableHead>
-            <TableHead className="font-semibold text-foreground">Status</TableHead>
-            <TableHead className="font-semibold text-foreground">Priority</TableHead>
-            <TableHead className="font-semibold text-foreground">Created By</TableHead>
-            <TableHead className="font-semibold text-foreground">Updated</TableHead>
+          <TableRow>
+            <TableHead className="bg-slate-800">Case Title</TableHead>
+            <TableHead className="bg-slate-800">Client</TableHead>
+            <TableHead className="bg-slate-800">Type</TableHead>
+            <TableHead className="bg-slate-800">Status</TableHead>
+            <TableHead className="bg-slate-800">Priority</TableHead>
+            <TableHead className="bg-slate-800">Created By</TableHead>
+            <TableHead className="bg-slate-800">Updated</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {cases?.map(caseItem => <TableRow key={caseItem.id} className="cursor-pointer hover:bg-gray-50" onClick={() => navigate(`/cases/${caseItem.id}`)}>
-              <TableCell className="font-medium text-foreground">
+              <TableCell className="font-medium">
                 {caseItem.title}
               </TableCell>
-              <TableCell className="text-muted-foreground">
+              <TableCell>
                 {caseItem.client_name || 'No client assigned'}
               </TableCell>
-              <TableCell className="text-muted-foreground">
+              <TableCell>
                 {formatCaseType(caseItem.case_type)}
               </TableCell>
               <TableCell>
-                <Badge variant={getStatusBadgeVariant(caseItem.status)} className="capitalize">
+                <Badge className={`${getStatusColor(caseItem.status)} rounded-full text-xs`}>
                   {caseItem.status?.replace('_', ' ')}
                 </Badge>
               </TableCell>
-              <TableCell className="capitalize text-muted-foreground">
-                {caseItem.priority}
+              <TableCell>
+                <span className="capitalize">{caseItem.priority}</span>
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">
                   <Avatar className="w-6 h-6">
-                    <AvatarFallback className="text-xs bg-gray-100 text-muted-foreground">
+                    <AvatarFallback className="text-xs bg-gray-100">
                       {caseItem.created_by_name?.split(' ').map((n: string) => n[0]).join('') || '?'}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="text-sm text-muted-foreground">{caseItem.created_by_name}</span>
+                  <span className="text-sm">{caseItem.created_by_name}</span>
                 </div>
               </TableCell>
-              <TableCell className="text-muted-foreground">
+              <TableCell>
                 {format(new Date(caseItem.updated_at), 'MMM d, yyyy')}
               </TableCell>
             </TableRow>)}

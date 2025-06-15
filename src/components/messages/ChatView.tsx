@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Paperclip, Phone, Send, Info } from 'lucide-react';
 import ChatHeader from '@/components/messages/ui/ChatHeader';
@@ -69,7 +70,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ threadId, threadData }) => {
         subtitle={getSubtitle()}
         buttons={
           <div className="flex items-center gap-2">
-            <IconButton variant="ghost" icon={<Phone className="w-5 h-5" />} />
+            <IconButton variant="brand-tertiary" icon={<Phone className="w-5 h-5" />} />
           </div>
         }
       />
@@ -118,7 +119,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ threadId, threadData }) => {
         </div>
       </div>
       <div className="flex w-full items-center gap-4 border-t border-solid border-gray-200 bg-white px-4 py-3">
-        <IconButton variant="ghost" icon={<Paperclip className="w-5 h-5" />} />
+        <IconButton variant="brand-tertiary" icon={<Paperclip className="w-5 h-5" />} />
         <TextFieldUnstyled className="h-auto grow shrink-0 basis-0">
           <TextFieldUnstyled.Input
             placeholder="Type your message..."
@@ -134,7 +135,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ threadId, threadData }) => {
           />
         </TextFieldUnstyled>
         <IconButton
-          variant="default"
+          variant="brand-primary"
           icon={<Send className="w-5 h-5" />}
           onClick={handleSendMessage}
           disabled={isSendingMessage || !newMessage.trim()}
