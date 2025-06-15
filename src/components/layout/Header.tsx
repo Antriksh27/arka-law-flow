@@ -31,7 +31,7 @@ const Header = () => {
           {/* Notifications */}
           <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground hover:bg-gray-100 relative">
             <Bell className="w-5 h-5" />
-            <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>
+            <span className="absolute -top-1 -right-1 w-3 h-3 bg-destructive rounded-full border-2 border-white"></span>
           </Button>
 
           {/* Settings */}
