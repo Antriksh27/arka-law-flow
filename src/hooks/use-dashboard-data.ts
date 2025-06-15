@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -42,11 +41,11 @@ const fetchDashboardData = async (firmId: string, userId: string) => {
     supabase.from('hearings').select('hearing_date').eq('firm_id', firmId).gte('hearing_date', startOfThisWeek.toISOString()).lte('hearing_date', endOfThisWeek.toISOString()),
     supabase.from('appointments').select('start_time').eq('firm_id', firmId).gte('start_time', startOfThisWeek.toISOString()).lte('start_time', endOfThisWeek.toISOString()),
     supabase.from('tasks').select('title, priority, due_date').eq('assigned_to', userId).neq('status', 'completed').order('due_date', { ascending: true }).limit(3),
-    supabase.from('notes_v2').select('title, content, updated_at').eq('created_by', userId).order('updated_at', { descending: true }).limit(2),
+    supabase.from('notes_v2').select('title, content, updated_at').eq('created_by', userId).order('updated_at', { ascending: false }).limit(2),
     supabase.from('team_members').select('full_name, role').eq('firm_id', firmId).limit(5),
     supabase.from('cases').select('id').eq('firm_id', firmId),
     supabase.from('invoices').select('status, total_amount').eq('firm_id', firmId),
-    supabase.from('documents').select('file_name, file_type, uploaded_at').eq('firm_id', firmId).order('uploaded_at', { descending: true }).limit(2),
+    supabase.from('documents').select('file_name, file_type, uploaded_at').eq('firm_id', firmId).order('uploaded_at', { ascending: false }).limit(2),
   ]);
 
   const caseIds = (caseIdsInFirm || []).map(c => c.id);
@@ -54,7 +53,7 @@ const fetchDashboardData = async (firmId: string, userId: string) => {
     .from('case_activities')
     .select('description, created_at, profiles(full_name)')
     .in('case_id', caseIds)
-    .order('created_at', { descending: true })
+    .order('created_at', { ascending: false })
     .limit(2);
 
   const revenue = { outstanding: 0, collected: 0, total: 0 };
@@ -62,7 +61,7 @@ const fetchDashboardData = async (firmId: string, userId: string) => {
     revenueData.forEach(inv => {
       if (inv.status === 'paid' && inv.total_amount) {
         revenue.collected += inv.total_amount;
-      } else if ((inv.status === 'sent' || inv.status === 'due') && inv.total_amount) {
+      } else if ((inv.status === 'sent' || inv.status === 'overdue') && inv.total_amount) {
         revenue.outstanding += inv.total_amount;
       }
     });
