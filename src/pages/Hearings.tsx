@@ -18,7 +18,7 @@ const Hearings = () => {
   });
 
   return (
-    <div className="container max-w-none flex h-full w-full flex-col items-start gap-6 bg-gray-50 py-12">
+    <div className="max-w-7xl mx-auto p-6 space-y-6">
       <HearingsHeader onViewChange={setViewType} currentView={viewType} />
       <HearingsFilters filters={filters} onFilterChange={setFilters} />
       
