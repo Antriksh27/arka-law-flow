@@ -5,22 +5,19 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { startOfWeek, addDays, format, isToday } from 'date-fns';
+import { startOfWeek, addDays, format, isToday, isTomorrow, formatDistanceToNowStrict } from 'date-fns';
+import { useDashboardData } from '@/hooks/use-dashboard-data';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const Dashboard = () => {
-  const metrics = [{
-    number: '1',
-    label: 'Active Cases'
-  }, {
-    number: '5',
-    label: 'Hearings'
-  }, {
-    number: '3',
-    label: 'Appointments'
-  }, {
-    number: '8',
-    label: 'Tasks'
-  }];
+  const { data, isLoading } = useDashboardData();
+
+  const dashboardMetrics = data ? [
+    { number: data.metrics.activeCases, label: 'Active Cases' },
+    { number: data.metrics.hearings, label: 'Hearings' },
+    { number: data.metrics.appointments, label: 'Appointments' },
+    { number: data.metrics.tasks, label: 'Tasks' },
+  ] : [];
 
   const weekSchedule = useMemo(() => {
     const today = new Date();
@@ -29,64 +26,27 @@ const Dashboard = () => {
 
     return Array.from({ length: 7 }).map((_, i) => {
       const date = addDays(startOfThisWeek, i);
-      // Dummy data for events. In a real app this would come from an API.
-      const eventCount = Math.floor(Math.random() * 6);
+      const dateString = format(date, 'yyyy-MM-dd');
+      const eventCount = data?.schedule[dateString] || 0;
       return {
         day: format(date, 'EEE'), // 'Mon', 'Tue', etc.
         date: format(date, 'd'),
         isCurrentDay: isToday(date),
-        eventCount: i < 6 ? eventCount : 0, // Less events on Sunday for demo
+        eventCount: eventCount,
       };
     });
-  }, []);
+  }, [data]);
 
-  const myTasks = [{
-    title: 'Review case documents for upcoming hearing',
-    priority: 'High',
-    dueDate: 'Due in 2 hours'
-  }, {
-    title: 'Prepare client meeting notes',
-    priority: 'Medium',
-    dueDate: 'Due April 25th'
-  }, {
-    title: 'Update Law Timeline',
-    priority: 'Low',
-    dueDate: 'Due April 22nd'
-  }];
-  const myNotes = [{
-    title: 'Case Strategy',
-    subtitle: 'Update defense argument for upcoming hearing',
-    date: 'Updated 2h ago'
-  }, {
-    title: 'Meeting Points',
-    subtitle: 'Key discussion items for client consultation',
-    date: 'Updated 1d ago'
-  }];
-  const teamMembers = [{
-    name: 'Priya Sharma',
-    role: 'Manager',
-    avatar: 'PS'
-  }, {
-    name: 'Rahul Verma',
-    role: 'Junior',
-    avatar: 'RV'
-  }];
-  const recentActivity = [{
-    title: 'Document added to Sonali vs State',
-    user: 'Priya Sharma',
-    time: '4 hours ago'
-  }, {
-    title: 'Hearing rescheduled for Mehta Corp Case',
-    user: 'Admin',
-    time: '4 hours ago'
-  }];
-  const recentDocuments = [{
-    name: 'hearing_notice.pdf',
-    icon: '📄'
-  }, {
-    name: 'client_statement.doc',
-    icon: '📄'
-  }];
+  const formatDueDate = (dueDate: string | null) => {
+    if (!dueDate) return 'No due date';
+    try {
+      const date = new Date(dueDate);
+      return `Due ${formatDistanceToNowStrict(date, { addSuffix: true })}`;
+    } catch (e) {
+      return 'Invalid date';
+    }
+  };
+
   return <div className="p-6 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="mb-6">
@@ -96,7 +56,14 @@ const Dashboard = () => {
 
       {/* Metrics Cards */}
       <div className="grid grid-cols-4 gap-4 mb-8">
-        {metrics.map((metric, index) => <Card key={index} className="p-4 bg-white border border-gray-200 shadow-sm">
+        {isLoading ? (
+          Array.from({ length: 4 }).map((_, index) => (
+            <Card key={index} className="p-4 bg-white border border-gray-200 shadow-sm">
+              <Skeleton className="h-20 w-full" />
+            </Card>
+          ))
+        ) : (
+          dashboardMetrics.map((metric, index) => <Card key={index} className="p-4 bg-white border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
                 <div className="w-10 h-10 bg-white border border-gray-200 rounded-lg flex items-center justify-center mb-2 shadow-sm">
@@ -105,7 +72,8 @@ const Dashboard = () => {
                 <p className="text-sm text-gray-600">{metric.label}</p>
               </div>
             </div>
-          </Card>)}
+          </Card>)
+        )}
       </div>
 
       {/* This Week's Schedule */}
@@ -114,45 +82,51 @@ const Dashboard = () => {
           <h3 className="text-lg font-medium text-gray-900">
             This Week's Schedule
           </h3>
-          <Button
-            variant="ghost"
-          >
+          <Button variant="ghost">
             <Calendar className="mr-2 h-4 w-4" />
             View Calendar
           </Button>
         </div>
         <div className="w-full items-start gap-2 grid grid-cols-7">
-          {weekSchedule.map((day, index) => {
-            const isCurrentDay = day.isCurrentDay;
-            const dayClasses = cn(
-                "flex flex-col items-center text-center gap-2 rounded-lg border p-4",
-                isCurrentDay ? "border-primary bg-accent" : "border-gray-200 bg-white"
-            );
-            const dayTextClasses = cn(
-                "text-xs font-semibold",
-                isCurrentDay ? "text-primary" : "text-gray-600"
-            );
-            const dateTextClasses = cn(
-                "text-2xl font-bold",
-                isCurrentDay ? "text-primary" : "text-gray-900"
-            );
+          {isLoading ? (
+            Array.from({ length: 7 }).map((_, index) => (
+              <div key={index} className="flex flex-col items-center text-center gap-2 rounded-lg border p-4 border-gray-200 bg-white">
+                <Skeleton className="h-24 w-full" />
+              </div>
+            ))
+          ) : (
+            weekSchedule.map((day, index) => {
+              const isCurrentDay = day.isCurrentDay;
+              const dayClasses = cn(
+                  "flex flex-col items-center text-center gap-2 rounded-lg border p-4",
+                  isCurrentDay ? "border-primary bg-accent" : "border-gray-200 bg-white"
+              );
+              const dayTextClasses = cn(
+                  "text-xs font-semibold",
+                  isCurrentDay ? "text-primary" : "text-gray-600"
+              );
+              const dateTextClasses = cn(
+                  "text-2xl font-bold",
+                  isCurrentDay ? "text-primary" : "text-gray-900"
+              );
 
-            return (
-                <div key={index} className={dayClasses}>
-                  <span className={dayTextClasses}>
-                    {day.day}
-                  </span>
-                  <span className={dateTextClasses}>
-                    {day.date}
-                  </span>
-                  {day.eventCount > 0 && (
-                    <Badge variant={isCurrentDay ? 'default' : 'secondary'}>
-                        {day.eventCount} {day.eventCount === 1 ? 'Event' : 'Events'}
-                    </Badge>
-                  )}
-                </div>
-            );
-          })}
+              return (
+                  <div key={index} className={dayClasses}>
+                    <span className={dayTextClasses}>
+                      {day.day}
+                    </span>
+                    <span className={dateTextClasses}>
+                      {day.date}
+                    </span>
+                    {day.eventCount > 0 && (
+                      <Badge variant={isCurrentDay ? 'default' : 'secondary'}>
+                          {day.eventCount} {day.eventCount === 1 ? 'Event' : 'Events'}
+                      </Badge>
+                    )}
+                  </div>
+              );
+            })
+          )}
         </div>
       </div>
 
@@ -181,15 +155,16 @@ const Dashboard = () => {
                     </Button>
                   </div>
                   <div className="space-y-3">
-                    {myTasks.map((task, index) => <div key={index} className="p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
-                        <div className="flex items-start justify-between mb-2">
-                          <h4 className="text-sm font-medium text-gray-900">{task.title}</h4>
-                          <span className={`text-xs px-2 py-1 rounded ${task.priority === 'High' ? 'bg-red-100 text-red-800' : task.priority === 'Medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
-                            {task.priority}
-                          </span>
-                        </div>
-                        <p className="text-xs text-gray-600">{task.dueDate}</p>
-                      </div>)}
+                    {isLoading ? Array.from({ length: 3 }).map((_, index) => <Skeleton key={index} className="h-16 w-full rounded-lg" />) :
+                      (data?.myTasks || []).map((task: any, index: number) => <div key={index} className="p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
+                          <div className="flex items-start justify-between mb-2">
+                            <h4 className="text-sm font-medium text-gray-900">{task.title}</h4>
+                            <span className={`text-xs px-2 py-1 rounded ${task.priority === 'High' ? 'bg-red-100 text-red-800' : task.priority === 'Medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
+                              {task.priority}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-600">{formatDueDate(task.due_date)}</p>
+                        </div>)}
                   </div>
                 </div>
 
@@ -205,7 +180,8 @@ const Dashboard = () => {
                     </Button>
                   </div>
                   <div className="space-y-3">
-                    {myNotes.map((note, index) => <div key={index} className="p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
+                  {isLoading ? Array.from({ length: 2 }).map((_, index) => <Skeleton key={index} className="h-20 w-full rounded-lg" />) :
+                    (data?.myNotes || []).map((note: any, index: number) => <div key={index} className="p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
                         <h4 className="text-sm font-medium text-gray-900 mb-1">{note.title}</h4>
                         <p className="text-xs text-gray-600 mb-2">{note.subtitle}</p>
                         <p className="text-xs text-gray-500">{note.date}</p>
@@ -226,7 +202,8 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {teamMembers.map((member, index) => <div key={index} className="flex items-center justify-between">
+                {isLoading ? Array.from({ length: 2 }).map((_, index) => <Skeleton key={index} className="h-10 w-full rounded-lg" />) :
+                  (data?.teamMembers || []).map((member: any, index: number) => <div key={index} className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 bg-white border border-gray-200 rounded-full flex items-center justify-center text-xs font-medium shadow-sm">
                         {member.avatar}
@@ -235,10 +212,6 @@ const Dashboard = () => {
                         <div className="font-medium text-sm">{member.name}</div>
                         <div className="text-xs text-gray-500">{member.role}</div>
                       </div>
-                    </div>
-                    <div className="flex gap-8 text-sm">
-                      <span>12</span>
-                      <span>8</span>
                     </div>
                   </div>)}
               </div>
@@ -252,12 +225,13 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {recentActivity.map((activity, index) => <div key={index} className="flex gap-3">
+                {isLoading ? Array.from({ length: 2 }).map((_, index) => <Skeleton key={index} className="h-10 w-full rounded-lg" />) :
+                (data?.recentActivity || []).map((activity: any, index: number) => <div key={index} className="flex gap-3">
                     <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
                     <div>
                       <p className="text-sm font-medium">{activity.title}</p>
                       <p className="text-xs text-gray-500">
-                        Added by {activity.user} • {activity.time}
+                        By {activity.user} • {activity.time}
                       </p>
                     </div>
                   </div>)}
@@ -295,24 +269,28 @@ const Dashboard = () => {
               <CardTitle className="text-lg font-medium">Revenue Overview</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-center mb-4">
-                <div className="text-2xl font-bold">₹72.5L</div>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
-                <div className="bg-orange-500 h-2 rounded-full" style={{
-                width: '75%'
-              }}></div>
-              </div>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Outstanding</span>
-                  <span>₹75.2L</span>
+              {isLoading ? <Skeleton className="h-24 w-full" /> : data && (
+              <>
+                <div className="text-center mb-4">
+                  <div className="text-2xl font-bold">₹{data.revenue.total.toLocaleString('en-IN')}</div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Collected</span>
-                  <span>₹4.2L</span>
+                <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+                  <div className="bg-orange-500 h-2 rounded-full" style={{
+                  width: `${data.revenue.total > 0 ? (data.revenue.collected / data.revenue.total * 100) : 0}%`
+                }}></div>
                 </div>
-              </div>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Outstanding</span>
+                    <span>₹{data.revenue.outstanding.toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Collected</span>
+                    <span>₹{data.revenue.collected.toLocaleString('en-IN')}</span>
+                  </div>
+                </div>
+              </>
+              )}
             </CardContent>
           </Card>
 
@@ -323,7 +301,8 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {recentDocuments.map((doc, index) => <div key={index} className="flex items-center gap-3">
+                {isLoading ? Array.from({ length: 2 }).map((_, index) => <Skeleton key={index} className="h-8 w-full rounded-lg" />) :
+                (data?.recentDocuments || []).map((doc: any, index: number) => <div key={index} className="flex items-center gap-3">
                     <span className="text-lg">{doc.icon}</span>
                     <div className="flex-1">
                       <p className="text-sm font-medium">{doc.name}</p>
