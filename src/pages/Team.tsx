@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState, useEffect } from "react";
 import { useTeamMembers } from "@/components/team/useTeamMembers";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
@@ -9,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogHeader, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/AuthContext";
-import { SetupFirm } from "@/components/team/SetupFirm";
+import { JoinHruLegal } from "@/components/team/JoinHruLegal";
 
 // FIXED: Updated icon imports to available names in lucide-react
 import { UserPlus, Search, Check, Mail, Phone, MoreHorizontal, User, Briefcase, CheckSquare, Settings, X, Calendar } from "lucide-react";
@@ -77,7 +76,7 @@ function TeamDirectory() {
   }
 
   if (user && !firmId) {
-    return <SetupFirm user={user} />;
+    return <JoinHruLegal user={user} />;
   }
 
   return <div className="container max-w-none flex h-full w-full flex-col items-start gap-6 py-12 bg-slate-50">

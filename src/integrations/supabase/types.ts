@@ -2385,10 +2385,6 @@ export type Database = {
         Args: { case_id: string }
         Returns: boolean
       }
-      create_firm_and_assign_admin: {
-        Args: { firm_name: string }
-        Returns: string
-      }
       create_law_firm_with_admin: {
         Args:
           | {
