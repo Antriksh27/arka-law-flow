@@ -61,24 +61,7 @@ function TeamDirectory() {
 
   if (authLoading) {
     return (
-      <div className="container max-w-none flex h-full w-full flex-col items-start gap-6 py-12 bg-slate-50">
-        <div className="flex w-full items-center justify-between">
-          <div className="flex flex-col items-start gap-2">
-            <Skeleton className="h-8 w-48" />
-            <Skeleton className="h-6 w-72" />
-          </div>
-          <Skeleton className="h-10 w-40" />
-        </div>
-        <div className="flex w-full items-start gap-6">
-          <div className="flex-grow space-y-2">
-            <Skeleton className="h-12 w-full" />
-            <Skeleton className="h-16 w-full" />
-            <Skeleton className="h-16 w-full" />
-            <Skeleton className="h-16 w-full" />
-          </div>
-          <Skeleton className="w-80 h-96" />
-        </div>
-      </div>
+      <div className="text-center py-12">Loading team members...</div>
     );
   }
 
@@ -86,7 +69,8 @@ function TeamDirectory() {
     return <JoinHruLegal user={user} />;
   }
 
-  return <div className="container max-w-none flex h-full w-full flex-col items-start gap-6 py-12 bg-slate-50">
+  return (
+    <div className="max-w-7xl mx-auto p-6 space-y-6">
       {/* Header + Actions */}
       <div className="flex w-full flex-col items-start gap-4">
         <div className="flex w-full items-center justify-between">
@@ -311,7 +295,8 @@ function TeamDirectory() {
             </div>}
         </div>
       </div>
-    </div>;
+    </div>
+  );
 }
 function FilterBadge({
   label,

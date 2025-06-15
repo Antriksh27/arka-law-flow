@@ -20,8 +20,8 @@ const MessagesPage: React.FC = () => {
   }, [selectedThreadId, threadsData]);
 
   return (
-    <DefaultPageLayout>
-      <div className="flex h-full w-full items-start">
+    <div className="max-w-7xl mx-auto p-6 space-y-6 h-full">
+      <div className="h-full bg-white border rounded-2xl shadow-sm flex min-h-[500px]">
         <ChatSidebar
           selectedThreadId={selectedThreadId}
           onSelectThread={handleSelectThread}
@@ -31,8 +31,9 @@ const MessagesPage: React.FC = () => {
             threadData={selectedThreadData}
         />
       </div>
-    </DefaultPageLayout>
+    </div>
   );
 };
 
 export default MessagesPage;
+

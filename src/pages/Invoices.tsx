@@ -111,9 +111,9 @@ const Invoices: React.FC = () => {
     queryFn: () => fetchInvoices(firmId),
     enabled: !!firmId
   });
-  return <div className="min-h-[calc(100vh-64px)] bg-legal-background flex flex-col gap-6 p-6 max-w-7xl mx-auto">
+  return (
+    <div className="max-w-7xl mx-auto p-6 space-y-6">
       {/* Breadcrumbs */}
-      
       {/* Header */}
       <div className="flex w-full flex-wrap items-center gap-4">
         <div className="flex grow shrink-0 basis-0 items-center gap-2">
@@ -131,31 +131,32 @@ const Invoices: React.FC = () => {
       <InvoiceToolbar total={invoices?.length || 0} />
       {/* Table / Loading / Error */}
       {(isLoading || loading) && <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <span className="ml-2 text-gray-600">Loading invoices...</span>
-        </div>}
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2 text-gray-600">Loading invoices...</span>
+      </div>}
       {error && <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md mt-4">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <AlertCircle className="h-5 w-5 text-red-400" aria-hidden="true" />
-            </div>
-            <div className="ml-3">
-              <p className="text-sm text-red-700">
-                Failed to load invoices: {error.message}
-              </p>
-            </div>
+        <div className="flex">
+          <div className="flex-shrink-0">
+            <AlertCircle className="h-5 w-5 text-red-400" aria-hidden="true" />
           </div>
-        </div>}
+          <div className="ml-3">
+            <p className="text-sm text-red-700">
+              Failed to load invoices: {error.message}
+            </p>
+          </div>
+        </div>
+      </div>}
       {!isLoading && !loading && !error && invoices && <div className="bg-white shadow-sm rounded-2xl border border-gray-200 p-0 mt-2">
-          <InvoicesTable invoices={invoices} isLoading={isLoading} />
-        </div>}
+        <InvoicesTable invoices={invoices} isLoading={isLoading} />
+      </div>}
       {!isLoading && !loading && !error && (!invoices || invoices.length === 0) && firmId && <div className="text-center py-12">
-          <p className="text-gray-500">No invoices found for this firm.</p>
-        </div>}
+        <p className="text-gray-500">No invoices found for this firm.</p>
+      </div>}
       {!isLoading && !loading && !firmId && <div className="text-center py-12">
-          <p className="text-gray-500">Firm information not available. Cannot load invoices.</p>
-          {firmError && <p className="mt-2 text-red-400 text-sm">{firmError}</p>}
-        </div>}
-    </div>;
+        <p className="text-gray-500">Firm information not available. Cannot load invoices.</p>
+        {firmError && <p className="mt-2 text-red-400 text-sm">{firmError}</p>}
+      </div>}
+    </div>
+  );
 };
 export default Invoices;
