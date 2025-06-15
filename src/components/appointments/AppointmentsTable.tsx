@@ -154,13 +154,13 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="bg-slate-900">Date & Time</TableHead>
-            <TableHead className="bg-slate-900">Client</TableHead>
-            <TableHead className="bg-slate-900">Case</TableHead>
-            <TableHead className="bg-slate-900">Assigned To</TableHead>
-            <TableHead className="bg-slate-900">Status</TableHead>
-            <TableHead className="bg-slate-900">Location</TableHead>
-            <TableHead className="bg-slate-900"></TableHead>
+            <TableHead className="bg-slate-900 text-white">Date & Time</TableHead>
+            <TableHead className="bg-slate-900 text-white">Client</TableHead>
+            <TableHead className="bg-slate-900 text-white">Case</TableHead>
+            <TableHead className="bg-slate-900 text-white">Assigned To</TableHead>
+            <TableHead className="bg-slate-900 text-white">Status</TableHead>
+            <TableHead className="bg-slate-900 text-white">Location</TableHead>
+            <TableHead className="bg-slate-900 text-white"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
