@@ -46,7 +46,7 @@ function NavHeader() {
   return <ul onMouseLeave={() => setPosition(pv => ({
     ...pv,
     opacity: 0
-  }))} className="relative mx-auto flex w-fit rounded-full border-2 border-[#F3F4F6] p-1 shadow-sm bg-slate-900">
+  }))} className="relative mx-auto flex w-fit rounded-full border-2 border-[#F3F4F6] p-1 shadow-sm bg-slate-400">
       {navigation.map(item => <Tab key={item.name} setPosition={setPosition} href={item.href}>
           {item.name}
         </Tab>)}
