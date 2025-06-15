@@ -1,8 +1,8 @@
+
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import DashboardLayout from '../components/layout/DashboardLayout';
 import { CaseDetailHeader } from '../components/cases/CaseDetailHeader';
 import { CaseDetailTabs } from '../components/cases/CaseDetailTabs';
 
@@ -63,38 +63,33 @@ const CaseDetail = () => {
 
   if (isLoading) {
     return (
-      <DashboardLayout>
-        <div className="animate-pulse p-6">
-          <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
-          <div className="h-64 bg-gray-200 rounded"></div>
-        </div>
-      </DashboardLayout>
+      <div className="animate-pulse p-6">
+        <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
+        <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
+        <div className="h-64 bg-gray-200 rounded"></div>
+      </div>
     );
   }
 
   if (!caseData) {
     return (
-      <DashboardLayout>
-        <div className="text-center py-12">
-          <p className="text-gray-500">Case not found</p>
-        </div>
-      </DashboardLayout>
+      <div className="text-center py-12">
+        <p className="text-gray-500">Case not found</p>
+      </div>
     );
   }
 
   return (
-    <DashboardLayout>
-      <div className="max-w-7xl mx-auto p-6">
-        <CaseDetailHeader case={caseData} />
-        <CaseDetailTabs 
-          caseId={id!} 
-          activeTab={activeTab} 
-          onTabChange={setActiveTab} 
-        />
-      </div>
-    </DashboardLayout>
+    <div className="max-w-7xl mx-auto p-6">
+      <CaseDetailHeader case={caseData} />
+      <CaseDetailTabs 
+        caseId={id!} 
+        activeTab={activeTab} 
+        onTabChange={setActiveTab} 
+      />
+    </div>
   );
 };
 
 export default CaseDetail;
+
