@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -43,6 +44,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .from('team_members')
         .select('firm_id')
         .eq('user_id', userId)
+        .limit(1) // Take the first record if multiple exist
         .maybeSingle();
       
       console.log(`AuthContext: DB RESPONSE: data:`, data, `error:`, error, `status:`, status);
