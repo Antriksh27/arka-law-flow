@@ -1,7 +1,12 @@
-import React from 'react';
+
+import React, { useMemo } from 'react';
 import { Calendar, Users, File, Folder, Plus, Upload, Download, Clock, User, FileText, CheckCircle, MoreHorizontal } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+import { startOfWeek, addDays, format, isToday } from 'date-fns';
+
 const Dashboard = () => {
   const metrics = [{
     number: '1',
@@ -16,31 +21,25 @@ const Dashboard = () => {
     number: '8',
     label: 'Tasks'
   }];
-  const weekDays = [{
-    day: 'Mon',
-    date: '19',
-    events: []
-  }, {
-    day: 'Tue',
-    date: '20',
-    events: []
-  }, {
-    day: 'Wed',
-    date: '21',
-    events: []
-  }, {
-    day: 'Thu',
-    date: '22',
-    events: []
-  }, {
-    day: 'Fri',
-    date: '23',
-    events: []
-  }, {
-    day: 'Sat',
-    date: '24',
-    events: ['30']
-  }];
+
+  const weekSchedule = useMemo(() => {
+    const today = new Date();
+    // Setting weekStartsOn: 1 for Monday
+    const startOfThisWeek = startOfWeek(today, { weekStartsOn: 1 });
+
+    return Array.from({ length: 7 }).map((_, i) => {
+      const date = addDays(startOfThisWeek, i);
+      // Dummy data for events. In a real app this would come from an API.
+      const eventCount = Math.floor(Math.random() * 6);
+      return {
+        day: format(date, 'EEE'), // 'Mon', 'Tue', etc.
+        date: format(date, 'd'),
+        isCurrentDay: isToday(date),
+        eventCount: i < 6 ? eventCount : 0, // Less events on Sunday for demo
+      };
+    });
+  }, []);
+
   const myTasks = [{
     title: 'Review case documents for upcoming hearing',
     priority: 'High',
@@ -109,33 +108,53 @@ const Dashboard = () => {
           </Card>)}
       </div>
 
-      {/* This Week's Events */}
-      <Card className="mb-8 bg-white border border-gray-200 shadow-sm">
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg font-medium">This Week's Events</CardTitle>
-            <div className="flex items-center gap-4 text-sm text-gray-600">
-              <span>May 19 - May 25, 2024</span>
-              <Button variant="ghost" size="sm">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-7 gap-4">
-            {weekDays.map((day, index) => <div key={index} className="text-center">
-                <div className="text-xs text-gray-500 mb-2">{day.day}</div>
-                <div className={`w-12 h-12 mx-auto flex items-center justify-center rounded-lg border ${day.events.length > 0 ? 'bg-blue-500 text-white' : 'bg-white border-gray-200'}`}>
-                  <span className="font-medium">{day.date}</span>
+      {/* This Week's Schedule */}
+      <div className="flex w-full flex-col items-start gap-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm mb-8">
+        <div className="flex w-full items-center justify-between">
+          <h3 className="text-lg font-medium text-gray-900">
+            This Week's Schedule
+          </h3>
+          <Button
+            variant="ghost"
+          >
+            <Calendar className="mr-2 h-4 w-4" />
+            View Calendar
+          </Button>
+        </div>
+        <div className="w-full items-start gap-2 grid grid-cols-7">
+          {weekSchedule.map((day, index) => {
+            const isCurrentDay = day.isCurrentDay;
+            const dayClasses = cn(
+                "flex flex-col items-center text-center gap-2 rounded-lg border p-4",
+                isCurrentDay ? "border-primary bg-accent" : "border-gray-200 bg-white"
+            );
+            const dayTextClasses = cn(
+                "text-xs font-semibold",
+                isCurrentDay ? "text-primary" : "text-gray-600"
+            );
+            const dateTextClasses = cn(
+                "text-2xl font-bold",
+                isCurrentDay ? "text-primary" : "text-gray-900"
+            );
+
+            return (
+                <div key={index} className={dayClasses}>
+                  <span className={dayTextClasses}>
+                    {day.day}
+                  </span>
+                  <span className={dateTextClasses}>
+                    {day.date}
+                  </span>
+                  {day.eventCount > 0 && (
+                    <Badge variant={isCurrentDay ? 'default' : 'secondary'}>
+                        {day.eventCount} {day.eventCount === 1 ? 'Event' : 'Events'}
+                    </Badge>
+                  )}
                 </div>
-                {day.events.map((event, eventIndex) => <div key={eventIndex} className="mt-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                    {event}
-                  </div>)}
-              </div>)}
-          </div>
-        </CardContent>
-      </Card>
+            );
+          })}
+        </div>
+      </div>
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-12 gap-6">
