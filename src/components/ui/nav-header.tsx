@@ -1,5 +1,5 @@
 
-"use client"; 
+"use client";
 
 import React, { useRef, useState } from "react";
 import { motion } from "framer-motion";
@@ -28,7 +28,7 @@ function NavHeader() {
 
   return (
     <ul
-      className="relative mx-auto flex w-fit rounded-full border-2 border-slate-300 bg-white p-1"
+      className="relative mx-auto flex w-fit rounded-full border-2 border-[#E0E7FF] bg-white p-1 shadow-sm"
       onMouseLeave={() => setPosition((pv) => ({ ...pv, opacity: 0 }))}
     >
       {navigation.map((item) => (
@@ -72,9 +72,12 @@ const Tab = ({
     >
       <Link 
         to={href}
-        className={`block px-3 py-1.5 text-xs uppercase mix-blend-difference md:px-5 md:py-3 md:text-sm transition-colors ${
-          isActive ? 'text-yellow-500' : 'text-slate-700 hover:text-white'
+        className={`block px-4 py-2 md:px-6 md:py-3 text-sm font-medium rounded-full transition-colors ${
+          isActive
+            ? 'bg-[#1E3A8A] text-white shadow'
+            : 'text-[#1E3A8A] hover:bg-[#E0E7FF] hover:text-[#1E3A8A]'
         }`}
+        style={{ letterSpacing: "0.05em" }}
       >
         {children}
       </Link>
@@ -86,7 +89,8 @@ const Cursor = ({ position }: { position: any }) => {
   return (
     <motion.li
       animate={position}
-      className="absolute z-0 h-7 rounded-full bg-slate-900 md:h-12"
+      className="absolute z-0 h-8 md:h-12 rounded-full bg-[#E0E7FF]"
+      style={{ top: 2 }}
     />
   );
 };

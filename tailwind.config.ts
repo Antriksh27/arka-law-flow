@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -23,11 +22,8 @@ export default {
 				sans: ['Inter', 'system-ui', 'sans-serif'],
 			},
 			colors: {
-				border: 'hsl(var(--border))',
-				input: 'hsl(var(--input))',
-				ring: 'hsl(var(--ring))',
-				background: 'hsl(var(--background))',
-				foreground: 'hsl(var(--foreground))',
+				background: '#F9FAFB',
+				foreground: '#1F2937',
 				primary: {
 					DEFAULT: '#1E3A8A',
 					50: '#EFF6FF',
@@ -42,39 +38,37 @@ export default {
 					900: '#1E3A8A',
 					foreground: '#FFFFFF'
 				},
-				secondary: {
-					DEFAULT: 'hsl(var(--secondary))',
-					foreground: 'hsl(var(--secondary-foreground))'
-				},
-				destructive: {
-					DEFAULT: 'hsl(var(--destructive))',
-					foreground: 'hsl(var(--destructive-foreground))'
-				},
-				muted: {
-					DEFAULT: 'hsl(var(--muted))',
-					foreground: 'hsl(var(--muted-foreground))'
-				},
 				accent: {
 					DEFAULT: '#E0E7FF',
+					50: '#EEF2FF'
+				},
+				secondary: {
+					DEFAULT: '#F3F4F6',
+					100: '#F3F4F6',
+					200: '#E5E7EB',
 					foreground: '#1E3A8A'
 				},
-				popover: {
-					DEFAULT: 'hsl(var(--popover))',
-					foreground: 'hsl(var(--popover-foreground))'
+				destructive: {
+					DEFAULT: '#EF4444',
+					foreground: '#fff'
 				},
-				card: {
-					DEFAULT: 'hsl(var(--card))',
-					foreground: 'hsl(var(--card-foreground))'
+				success: {
+					DEFAULT: '#10B981',
+					50: '#ECFDF5',
+					800: '#065F46',
 				},
-				sidebar: {
-					DEFAULT: 'hsl(var(--sidebar-background))',
-					foreground: 'hsl(var(--sidebar-foreground))',
-					primary: 'hsl(var(--sidebar-primary))',
-					'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-					accent: 'hsl(var(--sidebar-accent))',
-					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-					border: 'hsl(var(--sidebar-border))',
-					ring: 'hsl(var(--sidebar-ring))'
+				warning: {
+					DEFAULT: '#F59E0B',
+					50: '#FFFBEB',
+					800: '#92400E',
+				},
+				info: {
+					DEFAULT: '#3B82F6',
+					50: '#EFF6FF',
+					800: '#1E40AF',
+				},
+				muted: {
+					DEFAULT: '#6B7280'
 				},
 				legal: {
 					blue: '#1E3A8A',
@@ -82,12 +76,22 @@ export default {
 					background: '#F9FAFB',
 					text: '#1F2937',
 					'text-light': '#6B7280'
-				}
+				},
+				card: {
+					DEFAULT: '#fff',
+					background: '#fff',
+				},
+				border: '#E5E7EB',
 			},
 			borderRadius: {
-				lg: 'var(--radius)',
-				md: 'calc(var(--radius) - 2px)',
-				sm: 'calc(var(--radius) - 4px)'
+				xl: '1rem',
+				'2xl': '1.5rem',
+				lg: '0.75rem',
+				md: '0.5rem',
+				sm: '0.375rem'
+			},
+			boxShadow: {
+				card: '0 4px 24px rgba(30, 58, 138, 0.05)'
 			},
 			keyframes: {
 				'accordion-down': {
