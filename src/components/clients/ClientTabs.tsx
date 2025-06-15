@@ -6,6 +6,8 @@ import { ClientAppointments } from './ClientAppointments';
 import { ClientDocuments } from './ClientDocuments';
 import { ClientNotes } from './ClientNotes';
 import { ClientTasks } from './ClientTasks';
+import { ClientBilling } from './ClientBilling';
+import { ClientEmails } from './ClientEmails';
 import { 
   BarChart3, 
   CheckSquare, 
@@ -78,9 +80,7 @@ export const ClientTabs: React.FC<ClientTabsProps> = ({
           </TabsContent>
 
           <TabsContent value="billing" className="m-0">
-            <div className="text-center py-8 text-gray-500">
-              Billing content coming soon
-            </div>
+            <ClientBilling clientId={clientId} />
           </TabsContent>
 
           <TabsContent value="notes" className="m-0">
@@ -92,9 +92,7 @@ export const ClientTabs: React.FC<ClientTabsProps> = ({
           </TabsContent>
 
           <TabsContent value="emails" className="m-0">
-            <div className="text-center py-8 text-gray-500">
-              Emails content coming soon
-            </div>
+            <ClientEmails clientId={clientId} />
           </TabsContent>
         </div>
       </Tabs>
