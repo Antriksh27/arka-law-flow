@@ -104,7 +104,7 @@ function TeamDirectory() {
                     </TableCell>
                   </TableRow> : filtered.length === 0 ? <TableRow>
                     <TableCell colSpan={6}>
-                      <span className="text-sm text-muted-foreground block px-2 py-6 text-center">No team members found.</span>
+                      <span className="text-sm block px-2 py-6 text-center text-slate-900">No team members found.</span>
                     </TableCell>
                   </TableRow> : filtered.map((member: any) => <TableRow key={member.id} className="cursor-pointer" onClick={() => setSidebarMember(member)} data-selected={detailMember?.id === member.id}>
                       {/* Member Avatar, Name, Email */}
