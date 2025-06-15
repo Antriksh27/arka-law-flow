@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Bell, Settings, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,7 +12,7 @@ const Header = () => {
       <div className="flex items-center justify-between">
         {/* Logo Section */}
         <div className="flex items-center gap-4">
-          <img src="/lovable-uploads/89ea18cf-8c73-4793-9dcc-1a192855a630.png" alt="HRU Legal" className="h-[3.75rem] w-auto" />
+          <img src="/lovable-uploads/89ea18cf-8c73-4793-9dcc-1a192855a630.png" alt="HRU Legal" className="h-[4.125rem] w-auto" />
         </div>
         {/* Right Side Actions */}
         <div className="flex items-center gap-3">
