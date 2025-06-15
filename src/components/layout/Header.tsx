@@ -15,7 +15,7 @@ const Header = () => {
   const { user, signOut } = useAuth();
 
   return (
-    <header className="bg-slate-900 border-b border-slate-800 px-6 py-3">
+    <header className="bg-white border-b border-gray-200 px-6 py-3">
       <div className="flex items-center justify-between">
         {/* Logo Section */}
         <div className="flex items-center gap-3">
@@ -29,20 +29,20 @@ const Header = () => {
         {/* Right Side Actions */}
         <div className="flex items-center gap-2">
           {/* Notifications */}
-          <Button variant="ghost" size="icon" className="text-slate-300 hover:text-white hover:bg-slate-800 relative">
+          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground hover:bg-gray-100 relative">
             <Bell className="w-5 h-5" />
-            <span className="absolute -top-1 -right-1 w-3 h-3 bg-orange-500 rounded-full"></span>
+            <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>
           </Button>
 
           {/* Settings */}
-          <Button variant="ghost" size="icon" className="text-slate-300 hover:text-white hover:bg-slate-800">
+          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground hover:bg-gray-100">
             <Settings className="w-5 h-5" />
           </Button>
 
           {/* User Profile Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-slate-300 hover:text-white hover:bg-slate-800">
+              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground hover:bg-gray-100">
                 <User className="w-5 h-5" />
               </Button>
             </DropdownMenuTrigger>
@@ -51,7 +51,7 @@ const Header = () => {
                 {user?.email}
               </div>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={signOut} className="text-red-600 focus:text-red-600">
+              <DropdownMenuItem onClick={signOut} className="text-destructive focus:text-destructive">
                 <LogOut className="w-4 h-4 mr-2" />
                 Sign Out
               </DropdownMenuItem>

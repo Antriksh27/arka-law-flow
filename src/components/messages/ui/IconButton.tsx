@@ -1,28 +1,26 @@
 
 import React from "react";
+import { Button, ButtonProps } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-interface IconButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface IconButtonProps extends ButtonProps {
   icon: React.ReactNode;
-  variant?: "brand-primary" | "brand-tertiary";
 }
 
 export const IconButton: React.FC<IconButtonProps> = ({
   icon,
-  variant = "brand-primary",
+  variant = "default",
   className,
   ...props
 }) => {
-  const btnClass =
-    variant === "brand-primary"
-      ? "bg-primary text-white hover:bg-primary/90"
-      : "bg-primary-50 text-primary hover:bg-primary-100";
   return (
-    <button
-      type="button"
-      className={`inline-flex items-center justify-center rounded-lg p-2 transition-colors ${btnClass} ${className ?? ""}`}
+    <Button
+      variant={variant}
+      size="icon"
+      className={cn("p-2", className)}
       {...props}
     >
       {icon}
-    </button>
+    </Button>
   );
 };

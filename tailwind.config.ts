@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -30,29 +29,41 @@ export default {
 				foreground: 'hsl(var(--foreground))',
 				primary: {
 					DEFAULT: '#1E3A8A',
-					50: '#EFF6FF',
-					100: '#DBEAFE',
-					200: '#BFDBFE',
-					300: '#93C5FD',
-					400: '#60A5FA',
-					500: '#3B82F6',
-					600: '#2563EB',
-					700: '#1D4ED8',
-					800: '#1E40AF',
-					900: '#1E3A8A',
-					foreground: '#FFFFFF'
+					foreground: '#FFFFFF',
+					'50': '#EFF6FF',
+					'100': '#DBEAFE',
+					'200': '#BFDBFE',
+					'300': '#93C5FD',
+					'400': '#60A5FA',
+					'500': '#3B82F6',
+					'600': '#2563EB',
+					'700': '#1D4ED8',
+					'800': '#1E40AF',
+					'900': '#1E3A8A',
 				},
 				secondary: {
-					DEFAULT: 'hsl(var(--secondary))',
-					foreground: 'hsl(var(--secondary-foreground))'
+					DEFAULT: '#F3F4F6',
+					foreground: '#1E3A8A',
 				},
 				destructive: {
-					DEFAULT: 'hsl(var(--destructive))',
+					DEFAULT: '#EF4444',
 					foreground: 'hsl(var(--destructive-foreground))'
+				},
+				success: {
+					DEFAULT: '#10B981',
+					foreground: 'hsl(var(--success-foreground))',
+					'100': '#D1FAE5',
+					'800': '#065F46',
+				},
+				warning: {
+					DEFAULT: '#F59E0B',
+					foreground: 'hsl(var(--warning-foreground))',
+					'50': '#FFFBEB',
+					'800': '#92400E',
 				},
 				muted: {
 					DEFAULT: 'hsl(var(--muted))',
-					foreground: 'hsl(var(--muted-foreground))'
+					foreground: '#6B7280',
 				},
 				accent: {
 					DEFAULT: '#E0E7FF',
@@ -66,28 +77,13 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-				sidebar: {
-					DEFAULT: 'hsl(var(--sidebar-background))',
-					foreground: 'hsl(var(--sidebar-foreground))',
-					primary: 'hsl(var(--sidebar-primary))',
-					'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-					accent: 'hsl(var(--sidebar-accent))',
-					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-					border: 'hsl(var(--sidebar-border))',
-					ring: 'hsl(var(--sidebar-ring))'
-				},
-				legal: {
-					blue: '#1E3A8A',
-					'blue-light': '#E0E7FF',
-					background: '#F9FAFB',
-					text: '#1F2937',
-					'text-light': '#6B7280'
-				}
+				'table-header': '#220F3B',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
-				sm: 'calc(var(--radius) - 4px)'
+				sm: 'calc(var(--radius) - 4px)',
+				'2xl': 'calc(var(--radius) * 2.5)',
 			},
 			keyframes: {
 				'accordion-down': {
