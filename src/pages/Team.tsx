@@ -9,48 +9,33 @@ import { Dialog, DialogHeader, DialogContent, DialogTitle } from "@/components/u
 import { Checkbox } from "@/components/ui/checkbox";
 
 // FIXED: Updated icon imports to available names in lucide-react
-import {
-  UserPlus,
-  Search,
-  Check,
-  Mail,
-  Phone,
-  MoreHorizontal,
-  User,
-  Briefcase,
-  CheckSquare,
-  Settings,
-  X,
-  Calendar
-} from "lucide-react";
-
+import { UserPlus, Search, Check, Mail, Phone, MoreHorizontal, User, Briefcase, CheckSquare, Settings, X, Calendar } from "lucide-react";
 const roleLabels: Record<string, string> = {
   admin: "Admin",
   lawyer: "Lawyer",
   paralegal: "Paralegal",
   junior: "Junior",
-  office_staff: "Office Staff",
+  office_staff: "Office Staff"
 };
 const roleOrder = ["lawyer", "paralegal", "junior"];
-
 function TeamDirectory() {
-  const { data = [], isLoading } = useTeamMembers();
+  const {
+    data = [],
+    isLoading
+  } = useTeamMembers();
   const [search, setSearch] = useState("");
   const [sidebarMember, setSidebarMember] = useState<any | null>(null);
-
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return !q
-      ? data
-      : data.filter(
-          (m: any) =>
-            m.full_name?.toLowerCase().includes(q) ||
-            m.email?.toLowerCase().includes(q)
-        );
+    return !q ? data : data.filter((m: any) => m.full_name?.toLowerCase().includes(q) || m.email?.toLowerCase().includes(q));
   }, [search, data]);
-
   const filters = useMemo(() => {
-    let stats = { all: 0, lawyer: 0, paralegal: 0, junior: 0 };
+    let stats = {
+      all: 0,
+      lawyer: 0,
+      paralegal: 0,
+      junior: 0
+    };
     data.forEach((m: any) => {
       stats.all++;
       if (m.role === "lawyer") stats.lawyer++;
@@ -62,9 +47,7 @@ function TeamDirectory() {
 
   // Show selected member details (null = none)
   const detailMember = sidebarMember || filtered[0] || null;
-
-  return (
-    <div className="container max-w-none flex h-full w-full flex-col items-start gap-6 bg-background py-12">
+  return <div className="container max-w-none flex h-full w-full flex-col items-start gap-6 py-12 bg-slate-50">
       {/* Header + Actions */}
       <div className="flex w-full flex-col items-start gap-4">
         <div className="flex w-full items-center justify-between">
@@ -72,7 +55,7 @@ function TeamDirectory() {
             <span className="text-2xl font-semibold text-gray-900">
               Team Directory
             </span>
-            <span className="text-base text-muted-foreground">
+            <span className="text-base text-slate-900">
               Manage your firm's team and collaboration
             </span>
           </div>
@@ -86,41 +69,15 @@ function TeamDirectory() {
           <div className="h-auto w-80 flex-none">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
-              <input
-                type="text"
-                className="w-full rounded-lg bg-gray-100 pl-10 pr-4 py-2 text-sm border border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition placeholder:text-gray-500"
-                placeholder="Search team members..."
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-              />
+              <input type="text" className="w-full rounded-lg bg-gray-100 pl-10 pr-4 py-2 text-sm border border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition placeholder:text-gray-500" placeholder="Search team members..." value={search} onChange={e => setSearch(e.target.value)} />
             </div>
           </div>
           {/* Filter badges */}
           <div className="flex items-center gap-2">
-            <FilterBadge
-              label="All"
-              count={filters.all}
-              selected={true}
-              onClick={() => {}}
-            />
-            <FilterBadge
-              label="Lawyers"
-              count={filters.lawyer}
-              selected={false}
-              onClick={() => {}}
-            />
-            <FilterBadge
-              label="Paralegals"
-              count={filters.paralegal}
-              selected={false}
-              onClick={() => {}}
-            />
-            <FilterBadge
-              label="Juniors"
-              count={filters.junior}
-              selected={false}
-              onClick={() => {}}
-            />
+            <FilterBadge label="All" count={filters.all} selected={true} onClick={() => {}} />
+            <FilterBadge label="Lawyers" count={filters.lawyer} selected={false} onClick={() => {}} />
+            <FilterBadge label="Paralegals" count={filters.paralegal} selected={false} onClick={() => {}} />
+            <FilterBadge label="Juniors" count={filters.junior} selected={false} onClick={() => {}} />
           </div>
         </div>
       </div>
@@ -132,35 +89,24 @@ function TeamDirectory() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Team Member</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Cases</TableHead>
-                  <TableHead>Contact</TableHead>
+                  <TableHead className="bg-slate-900">Team Member</TableHead>
+                  <TableHead className="bg-slate-900">Role</TableHead>
+                  <TableHead className="bg-slate-900">Status</TableHead>
+                  <TableHead className="bg-slate-900">Cases</TableHead>
+                  <TableHead className="bg-slate-900">Contact</TableHead>
                   <TableHead />
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {isLoading ? (
-                  <TableRow>
+                {isLoading ? <TableRow>
                     <TableCell colSpan={6}>
                       <Skeleton className="h-11 w-full rounded-lg" />
                     </TableCell>
-                  </TableRow>
-                ) : filtered.length === 0 ? (
-                  <TableRow>
+                  </TableRow> : filtered.length === 0 ? <TableRow>
                     <TableCell colSpan={6}>
                       <span className="text-sm text-muted-foreground block px-2 py-6 text-center">No team members found.</span>
                     </TableCell>
-                  </TableRow>
-                ) : (
-                  filtered.map((member: any) => (
-                    <TableRow
-                      key={member.id}
-                      className="cursor-pointer"
-                      onClick={() => setSidebarMember(member)}
-                      data-selected={detailMember?.id === member.id}
-                    >
+                  </TableRow> : filtered.map((member: any) => <TableRow key={member.id} className="cursor-pointer" onClick={() => setSidebarMember(member)} data-selected={detailMember?.id === member.id}>
                       {/* Member Avatar, Name, Email */}
                       <TableCell>
                         <div className="flex items-center gap-3">
@@ -184,15 +130,7 @@ function TeamDirectory() {
                       </TableCell>
                       {/* Status */}
                       <TableCell>
-                        <Badge
-                          className={`rounded-full px-3 py-1 text-xs font-medium ${
-                            member.status === "active"
-                              ? "bg-green-100 text-green-800"
-                              : member.status === "inactive"
-                              ? "bg-gray-100 text-gray-500"
-                              : "bg-blue-100 text-blue-800"
-                          }`}
-                        >
+                        <Badge className={`rounded-full px-3 py-1 text-xs font-medium ${member.status === "active" ? "bg-green-100 text-green-800" : member.status === "inactive" ? "bg-gray-100 text-gray-500" : "bg-blue-100 text-blue-800"}`}>
                           {member.status.charAt(0).toUpperCase() + member.status.slice(1)}
                         </Badge>
                       </TableCell>
@@ -203,30 +141,18 @@ function TeamDirectory() {
                       {/* Contact Buttons */}
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          {member.email && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={e => {
-                                e.stopPropagation();
-                                window.open(`mailto:${member.email}`);
-                              }}
-                            >
+                          {member.email && <Button variant="ghost" size="icon" onClick={e => {
+                      e.stopPropagation();
+                      window.open(`mailto:${member.email}`);
+                    }}>
                               <Mail className="w-4 h-4" />
-                            </Button>
-                          )}
-                          {member.phone_number && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={e => {
-                                e.stopPropagation();
-                                window.open(`tel:${member.phone_number}`);
-                              }}
-                            >
+                            </Button>}
+                          {member.phone_number && <Button variant="ghost" size="icon" onClick={e => {
+                      e.stopPropagation();
+                      window.open(`tel:${member.phone_number}`);
+                    }}>
                               <Phone className="w-4 h-4" />
-                            </Button>
-                          )}
+                            </Button>}
                         </div>
                       </TableCell>
                       {/* Row Actions */}
@@ -234,11 +160,7 @@ function TeamDirectory() {
                         <div className="flex grow shrink-0 basis-0 items-center justify-end">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={e => e.stopPropagation()}
-                              >
+                              <Button variant="ghost" size="icon" onClick={e => e.stopPropagation()}>
                                 <MoreHorizontal className="w-4 h-4" />
                               </Button>
                             </DropdownMenuTrigger>
@@ -260,28 +182,19 @@ function TeamDirectory() {
                           </DropdownMenu>
                         </div>
                       </TableCell>
-                    </TableRow>
-                  ))
-                )}
+                    </TableRow>)}
               </TableBody>
             </Table>
           </div>
         </div>
         {/* Details sidebar */}
         <div className="flex w-80 flex-none flex-col items-start gap-6">
-          {!detailMember ? (
-            <span className="text-sm text-muted-foreground">Select a team member to view details</span>
-          ) : (
-            <div className="flex w-full flex-col items-start gap-4 rounded-lg border border-solid border-gray-200 bg-white px-6 py-6">
+          {!detailMember ? <span className="text-sm text-slate-900">Select a team member to view details</span> : <div className="flex w-full flex-col items-start gap-4 rounded-lg border border-solid border-gray-200 bg-white px-6 py-6">
               <div className="flex w-full items-center justify-between">
                 <span className="text-xl font-semibold text-gray-900">
                   Member Details
                 </span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setSidebarMember(null)}
-                >
+                <Button variant="ghost" size="icon" onClick={() => setSidebarMember(null)}>
                   <X className="w-5 h-5" />
                 </Button>
               </div>
@@ -313,7 +226,10 @@ function TeamDirectory() {
                   </DataFieldHorizontal>
                   <DataFieldHorizontal icon={<Calendar className="w-4 h-4" />} label="Joined">
                     <span className="text-sm text-gray-900">
-                      {detailMember.join_date || (detailMember.joined_at ? new Date(detailMember.joined_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short' }) : "-")}
+                      {detailMember.join_date || (detailMember.joined_at ? new Date(detailMember.joined_at).toLocaleDateString(undefined, {
+                    year: 'numeric',
+                    month: 'short'
+                  }) : "-")}
                     </span>
                   </DataFieldHorizontal>
                 </div>
@@ -353,47 +269,64 @@ function TeamDirectory() {
                   </Checkbox>
                 </div>
               </div>
-            </div>
-          )}
+            </div>}
         </div>
       </div>
-    </div>
-  );
+    </div>;
 }
-
-function FilterBadge({ label, count, selected, onClick }: { label: string; count: number; selected?: boolean; onClick?: () => void }) {
-  return (
-    <button
-      className={`rounded-full px-4 py-1 text-sm font-medium border 
+function FilterBadge({
+  label,
+  count,
+  selected,
+  onClick
+}: {
+  label: string;
+  count: number;
+  selected?: boolean;
+  onClick?: () => void;
+}) {
+  return <button className={`rounded-full px-4 py-1 text-sm font-medium border 
         ${selected ? "bg-primary text-white" : "bg-gray-100 text-gray-800 border-gray-200"} 
-        transition-colors hover:bg-primary/10`}
-      type="button"
-      onClick={onClick}
-    >
+        transition-colors hover:bg-primary/10`} type="button" onClick={onClick}>
       {label} <span className="ml-1 opacity-75">{count}</span>
-    </button>
-  );
+    </button>;
 }
-
-function DropdownMenu({ children }: { children: React.ReactNode }) {
+function DropdownMenu({
+  children
+}: {
+  children: React.ReactNode;
+}) {
   // Simple dropdown stub; replace with shadcn/ui dropdown if available.
   return <div className="relative">{children}</div>;
 }
-function DropdownMenuTrigger({ asChild, children }: { asChild?: boolean; children: React.ReactNode }) {
+function DropdownMenuTrigger({
+  asChild,
+  children
+}: {
+  asChild?: boolean;
+  children: React.ReactNode;
+}) {
   return children;
 }
-function DropdownMenuContent({ align, children }: { align?: string; children: React.ReactNode }) {
+function DropdownMenuContent({
+  align,
+  children
+}: {
+  align?: string;
+  children: React.ReactNode;
+}) {
   return <div className="absolute right-0 mt-2 min-w-[170px] z-50 bg-white rounded-xl shadow border px-1 py-2">{children}</div>;
 }
-function DropdownMenuItem({ children, ...props }: { children: React.ReactNode; onClick?: () => void }) {
-  return (
-    <div
-      className="flex items-center px-3 py-2 rounded-lg hover:bg-accent hover:text-primary cursor-pointer text-sm"
-      {...props}
-    >
+function DropdownMenuItem({
+  children,
+  ...props
+}: {
+  children: React.ReactNode;
+  onClick?: () => void;
+}) {
+  return <div className="flex items-center px-3 py-2 rounded-lg hover:bg-accent hover:text-primary cursor-pointer text-sm" {...props}>
       {children}
-    </div>
-  );
+    </div>;
 }
 function DropdownMenuSeparator() {
   return <div className="my-1 border-t border-gray-100"></div>;
@@ -402,22 +335,21 @@ function DropdownMenuSeparator() {
 // Utility: Initials from name
 function getInitials(name?: string): string {
   if (!name) return "";
-  return name
-    .split(" ")
-    .map(s => s[0])
-    .join("")
-    .substring(0, 2)
-    .toUpperCase();
+  return name.split(" ").map(s => s[0]).join("").substring(0, 2).toUpperCase();
 }
-
-function DataFieldHorizontal({ icon, label, children }: { icon: React.ReactNode; label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex items-center gap-2">
+function DataFieldHorizontal({
+  icon,
+  label,
+  children
+}: {
+  icon: React.ReactNode;
+  label: string;
+  children: React.ReactNode;
+}) {
+  return <div className="flex items-center gap-2">
       <span className="text-gray-400">{icon}</span>
       <span className="text-xs text-gray-600 min-w-[56px]">{label}</span>
       {children}
-    </div>
-  );
+    </div>;
 }
-
 export default TeamDirectory;
