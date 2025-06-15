@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -8,7 +9,8 @@ const getFirmId = async (userId: string) => {
     .from('team_members')
     .select('firm_id')
     .eq('user_id', userId)
-    .single();
+    .limit(1) // Grabs the first firm if multiple exist for the user
+    .maybeSingle(); // Handles if there are 0 or 1 results without erroring
 
   if (error) throw new Error(error.message);
   if (!data) throw new Error('User is not part of any firm.');
