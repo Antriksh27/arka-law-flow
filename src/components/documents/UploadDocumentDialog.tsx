@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -74,6 +73,20 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
         if (userError || !user) {
           throw new Error('Not authenticated');
         }
+
+        // Get current user's firm
+        const { data: teamMember, error: firmError } = await supabase
+          .from('team_members')
+          .select('firm_id')
+          .eq('user_id', user.id)
+          .limit(1)
+          .maybeSingle();
+
+        if (firmError) throw firmError;
+        if (!teamMember || !teamMember.firm_id) {
+          throw new Error('Could not determine your firm. Please ensure you are part of a team.');
+        }
+        const firmId = teamMember.firm_id;
         
         console.log('Starting upload for files:', selectedFiles.length);
         
@@ -112,7 +125,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
               uploaded_by: user.id,
               is_evidence: data.is_evidence,
               uploaded_at: new Date().toISOString(),
-              firm_id: null, // Set explicitly
+              firm_id: firmId, // Set explicitly
               folder_name: data.case_id === 'all' ? 'General Documents' : null
             };
 
