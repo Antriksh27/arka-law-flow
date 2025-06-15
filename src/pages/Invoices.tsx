@@ -32,22 +32,22 @@ const fetchInvoices = async (firmId: string | undefined): Promise<InvoiceListDat
 const InvoiceStats = () => {
   return <div className="flex w-full flex-wrap items-start gap-4 mobile:flex-col">
       {/* Outstanding */}
-      <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-2xl border border-gray-200 px-6 py-6 shadow-sm hover:shadow-md transition-shadow bg-slate-900">
+      <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-2xl border border-gray-200 px-6 py-6 shadow-sm hover:shadow-md transition-shadow bg-slate-100">
         <span className="text-sm font-medium text-muted-foreground">Outstanding</span>
         <span className="text-2xl font-semibold text-cyan-500">₹4.2L</span>
       </div>
       {/* Overdue */}
-      <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-2xl border border-gray-200 px-6 py-6 shadow-sm hover:shadow-md transition-shadow bg-slate-900">
+      <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-2xl border border-gray-200 px-6 py-6 shadow-sm hover:shadow-md transition-shadow bg-slate-100">
         <span className="text-sm font-medium text-muted-foreground">Overdue</span>
         <span className="text-2xl font-semibold text-red-600">₹1.8L</span>
       </div>
       {/* Paid this month */}
-      <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-2xl border border-gray-200 px-6 py-6 shadow-sm hover:shadow-md transition-shadow bg-slate-900">
+      <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-2xl border border-gray-200 px-6 py-6 shadow-sm hover:shadow-md transition-shadow bg-slate-100">
         <span className="text-sm font-medium text-muted-foreground">Paid this month</span>
         <span className="text-2xl font-semibold text-green-600">₹2.6L</span>
       </div>
       {/* Draft */}
-      <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-2xl border border-gray-200 px-6 py-6 shadow-sm hover:shadow-md transition-shadow bg-slate-900">
+      <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-2xl border border-gray-200 px-6 py-6 shadow-sm hover:shadow-md transition-shadow bg-slate-100">
         <span className="text-sm font-medium text-muted-foreground">Draft</span>
         <span className="text-2xl font-semibold text-yellow-500">12</span>
       </div>
@@ -111,8 +111,7 @@ const Invoices: React.FC = () => {
     queryFn: () => fetchInvoices(firmId),
     enabled: !!firmId
   });
-  return (
-    <div className="max-w-7xl mx-auto p-6 space-y-6">
+  return <div className="max-w-7xl mx-auto p-6 space-y-6">
       {/* Breadcrumbs */}
       {/* Header */}
       <div className="flex w-full flex-wrap items-center gap-4">
@@ -156,7 +155,6 @@ const Invoices: React.FC = () => {
         <p className="text-gray-500">Firm information not available. Cannot load invoices.</p>
         {firmError && <p className="mt-2 text-red-400 text-sm">{firmError}</p>}
       </div>}
-    </div>
-  );
+    </div>;
 };
 export default Invoices;
