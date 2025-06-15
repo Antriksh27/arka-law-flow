@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { Edit, Search, Paperclip, Phone, Send } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -58,8 +57,9 @@ const Messages = () => {
       if (!user) return [];
 
       // Step 1: Get threads user participates in
-      const { data: participantData, error: participantError } = await supabase
-        .from('message_thread_participants')
+      // @ts-expect-error - table not in types, casting to any to suppress error
+      const { data: participantData, error: participantError } = await (supabase
+        .from('message_thread_participants') as any)
         .select('thread_id')
         .eq('user_id', user.id);
 
@@ -77,7 +77,6 @@ const Messages = () => {
       if (threadsError) throw threadsError;
 
       // Step 3: For each thread, fetch shallow messages (last) and shallow participants
-      // (It's acceptable for now to do this on the client for limited numbers. For optimization, use a view/custom function.)
       const threadsWithData = await Promise.all((threadsData || []).map(async (thread: any) => {
         // Get last message in thread
         const { data: messagesData } = await supabase
@@ -88,8 +87,9 @@ const Messages = () => {
           .limit(1);
 
         // Get participants (user_id as id)
-        const { data: participantsData } = await supabase
-          .from('message_thread_participants')
+        // @ts-expect-error - table not in types, casting to any to suppress error
+        const { data: participantsData } = await (supabase
+          .from('message_thread_participants') as any)
           .select('user_id')
           .eq('thread_id', thread.id);
 
@@ -288,4 +288,3 @@ const Messages = () => {
 };
 
 export default Messages;
-
