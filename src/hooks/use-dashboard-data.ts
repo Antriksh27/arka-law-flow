@@ -106,7 +106,7 @@ const fetchDashboardData = async (firmId: string, userId: string) => {
 export const useDashboardData = () => {
   const { user } = useAuth();
   
-  const { data: firmId, isLoading: isLoadingFirmId } = useQuery({
+  const { data: firmId, isLoading: isLoadingFirmId, error: firmIdError, isError: isFirmIdError } = useQuery({
     queryKey: ['firmId', user?.id],
     queryFn: () => getFirmId(user!.id),
     enabled: !!user,
@@ -115,11 +115,13 @@ export const useDashboardData = () => {
   const queryResult = useQuery({
     queryKey: ['dashboardData', firmId],
     queryFn: () => fetchDashboardData(firmId!, user!.id),
-    enabled: !!firmId && !!user,
+    enabled: !!firmId && !!user && !isFirmIdError,
   });
 
   return {
     ...queryResult,
-    isLoading: queryResult.isLoading || isLoadingFirmId
+    isLoading: queryResult.isLoading || isLoadingFirmId,
+    isError: queryResult.isError || isFirmIdError,
+    error: queryResult.error || firmIdError,
   }
 };

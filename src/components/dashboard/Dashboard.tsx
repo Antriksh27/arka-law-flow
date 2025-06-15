@@ -1,6 +1,6 @@
 
 import React, { useMemo } from 'react';
-import { Calendar, Users, File, Folder, Plus, Upload, Download, Clock, User, FileText, CheckCircle, MoreHorizontal } from 'lucide-react';
+import { Calendar, Users, File, Folder, Plus, Upload, Download, Clock, User, FileText, CheckCircle, MoreHorizontal, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,9 +8,10 @@ import { cn } from '@/lib/utils';
 import { startOfWeek, addDays, format, isToday, isTomorrow, formatDistanceToNowStrict } from 'date-fns';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const Dashboard = () => {
-  const { data, isLoading } = useDashboardData();
+  const { data, isLoading, error, isError } = useDashboardData();
 
   const dashboardMetrics = data ? [
     { number: data.metrics.activeCases, label: 'Active Cases' },
@@ -46,6 +47,21 @@ const Dashboard = () => {
       return 'Invalid date';
     }
   };
+
+  if (isError) {
+    return (
+      <div className="p-6 bg-gray-50 min-h-screen">
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error loading dashboard</AlertTitle>
+          <AlertDescription>
+            There was a problem fetching your dashboard data. Please try refreshing the page.
+            {error && <pre className="mt-2 text-xs bg-red-100 p-2 rounded whitespace-pre-wrap">{error.message}</pre>}
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   return <div className="p-6 bg-gray-50 min-h-screen">
       {/* Header */}
