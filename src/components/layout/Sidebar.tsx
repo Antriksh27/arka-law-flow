@@ -9,6 +9,9 @@ import {
   Inbox,
   MessageSquare,
 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import ReceptionistSidebar from './ReceptionistSidebar';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: Inbox },
@@ -26,6 +29,33 @@ const navigation = [
 
 const Sidebar = () => {
   const location = useLocation();
+  const { user } = useAuth();
+  
+  // Get user role from team_members table
+  const [userRole, setUserRole] = React.useState<string | null>(null);
+  
+  React.useEffect(() => {
+    const fetchUserRole = async () => {
+      if (!user?.id) return;
+      
+      const { data } = await supabase
+        .from('team_members')
+        .select('role')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (data) {
+        setUserRole(data.role);
+      }
+    };
+    
+    fetchUserRole();
+  }, [user?.id]);
+  
+  // Show receptionist sidebar for receptionists
+  if (userRole === 'receptionist') {
+    return <ReceptionistSidebar />;
+  }
 
   return (
     <div className="w-64 bg-white border-r border-gray-200 h-screen flex flex-col">

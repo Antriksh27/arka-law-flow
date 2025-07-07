@@ -22,6 +22,7 @@ export type Database = {
           client_id: string | null
           created_at: string | null
           created_by: string | null
+          created_by_user_id: string | null
           document_url: string | null
           duration_minutes: number
           end_time: string | null
@@ -44,6 +45,7 @@ export type Database = {
           client_id?: string | null
           created_at?: string | null
           created_by?: string | null
+          created_by_user_id?: string | null
           document_url?: string | null
           duration_minutes?: number
           end_time?: string | null
@@ -66,6 +68,7 @@ export type Database = {
           client_id?: string | null
           created_at?: string | null
           created_by?: string | null
+          created_by_user_id?: string | null
           document_url?: string | null
           duration_minutes?: number
           end_time?: string | null
@@ -845,6 +848,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      contacts: {
+        Row: {
+          converted_client_id: string | null
+          converted_to_client: boolean | null
+          created_at: string | null
+          created_by: string | null
+          email: string | null
+          firm_id: string | null
+          id: string
+          last_visited_at: string | null
+          name: string
+          notes: string | null
+          phone: string | null
+          updated_at: string | null
+          visit_purpose: string | null
+        }
+        Insert: {
+          converted_client_id?: string | null
+          converted_to_client?: boolean | null
+          created_at?: string | null
+          created_by?: string | null
+          email?: string | null
+          firm_id?: string | null
+          id?: string
+          last_visited_at?: string | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string | null
+          visit_purpose?: string | null
+        }
+        Update: {
+          converted_client_id?: string | null
+          converted_to_client?: boolean | null
+          created_at?: string | null
+          created_by?: string | null
+          email?: string | null
+          firm_id?: string | null
+          id?: string
+          last_visited_at?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string | null
+          visit_purpose?: string | null
+        }
+        Relationships: []
       }
       court_hearings: {
         Row: {

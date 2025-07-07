@@ -1,0 +1,210 @@
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Calendar, Clock, User, Plus } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
+
+const ReceptionAppointments = () => {
+  const { user, firmId } = useAuth();
+  const [selectedLawyer, setSelectedLawyer] = useState<string>('all');
+  const [selectedDate, setSelectedDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
+
+  // Fetch lawyers for filter
+  const { data: lawyers } = useQuery({
+    queryKey: ['reception-lawyers', firmId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('team_members')
+        .select('id, user_id, full_name, role')
+        .eq('firm_id', firmId)
+        .in('role', ['lawyer', 'admin']);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!firmId
+  });
+
+  // Fetch appointments
+  const { data: appointments, isLoading } = useQuery({
+    queryKey: ['reception-appointments', firmId, selectedLawyer, selectedDate],
+    queryFn: async () => {
+      let query = supabase
+        .from('appointments')
+        .select(`
+          *,
+          clients(full_name),
+          profiles(full_name)
+        `)
+        .eq('firm_id', firmId)
+        .eq('appointment_date', selectedDate)
+        .order('appointment_time', { ascending: true });
+
+      if (selectedLawyer !== 'all') {
+        query = query.eq('lawyer_id', selectedLawyer);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!firmId
+  });
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'upcoming':
+        return <Badge className="bg-blue-100 text-blue-800 border-blue-200">Upcoming</Badge>;
+      case 'completed':
+        return <Badge className="bg-green-100 text-green-800 border-green-200">Completed</Badge>;
+      case 'cancelled':
+        return <Badge className="bg-red-100 text-red-800 border-red-200">Cancelled</Badge>;
+      case 'in-progress':
+        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">In Progress</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  return (
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-semibold text-[#111827]">Appointments</h1>
+          <p className="text-[#6B7280] mt-1">Manage appointments for all lawyers</p>
+        </div>
+        <Button className="gap-2">
+          <Plus className="w-4 h-4" />
+          Book Appointment
+        </Button>
+      </div>
+
+      {/* Filters */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex flex-wrap gap-4">
+            <div className="flex-1 min-w-[200px]">
+              <label className="text-sm font-medium text-[#111827] mb-2 block">Lawyer</label>
+              <Select value={selectedLawyer} onValueChange={setSelectedLawyer}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select lawyer" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Lawyers</SelectItem>
+                  {lawyers?.map((lawyer) => (
+                    <SelectItem key={lawyer.user_id} value={lawyer.user_id}>
+                      {lawyer.full_name} ({lawyer.role})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex-1 min-w-[200px]">
+              <label className="text-sm font-medium text-[#111827] mb-2 block">Date</label>
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Appointments */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg font-medium text-[#111827]">
+            Appointments for {format(parseISO(selectedDate), 'EEEE, MMMM d, yyyy')} ({appointments?.length || 0})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <div className="text-[#6B7280]">Loading appointments...</div>
+            </div>
+          ) : appointments?.length === 0 ? (
+            <div className="text-center py-8">
+              <Calendar className="w-12 h-12 text-[#6B7280] mx-auto mb-4" />
+              <p className="text-[#6B7280]">No appointments scheduled</p>
+              <p className="text-sm text-[#6B7280] mt-1">Book the first appointment for this day</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {appointments?.map((appointment) => (
+                <div key={appointment.id} className="border border-[#E5E7EB] rounded-lg p-4 hover:bg-[#F9FAFB] transition-colors">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-4 h-4 text-[#6B7280]" />
+                          <span className="font-medium text-[#111827]">
+                            {appointment.appointment_time || 'Time not set'}
+                          </span>
+                        </div>
+                        {getStatusBadge(appointment.status)}
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <User className="w-4 h-4 text-[#6B7280]" />
+                          <span className="text-sm text-[#6B7280]">Client:</span>
+                          <span className="text-sm font-medium text-[#111827]">
+                            {appointment.clients?.[0]?.full_name || 'No client assigned'}
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <User className="w-4 h-4 text-[#6B7280]" />
+                          <span className="text-sm text-[#6B7280]">Lawyer:</span>
+                          <span className="text-sm font-medium text-[#111827]">
+                            {appointment.profiles?.[0]?.full_name || 'No lawyer assigned'}
+                          </span>
+                        </div>
+
+                        {appointment.title && (
+                          <div className="text-sm text-[#6B7280]">
+                            <strong>Title:</strong> {appointment.title}
+                          </div>
+                        )}
+
+                        {appointment.notes && (
+                          <div className="text-sm text-[#6B7280]">
+                            <strong>Notes:</strong> {appointment.notes}
+                          </div>
+                        )}
+
+                        {appointment.location && (
+                          <div className="text-sm text-[#6B7280]">
+                            <strong>Location:</strong> {appointment.location}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" size="sm">
+                        Edit
+                      </Button>
+                      <Button variant="outline" size="sm">
+                        Reschedule
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default ReceptionAppointments;
