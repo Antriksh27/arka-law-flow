@@ -51,7 +51,7 @@ const ReceptionHome = () => {
     queryFn: async () => {
       const {
         data
-      } = await supabase.from('team_members').select('id, user_id, full_name, role').eq('firm_id', firmId).in('role', ['lawyer', 'admin']);
+      } = await supabase.from('team_members').select('id, user_id, full_name, role').eq('firm_id', firmId).in('role', ['lawyer', 'admin', 'junior']);
       return data || [];
     },
     enabled: !!firmId
@@ -126,9 +126,9 @@ const ReceptionHome = () => {
                     <span className="flex-1 text-sm font-medium text-[#111827]">
                       {lawyer.full_name || 'Unnamed Lawyer'}
                     </span>
-                    <Badge variant="outline" className="text-xs">
-                      {Math.floor(Math.random() * 5) + 1}
-                    </Badge>
+                     <Badge variant="outline" className="text-xs">
+                       {lawyer.role}
+                     </Badge>
                   </div>)}
               </div>
             </CardContent>

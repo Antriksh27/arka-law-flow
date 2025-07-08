@@ -114,7 +114,7 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
     const { data } = await supabase
       .from('profiles')
       .select('id, full_name')
-      .in('role', ['admin', 'lawyer', 'paralegal'])
+      .in('role', ['admin', 'lawyer', 'junior', 'paralegal'])
       .order('full_name');
     setUsers(data || []);
   };

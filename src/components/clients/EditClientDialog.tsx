@@ -60,7 +60,7 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
       const { data, error } = await supabase
         .from('profiles')
         .select('id, full_name')
-        .in('role', ['lawyer', 'partner', 'associate', 'admin']);
+        .in('role', ['lawyer', 'partner', 'associate', 'admin', 'junior']);
       
       if (error) throw error;
       return data;
