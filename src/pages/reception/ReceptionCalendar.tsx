@@ -401,7 +401,7 @@ const ReceptionCalendar = () => {
         .from('team_members')
         .select('id, user_id, full_name, role')
         .eq('firm_id', firmId)
-        .in('role', ['lawyer', 'admin']);
+        .in('role', ['lawyer', 'admin', 'junior']);
       
       const colors = [
         'bg-blue-500',
