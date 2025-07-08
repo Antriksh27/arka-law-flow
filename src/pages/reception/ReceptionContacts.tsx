@@ -8,14 +8,15 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { UserPlus, Search, Phone, Mail, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
-import { useDialog } from '@/hooks/use-dialog';
 import { useToast } from '@/hooks/use-toast';
+import AddContactDialog from '@/components/reception/AddContactDialog';
 
 const ReceptionContacts = () => {
   const { user, firmId } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
+  const [addContactOpen, setAddContactOpen] = useState(false);
 
   // Fetch contacts
   const { data: contacts, isLoading } = useQuery({
@@ -98,7 +99,10 @@ const ReceptionContacts = () => {
           <h1 className="text-2xl font-semibold text-[#111827]">Contacts</h1>
           <p className="text-[#6B7280] mt-1">Manage pre-client contacts and convert them to clients</p>
         </div>
-        <Button className="gap-2">
+        <Button 
+          className="gap-2"
+          onClick={() => setAddContactOpen(true)}
+        >
           <UserPlus className="w-4 h-4" />
           Add Contact
         </Button>
@@ -212,6 +216,12 @@ const ReceptionContacts = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Add Contact Modal */}
+      <AddContactDialog 
+        open={addContactOpen} 
+        onOpenChange={setAddContactOpen} 
+      />
     </div>
   );
 };

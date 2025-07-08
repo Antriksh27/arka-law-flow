@@ -8,11 +8,13 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar, Clock, User, Plus } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
+import BookAppointmentDialog from '@/components/reception/BookAppointmentDialog';
 
 const ReceptionAppointments = () => {
   const { user, firmId } = useAuth();
   const [selectedLawyer, setSelectedLawyer] = useState<string>('all');
   const [selectedDate, setSelectedDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
+  const [bookAppointmentOpen, setBookAppointmentOpen] = useState(false);
 
   // Fetch lawyers for filter
   const { data: lawyers } = useQuery({
@@ -78,7 +80,10 @@ const ReceptionAppointments = () => {
           <h1 className="text-2xl font-semibold text-[#111827]">Appointments</h1>
           <p className="text-[#6B7280] mt-1">Manage appointments for all lawyers</p>
         </div>
-        <Button className="gap-2">
+        <Button 
+          className="gap-2"
+          onClick={() => setBookAppointmentOpen(true)}
+        >
           <Plus className="w-4 h-4" />
           Book Appointment
         </Button>
@@ -203,6 +208,12 @@ const ReceptionAppointments = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Book Appointment Modal */}
+      <BookAppointmentDialog 
+        open={bookAppointmentOpen} 
+        onOpenChange={setBookAppointmentOpen} 
+      />
     </div>
   );
 };

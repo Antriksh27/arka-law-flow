@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -6,11 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar, Users, UserPlus, Clock } from 'lucide-react';
 import { format } from 'date-fns';
-import { useDialog } from '@/hooks/use-dialog';
+import AddContactDialog from '@/components/reception/AddContactDialog';
+import BookAppointmentDialog from '@/components/reception/BookAppointmentDialog';
 
 const ReceptionHome = () => {
   const { user, firmId } = useAuth();
-  const { openDialog } = useDialog();
+  const [addContactOpen, setAddContactOpen] = useState(false);
+  const [bookAppointmentOpen, setBookAppointmentOpen] = useState(false);
   
   // Get today's appointments count
   const { data: todayAppointments } = useQuery({
@@ -121,10 +123,7 @@ const ReceptionHome = () => {
           <CardContent className="space-y-3">
             <Button 
               className="w-full justify-start gap-2"
-              onClick={() => {
-                // Will implement booking modal
-                console.log('Book appointment');
-              }}
+              onClick={() => setBookAppointmentOpen(true)}
             >
               <Calendar className="w-4 h-4" />
               Book New Appointment
@@ -132,10 +131,7 @@ const ReceptionHome = () => {
             <Button 
               variant="outline" 
               className="w-full justify-start gap-2"
-              onClick={() => {
-                // Will implement contact modal
-                console.log('Add contact');
-              }}
+              onClick={() => setAddContactOpen(true)}
             >
               <UserPlus className="w-4 h-4" />
               Add New Contact
@@ -165,6 +161,16 @@ const ReceptionHome = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Modals */}
+      <AddContactDialog 
+        open={addContactOpen} 
+        onOpenChange={setAddContactOpen} 
+      />
+      <BookAppointmentDialog 
+        open={bookAppointmentOpen} 
+        onOpenChange={setBookAppointmentOpen} 
+      />
     </div>
   );
 };
