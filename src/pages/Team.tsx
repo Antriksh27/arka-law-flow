@@ -19,22 +19,28 @@ import {
 
 // FIXED: Updated icon imports to available names in lucide-react
 import { UserPlus, Search, Check, Mail, Phone, MoreHorizontal, User, Briefcase, CheckSquare, Settings, X, Calendar } from "lucide-react";
+import AddTeamMemberDialog from "@/components/team/AddTeamMemberDialog";
+
 const roleLabels: Record<string, string> = {
   admin: "Admin",
   lawyer: "Lawyer",
   paralegal: "Paralegal",
   junior: "Junior",
-  office_staff: "Office Staff"
+  office_staff: "Office Staff",
+  receptionist: "Receptionist"
 };
+
 const roleOrder = ["lawyer", "paralegal", "junior"];
+
 function TeamDirectory() {
   const {
     data = [],
     isLoading
   } = useTeamMembers();
-  const { user, firmId, loading: authLoading } = useAuth();
+  const { user, firmId, role: userRole, loading: authLoading } = useAuth();
   const [search, setSearch] = useState("");
   const [sidebarMember, setSidebarMember] = useState<any | null>(null);
+  const [addMemberOpen, setAddMemberOpen] = useState(false);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -82,10 +88,17 @@ function TeamDirectory() {
               Manage your firm's team and collaboration
             </span>
           </div>
-          <Button variant="default" className="gap-2" size="default">
-            <UserPlus className="w-5 h-5" />
-            Add New Member
-          </Button>
+          {userRole === 'admin' && (
+            <Button 
+              variant="default" 
+              className="gap-2" 
+              size="default"
+              onClick={() => setAddMemberOpen(true)}
+            >
+              <UserPlus className="w-5 h-5" />
+              Add New Member
+            </Button>
+          )}
         </div>
         <div className="flex w-full flex-wrap items-center gap-4">
           {/* Search */}
@@ -295,6 +308,12 @@ function TeamDirectory() {
             </div>}
         </div>
       </div>
+
+      {/* Add Team Member Dialog */}
+      <AddTeamMemberDialog 
+        open={addMemberOpen} 
+        onOpenChange={setAddMemberOpen} 
+      />
     </div>
   );
 }
