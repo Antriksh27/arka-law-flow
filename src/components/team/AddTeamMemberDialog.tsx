@@ -66,13 +66,8 @@ const AddTeamMemberDialog = ({ open, onOpenChange }: AddTeamMemberDialogProps) =
           throw new Error('No active session');
         }
 
-        const response = await fetch('/functions/v1/create-team-member', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.session.access_token}`,
-          },
-          body: JSON.stringify({
+        const { data: result, error } = await supabase.functions.invoke('create-team-member', {
+          body: {
             full_name: data.full_name,
             email: data.email,
             phone: data.phone,
@@ -81,13 +76,11 @@ const AddTeamMemberDialog = ({ open, onOpenChange }: AddTeamMemberDialogProps) =
             notes: data.notes,
             firm_id: firmId,
             invited_by: user?.id,
-          }),
+          },
         });
 
-        const result = await response.json();
-
-        if (!response.ok) {
-          throw new Error(result.error || 'Failed to create team member');
+        if (error) {
+          throw new Error(error.message || 'Failed to create team member');
         }
 
         return result;
