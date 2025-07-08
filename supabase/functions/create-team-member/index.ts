@@ -78,6 +78,7 @@ Deno.serve(async (req) => {
     const requestData: CreateTeamMemberRequest = await req.json()
 
     // Create user in Supabase Auth using admin client
+    console.log('Creating user with email:', requestData.email)
     const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: requestData.email,
       password: requestData.password,
@@ -88,7 +89,10 @@ Deno.serve(async (req) => {
       }
     })
 
+    console.log('Auth user creation result:', { authUser: !!authUser, authError })
+
     if (authError) {
+      console.error('Auth error details:', authError)
       return new Response(
         JSON.stringify({ error: `Failed to create user account: ${authError.message}` }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
