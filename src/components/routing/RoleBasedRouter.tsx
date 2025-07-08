@@ -25,6 +25,7 @@ import ReceptionHome from '@/pages/reception/ReceptionHome';
 import ReceptionContacts from '@/pages/reception/ReceptionContacts';
 import ReceptionAppointments from '@/pages/reception/ReceptionAppointments';
 import ReceptionSchedule from '@/pages/reception/ReceptionSchedule';
+import ReceptionCalendar from '@/pages/reception/ReceptionCalendar';
 
 const RoleBasedRouter = () => {
   const { role, loading } = useAuth();
@@ -47,6 +48,7 @@ const RoleBasedRouter = () => {
           <Route path="/reception/contacts" element={<ReceptionContacts />} />
           <Route path="/reception/appointments" element={<ReceptionAppointments />} />
           <Route path="/reception/schedule" element={<ReceptionSchedule />} />
+          <Route path="/reception/calendar" element={<ReceptionCalendar />} />
           <Route path="*" element={<ReceptionHome />} />
         </Routes>
       </ReceptionistLayout>
