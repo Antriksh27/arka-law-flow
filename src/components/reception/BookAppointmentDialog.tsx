@@ -126,7 +126,7 @@ const BookAppointmentDialog = ({ open, onOpenChange }: BookAppointmentDialogProp
           firm_id: firmId,
           created_by: user?.id,
           created_by_user_id: user?.id,
-          type: 'consultation',
+          type: 'in-person',
           status: 'upcoming',
         });
 
