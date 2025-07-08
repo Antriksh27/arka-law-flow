@@ -7,82 +7,71 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { 
-  Calendar, 
-  Users, 
-  UserPlus, 
-  Search, 
-  MoreHorizontal,
-  User,
-  Video,
-  MapPin,
-  Edit2,
-  CalendarPlus,
-  Briefcase,
-  LayoutList
-} from 'lucide-react';
+import { Calendar, Users, UserPlus, Search, MoreHorizontal, User, Video, MapPin, Edit2, CalendarPlus, Briefcase, LayoutList } from 'lucide-react';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import AddContactDialog from '@/components/reception/AddContactDialog';
 import BookAppointmentDialog from '@/components/reception/BookAppointmentDialog';
-
 const ReceptionHome = () => {
-  const { user, firmId } = useAuth();
+  const {
+    user,
+    firmId
+  } = useAuth();
   const navigate = useNavigate();
   const [addContactOpen, setAddContactOpen] = useState(false);
   const [bookAppointmentOpen, setBookAppointmentOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   // Get today's appointments
-  const { data: todayAppointments } = useQuery({
+  const {
+    data: todayAppointments
+  } = useQuery({
     queryKey: ['reception-today-appointments', firmId],
     queryFn: async () => {
       const today = format(new Date(), 'yyyy-MM-dd');
-      const { data } = await supabase
-        .from('appointments')
-        .select(`
+      const {
+        data
+      } = await supabase.from('appointments').select(`
           *,
           clients(full_name),
           team_members!appointments_lawyer_id_fkey(full_name)
-        `)
-        .eq('firm_id', firmId)
-        .eq('appointment_date', today)
-        .order('appointment_time', { ascending: true });
+        `).eq('firm_id', firmId).eq('appointment_date', today).order('appointment_time', {
+        ascending: true
+      });
       return data || [];
     },
     enabled: !!firmId
   });
 
   // Get lawyers with appointment counts
-  const { data: lawyers } = useQuery({
+  const {
+    data: lawyers
+  } = useQuery({
     queryKey: ['reception-lawyers', firmId],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('team_members')
-        .select('id, user_id, full_name, role')
-        .eq('firm_id', firmId)
-        .in('role', ['lawyer', 'admin']);
+      const {
+        data
+      } = await supabase.from('team_members').select('id, user_id, full_name, role').eq('firm_id', firmId).in('role', ['lawyer', 'admin']);
       return data || [];
     },
     enabled: !!firmId
   });
 
   // Get recent contacts
-  const { data: recentContacts } = useQuery({
+  const {
+    data: recentContacts
+  } = useQuery({
     queryKey: ['reception-recent-contacts', firmId],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('contacts')
-        .select('*')
-        .eq('firm_id', firmId)
-        .eq('converted_to_client', false)
-        .order('created_at', { ascending: false })
-        .limit(5);
+      const {
+        data
+      } = await supabase.from('contacts').select('*').eq('firm_id', firmId).eq('converted_to_client', false).order('created_at', {
+        ascending: false
+      }).limit(5);
       return data || [];
     },
     enabled: !!firmId
   });
-
   const getAppointmentTypeIcon = (type: string) => {
     switch (type) {
       case 'video-call':
@@ -93,7 +82,6 @@ const ReceptionHome = () => {
         return <User className="w-4 h-4" />;
     }
   };
-
   const getStatusVariant = (status: string) => {
     switch (status) {
       case 'confirmed':
@@ -104,30 +92,18 @@ const ReceptionHome = () => {
         return 'outline';
     }
   };
-
-  return (
-    <div className="container max-w-none flex h-full w-full flex-col items-start gap-6 bg-[#F9FAFB] py-12 overflow-auto">
+  return <div className="container max-w-none flex h-full w-full flex-col items-start gap-6 bg-[#F9FAFB] py-12 overflow-auto">
       {/* Header */}
       <div className="flex w-full items-center gap-4">
         <div className="flex grow shrink-0 basis-0 items-center gap-4">
-          <div className="flex items-center justify-center w-12 h-12 bg-[#1E3A8A] rounded-lg">
-            <Briefcase className="w-6 h-6 text-white" />
-          </div>
-          <span className="text-2xl font-semibold text-[#111827]">
-            Legal Firm Reception
-          </span>
+          
+          
         </div>
-        <Button
-          className="gap-2"
-          onClick={() => setAddContactOpen(true)}
-        >
+        <Button className="gap-2" onClick={() => setAddContactOpen(true)}>
           <UserPlus className="w-4 h-4" />
           New Contact
         </Button>
-        <Button
-          className="gap-2"
-          onClick={() => setBookAppointmentOpen(true)}
-        >
+        <Button className="gap-2" onClick={() => setBookAppointmentOpen(true)}>
           <CalendarPlus className="w-4 h-4" />
           New Appointment
         </Button>
@@ -141,8 +117,7 @@ const ReceptionHome = () => {
             <CardContent className="p-6">
               <h3 className="text-lg font-semibold text-[#111827] mb-4">Lawyers</h3>
               <div className="flex flex-col gap-2">
-                {lawyers?.map((lawyer) => (
-                  <div key={lawyer.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-[#F3F4F6]">
+                {lawyers?.map(lawyer => <div key={lawyer.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-[#F3F4F6]">
                     <Avatar className="w-8 h-8">
                       <AvatarFallback className="text-xs">
                         {lawyer.full_name?.charAt(0) || 'L'}
@@ -154,8 +129,7 @@ const ReceptionHome = () => {
                     <Badge variant="outline" className="text-xs">
                       {Math.floor(Math.random() * 5) + 1}
                     </Badge>
-                  </div>
-                ))}
+                  </div>)}
               </div>
             </CardContent>
           </Card>
@@ -188,12 +162,7 @@ const ReceptionHome = () => {
           <div className="flex w-full items-center gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#6B7280] w-4 h-4" />
-              <Input
-                placeholder="Search appointments..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+              <Input placeholder="Search appointments..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
             </div>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" className="gap-2">
@@ -216,9 +185,7 @@ const ReceptionHome = () => {
                 </h3>
               </div>
               <div className="divide-y divide-[#E5E7EB]">
-                {todayAppointments?.length > 0 ? (
-                  todayAppointments.map((appointment) => (
-                    <div key={appointment.id} className="flex items-center gap-4 p-4">
+                {todayAppointments?.length > 0 ? todayAppointments.map(appointment => <div key={appointment.id} className="flex items-center gap-4 p-4">
                       <div className="flex flex-col items-start gap-1">
                         <span className="text-sm font-semibold text-[#111827]">
                           {appointment.appointment_time}
@@ -255,13 +222,9 @@ const ReceptionHome = () => {
                       <Button variant="ghost" size="sm">
                         <MoreHorizontal className="w-4 h-4" />
                       </Button>
-                    </div>
-                  ))
-                ) : (
-                  <div className="p-8 text-center text-[#6B7280]">
+                    </div>) : <div className="p-8 text-center text-[#6B7280]">
                     No appointments scheduled for today
-                  </div>
-                )}
+                  </div>}
               </div>
             </CardContent>
           </Card>
@@ -273,18 +236,12 @@ const ReceptionHome = () => {
                 <h3 className="text-lg font-semibold text-[#111827]">
                   Recent Contacts
                 </h3>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => navigate('/reception/contacts')}
-                >
+                <Button variant="ghost" size="sm" onClick={() => navigate('/reception/contacts')}>
                   View All
                 </Button>
               </div>
               <div className="divide-y divide-[#E5E7EB]">
-                {recentContacts?.length > 0 ? (
-                  recentContacts.map((contact) => (
-                    <div key={contact.id} className="flex items-center gap-4 py-4">
+                {recentContacts?.length > 0 ? recentContacts.map(contact => <div key={contact.id} className="flex items-center gap-4 py-4">
                       <Avatar>
                         <AvatarFallback>
                           {contact.name?.charAt(0) || 'C'}
@@ -302,13 +259,9 @@ const ReceptionHome = () => {
                         <Edit2 className="w-3 h-3" />
                         Edit
                       </Button>
-                    </div>
-                  ))
-                ) : (
-                  <div className="py-8 text-center text-[#6B7280]">
+                    </div>) : <div className="py-8 text-center text-[#6B7280]">
                     No recent contacts
-                  </div>
-                )}
+                  </div>}
               </div>
             </CardContent>
           </Card>
@@ -316,16 +269,8 @@ const ReceptionHome = () => {
       </div>
 
       {/* Modals */}
-      <AddContactDialog 
-        open={addContactOpen} 
-        onOpenChange={setAddContactOpen} 
-      />
-      <BookAppointmentDialog 
-        open={bookAppointmentOpen} 
-        onOpenChange={setBookAppointmentOpen} 
-      />
-    </div>
-  );
+      <AddContactDialog open={addContactOpen} onOpenChange={setAddContactOpen} />
+      <BookAppointmentDialog open={bookAppointmentOpen} onOpenChange={setBookAppointmentOpen} />
+    </div>;
 };
-
 export default ReceptionHome;
