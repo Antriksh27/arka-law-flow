@@ -181,7 +181,7 @@ const BookAppointmentDialog = ({ open, onOpenChange }: BookAppointmentDialogProp
                     <SelectContent>
                       {lawyers?.map((lawyer) => (
                         <SelectItem key={lawyer.user_id} value={lawyer.user_id}>
-                          {lawyer.full_name} ({lawyer.role})
+                          {lawyer.full_name || 'Unnamed Lawyer'} ({lawyer.role})
                         </SelectItem>
                       ))}
                     </SelectContent>

@@ -149,7 +149,7 @@ const ReceptionHome = () => {
                       </AvatarFallback>
                     </Avatar>
                     <span className="flex-1 text-sm font-medium text-[#111827]">
-                      {lawyer.full_name}
+                      {lawyer.full_name || 'Unnamed Lawyer'}
                     </span>
                     <Badge variant="outline" className="text-xs">
                       {Math.floor(Math.random() * 5) + 1}
