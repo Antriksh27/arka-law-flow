@@ -401,7 +401,8 @@ const ReceptionCalendar = () => {
         .from('team_members')
         .select('id, user_id, full_name, role')
         .eq('firm_id', firmId)
-        .in('role', ['lawyer', 'admin', 'junior']);
+        .in('role', ['lawyer', 'admin', 'junior'])
+        .order('full_name');
       
       const colors = [
         'bg-blue-500',
@@ -414,7 +415,14 @@ const ReceptionCalendar = () => {
         'bg-teal-500'
       ];
       
-      return (data || []).map((lawyer, index) => ({
+      // Sort to put Chitrajeet Upadhyaya first
+      const sortedData = (data || []).sort((a, b) => {
+        if (a.full_name === 'Chitrajeet Upadhyaya') return -1;
+        if (b.full_name === 'Chitrajeet Upadhyaya') return 1;
+        return a.full_name?.localeCompare(b.full_name || '') || 0;
+      });
+      
+      return sortedData.map((lawyer, index) => ({
         id: lawyer.id,
         name: lawyer.full_name || 'Unnamed Lawyer',
         initials: lawyer.full_name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'UL',
