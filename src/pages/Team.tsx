@@ -41,11 +41,23 @@ function TeamDirectory() {
   const [search, setSearch] = useState("");
   const [sidebarMember, setSidebarMember] = useState<any | null>(null);
   const [addMemberOpen, setAddMemberOpen] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState<string>("all");
+
+  // Check if user can add members - admin or lawyer role
+  const canAddMembers = userRole === 'admin' || userRole === 'lawyer';
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return !q ? data : data.filter((m: any) => m.full_name?.toLowerCase().includes(q) || m.email?.toLowerCase().includes(q));
-  }, [search, data]);
+    let filteredData = !q ? data : data.filter((m: any) => m.full_name?.toLowerCase().includes(q) || m.email?.toLowerCase().includes(q));
+    
+    // Apply role filter
+    if (selectedFilter !== "all") {
+      filteredData = filteredData.filter((m: any) => m.role === selectedFilter);
+    }
+    
+    return filteredData;
+  }, [search, data, selectedFilter]);
+
   const filters = useMemo(() => {
     let stats = {
       all: 0,
@@ -88,7 +100,7 @@ function TeamDirectory() {
               Manage your firm's team and collaboration
             </span>
           </div>
-          {userRole === 'admin' && (
+          {canAddMembers && (
             <Button 
               variant="default" 
               className="gap-2" 
@@ -110,10 +122,10 @@ function TeamDirectory() {
           </div>
           {/* Filter badges */}
           <div className="flex items-center gap-2">
-            <FilterBadge label="All" count={filters.all} selected={true} onClick={() => {}} />
-            <FilterBadge label="Lawyers" count={filters.lawyer} selected={false} onClick={() => {}} />
-            <FilterBadge label="Paralegals" count={filters.paralegal} selected={false} onClick={() => {}} />
-            <FilterBadge label="Juniors" count={filters.junior} selected={false} onClick={() => {}} />
+            <FilterBadge label="All" count={filters.all} selected={selectedFilter === "all"} onClick={() => setSelectedFilter("all")} />
+            <FilterBadge label="Lawyers" count={filters.lawyer} selected={selectedFilter === "lawyer"} onClick={() => setSelectedFilter("lawyer")} />
+            <FilterBadge label="Paralegals" count={filters.paralegal} selected={selectedFilter === "paralegal"} onClick={() => setSelectedFilter("paralegal")} />
+            <FilterBadge label="Juniors" count={filters.junior} selected={selectedFilter === "junior"} onClick={() => setSelectedFilter("junior")} />
           </div>
         </div>
       </div>
