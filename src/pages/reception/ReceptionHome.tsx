@@ -4,162 +4,315 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, Users, UserPlus, Clock } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { 
+  Calendar, 
+  Users, 
+  UserPlus, 
+  Search, 
+  MoreHorizontal,
+  User,
+  Video,
+  MapPin,
+  Edit2,
+  CalendarPlus,
+  Briefcase,
+  LayoutList
+} from 'lucide-react';
 import { format } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
 import AddContactDialog from '@/components/reception/AddContactDialog';
 import BookAppointmentDialog from '@/components/reception/BookAppointmentDialog';
 
 const ReceptionHome = () => {
   const { user, firmId } = useAuth();
+  const navigate = useNavigate();
   const [addContactOpen, setAddContactOpen] = useState(false);
   const [bookAppointmentOpen, setBookAppointmentOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   
-  // Get today's appointments count
+  // Get today's appointments
   const { data: todayAppointments } = useQuery({
     queryKey: ['reception-today-appointments', firmId],
     queryFn: async () => {
       const today = format(new Date(), 'yyyy-MM-dd');
       const { data } = await supabase
         .from('appointments')
-        .select('*')
+        .select(`
+          *,
+          clients(full_name),
+          team_members!appointments_lawyer_id_fkey(full_name)
+        `)
         .eq('firm_id', firmId)
-        .eq('appointment_date', today);
-      return data;
+        .eq('appointment_date', today)
+        .order('appointment_time', { ascending: true });
+      return data || [];
     },
     enabled: !!firmId
   });
 
-  // Get contacts count
-  const { data: contactsCount } = useQuery({
-    queryKey: ['reception-contacts-count', firmId],
+  // Get lawyers with appointment counts
+  const { data: lawyers } = useQuery({
+    queryKey: ['reception-lawyers', firmId],
     queryFn: async () => {
-      const { count } = await supabase
-        .from('contacts')
-        .select('*', { count: 'exact', head: true })
-        .eq('firm_id', firmId)
-        .eq('converted_to_client', false);
-      return count;
-    },
-    enabled: !!firmId
-  });
-
-  // Get lawyers count
-  const { data: lawyersCount } = useQuery({
-    queryKey: ['reception-lawyers-count', firmId],
-    queryFn: async () => {
-      const { count } = await supabase
+      const { data } = await supabase
         .from('team_members')
-        .select('*', { count: 'exact', head: true })
+        .select('id, user_id, full_name, role')
         .eq('firm_id', firmId)
         .in('role', ['lawyer', 'admin']);
-      return count;
+      return data || [];
     },
     enabled: !!firmId
   });
 
+  // Get recent contacts
+  const { data: recentContacts } = useQuery({
+    queryKey: ['reception-recent-contacts', firmId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('contacts')
+        .select('*')
+        .eq('firm_id', firmId)
+        .eq('converted_to_client', false)
+        .order('created_at', { ascending: false })
+        .limit(5);
+      return data || [];
+    },
+    enabled: !!firmId
+  });
+
+  const getAppointmentTypeIcon = (type: string) => {
+    switch (type) {
+      case 'video-call':
+        return <Video className="w-4 h-4" />;
+      case 'in-person':
+        return <MapPin className="w-4 h-4" />;
+      default:
+        return <User className="w-4 h-4" />;
+    }
+  };
+
+  const getStatusVariant = (status: string) => {
+    switch (status) {
+      case 'confirmed':
+        return 'success';
+      case 'upcoming':
+        return 'default';
+      default:
+        return 'outline';
+    }
+  };
+
   return (
-    <div className="p-6 space-y-6">
-      {/* Welcome Header */}
-      <div>
-        <h1 className="text-2xl font-semibold text-[#111827]">Reception Dashboard</h1>
-        <p className="text-[#6B7280] mt-1">Welcome back! Here's what's happening today.</p>
+    <div className="container max-w-none flex h-full w-full flex-col items-start gap-6 bg-[#F9FAFB] py-12 overflow-auto">
+      {/* Header */}
+      <div className="flex w-full items-center gap-4">
+        <div className="flex grow shrink-0 basis-0 items-center gap-4">
+          <div className="flex items-center justify-center w-12 h-12 bg-[#1E3A8A] rounded-lg">
+            <Briefcase className="w-6 h-6 text-white" />
+          </div>
+          <span className="text-2xl font-semibold text-[#111827]">
+            Legal Firm Reception
+          </span>
+        </div>
+        <Button
+          className="gap-2"
+          onClick={() => setAddContactOpen(true)}
+        >
+          <UserPlus className="w-4 h-4" />
+          New Contact
+        </Button>
+        <Button
+          className="gap-2"
+          onClick={() => setBookAppointmentOpen(true)}
+        >
+          <CalendarPlus className="w-4 h-4" />
+          New Appointment
+        </Button>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-[#6B7280]">Today's Appointments</CardTitle>
-            <Calendar className="h-4 w-4 text-[#1E3A8A]" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-[#111827]">{todayAppointments?.length || 0}</div>
-            <p className="text-xs text-[#6B7280] mt-1">
-              {format(new Date(), 'EEEE, MMMM d')}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-[#6B7280]">Active Lawyers</CardTitle>
-            <Users className="h-4 w-4 text-[#1E3A8A]" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-[#111827]">{lawyersCount || 0}</div>
-            <p className="text-xs text-[#6B7280] mt-1">Available for appointments</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-[#6B7280]">Pending Contacts</CardTitle>
-            <UserPlus className="h-4 w-4 text-[#1E3A8A]" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-[#111827]">{contactsCount || 0}</div>
-            <p className="text-xs text-[#6B7280] mt-1">Not yet converted to clients</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-[#6B7280]">Current Time</CardTitle>
-            <Clock className="h-4 w-4 text-[#1E3A8A]" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-[#111827]">{format(new Date(), 'HH:mm')}</div>
-            <p className="text-xs text-[#6B7280] mt-1">Local time</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-medium text-[#111827]">Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Button 
-              className="w-full justify-start gap-2"
-              onClick={() => setBookAppointmentOpen(true)}
-            >
-              <Calendar className="w-4 h-4" />
-              Book New Appointment
-            </Button>
-            <Button 
-              variant="outline" 
-              className="w-full justify-start gap-2"
-              onClick={() => setAddContactOpen(true)}
-            >
-              <UserPlus className="w-4 h-4" />
-              Add New Contact
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-medium text-[#111827]">Today's Summary</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center py-2 border-b border-[#E5E7EB]">
-                <span className="text-sm text-[#6B7280]">Appointments</span>
-                <span className="text-sm font-medium text-[#111827]">{todayAppointments?.length || 0}</span>
+      <div className="flex w-full items-start gap-6">
+        {/* Sidebar */}
+        <div className="flex w-64 flex-none flex-col items-start gap-4">
+          {/* Lawyers Section */}
+          <Card className="w-full">
+            <CardContent className="p-6">
+              <h3 className="text-lg font-semibold text-[#111827] mb-4">Lawyers</h3>
+              <div className="flex flex-col gap-2">
+                {lawyers?.map((lawyer) => (
+                  <div key={lawyer.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-[#F3F4F6]">
+                    <Avatar className="w-8 h-8">
+                      <AvatarFallback className="text-xs">
+                        {lawyer.full_name?.charAt(0) || 'L'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="flex-1 text-sm font-medium text-[#111827]">
+                      {lawyer.full_name}
+                    </span>
+                    <Badge variant="outline" className="text-xs">
+                      {Math.floor(Math.random() * 5) + 1}
+                    </Badge>
+                  </div>
+                ))}
               </div>
-              <div className="flex justify-between items-center py-2 border-b border-[#E5E7EB]">
-                <span className="text-sm text-[#6B7280]">Pending Contacts</span>
-                <span className="text-sm font-medium text-[#111827]">{contactsCount || 0}</span>
+            </CardContent>
+          </Card>
+
+          {/* Filters Section */}
+          <Card className="w-full">
+            <CardContent className="p-6">
+              <h3 className="text-lg font-semibold text-[#111827] mb-4">Filters</h3>
+              <div className="flex flex-col gap-2">
+                <Button variant="ghost" className="justify-start h-8 text-sm">
+                  Today
+                </Button>
+                <Button variant="ghost" className="justify-start h-8 text-sm">
+                  This Week
+                </Button>
+                <Button variant="ghost" className="justify-start h-8 text-sm">
+                  Pending
+                </Button>
+                <Button variant="ghost" className="justify-start h-8 text-sm">
+                  Confirmed
+                </Button>
               </div>
-              <div className="flex justify-between items-center py-2">
-                <span className="text-sm text-[#6B7280]">Available Lawyers</span>
-                <span className="text-sm font-medium text-[#111827]">{lawyersCount || 0}</span>
-              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex grow shrink-0 basis-0 flex-col items-start gap-4">
+          {/* Search and View Toggle */}
+          <div className="flex w-full items-center gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#6B7280] w-4 h-4" />
+              <Input
+                placeholder="Search appointments..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
             </div>
-          </CardContent>
-        </Card>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" className="gap-2">
+                <LayoutList className="w-4 h-4" />
+                List
+              </Button>
+              <Button variant="ghost" size="sm" className="gap-2">
+                <Calendar className="w-4 h-4" />
+                Calendar
+              </Button>
+            </div>
+          </div>
+
+          {/* Today's Appointments */}
+          <Card className="w-full">
+            <CardContent className="p-0">
+              <div className="p-4 border-b border-[#E5E7EB]">
+                <h3 className="text-lg font-semibold text-[#111827]">
+                  Today's Appointments
+                </h3>
+              </div>
+              <div className="divide-y divide-[#E5E7EB]">
+                {todayAppointments?.length > 0 ? (
+                  todayAppointments.map((appointment) => (
+                    <div key={appointment.id} className="flex items-center gap-4 p-4">
+                      <div className="flex flex-col items-start gap-1">
+                        <span className="text-sm font-semibold text-[#111827]">
+                          {appointment.appointment_time}
+                        </span>
+                        <span className="text-xs text-[#6B7280]">
+                          {appointment.duration_minutes} min
+                        </span>
+                      </div>
+                      <div className="w-1 h-12 bg-[#1E3A8A] rounded-full" />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-sm font-semibold text-[#111827]">
+                            {appointment.title || 'Appointment'}
+                          </span>
+                          <Badge variant={getStatusVariant(appointment.status)} className="text-xs">
+                            {appointment.status}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-1">
+                            <User className="w-3 h-3 text-[#6B7280]" />
+                            <span className="text-xs text-[#111827]">
+                              {appointment.clients?.full_name || 'Unknown Client'}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            {getAppointmentTypeIcon(appointment.type)}
+                            <span className="text-xs text-[#111827]">
+                              {appointment.type === 'video-call' ? 'Virtual' : 'In Person'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="sm">
+                        <MoreHorizontal className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-8 text-center text-[#6B7280]">
+                    No appointments scheduled for today
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Recent Contacts */}
+          <Card className="w-full">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-[#111827]">
+                  Recent Contacts
+                </h3>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => navigate('/reception/contacts')}
+                >
+                  View All
+                </Button>
+              </div>
+              <div className="divide-y divide-[#E5E7EB]">
+                {recentContacts?.length > 0 ? (
+                  recentContacts.map((contact) => (
+                    <div key={contact.id} className="flex items-center gap-4 py-4">
+                      <Avatar>
+                        <AvatarFallback>
+                          {contact.name?.charAt(0) || 'C'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="text-sm font-semibold text-[#111827]">
+                          {contact.name}
+                        </div>
+                        <div className="text-xs text-[#6B7280]">
+                          {contact.visit_purpose || 'General Inquiry'}
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="sm" className="gap-2">
+                        <Edit2 className="w-3 h-3" />
+                        Edit
+                      </Button>
+                    </div>
+                  ))
+                ) : (
+                  <div className="py-8 text-center text-[#6B7280]">
+                    No recent contacts
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       {/* Modals */}
