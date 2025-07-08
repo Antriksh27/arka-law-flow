@@ -22,12 +22,8 @@ const ReceptionistSidebar = () => {
     icon: Users
   }, {
     name: 'Schedule',
-    href: '/reception/schedule',
-    icon: Clock
-  }, {
-    name: 'Calendar',
     href: '/reception/calendar',
-    icon: Calendar
+    icon: Clock
   }];
   const quickActions = [{
     name: 'New Contact',

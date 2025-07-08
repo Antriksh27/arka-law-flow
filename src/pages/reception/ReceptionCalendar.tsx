@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Clock, User, Plus, Edit, Trash2 } from "lucide-react";
+import { useQuery } from '@tanstack/react-query';
+import { ChevronLeft, ChevronRight, Clock, User, Plus, Edit, Trash2, Calendar as CalendarIcon } from "lucide-react";
 import { DayPicker } from "react-day-picker";
 import { format, addDays, isSameDay } from "date-fns";
 import { Button } from '@/components/ui/button';
@@ -11,7 +12,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Lawyer {
   id: string;
@@ -39,12 +43,7 @@ interface MultiUserCalendarProps {
 }
 
 function MultiUserCalendar({
-  lawyers = [
-    { id: '1', name: 'Sarah Johnson', initials: 'SJ', color: 'bg-blue-500' },
-    { id: '2', name: 'Michael Chen', initials: 'MC', color: 'bg-green-500' },
-    { id: '3', name: 'Emily Davis', initials: 'ED', color: 'bg-purple-500' },
-    { id: '4', name: 'Robert Wilson', initials: 'RW', color: 'bg-orange-500' },
-  ],
+  lawyers = [],
   appointments = [
     {
       id: '1',
@@ -102,243 +101,329 @@ function MultiUserCalendar({
   const dayAppointments = getAppointmentsForDate(selectedDate);
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-6 bg-[#F9FAFB]">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[#111827] mb-2">
-          Law Firm Reception Calendar
-        </h1>
-        <p className="text-[#6B7280]">
-          Manage daily appointments for all lawyers in one view
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Calendar Section */}
-        <div className="lg:col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Select Date</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <DayPicker
-                mode="single"
-                selected={selectedDate}
-                onSelect={(date) => {
-                  if (date) {
-                    setSelectedDate(date);
-                    setSelectedLawyer(null);
-                  }
-                }}
-                className="w-full"
-                disabled={[{ before: new Date() }]}
-              />
-            </CardContent>
-          </Card>
-
-          {/* Lawyers List */}
-          <Card className="mt-4">
-            <CardHeader>
-              <CardTitle className="text-lg">Lawyers</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {lawyers.map((lawyer) => (
-                  <div
-                    key={lawyer.id}
-                    className={cn(
-                      "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors",
-                      selectedLawyer === lawyer.id 
-                        ? "bg-[#E0E7FF] border-[#1E3A8A]" 
-                        : "hover:bg-[#F3F4F6]"
-                    )}
-                    onClick={() => setSelectedLawyer(
-                      selectedLawyer === lawyer.id ? null : lawyer.id
-                    )}
-                  >
-                    <div className={cn(
-                      "w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium",
-                      lawyer.color
-                    )}>
-                      {lawyer.initials}
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">{lawyer.name}</p>
-                      <p className="text-xs text-[#6B7280]">
-                        {dayAppointments.filter(apt => apt.lawyerId === lawyer.id).length} appointments
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+    <div className="h-full w-full bg-background overflow-auto">
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <CalendarIcon className="h-5 w-5 text-primary" />
+            </div>
+            <h1 className="text-3xl font-bold text-foreground">
+              Schedule Management
+            </h1>
+          </div>
+          <p className="text-muted-foreground text-lg">
+            Manage daily appointments for all lawyers in one view
+          </p>
         </div>
 
-        {/* Schedule Grid */}
-        <div className="lg:col-span-3">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">
-                Schedule for {format(selectedDate, "EEEE, MMMM d, yyyy")}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <div className="min-w-[800px]">
-                  {/* Header */}
-                  <div className="grid grid-cols-[100px_1fr] gap-2 mb-4">
-                    <div className="font-medium text-sm text-[#6B7280]">Time</div>
-                    <div className="grid grid-cols-4 gap-2">
-                      {lawyers.map((lawyer) => (
-                        <div key={lawyer.id} className="text-center">
-                          <div className={cn(
-                            "w-8 h-8 rounded-full mx-auto mb-1 flex items-center justify-center text-white text-xs font-medium",
-                            lawyer.color
-                          )}>
-                            {lawyer.initials}
-                          </div>
-                          <p className="text-xs font-medium truncate">{lawyer.name}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+        <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
+          {/* Calendar Section */}
+          <div className="xl:col-span-1">
+            <Card className="shadow-lg border-0 bg-white/50 backdrop-blur">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-xl font-semibold flex items-center gap-2">
+                  <CalendarIcon className="h-5 w-5 text-primary" />
+                  Select Date
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                <DayPicker
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(date) => {
+                    if (date) {
+                      setSelectedDate(date);
+                      setSelectedLawyer(null);
+                    }
+                  }}
+                  className="w-full"
+                  disabled={[{ before: new Date() }]}
+                />
+              </CardContent>
+            </Card>
 
-                  {/* Time Slots */}
-                  <div className="space-y-1">
-                    {timeSlots.map((time) => (
-                      <div key={time} className="grid grid-cols-[100px_1fr] gap-2">
-                        <div className="flex items-center text-sm text-[#6B7280] font-medium">
-                          {time}
+            {/* Lawyers List */}
+            <Card className="mt-6 shadow-lg border-0 bg-white/50 backdrop-blur">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-xl font-semibold flex items-center gap-2">
+                  <User className="h-5 w-5 text-primary" />
+                  Lawyers
+                  <Badge variant="outline" className="ml-auto">
+                    {lawyers.length}
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="space-y-3">
+                  {lawyers.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <User className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">No lawyers found</p>
+                    </div>
+                  ) : (
+                    lawyers.map((lawyer) => (
+                      <div
+                        key={lawyer.id}
+                        className={cn(
+                          "flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 hover:scale-[1.02]",
+                          selectedLawyer === lawyer.id 
+                            ? "bg-primary/10 border-primary shadow-md" 
+                            : "bg-white/80 border-border hover:bg-accent hover:border-accent-foreground/20"
+                        )}
+                        onClick={() => setSelectedLawyer(
+                          selectedLawyer === lawyer.id ? null : lawyer.id
+                        )}
+                      >
+                        <div className={cn(
+                          "w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-lg",
+                          lawyer.color
+                        )}>
+                          {lawyer.initials}
                         </div>
-                        <div className="grid grid-cols-4 gap-2">
-                          {lawyers.map((lawyer) => {
-                            const appointment = getAppointmentForSlot(lawyer.id, time, selectedDate);
-                            
-                            return (
-                              <div key={`${lawyer.id}-${time}`} className="h-12">
-                                {appointment ? (
-                                  <div className={cn(
-                                    "h-full rounded-md p-2 text-white text-xs relative group",
-                                    lawyer.color
-                                  )}>
-                                    <div className="font-medium truncate">
-                                      {appointment.clientName}
-                                    </div>
-                                    <div className="text-xs opacity-90 truncate">
-                                      {appointment.type}
-                                    </div>
-                                    
-                                    <DropdownMenu>
-                                      <DropdownMenuTrigger asChild>
-                                        <Button
-                                          variant="ghost"
-                                          size="icon"
-                                          className="absolute top-1 right-1 h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity text-white hover:bg-white/20"
-                                        >
-                                          <Edit className="h-3 w-3" />
-                                        </Button>
-                                      </DropdownMenuTrigger>
-                                      <DropdownMenuContent align="end">
-                                        <DropdownMenuItem
-                                          onClick={() => onAppointmentEdit?.(appointment)}
-                                        >
-                                          <Edit className="h-4 w-4 mr-2" />
-                                          Edit Appointment
-                                        </DropdownMenuItem>
-                                        <DropdownMenuSeparator />
-                                        <DropdownMenuItem
-                                          onClick={() => onAppointmentDelete?.(appointment.id)}
-                                          className="text-red-600 hover:bg-red-50 hover:text-red-600 focus:bg-red-50 focus:text-red-600"
-                                        >
-                                          <Trash2 className="h-4 w-4 mr-2" />
-                                          Delete Appointment
-                                        </DropdownMenuItem>
-                                      </DropdownMenuContent>
-                                    </DropdownMenu>
-                                  </div>
-                                ) : (
-                                  <Button
-                                    variant="ghost"
-                                    className="h-full w-full border-2 border-dashed border-[#E5E7EB] hover:border-[#1E3A8A] hover:bg-[#E0E7FF]"
-                                    onClick={() => {
-                                      onAppointmentCreate?.({
-                                        lawyerId: lawyer.id,
-                                        clientName: 'New Client',
-                                        time,
-                                        duration: 60,
-                                        type: 'Consultation',
-                                        date: selectedDate
-                                      });
-                                    }}
-                                  >
-                                    <Plus className="h-4 w-4 text-[#6B7280]" />
-                                  </Button>
-                                )}
+                        <div className="flex-1">
+                          <p className="font-semibold text-sm text-foreground">{lawyer.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {dayAppointments.filter(apt => apt.lawyerId === lawyer.id).length} appointments today
+                          </p>
+                        </div>
+                        <Badge variant={selectedLawyer === lawyer.id ? "default" : "outline"} className="text-xs">
+                          {dayAppointments.filter(apt => apt.lawyerId === lawyer.id).length}
+                        </Badge>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Schedule Grid */}
+          <div className="xl:col-span-4">
+            <Card className="shadow-lg border-0 bg-white/50 backdrop-blur">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-xl font-semibold flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-primary" />
+                  Schedule for {format(selectedDate, "EEEE, MMMM d, yyyy")}
+                  <Badge variant="outline" className="ml-auto">
+                    {dayAppointments.length} appointments
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="overflow-x-auto">
+                  <div className="min-w-[900px]">
+                    {lawyers.length === 0 ? (
+                      <div className="text-center py-16 text-muted-foreground">
+                        <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <p className="text-lg font-medium">No lawyers available</p>
+                        <p className="text-sm">Please add lawyers to view the schedule</p>
+                      </div>
+                    ) : (
+                      <>
+                        {/* Header */}
+                        <div className="grid gap-3 mb-6" style={{ gridTemplateColumns: `120px repeat(${lawyers.length}, 1fr)` }}>
+                          <div className="font-semibold text-muted-foreground text-center py-3">Time</div>
+                          {lawyers.map((lawyer) => (
+                            <div key={lawyer.id} className="text-center p-3 bg-white/80 rounded-xl border">
+                              <div className={cn(
+                                "w-10 h-10 rounded-full mx-auto mb-2 flex items-center justify-center text-white text-sm font-bold shadow-lg",
+                                lawyer.color
+                              )}>
+                                {lawyer.initials}
                               </div>
-                            );
-                          })}
+                              <p className="text-sm font-semibold truncate text-foreground">{lawyer.name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {dayAppointments.filter(apt => apt.lawyerId === lawyer.id).length} appointments
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Time Slots */}
+                        <div className="space-y-2">
+                          {timeSlots.map((time) => (
+                            <div 
+                              key={time} 
+                              className="grid gap-3 items-center" 
+                              style={{ gridTemplateColumns: `120px repeat(${lawyers.length}, 1fr)` }}
+                            >
+                              <div className="text-center py-3 text-sm font-medium text-muted-foreground bg-white/60 rounded-lg border">
+                                {time}
+                              </div>
+                              {lawyers.map((lawyer) => {
+                                const appointment = getAppointmentForSlot(lawyer.id, time, selectedDate);
+                                
+                                return (
+                                  <div key={`${lawyer.id}-${time}`} className="h-14">
+                                    {appointment ? (
+                                      <div className={cn(
+                                        "h-full rounded-xl p-3 text-white text-xs relative group shadow-lg border-2 border-white/20 hover:scale-105 transition-transform",
+                                        lawyer.color
+                                      )}>
+                                        <div className="font-semibold truncate mb-1">
+                                          {appointment.clientName}
+                                        </div>
+                                        <div className="text-xs opacity-90 truncate">
+                                          {appointment.type}
+                                        </div>
+                                        
+                                        <DropdownMenu>
+                                          <DropdownMenuTrigger asChild>
+                                            <Button
+                                              variant="ghost"
+                                              size="icon"
+                                              className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-white hover:bg-white/20 rounded-md"
+                                            >
+                                              <Edit className="h-3 w-3" />
+                                            </Button>
+                                          </DropdownMenuTrigger>
+                                          <DropdownMenuContent align="end">
+                                            <DropdownMenuItem
+                                              onClick={() => onAppointmentEdit?.(appointment)}
+                                            >
+                                              <Edit className="h-4 w-4 mr-2" />
+                                              Edit Appointment
+                                            </DropdownMenuItem>
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuItem
+                                              onClick={() => onAppointmentDelete?.(appointment.id)}
+                                              className="text-destructive hover:bg-destructive/10 hover:text-destructive focus:bg-destructive/10 focus:text-destructive"
+                                            >
+                                              <Trash2 className="h-4 w-4 mr-2" />
+                                              Delete Appointment
+                                            </DropdownMenuItem>
+                                          </DropdownMenuContent>
+                                        </DropdownMenu>
+                                      </div>
+                                    ) : (
+                                      <Button
+                                        variant="ghost"
+                                        className="h-full w-full border-2 border-dashed border-border hover:border-primary hover:bg-primary/5 rounded-xl transition-all duration-200 hover:scale-105"
+                                        onClick={() => {
+                                          onAppointmentCreate?.({
+                                            lawyerId: lawyer.id,
+                                            clientName: 'New Client',
+                                            time,
+                                            duration: 60,
+                                            type: 'Consultation',
+                                            date: selectedDate
+                                          });
+                                        }}
+                                      >
+                                        <Plus className="h-4 w-4 text-muted-foreground" />
+                                      </Button>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Today's Summary */}
+        <Card className="mt-8 shadow-lg border-0 bg-white/50 backdrop-blur">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl font-semibold flex items-center gap-2">
+              <Clock className="h-5 w-5 text-primary" />
+              Today's Appointments Summary
+              <Badge variant="outline" className="ml-auto">
+                {dayAppointments.length} total
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            {lawyers.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <User className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">No lawyers to display summary for</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {lawyers.map((lawyer) => {
+                  const lawyerAppointments = dayAppointments.filter(apt => apt.lawyerId === lawyer.id);
+                  return (
+                    <div key={lawyer.id} className="border-2 border-border rounded-xl p-4 bg-white/80 hover:bg-white hover:shadow-md transition-all duration-200">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className={cn(
+                          "w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-lg",
+                          lawyer.color
+                        )}>
+                          {lawyer.initials}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm text-foreground">{lawyer.name}</p>
+                          <Badge variant={lawyerAppointments.length > 0 ? "default" : "outline"} className="text-xs">
+                            {lawyerAppointments.length} appointments
+                          </Badge>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
+                      <div className="space-y-2">
+                        {lawyerAppointments.length === 0 ? (
+                          <p className="text-xs text-muted-foreground italic">No appointments today</p>
+                        ) : (
+                          lawyerAppointments.map((apt) => (
+                            <div key={apt.id} className="text-xs bg-accent/50 rounded-lg p-2">
+                              <div className="font-semibold text-foreground">{apt.time} - {apt.clientName}</div>
+                              <div className="text-muted-foreground">{apt.type}</div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
-
-      {/* Today's Summary */}
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Clock className="h-5 w-5" />
-            Today's Appointments Summary
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {lawyers.map((lawyer) => {
-              const lawyerAppointments = dayAppointments.filter(apt => apt.lawyerId === lawyer.id);
-              return (
-                <div key={lawyer.id} className="border border-[#E5E7EB] rounded-lg p-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className={cn(
-                      "w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium",
-                      lawyer.color
-                    )}>
-                      {lawyer.initials}
-                    </div>
-                    <div>
-                      <p className="font-medium text-sm">{lawyer.name}</p>
-                      <p className="text-xs text-[#6B7280]">
-                        {lawyerAppointments.length} appointments
-                      </p>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    {lawyerAppointments.length === 0 ? (
-                      <p className="text-xs text-[#6B7280]">No appointments today</p>
-                    ) : (
-                      lawyerAppointments.map((apt) => (
-                        <div key={apt.id} className="text-xs">
-                          <div className="font-medium">{apt.time} - {apt.clientName}</div>
-                          <div className="text-[#6B7280]">{apt.type}</div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
 
 const ReceptionCalendar = () => {
+  const { firmId } = useAuth();
+
+  // Get lawyers with colors
+  const { data: lawyers = [] } = useQuery({
+    queryKey: ['reception-lawyers', firmId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('team_members')
+        .select('id, user_id, full_name, role')
+        .eq('firm_id', firmId)
+        .in('role', ['lawyer', 'admin']);
+      
+      const colors = [
+        'bg-blue-500',
+        'bg-green-500', 
+        'bg-purple-500',
+        'bg-orange-500',
+        'bg-red-500',
+        'bg-indigo-500',
+        'bg-pink-500',
+        'bg-teal-500'
+      ];
+      
+      return (data || []).map((lawyer, index) => ({
+        id: lawyer.id,
+        name: lawyer.full_name || 'Unnamed Lawyer',
+        initials: lawyer.full_name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'UL',
+        color: colors[index % colors.length]
+      }));
+    },
+    enabled: !!firmId
+  });
+
   const handleAppointmentCreate = (appointment: Omit<Appointment, 'id'>) => {
     console.log('Creating appointment:', appointment);
   };
@@ -353,6 +438,7 @@ const ReceptionCalendar = () => {
 
   return (
     <MultiUserCalendar
+      lawyers={lawyers}
       onAppointmentCreate={handleAppointmentCreate}
       onAppointmentEdit={handleAppointmentEdit}
       onAppointmentDelete={handleAppointmentDelete}
