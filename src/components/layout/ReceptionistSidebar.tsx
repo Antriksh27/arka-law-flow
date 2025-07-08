@@ -24,6 +24,10 @@ const ReceptionistSidebar = () => {
     name: 'Schedule',
     href: '/reception/schedule',
     icon: Clock
+  }, {
+    name: 'Calendar',
+    href: '/reception/calendar',
+    icon: Calendar
   }];
   const quickActions = [{
     name: 'New Contact',
@@ -35,7 +39,7 @@ const ReceptionistSidebar = () => {
     icon: CalendarPlus
   }];
   const isActive = (path: string) => location.pathname === path;
-  return <div className="w-64 bg-white border-r border-[#E5E7EB] flex flex-col min-h-screen">
+  return <div className="w-64 bg-white border-r border-[#E5E7EB] flex flex-col h-full">
       {/* Logo */}
       
 
