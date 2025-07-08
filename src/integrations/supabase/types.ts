@@ -2593,6 +2593,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      is_current_user_admin_in_firm: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       is_lawyer: {
         Args: { user_id: string }
         Returns: boolean
