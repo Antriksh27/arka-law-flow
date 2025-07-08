@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { UserPlus, Search, Phone, Mail, Calendar } from 'lucide-react';
+import { UserPlus, Search, Phone, Mail, Calendar, Plus, Filter } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import AddContactDialog from '@/components/reception/AddContactDialog';
@@ -15,8 +16,19 @@ const ReceptionContacts = () => {
   const { user, firmId } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
   const [addContactOpen, setAddContactOpen] = useState(false);
+
+  // Check for action parameter to auto-open dialogs
+  useEffect(() => {
+    const action = searchParams.get('action');
+    if (action === 'new') {
+      setAddContactOpen(true);
+      // Clear the parameter
+      setSearchParams({});
+    }
+  }, [searchParams, setSearchParams]);
 
   // Fetch contacts
   const { data: contacts, isLoading } = useQuery({

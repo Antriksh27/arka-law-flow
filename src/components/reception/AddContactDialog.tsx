@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -93,6 +94,9 @@ const AddContactDialog = ({ open, onOpenChange }: AddContactDialogProps) => {
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Add New Contact</DialogTitle>
+          <DialogDescription>
+            Add a new contact to the system for potential client conversion.
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>

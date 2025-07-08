@@ -9,6 +9,7 @@ interface AuthContextType {
   loading: boolean;
   firmId: string | undefined;
   firmError: string | null;
+  role: string | null;
   signIn: (email: string, password: string) => Promise<{ error?: any }>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error?: any }>;
   signOut: () => Promise<void>;
@@ -28,21 +29,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [firmId, setFirmId] = useState<string | undefined>(undefined);
+  const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [firmError, setFirmError] = useState<string | null>(null);
 
-  const fetchFirmIdLocal = async (userId: string) => {
+  const fetchFirmIdAndRole = async (userId: string) => {
     if (!userId) {
-      console.log('AuthContext: fetchFirmIdLocal called with no userId. Setting firmId to undefined.');
+      console.log('AuthContext: fetchFirmIdAndRole called with no userId. Setting firmId and role to undefined.');
       setFirmId(undefined);
+      setRole(null);
       setFirmError("No userId present.");
       return;
     }
     try {
-      console.log(`AuthContext: START: Fetching firm_id for user: ${userId}`);
+      console.log(`AuthContext: START: Fetching firm_id and role for user: ${userId}`);
       const { data, error, status } = await supabase
         .from('team_members')
-        .select('firm_id')
+        .select('firm_id, role')
         .eq('user_id', userId)
         .limit(1) // Take the first record if multiple exist
         .maybeSingle();
@@ -50,28 +53,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log(`AuthContext: DB RESPONSE: data:`, data, `error:`, error, `status:`, status);
 
       if (error) {
-        console.error('AuthContext: Error fetching firm_id:', error.message);
+        console.error('AuthContext: Error fetching firm_id and role:', error.message);
         setFirmId(undefined);
-        setFirmError(error.message || "Unknown error fetching firm_id.");
-        console.log(`AuthContext: END (error): firm_id fetch failed for user: ${userId}`);
+        setRole(null);
+        setFirmError(error.message || "Unknown error fetching firm_id and role.");
+        console.log(`AuthContext: END (error): firm_id and role fetch failed for user: ${userId}`);
         return;
       }
       if (!data || !data.firm_id) {
         console.warn(`AuthContext: No firm_id found in team_members for user: ${userId}`);
         setFirmId(undefined);
+        setRole(null);
         setFirmError('No firm_id found for user.');
         console.log(`AuthContext: END (no data): No firm_id found for user: ${userId}`);
         return;
       }
-      console.log('AuthContext: Firm ID data fetched:', data);
+      console.log('AuthContext: Firm ID and role data fetched:', data);
       setFirmId(data.firm_id);
+      setRole(data.role);
       setFirmError(null);
-      console.log(`AuthContext: END (success): firm_id set to ${data.firm_id} for user: ${userId}`);
+      console.log(`AuthContext: END (success): firm_id set to ${data.firm_id} and role set to ${data.role} for user: ${userId}`);
     } catch (e: any) {
-      console.error('AuthContext: Exception fetching firm_id:', e.message);
+      console.error('AuthContext: Exception fetching firm_id and role:', e.message);
       setFirmId(undefined);
+      setRole(null);
       setFirmError('Exception: ' + (e.message || 'Unknown'));
-      console.log(`AuthContext: END (exception): firm_id fetch failed for user: ${userId}`);
+      console.log(`AuthContext: END (exception): firm_id and role fetch failed for user: ${userId}`);
     }
   };
 
@@ -87,13 +94,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(currentUser);
 
         if (currentUser) {
-          console.log(`AuthContext: User (id: ${currentUser.id}) present in onAuthStateChange. Fetching firm_id.`);
+          console.log(`AuthContext: User (id: ${currentUser.id}) present in onAuthStateChange. Fetching firm_id and role.`);
           setTimeout(async () => {
-            await fetchFirmIdLocal(currentUser.id);
+            await fetchFirmIdAndRole(currentUser.id);
             setLoading(false);
           }, 0);
         } else {
           setFirmId(undefined);
+          setRole(null);
           setFirmError(null);
           setLoading(false);
         }
@@ -155,6 +163,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(null);
       setSession(null);
       setFirmId(undefined);
+      setRole(null);
       window.location.href = '/auth';
     } catch (error) {
       console.error('Error signing out:', error);
@@ -166,6 +175,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     session,
     loading,
     firmId,
+    role,
     signIn,
     signUp,
     signOut,

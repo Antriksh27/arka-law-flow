@@ -4,27 +4,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { DialogProvider } from './hooks/use-dialog';
-import DashboardLayout from './components/layout/DashboardLayout';
+import RoleBasedRouter from './components/routing/RoleBasedRouter';
 import Auth from './pages/Auth';
-import Index from './pages/Index';
-import Cases from './pages/Cases';
-import CaseDetail from './pages/CaseDetail';
-import Clients from './pages/Clients';
-import ClientInfo from './pages/ClientInfo';
-import Appointments from './pages/Appointments';
-import Tasks from './pages/Tasks';
-import Hearings from './pages/Hearings';
-import Documents from './pages/Documents';
-import Notes from './pages/Notes';
-import Invoices from './pages/Invoices';
-import Team from './pages/Team';
-import NotFound from './pages/NotFound';
 import { BookingPage } from './pages/BookingPage';
-import Messages from './pages/Messages';
-import ReceptionHome from './pages/reception/ReceptionHome';
-import ReceptionContacts from './pages/reception/ReceptionContacts';
-import ReceptionAppointments from './pages/reception/ReceptionAppointments';
-import ReceptionSchedule from './pages/reception/ReceptionSchedule';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -49,31 +31,10 @@ function App() {
                 {/* Auth route */}
                 <Route path="/auth" element={<Auth />} />
                 
-                {/* Protected routes with dashboard layout */}
+                {/* Protected routes with role-based routing */}
                 <Route path="/*" element={
                   <ProtectedRoute>
-                    <DashboardLayout>
-                      <Routes>
-                        <Route path="/" element={<Index />} />
-                        <Route path="/cases" element={<Cases />} />
-                        <Route path="/cases/:id" element={<CaseDetail />} />
-                        <Route path="/clients" element={<Clients />} />
-                        <Route path="/clients/:id" element={<ClientInfo />} />
-                        <Route path="/appointments" element={<Appointments />} />
-                        <Route path="/tasks" element={<Tasks />} />
-                        <Route path="/hearings" element={<Hearings />} />
-                        <Route path="/documents" element={<Documents />} />
-                        <Route path="/notes" element={<Notes />} />
-                        <Route path="/messages" element={<Messages />} />
-                        <Route path="/invoices" element={<Invoices />} />
-                        <Route path="/team" element={<Team />} />
-                        <Route path="/reception/home" element={<ReceptionHome />} />
-                        <Route path="/reception/contacts" element={<ReceptionContacts />} />
-                        <Route path="/reception/appointments" element={<ReceptionAppointments />} />
-                        <Route path="/reception/schedule" element={<ReceptionSchedule />} />
-                        <Route path="*" element={<NotFound />} />
-                      </Routes>
-                    </DashboardLayout>
+                    <RoleBasedRouter />
                   </ProtectedRoute>
                 } />
               </Routes>

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,9 +13,20 @@ import BookAppointmentDialog from '@/components/reception/BookAppointmentDialog'
 
 const ReceptionAppointments = () => {
   const { user, firmId } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [selectedLawyer, setSelectedLawyer] = useState<string>('all');
   const [selectedDate, setSelectedDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
   const [bookAppointmentOpen, setBookAppointmentOpen] = useState(false);
+
+  // Check for action parameter to auto-open dialogs
+  useEffect(() => {
+    const action = searchParams.get('action');
+    if (action === 'new') {
+      setBookAppointmentOpen(true);
+      // Clear the parameter
+      setSearchParams({});
+    }
+  }, [searchParams, setSearchParams]);
 
   // Fetch lawyers for filter
   const { data: lawyers } = useQuery({
