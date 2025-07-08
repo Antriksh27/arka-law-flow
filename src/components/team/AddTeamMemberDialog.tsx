@@ -108,10 +108,11 @@ const AddTeamMemberDialog = ({ open, onOpenChange }: AddTeamMemberDialogProps) =
   });
 
   const onSubmit = (data: TeamMemberFormData) => {
-    if (userRole !== 'admin') {
+    const canAddMembers = userRole === 'admin' || userRole === 'lawyer';
+    if (!canAddMembers) {
       toast({
         title: "Access Denied",
-        description: "Only administrators can add team members.",
+        description: "Only administrators and lawyers can add team members.",
         variant: "destructive",
       });
       return;
@@ -128,7 +129,10 @@ const AddTeamMemberDialog = ({ open, onOpenChange }: AddTeamMemberDialogProps) =
     form.setValue('password', password);
   };
 
-  if (userRole !== 'admin') {
+  // Allow admin and lawyer roles to add team members
+  const canAddMembers = userRole === 'admin' || userRole === 'lawyer';
+
+  if (!canAddMembers) {
     return null;
   }
 
