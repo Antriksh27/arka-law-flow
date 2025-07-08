@@ -74,7 +74,8 @@ export const BookingForm: React.FC<BookingFormProps> = ({ lawyer, onSuccess }) =
     setLoading(true);
 
     try {
-      const { error } = await supabase
+      // First create the public appointment
+      const { data: publicAppointment, error } = await supabase
         .from('public_appointments')
         .insert({
           lawyer_id: lawyer.id,
@@ -86,12 +87,35 @@ export const BookingForm: React.FC<BookingFormProps> = ({ lawyer, onSuccess }) =
           client_phone: formData.clientPhone,
           reason: formData.reason,
           case_title: formData.isCaseRelated ? formData.caseTitle : null,
-        });
+        })
+        .select()
+        .single();
 
       if (error) {
-        console.error('Error creating appointment:', error);
+        console.error('Error creating public appointment:', error);
         alert('Failed to book appointment. Please try again.');
         return;
+      }
+
+      // Sync to main appointments table via edge function
+      try {
+        const response = await fetch('https://hpcnipcbymruvsnqrmjx.supabase.co/functions/v1/sync-public-appointment', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            publicAppointmentId: publicAppointment.id
+          })
+        });
+
+        if (!response.ok) {
+          console.error('Error syncing appointment to CRM');
+          // Still show success to user since public appointment was created
+        }
+      } catch (syncError) {
+        console.error('Error calling sync function:', syncError);
+        // Still show success to user since public appointment was created
       }
 
       onSuccess({
