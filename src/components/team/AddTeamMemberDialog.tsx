@@ -60,61 +60,37 @@ const AddTeamMemberDialog = ({ open, onOpenChange }: AddTeamMemberDialogProps) =
       setIsCreating(true);
       
       try {
-        // Step 1: Create user in Supabase Auth using admin function
-        const { data: authResponse, error: authError } = await supabase.auth.admin.createUser({
-          email: data.email,
-          password: data.password,
-          email_confirm: true, // Skip email verification for admin-created users
-          user_metadata: {
-            full_name: data.full_name,
-            role: data.role,
-          }
-        });
-
-        if (authError) {
-          throw new Error(`Failed to create user account: ${authError.message}`);
+        // Call the edge function to create the team member
+        const { data: session } = await supabase.auth.getSession();
+        if (!session.session) {
+          throw new Error('No active session');
         }
 
-        if (!authResponse.user) {
-          throw new Error('Failed to create user account');
-        }
-
-        // Step 2: Create profile entry
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: authResponse.user.id,
+        const response = await fetch('/functions/v1/create-team-member', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.session.access_token}`,
+          },
+          body: JSON.stringify({
             full_name: data.full_name,
             email: data.email,
             phone: data.phone,
             role: data.role,
-          });
-
-        if (profileError) {
-          console.error('Profile creation error:', profileError);
-          // Don't throw here as it might already exist from trigger
-        }
-
-        // Step 3: Add to team_members table
-        const { error: teamError } = await supabase
-          .from('team_members')
-          .insert({
-            user_id: authResponse.user.id,
-            firm_id: firmId,
-            full_name: data.full_name,
-            email: data.email,
-            phone_number: data.phone,
-            role: data.role,
-            status: 'active',
+            password: data.password,
             notes: data.notes,
+            firm_id: firmId,
             invited_by: user?.id,
-          });
+          }),
+        });
 
-        if (teamError) {
-          throw new Error(`Failed to add team member: ${teamError.message}`);
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || 'Failed to create team member');
         }
 
-        return authResponse.user;
+        return result;
       } finally {
         setIsCreating(false);
       }
@@ -123,12 +99,12 @@ const AddTeamMemberDialog = ({ open, onOpenChange }: AddTeamMemberDialogProps) =
       queryClient.invalidateQueries({ queryKey: ['team-members'] });
       toast({
         title: "Success",
-        description: "Team member has been successfully added and can now log in.",
+        description: "Team member has been successfully added and can now log in with their email and password.",
       });
       form.reset();
       onOpenChange(false);
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       console.error('Error adding team member:', error);
       toast({
         title: "Error",
