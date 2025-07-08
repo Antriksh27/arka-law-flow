@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -24,6 +24,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Plus } from 'lucide-react';
 
 interface BookAppointmentDialogProps {
   open: boolean;
@@ -47,6 +48,7 @@ const BookAppointmentDialog = ({ open, onOpenChange }: BookAppointmentDialogProp
   const { user, firmId } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [showAddContact, setShowAddContact] = useState(false);
 
   const form = useForm<AppointmentFormData>({
     defaultValues: {
@@ -77,6 +79,65 @@ const BookAppointmentDialog = ({ open, onOpenChange }: BookAppointmentDialogProp
     },
     enabled: !!firmId && open,
   });
+
+  // Fetch clients and contacts for selection
+  const { data: clientsAndContacts } = useQuery({
+    queryKey: ['clients-contacts', firmId],
+    queryFn: async () => {
+      const [clientsResponse, contactsResponse] = await Promise.all([
+        supabase
+          .from('clients')
+          .select('id, full_name, email, phone')
+          .eq('firm_id', firmId)
+          .order('full_name'),
+        supabase
+          .from('contacts')
+          .select('id, name, email, phone')
+          .eq('firm_id', firmId)
+          .order('name')
+      ]);
+
+      if (clientsResponse.error) throw clientsResponse.error;
+      if (contactsResponse.error) throw contactsResponse.error;
+
+      const clients = clientsResponse.data?.map(client => ({
+        id: client.id,
+        name: client.full_name,
+        email: client.email,
+        phone: client.phone,
+        type: 'client' as const
+      })) || [];
+
+      const contacts = contactsResponse.data?.map(contact => ({
+        id: contact.id,
+        name: contact.name,
+        email: contact.email,
+        phone: contact.phone,
+        type: 'contact' as const
+      })) || [];
+
+      return [...clients, ...contacts];
+    },
+    enabled: !!firmId && open,
+  });
+
+  const handleClientSelection = (selectedValue: string) => {
+    if (selectedValue === 'add-new') {
+      setShowAddContact(true);
+      form.setValue('client_name', '');
+      form.setValue('client_email', '');
+      form.setValue('client_phone', '');
+      return;
+    }
+
+    const selectedClient = clientsAndContacts?.find(item => `${item.type}-${item.id}` === selectedValue);
+    if (selectedClient) {
+      form.setValue('client_name', selectedClient.name);
+      form.setValue('client_email', selectedClient.email || '');
+      form.setValue('client_phone', selectedClient.phone || '');
+      setShowAddContact(false);
+    }
+  };
 
   const bookAppointmentMutation = useMutation({
     mutationFn: async (data: AppointmentFormData) => {
@@ -191,59 +252,143 @@ const BookAppointmentDialog = ({ open, onOpenChange }: BookAppointmentDialogProp
               )}
             />
 
-            <div className="grid grid-cols-2 gap-3">
-              <FormField
-                control={form.control}
-                name="client_name"
-                rules={{ required: "Client name is required" }}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Client Name *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter client name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="client_email"
-                rules={{ required: "Client email is required" }}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Client Email *</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="email" 
-                        placeholder="Enter email" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
             <FormField
               control={form.control}
-              name="client_phone"
+              name="client_name"
+              rules={{ required: "Client selection is required" }}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Client Phone</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="tel" 
-                      placeholder="Enter phone number" 
-                      {...field} 
-                    />
-                  </FormControl>
+                  <FormLabel>Client/Contact *</FormLabel>
+                  <Select onValueChange={handleClientSelection} value={showAddContact ? 'add-new' : clientsAndContacts?.find(item => item.name === field.value) ? `${clientsAndContacts.find(item => item.name === field.value)?.type}-${clientsAndContacts.find(item => item.name === field.value)?.id}` : ''}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select client or contact" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="add-new">
+                        <div className="flex items-center gap-2">
+                          <Plus className="w-4 h-4" />
+                          Add New Contact
+                        </div>
+                      </SelectItem>
+                      {clientsAndContacts?.map((item) => (
+                        <SelectItem key={`${item.type}-${item.id}`} value={`${item.type}-${item.id}`}>
+                          <div className="flex flex-col">
+                            <span>{item.name}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {item.email || 'No email'} • {item.type === 'client' ? 'Client' : 'Contact'}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+            {showAddContact && (
+              <div className="space-y-4 p-4 border rounded-lg bg-muted/20">
+                <h4 className="font-medium text-sm">Add New Contact</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField
+                    control={form.control}
+                    name="client_name"
+                    rules={{ required: "Client name is required" }}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Full Name *</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter full name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="client_email"
+                    rules={{ required: "Client email is required" }}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="email" 
+                            placeholder="Enter email" 
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="client_phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="tel" 
+                          placeholder="Enter phone number" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+
+            {!showAddContact && (
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="client_email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="email" 
+                          placeholder="Auto-populated from selection" 
+                          {...field}
+                          disabled
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="client_phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="tel" 
+                          placeholder="Auto-populated from selection" 
+                          {...field}
+                          disabled
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-3">
               <FormField
