@@ -124,8 +124,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) throw error;
       
       if (data.user) {
-        // Force page reload for clean state. This will trigger the useEffect above.
-        window.location.href = '/';
+        // Check user role and redirect accordingly
+        const { data: teamMember } = await supabase
+          .from('team_members')
+          .select('role')
+          .eq('user_id', data.user.id)
+          .single();
+        
+        if (teamMember?.role === 'receptionist') {
+          window.location.href = '/reception/home';
+        } else {
+          window.location.href = '/';
+        }
       }
       
       return { error: null };
