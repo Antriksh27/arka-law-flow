@@ -277,7 +277,7 @@ const AddTeamMemberDialog = ({ open, onOpenChange }: AddTeamMemberDialogProps) =
                   <div className="flex gap-2">
                     <FormControl>
                       <Input 
-                        type="password" 
+                        type="text" 
                         placeholder="Enter password" 
                         {...field} 
                       />
