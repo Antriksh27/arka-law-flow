@@ -21,6 +21,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { sendAppointmentNotification } from '@/lib/appointmentNotifications';
 
 interface RescheduleAppointmentDialogProps {
   open: boolean;
@@ -97,6 +98,7 @@ const RescheduleAppointmentDialog = ({ open, onOpenChange, appointment }: Resche
           });
 
         if (createError) throw createError;
+        return { type: 'date_changed', data };
       } else {
         // If only time changed, update as rescheduled
         const { error } = await supabase
@@ -112,10 +114,51 @@ const RescheduleAppointmentDialog = ({ open, onOpenChange, appointment }: Resche
           .eq('id', appointment.id);
 
         if (error) throw error;
+        return { type: 'time_changed', data };
       }
     },
-    onSuccess: () => {
+    onSuccess: async (result) => {
       queryClient.invalidateQueries({ queryKey: ['reception-appointments'] });
+      
+      // Send notification for reschedule
+      if (appointment?.lawyer_id) {
+        try {
+          // Get client name for notification
+          let clientName = 'Client';
+          if (appointment.client_id) {
+            const { data: client } = await supabase
+              .from('clients')
+              .select('full_name')
+              .eq('id', appointment.client_id)
+              .single();
+            clientName = client?.full_name || 'Client';
+          }
+
+          const message = result.type === 'date_changed' 
+            ? `${clientName}'s appointment has been rescheduled from ${appointment.appointment_date} to ${result.data.appointment_date} at ${result.data.appointment_time?.slice(0, 5) || 'N/A'}`
+            : `${clientName}'s appointment time has been changed to ${result.data.appointment_time?.slice(0, 5) || 'N/A'}`;
+
+          await sendAppointmentNotification({
+            type: 'updated',
+            appointment_id: appointment.id,
+            lawyer_id: appointment.lawyer_id,
+            title: 'Appointment Rescheduled',
+            message,
+            metadata: { 
+              old_date: appointment.appointment_date,
+              old_time: appointment.appointment_time,
+              new_date: result.data.appointment_date,
+              new_time: result.data.appointment_time,
+              reason: result.data.reschedule_reason,
+              client_name: clientName,
+              change_type: result.type
+            }
+          });
+        } catch (error) {
+          console.error('Failed to send reschedule notification:', error);
+        }
+      }
+      
       toast({
         title: "Success",
         description: "Appointment rescheduled successfully!",

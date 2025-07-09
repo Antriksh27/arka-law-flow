@@ -27,6 +27,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Plus, Check, ChevronsUpDown } from 'lucide-react';
+import { sendAppointmentNotification } from '@/lib/appointmentNotifications';
 
 interface BookAppointmentDialogProps {
   open: boolean;
@@ -190,7 +191,7 @@ const BookAppointmentDialog = ({ open, onOpenChange }: BookAppointmentDialogProp
       }
 
       // Create appointment
-      const { error } = await supabase
+      const { data: newAppointment, error } = await supabase
         .from('appointments')
         .insert({
           lawyer_id: data.lawyer_id,
@@ -206,13 +207,39 @@ const BookAppointmentDialog = ({ open, onOpenChange }: BookAppointmentDialogProp
           created_by_user_id: user?.id,
           type: 'in-person',
           status: 'upcoming',
-        });
+        })
+        .select()
+        .single();
 
       if (error) throw error;
+      return { appointment: newAppointment, clientName: data.client_name };
     },
-    onSuccess: () => {
+    onSuccess: async (result) => {
       queryClient.invalidateQueries({ queryKey: ['reception-appointments'] });
       queryClient.invalidateQueries({ queryKey: ['reception-today-appointments'] });
+      
+      // Send notification for new appointment
+      if (result?.appointment?.lawyer_id) {
+        try {
+          await sendAppointmentNotification({
+            type: 'created',
+            appointment_id: result.appointment.id,
+            lawyer_id: result.appointment.lawyer_id,
+            title: 'New Appointment Scheduled',
+            message: `New appointment scheduled with ${result.clientName} on ${result.appointment.appointment_date} at ${result.appointment.appointment_time?.slice(0, 5) || 'N/A'}`,
+            metadata: { 
+              client_name: result.clientName,
+              appointment_date: result.appointment.appointment_date,
+              appointment_time: result.appointment.appointment_time,
+              title: result.appointment.title,
+              location: result.appointment.location
+            }
+          });
+        } catch (error) {
+          console.error('Failed to send new appointment notification:', error);
+        }
+      }
+      
       toast({
         title: "Success",
         description: "Appointment booked successfully!",

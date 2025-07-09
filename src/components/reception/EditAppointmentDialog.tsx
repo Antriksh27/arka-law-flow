@@ -22,6 +22,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { sendAppointmentNotification } from '@/lib/appointmentNotifications';
 
 interface EditAppointmentDialogProps {
   open: boolean;
@@ -86,9 +87,54 @@ const EditAppointmentDialog = ({ open, onOpenChange, appointment }: EditAppointm
         .eq('id', appointment.id);
 
       if (error) throw error;
+      return data;
     },
-    onSuccess: () => {
+    onSuccess: async (updatedData) => {
       queryClient.invalidateQueries({ queryKey: ['reception-appointments'] });
+      
+      // Send notification for status changes
+      if (appointment?.lawyer_id && appointment?.status !== updatedData.status) {
+        try {
+          // Get client name for notification
+          let clientName = 'Client';
+          if (appointment.client_id) {
+            const { data: client } = await supabase
+              .from('clients')
+              .select('full_name')
+              .eq('id', appointment.client_id)
+              .single();
+            clientName = client?.full_name || 'Client';
+          }
+
+          const statusMessages = {
+            upcoming: 'Appointment scheduled',
+            arrived: 'Client has arrived',
+            'in-progress': 'Appointment in progress',
+            completed: 'Appointment completed',
+            cancelled: 'Appointment cancelled',
+            rescheduled: 'Appointment rescheduled',
+            late: 'Client is late'
+          };
+
+          await sendAppointmentNotification({
+            type: 'status_changed',
+            appointment_id: appointment.id,
+            lawyer_id: appointment.lawyer_id,
+            title: `Appointment Status Updated`,
+            message: `${clientName}'s appointment status changed to ${updatedData.status}. ${statusMessages[updatedData.status as keyof typeof statusMessages] || ''}`,
+            metadata: { 
+              old_status: appointment.status,
+              new_status: updatedData.status,
+              appointment_date: updatedData.appointment_date,
+              appointment_time: updatedData.appointment_time,
+              client_name: clientName
+            }
+          });
+        } catch (error) {
+          console.error('Failed to send status change notification:', error);
+        }
+      }
+      
       toast({
         title: "Success",
         description: "Appointment updated successfully!",
