@@ -49,11 +49,7 @@ const ReceptionAppointments = () => {
     queryFn: async () => {
       let query = supabase
         .from('appointments')
-        .select(`
-          *,
-          clients(full_name),
-          profiles(full_name)
-        `)
+        .select('*')
         .eq('firm_id', firmId)
         .eq('appointment_date', selectedDate)
         .order('appointment_time', { ascending: true });
@@ -62,9 +58,44 @@ const ReceptionAppointments = () => {
         query = query.eq('lawyer_id', selectedLawyer);
       }
 
-      const { data, error } = await query;
+      const { data: appointmentsData, error } = await query;
       if (error) throw error;
-      return data;
+
+      // Get client and lawyer names separately
+      const enrichedAppointments = await Promise.all(
+        (appointmentsData || []).map(async (appointment) => {
+          let clientName = null;
+          let lawyerName = null;
+
+          // Get client name if client_id exists
+          if (appointment.client_id) {
+            const { data: client } = await supabase
+              .from('clients')
+              .select('full_name')
+              .eq('id', appointment.client_id)
+              .single();
+            clientName = client?.full_name;
+          }
+
+          // Get lawyer name if lawyer_id exists
+          if (appointment.lawyer_id) {
+            const { data: lawyer } = await supabase
+              .from('team_members')
+              .select('full_name')
+              .eq('user_id', appointment.lawyer_id)
+              .single();
+            lawyerName = lawyer?.full_name;
+          }
+
+          return {
+            ...appointment,
+            client_name: clientName,
+            lawyer_name: lawyerName
+          };
+        })
+      );
+
+      return enrichedAppointments;
     },
     enabled: !!firmId
   });
@@ -173,7 +204,7 @@ const ReceptionAppointments = () => {
                           <User className="w-4 h-4 text-[#6B7280]" />
                           <span className="text-sm text-[#6B7280]">Client:</span>
                           <span className="text-sm font-medium text-[#111827]">
-                            {appointment.clients?.[0]?.full_name || 'No client assigned'}
+                            {appointment.client_name || 'No client assigned'}
                           </span>
                         </div>
                         
@@ -181,7 +212,7 @@ const ReceptionAppointments = () => {
                           <User className="w-4 h-4 text-[#6B7280]" />
                           <span className="text-sm text-[#6B7280]">Lawyer:</span>
                           <span className="text-sm font-medium text-[#111827]">
-                            {appointment.profiles?.[0]?.full_name || 'No lawyer assigned'}
+                            {appointment.lawyer_name || 'No lawyer assigned'}
                           </span>
                         </div>
 
