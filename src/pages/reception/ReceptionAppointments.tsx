@@ -181,7 +181,7 @@ const ReceptionAppointments = () => {
   }, [appointments, markLateMutation]);
 
   const shouldShowArrivedButton = (appointment: any) => {
-    return appointment.status === 'upcoming' || appointment.status === 'late';
+    return appointment.status === 'upcoming' || appointment.status === 'late' || appointment.status === 'rescheduled';
   };
 
   const getArrivedButtonText = (appointment: any) => {
