@@ -117,11 +117,12 @@ const ReceptionAppointments = () => {
       
       const appointmentDateTime = parseISO(`${appointment.appointment_date}T${appointment.appointment_time}`);
       const fifteenMinutesBefore = subMinutes(appointmentDateTime, 15);
+      const fifteenMinutesAfter = new Date(appointmentDateTime.getTime() + 15 * 60 * 1000);
       const now = new Date();
       
-      // Check if current time is within 15 minutes before appointment time
-      if (now < fifteenMinutesBefore || now > appointmentDateTime) {
-        throw new Error('Can only mark as arrived within 15 minutes before scheduled time');
+      // Check if current time is within the allowed window (15 min before to 15 min after)
+      if (now < fifteenMinutesBefore || now > fifteenMinutesAfter) {
+        throw new Error('Can only mark as arrived within 15 minutes before and 15 minutes after scheduled time');
       }
       
       const { error } = await supabase
@@ -169,11 +170,13 @@ const ReceptionAppointments = () => {
     
     const now = new Date();
     appointments.forEach((appointment) => {
-      if (appointment.status === 'upcoming' && appointment.appointment_date && appointment.appointment_time) {
+      // Only mark as late if status is upcoming or rescheduled
+      if ((appointment.status === 'upcoming' || appointment.status === 'rescheduled') && appointment.appointment_date && appointment.appointment_time) {
         const appointmentDateTime = parseISO(`${appointment.appointment_date}T${appointment.appointment_time}`);
-        const tenMinutesAfter = new Date(appointmentDateTime.getTime() + 10 * 60 * 1000);
+        // Mark as late if 15 minutes have passed after the scheduled time (end of arrival window)
+        const fifteenMinutesAfter = new Date(appointmentDateTime.getTime() + 15 * 60 * 1000);
         
-        if (now > tenMinutesAfter) {
+        if (now > fifteenMinutesAfter) {
           markLateMutation.mutate(appointment.id);
         }
       }
@@ -189,12 +192,13 @@ const ReceptionAppointments = () => {
     
     const appointmentDateTime = parseISO(`${appointment.appointment_date}T${appointment.appointment_time}`);
     const fifteenMinutesBefore = subMinutes(appointmentDateTime, 15);
+    const fifteenMinutesAfter = new Date(appointmentDateTime.getTime() + 15 * 60 * 1000);
     const now = new Date();
     
     if (now < fifteenMinutesBefore) {
       return 'Too Early';
-    } else if (now > appointmentDateTime) {
-      return 'Mark Arrived';
+    } else if (now > fifteenMinutesAfter) {
+      return 'Too Late';
     } else {
       return 'Mark Arrived';
     }
