@@ -7,6 +7,7 @@ import { DialogProvider } from './hooks/use-dialog';
 import RoleBasedRouter from './components/routing/RoleBasedRouter';
 import Auth from './pages/Auth';
 import { BookingPage } from './pages/BookingPage';
+import { Toaster } from './components/ui/toaster';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -38,6 +39,7 @@ function App() {
                   </ProtectedRoute>
                 } />
               </Routes>
+              <Toaster />
             </DialogProvider>
           </AuthProvider>
         </QueryClientProvider>
