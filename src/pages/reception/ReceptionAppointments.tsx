@@ -142,6 +142,17 @@ const ReceptionAppointments = () => {
     const fifteenMinutesBefore = subMinutes(appointmentDateTime, 15);
     const now = new Date();
     
+    console.log('Appointment check:', {
+      appointmentDateTime,
+      fifteenMinutesBefore,
+      now,
+      status: appointment.status,
+      isWithinInterval: isWithinInterval(now, {
+        start: fifteenMinutesBefore,
+        end: appointmentDateTime
+      })
+    });
+    
     return isWithinInterval(now, {
       start: fifteenMinutesBefore,
       end: appointmentDateTime

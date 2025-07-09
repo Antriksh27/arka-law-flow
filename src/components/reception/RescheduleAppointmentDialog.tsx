@@ -61,20 +61,39 @@ const RescheduleAppointmentDialog = ({ open, onOpenChange, appointment }: Resche
 
   const rescheduleAppointmentMutation = useMutation({
     mutationFn: async (data: RescheduleFormData) => {
-      const { error } = await supabase
+      // First, mark the current appointment as cancelled
+      const { error: cancelError } = await supabase
         .from('appointments')
         .update({
-          appointment_date: data.appointment_date,
-          appointment_time: data.appointment_time,
-          duration_minutes: data.duration_minutes,
-          status: 'rescheduled',
+          status: 'cancelled',
           notes: appointment.notes ? 
-            `${appointment.notes}\n\nRescheduled: ${data.reschedule_reason || 'No reason provided'}` : 
-            `Rescheduled: ${data.reschedule_reason || 'No reason provided'}`
+            `${appointment.notes}\n\nCancelled due to reschedule: ${data.reschedule_reason || 'No reason provided'}` : 
+            `Cancelled due to reschedule: ${data.reschedule_reason || 'No reason provided'}`
         })
         .eq('id', appointment.id);
 
-      if (error) throw error;
+      if (cancelError) throw cancelError;
+
+      // Then create a new appointment with the new date/time
+      const { error: createError } = await supabase
+        .from('appointments')
+        .insert({
+          client_id: appointment.client_id,
+          lawyer_id: appointment.lawyer_id,
+          case_id: appointment.case_id,
+          appointment_date: data.appointment_date,
+          appointment_time: data.appointment_time,
+          duration_minutes: data.duration_minutes,
+          title: appointment.title,
+          location: appointment.location,
+          notes: `Rescheduled from ${appointment.appointment_date} ${appointment.appointment_time}. Reason: ${data.reschedule_reason || 'No reason provided'}`,
+          status: 'upcoming',
+          firm_id: appointment.firm_id,
+          created_by_user_id: appointment.created_by_user_id,
+          type: appointment.type || 'consultation'
+        });
+
+      if (createError) throw createError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reception-appointments'] });
