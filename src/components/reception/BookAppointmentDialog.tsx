@@ -290,7 +290,7 @@ const BookAppointmentDialog = ({ open, onOpenChange }: BookAppointmentDialogProp
                         </Button>
                       </FormControl>
                     </PopoverTrigger>
-                    <PopoverContent className="w-full p-0" align="start">
+                    <PopoverContent className="w-full p-0 bg-white border border-gray-200 shadow-lg z-50" align="start">
                       <Command>
                         <CommandInput placeholder="Search clients and contacts..." />
                         <CommandList>
