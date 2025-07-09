@@ -81,10 +81,18 @@ export const AppointmentsTimeline: React.FC<AppointmentsTimelineProps> = ({
     switch (status) {
       case 'upcoming':
         return <Badge variant="success">Confirmed</Badge>;
+      case 'arrived':
+        return <Badge className="bg-green-100 text-green-800 border-green-200">Arrived</Badge>;
+      case 'late':
+        return <Badge className="bg-orange-100 text-orange-800 border-orange-200">Late</Badge>;
       case 'completed':
         return <Badge variant="success">Completed</Badge>;
       case 'cancelled':
         return <Badge variant="error">Cancelled</Badge>;
+      case 'rescheduled':
+        return <Badge className="bg-purple-100 text-purple-800 border-purple-200">Rescheduled</Badge>;
+      case 'in-progress':
+        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">In Progress</Badge>;
       default:
         return <Badge>Pending</Badge>;
     }
@@ -122,12 +130,20 @@ export const AppointmentsTimeline: React.FC<AppointmentsTimelineProps> = ({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'upcoming':
-      case 'completed':
         return 'bg-blue-600';
+      case 'arrived':
+      case 'completed':
+        return 'bg-green-600';
+      case 'late':
+        return 'bg-orange-600';
+      case 'rescheduled':
+        return 'bg-purple-600';
+      case 'in-progress':
+        return 'bg-yellow-600';
       case 'cancelled':
         return 'bg-red-600';
       default:
-        return 'bg-yellow-600';
+        return 'bg-gray-600';
     }
   };
 

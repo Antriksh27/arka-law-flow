@@ -35,17 +35,12 @@ serve(async (req) => {
     const { error: notificationError } = await supabase
       .from('notifications')
       .insert({
-        user_id: lawyer_id,
-        type: 'appointment',
+        recipient_id: lawyer_id,
+        notification_type: 'appointment',
         title,
         message,
-        metadata: {
-          appointment_id,
-          notification_type: type,
-          ...metadata
-        },
-        read: false,
-        created_at: new Date().toISOString()
+        reference_id: appointment_id,
+        read: false
       });
 
     if (notificationError) {

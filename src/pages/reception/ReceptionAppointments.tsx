@@ -13,6 +13,7 @@ import { format, parseISO, isWithinInterval, subMinutes } from 'date-fns';
 import BookAppointmentDialog from '@/components/reception/BookAppointmentDialog';
 import EditAppointmentDialog from '@/components/reception/EditAppointmentDialog';
 import RescheduleAppointmentDialog from '@/components/reception/RescheduleAppointmentDialog';
+import { sendAppointmentNotification } from '@/lib/appointmentNotifications';
 
 const ReceptionAppointments = () => {
   const { user, firmId } = useAuth();
@@ -132,8 +133,31 @@ const ReceptionAppointments = () => {
       
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: async (_, appointmentId) => {
       queryClient.invalidateQueries({ queryKey: ['reception-appointments'] });
+      
+      // Send notification to lawyer about status change
+      const appointment = appointments?.find(apt => apt.id === appointmentId);
+      if (appointment?.lawyer_id) {
+        try {
+          await sendAppointmentNotification({
+            type: 'status_changed',
+            appointment_id: appointmentId,
+            lawyer_id: appointment.lawyer_id,
+            title: 'Client Arrived',
+            message: `${appointment.client_name || 'Client'} has arrived for their appointment scheduled at ${appointment.appointment_time?.slice(0, 5) || 'N/A'}`,
+            metadata: { 
+              old_status: appointment.status,
+              new_status: 'arrived',
+              appointment_date: appointment.appointment_date,
+              appointment_time: appointment.appointment_time
+            }
+          });
+        } catch (error) {
+          console.error('Failed to send arrival notification:', error);
+        }
+      }
+      
       toast({
         title: "Success",
         description: "Client marked as arrived!",
@@ -159,8 +183,30 @@ const ReceptionAppointments = () => {
       
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: async (_, appointmentId) => {
       queryClient.invalidateQueries({ queryKey: ['reception-appointments'] });
+      
+      // Send notification to lawyer about status change
+      const appointment = appointments?.find(apt => apt.id === appointmentId);
+      if (appointment?.lawyer_id) {
+        try {
+          await sendAppointmentNotification({
+            type: 'status_changed',
+            appointment_id: appointmentId,
+            lawyer_id: appointment.lawyer_id,
+            title: 'Client Late',
+            message: `${appointment.client_name || 'Client'} is marked as late for their appointment scheduled at ${appointment.appointment_time?.slice(0, 5) || 'N/A'}`,
+            metadata: { 
+              old_status: appointment.status,
+              new_status: 'late',
+              appointment_date: appointment.appointment_date,
+              appointment_time: appointment.appointment_time
+            }
+          });
+        } catch (error) {
+          console.error('Failed to send late notification:', error);
+        }
+      }
     },
   });
 

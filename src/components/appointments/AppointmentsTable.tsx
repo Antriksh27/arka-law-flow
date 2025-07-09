@@ -82,10 +82,18 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
     switch (status) {
       case 'upcoming':
         return <Badge className="bg-blue-100 text-blue-800"><Clock className="w-3 h-3 mr-1" />Upcoming</Badge>;
+      case 'arrived':
+        return <Badge className="bg-green-100 text-green-800"><Check className="w-3 h-3 mr-1" />Arrived</Badge>;
+      case 'late':
+        return <Badge className="bg-orange-100 text-orange-800"><Clock className="w-3 h-3 mr-1" />Late</Badge>;
       case 'completed':
         return <Badge className="bg-green-100 text-green-800"><Check className="w-3 h-3 mr-1" />Completed</Badge>;
       case 'cancelled':
         return <Badge className="bg-gray-100 text-gray-800">Cancelled</Badge>;
+      case 'rescheduled':
+        return <Badge className="bg-purple-100 text-purple-800"><Clock className="w-3 h-3 mr-1" />Rescheduled</Badge>;
+      case 'in-progress':
+        return <Badge className="bg-yellow-100 text-yellow-800"><Clock className="w-3 h-3 mr-1" />In Progress</Badge>;
       default:
         return <Badge><Clock className="w-3 h-3 mr-1" />Upcoming</Badge>;
     }
