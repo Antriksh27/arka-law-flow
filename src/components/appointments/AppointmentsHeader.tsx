@@ -53,14 +53,14 @@ export const AppointmentsHeader: React.FC<AppointmentsHeaderProps> = ({
         <div className="bg-gray-100 rounded-lg flex p-1">
           <button 
             className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 ${
-              currentView === 'list' 
+              currentView === 'timeline' 
                 ? 'bg-white shadow-sm text-gray-800' 
                 : 'text-gray-600 hover:text-gray-900'
             }`} 
-            onClick={() => onViewChange('list')}
+            onClick={() => onViewChange('timeline')}
           >
             <List className="h-4 w-4" />
-            <span className="text-sm font-medium">List</span>
+            <span className="text-sm font-medium">Timeline</span>
           </button>
           <button 
             className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 ${
