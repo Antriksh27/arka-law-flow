@@ -264,9 +264,9 @@ const ReceptionAppointments = () => {
                       <div className="flex items-center gap-3 mb-2">
                         <div className="flex items-center gap-1">
                           <Clock className="w-4 h-4 text-[#6B7280]" />
-                          <span className="font-medium text-[#111827]">
-                            {appointment.appointment_time || 'Time not set'}
-                          </span>
+                           <span className="font-medium text-[#111827]">
+                             {appointment.appointment_time ? appointment.appointment_time.slice(0, 5) : 'Time not set'}
+                           </span>
                         </div>
                         {getStatusBadge(appointment.status)}
                       </div>

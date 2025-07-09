@@ -29,16 +29,50 @@ const ReceptionHome = () => {
     queryKey: ['reception-today-appointments', firmId],
     queryFn: async () => {
       const today = format(new Date(), 'yyyy-MM-dd');
-      const {
-        data
-      } = await supabase.from('appointments').select(`
-          *,
-          clients(full_name),
-          team_members!appointments_lawyer_id_fkey(full_name)
-        `).eq('firm_id', firmId).eq('appointment_date', today).order('appointment_time', {
-        ascending: true
-      });
-      return data || [];
+      const { data, error } = await supabase
+        .from('appointments')
+        .select('*')
+        .eq('firm_id', firmId)
+        .eq('appointment_date', today)
+        .order('appointment_time', { ascending: true });
+
+      if (error) throw error;
+
+      // Get client and lawyer names separately
+      const enrichedAppointments = await Promise.all(
+        (data || []).map(async (appointment) => {
+          let clientName = null;
+          let lawyerName = null;
+
+          // Get client name if client_id exists
+          if (appointment.client_id) {
+            const { data: client } = await supabase
+              .from('clients')
+              .select('full_name')
+              .eq('id', appointment.client_id)
+              .single();
+            clientName = client?.full_name;
+          }
+
+          // Get lawyer name if lawyer_id exists
+          if (appointment.lawyer_id) {
+            const { data: lawyer } = await supabase
+              .from('team_members')
+              .select('full_name')
+              .eq('user_id', appointment.lawyer_id)
+              .single();
+            lawyerName = lawyer?.full_name;
+          }
+
+          return {
+            ...appointment,
+            clients: clientName ? [{ full_name: clientName }] : [],
+            team_members: lawyerName ? [{ full_name: lawyerName }] : []
+          };
+        })
+      );
+
+      return enrichedAppointments;
     },
     enabled: !!firmId
   });
@@ -185,10 +219,10 @@ const ReceptionHome = () => {
                 </h3>
               </div>
               <div className="divide-y divide-[#E5E7EB]">
-                {todayAppointments?.length > 0 ? todayAppointments.map(appointment => <div key={appointment.id} className="flex items-center gap-4 p-4">
+                 {todayAppointments?.length > 0 ? todayAppointments.map(appointment => <div key={appointment.id} className="flex items-center gap-4 p-4">
                       <div className="flex flex-col items-start gap-1">
                         <span className="text-sm font-semibold text-[#111827]">
-                          {appointment.appointment_time}
+                          {appointment.appointment_time ? appointment.appointment_time.slice(0, 5) : 'Time not set'}
                         </span>
                         <span className="text-xs text-[#6B7280]">
                           {appointment.duration_minutes} min
@@ -208,7 +242,7 @@ const ReceptionHome = () => {
                           <div className="flex items-center gap-1">
                             <User className="w-3 h-3 text-[#6B7280]" />
                             <span className="text-xs text-[#111827]">
-                              {appointment.clients?.full_name || 'Unknown Client'}
+                              {appointment.clients?.[0]?.full_name || 'Unknown Client'}
                             </span>
                           </div>
                           <div className="flex items-center gap-1">

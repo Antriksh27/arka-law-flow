@@ -168,9 +168,27 @@ const RescheduleAppointmentDialog = ({ open, onOpenChange, appointment }: Resche
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>New Time *</FormLabel>
-                    <FormControl>
-                      <Input type="time" {...field} />
-                    </FormControl>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select time" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="max-h-[200px]">
+                        {Array.from({ length: 48 }, (_, i) => {
+                          const hour = Math.floor(i / 4) + 8; // Start from 8 AM
+                          const minute = (i % 4) * 15;
+                          if (hour >= 20) return null; // Stop at 8 PM
+                          const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+                          const displayTime = `${hour > 12 ? hour - 12 : hour === 0 ? 12 : hour}:${minute.toString().padStart(2, '0')} ${hour >= 12 ? 'PM' : 'AM'}`;
+                          return (
+                            <SelectItem key={timeString} value={timeString}>
+                              {displayTime}
+                            </SelectItem>
+                          );
+                        }).filter(Boolean)}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

@@ -17,17 +17,48 @@ const ReceptionSchedule = () => {
       const today = format(new Date(), 'yyyy-MM-dd');
       const { data, error } = await supabase
         .from('appointments')
-        .select(`
-          *,
-          clients(full_name),
-          profiles(full_name)
-        `)
+        .select('*')
         .eq('firm_id', firmId)
         .eq('appointment_date', today)
         .order('appointment_time', { ascending: true });
       
       if (error) throw error;
-      return data;
+
+      // Get client and lawyer names separately
+      const enrichedAppointments = await Promise.all(
+        (data || []).map(async (appointment) => {
+          let clientName = null;
+          let lawyerName = null;
+
+          // Get client name if client_id exists
+          if (appointment.client_id) {
+            const { data: client } = await supabase
+              .from('clients')
+              .select('full_name')
+              .eq('id', appointment.client_id)
+              .single();
+            clientName = client?.full_name;
+          }
+
+          // Get lawyer name if lawyer_id exists
+          if (appointment.lawyer_id) {
+            const { data: lawyer } = await supabase
+              .from('team_members')
+              .select('full_name')
+              .eq('user_id', appointment.lawyer_id)
+              .single();
+            lawyerName = lawyer?.full_name;
+          }
+
+          return {
+            ...appointment,
+            clients: clientName ? [{ full_name: clientName }] : [],
+            profiles: lawyerName ? [{ full_name: lawyerName }] : []
+          };
+        })
+      );
+
+      return enrichedAppointments;
     },
     enabled: !!firmId
   });
@@ -117,7 +148,7 @@ const ReceptionSchedule = () => {
                           <div className="flex items-center gap-2">
                             <Clock className="w-4 h-4 text-[#6B7280]" />
                             <span className="font-medium text-[#111827]">
-                              {appointment.appointment_time || 'Time not set'}
+                              {appointment.appointment_time ? appointment.appointment_time.slice(0, 5) : 'Time not set'}
                             </span>
                           </div>
                           {timeStatus && (
