@@ -136,27 +136,24 @@ const ReceptionAppointments = () => {
   });
 
   const canMarkArrived = (appointment: any) => {
-    if (!appointment.appointment_date || !appointment.appointment_time) return false;
+    if (!appointment.appointment_date || !appointment.appointment_time || appointment.status !== 'upcoming') return false;
     
     const appointmentDateTime = parseISO(`${appointment.appointment_date}T${appointment.appointment_time}`);
     const fifteenMinutesBefore = subMinutes(appointmentDateTime, 15);
     const now = new Date();
     
-    console.log('Appointment check:', {
-      appointmentDateTime,
-      fifteenMinutesBefore,
-      now,
+    // Check if current time is between 15 minutes before and appointment time
+    const canMark = now >= fifteenMinutesBefore && now <= appointmentDateTime;
+    
+    console.log('Mark Arrived Check:', {
+      appointmentTime: appointmentDateTime.toLocaleString(),
+      fifteenMinBefore: fifteenMinutesBefore.toLocaleString(),
+      currentTime: now.toLocaleString(),
       status: appointment.status,
-      isWithinInterval: isWithinInterval(now, {
-        start: fifteenMinutesBefore,
-        end: appointmentDateTime
-      })
+      canMark
     });
     
-    return isWithinInterval(now, {
-      start: fifteenMinutesBefore,
-      end: appointmentDateTime
-    }) && appointment.status === 'upcoming';
+    return canMark;
   };
 
   const handleEdit = (appointment: any) => {

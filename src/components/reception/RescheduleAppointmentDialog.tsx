@@ -61,39 +61,58 @@ const RescheduleAppointmentDialog = ({ open, onOpenChange, appointment }: Resche
 
   const rescheduleAppointmentMutation = useMutation({
     mutationFn: async (data: RescheduleFormData) => {
-      // First, mark the current appointment as cancelled
-      const { error: cancelError } = await supabase
-        .from('appointments')
-        .update({
-          status: 'cancelled',
-          notes: appointment.notes ? 
-            `${appointment.notes}\n\nCancelled due to reschedule: ${data.reschedule_reason || 'No reason provided'}` : 
-            `Cancelled due to reschedule: ${data.reschedule_reason || 'No reason provided'}`
-        })
-        .eq('id', appointment.id);
+      const dateChanged = data.appointment_date !== appointment.appointment_date;
+      
+      if (dateChanged) {
+        // If date changed, mark as cancelled and create new appointment
+        const { error: cancelError } = await supabase
+          .from('appointments')
+          .update({
+            status: 'cancelled',
+            notes: appointment.notes ? 
+              `${appointment.notes}\n\nCancelled due to reschedule to ${data.appointment_date}: ${data.reschedule_reason || 'No reason provided'}` : 
+              `Cancelled due to reschedule to ${data.appointment_date}: ${data.reschedule_reason || 'No reason provided'}`
+          })
+          .eq('id', appointment.id);
 
-      if (cancelError) throw cancelError;
+        if (cancelError) throw cancelError;
 
-      // Then create a new appointment with the new date/time
-      const { error: createError } = await supabase
-        .from('appointments')
-        .insert({
-          client_id: appointment.client_id,
-          lawyer_id: appointment.lawyer_id,
-          case_id: appointment.case_id,
-          appointment_date: data.appointment_date,
-          appointment_time: data.appointment_time,
-          duration_minutes: data.duration_minutes,
-          title: appointment.title,
-          location: appointment.location,
-          notes: `Rescheduled from ${appointment.appointment_date} ${appointment.appointment_time}. Reason: ${data.reschedule_reason || 'No reason provided'}`,
-          status: 'upcoming',
-          firm_id: appointment.firm_id,
-          created_by_user_id: appointment.created_by_user_id,
-          type: appointment.type || 'consultation'
-        });
+        // Create new appointment
+        const { error: createError } = await supabase
+          .from('appointments')
+          .insert({
+            client_id: appointment.client_id,
+            lawyer_id: appointment.lawyer_id,
+            case_id: appointment.case_id,
+            appointment_date: data.appointment_date,
+            appointment_time: data.appointment_time,
+            duration_minutes: data.duration_minutes,
+            title: appointment.title,
+            location: appointment.location,
+            notes: `Rescheduled from ${appointment.appointment_date} ${appointment.appointment_time}. Reason: ${data.reschedule_reason || 'No reason provided'}`,
+            status: 'upcoming',
+            firm_id: appointment.firm_id,
+            created_by_user_id: appointment.created_by_user_id,
+            type: appointment.type || 'consultation'
+          });
 
-      if (createError) throw createError;
+        if (createError) throw createError;
+      } else {
+        // If only time changed, update as rescheduled
+        const { error } = await supabase
+          .from('appointments')
+          .update({
+            appointment_time: data.appointment_time,
+            duration_minutes: data.duration_minutes,
+            status: 'rescheduled',
+            notes: appointment.notes ? 
+              `${appointment.notes}\n\nRescheduled time: ${data.reschedule_reason || 'No reason provided'}` : 
+              `Rescheduled time: ${data.reschedule_reason || 'No reason provided'}`
+          })
+          .eq('id', appointment.id);
+
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reception-appointments'] });
