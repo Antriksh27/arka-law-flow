@@ -1,22 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Clock, User, Plus } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
+import { Calendar, Clock, User, Plus, UserCheck } from 'lucide-react';
+import { format, parseISO, isWithinInterval, subMinutes } from 'date-fns';
 import BookAppointmentDialog from '@/components/reception/BookAppointmentDialog';
+import EditAppointmentDialog from '@/components/reception/EditAppointmentDialog';
+import RescheduleAppointmentDialog from '@/components/reception/RescheduleAppointmentDialog';
 
 const ReceptionAppointments = () => {
   const { user, firmId } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedLawyer, setSelectedLawyer] = useState<string>('all');
   const [selectedDate, setSelectedDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
   const [bookAppointmentOpen, setBookAppointmentOpen] = useState(false);
+  const [editAppointmentOpen, setEditAppointmentOpen] = useState(false);
+  const [rescheduleAppointmentOpen, setRescheduleAppointmentOpen] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
 
   // Check for action parameter to auto-open dialogs
   useEffect(() => {
@@ -100,16 +108,72 @@ const ReceptionAppointments = () => {
     enabled: !!firmId
   });
 
+  // Mark arrived mutation
+  const markArrivedMutation = useMutation({
+    mutationFn: async (appointmentId: string) => {
+      const { error } = await supabase
+        .from('appointments')
+        .update({ status: 'arrived' })
+        .eq('id', appointmentId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reception-appointments'] });
+      toast({
+        title: "Success",
+        description: "Client marked as arrived!",
+      });
+    },
+    onError: (error) => {
+      console.error('Error marking arrived:', error);
+      toast({
+        title: "Error",
+        description: "Failed to mark client as arrived. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const canMarkArrived = (appointment: any) => {
+    if (!appointment.appointment_date || !appointment.appointment_time) return false;
+    
+    const appointmentDateTime = parseISO(`${appointment.appointment_date}T${appointment.appointment_time}`);
+    const fifteenMinutesBefore = subMinutes(appointmentDateTime, 15);
+    const now = new Date();
+    
+    return isWithinInterval(now, {
+      start: fifteenMinutesBefore,
+      end: appointmentDateTime
+    }) && appointment.status === 'upcoming';
+  };
+
+  const handleEdit = (appointment: any) => {
+    setSelectedAppointment(appointment);
+    setEditAppointmentOpen(true);
+  };
+
+  const handleReschedule = (appointment: any) => {
+    setSelectedAppointment(appointment);
+    setRescheduleAppointmentOpen(true);
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'upcoming':
         return <Badge className="bg-blue-100 text-blue-800 border-blue-200">Upcoming</Badge>;
+      case 'arrived':
+        return <Badge className="bg-green-100 text-green-800 border-green-200">Arrived</Badge>;
+      case 'in-progress':
+        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">In Progress</Badge>;
       case 'completed':
         return <Badge className="bg-green-100 text-green-800 border-green-200">Completed</Badge>;
       case 'cancelled':
         return <Badge className="bg-red-100 text-red-800 border-red-200">Cancelled</Badge>;
-      case 'in-progress':
-        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">In Progress</Badge>;
+      case 'rescheduled':
+        return <Badge className="bg-purple-100 text-purple-800 border-purple-200">Rescheduled</Badge>;
+      case 'late':
+        return <Badge className="bg-orange-100 text-orange-800 border-orange-200">Late</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -237,10 +301,30 @@ const ReceptionAppointments = () => {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm">
+                      {canMarkArrived(appointment) && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="text-green-600 border-green-200 hover:bg-green-50"
+                          onClick={() => markArrivedMutation.mutate(appointment.id)}
+                          disabled={markArrivedMutation.isPending}
+                        >
+                          <UserCheck className="w-4 h-4 mr-1" />
+                          Mark Arrived
+                        </Button>
+                      )}
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleEdit(appointment)}
+                      >
                         Edit
                       </Button>
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleReschedule(appointment)}
+                      >
                         Reschedule
                       </Button>
                     </div>
@@ -252,10 +336,22 @@ const ReceptionAppointments = () => {
         </CardContent>
       </Card>
 
-      {/* Book Appointment Modal */}
+      {/* Dialogs */}
       <BookAppointmentDialog 
         open={bookAppointmentOpen} 
         onOpenChange={setBookAppointmentOpen} 
+      />
+      
+      <EditAppointmentDialog
+        open={editAppointmentOpen}
+        onOpenChange={setEditAppointmentOpen}
+        appointment={selectedAppointment}
+      />
+      
+      <RescheduleAppointmentDialog
+        open={rescheduleAppointmentOpen}
+        onOpenChange={setRescheduleAppointmentOpen}
+        appointment={selectedAppointment}
       />
     </div>
   );
