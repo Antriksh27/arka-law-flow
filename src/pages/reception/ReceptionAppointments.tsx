@@ -111,19 +111,6 @@ const ReceptionAppointments = () => {
   // Mark arrived mutation
   const markArrivedMutation = useMutation({
     mutationFn: async (appointmentId: string) => {
-      // Find the appointment to validate timing
-      const appointment = appointments?.find(apt => apt.id === appointmentId);
-      if (!appointment) throw new Error('Appointment not found');
-      
-      const appointmentDateTime = parseISO(`${appointment.appointment_date}T${appointment.appointment_time}`);
-      const fifteenMinutesBefore = subMinutes(appointmentDateTime, 15);
-      const now = new Date();
-      
-      // Check if current time is within 15 minutes before appointment time
-      if (now < fifteenMinutesBefore || now > appointmentDateTime) {
-        throw new Error('Can only mark as arrived within 15 minutes before scheduled time');
-      }
-      
       const { error } = await supabase
         .from('appointments')
         .update({ status: 'arrived' })
@@ -142,62 +129,31 @@ const ReceptionAppointments = () => {
       console.error('Error marking arrived:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to mark client as arrived. Please try again.",
+        description: "Failed to mark client as arrived. Please try again.",
         variant: "destructive",
       });
     },
   });
 
-  // Mark late mutation
-  const markLateMutation = useMutation({
-    mutationFn: async (appointmentId: string) => {
-      const { error } = await supabase
-        .from('appointments')
-        .update({ status: 'late' })
-        .eq('id', appointmentId);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reception-appointments'] });
-    },
-  });
-
-  // Check for late appointments and update them
-  React.useEffect(() => {
-    if (!appointments) return;
-    
-    const now = new Date();
-    appointments.forEach((appointment) => {
-      if (appointment.status === 'upcoming' && appointment.appointment_date && appointment.appointment_time) {
-        const appointmentDateTime = parseISO(`${appointment.appointment_date}T${appointment.appointment_time}`);
-        const tenMinutesAfter = new Date(appointmentDateTime.getTime() + 10 * 60 * 1000);
-        
-        if (now > tenMinutesAfter) {
-          markLateMutation.mutate(appointment.id);
-        }
-      }
-    });
-  }, [appointments, markLateMutation]);
-
-  const shouldShowArrivedButton = (appointment: any) => {
-    return appointment.status === 'upcoming' || appointment.status === 'late';
-  };
-
-  const getArrivedButtonText = (appointment: any) => {
-    if (!appointment.appointment_date || !appointment.appointment_time) return 'Mark Arrived';
+  const canMarkArrived = (appointment: any) => {
+    if (!appointment.appointment_date || !appointment.appointment_time || appointment.status !== 'upcoming') return false;
     
     const appointmentDateTime = parseISO(`${appointment.appointment_date}T${appointment.appointment_time}`);
     const fifteenMinutesBefore = subMinutes(appointmentDateTime, 15);
     const now = new Date();
     
-    if (now < fifteenMinutesBefore) {
-      return 'Too Early';
-    } else if (now > appointmentDateTime) {
-      return 'Mark Arrived';
-    } else {
-      return 'Mark Arrived';
-    }
+    // Check if current time is between 15 minutes before and appointment time
+    const canMark = now >= fifteenMinutesBefore && now <= appointmentDateTime;
+    
+    console.log('Mark Arrived Check:', {
+      appointmentTime: appointmentDateTime.toLocaleString(),
+      fifteenMinBefore: fifteenMinutesBefore.toLocaleString(),
+      currentTime: now.toLocaleString(),
+      status: appointment.status,
+      canMark
+    });
+    
+    return canMark;
   };
 
   const handleEdit = (appointment: any) => {
@@ -353,7 +309,7 @@ const ReceptionAppointments = () => {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {shouldShowArrivedButton(appointment) && (
+                      {canMarkArrived(appointment) && (
                         <Button 
                           variant="outline" 
                           size="sm" 
@@ -362,7 +318,7 @@ const ReceptionAppointments = () => {
                           disabled={markArrivedMutation.isPending}
                         >
                           <UserCheck className="w-4 h-4 mr-1" />
-                          {getArrivedButtonText(appointment)}
+                          Mark Arrived
                         </Button>
                       )}
                       <Button 
