@@ -14,6 +14,7 @@ export interface FilterState {
   client: string;
   case: string;
   searchQuery: string;
+  showPastAppointments: boolean;
 }
 
 const Appointments = () => {
@@ -25,6 +26,7 @@ const Appointments = () => {
     client: '',
     case: '',
     searchQuery: '',
+    showPastAppointments: false,
   });
 
   return (

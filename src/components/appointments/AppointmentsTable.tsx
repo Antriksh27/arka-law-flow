@@ -9,7 +9,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useDialog } from '@/hooks/use-dialog';
 import { EditAppointmentDialog } from './EditAppointmentDialog';
 import { FilterState } from '../../pages/Appointments';
-import { format } from 'date-fns';
+import { format, isBefore, startOfDay } from 'date-fns';
+import { useAuth } from '@/contexts/AuthContext';
 interface Appointment {
   id: string;
   title: string;
@@ -31,9 +32,8 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
 }) => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
-  const {
-    openDialog
-  } = useDialog();
+  const { openDialog } = useDialog();
+  const { user } = useAuth();
   useEffect(() => {
     fetchAppointments();
   }, [filters]);
@@ -45,6 +45,18 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
       }).order('appointment_time', {
         ascending: true
       });
+      
+      // Filter by current lawyer only
+      if (user?.id) {
+        query = query.eq('lawyer_id', user.id);
+      }
+      
+      // Filter by date - show only future appointments by default
+      if (!filters.showPastAppointments) {
+        const today = format(startOfDay(new Date()), 'yyyy-MM-dd');
+        query = query.gte('appointment_date', today);
+      }
+      
       if (filters.searchQuery) {
         query = query.or(`client_name.ilike.%${filters.searchQuery}%,case_title.ilike.%${filters.searchQuery}%,notes.ilike.%${filters.searchQuery}%`);
       }

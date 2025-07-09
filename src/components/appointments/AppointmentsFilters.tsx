@@ -1,8 +1,8 @@
 
 import React from 'react';
 import { Input } from '../ui/input';
-// import { Button } from '../ui/button'; // Button is not used yet
-import { Search /*, Calendar, Users, FileText, User*/ } from 'lucide-react'; // Other icons not used yet
+import { Button } from '../ui/button';
+import { Search, Clock, History } from 'lucide-react';
 import { FilterState } from '../../pages/Appointments';
 
 interface AppointmentsFiltersProps {
@@ -21,7 +21,12 @@ export const AppointmentsFilters: React.FC<AppointmentsFiltersProps> = ({
     });
   };
 
-  // TODO: Implement other filters for dateRange, status, assignedUser, client, case
+  const togglePastAppointments = () => {
+    onFilterChange({
+      ...filters,
+      showPastAppointments: !filters.showPastAppointments
+    });
+  };
 
   return (
     <div className="flex flex-wrap items-center gap-4 p-4 bg-white border-b border-gray-200">
@@ -35,6 +40,15 @@ export const AppointmentsFilters: React.FC<AppointmentsFiltersProps> = ({
           className="pl-10 pr-4 py-2 w-full md:w-64 border-gray-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue"
         />
       </div>
+      
+      <Button
+        variant={filters.showPastAppointments ? "default" : "outline"}
+        onClick={togglePastAppointments}
+        className="flex items-center gap-2"
+      >
+        {filters.showPastAppointments ? <History className="h-4 w-4" /> : <Clock className="h-4 w-4" />}
+        {filters.showPastAppointments ? "Hide Past" : "Show Past"}
+      </Button>
       {/* Placeholder for other filter controls */}
       {/* 
       Example for a select filter (conceptual, needs actual implementation and state management):

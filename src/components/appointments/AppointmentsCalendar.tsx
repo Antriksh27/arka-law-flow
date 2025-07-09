@@ -7,6 +7,7 @@ import { FullScreenCalendar } from '@/components/ui/fullscreen-calendar';
 import { useDialog } from '@/hooks/use-dialog';
 import { CreateAppointmentDialog } from './CreateAppointmentDialog';
 import { ViewAppointmentDialog } from './ViewAppointmentDialog';
+import { useAuth } from '@/contexts/AuthContext';
 
 import {
   Loader2,
@@ -57,16 +58,17 @@ export const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({
   filters,
 }) => {
   const { openDialog } = useDialog();
+  const { user } = useAuth();
   const [currentDisplayMonth, setCurrentDisplayMonth] = useState<Date>(startOfToday());
 
   const firstDayOfSelectedMonth = startOfMonth(currentDisplayMonth);
   const lastDayOfSelectedMonth = endOfMonth(currentDisplayMonth);
 
   const { data: rawAppointments, isLoading, error } = useQuery<SupabaseAppointment[], Error>({
-    queryKey: ['appointments', format(currentDisplayMonth, 'yyyy-MM')],
+    queryKey: ['appointments', format(currentDisplayMonth, 'yyyy-MM'), user?.id, filters.showPastAppointments],
     queryFn: async () => {
       // Query appointments with separate date and time fields
-      const { data: appointmentsData, error: appointmentsError } = await supabase
+      let query = supabase
         .from('appointments')
         .select(`
           id,
@@ -82,6 +84,13 @@ export const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({
         .gte('appointment_date', format(firstDayOfSelectedMonth, 'yyyy-MM-dd'))
         .lte('appointment_date', format(lastDayOfSelectedMonth, 'yyyy-MM-dd'))
         .order('appointment_date', { ascending: true });
+
+      // Filter by current lawyer only
+      if (user?.id) {
+        query = query.eq('lawyer_id', user.id);
+      }
+
+      const { data: appointmentsData, error: appointmentsError } = await query;
 
       if (appointmentsError) {
         console.error('Error fetching appointments:', appointmentsError);
