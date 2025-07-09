@@ -24,7 +24,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Plus, Check, ChevronsUpDown } from 'lucide-react';
 
 interface BookAppointmentDialogProps {
   open: boolean;
@@ -49,6 +51,8 @@ const BookAppointmentDialog = ({ open, onOpenChange }: BookAppointmentDialogProp
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showAddContact, setShowAddContact] = useState(false);
+  const [clientSearchOpen, setClientSearchOpen] = useState(false);
+  const [selectedClientValue, setSelectedClientValue] = useState('');
 
   const form = useForm<AppointmentFormData>({
     defaultValues: {
@@ -124,9 +128,11 @@ const BookAppointmentDialog = ({ open, onOpenChange }: BookAppointmentDialogProp
   const handleClientSelection = (selectedValue: string) => {
     if (selectedValue === 'add-new') {
       setShowAddContact(true);
+      setSelectedClientValue('add-new');
       form.setValue('client_name', '');
       form.setValue('client_email', '');
       form.setValue('client_phone', '');
+      setClientSearchOpen(false);
       return;
     }
 
@@ -135,8 +141,19 @@ const BookAppointmentDialog = ({ open, onOpenChange }: BookAppointmentDialogProp
       form.setValue('client_name', selectedClient.name);
       form.setValue('client_email', selectedClient.email || '');
       form.setValue('client_phone', selectedClient.phone || '');
+      setSelectedClientValue(selectedValue);
       setShowAddContact(false);
+      setClientSearchOpen(false);
     }
+  };
+
+  const getSelectedClientDisplay = () => {
+    if (showAddContact) return 'Add New Contact';
+    if (selectedClientValue && selectedClientValue !== 'add-new') {
+      const selectedClient = clientsAndContacts?.find(item => `${item.type}-${item.id}` === selectedClientValue);
+      return selectedClient ? selectedClient.name : 'Select client or contact';
+    }
+    return 'Select client or contact';
   };
 
   const bookAppointmentMutation = useMutation({
@@ -257,33 +274,61 @@ const BookAppointmentDialog = ({ open, onOpenChange }: BookAppointmentDialogProp
               name="client_name"
               rules={{ required: "Client selection is required" }}
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="flex flex-col">
                   <FormLabel>Client/Contact *</FormLabel>
-                  <Select onValueChange={handleClientSelection} value={showAddContact ? 'add-new' : clientsAndContacts?.find(item => item.name === field.value) ? `${clientsAndContacts.find(item => item.name === field.value)?.type}-${clientsAndContacts.find(item => item.name === field.value)?.id}` : ''}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select client or contact" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="add-new">
-                        <div className="flex items-center gap-2">
-                          <Plus className="w-4 h-4" />
-                          Add New Contact
-                        </div>
-                      </SelectItem>
-                      {clientsAndContacts?.map((item) => (
-                        <SelectItem key={`${item.type}-${item.id}`} value={`${item.type}-${item.id}`}>
-                          <div className="flex flex-col">
-                            <span>{item.name}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {item.email || 'No email'} • {item.type === 'client' ? 'Client' : 'Contact'}
-                            </span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Popover open={clientSearchOpen} onOpenChange={setClientSearchOpen}>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={clientSearchOpen}
+                          className="w-full justify-between"
+                        >
+                          {getSelectedClientDisplay()}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0" align="start">
+                      <Command>
+                        <CommandInput placeholder="Search clients and contacts..." />
+                        <CommandList>
+                          <CommandEmpty>No client or contact found.</CommandEmpty>
+                          <CommandGroup>
+                            <CommandItem
+                              value="add-new"
+                              onSelect={() => handleClientSelection('add-new')}
+                            >
+                              <div className="flex items-center gap-2">
+                                <Plus className="w-4 h-4" />
+                                Add New Contact
+                              </div>
+                            </CommandItem>
+                            {clientsAndContacts?.map((item) => (
+                              <CommandItem
+                                key={`${item.type}-${item.id}`}
+                                value={`${item.name} ${item.email || ''} ${item.type}`}
+                                onSelect={() => handleClientSelection(`${item.type}-${item.id}`)}
+                              >
+                                <Check
+                                  className={`mr-2 h-4 w-4 ${
+                                    selectedClientValue === `${item.type}-${item.id}` ? "opacity-100" : "opacity-0"
+                                  }`}
+                                />
+                                <div className="flex flex-col">
+                                  <span>{item.name}</span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {item.email || 'No email'} • {item.type === 'client' ? 'Client' : 'Contact'}
+                                  </span>
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
                 </FormItem>
               )}
