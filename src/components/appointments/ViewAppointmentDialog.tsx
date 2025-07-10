@@ -4,8 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useDialog } from '@/hooks/use-dialog';
 import { EditAppointmentDialog } from './EditAppointmentDialog';
+import RescheduleAppointmentDialog from '../reception/RescheduleAppointmentDialog';
+import { ConvertToClientDialog } from './ConvertToClientDialog';
 import { format, parseISO } from 'date-fns';
-import { Calendar, Clock, User, MapPin, FileText, Edit } from 'lucide-react';
+import { Calendar, Clock, User, MapPin, FileText, Edit, RotateCcw, X, UserPlus } from 'lucide-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface ViewAppointmentDialogProps {
   appointment: {
@@ -19,6 +24,10 @@ interface ViewAppointmentDialogProps {
     lawyer_name: string | null;
     location: string | null;
     notes: string | null;
+    client_name?: string;
+    client_id?: string | null;
+    case_id?: string | null;
+    duration_minutes?: number;
   };
 }
 
@@ -26,6 +35,35 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
   appointment,
 }) => {
   const { closeDialog, openDialog } = useDialog();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const cancelMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from('appointments')
+        .update({ status: 'cancelled' })
+        .eq('id', appointment.id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Appointment cancelled successfully"
+      });
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['appointments-timeline'] });
+      closeDialog();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to cancel appointment",
+        variant: "destructive"
+      });
+    }
+  });
 
   const handleEdit = () => {
     closeDialog();
@@ -35,10 +73,10 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
       title: appointment.title || '',
       appointment_date: appointment.appointment_date || '',
       appointment_time: appointment.appointment_time || '',
-      duration_minutes: 60, // Default duration
-      client_id: undefined,
+      duration_minutes: appointment.duration_minutes || 60,
+      client_id: appointment.client_id,
       lawyer_id: appointment.lawyer_id || '',
-      case_id: undefined,
+      case_id: appointment.case_id,
       location: appointment.location || 'in_person',
       notes: appointment.notes || '',
       status: appointment.status || 'upcoming'
@@ -48,11 +86,50 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
       <EditAppointmentDialog 
         appointment={editAppointment} 
         onSuccess={() => {
-          // Optionally refresh the calendar or show success message
-          console.log('Appointment updated successfully');
+          queryClient.invalidateQueries({ queryKey: ['appointments'] });
+          queryClient.invalidateQueries({ queryKey: ['appointments-timeline'] });
         }} 
       />
     );
+  };
+
+  const handleReschedule = () => {
+    closeDialog();
+    openDialog(
+      <RescheduleAppointmentDialog 
+        open={true}
+        onOpenChange={() => {}}
+        appointment={{
+          id: appointment.id,
+          client_name: appointment.client_name || '',
+          appointment_date: appointment.appointment_date || '',
+          appointment_time: appointment.appointment_time || '',
+          lawyer_id: appointment.lawyer_id || '',
+          lawyer_name: appointment.lawyer_name || '',
+        }}
+      />
+    );
+  };
+
+  const handleConvertToClient = () => {
+    closeDialog();
+    openDialog(
+      <ConvertToClientDialog
+        appointmentId={appointment.id}
+        clientName={appointment.client_name || ''}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['appointments'] });
+          queryClient.invalidateQueries({ queryKey: ['appointments-timeline'] });
+          queryClient.invalidateQueries({ queryKey: ['clients'] });
+        }}
+      />
+    );
+  };
+
+  const handleCancel = () => {
+    if (window.confirm('Are you sure you want to cancel this appointment?')) {
+      cancelMutation.mutate();
+    }
   };
 
   const getStatusColor = (status: string | null) => {
@@ -82,17 +159,8 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
     <Dialog open={true} onOpenChange={closeDialog}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold text-gray-900 flex items-center justify-between">
+          <DialogTitle className="text-xl font-semibold text-gray-900">
             Appointment Details
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleEdit}
-              className="ml-2"
-            >
-              <Edit className="h-4 w-4 mr-1" />
-              Edit
-            </Button>
           </DialogTitle>
         </DialogHeader>
 
@@ -126,6 +194,17 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
               </div>
             </div>
           </div>
+
+          {/* Client */}
+          {appointment.client_name && (
+            <div className="flex items-center gap-3">
+              <User className="h-5 w-5 text-gray-500" />
+              <div>
+                <p className="text-sm font-medium text-gray-700">Client</p>
+                <p className="text-sm text-gray-600">{appointment.client_name}</p>
+              </div>
+            </div>
+          )}
 
           {/* Assigned Lawyer */}
           {appointment.lawyer_name && (
@@ -166,6 +245,44 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
                 <p className="text-sm text-gray-600 whitespace-pre-wrap">{appointment.notes}</p>
               </div>
             </div>
+          )}
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-wrap gap-2 pt-6 border-t">
+          <Button
+            variant="outline"
+            onClick={handleEdit}
+            className="flex-1"
+          >
+            <Edit className="h-4 w-4 mr-2" />
+            Edit
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleReschedule}
+            className="flex-1"
+          >
+            <RotateCcw className="h-4 w-4 mr-2" />
+            Reschedule
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleCancel}
+            disabled={cancelMutation.isPending}
+            className="flex-1"
+          >
+            <X className="h-4 w-4 mr-2" />
+            {cancelMutation.isPending ? 'Cancelling...' : 'Cancel'}
+          </Button>
+          {appointment.client_name && !appointment.client_id && (
+            <Button
+              onClick={handleConvertToClient}
+              className="flex-1"
+            >
+              <UserPlus className="h-4 w-4 mr-2" />
+              Convert to Client
+            </Button>
           )}
         </div>
       </DialogContent>

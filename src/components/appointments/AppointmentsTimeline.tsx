@@ -9,6 +9,8 @@ import { Avatar, AvatarFallback } from '../ui/avatar';
 import { IconButton } from '../messages/ui/IconButton';
 import { MoreHorizontal, Video, MapPin, Phone } from 'lucide-react';
 import { Loader2, AlertCircle } from 'lucide-react';
+import { ViewAppointmentDialog } from './ViewAppointmentDialog';
+import { useDialog } from '@/hooks/use-dialog';
 
 interface AppointmentsTimelineProps {
   filters: FilterState;
@@ -26,12 +28,17 @@ interface Appointment {
   status: string;
   location: string;
   notes?: string;
+  client_id?: string;
+  case_id?: string;
+  lawyer_id?: string;
+  type?: string;
 }
 
 export const AppointmentsTimeline: React.FC<AppointmentsTimelineProps> = ({
   filters,
 }) => {
   const { user } = useAuth();
+  const { openDialog } = useDialog();
 
   const { data: appointments, isLoading, error } = useQuery<Appointment[], Error>({
     queryKey: ['appointments-timeline', user?.id, filters.showPastAppointments, filters.searchQuery],
@@ -147,6 +154,29 @@ export const AppointmentsTimeline: React.FC<AppointmentsTimelineProps> = ({
     }
   };
 
+  const handleAppointmentClick = (appointment: Appointment) => {
+    openDialog(
+      <ViewAppointmentDialog 
+        appointment={{
+          id: appointment.id,
+          title: appointment.title,
+          appointment_date: appointment.appointment_date,
+          appointment_time: appointment.appointment_time,
+          status: appointment.status,
+          type: appointment.type || null,
+          lawyer_id: appointment.lawyer_id || null,
+          lawyer_name: appointment.assigned_user_name,
+          location: appointment.location,
+          notes: appointment.notes || null,
+          client_name: appointment.client_name,
+          client_id: appointment.client_id || null,
+          case_id: appointment.case_id || null,
+          duration_minutes: appointment.duration_minutes
+        }}
+      />
+    );
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-10">
@@ -187,7 +217,8 @@ export const AppointmentsTimeline: React.FC<AppointmentsTimelineProps> = ({
           {dayAppointments.map((appointment, index) => (
             <div
               key={appointment.id}
-              className="flex w-full items-center gap-4 border-b border-gray-200 px-4 py-4 hover:bg-gray-50"
+              className="flex w-full items-center gap-4 border-b border-gray-200 px-4 py-4 hover:bg-gray-50 cursor-pointer"
+              onClick={() => handleAppointmentClick(appointment)}
             >
               <div className="flex flex-col items-start gap-1">
                 <span className="text-sm font-semibold text-gray-900">
@@ -229,7 +260,10 @@ export const AppointmentsTimeline: React.FC<AppointmentsTimelineProps> = ({
               </div>
               <IconButton
                 icon={<MoreHorizontal className="w-4 h-4" />}
-                onClick={() => {}}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAppointmentClick(appointment);
+                }}
               />
             </div>
           ))}
