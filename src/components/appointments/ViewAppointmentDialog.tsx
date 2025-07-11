@@ -94,8 +94,7 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
   };
 
   const handleReschedule = () => {
-    closeDialog();
-    openDialog(
+    const rescheduleDialog = (
       <RescheduleAppointmentDialog 
         open={true}
         onOpenChange={(open) => {
@@ -122,6 +121,12 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
         }}
       />
     );
+    
+    closeDialog();
+    // Small delay to ensure dialog close completes before opening new one
+    setTimeout(() => {
+      openDialog(rescheduleDialog);
+    }, 100);
   };
 
   const handleConvertToClient = () => {

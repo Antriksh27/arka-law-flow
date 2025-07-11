@@ -11,6 +11,7 @@ import { UserPlus, Search, Phone, Mail, Calendar, Plus, Filter } from 'lucide-re
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import AddContactDialog from '@/components/reception/AddContactDialog';
+import { ConvertContactToClientDialog } from '@/components/reception/ConvertContactToClientDialog';
 
 const ReceptionContacts = () => {
   const { user, firmId } = useAuth();
@@ -19,6 +20,8 @@ const ReceptionContacts = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
   const [addContactOpen, setAddContactOpen] = useState(false);
+  const [convertDialogOpen, setConvertDialogOpen] = useState(false);
+  const [selectedContact, setSelectedContact] = useState<any>(null);
 
   // Check for action parameter to auto-open dialogs
   useEffect(() => {
@@ -100,7 +103,8 @@ const ReceptionContacts = () => {
   });
 
   const handleConvertToClient = (contact: any) => {
-    convertToClientMutation.mutate(contact);
+    setSelectedContact(contact);
+    setConvertDialogOpen(true);
   };
 
   return (
@@ -234,6 +238,15 @@ const ReceptionContacts = () => {
         open={addContactOpen} 
         onOpenChange={setAddContactOpen} 
       />
+
+      {/* Convert Contact to Client Modal */}
+      {selectedContact && (
+        <ConvertContactToClientDialog
+          contact={selectedContact}
+          open={convertDialogOpen}
+          onOpenChange={setConvertDialogOpen}
+        />
+      )}
     </div>
   );
 };
