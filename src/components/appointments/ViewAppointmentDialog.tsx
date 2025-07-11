@@ -98,7 +98,11 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
     openDialog(
       <RescheduleAppointmentDialog 
         open={true}
-        onOpenChange={() => {}}
+        onOpenChange={(open) => {
+          if (!open) {
+            closeDialog();
+          }
+        }}
         appointment={{
           id: appointment.id,
           client_name: appointment.client_name || '',
@@ -106,6 +110,15 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
           appointment_time: appointment.appointment_time || '',
           lawyer_id: appointment.lawyer_id || '',
           lawyer_name: appointment.lawyer_name || '',
+          duration_minutes: appointment.duration_minutes || 60,
+          client_id: appointment.client_id,
+          case_id: appointment.case_id,
+          title: appointment.title,
+          location: appointment.location,
+          notes: appointment.notes,
+          firm_id: null, // Will be fetched in the dialog
+          created_by_user_id: null,
+          type: appointment.type
         }}
       />
     );
