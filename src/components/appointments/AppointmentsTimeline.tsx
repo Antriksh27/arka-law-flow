@@ -46,7 +46,7 @@ export const AppointmentsTimeline: React.FC<AppointmentsTimelineProps> = ({
       let query = supabase
         .from('appointment_details')
         .select('*')
-        .order('appointment_date', { ascending: true })
+        .order('appointment_date', { ascending: false })
         .order('appointment_time', { ascending: true });
       
       // Filter by current lawyer only
@@ -207,7 +207,9 @@ export const AppointmentsTimeline: React.FC<AppointmentsTimelineProps> = ({
 
   return (
     <div className="flex w-full flex-col items-start">
-      {Object.entries(groupedAppointments).map(([date, dayAppointments]) => (
+      {Object.entries(groupedAppointments)
+        .sort(([a], [b]) => new Date(b).getTime() - new Date(a).getTime())
+        .map(([date, dayAppointments]) => (
         <div key={date} className="flex w-full flex-col items-start">
           <div className="flex w-full items-center gap-2 px-4 py-4">
             <span className="text-xl font-semibold text-gray-900">

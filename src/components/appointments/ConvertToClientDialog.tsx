@@ -61,7 +61,22 @@ export const ConvertToClientDialog: React.FC<ConvertToClientDialogProps> = ({
   });
 
   // Fetch lawyers for assignment
-  const lawyers = (queryClient.getQueryData(['lawyers']) || []) as Array<{id: string, full_name: string}>;
+  const [lawyers, setLawyers] = React.useState<Array<{id: string, full_name: string}>>([]);
+  
+  React.useEffect(() => {
+    const fetchLawyers = async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .eq('role', 'lawyer');
+      
+      if (data) {
+        setLawyers(data);
+      }
+    };
+    
+    fetchLawyers();
+  }, []);
 
   const convertMutation = useMutation({
     mutationFn: async (formData: ConvertToClientFormData) => {
