@@ -197,7 +197,7 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
 
   return (
     <Dialog open={true} onOpenChange={closeDialog}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto p-6">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold text-gray-900">
             Appointment Details
