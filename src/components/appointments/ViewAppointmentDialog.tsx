@@ -6,8 +6,9 @@ import { useDialog } from '@/hooks/use-dialog';
 import { EditAppointmentDialog } from './EditAppointmentDialog';
 import RescheduleAppointmentDialog from '../reception/RescheduleAppointmentDialog';
 import { ConvertToClientDialog } from './ConvertToClientDialog';
+import { ConvertContactToClientDialog } from '../reception/ConvertContactToClientDialog';
 import { format, parseISO } from 'date-fns';
-import { Calendar, Clock, User, MapPin, FileText, Edit, RotateCcw, X, UserPlus } from 'lucide-react';
+import { Calendar, Clock, User, MapPin, FileText, Edit, RotateCcw, X, UserPlus, Users } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -139,6 +140,27 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
           queryClient.invalidateQueries({ queryKey: ['appointments'] });
           queryClient.invalidateQueries({ queryKey: ['appointments-timeline'] });
           queryClient.invalidateQueries({ queryKey: ['clients'] });
+        }}
+      />
+    );
+  };
+
+  const handleConvertContactToClient = () => {
+    closeDialog();
+    openDialog(
+      <ConvertContactToClientDialog
+        contact={{
+          id: 'temp-id',
+          name: appointment.client_name || '',
+          email: '',
+          phone: '',
+          notes: ''
+        }}
+        open={true}
+        onOpenChange={(open) => {
+          if (!open) {
+            closeDialog();
+          }
         }}
       />
     );
@@ -302,6 +324,14 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
               Convert to Client
             </Button>
           )}
+          <Button
+            variant="outline"
+            onClick={handleConvertContactToClient}
+            className="flex-1"
+          >
+            <Users className="h-4 w-4 mr-2" />
+            Convert Contact
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
