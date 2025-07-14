@@ -173,11 +173,24 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
       
       onOpenChange(false);
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Error converting contact to client:', error);
-      const errorMessage = error instanceof Error ? error.message : "Failed to convert contact to client. Please try again.";
+      
+      // Extract specific error message from different error formats
+      let errorMessage = "Failed to convert contact to client. Please try again.";
+      
+      if (error?.message) {
+        errorMessage = error.message;
+      } else if (error?.error_description) {
+        errorMessage = error.error_description;
+      } else if (error?.details) {
+        errorMessage = error.details;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
       toast({
-        title: "Error",
+        title: "Conversion Failed",
         description: errorMessage,
         variant: "destructive"
       });
