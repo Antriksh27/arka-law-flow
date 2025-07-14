@@ -131,16 +131,13 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
         newCase = caseData;
       }
 
-      // Update the contact as converted
-      const { error: contactError } = await supabase
+      // Remove the contact from contacts table (transfer complete)
+      const { error: deleteError } = await supabase
         .from('contacts')
-        .update({
-          converted_to_client: true,
-          converted_client_id: newClient.id,
-        })
+        .delete()
         .eq('id', contact.id);
 
-      if (contactError) throw contactError;
+      if (deleteError) throw deleteError;
 
       return { client: newClient, case: newCase };
     },
