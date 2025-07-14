@@ -87,6 +87,25 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
 
   const convertMutation = useMutation({
     mutationFn: async (formData: ConvertContactFormData) => {
+      // Validate required data
+      if (!firmId || !user?.id) {
+        throw new Error('Missing required authentication data');
+      }
+
+      // Check if client with this email already exists
+      if (formData.email) {
+        const { data: existingClient } = await supabase
+          .from('clients')
+          .select('id')
+          .eq('email', formData.email)
+          .eq('firm_id', firmId)
+          .single();
+        
+        if (existingClient) {
+          throw new Error('A client with this email already exists');
+        }
+      }
+
       // Create the new client
       const { data: newClient, error: clientError } = await supabase
         .from('clients')
@@ -156,9 +175,10 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
     },
     onError: (error) => {
       console.error('Error converting contact to client:', error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to convert contact to client. Please try again.";
       toast({
         title: "Error",
-        description: "Failed to convert contact to client. Please try again.",
+        description: errorMessage,
         variant: "destructive"
       });
     }
