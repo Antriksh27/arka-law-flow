@@ -98,7 +98,7 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
           law_firm_id
         )
       `)
-      .in('law_firm_members.role', ['admin', 'lawyer', 'partner', 'associate', 'junior', 'paralegal'])
+      .in('law_firm_members.role', ['admin', 'lawyer', 'partner', 'associate', 'junior', 'Junior', 'paralegal'])
       .order('full_name');
     setUsers(data || []);
   };
