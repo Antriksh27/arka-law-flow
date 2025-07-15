@@ -20,6 +20,7 @@ interface CaseFormData {
   case_title: string;
   description?: string;
   client_id?: string;
+  assigned_users?: string[];
   case_type: string;
   status: string;
   priority: string;
@@ -72,6 +73,29 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
     }
   });
 
+  // Fetch lawyers from the firm for assignment
+  const { data: lawyers = [] } = useQuery({
+    queryKey: ['firm-lawyers'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select(`
+          id, 
+          full_name, 
+          role,
+          law_firm_members!inner(
+            role,
+            law_firm_id
+          )
+        `)
+        .in('law_firm_members.role', ['admin', 'lawyer', 'partner', 'associate'])
+        .order('full_name');
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
   const createCaseMutation = useMutation({
     mutationFn: async (data: CaseFormData) => {
       const caseData = {
@@ -91,6 +115,7 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
         respondent: data.respondent || null,
         advocate_name: data.advocate_name || null,
         district: data.district || null,
+        assigned_users: data.assigned_users || [],
         created_by: (await supabase.auth.getUser()).data.user?.id
       };
 
@@ -337,6 +362,28 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
                 className="mt-2 bg-white border-gray-300"
                 placeholder="Enter district..."
               />
+            </div>
+
+            <div className="md:col-span-2">
+              <Label htmlFor="assigned_users">Assign Lawyers</Label>
+              <div className="mt-2 space-y-2 max-h-40 overflow-y-auto border border-gray-300 rounded-md p-3 bg-white">
+                {lawyers.length === 0 ? (
+                  <p className="text-gray-500 text-sm">No lawyers available</p>
+                ) : (
+                  lawyers.map((lawyer) => (
+                    <label key={lawyer.id} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
+                      <input
+                        type="checkbox"
+                        value={lawyer.id}
+                        {...register('assigned_users')}
+                        className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
+                      />
+                      <span className="text-sm">{lawyer.full_name}</span>
+                      <span className="text-xs text-gray-500 capitalize">({lawyer.role})</span>
+                    </label>
+                  ))
+                )}
+              </div>
             </div>
 
             <div className="md:col-span-2">

@@ -21,10 +21,36 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
   const { data: cases, isLoading } = useQuery({
     queryKey: ['cases', searchQuery, statusFilter, typeFilter, assignedFilter],
     queryFn: async () => {
+      // Get current user info
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      // Get user's role and firm membership
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select(`
+          role,
+          law_firm_members(role, law_firm_id)
+        `)
+        .eq('id', user.id)
+        .single();
+
+      // Check if user is admin or lawyer (can see all firm cases)
+      const isAdminOrLawyer = userProfile?.role === 'admin' || 
+                              userProfile?.role === 'lawyer' || 
+                              userProfile?.role === 'partner' ||
+                              userProfile?.role === 'associate';
+
       let query = supabase
         .from('case_details')
         .select('*')
         .order('created_at', { ascending: false });
+
+      // Apply role-based filtering
+      if (!isAdminOrLawyer) {
+        // Non-admin users only see cases they're assigned to
+        query = query.or(`assigned_to.eq.${user.id},assigned_users.cs.{${user.id}}`);
+      }
 
       if (searchQuery) {
         query = query.or(`title.ilike.%${searchQuery}%,client_name.ilike.%${searchQuery}%`);
