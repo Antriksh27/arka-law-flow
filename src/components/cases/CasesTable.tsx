@@ -44,7 +44,8 @@ export const CasesTable: React.FC<CasesTableProps> = ({
       const isAdminOrLawyer = userProfile?.role === 'admin' || 
                               userProfile?.role === 'lawyer' || 
                               userProfile?.role === 'partner' ||
-                              userProfile?.role === 'associate';
+                              userProfile?.role === 'associate' ||
+                              userProfile?.role === 'junior';
 
       let query = supabase.from('case_details').select('*').order('created_at', {
         ascending: false

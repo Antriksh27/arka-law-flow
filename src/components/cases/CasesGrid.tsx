@@ -39,7 +39,8 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
       const isAdminOrLawyer = userProfile?.role === 'admin' || 
                               userProfile?.role === 'lawyer' || 
                               userProfile?.role === 'partner' ||
-                              userProfile?.role === 'associate';
+                              userProfile?.role === 'associate' ||
+                              userProfile?.role === 'junior';
 
       let query = supabase
         .from('case_details')

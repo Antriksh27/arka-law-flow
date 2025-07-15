@@ -88,7 +88,7 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
             law_firm_id
           )
         `)
-        .in('law_firm_members.role', ['admin', 'lawyer', 'partner', 'associate'])
+        .in('law_firm_members.role', ['admin', 'lawyer', 'partner', 'associate', 'junior'])
         .order('full_name');
       
       if (error) throw error;
