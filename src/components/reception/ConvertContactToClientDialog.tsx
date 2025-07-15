@@ -53,7 +53,7 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
   const { user, firmId } = useAuth();
   const queryClient = useQueryClient();
   
-  const [lawyers, setLawyers] = React.useState<Array<{id: string, full_name: string}>>([]);
+  const [lawyers, setLawyers] = React.useState<Array<{id: string, full_name: string, role: string}>>([]);
   
   const {
     register,
@@ -74,8 +74,17 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
     const fetchLawyers = async () => {
       const { data } = await supabase
         .from('profiles')
-        .select('id, full_name')
-        .eq('role', 'lawyer');
+        .select(`
+          id, 
+          full_name, 
+          role,
+          law_firm_members!inner(
+            role,
+            law_firm_id
+          )
+        `)
+        .in('law_firm_members.role', ['admin', 'lawyer', 'partner', 'associate'])
+        .order('full_name');
       
       if (data) {
         setLawyers(data);
@@ -268,7 +277,7 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
                 <SelectContent>
                   {lawyers.map((lawyer) => (
                     <SelectItem key={lawyer.id} value={lawyer.id}>
-                      {lawyer.full_name}
+                      {lawyer.full_name} ({lawyer.role})
                     </SelectItem>
                   ))}
                 </SelectContent>

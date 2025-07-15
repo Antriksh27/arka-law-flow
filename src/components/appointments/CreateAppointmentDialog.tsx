@@ -38,6 +38,7 @@ interface Case {
 interface User {
   id: string;
   full_name: string;
+  role: string;
 }
 
 interface CreateAppointmentDialogProps {
@@ -88,8 +89,16 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
   const fetchUsers = async () => {
     const { data } = await supabase
       .from('profiles')
-      .select('id, full_name')
-      .in('role', ['admin', 'lawyer', 'junior', 'paralegal'])
+      .select(`
+        id, 
+        full_name, 
+        role,
+        law_firm_members!inner(
+          role,
+          law_firm_id
+        )
+      `)
+      .in('law_firm_members.role', ['admin', 'lawyer', 'partner', 'associate', 'junior', 'paralegal'])
       .order('full_name');
     setUsers(data || []);
   };
@@ -291,7 +300,7 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
                   <SelectContent className="bg-white border-gray-300">
                     {users.map((user) => (
                       <SelectItem key={user.id} value={user.id} className="text-gray-900">
-                        {user.full_name}
+                        {user.full_name} ({user.role})
                       </SelectItem>
                     ))}
                   </SelectContent>
