@@ -851,10 +851,13 @@ export type Database = {
       }
       contacts: {
         Row: {
+          address_line_1: string | null
+          address_line_2: string | null
           converted_client_id: string | null
           converted_to_client: boolean | null
           created_at: string | null
           created_by: string | null
+          district_id: string | null
           email: string | null
           firm_id: string | null
           id: string
@@ -862,14 +865,19 @@ export type Database = {
           name: string
           notes: string | null
           phone: string | null
+          pin_code: string | null
+          state_id: string | null
           updated_at: string | null
           visit_purpose: string | null
         }
         Insert: {
+          address_line_1?: string | null
+          address_line_2?: string | null
           converted_client_id?: string | null
           converted_to_client?: boolean | null
           created_at?: string | null
           created_by?: string | null
+          district_id?: string | null
           email?: string | null
           firm_id?: string | null
           id?: string
@@ -877,14 +885,19 @@ export type Database = {
           name: string
           notes?: string | null
           phone?: string | null
+          pin_code?: string | null
+          state_id?: string | null
           updated_at?: string | null
           visit_purpose?: string | null
         }
         Update: {
+          address_line_1?: string | null
+          address_line_2?: string | null
           converted_client_id?: string | null
           converted_to_client?: boolean | null
           created_at?: string | null
           created_by?: string | null
+          district_id?: string | null
           email?: string | null
           firm_id?: string | null
           id?: string
@@ -892,10 +905,27 @@ export type Database = {
           name?: string
           notes?: string | null
           phone?: string | null
+          pin_code?: string | null
+          state_id?: string | null
           updated_at?: string | null
           visit_purpose?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "contacts_district_id_fkey"
+            columns: ["district_id"]
+            isOneToOne: false
+            referencedRelation: "districts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contacts_state_id_fkey"
+            columns: ["state_id"]
+            isOneToOne: false
+            referencedRelation: "states"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       court_hearings: {
         Row: {
@@ -964,6 +994,32 @@ export type Database = {
             columns: ["lawyer_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      districts: {
+        Row: {
+          id: string
+          name: string
+          state_id: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          state_id: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          state_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "districts_state_id_fkey"
+            columns: ["state_id"]
+            isOneToOne: false
+            referencedRelation: "states"
             referencedColumns: ["id"]
           },
         ]
@@ -1934,6 +1990,21 @@ export type Database = {
           reason?: string | null
           status?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      states: {
+        Row: {
+          id: string
+          name: string
+        }
+        Insert: {
+          id?: string
+          name: string
+        }
+        Update: {
+          id?: string
+          name?: string
         }
         Relationships: []
       }

@@ -1,7 +1,7 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -23,6 +23,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface AddContactDialogProps {
   open: boolean;
@@ -35,12 +36,47 @@ interface ContactFormData {
   phone?: string;
   visit_purpose?: string;
   notes?: string;
+  address_line_1?: string;
+  address_line_2?: string;
+  pin_code?: string;
+  state_id?: string;
+  district_id?: string;
 }
 
 const AddContactDialog = ({ open, onOpenChange }: AddContactDialogProps) => {
   const { user, firmId } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [selectedStateId, setSelectedStateId] = useState<string>('');
+
+  // Fetch states
+  const { data: states = [] } = useQuery({
+    queryKey: ['states'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('states')
+        .select('id, name')
+        .order('name');
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Fetch districts based on selected state
+  const { data: districts = [] } = useQuery({
+    queryKey: ['districts', selectedStateId],
+    queryFn: async () => {
+      if (!selectedStateId) return [];
+      const { data, error } = await supabase
+        .from('districts')
+        .select('id, name')
+        .eq('state_id', selectedStateId)
+        .order('name');
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!selectedStateId,
+  });
 
   const form = useForm<ContactFormData>({
     defaultValues: {
@@ -49,6 +85,11 @@ const AddContactDialog = ({ open, onOpenChange }: AddContactDialogProps) => {
       phone: '',
       visit_purpose: '',
       notes: '',
+      address_line_1: '',
+      address_line_2: '',
+      pin_code: '',
+      state_id: '',
+      district_id: '',
     },
   });
 
@@ -73,6 +114,7 @@ const AddContactDialog = ({ open, onOpenChange }: AddContactDialogProps) => {
         description: "Contact added successfully!",
       });
       form.reset();
+      setSelectedStateId('');
       onOpenChange(false);
     },
     onError: (error) => {
@@ -164,6 +206,120 @@ const AddContactDialog = ({ open, onOpenChange }: AddContactDialogProps) => {
                       {...field} 
                     />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="address_line_1"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Address Line 1</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="Enter address line 1" 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="address_line_2"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Address Line 2</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="Enter address line 2 (optional)" 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="pin_code"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>PIN Code</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="Enter PIN code" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="state_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>State</FormLabel>
+                    <Select 
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        setSelectedStateId(value);
+                        form.setValue('district_id', ''); // Reset district when state changes
+                      }} 
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select state" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {states.map((state) => (
+                          <SelectItem key={state.id} value={state.id}>
+                            {state.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="district_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>District</FormLabel>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    value={field.value}
+                    disabled={!selectedStateId}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder={!selectedStateId ? "Select state first" : "Select district"} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {districts.map((district) => (
+                        <SelectItem key={district.id} value={district.id}>
+                          {district.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
