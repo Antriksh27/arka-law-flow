@@ -74,29 +74,41 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
 
   React.useEffect(() => {
     const fetchLawyers = async () => {
-      if (!firmId) return;
+      if (!firmId) {
+        console.log('ConvertContactToClientDialog: No firm ID available');
+        return;
+      }
       
       console.log('ConvertContactToClientDialog: Fetching lawyers for firm:', firmId);
       
-      const { data, error } = await supabase
-        .from('profiles')
-        .select(`
-          id, 
-          full_name, 
-          role,
-          team_members!inner(
-            role,
-            firm_id
-          )
-        `)
-        .eq('team_members.firm_id', firmId)
-        .in('team_members.role', ['admin', 'lawyer', 'junior', 'paralegal', 'office_staff', 'receptionist'])
-        .order('full_name');
+      // First, let's check what team members exist
+      const { data: teamMembers, error: teamError } = await supabase
+        .from('team_members')
+        .select('*')
+        .eq('firm_id', firmId);
       
-      console.log('ConvertContactToClientDialog: Lawyers query result:', { data, error });
+      console.log('ConvertContactToClientDialog: Team members:', { teamMembers, teamError });
       
-      if (data) {
-        setLawyers(data);
+      // Query team members and then get their profile info separately
+      const { data: teamMembersData, error: tmError } = await supabase
+        .from('team_members')
+        .select('user_id, role, full_name')
+        .eq('firm_id', firmId)
+        .in('role', ['admin', 'lawyer', 'junior', 'paralegal', 'office_staff', 'receptionist']);
+      
+      console.log('ConvertContactToClientDialog: Team members query result:', { teamMembersData, tmError });
+      
+      if (teamMembersData && teamMembersData.length > 0) {
+        const lawyers = teamMembersData.map(tm => ({
+          id: tm.user_id,
+          full_name: tm.full_name,
+          role: tm.role
+        }));
+        console.log('ConvertContactToClientDialog: Processed lawyers:', lawyers);
+        setLawyers(lawyers);
+      } else {
+        console.log('ConvertContactToClientDialog: No team members found');
+        setLawyers([]);
       }
     };
     
