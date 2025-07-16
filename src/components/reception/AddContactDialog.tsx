@@ -24,6 +24,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Plus } from 'lucide-react';
 
 interface AddContactDialogProps {
   open: boolean;
@@ -48,6 +49,8 @@ const AddContactDialog = ({ open, onOpenChange }: AddContactDialogProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedStateId, setSelectedStateId] = useState<string>('');
+  const [showAddDistrict, setShowAddDistrict] = useState(false);
+  const [newDistrictName, setNewDistrictName] = useState('');
 
   // Fetch states
   const { data: states = [] } = useQuery({
@@ -93,6 +96,43 @@ const AddContactDialog = ({ open, onOpenChange }: AddContactDialogProps) => {
     },
   });
 
+  // Add district mutation
+  const addDistrictMutation = useMutation({
+    mutationFn: async (districtName: string) => {
+      if (!selectedStateId) throw new Error('No state selected');
+      
+      const { data, error } = await supabase
+        .from('districts')
+        .insert({
+          name: districtName,
+          state_id: selectedStateId,
+        })
+        .select('id, name')
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (newDistrict) => {
+      queryClient.invalidateQueries({ queryKey: ['districts', selectedStateId] });
+      form.setValue('district_id', newDistrict.id);
+      setShowAddDistrict(false);
+      setNewDistrictName('');
+      toast({
+        title: "Success",
+        description: "District added successfully!",
+      });
+    },
+    onError: (error) => {
+      console.error('Error adding district:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add district. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const addContactMutation = useMutation({
     mutationFn: async (data: ContactFormData) => {
       const { error } = await supabase
@@ -115,6 +155,8 @@ const AddContactDialog = ({ open, onOpenChange }: AddContactDialogProps) => {
       });
       form.reset();
       setSelectedStateId('');
+      setShowAddDistrict(false);
+      setNewDistrictName('');
       onOpenChange(false);
     },
     onError: (error) => {
@@ -129,6 +171,18 @@ const AddContactDialog = ({ open, onOpenChange }: AddContactDialogProps) => {
 
   const onSubmit = (data: ContactFormData) => {
     addContactMutation.mutate(data);
+  };
+
+  const handleAddDistrict = () => {
+    if (!newDistrictName.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a district name.",
+        variant: "destructive",
+      });
+      return;
+    }
+    addDistrictMutation.mutate(newDistrictName.trim());
   };
 
   return (
@@ -302,24 +356,75 @@ const AddContactDialog = ({ open, onOpenChange }: AddContactDialogProps) => {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>District</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    value={field.value}
-                    disabled={!selectedStateId}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder={!selectedStateId ? "Select state first" : "Select district"} />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {districts.map((district) => (
-                        <SelectItem key={district.id} value={district.id}>
-                          {district.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {showAddDistrict ? (
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Enter new district name"
+                          value={newDistrictName}
+                          onChange={(e) => setNewDistrictName(e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleAddDistrict();
+                            }
+                          }}
+                        />
+                        <Button 
+                          type="button" 
+                          onClick={handleAddDistrict}
+                          disabled={addDistrictMutation.isPending}
+                          size="sm"
+                        >
+                          {addDistrictMutation.isPending ? 'Adding...' : 'Add'}
+                        </Button>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          onClick={() => {
+                            setShowAddDistrict(false);
+                            setNewDistrictName('');
+                          }}
+                          size="sm"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <Select 
+                      onValueChange={(value) => {
+                        if (value === 'add_new') {
+                          setShowAddDistrict(true);
+                        } else {
+                          field.onChange(value);
+                        }
+                      }} 
+                      value={field.value}
+                      disabled={!selectedStateId}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={!selectedStateId ? "Select state first" : "Select district"} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {districts.map((district) => (
+                          <SelectItem key={district.id} value={district.id}>
+                            {district.name}
+                          </SelectItem>
+                        ))}
+                        {selectedStateId && (
+                          <SelectItem value="add_new" className="border-t">
+                            <div className="flex items-center gap-2">
+                              <Plus className="h-4 w-4" />
+                              Add New District
+                            </div>
+                          </SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
