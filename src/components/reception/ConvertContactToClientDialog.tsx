@@ -25,6 +25,11 @@ interface ConvertContactToClientDialogProps {
     email?: string;
     phone?: string;
     notes?: string;
+    address_line_1?: string;
+    address_line_2?: string;
+    visit_purpose?: string;
+    pin_code?: string;
+    last_visited_at?: string;
   };
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -67,8 +72,10 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
       full_name: contact.name,
       email: contact.email || '',
       phone: contact.phone || '',
+      address: contact.address_line_1 ? 
+        [contact.address_line_1, contact.address_line_2].filter(Boolean).join(', ') : '',
       case_type: 'civil',
-      additional_notes: contact.notes || ''
+      additional_notes: [contact.notes, contact.visit_purpose].filter(Boolean).join('\n') || ''
     }
   });
 
@@ -249,37 +256,64 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          {/* Contact Information Display */}
+          <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <h4 className="font-medium text-sm text-blue-900 mb-2">Contact Information Being Converted</h4>
+            <div className="space-y-1 text-sm">
+              <div><span className="font-medium">Name:</span> {contact.name}</div>
+              {contact.email && <div><span className="font-medium">Email:</span> {contact.email}</div>}
+              {contact.phone && <div><span className="font-medium">Phone:</span> {contact.phone}</div>}
+              {(contact.address_line_1 || contact.address_line_2) && (
+                <div><span className="font-medium">Address:</span> {[contact.address_line_1, contact.address_line_2].filter(Boolean).join(', ')}</div>
+              )}
+              {contact.pin_code && <div><span className="font-medium">Pin Code:</span> {contact.pin_code}</div>}
+              {contact.visit_purpose && <div><span className="font-medium">Previous Visit Purpose:</span> {contact.visit_purpose}</div>}
+              {contact.last_visited_at && (
+                <div><span className="font-medium">Last Visited:</span> {new Date(contact.last_visited_at).toLocaleDateString()}</div>
+              )}
+              {contact.notes && <div><span className="font-medium">Notes:</span> {contact.notes}</div>}
+            </div>
+          </div>
+
           {/* Client Information */}
           <div className="space-y-4">
-            <h3 className="text-lg font-medium">Client Information</h3>
+            <h3 className="text-lg font-medium">Client Information (Auto-filled from contact)</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="full_name">Full Name *</Label>
+                <Label htmlFor="full_name">Full Name * (Auto-filled)</Label>
                 <Input
                   id="full_name"
                   {...register('full_name', { required: 'Full name is required' })}
+                  className="bg-blue-50"
                 />
                 {errors.full_name && (
                   <p className="text-sm text-red-600 mt-1">{errors.full_name.message}</p>
                 )}
+                <p className="text-xs text-gray-500 mt-1">Auto-filled from contact name</p>
               </div>
 
               <div>
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">Email (Auto-filled)</Label>
                 <Input
                   id="email"
                   type="email"
                   {...register('email')}
+                  className="bg-blue-50"
+                  placeholder="Email from contact record"
                 />
+                <p className="text-xs text-gray-500 mt-1">Auto-filled from contact email</p>
               </div>
 
               <div>
-                <Label htmlFor="phone">Phone</Label>
+                <Label htmlFor="phone">Phone (Auto-filled)</Label>
                 <Input
                   id="phone"
                   {...register('phone')}
+                  className="bg-blue-50"
+                  placeholder="Phone from contact record"
                 />
+                <p className="text-xs text-gray-500 mt-1">Auto-filled from contact phone</p>
               </div>
 
               <div>
@@ -287,16 +321,22 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
                 <Input
                   id="organization"
                   {...register('organization')}
+                  placeholder="Add organization/company name"
                 />
               </div>
             </div>
 
             <div>
-              <Label htmlFor="address">Address</Label>
+              <Label htmlFor="address">Address (Auto-filled)</Label>
               <Input
                 id="address"
                 {...register('address')}
+                placeholder="Address from contact record"
+                className="bg-blue-50"
               />
+              <p className="text-xs text-gray-500 mt-1">
+                Auto-filled from contact's address. You can modify this if needed.
+              </p>
             </div>
 
             <div>
