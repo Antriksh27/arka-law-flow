@@ -44,7 +44,7 @@ interface AppointmentFormData {
   duration_minutes: number;
   title?: string;
   notes?: string;
-  location?: string;
+  
 }
 
 const BookAppointmentDialog = ({ open, onOpenChange }: BookAppointmentDialogProps) => {
@@ -66,7 +66,7 @@ const BookAppointmentDialog = ({ open, onOpenChange }: BookAppointmentDialogProp
       duration_minutes: 60,
       title: '',
       notes: '',
-      location: '',
+      
     },
   });
 
@@ -201,7 +201,7 @@ const BookAppointmentDialog = ({ open, onOpenChange }: BookAppointmentDialogProp
           duration_minutes: data.duration_minutes,
           title: data.title,
           notes: data.notes,
-          location: data.location,
+          
           firm_id: firmId,
           created_by: user?.id,
           created_by_user_id: user?.id,
@@ -232,7 +232,7 @@ const BookAppointmentDialog = ({ open, onOpenChange }: BookAppointmentDialogProp
               appointment_date: result.appointment.appointment_date,
               appointment_time: result.appointment.appointment_time,
               title: result.appointment.title,
-              location: result.appointment.location
+              
             }
           });
         } catch (error) {
@@ -553,22 +553,6 @@ const BookAppointmentDialog = ({ open, onOpenChange }: BookAppointmentDialogProp
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="location"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Location</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="e.g., Conference Room A, Office" 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
 
             <FormField
               control={form.control}

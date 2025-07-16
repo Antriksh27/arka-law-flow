@@ -36,7 +36,7 @@ interface EditAppointmentFormData {
   duration_minutes: number;
   title?: string;
   notes?: string;
-  location?: string;
+  
   status: string;
 }
 
@@ -52,7 +52,7 @@ const EditAppointmentDialog = ({ open, onOpenChange, appointment }: EditAppointm
       duration_minutes: appointment?.duration_minutes || 60,
       title: appointment?.title || '',
       notes: appointment?.notes || '',
-      location: appointment?.location || '',
+      
       status: appointment?.status || 'upcoming',
     },
   });
@@ -65,7 +65,7 @@ const EditAppointmentDialog = ({ open, onOpenChange, appointment }: EditAppointm
         duration_minutes: appointment.duration_minutes || 60,
         title: appointment.title || '',
         notes: appointment.notes || '',
-        location: appointment.location || '',
+        
         status: appointment.status || 'upcoming',
       });
     }
@@ -81,7 +81,7 @@ const EditAppointmentDialog = ({ open, onOpenChange, appointment }: EditAppointm
           duration_minutes: data.duration_minutes,
           title: data.title,
           notes: data.notes,
-          location: data.location,
+          
           status: data.status,
         })
         .eq('id', appointment.id);
@@ -282,22 +282,6 @@ const EditAppointmentDialog = ({ open, onOpenChange, appointment }: EditAppointm
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="location"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Location</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="e.g., Conference Room A, Office" 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
 
             <FormField
               control={form.control}
