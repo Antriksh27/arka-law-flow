@@ -76,7 +76,9 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
     const fetchLawyers = async () => {
       if (!firmId) return;
       
-      const { data } = await supabase
+      console.log('ConvertContactToClientDialog: Fetching lawyers for firm:', firmId);
+      
+      const { data, error } = await supabase
         .from('profiles')
         .select(`
           id, 
@@ -88,8 +90,10 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
           )
         `)
         .eq('law_firm_members.law_firm_id', firmId)
-        .in('law_firm_members.role', ['admin', 'lawyer', 'partner', 'associate', 'junior', 'Junior'])
+        .in('law_firm_members.role', ['admin', 'lawyer', 'partner', 'associate', 'junior', 'Junior', 'param', 'paralegal'])
         .order('full_name');
+      
+      console.log('ConvertContactToClientDialog: Lawyers query result:', { data, error });
       
       if (data) {
         setLawyers(data);
