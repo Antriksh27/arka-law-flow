@@ -237,13 +237,10 @@ const ReceptionAppointments = () => {
     if (!appointment.appointment_date || !appointment.appointment_time) return 'Mark Arrived';
     
     const appointmentDateTime = parseISO(`${appointment.appointment_date}T${appointment.appointment_time}`);
-    const fifteenMinutesBefore = subMinutes(appointmentDateTime, 15);
     const fifteenMinutesAfter = new Date(appointmentDateTime.getTime() + 15 * 60 * 1000);
     const now = new Date();
     
-    if (now < fifteenMinutesBefore) {
-      return 'Too Early';
-    } else if (now > fifteenMinutesAfter) {
+    if (now > fifteenMinutesAfter) {
       return 'Too Late';
     } else {
       return 'Mark Arrived';
