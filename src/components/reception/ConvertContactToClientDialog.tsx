@@ -84,13 +84,13 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
           id, 
           full_name, 
           role,
-          law_firm_members!inner(
+          team_members!inner(
             role,
-            law_firm_id
+            firm_id
           )
         `)
-        .eq('law_firm_members.law_firm_id', firmId)
-        .in('law_firm_members.role', ['admin', 'lawyer', 'partner', 'associate', 'junior', 'Junior', 'param', 'paralegal'])
+        .eq('team_members.firm_id', firmId)
+        .in('team_members.role', ['admin', 'lawyer', 'junior', 'paralegal', 'office_staff', 'receptionist'])
         .order('full_name');
       
       console.log('ConvertContactToClientDialog: Lawyers query result:', { data, error });
