@@ -17,6 +17,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useQuery } from '@tanstack/react-query';
+import { Plus } from 'lucide-react';
 
 interface ConvertContactToClientDialogProps {
   contact: {
@@ -29,6 +31,8 @@ interface ConvertContactToClientDialogProps {
     address_line_2?: string;
     visit_purpose?: string;
     pin_code?: string;
+    state_id?: string;
+    district_id?: string;
     last_visited_at?: string;
   };
   open: boolean;
@@ -39,7 +43,12 @@ interface ConvertContactFormData {
   full_name: string;
   email?: string;
   phone?: string;
-  address?: string;
+  address_line_1?: string;
+  address_line_2?: string;
+  pin_code?: string;
+  state_id?: string;
+  district_id?: string;
+  visit_purpose?: string;
   organization?: string;
   assigned_lawyer_ids?: string[];
   case_title?: string;
@@ -47,7 +56,7 @@ interface ConvertContactFormData {
   case_type?: 'civil' | 'criminal' | 'family' | 'corporate' | 'tax' | 'other' | 'labor' | 'intellectual_property' | 'real_estate' | 'immigration' | 'constitutional';
   estimated_fees?: number;
   payment_terms?: string;
-  additional_notes?: string;
+  notes?: string;
 }
 
 export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialogProps> = ({
@@ -61,22 +70,96 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
   
   const [lawyers, setLawyers] = React.useState<Array<{id: string, full_name: string, role: string}>>([]);
   const [selectedLawyers, setSelectedLawyers] = React.useState<string[]>([]);
+  const [selectedStateId, setSelectedStateId] = React.useState<string>(contact.state_id || '');
+  const [showAddDistrict, setShowAddDistrict] = React.useState(false);
+  const [newDistrictName, setNewDistrictName] = React.useState('');
   
   const {
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors, isSubmitting }
   } = useForm<ConvertContactFormData>({
     defaultValues: {
       full_name: contact.name,
       email: contact.email || '',
       phone: contact.phone || '',
-      address: contact.address_line_1 ? 
-        [contact.address_line_1, contact.address_line_2].filter(Boolean).join(', ') : '',
+      address_line_1: contact.address_line_1 || '',
+      address_line_2: contact.address_line_2 || '',
+      pin_code: contact.pin_code || '',
+      state_id: contact.state_id || '',
+      district_id: contact.district_id || '',
+      visit_purpose: contact.visit_purpose || '',
       case_type: 'civil',
-      additional_notes: [contact.notes, contact.visit_purpose].filter(Boolean).join('\n') || ''
+      notes: contact.notes || ''
     }
+  });
+
+  // Fetch states
+  const { data: states = [] } = useQuery({
+    queryKey: ['states'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('states')
+        .select('id, name')
+        .order('name');
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Fetch districts based on selected state
+  const { data: districts = [] } = useQuery({
+    queryKey: ['districts', selectedStateId],
+    queryFn: async () => {
+      if (!selectedStateId) return [];
+      const { data, error } = await supabase
+        .from('districts')
+        .select('id, name')
+        .eq('state_id', selectedStateId)
+        .order('name');
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!selectedStateId,
+  });
+
+  // Add district mutation
+  const addDistrictMutation = useMutation({
+    mutationFn: async (districtName: string) => {
+      if (!selectedStateId) throw new Error('No state selected');
+      
+      const { data, error } = await supabase
+        .from('districts')
+        .insert({
+          name: districtName,
+          state_id: selectedStateId,
+        })
+        .select('id, name')
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (newDistrict) => {
+      queryClient.invalidateQueries({ queryKey: ['districts', selectedStateId] });
+      setValue('district_id', newDistrict.id);
+      setShowAddDistrict(false);
+      setNewDistrictName('');
+      toast({
+        title: "Success",
+        description: "District added successfully!",
+      });
+    },
+    onError: (error) => {
+      console.error('Error adding district:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add district. Please try again.",
+        variant: "destructive",
+      });
+    },
   });
 
   React.useEffect(() => {
@@ -154,18 +237,19 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
       }
 
       // Create the new client
+      const clientAddress = [formData.address_line_1, formData.address_line_2].filter(Boolean).join(', ');
       const { data: newClient, error: clientError } = await supabase
         .from('clients')
         .insert({
           full_name: formData.full_name,
           email: formData.email,
           phone: formData.phone,
-          address: formData.address,
+          address: clientAddress,
           organization: formData.organization,
           assigned_lawyer_id: formData.assigned_lawyer_ids?.[0],
           firm_id: firmId,
           status: 'active',
-          notes: formData.additional_notes,
+          notes: formData.notes,
           created_by: user?.id,
         })
         .select()
@@ -248,6 +332,18 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
     convertMutation.mutate(data);
   };
 
+  const handleAddDistrict = () => {
+    if (!newDistrictName.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a district name.",
+        variant: "destructive",
+      });
+      return;
+    }
+    addDistrictMutation.mutate(newDistrictName.trim());
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -256,64 +352,39 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* Contact Information Display */}
-          <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <h4 className="font-medium text-sm text-blue-900 mb-2">Contact Information Being Converted</h4>
-            <div className="space-y-1 text-sm">
-              <div><span className="font-medium">Name:</span> {contact.name}</div>
-              {contact.email && <div><span className="font-medium">Email:</span> {contact.email}</div>}
-              {contact.phone && <div><span className="font-medium">Phone:</span> {contact.phone}</div>}
-              {(contact.address_line_1 || contact.address_line_2) && (
-                <div><span className="font-medium">Address:</span> {[contact.address_line_1, contact.address_line_2].filter(Boolean).join(', ')}</div>
-              )}
-              {contact.pin_code && <div><span className="font-medium">Pin Code:</span> {contact.pin_code}</div>}
-              {contact.visit_purpose && <div><span className="font-medium">Previous Visit Purpose:</span> {contact.visit_purpose}</div>}
-              {contact.last_visited_at && (
-                <div><span className="font-medium">Last Visited:</span> {new Date(contact.last_visited_at).toLocaleDateString()}</div>
-              )}
-              {contact.notes && <div><span className="font-medium">Notes:</span> {contact.notes}</div>}
-            </div>
-          </div>
-
           {/* Client Information */}
           <div className="space-y-4">
-            <h3 className="text-lg font-medium">Client Information (Auto-filled from contact)</h3>
+            <h3 className="text-lg font-medium">Client Information</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="full_name">Full Name * (Auto-filled)</Label>
+                <Label htmlFor="full_name">Full Name *</Label>
                 <Input
                   id="full_name"
                   {...register('full_name', { required: 'Full name is required' })}
-                  className="bg-blue-50"
                 />
                 {errors.full_name && (
                   <p className="text-sm text-red-600 mt-1">{errors.full_name.message}</p>
                 )}
-                <p className="text-xs text-gray-500 mt-1">Auto-filled from contact name</p>
               </div>
 
               <div>
-                <Label htmlFor="email">Email (Auto-filled)</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
                   {...register('email')}
-                  className="bg-blue-50"
-                  placeholder="Email from contact record"
+                  placeholder="Enter email address"
                 />
-                <p className="text-xs text-gray-500 mt-1">Auto-filled from contact email</p>
               </div>
 
               <div>
-                <Label htmlFor="phone">Phone (Auto-filled)</Label>
+                <Label htmlFor="phone">Phone</Label>
                 <Input
                   id="phone"
                   {...register('phone')}
-                  className="bg-blue-50"
-                  placeholder="Phone from contact record"
+                  placeholder="Enter phone number"
                 />
-                <p className="text-xs text-gray-500 mt-1">Auto-filled from contact phone</p>
               </div>
 
               <div>
@@ -327,16 +398,147 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
             </div>
 
             <div>
-              <Label htmlFor="address">Address (Auto-filled)</Label>
+              <Label htmlFor="visit_purpose">Purpose of Visit</Label>
               <Input
-                id="address"
-                {...register('address')}
-                placeholder="Address from contact record"
-                className="bg-blue-50"
+                id="visit_purpose"
+                {...register('visit_purpose')}
+                placeholder="e.g., Legal consultation, Document review"
               />
-              <p className="text-xs text-gray-500 mt-1">
-                Auto-filled from contact's address. You can modify this if needed.
-              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="address_line_1">Address Line 1</Label>
+                <Input
+                  id="address_line_1"
+                  {...register('address_line_1')}
+                  placeholder="Enter address line 1"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="address_line_2">Address Line 2</Label>
+                <Input
+                  id="address_line_2"
+                  {...register('address_line_2')}
+                  placeholder="Enter address line 2 (optional)"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="pin_code">PIN Code</Label>
+                <Input
+                  id="pin_code"
+                  {...register('pin_code')}
+                  placeholder="Enter PIN code"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="state_id">State</Label>
+                <Select 
+                  onValueChange={(value) => {
+                    setValue('state_id', value);
+                    setSelectedStateId(value);
+                    setValue('district_id', ''); // Reset district when state changes
+                  }} 
+                  value={watch('state_id')}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select state" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {states.map((state) => (
+                      <SelectItem key={state.id} value={state.id}>
+                        {state.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="district_id">District</Label>
+              {showAddDistrict ? (
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Enter new district name"
+                      value={newDistrictName}
+                      onChange={(e) => setNewDistrictName(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddDistrict();
+                        }
+                      }}
+                    />
+                    <Button 
+                      type="button" 
+                      onClick={handleAddDistrict}
+                      disabled={addDistrictMutation.isPending}
+                      size="sm"
+                    >
+                      {addDistrictMutation.isPending ? 'Adding...' : 'Add'}
+                    </Button>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => {
+                        setShowAddDistrict(false);
+                        setNewDistrictName('');
+                      }}
+                      size="sm"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <Select 
+                  onValueChange={(value) => {
+                    if (value === 'add_new') {
+                      setShowAddDistrict(true);
+                    } else {
+                      setValue('district_id', value);
+                    }
+                  }} 
+                  value={watch('district_id')}
+                  disabled={!selectedStateId}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={!selectedStateId ? "Select state first" : "Select district"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {districts.map((district) => (
+                      <SelectItem key={district.id} value={district.id}>
+                        {district.name}
+                      </SelectItem>
+                    ))}
+                    {selectedStateId && (
+                      <SelectItem value="add_new" className="border-t">
+                        <div className="flex items-center gap-2">
+                          <Plus className="h-4 w-4" />
+                          Add New District
+                        </div>
+                      </SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="notes">Notes</Label>
+              <Textarea
+                id="notes"
+                {...register('notes')}
+                placeholder="Additional notes about the client"
+                rows={3}
+              />
             </div>
 
             <div>
@@ -446,16 +648,6 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
             </div>
           </div>
 
-          {/* Additional Notes */}
-          <div>
-            <Label htmlFor="additional_notes">Additional Notes</Label>
-            <Textarea
-              id="additional_notes"
-              {...register('additional_notes')}
-              placeholder="Any additional notes about the client or case..."
-              rows={3}
-            />
-          </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
