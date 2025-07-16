@@ -374,11 +374,11 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Convert Contact to Client</DialogTitle>
-        </DialogHeader>
+    <div className="min-h-screen p-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-2xl font-semibold">Convert Contact to Client</h1>
+        </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Client Information */}
@@ -678,16 +678,16 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
           </div>
 
 
-          <DialogFooter>
+          <div className="flex gap-4 pt-6">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? 'Converting...' : 'Convert to Client'}
             </Button>
-          </DialogFooter>
+          </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 };
