@@ -86,7 +86,16 @@ const ReceptionHome = () => {
       const {
         data
       } = await supabase.from('team_members').select('id, user_id, full_name, role').eq('firm_id', firmId).in('role', ['lawyer', 'admin', 'junior']);
-      return data || [];
+      
+      // Sort to always show "chitrajeet upadhyaya" first
+      return data?.sort((a, b) => {
+        const nameA = a.full_name?.toLowerCase() || '';
+        const nameB = b.full_name?.toLowerCase() || '';
+        
+        if (nameA.includes('chitrajeet upadhyaya')) return -1;
+        if (nameB.includes('chitrajeet upadhyaya')) return 1;
+        return nameA.localeCompare(nameB);
+      }) || [];
     },
     enabled: !!firmId
   });
