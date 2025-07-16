@@ -27,6 +27,8 @@ interface ConvertContactToClientDialogProps {
     state_id?: string;
     district_id?: string;
     last_visited_at?: string;
+    referred_by_name?: string;
+    referred_by_phone?: string;
   };
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -49,6 +51,8 @@ interface ConvertContactFormData {
   estimated_fees?: number;
   payment_terms?: string;
   notes?: string;
+  referred_by_name?: string;
+  referred_by_phone?: string;
 }
 export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialogProps> = ({
   contact,
@@ -95,7 +99,9 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
       district_id: contact.district_id || '',
       visit_purpose: contact.visit_purpose || '',
       case_type: 'civil',
-      notes: contact.notes || ''
+      notes: contact.notes || '',
+      referred_by_name: contact.referred_by_name || '',
+      referred_by_phone: contact.referred_by_phone || '',
     }
   });
 
@@ -115,7 +121,9 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
         district_id: contact.district_id || '',
         visit_purpose: contact.visit_purpose || '',
         case_type: 'civil' as const,
-        notes: contact.notes || ''
+        notes: contact.notes || '',
+        referred_by_name: contact.referred_by_name || '',
+        referred_by_phone: contact.referred_by_phone || '',
       };
       console.log('ConvertContactToClientDialog: Form data being set:', formData);
       reset(formData);
@@ -395,6 +403,18 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
               <div>
                 <Label htmlFor="organization">Organization</Label>
                 <Input id="organization" {...register('organization')} placeholder="Add organization/company name" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="referred_by_name">Referred by Name</Label>
+                <Input id="referred_by_name" {...register('referred_by_name')} placeholder="Name of person who referred this client" />
+              </div>
+
+              <div>
+                <Label htmlFor="referred_by_phone">Referred by Phone</Label>
+                <Input id="referred_by_phone" {...register('referred_by_phone')} placeholder="Phone number of referrer" />
               </div>
             </div>
 

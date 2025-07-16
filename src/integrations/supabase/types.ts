@@ -866,6 +866,8 @@ export type Database = {
           notes: string | null
           phone: string | null
           pin_code: string | null
+          referred_by_name: string | null
+          referred_by_phone: string | null
           state_id: string | null
           updated_at: string | null
           visit_purpose: string | null
@@ -886,6 +888,8 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           pin_code?: string | null
+          referred_by_name?: string | null
+          referred_by_phone?: string | null
           state_id?: string | null
           updated_at?: string | null
           visit_purpose?: string | null
@@ -906,6 +910,8 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           pin_code?: string | null
+          referred_by_name?: string | null
+          referred_by_phone?: string | null
           state_id?: string | null
           updated_at?: string | null
           visit_purpose?: string | null
