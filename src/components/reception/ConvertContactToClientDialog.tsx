@@ -375,7 +375,7 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
 
   return (
     <div className="fixed inset-0 bg-background overflow-y-auto">
-      <div className="h-full flex flex-col p-6">
+      <div className="h-full flex flex-col">
         <div className="mb-6">
           <h1 className="text-2xl font-semibold">Convert Contact to Client</h1>
         </div>
