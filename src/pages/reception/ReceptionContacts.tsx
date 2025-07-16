@@ -103,6 +103,7 @@ const ReceptionContacts = () => {
   });
 
   const handleConvertToClient = (contact: any) => {
+    console.log('ReceptionContacts: Converting contact to client, contact data:', contact);
     setSelectedContact(contact);
     setConvertDialogOpen(true);
   };
