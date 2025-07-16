@@ -39,12 +39,12 @@ interface AppointmentFormData {
   client_name: string;
   client_email: string;
   client_phone?: string;
+  client_address?: string;
   appointment_date: string;
   appointment_time: string;
   duration_minutes: number;
   title?: string;
   notes?: string;
-  
 }
 
 const BookAppointmentDialog = ({ open, onOpenChange }: BookAppointmentDialogProps) => {
@@ -61,12 +61,12 @@ const BookAppointmentDialog = ({ open, onOpenChange }: BookAppointmentDialogProp
       client_name: '',
       client_email: '',
       client_phone: '',
+      client_address: '',
       appointment_date: format(new Date(), 'yyyy-MM-dd'),
       appointment_time: '10:00',
       duration_minutes: 60,
       title: '',
       notes: '',
-      
     },
   });
 
@@ -101,12 +101,12 @@ const BookAppointmentDialog = ({ open, onOpenChange }: BookAppointmentDialogProp
       const [clientsResponse, contactsResponse] = await Promise.all([
         supabase
           .from('clients')
-          .select('id, full_name, email, phone')
+          .select('id, full_name, email, phone, address')
           .eq('firm_id', firmId)
           .order('full_name'),
         supabase
           .from('contacts')
-          .select('id, name, email, phone')
+          .select('id, name, email, phone, address_line_1, address_line_2, visit_purpose, notes')
           .eq('firm_id', firmId)
           .order('name')
       ]);
@@ -119,7 +119,9 @@ const BookAppointmentDialog = ({ open, onOpenChange }: BookAppointmentDialogProp
         name: client.full_name,
         email: client.email,
         phone: client.phone,
-        type: 'client' as const
+        address: client.address,
+        type: 'client' as const,
+        additionalInfo: null
       })) || [];
 
       const contacts = contactsResponse.data?.map(contact => ({
@@ -127,7 +129,13 @@ const BookAppointmentDialog = ({ open, onOpenChange }: BookAppointmentDialogProp
         name: contact.name,
         email: contact.email,
         phone: contact.phone,
-        type: 'contact' as const
+        address: contact.address_line_1 ? 
+          [contact.address_line_1, contact.address_line_2].filter(Boolean).join(', ') : null,
+        type: 'contact' as const,
+        additionalInfo: {
+          visit_purpose: contact.visit_purpose,
+          notes: contact.notes
+        }
       })) || [];
 
       return [...clients, ...contacts];
@@ -151,6 +159,17 @@ const BookAppointmentDialog = ({ open, onOpenChange }: BookAppointmentDialogProp
       form.setValue('client_name', selectedClient.name);
       form.setValue('client_email', selectedClient.email || '');
       form.setValue('client_phone', selectedClient.phone || '');
+      
+      // Set additional fields if they exist on the form
+      if (selectedClient.address) {
+        form.setValue('client_address', selectedClient.address);
+      }
+      
+      // If it's a contact with additional info, set visit purpose as notes
+      if (selectedClient.type === 'contact' && selectedClient.additionalInfo?.visit_purpose) {
+        form.setValue('notes', selectedClient.additionalInfo.visit_purpose);
+      }
+      
       setSelectedClientValue(selectedValue);
       setShowAddContact(false);
       setClientSearchOpen(false);
@@ -430,35 +449,55 @@ const BookAppointmentDialog = ({ open, onOpenChange }: BookAppointmentDialogProp
             )}
 
             {!showAddContact && (
-              <div className="grid grid-cols-2 gap-3">
-                <FormField
-                  control={form.control}
-                  name="client_email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="email" 
-                          placeholder="Auto-populated from selection" 
-                          {...field}
-                          disabled
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField
+                    control={form.control}
+                    name="client_email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="email" 
+                            placeholder="Auto-populated from selection" 
+                            {...field}
+                            disabled
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="client_phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Phone</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="tel" 
+                            placeholder="Auto-populated from selection" 
+                            {...field}
+                            disabled
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 <FormField
                   control={form.control}
-                  name="client_phone"
+                  name="client_address"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Phone</FormLabel>
+                      <FormLabel>Address</FormLabel>
                       <FormControl>
                         <Input 
-                          type="tel" 
                           placeholder="Auto-populated from selection" 
                           {...field}
                           disabled
@@ -468,6 +507,30 @@ const BookAppointmentDialog = ({ open, onOpenChange }: BookAppointmentDialogProp
                     </FormItem>
                   )}
                 />
+              </>
+            )}
+
+            {/* Show contact details in a info box when selected */}
+            {!showAddContact && selectedClientValue && selectedClientValue !== 'add-new' && (
+              <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <h4 className="font-medium text-sm text-blue-900 mb-2">Contact Information</h4>
+                {(() => {
+                  const selectedClient = clientsAndContacts?.find(item => `${item.type}-${item.id}` === selectedClientValue);
+                  if (!selectedClient) return null;
+                  
+                  return (
+                    <div className="space-y-1 text-sm">
+                      <div><span className="font-medium">Name:</span> {selectedClient.name}</div>
+                      {selectedClient.email && <div><span className="font-medium">Email:</span> {selectedClient.email}</div>}
+                      {selectedClient.phone && <div><span className="font-medium">Phone:</span> {selectedClient.phone}</div>}
+                      {selectedClient.address && <div><span className="font-medium">Address:</span> {selectedClient.address}</div>}
+                      {selectedClient.type === 'contact' && selectedClient.additionalInfo?.visit_purpose && 
+                        <div><span className="font-medium">Previous visit purpose:</span> {selectedClient.additionalInfo.visit_purpose}</div>
+                      }
+                      <div><span className="font-medium">Type:</span> {selectedClient.type === 'client' ? 'Existing Client' : 'Contact'}</div>
+                    </div>
+                  );
+                })()}
               </div>
             )}
 
