@@ -100,26 +100,30 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
 
   // Reset form when contact changes
   React.useEffect(() => {
-    console.log('ConvertContactToClientDialog: Contact changed, resetting form values');
-    console.log('ConvertContactToClientDialog: Contact state_id:', contact.state_id);
-    console.log('ConvertContactToClientDialog: Contact district_id:', contact.district_id);
-    
-    reset({
-      full_name: contact.name,
-      email: contact.email || '',
-      phone: contact.phone || '',
-      address_line_1: contact.address_line_1 || '',
-      address_line_2: contact.address_line_2 || '',
-      pin_code: contact.pin_code || '',
-      state_id: contact.state_id || '',
-      district_id: contact.district_id || '',
-      visit_purpose: contact.visit_purpose || '',
-      case_type: 'civil',
-      notes: contact.notes || ''
-    });
-    
-    setSelectedStateId(contact.state_id || '');
-  }, [contact, reset]);
+    if (open && contact) {
+      console.log('ConvertContactToClientDialog: Contact changed, resetting form values');
+      console.log('ConvertContactToClientDialog: Full contact data:', contact);
+      
+      const formData = {
+        full_name: contact.name || '',
+        email: contact.email || '',
+        phone: contact.phone || '',
+        address_line_1: contact.address_line_1 || '',
+        address_line_2: contact.address_line_2 || '',
+        pin_code: contact.pin_code || '',
+        state_id: contact.state_id || '',
+        district_id: contact.district_id || '',
+        visit_purpose: contact.visit_purpose || '',
+        case_type: 'civil' as const,
+        notes: contact.notes || ''
+      };
+      
+      console.log('ConvertContactToClientDialog: Form data being set:', formData);
+      
+      reset(formData);
+      setSelectedStateId(contact.state_id || '');
+    }
+  }, [contact, open, reset]);
 
   // Fetch states
   const { data: states = [] } = useQuery({
