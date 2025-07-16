@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface ConvertContactToClientDialogProps {
   contact: {
@@ -35,7 +36,7 @@ interface ConvertContactFormData {
   phone?: string;
   address?: string;
   organization?: string;
-  assigned_lawyer_id?: string;
+  assigned_lawyer_ids?: string[];
   case_title?: string;
   case_description?: string;
   case_type?: 'civil' | 'criminal' | 'family' | 'corporate' | 'tax' | 'other' | 'labor' | 'intellectual_property' | 'real_estate' | 'immigration' | 'constitutional';
@@ -54,6 +55,7 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
   const queryClient = useQueryClient();
   
   const [lawyers, setLawyers] = React.useState<Array<{id: string, full_name: string, role: string}>>([]);
+  const [selectedLawyers, setSelectedLawyers] = React.useState<string[]>([]);
   
   const {
     register,
@@ -72,6 +74,8 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
 
   React.useEffect(() => {
     const fetchLawyers = async () => {
+      if (!firmId) return;
+      
       const { data } = await supabase
         .from('profiles')
         .select(`
@@ -83,7 +87,8 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
             law_firm_id
           )
         `)
-        .in('law_firm_members.role', ['admin', 'lawyer', 'partner', 'associate', 'junior'])
+        .eq('law_firm_members.law_firm_id', firmId)
+        .in('law_firm_members.role', ['admin', 'lawyer', 'partner', 'associate', 'junior', 'Junior'])
         .order('full_name');
       
       if (data) {
@@ -92,7 +97,7 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
     };
     
     fetchLawyers();
-  }, []);
+  }, [firmId]);
 
   const convertMutation = useMutation({
     mutationFn: async (formData: ConvertContactFormData) => {
@@ -124,7 +129,7 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
           phone: formData.phone,
           address: formData.address,
           organization: formData.organization,
-          assigned_lawyer_id: formData.assigned_lawyer_id,
+          assigned_lawyer_id: formData.assigned_lawyer_ids?.[0],
           firm_id: firmId,
           status: 'active',
           notes: formData.additional_notes,
@@ -146,7 +151,7 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
             description: formData.case_description,
             case_type: formData.case_type,
             client_id: newClient.id,
-            assigned_to: formData.assigned_lawyer_id,
+            assigned_to: formData.assigned_lawyer_ids?.[0],
             firm_id: firmId,
             created_by: user?.id,
             status: 'open',
@@ -269,19 +274,39 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
             </div>
 
             <div>
-              <Label htmlFor="assigned_lawyer_id">Assigned Lawyer</Label>
-              <Select onValueChange={(value) => setValue('assigned_lawyer_id', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a lawyer..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {lawyers.map((lawyer) => (
-                    <SelectItem key={lawyer.id} value={lawyer.id}>
-                      {lawyer.full_name} ({lawyer.role})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label>Assigned Lawyers</Label>
+              <div className="space-y-2 max-h-48 overflow-y-auto border rounded-md p-3">
+                {lawyers.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No lawyers found in your firm</p>
+                ) : (
+                  lawyers.map((lawyer) => (
+                    <div key={lawyer.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`lawyer-${lawyer.id}`}
+                        checked={selectedLawyers.includes(lawyer.id)}
+                        onCheckedChange={(checked) => {
+                          const newSelected = checked
+                            ? [...selectedLawyers, lawyer.id]
+                            : selectedLawyers.filter(id => id !== lawyer.id);
+                          setSelectedLawyers(newSelected);
+                          setValue('assigned_lawyer_ids', newSelected);
+                        }}
+                      />
+                      <Label 
+                        htmlFor={`lawyer-${lawyer.id}`}
+                        className="text-sm font-normal cursor-pointer flex-1"
+                      >
+                        {lawyer.full_name} ({lawyer.role})
+                      </Label>
+                    </div>
+                  ))
+                )}
+              </div>
+              {selectedLawyers.length > 0 && (
+                <p className="text-sm text-muted-foreground mt-2">
+                  {selectedLawyers.length} lawyer(s) selected
+                </p>
+              )}
             </div>
           </div>
 
