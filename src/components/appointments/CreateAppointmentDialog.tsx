@@ -98,9 +98,18 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
           law_firm_id
         )
       `)
-      .in('law_firm_members.role', ['admin', 'lawyer', 'partner', 'associate', 'junior', 'Junior', 'paralegal'])
-      .order('full_name');
-    setUsers(data || []);
+      .in('law_firm_members.role', ['admin', 'lawyer', 'partner', 'associate', 'junior', 'Junior', 'paralegal']);
+    
+    // Sort to always show "chitrajeet upadhyaya" first
+    const sortedData = (data || []).sort((a, b) => {
+      const nameA = a.full_name?.toLowerCase() || '';
+      const nameB = b.full_name?.toLowerCase() || '';
+      
+      if (nameA.includes('chitrajeet upadhyaya')) return -1;
+      if (nameB.includes('chitrajeet upadhyaya')) return 1;
+      return nameA.localeCompare(nameB);
+    });
+    setUsers(sortedData);
   };
 
   const generateTitle = () => {

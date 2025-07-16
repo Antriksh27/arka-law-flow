@@ -114,9 +114,18 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
     const { data } = await supabase
       .from('profiles')
       .select('id, full_name')
-      .in('role', ['admin', 'lawyer', 'junior', 'paralegal'])
-      .order('full_name');
-    setUsers(data || []);
+      .in('role', ['admin', 'lawyer', 'junior', 'paralegal']);
+    
+    // Sort to always show "chitrajeet upadhyaya" first
+    const sortedData = (data || []).sort((a, b) => {
+      const nameA = a.full_name?.toLowerCase() || '';
+      const nameB = b.full_name?.toLowerCase() || '';
+      
+      if (nameA.includes('chitrajeet upadhyaya')) return -1;
+      if (nameB.includes('chitrajeet upadhyaya')) return 1;
+      return nameA.localeCompare(nameB);
+    });
+    setUsers(sortedData);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

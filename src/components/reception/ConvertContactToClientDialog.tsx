@@ -96,10 +96,20 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
         .eq('firm_id', firmId)
         .in('role', ['lawyer', 'junior']);
       
-      console.log('ConvertContactToClientDialog: Team members query result:', { teamMembersData, tmError });
+      // Sort to always show "chitrajeet upadhyaya" first
+      const sortedTeamMembers = teamMembersData?.sort((a, b) => {
+        const nameA = a.full_name?.toLowerCase() || '';
+        const nameB = b.full_name?.toLowerCase() || '';
+        
+        if (nameA.includes('chitrajeet upadhyaya')) return -1;
+        if (nameB.includes('chitrajeet upadhyaya')) return 1;
+        return nameA.localeCompare(nameB);
+      }) || [];
       
-      if (teamMembersData && teamMembersData.length > 0) {
-        const lawyers = teamMembersData.map(tm => ({
+      console.log('ConvertContactToClientDialog: Team members query result:', { sortedTeamMembers, tmError });
+      
+      if (sortedTeamMembers && sortedTeamMembers.length > 0) {
+        const lawyers = sortedTeamMembers.map(tm => ({
           id: tm.user_id,
           full_name: tm.full_name,
           role: tm.role

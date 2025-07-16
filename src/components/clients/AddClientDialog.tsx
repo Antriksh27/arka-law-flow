@@ -52,7 +52,16 @@ export const AddClientDialog: React.FC<AddClientDialogProps> = ({
         .select('id, full_name')
         .in('role', ['lawyer', 'partner', 'associate', 'admin', 'junior']);
       if (error) throw error;
-      return data;
+      
+      // Sort to always show "chitrajeet upadhyaya" first
+      return data?.sort((a, b) => {
+        const nameA = a.full_name?.toLowerCase() || '';
+        const nameB = b.full_name?.toLowerCase() || '';
+        
+        if (nameA.includes('chitrajeet upadhyaya')) return -1;
+        if (nameB.includes('chitrajeet upadhyaya')) return 1;
+        return nameA.localeCompare(nameB);
+      }) || [];
     }
   });
 

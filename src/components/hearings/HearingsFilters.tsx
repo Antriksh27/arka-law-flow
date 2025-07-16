@@ -71,15 +71,24 @@ export const HearingsFilters: React.FC<HearingsFiltersProps> = ({
         .from('profiles')
         .select('id, full_name')
         .not('full_name', 'is', null)
-        .neq('full_name', '')
-        .order('full_name');
+        .neq('full_name', '');
       
       if (error) throw error;
 
       // Filter out any null, undefined, or empty values
-      return (data || []).filter(user => 
+      const filteredData = (data || []).filter(user => 
         user.id && user.full_name && user.full_name.trim() !== ''
       );
+      
+      // Sort to always show "chitrajeet upadhyaya" first
+      return filteredData.sort((a, b) => {
+        const nameA = a.full_name?.toLowerCase() || '';
+        const nameB = b.full_name?.toLowerCase() || '';
+        
+        if (nameA.includes('chitrajeet upadhyaya')) return -1;
+        if (nameB.includes('chitrajeet upadhyaya')) return 1;
+        return nameA.localeCompare(nameB);
+      });
     }
   });
 

@@ -401,8 +401,17 @@ const ReceptionCalendar = () => {
         .from('team_members')
         .select('id, user_id, full_name, role')
         .eq('firm_id', firmId)
-        .in('role', ['lawyer', 'admin', 'junior'])
-        .order('full_name');
+        .in('role', ['lawyer', 'admin', 'junior']);
+      
+      // Sort to always show "chitrajeet upadhyaya" first
+      const sortedData = data?.sort((a, b) => {
+        const nameA = a.full_name?.toLowerCase() || '';
+        const nameB = b.full_name?.toLowerCase() || '';
+        
+        if (nameA.includes('chitrajeet upadhyaya')) return -1;
+        if (nameB.includes('chitrajeet upadhyaya')) return 1;
+        return nameA.localeCompare(nameB);
+      }) || [];
       
       const colors = [
         'bg-blue-500',
@@ -414,13 +423,6 @@ const ReceptionCalendar = () => {
         'bg-pink-500',
         'bg-teal-500'
       ];
-      
-      // Sort to put Chitrajeet Upadhyaya first
-      const sortedData = (data || []).sort((a, b) => {
-        if (a.full_name === 'Chitrajeet Upadhyaya') return -1;
-        if (b.full_name === 'Chitrajeet Upadhyaya') return 1;
-        return a.full_name?.localeCompare(b.full_name || '') || 0;
-      });
       
       return sortedData.map((lawyer, index) => ({
         id: lawyer.id,

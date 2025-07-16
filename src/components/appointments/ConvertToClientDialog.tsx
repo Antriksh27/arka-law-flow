@@ -71,7 +71,16 @@ export const ConvertToClientDialog: React.FC<ConvertToClientDialogProps> = ({
         .eq('role', 'lawyer');
       
       if (data) {
-        setLawyers(data);
+        // Sort to always show "chitrajeet upadhyaya" first
+        const sortedData = data.sort((a, b) => {
+          const nameA = a.full_name?.toLowerCase() || '';
+          const nameB = b.full_name?.toLowerCase() || '';
+          
+          if (nameA.includes('chitrajeet upadhyaya')) return -1;
+          if (nameB.includes('chitrajeet upadhyaya')) return 1;
+          return nameA.localeCompare(nameB);
+        });
+        setLawyers(sortedData);
       }
     };
     

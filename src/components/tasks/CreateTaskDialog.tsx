@@ -63,10 +63,18 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       const { data, error } = await supabase
         .from('profiles')
         .select('id, full_name, role')
-        .in('role', ['admin', 'lawyer', 'paralegal', 'junior', 'associate', 'partner'])
-        .order('full_name');
+        .in('role', ['admin', 'lawyer', 'paralegal', 'junior', 'associate', 'partner']);
       if (error) throw error;
-      return data || [];
+      
+      // Sort to always show "chitrajeet upadhyaya" first
+      return (data || []).sort((a, b) => {
+        const nameA = a.full_name?.toLowerCase() || '';
+        const nameB = b.full_name?.toLowerCase() || '';
+        
+        if (nameA.includes('chitrajeet upadhyaya')) return -1;
+        if (nameB.includes('chitrajeet upadhyaya')) return 1;
+        return nameA.localeCompare(nameB);
+      });
     }
   });
 
