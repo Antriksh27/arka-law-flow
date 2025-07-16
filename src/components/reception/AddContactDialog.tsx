@@ -133,7 +133,7 @@ const AddContactDialog = ({ open, onOpenChange }: AddContactDialogProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto p-6">
         <DialogHeader>
           <DialogTitle>Add New Contact</DialogTitle>
           <DialogDescription>
@@ -142,7 +142,7 @@ const AddContactDialog = ({ open, onOpenChange }: AddContactDialogProps) => {
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 mt-4">
             <FormField
               control={form.control}
               name="name"
@@ -343,7 +343,7 @@ const AddContactDialog = ({ open, onOpenChange }: AddContactDialogProps) => {
               )}
             />
 
-            <div className="flex justify-end gap-3">
+            <div className="flex justify-end gap-3 pt-4 border-t">
               <Button 
                 type="button" 
                 variant="outline" 
