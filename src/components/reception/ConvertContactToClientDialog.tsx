@@ -406,18 +406,6 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="referred_by_name">Referred by Name</Label>
-                <Input id="referred_by_name" {...register('referred_by_name')} placeholder="Name of person who referred this client" />
-              </div>
-
-              <div>
-                <Label htmlFor="referred_by_phone">Referred by Phone</Label>
-                <Input id="referred_by_phone" {...register('referred_by_phone')} placeholder="Phone number of referrer" />
-              </div>
-            </div>
-
             <div>
               <Label htmlFor="visit_purpose">Purpose of Visit</Label>
               <Input id="visit_purpose" {...register('visit_purpose')} placeholder="e.g., Legal consultation, Document review" />
@@ -526,6 +514,23 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
               {selectedLawyers.length > 0 && <p className="text-sm text-muted-foreground mt-2">
                   {selectedLawyers.length} lawyer(s) selected
                 </p>}
+            </div>
+          </div>
+
+          {/* Referral Information */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Referral Information</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="referred_by_name">Referred by Name</Label>
+                <Input id="referred_by_name" {...register('referred_by_name')} placeholder="Name of person who referred this client" />
+              </div>
+
+              <div>
+                <Label htmlFor="referred_by_phone">Referred by Phone</Label>
+                <Input id="referred_by_phone" {...register('referred_by_phone')} placeholder="Phone number of referrer" />
+              </div>
             </div>
           </div>
 
