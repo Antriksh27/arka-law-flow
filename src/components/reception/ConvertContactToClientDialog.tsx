@@ -94,7 +94,7 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
         .from('team_members')
         .select('user_id, role, full_name')
         .eq('firm_id', firmId)
-        .in('role', ['admin', 'lawyer', 'junior', 'paralegal', 'office_staff', 'receptionist']);
+        .in('role', ['lawyer', 'junior']);
       
       console.log('ConvertContactToClientDialog: Team members query result:', { teamMembersData, tmError });
       
