@@ -9,9 +9,10 @@ import { ConvertToClientDialog } from './ConvertToClientDialog';
 import { ConvertContactToClientDialog } from '../reception/ConvertContactToClientDialog';
 import { format, parseISO } from 'date-fns';
 import { Calendar, Clock, User, MapPin, FileText, Edit, RotateCcw, X, UserPlus, Users } from 'lucide-react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ViewAppointmentDialogProps {
   appointment: {
@@ -38,6 +39,34 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
   const { closeDialog, openDialog } = useDialog();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { firmId } = useAuth();
+
+  // Fetch contact data by client name if available
+  const { data: contactData } = useQuery({
+    queryKey: ['contact-by-name', appointment.client_name, firmId],
+    queryFn: async () => {
+      if (!appointment.client_name || !firmId) return null;
+      
+      console.log('ViewAppointmentDialog: Searching for contact with name:', appointment.client_name);
+      
+      const { data, error } = await supabase
+        .from('contacts')
+        .select('*')
+        .eq('firm_id', firmId)
+        .ilike('name', appointment.client_name.trim())
+        .eq('converted_to_client', false)
+        .single();
+      
+      if (error) {
+        console.log('ViewAppointmentDialog: Contact not found or error:', error);
+        return null;
+      }
+      
+      console.log('ViewAppointmentDialog: Found contact data:', data);
+      return data;
+    },
+    enabled: !!appointment.client_name && !!firmId,
+  });
 
   const cancelMutation = useMutation({
     mutationFn: async () => {
@@ -147,15 +176,27 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
 
   const handleConvertContactToClient = () => {
     closeDialog();
+    
+    // Use actual contact data if found, otherwise create a minimal contact object
+    const contactToConvert = contactData || {
+      id: 'temp-id',
+      name: appointment.client_name || '',
+      email: '',
+      phone: '',
+      notes: '',
+      address_line_1: '',
+      address_line_2: '',
+      pin_code: '',
+      state_id: '',
+      district_id: '',
+      visit_purpose: ''
+    };
+    
+    console.log('ViewAppointmentDialog: Converting contact with data:', contactToConvert);
+    
     openDialog(
       <ConvertContactToClientDialog
-        contact={{
-          id: 'temp-id',
-          name: appointment.client_name || '',
-          email: '',
-          phone: '',
-          notes: ''
-        }}
+        contact={contactToConvert}
         open={true}
         onOpenChange={(open) => {
           if (!open) {
