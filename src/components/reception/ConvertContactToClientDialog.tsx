@@ -375,12 +375,12 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
 
   return (
     <div className="fixed inset-0 bg-background overflow-y-auto">
-      <div className="h-full flex flex-col">
+      <div className="h-full flex flex-col p-6">
         <div className="mb-6">
           <h1 className="text-2xl font-semibold">Convert Contact to Client</h1>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 space-y-6 overflow-y-auto">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 space-y-6 overflow-y-auto p-6 bg-card rounded-lg shadow-sm">
           {/* Client Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Client Information</h3>
