@@ -91,56 +91,102 @@ Deno.serve(async (req) => {
     // Parse request body
     const requestData: CreateTeamMemberRequest = await req.json()
 
-    // Create user in Supabase Auth using admin client
-    console.log('Creating user with email:', requestData.email)
-    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email: requestData.email,
-      password: requestData.password,
-      email_confirm: true, // Skip email verification for admin-created users
-      user_metadata: {
-        full_name: requestData.full_name,
-        role: requestData.role,
+    // Check if user already exists
+    console.log('Checking if user exists with email:', requestData.email)
+    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers()
+    const existingUser = existingUsers?.users?.find(user => user.email === requestData.email)
+    
+    let userId: string
+
+    if (existingUser) {
+      console.log('User already exists, using existing user:', existingUser.id)
+      userId = existingUser.id
+      
+      // Update existing profile with new information if needed
+      const { error: profileUpsertError } = await supabaseAdmin
+        .from('profiles')
+        .upsert({
+          id: userId,
+          full_name: requestData.full_name,
+          email: requestData.email,
+          phone: requestData.phone,
+          role: requestData.role,
+        }, {
+          onConflict: 'id'
+        })
+
+      if (profileUpsertError) {
+        console.error('Profile upsert error:', profileUpsertError)
       }
-    })
-
-    console.log('Auth user creation result:', { authUser: !!authUser, authError })
-
-    if (authError) {
-      console.error('Auth error details:', authError)
-      return new Response(
-        JSON.stringify({ error: `Failed to create user account: ${authError.message}` }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    if (!authUser.user) {
-      return new Response(
-        JSON.stringify({ error: 'Failed to create user account' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    // Create profile entry
-    const { error: profileError } = await supabaseAdmin
-      .from('profiles')
-      .insert({
-        id: authUser.user.id,
-        full_name: requestData.full_name,
+    } else {
+      // Create new user in Supabase Auth using admin client
+      console.log('Creating new user with email:', requestData.email)
+      const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
         email: requestData.email,
-        phone: requestData.phone,
-        role: requestData.role,
+        password: requestData.password,
+        email_confirm: true, // Skip email verification for admin-created users
+        user_metadata: {
+          full_name: requestData.full_name,
+          role: requestData.role,
+        }
       })
 
-    if (profileError) {
-      console.error('Profile creation error:', profileError)
-      // Don't throw here as it might already exist from trigger
+      console.log('Auth user creation result:', { authUser: !!authUser, authError })
+
+      if (authError) {
+        console.error('Auth error details:', authError)
+        return new Response(
+          JSON.stringify({ error: `Failed to create user account: ${authError.message}` }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      if (!authUser.user) {
+        return new Response(
+          JSON.stringify({ error: 'Failed to create user account' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      userId = authUser.user.id
+
+      // Create profile entry for new user
+      const { error: profileError } = await supabaseAdmin
+        .from('profiles')
+        .insert({
+          id: userId,
+          full_name: requestData.full_name,
+          email: requestData.email,
+          phone: requestData.phone,
+          role: requestData.role,
+        })
+
+      if (profileError) {
+        console.error('Profile creation error:', profileError)
+        // Don't throw here as it might already exist from trigger
+      }
+    }
+
+    // Check if user is already a team member of this firm
+    const { data: existingTeamMember } = await supabaseAdmin
+      .from('team_members')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('firm_id', requestData.firm_id)
+      .single()
+
+    if (existingTeamMember) {
+      return new Response(
+        JSON.stringify({ error: 'User is already a member of this firm' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
     // Add to team_members table
     const { error: teamError } = await supabaseAdmin
       .from('team_members')
       .insert({
-        user_id: authUser.user.id,
+        user_id: userId,
         firm_id: requestData.firm_id,
         full_name: requestData.full_name,
         email: requestData.email,
@@ -161,8 +207,8 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        user: authUser.user,
-        message: 'Team member created successfully and can now log in'
+        user_id: userId,
+        message: 'Team member added successfully'
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
