@@ -27,6 +27,14 @@ import ReceptionAppointments from '@/pages/reception/ReceptionAppointments';
 import ReceptionSchedule from '@/pages/reception/ReceptionSchedule';
 import ReceptionCalendar from '@/pages/reception/ReceptionCalendar';
 
+// Office Staff pages
+import OfficeStaffLayout from '@/components/layout/OfficeStaffLayout';
+import StaffDashboard from '@/pages/staff/StaffDashboard';
+import StaffCases from '@/pages/staff/StaffCases';
+import StaffDocuments from '@/pages/staff/StaffDocuments';
+import StaffTasks from '@/pages/staff/StaffTasks';
+import StaffInstructions from '@/pages/staff/StaffInstructions';
+
 const RoleBasedRouter = () => {
   const { role, loading } = useAuth();
 
@@ -52,6 +60,23 @@ const RoleBasedRouter = () => {
           <Route path="*" element={<ReceptionHome />} />
         </Routes>
       </ReceptionistLayout>
+    );
+  }
+
+  // Office Staff routes with special layout
+  if (role === 'office_staff') {
+    return (
+      <OfficeStaffLayout>
+        <Routes>
+          <Route path="/" element={<StaffDashboard />} />
+          <Route path="/staff/dashboard" element={<StaffDashboard />} />
+          <Route path="/staff/cases" element={<StaffCases />} />
+          <Route path="/staff/documents" element={<StaffDocuments />} />
+          <Route path="/staff/tasks" element={<StaffTasks />} />
+          <Route path="/staff/instructions" element={<StaffInstructions />} />
+          <Route path="*" element={<StaffDashboard />} />
+        </Routes>
+      </OfficeStaffLayout>
     );
   }
 

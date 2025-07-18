@@ -1199,6 +1199,45 @@ export type Database = {
           },
         ]
       }
+      instructions: {
+        Row: {
+          case_id: string | null
+          created_at: string
+          deadline: string | null
+          id: string
+          lawyer_id: string
+          message: string
+          priority: string
+          staff_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          case_id?: string | null
+          created_at?: string
+          deadline?: string | null
+          id?: string
+          lawyer_id: string
+          message: string
+          priority?: string
+          staff_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          case_id?: string | null
+          created_at?: string
+          deadline?: string | null
+          id?: string
+          lawyer_id?: string
+          message?: string
+          priority?: string
+          staff_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       invoice_items: {
         Row: {
           amount: number | null
