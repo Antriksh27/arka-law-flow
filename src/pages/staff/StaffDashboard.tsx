@@ -152,19 +152,19 @@ const StaffDashboard = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending': return 'destructive';
+      case 'pending': return 'error';
       case 'in_progress': return 'default';
-      case 'completed': case 'done': return 'secondary';
+      case 'completed': case 'done': return 'success';
       default: return 'outline';
     }
   };
 
   const getPriorityColor = (priority?: string) => {
     switch (priority) {
-      case 'urgent': return 'destructive';
-      case 'high': return 'destructive';
+      case 'urgent': return 'error';
+      case 'high': return 'error';
       case 'medium': return 'default';
-      case 'low': return 'secondary';
+      case 'low': return 'success';
       default: return 'outline';
     }
   };

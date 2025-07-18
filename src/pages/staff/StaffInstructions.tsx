@@ -77,31 +77,24 @@ const StaffInstructions = () => {
     try {
       const { data, error } = await supabase
         .from('instructions')
-        .select(`
-          *,
-          cases:case_id (
-            case_title,
-            case_number
-          )
-        `)
+        .select('*')
         .or(`staff_id.eq.${user.id},staff_id.is.null`)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      // Enhance with lawyer names
+      // Enhance with lawyer names and case titles
       const enhancedInstructions = await Promise.all(
         (data || []).map(async (instruction) => {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('full_name')
-            .eq('id', instruction.lawyer_id)
-            .single();
+          const [profile, caseData] = await Promise.all([
+            supabase.from('profiles').select('full_name').eq('id', instruction.lawyer_id).single(),
+            instruction.case_id ? supabase.from('cases').select('case_title').eq('id', instruction.case_id).single() : null
+          ]);
 
           return {
             ...instruction,
-            case_title: instruction.cases?.case_title,
-            lawyer_name: profile?.full_name || 'Unknown'
+            case_title: caseData?.data?.case_title || null,
+            lawyer_name: profile?.data?.full_name || 'Unknown'
           };
         })
       );
@@ -178,20 +171,20 @@ const StaffInstructions = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending': return 'destructive';
+      case 'pending': return 'error';
       case 'accepted': return 'default';
       case 'in_progress': return 'default';
-      case 'completed': return 'secondary';
+      case 'completed': return 'success';
       default: return 'outline';
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'urgent': return 'destructive';
-      case 'high': return 'destructive';
+      case 'urgent': return 'error';
+      case 'high': return 'error';
       case 'medium': return 'default';
-      case 'low': return 'secondary';
+      case 'low': return 'success';
       default: return 'outline';
     }
   };
@@ -230,7 +223,7 @@ const StaffInstructions = () => {
           </p>
         </div>
         <div className="flex items-center gap-4">
-          <Badge variant="destructive">
+          <Badge variant="error">
             {instructions.filter(i => i.status === 'pending').length} Pending
           </Badge>
           <Badge variant="default">

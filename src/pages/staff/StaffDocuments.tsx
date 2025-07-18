@@ -248,18 +248,18 @@ const StaffDocuments = () => {
     }
   };
 
-  const handleDownload = async (document: Document) => {
+  const handleDownload = async (doc: Document) => {
     try {
       const { data, error } = await supabase.storage
         .from('documents')
-        .download(document.file_url.split('/').pop() || '');
+        .download(doc.file_url.split('/').pop() || '');
 
       if (error) throw error;
 
       const url = window.URL.createObjectURL(data);
-      const link = document.createElement('a');
+      const link = window.document.createElement('a');
       link.href = url;
-      link.download = document.file_name;
+      link.download = doc.file_name;
       link.click();
       window.URL.revokeObjectURL(url);
     } catch (error) {
@@ -486,7 +486,7 @@ const StaffDocuments = () => {
                               <div className="text-xs text-muted-foreground">{document.description}</div>
                             )}
                             {document.is_evidence && (
-                              <Badge variant="destructive" className="text-xs mt-1">Evidence</Badge>
+                              <Badge variant="error" className="text-xs mt-1">Evidence</Badge>
                             )}
                           </div>
                         </div>

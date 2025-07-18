@@ -111,29 +111,24 @@ const StaffTasks = () => {
     try {
       const { data, error } = await supabase
         .from('tasks')
-        .select(`
-          *,
-          cases:case_id (
-            case_title,
-            case_number
-          )
-        `)
+        .select('*')
         .or(`assigned_to.eq.${user.id},created_by.eq.${user.id}`)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      // Enhance with creator and assignee names
+      // Enhance with creator and assignee names and case titles
       const enhancedTasks = await Promise.all(
         (data || []).map(async (task) => {
-          const [creatorProfile, assigneeProfile] = await Promise.all([
+          const [creatorProfile, assigneeProfile, caseData] = await Promise.all([
             supabase.from('profiles').select('full_name').eq('id', task.created_by).single(),
-            task.assigned_to ? supabase.from('profiles').select('full_name').eq('id', task.assigned_to).single() : null
+            task.assigned_to ? supabase.from('profiles').select('full_name').eq('id', task.assigned_to).single() : null,
+            task.case_id ? supabase.from('cases').select('case_title').eq('id', task.case_id).single() : null
           ]);
 
           return {
             ...task,
-            case_title: task.cases?.case_title,
+            case_title: caseData?.data?.case_title || null,
             creator_name: creatorProfile.data?.full_name || 'Unknown',
             assignee_name: assigneeProfile?.data?.full_name || 'Unassigned'
           };
@@ -166,22 +161,27 @@ const StaffTasks = () => {
     try {
       const { data, error } = await supabase
         .from('team_members')
-        .select(`
-          user_id,
-          role,
-          profiles:user_id (
-            full_name
-          )
-        `)
+        .select('user_id, role')
         .eq('status', 'active');
 
       if (error) throw error;
 
-      const members = (data || []).map(member => ({
-        user_id: member.user_id,
-        full_name: member.profiles?.full_name || 'Unknown',
-        role: member.role
-      }));
+      // Enhance with profile names
+      const members = await Promise.all(
+        (data || []).map(async (member) => {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('id', member.user_id)
+            .single();
+
+          return {
+            user_id: member.user_id,
+            full_name: profile?.full_name || 'Unknown',
+            role: member.role
+          };
+        })
+      );
 
       setTeamMembers(members);
     } catch (error) {
@@ -219,7 +219,11 @@ const StaffTasks = () => {
       const { error } = await supabase
         .from('tasks')
         .insert({
-          ...taskForm,
+          title: taskForm.title,
+          description: taskForm.description,
+          status: taskForm.status as 'todo' | 'in_progress' | 'completed',
+          priority: taskForm.priority as 'low' | 'medium' | 'high',
+          due_date: taskForm.due_date || null,
           created_by: user.id,
           assigned_to: taskForm.assigned_to || user.id,
           case_id: taskForm.case_id || null
@@ -247,9 +251,16 @@ const StaffTasks = () => {
 
   const handleUpdateTask = async (taskId: string, updates: Partial<Task>) => {
     try {
+      const updateData: any = {};
+      if (updates.status) updateData.status = updates.status;
+      if (updates.priority) updateData.priority = updates.priority;
+      if (updates.title) updateData.title = updates.title;
+      if (updates.description) updateData.description = updates.description;
+      if (updates.due_date) updateData.due_date = updates.due_date;
+      
       const { error } = await supabase
         .from('tasks')
-        .update(updates)
+        .update(updateData)
         .eq('id', taskId);
 
       if (error) throw error;
@@ -312,19 +323,19 @@ const StaffTasks = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'todo': return 'destructive';
+      case 'todo': return 'error';
       case 'in_progress': return 'default';
-      case 'done': return 'secondary';
+      case 'done': return 'success';
       default: return 'outline';
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'urgent': return 'destructive';
-      case 'high': return 'destructive';
+      case 'urgent': return 'error';
+      case 'high': return 'error';
       case 'medium': return 'default';
-      case 'low': return 'secondary';
+      case 'low': return 'success';
       default: return 'outline';
     }
   };
@@ -666,7 +677,7 @@ const StaffTasks = () => {
                         <p className="text-xs text-muted-foreground">{task.description}</p>
                       )}
                       <div className="flex items-center justify-between">
-                        <Badge variant="secondary" className="text-xs">
+                        <Badge variant="success" className="text-xs">
                           Completed
                         </Badge>
                         {task.due_date && (

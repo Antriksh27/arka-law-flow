@@ -71,13 +71,29 @@ const StaffCases = () => {
 
     try {
       const { data, error } = await supabase
-        .from('case_details')
-        .select('*')
+        .from('cases')
+        .select('id, case_title, case_number, status, stage, next_hearing_date, assigned_to, client_id, priority, description, court_name, created_by, created_at')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      setCases(data || []);
+      // Transform data to match Case interface
+      const transformedCases = (data || []).map(caseData => ({
+        id: caseData.id,
+        case_title: caseData.case_title,
+        case_number: caseData.case_number || '',
+        status: caseData.status || '',
+        stage: caseData.stage || '',
+        next_hearing_date: caseData.next_hearing_date || '',
+        assigned_to: caseData.assigned_to || '',
+        client_name: '', // Will be populated separately if needed
+        created_by_name: '', // Will be populated separately if needed
+        priority: caseData.priority || '',
+        description: caseData.description || '',
+        court_name: caseData.court_name || ''
+      }));
+
+      setCases(transformedCases);
     } catch (error) {
       console.error('Error fetching cases:', error);
     } finally {
@@ -112,7 +128,7 @@ const StaffCases = () => {
     try {
       // Fetch case details
       const { data: caseData } = await supabase
-        .from('case_details')
+        .from('cases')
         .select('*')
         .eq('id', caseId)
         .single();
@@ -146,7 +162,20 @@ const StaffCases = () => {
         .order('created_at', { ascending: false });
 
       setSelectedCase({
-        case: caseData,
+        case: {
+          id: caseData.id,
+          case_title: caseData.case_title,
+          case_number: caseData.case_number || '',
+          status: caseData.status || '',
+          stage: caseData.stage || '',
+          next_hearing_date: caseData.next_hearing_date || '',
+          assigned_to: caseData.assigned_to || '',
+          client_name: '',
+          created_by_name: '',
+          priority: caseData.priority || '',
+          description: caseData.description || '',
+          court_name: caseData.court_name || ''
+        },
         documents: documents || [],
         tasks: tasks || [],
         instructions: instructions || [],
@@ -162,20 +191,20 @@ const StaffCases = () => {
     switch (status?.toLowerCase()) {
       case 'open': return 'default';
       case 'in_progress': return 'default';
-      case 'pending': return 'destructive';
-      case 'closed': return 'secondary';
-      case 'won': return 'secondary';
-      case 'lost': return 'destructive';
+      case 'pending': return 'error';
+      case 'closed': return 'success';
+      case 'won': return 'success';
+      case 'lost': return 'error';
       default: return 'outline';
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority?.toLowerCase()) {
-      case 'urgent': return 'destructive';
-      case 'high': return 'destructive';
+      case 'urgent': return 'error';
+      case 'high': return 'error';
       case 'medium': return 'default';
-      case 'low': return 'secondary';
+      case 'low': return 'success';
       default: return 'outline';
     }
   };
