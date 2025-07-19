@@ -133,22 +133,48 @@ const InstructionsChat = () => {
       priority = 'low';
     }
 
-    // Extract deadline
+    // Extract and convert deadline to actual date
     let deadline = '';
-    const datePatterns = [
-      /by (\w+day)/i,
-      /by (\w+ \d{1,2})/i,
-      /before (\w+day)/i,
-      /by (\d{1,2}\/\d{1,2})/i,
-      /by end of (\w+)/i
-    ];
+    let deadlineDate: Date | null = null;
+    
+    const now = new Date();
+    
+    // Check for specific day names
+    if (lowerMessage.includes('by monday') || lowerMessage.includes('by next monday')) {
+      deadlineDate = getNextWeekday(now, 1); // Monday
+      deadline = 'Monday';
+    } else if (lowerMessage.includes('by tuesday') || lowerMessage.includes('by next tuesday')) {
+      deadlineDate = getNextWeekday(now, 2); // Tuesday
+      deadline = 'Tuesday';
+    } else if (lowerMessage.includes('by wednesday') || lowerMessage.includes('by next wednesday')) {
+      deadlineDate = getNextWeekday(now, 3); // Wednesday
+      deadline = 'Wednesday';
+    } else if (lowerMessage.includes('by thursday') || lowerMessage.includes('by next thursday')) {
+      deadlineDate = getNextWeekday(now, 4); // Thursday
+      deadline = 'Thursday';
+    } else if (lowerMessage.includes('by friday') || lowerMessage.includes('by next friday')) {
+      deadlineDate = getNextWeekday(now, 5); // Friday
+      deadline = 'Friday';
+    } else if (lowerMessage.includes('by end of week') || lowerMessage.includes('end of week')) {
+      deadlineDate = getNextWeekday(now, 5); // Friday
+      deadline = 'End of week';
+    } else if (lowerMessage.includes('by tomorrow') || lowerMessage.includes('tomorrow')) {
+      deadlineDate = new Date(now);
+      deadlineDate.setDate(deadlineDate.getDate() + 1);
+      deadline = 'Tomorrow';
+    } else if (lowerMessage.includes('today')) {
+      deadlineDate = new Date(now);
+      deadline = 'Today';
+    }
 
-    for (const pattern of datePatterns) {
-      const match = message.match(pattern);
-      if (match) {
-        deadline = match[1];
-        break;
-      }
+    // Helper function to get next occurrence of a weekday
+    function getNextWeekday(date: Date, targetDay: number): Date {
+      const result = new Date(date);
+      const currentDay = result.getDay();
+      const daysUntilTarget = targetDay - currentDay;
+      const daysToAdd = daysUntilTarget <= 0 ? daysUntilTarget + 7 : daysUntilTarget;
+      result.setDate(result.getDate() + daysToAdd);
+      return result;
     }
 
     // Extract case reference
@@ -161,6 +187,7 @@ const InstructionsChat = () => {
       staffMember,
       priority,
       deadline,
+      deadlineDate,
       caseRef,
       cleanMessage: message
     };
@@ -176,7 +203,7 @@ const InstructionsChat = () => {
           case_id: parsedData.caseRef?.id,
           message: parsedData.cleanMessage,
           priority: parsedData.priority,
-          deadline: parsedData.deadline ? new Date(parsedData.deadline).toISOString().split('T')[0] : null,
+          deadline: parsedData.deadlineDate ? parsedData.deadlineDate.toISOString().split('T')[0] : null,
         })
         .select()
         .single();
