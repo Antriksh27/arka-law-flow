@@ -97,6 +97,29 @@ const InstructionsTable = () => {
 
   useEffect(() => {
     loadInstructions();
+
+    // Set up real-time subscription for instructions
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'instructions',
+          filter: `lawyer_id=eq.${user?.id}`
+        },
+        (payload) => {
+          console.log('Real-time change:', payload);
+          // Reload instructions when changes occur
+          loadInstructions();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user?.id]);
 
   const handleDelete = async (id: string) => {

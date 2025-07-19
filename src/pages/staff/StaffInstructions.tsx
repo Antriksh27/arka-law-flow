@@ -65,6 +65,51 @@ const StaffInstructions = () => {
 
   useEffect(() => {
     fetchInstructions();
+
+    // Set up real-time subscription for instructions
+    const channel = supabase
+      .channel('staff-instructions-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'instructions',
+          filter: `staff_id=eq.${user?.id}`
+        },
+        (payload) => {
+          console.log('Real-time instruction change:', payload);
+          
+          if (payload.eventType === 'DELETE') {
+            // Remove deleted instruction
+            setInstructions(prev => prev.filter(inst => inst.id !== payload.old.id));
+            toast({
+              title: "Instruction Deleted",
+              description: "An instruction was removed by the lawyer",
+              variant: "destructive",
+            });
+          } else {
+            // Reload all instructions for INSERT and UPDATE
+            fetchInstructions();
+            if (payload.eventType === 'UPDATE') {
+              toast({
+                title: "Instruction Updated",
+                description: "An instruction has been modified",
+              });
+            } else if (payload.eventType === 'INSERT') {
+              toast({
+                title: "New Instruction",
+                description: "You have received a new instruction",
+              });
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   useEffect(() => {
