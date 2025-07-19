@@ -8,6 +8,7 @@ import {
   Folder, 
   Inbox,
   MessageSquare,
+  ClipboardList,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,6 +21,7 @@ const navigation = [
   { name: 'Appointments', href: '/appointments', icon: Calendar },
   { name: 'Hearings', href: '/hearings', icon: Calendar },
   { name: 'Tasks', href: '/tasks', icon: File },
+  { name: 'Instructions', href: '/instructions', icon: ClipboardList },
   { name: 'Invoices', href: '/invoices', icon: File },
   { name: 'Notes', href: '/notes', icon: File },
   { name: 'Messages', href: '/messages', icon: MessageSquare },
