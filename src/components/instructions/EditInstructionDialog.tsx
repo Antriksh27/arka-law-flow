@@ -49,8 +49,8 @@ export const EditInstructionDialog: React.FC<EditInstructionDialogProps> = ({
     priority: instruction.priority,
     status: instruction.status,
     deadline: instruction.deadline || '',
-    staff_id: instruction.staff_id || '',
-    case_id: instruction.case_id || '',
+    staff_id: instruction.staff_id || 'unassigned',
+    case_id: instruction.case_id || 'none',
   });
   const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
   const [cases, setCases] = useState<Case[]>([]);
@@ -129,8 +129,8 @@ export const EditInstructionDialog: React.FC<EditInstructionDialogProps> = ({
           priority: formData.priority,
           status: formData.status,
           deadline: formData.deadline || null,
-          staff_id: formData.staff_id || null,
-          case_id: formData.case_id || null,
+          staff_id: formData.staff_id === 'unassigned' ? null : formData.staff_id,
+          case_id: formData.case_id === 'none' ? null : formData.case_id,
         })
         .eq('id', instruction.id)
         .select()
@@ -142,12 +142,12 @@ export const EditInstructionDialog: React.FC<EditInstructionDialogProps> = ({
       let staff_name = '';
       let case_title = '';
 
-      if (formData.staff_id) {
+      if (formData.staff_id && formData.staff_id !== 'unassigned') {
         const staffMember = staffMembers.find(s => s.id === formData.staff_id);
         staff_name = staffMember?.full_name || '';
       }
 
-      if (formData.case_id) {
+      if (formData.case_id && formData.case_id !== 'none') {
         const caseData = cases.find(c => c.id === formData.case_id);
         case_title = caseData?.case_title || '';
       }
@@ -248,13 +248,13 @@ export const EditInstructionDialog: React.FC<EditInstructionDialogProps> = ({
             <Label htmlFor="staff">Staff Member</Label>
             <Select
               value={formData.staff_id}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, staff_id: value }))}
+              onValueChange={(value) => setFormData(prev => ({ ...prev, staff_id: value === 'unassigned' ? '' : value }))}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select staff member" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Unassigned</SelectItem>
+                <SelectItem value="unassigned">Unassigned</SelectItem>
                 {staffMembers.map((staff) => (
                   <SelectItem key={staff.id} value={staff.id}>
                     {staff.full_name} ({staff.role.replace('_', ' ')})
@@ -268,13 +268,13 @@ export const EditInstructionDialog: React.FC<EditInstructionDialogProps> = ({
             <Label htmlFor="case">Related Case</Label>
             <Select
               value={formData.case_id}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, case_id: value }))}
+              onValueChange={(value) => setFormData(prev => ({ ...prev, case_id: value === 'none' ? '' : value }))}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select case" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No case</SelectItem>
+                <SelectItem value="none">No case</SelectItem>
                 {cases.map((caseItem) => (
                   <SelectItem key={caseItem.id} value={caseItem.id}>
                     {caseItem.case_title}
