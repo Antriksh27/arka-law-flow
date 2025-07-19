@@ -1,12 +1,10 @@
 import React from 'react';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import InstructionsChat from '@/components/instructions/InstructionsChat';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { MessageSquare, Users, Clock, CheckCircle } from 'lucide-react';
 
 const Instructions = () => {
   return (
-    <DashboardLayout>
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">Instructions</h1>
@@ -133,8 +131,7 @@ const Instructions = () => {
           </div>
         </div>
       </div>
-    </DashboardLayout>
-  );
+    );
 };
 
 export default Instructions;
