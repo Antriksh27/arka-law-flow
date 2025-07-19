@@ -180,8 +180,53 @@ const InstructionsChat = () => {
     // Extract case reference
     const caseRef = cases.find(c => 
       lowerMessage.includes(c.case_title.toLowerCase()) ||
-      lowerMessage.includes(c.case_title.split(' ')[0].toLowerCase())
+      lowerMessage.includes(c.case_title.split(' ')[0].toLowerCase()) ||
+      lowerMessage.includes(`case ${c.id.substring(0, 8)}`) ||
+      message.match(new RegExp(`case\\s+\\d+`, 'i'))
     );
+
+    // Clean the message to extract just the task
+    let cleanMessage = message;
+    
+    // Remove "ask [name] to" or "tell [name] to" or "have [name]" patterns
+    if (staffMember) {
+      const staffFirstName = staffMember.full_name.split(' ')[0].toLowerCase();
+      const patterns = [
+        new RegExp(`^(ask|tell)\\s+${staffFirstName}\\s+to\\s+`, 'i'),
+        new RegExp(`^(ask|tell)\\s+${staffMember.full_name.toLowerCase()}\\s+to\\s+`, 'i'),
+        new RegExp(`^(have|get)\\s+${staffFirstName}\\s+`, 'i'),
+        new RegExp(`^(have|get)\\s+${staffMember.full_name.toLowerCase()}\\s+`, 'i'),
+        new RegExp(`^(can you ask|could you ask)\\s+${staffFirstName}\\s+to\\s+`, 'i'),
+      ];
+      
+      for (const pattern of patterns) {
+        cleanMessage = cleanMessage.replace(pattern, '');
+      }
+    }
+
+    // Remove deadline phrases from the end
+    const deadlinePatterns = [
+      /\s+by\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)$/i,
+      /\s+by\s+tomorrow$/i,
+      /\s+by\s+today$/i,
+      /\s+by\s+end\s+of\s+week$/i,
+      /\s+by\s+next\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)$/i,
+      /\s+-\s+urgent$/i,
+      /\s+urgent$/i,
+      /\s+asap$/i,
+      /\s+immediately$/i,
+      /\s+when\s+you\s+can$/i,
+    ];
+
+    for (const pattern of deadlinePatterns) {
+      cleanMessage = cleanMessage.replace(pattern, '');
+    }
+
+    // Capitalize first letter and ensure proper formatting
+    cleanMessage = cleanMessage.trim();
+    if (cleanMessage) {
+      cleanMessage = cleanMessage.charAt(0).toUpperCase() + cleanMessage.slice(1);
+    }
 
     return {
       staffMember,
@@ -189,7 +234,7 @@ const InstructionsChat = () => {
       deadline,
       deadlineDate,
       caseRef,
-      cleanMessage: message
+      cleanMessage: cleanMessage || message // fallback to original if cleaning fails
     };
   };
 
