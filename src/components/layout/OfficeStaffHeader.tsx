@@ -38,7 +38,6 @@ const OfficeStaffHeader = () => {
             <img src="/lovable-uploads/89ea18cf-8c73-4793-9dcc-1a192855a630.png" alt="HRU Legal" className="h-[4.125rem] w-auto" />
             <div className="text-white">
               <h1 className="text-xl font-bold">Office Staff Portal</h1>
-              <p className="text-sm text-slate-300">Case Management System</p>
             </div>
           </div>
           
