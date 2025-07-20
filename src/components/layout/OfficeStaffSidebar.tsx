@@ -1,54 +1,52 @@
 import React from 'react';
 import { useLocation, NavLink } from 'react-router-dom';
-import { 
-  LayoutDashboard,
-  FolderOpen,
-  FileText,
-  CheckSquare,
-  MessageSquareText,
-  Users,
-  Scale,
-  Receipt,
-  Upload,
-  Plus,
-  LogOut,
-  Settings
-} from 'lucide-react';
+import { LayoutDashboard, FolderOpen, FileText, CheckSquare, MessageSquareText, Upload, Plus, LogOut, Settings } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-
-const menuItems = [
-  { name: 'Dashboard', href: '/staff/dashboard', icon: LayoutDashboard },
-  { name: 'Cases', href: '/staff/cases', icon: FolderOpen },
-  { name: 'Clients', href: '/staff/clients', icon: Users },
-  { name: 'Hearings', href: '/staff/hearings', icon: Scale },
-  { name: 'Documents', href: '/staff/documents', icon: FileText },
-  { name: 'Tasks', href: '/staff/tasks', icon: CheckSquare },
-  { name: 'Instructions', href: '/staff/instructions', icon: MessageSquareText },
-  { name: 'Invoices', href: '/staff/invoices', icon: Receipt },
-];
-
-const quickActions = [
-  { name: 'Upload Document', href: '/staff/documents?action=upload', icon: Upload },
-  { name: 'New Task', href: '/staff/tasks?action=create', icon: Plus },
-];
-
+const menuItems = [{
+  name: 'Dashboard',
+  href: '/staff/dashboard',
+  icon: LayoutDashboard
+}, {
+  name: 'Cases Overview',
+  href: '/staff/cases',
+  icon: FolderOpen
+}, {
+  name: 'Documents',
+  href: '/staff/documents',
+  icon: FileText
+}, {
+  name: 'Tasks',
+  href: '/staff/tasks',
+  icon: CheckSquare
+}, {
+  name: 'Instructions',
+  href: '/staff/instructions',
+  icon: MessageSquareText
+}];
+const quickActions = [{
+  name: 'Upload Document',
+  href: '/staff/documents?action=upload',
+  icon: Upload
+}, {
+  name: 'New Task',
+  href: '/staff/tasks?action=create',
+  icon: Plus
+}];
 const OfficeStaffSidebar = () => {
   const location = useLocation();
-  const { signOut } = useAuth();
-
+  const {
+    signOut
+  } = useAuth();
   const isActive = (path: string): boolean => {
     return location.pathname === path || location.pathname.startsWith(path + '/');
   };
-
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     signOut();
   };
-
-  return (
-    <div className="w-64 bg-card border-r border-border h-screen flex flex-col">
+  return <div className="w-64 bg-card border-r border-border h-screen flex flex-col">
       {/* Logo */}
       <div className="p-6 border-b border-border">
         <div className="flex items-center gap-3">
@@ -56,7 +54,7 @@ const OfficeStaffSidebar = () => {
             <span className="text-primary-foreground font-bold text-lg">A</span>
           </div>
           <div>
-            <span className="text-xl font-bold text-foreground">Arka</span>
+            
             <p className="text-sm text-muted-foreground">Office Staff Portal</p>
           </div>
         </div>
@@ -65,19 +63,13 @@ const OfficeStaffSidebar = () => {
       {/* Main Navigation */}
       <nav className="flex-1 p-4 space-y-1">
         <div className="space-y-1">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <NavLink
-                key={item.name}
-                to={item.href}
-                className={`nav-item ${isActive(item.href) ? 'active' : ''}`}
-              >
+          {menuItems.map(item => {
+          const Icon = item.icon;
+          return <NavLink key={item.name} to={item.href} className={`nav-item ${isActive(item.href) ? 'active' : ''}`}>
                 <Icon className="w-5 h-5" />
                 <span className="font-medium">{item.name}</span>
-              </NavLink>
-            );
-          })}
+              </NavLink>;
+        })}
         </div>
 
         {/* Quick Actions */}
@@ -86,19 +78,13 @@ const OfficeStaffSidebar = () => {
             Quick Actions
           </h3>
           <div className="space-y-1">
-            {quickActions.map((action) => {
-              const Icon = action.icon;
-              return (
-                <NavLink
-                  key={action.name}
-                  to={action.href}
-                  className="nav-item"
-                >
+            {quickActions.map(action => {
+            const Icon = action.icon;
+            return <NavLink key={action.name} to={action.href} className="nav-item">
                   <Icon className="w-4 h-4" />
                   <span className="text-sm">{action.name}</span>
-                </NavLink>
-              );
-            })}
+                </NavLink>;
+          })}
           </div>
         </div>
 
@@ -122,18 +108,11 @@ const OfficeStaffSidebar = () => {
           <Settings className="w-4 h-4 mr-2" />
           Settings
         </Button>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="w-full justify-start text-destructive hover:text-destructive"
-          onClick={handleSignOut}
-        >
+        <Button variant="ghost" size="sm" className="w-full justify-start text-destructive hover:text-destructive" onClick={handleSignOut}>
           <LogOut className="w-4 h-4 mr-2" />
           Sign Out
         </Button>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default OfficeStaffSidebar;
