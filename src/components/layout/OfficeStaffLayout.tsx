@@ -1,7 +1,6 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import OfficeStaffSidebar from './OfficeStaffSidebar';
 import OfficeStaffHeader from './OfficeStaffHeader';
 
 interface OfficeStaffLayoutProps {
@@ -30,12 +29,9 @@ const OfficeStaffLayout = ({ children }: OfficeStaffLayoutProps) => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <OfficeStaffHeader />
-      <div className="flex flex-1">
-        <OfficeStaffSidebar />
-        <main className="flex-1 overflow-auto">
-          {children}
-        </main>
-      </div>
+      <main className="flex-1 overflow-auto">
+        {children}
+      </main>
     </div>
   );
 };
