@@ -3,6 +3,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -20,6 +21,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
   assignedFilter
 }) => {
   const navigate = useNavigate();
+  const { role } = useAuth();
   const {
     data: cases,
     isLoading
@@ -112,6 +114,15 @@ export const CasesTable: React.FC<CasesTableProps> = ({
   const formatCaseType = (type: string) => {
     return type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
+  
+  const handleCaseClick = (caseId: string) => {
+    if (role === 'office_staff') {
+      navigate(`/staff/cases/${caseId}`);
+    } else {
+      navigate(`/cases/${caseId}`);
+    }
+  };
+
   if (isLoading) {
     return <div className="text-center py-8">Loading cases...</div>;
   }
@@ -129,7 +140,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {cases?.map(caseItem => <TableRow key={caseItem.id} className="cursor-pointer hover:bg-gray-50" onClick={() => navigate(`/cases/${caseItem.id}`)}>
+          {cases?.map(caseItem => <TableRow key={caseItem.id} className="cursor-pointer hover:bg-gray-50" onClick={() => handleCaseClick(caseItem.id)}>
               <TableCell className="font-medium">
                 {caseItem.title}
               </TableCell>
