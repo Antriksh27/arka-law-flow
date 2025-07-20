@@ -71,7 +71,7 @@ const RoleBasedRouter = () => {
         <Routes>
           <Route path="/" element={<StaffDashboard />} />
           <Route path="/staff/dashboard" element={<StaffDashboard />} />
-          <Route path="/staff/cases" element={<Cases />} />
+          <Route path="/staff/cases" element={<StaffCases />} />
           <Route path="/staff/clients" element={<Clients />} />
           <Route path="/staff/hearings" element={<Hearings />} />
           <Route path="/staff/documents" element={<StaffDocuments />} />
