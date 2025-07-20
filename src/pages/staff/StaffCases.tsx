@@ -331,7 +331,7 @@ const StaffCases = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => fetchCaseDetails(case_.id)}
+                          onClick={() => window.location.href = `/staff/cases/${case_.id}`}
                         >
                           <Eye className="w-4 h-4 mr-1" />
                           View
