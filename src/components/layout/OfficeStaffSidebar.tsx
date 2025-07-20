@@ -6,6 +6,9 @@ import {
   FileText,
   CheckSquare,
   MessageSquareText,
+  Users,
+  Scale,
+  Receipt,
   Upload,
   Plus,
   LogOut,
@@ -17,10 +20,13 @@ import { Button } from '@/components/ui/button';
 
 const menuItems = [
   { name: 'Dashboard', href: '/staff/dashboard', icon: LayoutDashboard },
-  { name: 'Cases Overview', href: '/staff/cases', icon: FolderOpen },
+  { name: 'Cases', href: '/staff/cases', icon: FolderOpen },
+  { name: 'Clients', href: '/staff/clients', icon: Users },
+  { name: 'Hearings', href: '/staff/hearings', icon: Scale },
   { name: 'Documents', href: '/staff/documents', icon: FileText },
   { name: 'Tasks', href: '/staff/tasks', icon: CheckSquare },
   { name: 'Instructions', href: '/staff/instructions', icon: MessageSquareText },
+  { name: 'Invoices', href: '/staff/invoices', icon: Receipt },
 ];
 
 const quickActions = [
