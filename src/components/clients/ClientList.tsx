@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { AddClientDialog } from './AddClientDialog';
 import { EditClientDialog } from './EditClientDialog';
@@ -37,6 +38,7 @@ export const ClientList = () => {
 
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { role } = useAuth();
 
   const {
     data: clients = [],
@@ -112,7 +114,11 @@ export const ClientList = () => {
   };
 
   const handleClientNameClick = (clientId: string) => {
-    navigate(`/clients/${clientId}`);
+    if (role === 'office_staff') {
+      navigate(`/staff/clients/${clientId}`);
+    } else {
+      navigate(`/clients/${clientId}`);
+    }
   };
 
   console.log('ClientList render state:', { isLoading, error, clientsCount: clients.length });
