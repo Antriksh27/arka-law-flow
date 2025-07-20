@@ -67,13 +67,20 @@ const StaffCases = () => {
   }, [cases, searchQuery, statusFilter, stageFilter]);
 
   const fetchCases = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('No user found, not fetching cases');
+      return;
+    }
 
+    console.log('Fetching cases for user:', user.id);
+    
     try {
       const { data, error } = await supabase
         .from('cases')
-        .select('id, case_title, case_number, status, stage, next_hearing_date, assigned_to, client_id, priority, description, court_name, created_by, created_at')
+        .select('id, case_title, case_number, status, stage, next_hearing_date, assigned_to, client_id, priority, description, court_name, created_by, created_at, firm_id')
         .order('created_at', { ascending: false });
+
+      console.log('Cases query result:', { data, error });
 
       if (error) throw error;
 
@@ -93,6 +100,7 @@ const StaffCases = () => {
         court_name: caseData.court_name || ''
       }));
 
+      console.log('Transformed cases:', transformedCases);
       setCases(transformedCases);
     } catch (error) {
       console.error('Error fetching cases:', error);
