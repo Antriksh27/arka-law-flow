@@ -1,9 +1,28 @@
 import React from 'react';
 import InstructionsChat from '@/components/instructions/InstructionsChat';
 import InstructionsTable from '@/components/instructions/InstructionsTable';
+import StaffInstructionsView from '@/components/instructions/StaffInstructionsView';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 const Instructions = () => {
+  const { role } = useAuth();
+
+  // For office staff, show a different view focused on their received instructions
+  if (role === 'office_staff') {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900">My Instructions</h1>
+          <p className="text-gray-600">View and manage instructions assigned to you</p>
+        </div>
+
+        <StaffInstructionsView />
+      </div>
+    );
+  }
+
+  // For lawyers and admins, show the full instruction management interface
   return (
     <div className="space-y-6">
       <div>
