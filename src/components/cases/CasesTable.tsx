@@ -40,14 +40,20 @@ export const CasesTable: React.FC<CasesTableProps> = ({
         .eq('id', user.id)
         .single();
 
-      // Check if user is admin or lawyer (can see all firm cases)
+      // Check if user is admin, lawyer, or office staff (can see all firm cases)
       const isAdminOrLawyer = userProfile?.role === 'admin' || 
                               userProfile?.role === 'lawyer' || 
                               userProfile?.role === 'partner' ||
                               userProfile?.role === 'associate' ||
-                              userProfile?.role === 'junior';
+                              userProfile?.role === 'junior' ||
+                              userProfile?.role === 'office_staff';
 
-      let query = supabase.from('case_details').select('*').order('created_at', {
+      console.log('Fetching cases for user:', user.id);
+      let query = supabase.from('cases').select(`
+        *,
+        clients!client_id(full_name),
+        profiles!created_by(full_name)
+      `).order('created_at', {
         ascending: false
       });
 
@@ -58,7 +64,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
       }
 
       if (searchQuery) {
-        query = query.or(`title.ilike.%${searchQuery}%,client_name.ilike.%${searchQuery}%`);
+        query = query.or(`case_title.ilike.%${searchQuery}%`);
       }
       if (statusFilter !== 'all') {
         query = query.eq('status', statusFilter as any);
@@ -70,8 +76,23 @@ export const CasesTable: React.FC<CasesTableProps> = ({
         data,
         error
       } = await query;
-      if (error) throw error;
-      return data || [];
+      if (error) {
+        console.error('Query result:', { data, error });
+        throw error;
+      }
+      console.log('Cases query result:', { data, error });
+      
+      // Transform the data to match the expected structure
+      const transformedData = data?.map((caseItem: any) => ({
+        ...caseItem,
+        title: caseItem.case_title,
+        client_name: caseItem.clients?.full_name,
+        created_by_name: caseItem.profiles?.full_name
+      })) || [];
+      
+      console.log('Transformed cases:', transformedData);
+      
+      return transformedData;
     }
   });
   const getStatusColor = (status: string) => {
