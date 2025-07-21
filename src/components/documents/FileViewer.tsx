@@ -24,9 +24,19 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
     
     setLoading(true);
     try {
+      // Extract the file path from the public URL
+      // file_url format: https://xxx.supabase.co/storage/v1/object/public/documents/path/to/file.pdf
+      // We need just: path/to/file.pdf
+      let filePath = document.file_url;
+      
+      // If it's a full URL, extract the path after the bucket name
+      if (filePath.includes('/storage/v1/object/public/documents/')) {
+        filePath = filePath.split('/storage/v1/object/public/documents/')[1];
+      }
+      
       const { data, error } = await supabase.storage
         .from('documents')
-        .createSignedUrl(document.file_url, 3600); // 1 hour expiry
+        .createSignedUrl(filePath, 3600); // 1 hour expiry
 
       if (error) throw error;
       setFileUrl(data.signedUrl);
@@ -54,9 +64,17 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
 
   const handleDownload = async () => {
     try {
+      // Extract the file path from the public URL for download
+      let filePath = document.file_url;
+      
+      // If it's a full URL, extract the path after the bucket name
+      if (filePath.includes('/storage/v1/object/public/documents/')) {
+        filePath = filePath.split('/storage/v1/object/public/documents/')[1];
+      }
+      
       const { data, error } = await supabase.storage
         .from('documents')
-        .download(document.file_url);
+        .download(filePath);
 
       if (error) throw error;
 
