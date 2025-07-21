@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Download, Plus, File, Eye, FileText, Shield, Award, Copy, Clock } from 'lucide-react';
 import { UploadDocumentForClientDialog } from '../documents/UploadDocumentForClientDialog';
+import { FileViewer } from '../documents/FileViewer';
 
 interface ClientDocumentsProps {
   clientId: string;
@@ -16,6 +17,8 @@ interface ClientDocumentsProps {
 export const ClientDocuments: React.FC<ClientDocumentsProps> = ({ clientId }) => {
   const { toast } = useToast();
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState<any>(null);
+  const [showFileViewer, setShowFileViewer] = useState(false);
 
   const { data: documents = [], isLoading, refetch } = useQuery({
     queryKey: ['client-documents', clientId],
@@ -71,6 +74,11 @@ export const ClientDocuments: React.FC<ClientDocumentsProps> = ({ clientId }) =>
 
   const handleUploadSuccess = () => {
     refetch();
+  };
+
+  const handleViewDocument = (document: any) => {
+    setSelectedDocument(document);
+    setShowFileViewer(true);
   };
 
   const getFileIcon = (fileType: string) => {
@@ -182,7 +190,12 @@ export const ClientDocuments: React.FC<ClientDocumentsProps> = ({ clientId }) =>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 ml-4">
-                        <Button variant="ghost" size="sm" className="text-gray-500 hover:text-gray-700">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-gray-500 hover:text-gray-700"
+                          onClick={() => handleViewDocument(document)}
+                        >
                           <Eye className="w-4 h-4" />
                         </Button>
                         <Button 
@@ -208,6 +221,12 @@ export const ClientDocuments: React.FC<ClientDocumentsProps> = ({ clientId }) =>
         onClose={() => setUploadDialogOpen(false)}
         clientId={clientId}
         onUploadSuccess={handleUploadSuccess}
+      />
+
+      <FileViewer
+        open={showFileViewer}
+        onClose={() => setShowFileViewer(false)}
+        document={selectedDocument}
       />
     </>
   );
