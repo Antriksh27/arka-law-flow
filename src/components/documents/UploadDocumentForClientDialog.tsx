@@ -285,12 +285,11 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
             <Label htmlFor="case_id" className="text-sm font-medium">
               Associate with Case (Optional)
             </Label>
-            <Select onValueChange={(value) => setValue('case_id', value)} value={watchedValues.case_id}>
+            <Select onValueChange={(value) => setValue('case_id', value || undefined)} value={watchedValues.case_id || ''}>
               <SelectTrigger>
                 <SelectValue placeholder="Select a case (optional)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No case association</SelectItem>
                 {cases.map((case_) => (
                   <SelectItem key={case_.id} value={case_.id}>
                     {case_.case_title} {case_.case_number && `(${case_.case_number})`}
