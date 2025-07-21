@@ -34,9 +34,6 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
         filePath = filePath.split('/storage/v1/object/public/documents/')[1];
       }
       
-      console.log('Original file_url:', document.file_url);
-      console.log('Extracted filePath:', filePath);
-      
       const { data, error } = await supabase.storage
         .from('documents')
         .createSignedUrl(filePath, 3600); // 1 hour expiry
