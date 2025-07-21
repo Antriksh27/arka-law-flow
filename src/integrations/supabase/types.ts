@@ -1030,11 +1030,35 @@ export type Database = {
           },
         ]
       }
+      document_types: {
+        Row: {
+          category_code: string
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          category_code: string
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          category_code?: string
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           case_id: string | null
+          certified_copy: boolean | null
           client_id: string | null
+          confidential: boolean | null
           description: string | null
+          document_type_id: string | null
           file_name: string
           file_size: number | null
           file_type: string | null
@@ -1044,14 +1068,20 @@ export type Database = {
           id: string
           is_evidence: boolean | null
           is_shared_with_client: boolean | null
+          notes: string | null
+          original_copy_retained: boolean | null
           title: string | null
           uploaded_at: string | null
           uploaded_by: string | null
+          uploaded_by_user_id: string | null
         }
         Insert: {
           case_id?: string | null
+          certified_copy?: boolean | null
           client_id?: string | null
+          confidential?: boolean | null
           description?: string | null
+          document_type_id?: string | null
           file_name: string
           file_size?: number | null
           file_type?: string | null
@@ -1061,14 +1091,20 @@ export type Database = {
           id?: string
           is_evidence?: boolean | null
           is_shared_with_client?: boolean | null
+          notes?: string | null
+          original_copy_retained?: boolean | null
           title?: string | null
           uploaded_at?: string | null
           uploaded_by?: string | null
+          uploaded_by_user_id?: string | null
         }
         Update: {
           case_id?: string | null
+          certified_copy?: boolean | null
           client_id?: string | null
+          confidential?: boolean | null
           description?: string | null
+          document_type_id?: string | null
           file_name?: string
           file_size?: number | null
           file_type?: string | null
@@ -1078,9 +1114,12 @@ export type Database = {
           id?: string
           is_evidence?: boolean | null
           is_shared_with_client?: boolean | null
+          notes?: string | null
+          original_copy_retained?: boolean | null
           title?: string | null
           uploaded_at?: string | null
           uploaded_by?: string | null
+          uploaded_by_user_id?: string | null
         }
         Relationships: [
           {
@@ -1109,6 +1148,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_document_type_id_fkey"
+            columns: ["document_type_id"]
+            isOneToOne: false
+            referencedRelation: "document_types"
             referencedColumns: ["id"]
           },
           {
