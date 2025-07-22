@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, Mail, Phone, MapPin, Building, UserCheck } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Building, UserCheck, Users } from 'lucide-react';
 interface ClientInfoSidebarProps {
   client: any;
   onUpdate: () => void;
@@ -53,6 +53,25 @@ export const ClientInfoSidebar: React.FC<ClientInfoSidebarProps> = ({
               <UserCheck className="w-4 h-4 text-gray-400" />
               <span className="text-gray-900">{client.assigned_lawyer.full_name}</span>
             </div>
+          </div>
+        )}
+
+        {/* Referral Information */}
+        {(client.referred_by_name || client.referred_by_phone) && (
+          <div className="space-y-4">
+            <h4 className="text-sm font-medium text-gray-900">Referral Details</h4>
+            {client.referred_by_name && (
+              <div className="flex items-center gap-3 text-sm">
+                <Users className="w-4 h-4 text-gray-400" />
+                <span className="text-gray-900">{client.referred_by_name}</span>
+              </div>
+            )}
+            {client.referred_by_phone && (
+              <div className="flex items-center gap-3 text-sm">
+                <Phone className="w-4 h-4 text-gray-400" />
+                <span className="text-gray-900">{client.referred_by_phone}</span>
+              </div>
+            )}
           </div>
         )}
       </CardContent>

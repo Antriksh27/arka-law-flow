@@ -766,6 +766,8 @@ export type Database = {
           notes: string | null
           organization: string | null
           phone: string | null
+          referred_by_name: string | null
+          referred_by_phone: string | null
           services: string[] | null
           source: string | null
           status: Database["public"]["Enums"]["client_status_enum"] | null
@@ -789,6 +791,8 @@ export type Database = {
           notes?: string | null
           organization?: string | null
           phone?: string | null
+          referred_by_name?: string | null
+          referred_by_phone?: string | null
           services?: string[] | null
           source?: string | null
           status?: Database["public"]["Enums"]["client_status_enum"] | null
@@ -812,6 +816,8 @@ export type Database = {
           notes?: string | null
           organization?: string | null
           phone?: string | null
+          referred_by_name?: string | null
+          referred_by_phone?: string | null
           services?: string[] | null
           source?: string | null
           status?: Database["public"]["Enums"]["client_status_enum"] | null

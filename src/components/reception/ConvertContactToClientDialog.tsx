@@ -268,21 +268,53 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
 
       // Create the new client
       const clientAddress = [formData.address_line_1, formData.address_line_2].filter(Boolean).join(', ');
-      const {
-        data: newClient,
-        error: clientError
-      } = await supabase.from('clients').insert({
-        full_name: formData.full_name,
-        email: formData.email,
-        phone: formData.phone,
-        address: clientAddress,
-        organization: formData.organization,
-        assigned_lawyer_id: formData.assigned_lawyer_ids?.[0],
-        firm_id: firmId,
-        status: 'new',
-        notes: formData.notes,
-        created_by: user?.id
-      }).select().single();
+      
+      // Create comprehensive notes with conversion details
+      let conversionNotes = [];
+      if (formData.notes) {
+        conversionNotes.push(`Original Notes: ${formData.notes}`);
+      }
+      
+      // Add case details if provided
+      if (formData.case_title) {
+        conversionNotes.push(`\n--- Case Created During Conversion ---`);
+        conversionNotes.push(`Case Title: ${formData.case_title}`);
+        if (formData.case_description) {
+          conversionNotes.push(`Case Description: ${formData.case_description}`);
+        }
+        conversionNotes.push(`Case Type: ${formData.case_type}`);
+        if (formData.estimated_fees) {
+          conversionNotes.push(`Estimated Fees: ₹${formData.estimated_fees}`);
+        }
+        if (formData.payment_terms) {
+          conversionNotes.push(`Payment Terms: ${formData.payment_terms}`);
+        }
+      }
+      
+      conversionNotes.push(`\n--- Conversion Details ---`);
+      conversionNotes.push(`Converted from contact on: ${new Date().toLocaleString()}`);
+      conversionNotes.push(`Purpose of Visit: ${formData.visit_purpose || 'Not specified'}`);
+      
+      const finalNotes = conversionNotes.join('\n');
+      
+      const { data: newClient, error: clientError } = await supabase
+        .from('clients')
+        .insert({
+          full_name: formData.full_name,
+          email: formData.email,
+          phone: formData.phone,
+          address: clientAddress,
+          organization: formData.organization,
+          assigned_lawyer_id: formData.assigned_lawyer_ids?.[0],
+          firm_id: firmId,
+          status: 'new',
+          notes: finalNotes,
+          referred_by_name: formData.referred_by_name,
+          referred_by_phone: formData.referred_by_phone,
+          created_by: user?.id
+        })
+        .select()
+        .single();
       if (clientError) throw clientError;
 
       // Create a case if case details are provided
