@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileText, Calendar, CheckSquare, StickyNote, MessageSquare, Activity, Filter, Search, Plus, BarChart3, FileSearch, Clock, Bot } from 'lucide-react';
@@ -18,13 +17,11 @@ import { CaseDetails } from './CaseDetails';
 import { CaseTimeline } from './CaseTimeline';
 import { CaseResearch } from './CaseResearch';
 import { CreateNoteMultiModal } from '../notes/CreateNoteMultiModal';
-
 interface CaseDetailTabsProps {
   caseId: string;
   activeTab: string;
   onTabChange: (tab: string) => void;
 }
-
 export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
   caseId,
   activeTab,
@@ -33,24 +30,24 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
   const [showCreateNoteModal, setShowCreateNoteModal] = useState(false);
 
   // Fetch latest 3 activities for the sidebar
-  const { data: recentActivities } = useQuery({
+  const {
+    data: recentActivities
+  } = useQuery({
     queryKey: ['recent-activities', caseId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('case_activities')
-        .select(`
+      const {
+        data,
+        error
+      } = await supabase.from('case_activities').select(`
           *,
           profiles!case_activities_created_by_fkey(full_name)
-        `)
-        .eq('case_id', caseId)
-        .order('created_at', { ascending: false })
-        .limit(3);
-      
+        `).eq('case_id', caseId).order('created_at', {
+        ascending: false
+      }).limit(3);
       if (error) throw error;
       return data || [];
     }
   });
-
   const getActivityTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
       'case_created': 'Case Created',
@@ -80,64 +77,49 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
   };
 
   // Organize tabs into two rows
-  const primaryTabs = [
-    {
-      value: 'overview',
-      label: 'Overview',
-      icon: BarChart3
-    },
-    {
-      value: 'details',
-      label: 'Details',
-      icon: FileSearch
-    },
-    {
-      value: 'timeline',
-      label: 'Timeline',
-      icon: Clock
-    },
-    {
-      value: 'hearings',
-      label: 'Hearings',
-      icon: Calendar
-    },
-    {
-      value: 'documents',
-      label: 'Documents',
-      icon: FileText
-    }
-  ];
-
-  const secondaryTabs = [
-    {
-      value: 'tasks',
-      label: 'Tasks',
-      icon: CheckSquare
-    },
-    {
-      value: 'notes',
-      label: 'Notes',
-      icon: StickyNote
-    },
-    {
-      value: 'messages',
-      label: 'Messages',
-      icon: MessageSquare
-    },
-    {
-      value: 'research',
-      label: 'Research',
-      icon: Bot
-    },
-    {
-      value: 'activity',
-      label: 'Activity',
-      icon: Activity
-    }
-  ];
-
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+  const primaryTabs = [{
+    value: 'overview',
+    label: 'Overview',
+    icon: BarChart3
+  }, {
+    value: 'details',
+    label: 'Details',
+    icon: FileSearch
+  }, {
+    value: 'timeline',
+    label: 'Timeline',
+    icon: Clock
+  }, {
+    value: 'hearings',
+    label: 'Hearings',
+    icon: Calendar
+  }, {
+    value: 'documents',
+    label: 'Documents',
+    icon: FileText
+  }];
+  const secondaryTabs = [{
+    value: 'tasks',
+    label: 'Tasks',
+    icon: CheckSquare
+  }, {
+    value: 'notes',
+    label: 'Notes',
+    icon: StickyNote
+  }, {
+    value: 'messages',
+    label: 'Messages',
+    icon: MessageSquare
+  }, {
+    value: 'research',
+    label: 'Research',
+    icon: Bot
+  }, {
+    value: 'activity',
+    label: 'Activity',
+    icon: Activity
+  }];
+  return <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
       {/* Main Content */}
       <div className="lg:col-span-3">
         <div className="bg-white border border-gray-200 rounded-2xl shadow-sm">
@@ -147,47 +129,27 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
               {/* Primary tabs row */}
               <div className="flex border-b border-gray-100">
                 {primaryTabs.map(tab => {
-                  const IconComponent = tab.icon;
-                  return (
-                    <button
-                      key={tab.value}
-                      onClick={() => onTabChange(tab.value)}
-                      className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors flex-1 justify-center border-b-2 ${
-                        activeTab === tab.value
-                          ? 'border-primary text-primary bg-blue-50'
-                          : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                      }`}
-                    >
+                const IconComponent = tab.icon;
+                return <button key={tab.value} onClick={() => onTabChange(tab.value)} className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors flex-1 justify-center border-b-2 ${activeTab === tab.value ? 'border-primary text-primary bg-blue-50' : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'}`}>
                       <IconComponent className="w-4 h-4" />
                       {tab.label}
-                    </button>
-                  );
-                })}
+                    </button>;
+              })}
               </div>
               
               {/* Secondary tabs row */}
               <div className="flex">
                 {secondaryTabs.map(tab => {
-                  const IconComponent = tab.icon;
-                  return (
-                    <button
-                      key={tab.value}
-                      onClick={() => onTabChange(tab.value)}
-                      className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors flex-1 justify-center border-b-2 ${
-                        activeTab === tab.value
-                          ? 'border-primary text-primary bg-blue-50'
-                          : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                      }`}
-                    >
+                const IconComponent = tab.icon;
+                return <button key={tab.value} onClick={() => onTabChange(tab.value)} className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors flex-1 justify-center border-b-2 ${activeTab === tab.value ? 'border-primary text-primary bg-blue-50' : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'}`}>
                       <IconComponent className="w-4 h-4" />
                       {tab.label}
-                    </button>
-                  );
-                })}
+                    </button>;
+              })}
               </div>
             </div>
 
-            <div className="p-6">
+            <div className="p-6 bg-slate-50">
               <TabsContent value="overview" className="m-0">
                 <CaseOverview caseId={caseId} />
               </TabsContent>
@@ -256,10 +218,7 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
               <Plus className="w-4 h-4 mr-2" />
               Add Task
             </Button>
-            <Button 
-              className="w-full justify-start"
-              onClick={() => setShowCreateNoteModal(true)}
-            >
+            <Button className="w-full justify-start" onClick={() => setShowCreateNoteModal(true)}>
               <StickyNote className="w-4 h-4 mr-2" />
               New Note
             </Button>
@@ -270,9 +229,7 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
         <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
           <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
           <div className="space-y-4">
-            {recentActivities && recentActivities.length > 0 ? (
-              recentActivities.map((activity) => (
-                <div key={activity.id} className="flex items-start gap-3">
+            {recentActivities && recentActivities.length > 0 ? recentActivities.map(activity => <div key={activity.id} className="flex items-start gap-3">
                   <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                     <Activity className="w-4 h-4 text-blue-600" />
                   </div>
@@ -282,22 +239,13 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
                       {format(new Date(activity.created_at), 'MMM d, h:mm a')}
                     </p>
                   </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-4">
+                </div>) : <div className="text-center py-4">
                 <p className="text-sm text-gray-500">No recent activity</p>
-              </div>
-            )}
+              </div>}
           </div>
         </div>
       </div>
 
-      <CreateNoteMultiModal
-        open={showCreateNoteModal}
-        onClose={() => setShowCreateNoteModal(false)}
-        caseId={caseId}
-      />
-    </div>
-  );
+      <CreateNoteMultiModal open={showCreateNoteModal} onClose={() => setShowCreateNoteModal(false)} caseId={caseId} />
+    </div>;
 };
