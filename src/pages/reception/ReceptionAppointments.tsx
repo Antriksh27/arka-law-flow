@@ -236,7 +236,7 @@ const ReceptionAppointments = () => {
         }
       }
     });
-  }, [appointments, markLateMutation]);
+  }, [appointments]); // Removed markLateMutation from dependencies to prevent infinite loop
 
   const shouldShowArrivedButton = (appointment: any) => {
     return appointment.status === 'upcoming' || appointment.status === 'late' || appointment.status === 'rescheduled';
