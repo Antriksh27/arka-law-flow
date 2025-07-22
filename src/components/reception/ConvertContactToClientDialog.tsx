@@ -340,10 +340,18 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
       }
 
       // Remove the contact from contacts table (transfer complete)
-      const {
-        error: deleteError
-      } = await supabase.from('contacts').delete().eq('id', contact.id);
-      if (deleteError) throw deleteError;
+      console.log('ConvertContactToClientDialog: Attempting to delete contact with ID:', contact.id);
+      const { error: deleteError } = await supabase
+        .from('contacts')
+        .delete()
+        .eq('id', contact.id);
+      
+      if (deleteError) {
+        console.error('ConvertContactToClientDialog: Error deleting contact:', deleteError);
+        throw new Error(`Failed to remove contact: ${deleteError.message}`);
+      }
+      
+      console.log('ConvertContactToClientDialog: Contact successfully deleted');
       return {
         client: newClient,
         case: newCase
