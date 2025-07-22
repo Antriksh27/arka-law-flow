@@ -65,18 +65,18 @@ const RescheduleAppointmentDialog = ({ open, onOpenChange, appointment }: Resche
       const dateChanged = data.appointment_date !== appointment.appointment_date;
       
       if (dateChanged) {
-        // If date changed, mark as cancelled and create new appointment
-        const { error: cancelError } = await supabase
+        // If date changed, mark original as rescheduled and create new appointment
+        const { error: rescheduleError } = await supabase
           .from('appointments')
           .update({
-            status: 'cancelled',
+            status: 'rescheduled',
             notes: appointment.notes ? 
-              `${appointment.notes}\n\nCancelled due to reschedule to ${data.appointment_date}: ${data.reschedule_reason || 'No reason provided'}` : 
-              `Cancelled due to reschedule to ${data.appointment_date}: ${data.reschedule_reason || 'No reason provided'}`
+              `${appointment.notes}\n\nRescheduled to ${data.appointment_date} at ${data.appointment_time}: ${data.reschedule_reason || 'No reason provided'}` : 
+              `Rescheduled to ${data.appointment_date} at ${data.appointment_time}: ${data.reschedule_reason || 'No reason provided'}`
           })
           .eq('id', appointment.id);
 
-        if (cancelError) throw cancelError;
+        if (rescheduleError) throw rescheduleError;
 
         // Create new appointment
         const { error: createError } = await supabase
