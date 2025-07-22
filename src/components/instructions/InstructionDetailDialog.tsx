@@ -310,7 +310,7 @@ export const InstructionDetailDialog: React.FC<InstructionDetailDialogProps> = (
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+      <DialogContent className="max-w-4xl h-[85vh] flex flex-col">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center justify-between">
             <span>Instruction Details</span>
@@ -431,53 +431,60 @@ export const InstructionDetailDialog: React.FC<InstructionDetailDialogProps> = (
         </div>
 
         {/* Replies Section */}
-        <div className="flex-1 flex flex-col min-h-0">
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
           <div className="flex items-center gap-2 p-4 border-b flex-shrink-0">
             <MessageSquare className="w-4 h-4" />
             <span className="font-medium">Conversation ({replies.length})</span>
           </div>
 
-          <ScrollArea className="flex-1 p-4">
-            <div className="space-y-4">
-              {replies.map((reply) => (
-                <div
-                  key={reply.id}
-                  className={`flex gap-3 ${
-                    reply.created_by === user?.id ? 'justify-end' : 'justify-start'
-                  }`}
-                >
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-4 space-y-4">
+              {replies.length === 0 ? (
+                <div className="text-center text-muted-foreground py-8">
+                  <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p>No replies yet. Start the conversation!</p>
+                </div>
+              ) : (
+                replies.map((reply) => (
                   <div
-                    className={`max-w-[80%] p-3 rounded-lg ${
-                      reply.created_by === user?.id
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted'
-                    } ${
-                      reply.is_status_update ? 'bg-secondary text-secondary-foreground' : ''
+                    key={reply.id}
+                    className={`flex gap-3 ${
+                      reply.created_by === user?.id ? 'justify-end' : 'justify-start'
                     }`}
                   >
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-medium">{reply.creator_name}</span>
-                      <span className="text-xs opacity-70">
-                        {new Date(reply.created_at).toLocaleString()}
-                      </span>
-                      {reply.is_from_lawyer && (
-                        <Badge variant="outline" className="text-xs">Lawyer</Badge>
+                    <div
+                      className={`max-w-[80%] p-3 rounded-lg ${
+                        reply.created_by === user?.id
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted'
+                      } ${
+                        reply.is_status_update ? 'bg-secondary text-secondary-foreground' : ''
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs font-medium">{reply.creator_name}</span>
+                        <span className="text-xs opacity-70">
+                          {new Date(reply.created_at).toLocaleString()}
+                        </span>
+                        {reply.is_from_lawyer && (
+                          <Badge variant="outline" className="text-xs">Lawyer</Badge>
+                        )}
+                      </div>
+                      
+                      <p className="text-sm">{reply.reply_message}</p>
+                      
+                      {reply.tagged_user_name && (
+                        <div className="flex items-center gap-1 mt-1 text-xs opacity-70">
+                          <AtSign className="w-3 h-3" />
+                          <span>Tagged: {reply.tagged_user_name}</span>
+                        </div>
                       )}
                     </div>
-                    
-                    <p className="text-sm">{reply.reply_message}</p>
-                    
-                    {reply.tagged_user_name && (
-                      <div className="flex items-center gap-1 mt-1 text-xs opacity-70">
-                        <AtSign className="w-3 h-3" />
-                        <span>Tagged: {reply.tagged_user_name}</span>
-                      </div>
-                    )}
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
-          </ScrollArea>
+          </div>
         </div>
 
         {/* Reply Input - Fixed at bottom */}
