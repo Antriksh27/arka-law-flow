@@ -274,15 +274,15 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
       // Create the new client
       const clientAddress = [formData.address_line_1, formData.address_line_2].filter(Boolean).join(', ');
       
-      // Create comprehensive notes with conversion details
+      // Create comprehensive notes with conversion details including case information
       let conversionNotes = [];
       if (formData.notes) {
         conversionNotes.push(`Original Notes: ${formData.notes}`);
       }
       
-      // Add case details if provided
+      // Add case details as notes instead of creating a case
       if (formData.case_title) {
-        conversionNotes.push(`\n--- Case Created During Conversion ---`);
+        conversionNotes.push(`\n--- Case Information Provided During Conversion ---`);
         conversionNotes.push(`Case Title: ${formData.case_title}`);
         if (formData.case_description) {
           conversionNotes.push(`Case Description: ${formData.case_description}`);
@@ -322,27 +322,7 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
         .single();
       if (clientError) throw clientError;
 
-      // Create a case if case details are provided
-      let newCase = null;
-      if (formData.case_title) {
-        const {
-          data: caseData,
-          error: caseError
-        } = await supabase.from('cases').insert({
-          title: formData.case_title,
-          case_title: formData.case_title,
-          description: formData.case_description,
-          case_type: formData.case_type,
-          client_id: newClient.id,
-          assigned_to: formData.assigned_lawyer_ids?.[0],
-          firm_id: firmId,
-          created_by: user?.id,
-          status: 'open',
-          priority: 'medium'
-        }).select().single();
-        if (caseError) throw caseError;
-        newCase = caseData;
-      }
+      // Note: Case information is now stored in client notes instead of creating a separate case
 
       // Remove the contact from contacts table (transfer complete)
       console.log('ConvertContactToClientDialog: Attempting to delete contact with ID:', contact.id);
@@ -358,14 +338,13 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
       
       console.log('ConvertContactToClientDialog: Contact successfully deleted');
       return {
-        client: newClient,
-        case: newCase
+        client: newClient
       };
     },
     onSuccess: data => {
       toast({
         title: "Success",
-        description: `${data.client.full_name} has been converted to a client${data.case ? ' and a case has been created' : ''}`
+        description: `${data.client.full_name} has been converted to a client. Case information has been added to client notes for office staff review.`
       });
 
       // Invalidate relevant queries
@@ -581,7 +560,7 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
 
           {/* Case Information */}
           <div className="space-y-4">
-            <h3 className="text-lg font-medium">Case Information (Optional)</h3>
+            <h3 className="text-lg font-medium">Case Information (Will be saved as notes for office staff)</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
