@@ -11,8 +11,9 @@ interface ClientNotesProps {
 }
 
 export const ClientNotes: React.FC<ClientNotesProps> = ({ clientId }) => {
-  const { data: notes = [], isLoading } = useQuery({
-    queryKey: ['client-notes', clientId],
+  // Fetch both notes_v2 and client notes
+  const { data: notesV2 = [], isLoading: notesV2Loading } = useQuery({
+    queryKey: ['client-notes-v2', clientId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('notes_v2')
@@ -27,6 +28,46 @@ export const ClientNotes: React.FC<ClientNotesProps> = ({ clientId }) => {
       return data;
     }
   });
+
+  const { data: clientData, isLoading: clientLoading } = useQuery({
+    queryKey: ['client-data', clientId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('notes, created_at, created_by, profiles!clients_created_by_fkey(full_name)')
+        .eq('id', clientId)
+        .single();
+
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const isLoading = notesV2Loading || clientLoading;
+
+  // Combine both types of notes
+  const allNotes = [];
+  
+  // Add client notes if they exist
+  if (clientData?.notes) {
+    allNotes.push({
+      id: 'client-notes',
+      title: 'Conversion Notes',
+      content: clientData.notes,
+      created_at: clientData.created_at,
+      created_by: clientData.profiles,
+      visibility: 'team',
+      is_pinned: false,
+      tags: ['conversion'],
+      color: null
+    });
+  }
+  
+  // Add notes_v2
+  allNotes.push(...notesV2);
+  
+  // Sort by created_at
+  const notes = allNotes.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
   const getVisibilityIcon = (visibility: string) => {
     return visibility === 'private' ? (
@@ -87,10 +128,18 @@ export const ClientNotes: React.FC<ClientNotesProps> = ({ clientId }) => {
                 </div>
                 
                 {note.content && (
-                  <p className="text-gray-600 mb-3 text-sm">
-                    {note.content.substring(0, 200)}
-                    {note.content.length > 200 ? '...' : ''}
-                  </p>
+                  <div className="text-gray-600 mb-3 text-sm whitespace-pre-wrap">
+                    {note.id === 'client-notes' ? (
+                      // Show full content for conversion notes
+                      note.content
+                    ) : (
+                      // Show truncated content for other notes
+                      <>
+                        {note.content.substring(0, 200)}
+                        {note.content.length > 200 ? '...' : ''}
+                      </>
+                    )}
+                  </div>
                 )}
 
                 {note.tags && note.tags.length > 0 && (
