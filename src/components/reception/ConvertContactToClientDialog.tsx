@@ -256,6 +256,11 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
         throw new Error('Missing required authentication data');
       }
 
+      // Prevent conversion of temporary/fake contacts
+      if (!contact?.id || contact.id === 'temp-id' || contact.id.startsWith('temp-')) {
+        throw new Error('Cannot convert temporary contact. Please create a proper contact first.');
+      }
+
       // Check if client with this email already exists
       if (formData.email) {
         const {
