@@ -30,8 +30,10 @@ import {
   Clock,
   Eye,
   Play,
-  CheckSquare
+  CheckSquare,
+  MessageCircle
 } from 'lucide-react';
+import { InstructionDetailDialog } from '@/components/instructions/InstructionDetailDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -448,7 +450,7 @@ const StaffInstructions = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <Button
+                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => {
@@ -456,7 +458,7 @@ const StaffInstructions = () => {
                               setShowDetailDialog(true);
                             }}
                           >
-                            <Eye className="w-4 h-4" />
+                            <MessageCircle className="w-4 h-4" />
                           </Button>
                           
                           {instruction.status === 'pending' && (
@@ -500,106 +502,12 @@ const StaffInstructions = () => {
       </Card>
 
       {/* Instruction Detail Dialog */}
-      <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Instruction Details</DialogTitle>
-          </DialogHeader>
-          
-          {selectedInstruction && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h4 className="font-medium mb-2">From</h4>
-                  <div className="flex items-center gap-2">
-                    <User className="w-4 h-4 text-muted-foreground" />
-                    {selectedInstruction.lawyer_name}
-                  </div>
-                </div>
-                <div>
-                  <h4 className="font-medium mb-2">Case</h4>
-                  <div>{selectedInstruction.case_title || 'No specific case'}</div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <h4 className="font-medium mb-2">Priority</h4>
-                  <Badge variant={getPriorityColor(selectedInstruction.priority)}>
-                    {selectedInstruction.priority}
-                  </Badge>
-                </div>
-                <div>
-                  <h4 className="font-medium mb-2">Status</h4>
-                  <Badge variant={getStatusColor(selectedInstruction.status)}>
-                    {selectedInstruction.status.replace('_', ' ')}
-                  </Badge>
-                </div>
-                <div>
-                  <h4 className="font-medium mb-2">Deadline</h4>
-                  <div className={isOverdue(selectedInstruction.deadline) ? 'text-destructive' : ''}>
-                    {selectedInstruction.deadline 
-                      ? new Date(selectedInstruction.deadline).toLocaleDateString()
-                      : 'No deadline'
-                    }
-                    {isOverdue(selectedInstruction.deadline) && (
-                      <span className="text-xs block">(Overdue)</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="font-medium mb-2">Message</h4>
-                <div className="bg-muted/50 p-3 rounded-lg">
-                  {selectedInstruction.message}
-                </div>
-              </div>
-
-              <div>
-                <h4 className="font-medium mb-2">Received</h4>
-                <div className="text-sm text-muted-foreground">
-                  {new Date(selectedInstruction.created_at).toLocaleString()}
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-2 pt-4 border-t">
-                {selectedInstruction.status === 'pending' && (
-                  <Button
-                    onClick={() => handleUpdateStatus(selectedInstruction.id, 'accepted')}
-                    className="flex-1"
-                  >
-                    Accept Instruction
-                  </Button>
-                )}
-                
-                {selectedInstruction.status === 'accepted' && (
-                  <Button
-                    onClick={() => handleUpdateStatus(selectedInstruction.id, 'in_progress')}
-                    className="flex-1"
-                  >
-                    Start Working
-                  </Button>
-                )}
-                
-                {selectedInstruction.status === 'in_progress' && (
-                  <Button
-                    onClick={() => handleUpdateStatus(selectedInstruction.id, 'completed')}
-                    className="flex-1"
-                  >
-                    Mark as Completed
-                  </Button>
-                )}
-                
-                <Button variant="outline" onClick={() => setShowDetailDialog(false)}>
-                  Close
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <InstructionDetailDialog
+        instruction={selectedInstruction}
+        isOpen={showDetailDialog}
+        onClose={() => setShowDetailDialog(false)}
+        onUpdate={fetchInstructions}
+      />
     </div>
   );
 };

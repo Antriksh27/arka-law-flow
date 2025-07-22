@@ -1245,6 +1245,56 @@ export type Database = {
           },
         ]
       }
+      instruction_replies: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          instruction_id: string
+          is_from_lawyer: boolean
+          is_status_update: boolean
+          new_status: string | null
+          old_status: string | null
+          reply_message: string
+          tagged_user_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          instruction_id: string
+          is_from_lawyer?: boolean
+          is_status_update?: boolean
+          new_status?: string | null
+          old_status?: string | null
+          reply_message: string
+          tagged_user_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          instruction_id?: string
+          is_from_lawyer?: boolean
+          is_status_update?: boolean
+          new_status?: string | null
+          old_status?: string | null
+          reply_message?: string
+          tagged_user_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instruction_replies_instruction_id_fkey"
+            columns: ["instruction_id"]
+            isOneToOne: false
+            referencedRelation: "instructions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       instructions: {
         Row: {
           case_id: string | null
