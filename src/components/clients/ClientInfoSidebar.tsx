@@ -46,7 +46,15 @@ export const ClientInfoSidebar: React.FC<ClientInfoSidebarProps> = ({
         </div>
 
         {/* Assigned Lawyer */}
-        {client.assigned_lawyer}
+        {client.assigned_lawyer && (
+          <div className="space-y-4">
+            <h4 className="text-sm font-medium text-gray-900">Assigned Lawyer</h4>
+            <div className="flex items-center gap-3 text-sm">
+              <UserCheck className="w-4 h-4 text-gray-400" />
+              <span className="text-gray-900">{client.assigned_lawyer.full_name}</span>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>;
 };
