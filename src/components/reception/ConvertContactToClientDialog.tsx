@@ -260,7 +260,7 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
       if (formData.email) {
         const {
           data: existingClient
-        } = await supabase.from('clients').select('id').eq('email', formData.email).eq('firm_id', firmId).single();
+        } = await supabase.from('clients').select('id').eq('email', formData.email).eq('firm_id', firmId).maybeSingle();
         if (existingClient) {
           throw new Error('A client with this email already exists');
         }
