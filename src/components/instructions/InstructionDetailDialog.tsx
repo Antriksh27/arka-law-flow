@@ -310,8 +310,8 @@ export const InstructionDetailDialog: React.FC<InstructionDetailDialogProps> = (
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
-        <DialogHeader>
+      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center justify-between">
             <span>Instruction Details</span>
             <div className="flex items-center gap-2">
@@ -341,184 +341,184 @@ export const InstructionDetailDialog: React.FC<InstructionDetailDialogProps> = (
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col h-[600px]">
-          {/* Instruction Content */}
-          <div className="flex-shrink-0 space-y-4 p-4 border-b">
-            {/* Status Controls */}
-            <div className="flex items-center gap-2">
-              <Select value={instruction.status} onValueChange={handleStatusChange}>
-                <SelectTrigger className="w-48">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="accepted">Accepted</SelectItem>
-                  <SelectItem value="in_progress">In Progress</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              {instruction.lawyer_id === user?.id && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsEditing(!isEditing)}
-                >
-                  <Edit className="w-4 h-4 mr-2" />
-                  {isEditing ? 'Cancel' : 'Edit'}
-                </Button>
-              )}
-            </div>
-
-            {/* Instruction Message */}
-            {isEditing ? (
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium">Message</label>
-                  <Textarea
-                    value={editedMessage}
-                    onChange={(e) => setEditedMessage(e.target.value)}
-                    rows={3}
-                  />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium">Priority</label>
-                    <Select value={editedPriority} onValueChange={setEditedPriority}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="low">Low</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="high">High</SelectItem>
-                        <SelectItem value="urgent">Urgent</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div>
-                    <label className="text-sm font-medium">Deadline</label>
-                    <Input
-                      type="date"
-                      value={editedDeadline}
-                      onChange={(e) => setEditedDeadline(e.target.value)}
-                    />
-                  </div>
-                </div>
-                
-                <div className="flex gap-2">
-                  <Button onClick={handleSaveEdit} disabled={loading}>
-                    <Save className="w-4 h-4 mr-2" />
-                    Save Changes
-                  </Button>
-                  <Button variant="outline" onClick={() => setIsEditing(false)}>
-                    <X className="w-4 h-4 mr-2" />
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="bg-muted/30 p-4 rounded-lg">
-                <p className="text-sm leading-relaxed">{instruction.message}</p>
-                {instruction.case_title && (
-                  <p className="text-xs text-muted-foreground mt-2">
-                    <strong>Case:</strong> {instruction.case_title}
-                  </p>
-                )}
-              </div>
+        {/* Instruction Content */}
+        <div className="flex-shrink-0 space-y-4 p-4 border-b">
+          {/* Status Controls */}
+          <div className="flex items-center gap-2">
+            <Select value={instruction.status} onValueChange={handleStatusChange}>
+              <SelectTrigger className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="accepted">Accepted</SelectItem>
+                <SelectItem value="in_progress">In Progress</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            {instruction.lawyer_id === user?.id && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsEditing(!isEditing)}
+              >
+                <Edit className="w-4 h-4 mr-2" />
+                {isEditing ? 'Cancel' : 'Edit'}
+              </Button>
             )}
           </div>
 
-          {/* Replies Section */}
-          <div className="flex-1 flex flex-col">
-            <div className="flex items-center gap-2 p-4 border-b">
-              <MessageSquare className="w-4 h-4" />
-              <span className="font-medium">Conversation ({replies.length})</span>
-            </div>
-
-            <ScrollArea className="flex-1 p-4">
-              <div className="space-y-4">
-                {replies.map((reply) => (
-                  <div
-                    key={reply.id}
-                    className={`flex gap-3 ${
-                      reply.created_by === user?.id ? 'justify-end' : 'justify-start'
-                    }`}
-                  >
-                    <div
-                      className={`max-w-[80%] p-3 rounded-lg ${
-                        reply.created_by === user?.id
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted'
-                      } ${
-                        reply.is_status_update ? 'bg-secondary text-secondary-foreground' : ''
-                      }`}
-                    >
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-medium">{reply.creator_name}</span>
-                        <span className="text-xs opacity-70">
-                          {new Date(reply.created_at).toLocaleString()}
-                        </span>
-                        {reply.is_from_lawyer && (
-                          <Badge variant="outline" className="text-xs">Lawyer</Badge>
-                        )}
-                      </div>
-                      
-                      <p className="text-sm">{reply.reply_message}</p>
-                      
-                      {reply.tagged_user_name && (
-                        <div className="flex items-center gap-1 mt-1 text-xs opacity-70">
-                          <AtSign className="w-3 h-3" />
-                          <span>Tagged: {reply.tagged_user_name}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-
-            {/* Reply Input */}
-            <div className="p-4 border-t space-y-3">
-              <div className="flex items-center gap-2">
-                <Reply className="w-4 h-4" />
-                <span className="text-sm font-medium">Add Reply</span>
-              </div>
-              
-              <div className="flex gap-2">
-                <Select value={taggedUser} onValueChange={setTaggedUser}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Tag someone (optional)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">No one</SelectItem>
-                    {teamMembers.map((member) => (
-                      <SelectItem key={member.id} value={member.id}>
-                        {member.full_name} ({member.role})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="flex gap-2">
+          {/* Instruction Message */}
+          {isEditing ? (
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">Message</label>
                 <Textarea
-                  placeholder="Type your reply..."
-                  value={newReply}
-                  onChange={(e) => setNewReply(e.target.value)}
-                  rows={2}
-                  className="flex-1"
+                  value={editedMessage}
+                  onChange={(e) => setEditedMessage(e.target.value)}
+                  rows={3}
                 />
-                <Button 
-                  onClick={handleSendReply} 
-                  disabled={!newReply.trim() || loading}
-                  className="self-end"
-                >
-                  <Send className="w-4 h-4" />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">Priority</label>
+                  <Select value={editedPriority} onValueChange={setEditedPriority}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="urgent">Urgent</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium">Deadline</label>
+                  <Input
+                    type="date"
+                    value={editedDeadline}
+                    onChange={(e) => setEditedDeadline(e.target.value)}
+                  />
+                </div>
+              </div>
+              
+              <div className="flex gap-2">
+                <Button onClick={handleSaveEdit} disabled={loading}>
+                  <Save className="w-4 h-4 mr-2" />
+                  Save Changes
+                </Button>
+                <Button variant="outline" onClick={() => setIsEditing(false)}>
+                  <X className="w-4 h-4 mr-2" />
+                  Cancel
                 </Button>
               </div>
+            </div>
+          ) : (
+            <div className="bg-muted/30 p-4 rounded-lg">
+              <p className="text-sm leading-relaxed">{instruction.message}</p>
+              {instruction.case_title && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  <strong>Case:</strong> {instruction.case_title}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Replies Section */}
+        <div className="flex-1 flex flex-col min-h-0">
+          <div className="flex items-center gap-2 p-4 border-b flex-shrink-0">
+            <MessageSquare className="w-4 h-4" />
+            <span className="font-medium">Conversation ({replies.length})</span>
+          </div>
+
+          <ScrollArea className="flex-1 p-4">
+            <div className="space-y-4">
+              {replies.map((reply) => (
+                <div
+                  key={reply.id}
+                  className={`flex gap-3 ${
+                    reply.created_by === user?.id ? 'justify-end' : 'justify-start'
+                  }`}
+                >
+                  <div
+                    className={`max-w-[80%] p-3 rounded-lg ${
+                      reply.created_by === user?.id
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted'
+                    } ${
+                      reply.is_status_update ? 'bg-secondary text-secondary-foreground' : ''
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs font-medium">{reply.creator_name}</span>
+                      <span className="text-xs opacity-70">
+                        {new Date(reply.created_at).toLocaleString()}
+                      </span>
+                      {reply.is_from_lawyer && (
+                        <Badge variant="outline" className="text-xs">Lawyer</Badge>
+                      )}
+                    </div>
+                    
+                    <p className="text-sm">{reply.reply_message}</p>
+                    
+                    {reply.tagged_user_name && (
+                      <div className="flex items-center gap-1 mt-1 text-xs opacity-70">
+                        <AtSign className="w-3 h-3" />
+                        <span>Tagged: {reply.tagged_user_name}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+        </div>
+
+        {/* Reply Input - Fixed at bottom */}
+        <div className="flex-shrink-0 p-4 border-t bg-background">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Reply className="w-4 h-4" />
+              <span className="text-sm font-medium">Add Reply</span>
+            </div>
+            
+            <div className="flex gap-2">
+              <Select value={taggedUser} onValueChange={setTaggedUser}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Tag someone (optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No one</SelectItem>
+                  {teamMembers.map((member) => (
+                    <SelectItem key={member.id} value={member.id}>
+                      {member.full_name} ({member.role})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="flex gap-2">
+              <Textarea
+                placeholder="Type your reply..."
+                value={newReply}
+                onChange={(e) => setNewReply(e.target.value)}
+                rows={2}
+                className="flex-1"
+              />
+              <Button 
+                onClick={handleSendReply} 
+                disabled={!newReply.trim() || loading}
+                className="self-end"
+              >
+                <Send className="w-4 h-4" />
+              </Button>
             </div>
           </div>
         </div>
