@@ -34,11 +34,15 @@ export const ClientNotes: React.FC<ClientNotesProps> = ({ clientId }) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('clients')
-        .select('notes, created_at, created_by, profiles!clients_created_by_fkey(full_name)')
+        .select('notes, created_at, created_by')
         .eq('id', clientId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching client data:', error);
+        throw error;
+      }
+      console.log('Client data:', data);
       return data;
     }
   });
@@ -55,7 +59,7 @@ export const ClientNotes: React.FC<ClientNotesProps> = ({ clientId }) => {
       title: 'Conversion Notes',
       content: clientData.notes,
       created_at: clientData.created_at,
-      created_by: clientData.profiles,
+      created_by: { full_name: 'System' }, // Default for conversion notes
       visibility: 'team',
       is_pinned: false,
       tags: ['conversion'],
