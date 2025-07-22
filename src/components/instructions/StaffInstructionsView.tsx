@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Clock, AlertCircle, User, Calendar, Search, Filter, CheckCheck, CircleDot, PlayCircle, Timer } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { CheckCircle, Clock, AlertCircle, User, Calendar, Search, Filter, CheckCheck, CircleDot, PlayCircle, Timer, MessageCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { InstructionDetailDialog } from '@/components/instructions/InstructionDetailDialog';
 
 interface Instruction {
   id: string;
@@ -17,6 +19,7 @@ interface Instruction {
   deadline: string | null;
   created_at: string;
   lawyer_id: string;
+  staff_id: string | null;
   case_id: string | null;
   case_title?: string;
   lawyer_name?: string;
@@ -29,6 +32,8 @@ const StaffInstructionsView = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
+  const [selectedInstruction, setSelectedInstruction] = useState<Instruction | null>(null);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -45,6 +50,7 @@ const StaffInstructionsView = () => {
           deadline,
           created_at,
           lawyer_id,
+          staff_id,
           case_id
         `)
         .eq('staff_id', user?.id)
@@ -450,22 +456,34 @@ const StaffInstructionsView = () => {
                             </div>
                           </div>
                           
-                          <div className="pt-2">
-                            <Select
-                              value={instruction.status}
-                              onValueChange={(value) => updateInstructionStatus(instruction.id, value)}
-                            >
-                              <SelectTrigger className="w-full">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="pending">Pending</SelectItem>
-                                <SelectItem value="accepted">Accepted</SelectItem>
-                                <SelectItem value="in_progress">In Progress</SelectItem>
-                                <SelectItem value="completed">Completed</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
+                           <div className="pt-2 flex gap-2">
+                             <Button
+                               variant="outline"
+                               size="sm"
+                               onClick={() => {
+                                 setSelectedInstruction(instruction);
+                                 setShowDetailDialog(true);
+                               }}
+                               className="flex-1"
+                             >
+                               <MessageCircle className="w-4 h-4 mr-2" />
+                               View Details
+                             </Button>
+                             <Select
+                               value={instruction.status}
+                               onValueChange={(value) => updateInstructionStatus(instruction.id, value)}
+                             >
+                               <SelectTrigger className="w-24">
+                                 <SelectValue />
+                               </SelectTrigger>
+                               <SelectContent>
+                                 <SelectItem value="pending">Pending</SelectItem>
+                                 <SelectItem value="accepted">Accepted</SelectItem>
+                                 <SelectItem value="in_progress">In Progress</SelectItem>
+                                 <SelectItem value="completed">Completed</SelectItem>
+                               </SelectContent>
+                             </Select>
+                           </div>
                         </div>
                       </CardContent>
                     </Card>
@@ -503,22 +521,32 @@ const StaffInstructionsView = () => {
                             </div>
                           </div>
                           
-                          <div className="flex items-center gap-2">
-                            <Select
-                              value={instruction.status}
-                              onValueChange={(value) => updateInstructionStatus(instruction.id, value)}
-                            >
-                              <SelectTrigger className="w-[130px]">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="pending">Pending</SelectItem>
-                                <SelectItem value="accepted">Accepted</SelectItem>
-                                <SelectItem value="in_progress">In Progress</SelectItem>
-                                <SelectItem value="completed">Completed</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
+                           <div className="flex items-center gap-2">
+                             <Button
+                               variant="outline"
+                               size="sm"
+                               onClick={() => {
+                                 setSelectedInstruction(instruction);
+                                 setShowDetailDialog(true);
+                               }}
+                             >
+                               <MessageCircle className="w-4 h-4" />
+                             </Button>
+                             <Select
+                               value={instruction.status}
+                               onValueChange={(value) => updateInstructionStatus(instruction.id, value)}
+                             >
+                               <SelectTrigger className="w-[130px]">
+                                 <SelectValue />
+                               </SelectTrigger>
+                               <SelectContent>
+                                 <SelectItem value="pending">Pending</SelectItem>
+                                 <SelectItem value="accepted">Accepted</SelectItem>
+                                 <SelectItem value="in_progress">In Progress</SelectItem>
+                                 <SelectItem value="completed">Completed</SelectItem>
+                               </SelectContent>
+                             </Select>
+                           </div>
                         </div>
                       </CardContent>
                     </Card>
@@ -529,6 +557,14 @@ const StaffInstructionsView = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Instruction Detail Dialog */}
+      <InstructionDetailDialog
+        instruction={selectedInstruction}
+        isOpen={showDetailDialog}
+        onClose={() => setShowDetailDialog(false)}
+        onUpdate={loadInstructions}
+      />
     </div>
   );
 };
