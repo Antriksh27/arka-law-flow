@@ -15,7 +15,7 @@ interface Client {
   email?: string;
   phone?: string;
   organization?: string;
-  status: 'active' | 'inactive' | 'lead' | 'prospect';
+  status: 'active' | 'inactive' | 'lead' | 'prospect' | 'new';
   assigned_lawyer_id?: string;
   address?: string;
   notes?: string;
@@ -34,7 +34,7 @@ interface ClientFormData {
   phone?: string;
   organization?: string;
   address?: string;
-  status: 'active' | 'inactive' | 'lead' | 'prospect';
+  status: 'active' | 'inactive' | 'lead' | 'prospect' | 'new';
   assigned_lawyer_id?: string;
   notes?: string;
 }
@@ -174,6 +174,7 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
               {...register('status')}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
+              <option value="new">New</option>
               <option value="lead">Lead</option>
               <option value="prospect">Prospect</option>
               <option value="active">Active</option>

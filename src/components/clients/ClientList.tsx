@@ -18,14 +18,14 @@ interface Client {
   full_name: string;
   email?: string;
   phone?: string;
-  status: 'active' | 'inactive' | 'lead' | 'prospect';
+  status: 'active' | 'inactive' | 'lead' | 'prospect' | 'new';
   organization?: string;
   assigned_lawyer_name?: string;
   active_case_count: number;
   created_at: string;
 }
 
-type StatusFilter = 'all' | 'active' | 'inactive' | 'lead' | 'prospect';
+type StatusFilter = 'all' | 'active' | 'inactive' | 'lead' | 'prospect' | 'new';
 
 export const ClientList = () => {
   console.log('ClientList component rendering...');
@@ -169,6 +169,7 @@ export const ClientList = () => {
             className="w-32 px-3 py-2 border border-slate-900 rounded-md text-sm bg-white"
           >
             <option value="all">All Status</option>
+            <option value="new">New</option>
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
             <option value="lead">Lead</option>
@@ -223,9 +224,13 @@ export const ClientList = () => {
                   </TableCell>
                   <TableCell>
                     <Badge 
-                      className={`${client.status === 'active' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-gray-100 text-gray-700 border-gray-200'} rounded-full text-xs`}
+                      className={`${
+                        client.status === 'active' ? 'bg-green-100 text-green-700 border-green-200' :
+                        client.status === 'new' ? 'bg-blue-100 text-blue-700 border-blue-200' :
+                        'bg-gray-100 text-gray-700 border-gray-200'
+                      } rounded-full text-xs`}
                     >
-                      {client.status}
+                      {client.status === 'new' ? 'New' : client.status}
                     </Badge>
                   </TableCell>
                   <TableCell>

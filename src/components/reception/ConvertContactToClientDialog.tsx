@@ -279,7 +279,7 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
         organization: formData.organization,
         assigned_lawyer_id: formData.assigned_lawyer_ids?.[0],
         firm_id: firmId,
-        status: 'active',
+        status: 'new',
         notes: formData.notes,
         created_by: user?.id
       }).select().single();

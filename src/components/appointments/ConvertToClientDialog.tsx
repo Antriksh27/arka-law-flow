@@ -111,7 +111,7 @@ export const ConvertToClientDialog: React.FC<ConvertToClientDialogProps> = ({
           organization: formData.organization,
           assigned_lawyer_id: formData.assigned_lawyer_id,
           firm_id: teamMember.firm_id,
-          status: 'active',
+          status: 'new',
           notes: formData.additional_notes,
         })
         .select()

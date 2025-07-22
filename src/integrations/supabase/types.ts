@@ -2902,7 +2902,7 @@ export type Database = {
       client_category: "vip" | "regular" | "new"
       client_source: "referral" | "website" | "advertisement" | "walk_in"
       client_status: "lead" | "ongoing" | "payment_pending" | "closed"
-      client_status_enum: "active" | "inactive" | "lead" | "prospect"
+      client_status_enum: "active" | "inactive" | "lead" | "prospect" | "new"
       client_type: "individual" | "company" | "organization"
       firm_status: "active" | "suspended" | "pending"
       hearing_status: "scheduled" | "adjourned" | "completed" | "cancelled"
@@ -3085,7 +3085,7 @@ export const Constants = {
       client_category: ["vip", "regular", "new"],
       client_source: ["referral", "website", "advertisement", "walk_in"],
       client_status: ["lead", "ongoing", "payment_pending", "closed"],
-      client_status_enum: ["active", "inactive", "lead", "prospect"],
+      client_status_enum: ["active", "inactive", "lead", "prospect", "new"],
       client_type: ["individual", "company", "organization"],
       firm_status: ["active", "suspended", "pending"],
       hearing_status: ["scheduled", "adjourned", "completed", "cancelled"],

@@ -9,7 +9,7 @@ interface Client {
   full_name: string;
   email?: string;
   phone?: string;
-  status: 'active' | 'inactive' | 'lead' | 'prospect';
+  status: 'active' | 'inactive' | 'lead' | 'prospect' | 'new';
   organization?: string;
   assigned_lawyer_name?: string;
   active_case_count: number;
@@ -30,6 +30,7 @@ export const ClientDetailsDialog: React.FC<ClientDetailsDialogProps> = ({
   const getStatusBadgeVariant = (status: string): "default" | "outline" | "success" | "error" | "warning" => {
     switch (status) {
       case 'active': return 'success';
+      case 'new': return 'default';
       case 'inactive': return 'outline';
       case 'lead': return 'warning';
       case 'prospect': return 'error';
@@ -59,7 +60,7 @@ export const ClientDetailsDialog: React.FC<ClientDetailsDialogProps> = ({
                   <label className="text-sm font-medium text-gray-500">Status</label>
                   <div className="mt-1">
                     <Badge variant={getStatusBadgeVariant(client.status)}>
-                      {client.status}
+                      {client.status === 'new' ? 'New' : client.status}
                     </Badge>
                   </div>
                 </div>
