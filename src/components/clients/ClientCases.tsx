@@ -1,16 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { Eye, Plus } from 'lucide-react';
+import { AddCaseDialog } from '@/components/cases/AddCaseDialog';
 
 interface ClientCasesProps {
   clientId: string;
 }
 
 export const ClientCases: React.FC<ClientCasesProps> = ({ clientId }) => {
+  const [showAddDialog, setShowAddDialog] = useState(false);
   const { data: cases = [], isLoading } = useQuery({
     queryKey: ['client-cases', clientId],
     queryFn: async () => {
@@ -57,7 +59,11 @@ export const ClientCases: React.FC<ClientCasesProps> = ({ clientId }) => {
     <Card className="bg-white rounded-2xl shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-xl font-semibold">Cases</CardTitle>
-        <Button size="sm" className="bg-primary hover:bg-primary/90">
+        <Button 
+          size="sm" 
+          className="bg-primary hover:bg-primary/90"
+          onClick={() => setShowAddDialog(true)}
+        >
           <Plus className="w-4 h-4 mr-2" />
           New Case
         </Button>
@@ -101,6 +107,12 @@ export const ClientCases: React.FC<ClientCasesProps> = ({ clientId }) => {
           </div>
         )}
       </CardContent>
+      
+      <AddCaseDialog 
+        open={showAddDialog}
+        onClose={() => setShowAddDialog(false)}
+        preSelectedClientId={clientId}
+      />
     </Card>
   );
 };
