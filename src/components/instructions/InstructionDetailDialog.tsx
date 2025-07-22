@@ -86,7 +86,7 @@ export const InstructionDetailDialog: React.FC<InstructionDetailDialogProps> = (
   const { toast } = useToast();
   const [replies, setReplies] = useState<InstructionReply[]>([]);
   const [newReply, setNewReply] = useState('');
-  const [taggedUser, setTaggedUser] = useState<string>('');
+  const [taggedUser, setTaggedUser] = useState<string>('none');
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [editedMessage, setEditedMessage] = useState('');
@@ -185,13 +185,13 @@ export const InstructionDetailDialog: React.FC<InstructionDetailDialogProps> = (
           reply_message: newReply,
           created_by: user?.id,
           is_from_lawyer: instruction.lawyer_id === user?.id,
-          tagged_user_id: taggedUser || null,
+          tagged_user_id: taggedUser === 'none' ? null : taggedUser,
         });
 
       if (error) throw error;
 
       setNewReply('');
-      setTaggedUser('');
+      setTaggedUser('none');
       fetchReplies();
       
       toast({
@@ -493,7 +493,7 @@ export const InstructionDetailDialog: React.FC<InstructionDetailDialogProps> = (
                     <SelectValue placeholder="Tag someone (optional)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No one</SelectItem>
+                    <SelectItem value="none">No one</SelectItem>
                     {teamMembers.map((member) => (
                       <SelectItem key={member.id} value={member.id}>
                         {member.full_name} ({member.role})
