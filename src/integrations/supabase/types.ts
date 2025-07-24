@@ -174,6 +174,78 @@ export type Database = {
           },
         ]
       }
+      availability_exceptions: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          is_blocked: boolean
+          reason: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          is_blocked?: boolean
+          reason?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          is_blocked?: boolean
+          reason?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      availability_rules: {
+        Row: {
+          appointment_duration: number
+          buffer_time: number
+          created_at: string
+          day_of_week: number
+          end_time: string
+          id: string
+          is_active: boolean
+          max_appointments_per_day: number | null
+          start_time: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          appointment_duration?: number
+          buffer_time?: number
+          created_at?: string
+          day_of_week: number
+          end_time: string
+          id?: string
+          is_active?: boolean
+          max_appointments_per_day?: number | null
+          start_time: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          appointment_duration?: number
+          buffer_time?: number
+          created_at?: string
+          day_of_week?: number
+          end_time?: string
+          id?: string
+          is_active?: boolean
+          max_appointments_per_day?: number | null
+          start_time?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       calendar_events: {
         Row: {
           created_at: string | null

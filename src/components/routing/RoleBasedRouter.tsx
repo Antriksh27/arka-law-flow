@@ -19,6 +19,7 @@ import Invoices from '@/pages/Invoices';
 import Team from '@/pages/Team';
 import Messages from '@/pages/Messages';
 import Instructions from '@/pages/Instructions';
+import Availability from '@/pages/Availability';
 import NotFound from '@/pages/NotFound';
 
 // Reception pages
@@ -103,6 +104,7 @@ const RoleBasedRouter = () => {
         <Route path="/messages" element={<Messages />} />
         <Route path="/instructions" element={<Instructions />} />
         <Route path="/invoices" element={<Invoices />} />
+        <Route path="/availability" element={<Availability />} />
         <Route path="/team" element={<Team />} />
         {/* Fallback for reception routes accessed by non-receptionists */}
         <Route path="/reception/*" element={<Index />} />
