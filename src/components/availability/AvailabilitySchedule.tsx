@@ -125,7 +125,7 @@ export const AvailabilitySchedule = () => {
 
   const saveNewRule = async (index: number) => {
     const rule = editingRules[index];
-    if (!rule.day_of_week !== undefined && rule.start_time && rule.end_time) {
+    if (rule.day_of_week !== undefined && rule.start_time && rule.end_time && rule.start_time < rule.end_time) {
       await createRuleMutation.mutateAsync(rule as Omit<AvailabilityRule, 'id'>);
       setEditingRules(editingRules.filter((_, i) => i !== index));
     }
@@ -182,7 +182,7 @@ export const AvailabilitySchedule = () => {
             <CardContent className="space-y-4">
               {day.rules.map(rule => (
                 <div key={rule.id} className="flex items-center gap-4 p-4 border rounded-lg">
-                  <div className="grid grid-cols-6 gap-4 flex-1">
+                  <div className="grid grid-cols-4 gap-4 flex-1">
                     <div>
                       <Label className="text-xs">Start Time</Label>
                       <div className="text-sm font-medium">{rule.start_time}</div>
@@ -190,14 +190,6 @@ export const AvailabilitySchedule = () => {
                     <div>
                       <Label className="text-xs">End Time</Label>
                       <div className="text-sm font-medium">{rule.end_time}</div>
-                    </div>
-                    <div>
-                      <Label className="text-xs">Duration</Label>
-                      <div className="text-sm font-medium">{rule.appointment_duration} min</div>
-                    </div>
-                    <div>
-                      <Label className="text-xs">Buffer</Label>
-                      <div className="text-sm font-medium">{rule.buffer_time} min</div>
                     </div>
                     <div>
                       <Label className="text-xs">Max/Day</Label>
@@ -225,7 +217,7 @@ export const AvailabilitySchedule = () => {
                 if (rule.day_of_week !== day.value) return null;
                 
                 return (
-                  <div key={index} className="grid grid-cols-6 gap-4 p-4 border-2 border-dashed rounded-lg">
+                  <div key={index} className="grid grid-cols-4 gap-4 p-4 border-2 border-dashed rounded-lg bg-blue-50">
                     <div>
                       <Label>Start Time</Label>
                       <Input
@@ -243,33 +235,6 @@ export const AvailabilitySchedule = () => {
                       />
                     </div>
                     <div>
-                      <Label>Duration (min)</Label>
-                      <Select
-                        value={rule.appointment_duration?.toString() || ''}
-                        onValueChange={(value) => updateEditingRule(index, 'appointment_duration', parseInt(value))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {DURATION_OPTIONS.map(duration => (
-                            <SelectItem key={duration} value={duration.toString()}>
-                              {duration} minutes
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label>Buffer (min)</Label>
-                      <Input
-                        type="number"
-                        min="0"
-                        value={rule.buffer_time || 0}
-                        onChange={(e) => updateEditingRule(index, 'buffer_time', parseInt(e.target.value) || 0)}
-                      />
-                    </div>
-                    <div>
                       <Label>Max/Day</Label>
                       <Input
                         type="number"
@@ -280,7 +245,7 @@ export const AvailabilitySchedule = () => {
                       />
                     </div>
                     <div className="flex items-end gap-2">
-                      <Button size="sm" onClick={() => saveNewRule(index)}>
+                      <Button size="sm" onClick={() => saveNewRule(index)} className="bg-blue-600 hover:bg-blue-700">
                         <Save className="h-4 w-4" />
                       </Button>
                       <Button
