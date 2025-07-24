@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AppointmentsHeader } from '../components/appointments/AppointmentsHeader';
 import { AppointmentsFilters } from '../components/appointments/AppointmentsFilters';
 import { AppointmentsTable } from '../components/appointments/AppointmentsTable';
@@ -10,7 +11,7 @@ import DefaultPageLayout from '../components/messages/ui/DefaultPageLayout';
 import { Button } from '../components/ui/button';
 import { TextField } from '../components/messages/ui/TextField';
 import { ToggleGroup, ToggleGroupItem } from '../components/ui/toggle-group';
-import { Filter, Plus, Search, LayoutList, Calendar } from 'lucide-react';
+import { Filter, Plus, Search, LayoutList, Calendar, Clock } from 'lucide-react';
 import { useDialog } from '@/hooks/use-dialog';
 import { CreateAppointmentDialog } from '../components/appointments/CreateAppointmentDialog';
 
@@ -38,6 +39,7 @@ const Appointments = () => {
     showPastAppointments: false,
   });
   const { openDialog } = useDialog();
+  const navigate = useNavigate();
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setFilters({
@@ -54,6 +56,10 @@ const Appointments = () => {
             My Appointments
           </span>
           <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => navigate('/availability')}>
+              <Clock className="w-4 h-4 mr-2" />
+              My Availability
+            </Button>
             <Button variant="outline" onClick={() => {}}>
               <Filter className="w-4 h-4 mr-2" />
               Filter
