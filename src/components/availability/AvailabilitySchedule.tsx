@@ -36,6 +36,7 @@ const DURATION_OPTIONS = [15, 30, 45, 60, 90, 120];
 
 export const AvailabilitySchedule = () => {
   const [editingRules, setEditingRules] = useState<Partial<AvailabilityRule>[]>([]);
+  const [selectedDay, setSelectedDay] = useState<number>(1);
   const queryClient = useQueryClient();
 
   const { data: availabilityRules, isLoading } = useQuery({
@@ -111,9 +112,9 @@ export const AvailabilitySchedule = () => {
     }
   });
 
-  const addNewRule = () => {
+  const addNewRule = (dayOfWeek?: number) => {
     setEditingRules([...editingRules, {
-      day_of_week: 1,
+      day_of_week: dayOfWeek ?? 1,
       start_time: '09:00',
       end_time: '17:00',
       appointment_duration: 30,
@@ -162,10 +163,24 @@ export const AvailabilitySchedule = () => {
             Set your available time slots for each day of the week
           </p>
         </div>
-        <Button onClick={addNewRule} className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          Add Time Slot
-        </Button>
+        <div className="flex items-center gap-3">
+          <Select value={selectedDay.toString()} onValueChange={(value) => setSelectedDay(parseInt(value))}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {DAYS_OF_WEEK.map(day => (
+                <SelectItem key={day.value} value={day.value.toString()}>
+                  {day.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button onClick={() => addNewRule(selectedDay)} className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            Add Time Slot
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-6">
