@@ -1,5 +1,5 @@
-import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import ReceptionistLayout from '@/components/layout/ReceptionistLayout';
@@ -39,6 +39,15 @@ import OfficeStaffClientList from '@/components/clients/OfficeStaffClientList';
 
 const RoleBasedRouter = () => {
   const { role, loading } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Redirect users away from reception routes if they're not receptionists
+  useEffect(() => {
+    if (!loading && role && role !== 'receptionist' && location.pathname.startsWith('/reception')) {
+      navigate('/', { replace: true });
+    }
+  }, [role, loading, location.pathname, navigate]);
 
   if (loading) {
     return (
