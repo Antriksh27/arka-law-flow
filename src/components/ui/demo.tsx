@@ -77,12 +77,11 @@ export function ExpandableChatDemo() {
   }
 
   return (
-    <div className="h-[600px] relative">
-      <ExpandableChat
-        size="lg"
-        position="bottom-right"
-        icon={<Bot className="h-6 w-6" />}
-      >
+    <ExpandableChat
+      size="lg"
+      position="bottom-right"
+      icon={<Bot className="h-6 w-6" />}
+    >
         <ExpandableChatHeader className="flex-col text-center justify-center">
           <h1 className="text-xl font-semibold">Chat with AI ✨</h1>
           <p className="text-sm text-muted-foreground">
@@ -166,7 +165,6 @@ export function ExpandableChatDemo() {
           </form>
         </ExpandableChatFooter>
       </ExpandableChat>
-    </div>
   )
 }
 
