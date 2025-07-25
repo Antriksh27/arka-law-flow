@@ -8,6 +8,7 @@ import RoleBasedRouter from './components/routing/RoleBasedRouter';
 import Auth from './pages/Auth';
 import { BookingPage } from './pages/BookingPage';
 import { Toaster } from './components/ui/toaster';
+import { ExpandableChatDemo } from './components/ui/demo';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -40,6 +41,7 @@ function App() {
                 } />
               </Routes>
               <Toaster />
+              <ExpandableChatDemo />
             </DialogProvider>
           </AuthProvider>
         </QueryClientProvider>
