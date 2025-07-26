@@ -2800,6 +2800,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_current_user_firm_id_secure: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_current_user_profile: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -2811,6 +2815,10 @@ export type Database = {
       }
       get_current_user_role_for_firm: {
         Args: { p_firm_id: string }
+        Returns: string
+      }
+      get_current_user_role_secure: {
+        Args: Record<PropertyKey, never>
         Returns: string
       }
       get_profile_by_id: {
