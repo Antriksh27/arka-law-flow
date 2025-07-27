@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { sanitizeInput, isValidEmail } from '@/lib/security';
 import {
   Dialog,
   DialogContent,
@@ -60,6 +61,21 @@ const AddTeamMemberDialog = ({ open, onOpenChange }: AddTeamMemberDialogProps) =
       setIsCreating(true);
       
       try {
+        // Sanitize inputs before processing
+        const sanitizedData = {
+          full_name: sanitizeInput(data.full_name),
+          email: sanitizeInput(data.email).toLowerCase(),
+          phone: data.phone ? sanitizeInput(data.phone) : undefined,
+          role: data.role,
+          password: data.password, // Don't sanitize password
+          notes: data.notes ? sanitizeInput(data.notes) : undefined,
+        };
+
+        // Additional validation
+        if (!isValidEmail(sanitizedData.email)) {
+          throw new Error('Invalid email format');
+        }
+
         // Call the edge function to create the team member
         const { data: session } = await supabase.auth.getSession();
         if (!session.session) {
@@ -68,12 +84,7 @@ const AddTeamMemberDialog = ({ open, onOpenChange }: AddTeamMemberDialogProps) =
 
         const { data: result, error } = await supabase.functions.invoke('create-team-member', {
           body: {
-            full_name: data.full_name,
-            email: data.email,
-            phone: data.phone,
-            role: data.role,
-            password: data.password,
-            notes: data.notes,
+            ...sanitizedData,
             firm_id: firmId,
             invited_by: user?.id,
           },
@@ -121,11 +132,30 @@ const AddTeamMemberDialog = ({ open, onOpenChange }: AddTeamMemberDialogProps) =
   };
 
   const generatePassword = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+    // Generate a strong password with mixed case, numbers, and symbols
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()+=[]{}|;:,.<>?';
     let password = '';
-    for (let i = 0; i < 12; i++) {
+    
+    // Ensure at least one character from each category
+    const categories = [
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZ', // uppercase
+      'abcdefghijklmnopqrstuvwxyz', // lowercase
+      '0123456789', // numbers
+      '!@#$%^&*()+=[]{}|;:,.<>?' // symbols
+    ];
+    
+    // Add one char from each category first
+    categories.forEach(category => {
+      password += category.charAt(Math.floor(Math.random() * category.length));
+    });
+    
+    // Fill remaining 8 characters randomly
+    for (let i = 4; i < 16; i++) {
       password += chars.charAt(Math.floor(Math.random() * chars.length));
     }
+    
+    // Shuffle the password
+    password = password.split('').sort(() => 0.5 - Math.random()).join('');
     form.setValue('password', password);
   };
 
@@ -240,8 +270,14 @@ const AddTeamMemberDialog = ({ open, onOpenChange }: AddTeamMemberDialogProps) =
               rules={{ 
                 required: "Password is required",
                 minLength: {
-                  value: 8,
-                  message: "Password must be at least 8 characters"
+                  value: 12,
+                  message: "Password must be at least 12 characters"
+                },
+                validate: {
+                  hasUppercase: (value) => /[A-Z]/.test(value) || "Password must contain at least one uppercase letter",
+                  hasLowercase: (value) => /[a-z]/.test(value) || "Password must contain at least one lowercase letter",
+                  hasNumber: (value) => /\d/.test(value) || "Password must contain at least one number",
+                  hasSymbol: (value) => /[!@#$%^&*()+=\[\]{}|;:,.<>?]/.test(value) || "Password must contain at least one symbol"
                 }
               }}
               render={({ field }) => (
@@ -250,7 +286,7 @@ const AddTeamMemberDialog = ({ open, onOpenChange }: AddTeamMemberDialogProps) =
                   <div className="flex gap-2">
                     <FormControl>
                       <Input 
-                        type="text" 
+                        type="password" 
                         placeholder="Enter password" 
                         {...field} 
                       />

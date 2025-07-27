@@ -2829,6 +2829,10 @@ export type Database = {
           role: string
         }[]
       }
+      get_user_firm_id_from_team: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_user_firms: {
         Args: { user_id: string }
         Returns: string[]
@@ -2869,6 +2873,10 @@ export type Database = {
       }
       get_user_role: {
         Args: { user_id: string }
+        Returns: string
+      }
+      get_user_team_role_secure: {
+        Args: Record<PropertyKey, never>
         Returns: string
       }
       has_case_access: {

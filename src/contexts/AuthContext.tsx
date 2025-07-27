@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { AuditLogger } from '@/lib/auditLogger';
 
 interface AuthContextType {
   user: User | null;
@@ -121,9 +122,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         password,
       });
       
-      if (error) throw error;
+      if (error) {
+        // Log failed login attempt
+        await AuditLogger.logAuthEvent('login_failed', { 
+          email: email.toLowerCase(),
+          error_message: error.message 
+        });
+        throw error;
+      }
       
       if (data.user) {
+        // Log successful login
+        await AuditLogger.logAuthEvent('login_success', { 
+          email: email.toLowerCase(),
+          user_id: data.user.id 
+        });
+        
         // Check user role and redirect accordingly
         const { data: teamMember } = await supabase
           .from('team_members')
@@ -160,6 +174,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (error) throw error;
       
+      // Log successful signup
+      if (data.user) {
+        await AuditLogger.logAuthEvent('signup', { 
+          email: email.toLowerCase(),
+          user_id: data.user.id,
+          full_name: fullName 
+        });
+      }
+      
       return { error: null };
     } catch (error) {
       return { error };
@@ -168,7 +191,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
+      // Log logout before clearing session
+      await AuditLogger.logAuthEvent('logout');
+      
       await supabase.auth.signOut();
+      
       // Clear local state immediately
       setUser(null);
       setSession(null);
