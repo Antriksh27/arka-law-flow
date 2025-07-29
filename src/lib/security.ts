@@ -40,7 +40,7 @@ export const isValidPhone = (phone: string): boolean => {
 };
 
 /**
- * Validates password strength
+ * Validates password strength with enhanced security requirements
  * @param password - Password to validate
  * @returns Object with validation results
  */
@@ -51,11 +51,19 @@ export const validatePasswordStrength = (password: string) => {
     score: 0
   };
 
-  if (password.length < 12) {
+  // Enhanced minimum length requirement
+  if (password.length < 14) {
     result.isValid = false;
-    result.errors.push('Password must be at least 12 characters long');
+    result.errors.push('Password must be at least 14 characters long');
   } else {
     result.score += 1;
+  }
+
+  // Check for common passwords (basic list)
+  const commonPasswords = ['password', '123456', 'password123', 'admin', 'qwerty'];
+  if (commonPasswords.some(common => password.toLowerCase().includes(common))) {
+    result.isValid = false;
+    result.errors.push('Password contains common patterns');
   }
 
   if (!/[A-Z]/.test(password)) {
@@ -90,13 +98,13 @@ export const validatePasswordStrength = (password: string) => {
 };
 
 /**
- * Rate limiting utility (client-side basic implementation)
+ * Enhanced rate limiting utility with stricter controls
  */
 export class RateLimiter {
   private attempts: Map<string, number[]> = new Map();
   
   constructor(
-    private maxAttempts: number = 5,
+    private maxAttempts: number = 3, // Reduced from 5 to 3
     private windowMs: number = 15 * 60 * 1000 // 15 minutes
   ) {}
 
