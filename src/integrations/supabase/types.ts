@@ -162,13 +162,6 @@ export type Database = {
             foreignKeyName: "audit_logs_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "firm_statistics"
-            referencedColumns: ["admin_id"]
-          },
-          {
-            foreignKeyName: "audit_logs_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -282,13 +275,6 @@ export type Database = {
             foreignKeyName: "calendar_events_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "firm_statistics"
-            referencedColumns: ["admin_id"]
-          },
-          {
-            foreignKeyName: "calendar_events_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -336,13 +322,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "cases"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "case_activities_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "firm_statistics"
-            referencedColumns: ["admin_id"]
           },
           {
             foreignKeyName: "case_activities_created_by_fkey"
@@ -459,13 +438,6 @@ export type Database = {
             foreignKeyName: "case_emails_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
-            referencedRelation: "firm_statistics"
-            referencedColumns: ["admin_id"]
-          },
-          {
-            foreignKeyName: "case_emails_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -521,13 +493,6 @@ export type Database = {
             foreignKeyName: "case_files_uploaded_by_fkey"
             columns: ["uploaded_by"]
             isOneToOne: false
-            referencedRelation: "firm_statistics"
-            referencedColumns: ["admin_id"]
-          },
-          {
-            foreignKeyName: "case_files_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -569,13 +534,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "cases"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "case_notes_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "firm_statistics"
-            referencedColumns: ["admin_id"]
           },
           {
             foreignKeyName: "case_notes_created_by_fkey"
@@ -766,13 +724,6 @@ export type Database = {
             foreignKeyName: "cases_assigned_to_fkey"
             columns: ["assigned_to"]
             isOneToOne: false
-            referencedRelation: "firm_statistics"
-            referencedColumns: ["admin_id"]
-          },
-          {
-            foreignKeyName: "cases_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -789,13 +740,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "cases_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "firm_statistics"
-            referencedColumns: ["admin_id"]
           },
           {
             foreignKeyName: "cases_created_by_fkey"
@@ -897,13 +841,6 @@ export type Database = {
           type?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "clients_assigned_lawyer_id_fkey"
-            columns: ["assigned_lawyer_id"]
-            isOneToOne: false
-            referencedRelation: "firm_statistics"
-            referencedColumns: ["admin_id"]
-          },
           {
             foreignKeyName: "clients_assigned_lawyer_id_fkey"
             columns: ["assigned_lawyer_id"]
@@ -1070,13 +1007,6 @@ export type Database = {
             foreignKeyName: "court_hearings_lawyer_id_fkey"
             columns: ["lawyer_id"]
             isOneToOne: false
-            referencedRelation: "firm_statistics"
-            referencedColumns: ["admin_id"]
-          },
-          {
-            foreignKeyName: "court_hearings_lawyer_id_fkey"
-            columns: ["lawyer_id"]
-            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -1234,13 +1164,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "document_types"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "documents_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "firm_statistics"
-            referencedColumns: ["admin_id"]
           },
           {
             foreignKeyName: "documents_uploaded_by_fkey"
@@ -1588,13 +1511,6 @@ export type Database = {
             foreignKeyName: "law_firm_members_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "firm_statistics"
-            referencedColumns: ["admin_id"]
-          },
-          {
-            foreignKeyName: "law_firm_members_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -1635,13 +1551,6 @@ export type Database = {
           status?: Database["public"]["Enums"]["firm_status"] | null
         }
         Relationships: [
-          {
-            foreignKeyName: "law_firms_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "firm_statistics"
-            referencedColumns: ["admin_id"]
-          },
           {
             foreignKeyName: "law_firms_created_by_fkey"
             columns: ["created_by"]
@@ -1792,13 +1701,6 @@ export type Database = {
             foreignKeyName: "notes_author_id_fkey"
             columns: ["author_id"]
             isOneToOne: false
-            referencedRelation: "firm_statistics"
-            referencedColumns: ["admin_id"]
-          },
-          {
-            foreignKeyName: "notes_author_id_fkey"
-            columns: ["author_id"]
-            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -1920,13 +1822,6 @@ export type Database = {
             foreignKeyName: "notes_v2_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
-            referencedRelation: "firm_statistics"
-            referencedColumns: ["admin_id"]
-          },
-          {
-            foreignKeyName: "notes_v2_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -1964,13 +1859,6 @@ export type Database = {
           title?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "notifications_recipient_id_fkey"
-            columns: ["recipient_id"]
-            isOneToOne: false
-            referencedRelation: "firm_statistics"
-            referencedColumns: ["admin_id"]
-          },
           {
             foreignKeyName: "notifications_recipient_id_fkey"
             columns: ["recipient_id"]
@@ -2045,13 +1933,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "payments_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "firm_statistics"
-            referencedColumns: ["admin_id"]
           },
           {
             foreignKeyName: "payments_created_by_fkey"
@@ -2287,13 +2168,6 @@ export type Database = {
             foreignKeyName: "tasks_assigned_to_fkey"
             columns: ["assigned_to"]
             isOneToOne: false
-            referencedRelation: "firm_statistics"
-            referencedColumns: ["admin_id"]
-          },
-          {
-            foreignKeyName: "tasks_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -2324,13 +2198,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tasks_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "firm_statistics"
-            referencedColumns: ["admin_id"]
           },
           {
             foreignKeyName: "tasks_created_by_fkey"
@@ -2611,13 +2478,6 @@ export type Database = {
             foreignKeyName: "cases_assigned_to_fkey"
             columns: ["assigned_to"]
             isOneToOne: false
-            referencedRelation: "firm_statistics"
-            referencedColumns: ["admin_id"]
-          },
-          {
-            foreignKeyName: "cases_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -2634,13 +2494,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "cases_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "firm_statistics"
-            referencedColumns: ["admin_id"]
           },
           {
             foreignKeyName: "cases_created_by_fkey"
@@ -2680,13 +2533,6 @@ export type Database = {
           status: Database["public"]["Enums"]["client_status_enum"] | null
         }
         Relationships: [
-          {
-            foreignKeyName: "clients_assigned_lawyer_id_fkey"
-            columns: ["assigned_lawyer_id"]
-            isOneToOne: false
-            referencedRelation: "firm_statistics"
-            referencedColumns: ["admin_id"]
-          },
           {
             foreignKeyName: "clients_assigned_lawyer_id_fkey"
             columns: ["assigned_lawyer_id"]
