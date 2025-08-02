@@ -98,24 +98,36 @@ export const validatePasswordStrength = (password: string) => {
 };
 
 /**
- * Enhanced rate limiting utility with stricter controls
+ * Enhanced rate limiting utility with stricter controls and progressive delays
  */
 export class RateLimiter {
   private attempts: Map<string, number[]> = new Map();
+  private lockouts: Map<string, number> = new Map();
   
   constructor(
     private maxAttempts: number = 3, // Reduced from 5 to 3
-    private windowMs: number = 15 * 60 * 1000 // 15 minutes
+    private windowMs: number = 15 * 60 * 1000, // 15 minutes
+    private progressiveDelayBase: number = 1000 // 1 second base delay
   ) {}
 
   isAllowed(identifier: string): boolean {
     const now = Date.now();
+    
+    // Check if user is currently locked out
+    const lockoutUntil = this.lockouts.get(identifier);
+    if (lockoutUntil && now < lockoutUntil) {
+      return false;
+    }
+    
     const userAttempts = this.attempts.get(identifier) || [];
     
     // Clean old attempts
     const recentAttempts = userAttempts.filter(time => now - time < this.windowMs);
     
     if (recentAttempts.length >= this.maxAttempts) {
+      // Progressive lockout duration based on attempt count
+      const lockoutDuration = this.progressiveDelayBase * Math.pow(2, recentAttempts.length - this.maxAttempts);
+      this.lockouts.set(identifier, now + lockoutDuration);
       return false;
     }
     
@@ -127,6 +139,14 @@ export class RateLimiter {
   }
 
   getRemainingTime(identifier: string): number {
+    const lockoutUntil = this.lockouts.get(identifier);
+    if (lockoutUntil) {
+      const timeRemaining = lockoutUntil - Date.now();
+      if (timeRemaining > 0) {
+        return timeRemaining;
+      }
+    }
+    
     const attempts = this.attempts.get(identifier) || [];
     if (attempts.length < this.maxAttempts) {
       return 0;
@@ -136,6 +156,13 @@ export class RateLimiter {
     const timeUntilReset = this.windowMs - (Date.now() - oldestAttempt);
     
     return Math.max(0, timeUntilReset);
+  }
+
+  /**
+   * Gets progressive delay in milliseconds for failed attempts
+   */
+  getProgressiveDelay(attemptCount: number): number {
+    return this.progressiveDelayBase * Math.pow(2, attemptCount - 1);
   }
 }
 

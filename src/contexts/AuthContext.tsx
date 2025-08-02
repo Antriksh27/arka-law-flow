@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { AuditLogger } from '@/lib/auditLogger';
+import { SessionManager, initializeSessionSecurity } from '@/lib/sessionSecurity';
 
 interface AuthContextType {
   user: User | null;
@@ -98,6 +99,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.log(`AuthContext: User (id: ${currentUser.id}) present in onAuthStateChange. Fetching firm_id and role.`);
           setTimeout(async () => {
             await fetchFirmIdAndRole(currentUser.id);
+            // Initialize session security for authenticated users
+            initializeSessionSecurity();
             setLoading(false);
           }, 0);
         } else {
@@ -194,16 +197,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Log logout before clearing session
       await AuditLogger.logAuthEvent('logout');
       
-      await supabase.auth.signOut();
+      // Use secure logout from session manager
+      await SessionManager.secureLogout();
       
       // Clear local state immediately
       setUser(null);
       setSession(null);
       setFirmId(undefined);
       setRole(null);
-      window.location.href = '/auth';
     } catch (error) {
       console.error('Error signing out:', error);
+      // Force redirect even if logout fails
+      window.location.href = '/auth';
     }
   };
 

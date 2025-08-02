@@ -5,10 +5,11 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
-import { sanitizeInput, isValidEmail, validatePasswordStrength, RateLimiter } from '@/lib/security';
+import { sanitizeInput, isValidEmail, validatePasswordStrength, RateLimiter, isValidUUID } from '@/lib/security';
+import { secureSignIn, secureSignUp } from '@/lib/sessionSecurity';
 type AuthMode = 'login' | 'signup';
-// Rate limiter for login attempts
-const loginRateLimiter = new RateLimiter(5, 15 * 60 * 1000); // 5 attempts per 15 minutes
+// Enhanced rate limiter for login attempts with progressive delays
+const loginRateLimiter = new RateLimiter(3, 15 * 60 * 1000, 2000); // 3 attempts per 15 minutes, 2s base delay
 
 export const AuthForm: React.FC = () => {
   const [mode, setMode] = useState<AuthMode>('login');
@@ -68,26 +69,43 @@ export const AuthForm: React.FC = () => {
     setLoading(true);
     try {
       if (mode === 'login') {
-        const { error } = await signIn(sanitizedEmail, password);
+        // Use secure sign-in with enhanced security
+        const { error } = await secureSignIn(sanitizedEmail, password);
         if (error) {
           toast({
             title: 'Login Failed',
             description: error.message || 'Please check your credentials and try again.',
             variant: 'destructive'
           });
+        } else {
+          toast({
+            title: 'Welcome Back',
+            description: 'You have been successfully signed in.',
+          });
         }
       } else {
-        const { error } = await signUp(sanitizedEmail, password, sanitizedFullName);
+        // Use secure sign-up with enhanced security
+        const { error } = await secureSignUp(sanitizedEmail, password, sanitizedFullName);
         if (error) {
+          // Handle specific error types
+          let errorMessage = 'Please try again with different credentials.';
+          if (error.message?.includes('already registered')) {
+            errorMessage = 'An account with this email already exists. Please sign in instead.';
+          } else if (error.message?.includes('password')) {
+            errorMessage = 'Password does not meet security requirements.';
+          } else if (error.message?.includes('email')) {
+            errorMessage = 'Please enter a valid email address.';
+          }
+          
           toast({
             title: 'Signup Failed',
-            description: error.message || 'Please try again with different credentials.',
+            description: error.message || errorMessage,
             variant: 'destructive'
           });
         } else {
           toast({
             title: 'Account Created',
-            description: 'Please check your email to verify your account.'
+            description: 'Please check your email to verify your account.',
           });
           setMode('login');
           // Clear form
@@ -96,10 +114,19 @@ export const AuthForm: React.FC = () => {
           setFullName('');
         }
       }
-    } catch (error) {
+    } catch (error: any) {
+      // Enhanced error handling
+      let errorMessage = 'An unexpected error occurred. Please try again.';
+      
+      if (error?.message?.includes('rate limit')) {
+        errorMessage = 'Too many requests. Please wait a moment before trying again.';
+      } else if (error?.message?.includes('network')) {
+        errorMessage = 'Network error. Please check your connection and try again.';
+      }
+      
       toast({
         title: 'Error',
-        description: 'An unexpected error occurred. Please try again.',
+        description: errorMessage,
         variant: 'destructive'
       });
     } finally {
