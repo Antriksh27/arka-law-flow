@@ -2431,6 +2431,7 @@ export type Database = {
           assigned_to: string | null
           assigned_users: string[] | null
           case_number: string | null
+          case_title: string | null
           case_type: Database["public"]["Enums"]["case_type_enum"] | null
           category: string | null
           client_id: string | null
@@ -2567,6 +2568,28 @@ export type Database = {
           license_count: number | null
           status: Database["public"]["Enums"]["firm_status"] | null
           total_users: number | null
+        }
+        Relationships: []
+      }
+      security_dashboard: {
+        Row: {
+          action: string | null
+          count: number | null
+          date: string | null
+          entity_type: string | null
+          unique_users: number | null
+        }
+        Relationships: []
+      }
+      security_monitoring: {
+        Row: {
+          action: string | null
+          details: Json | null
+          entity_type: string | null
+          severity_level: string | null
+          timestamp: string | null
+          user_name: string | null
+          user_role: string | null
         }
         Relationships: []
       }
