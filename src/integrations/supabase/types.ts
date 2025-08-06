@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      appointment_rate_limits: {
+        Row: {
+          created_at: string | null
+          id: string
+          ip_address: unknown | null
+          request_count: number | null
+          user_id: string | null
+          window_start: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          request_count?: number | null
+          user_id?: string | null
+          window_start?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          request_count?: number | null
+          user_id?: string | null
+          window_start?: string | null
+        }
+        Relationships: []
+      }
       appointments: {
         Row: {
           appointment_date: string | null
@@ -2611,6 +2638,10 @@ export type Database = {
         Args: { user_id: string; task_id: string }
         Returns: boolean
       }
+      check_appointment_rate_limit: {
+        Args: { p_user_id?: string }
+        Returns: boolean
+      }
       check_if_super_admin: {
         Args: { user_id: string }
         Returns: boolean
@@ -2696,6 +2727,14 @@ export type Database = {
           id: string
           full_name: string
           role: string
+        }[]
+      }
+      get_security_metrics: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          metric: string
+          value: number
+          timeframe: string
         }[]
       }
       get_user_firm_id_from_team: {
