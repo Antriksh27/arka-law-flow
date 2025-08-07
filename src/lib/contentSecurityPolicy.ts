@@ -6,13 +6,13 @@ export const CSP_DIRECTIVES = {
   'default-src': ["'self'"],
   'script-src': [
     "'self'",
-    "'unsafe-inline'", // Required for Vite dev mode
+    // "'unsafe-inline'", // This should be removed in production builds
     "https://hpcnipcbymruvsnqrmjx.supabase.co",
     "https://*.supabase.co"
   ],
   'style-src': [
     "'self'",
-    "'unsafe-inline'", // Required for CSS-in-JS and Tailwind
+    // "'unsafe-inline'", // This should be removed in production builds
     "https://fonts.googleapis.com"
   ],
   'font-src': [
@@ -69,7 +69,6 @@ export const applyCSPMetaTag = (): void => {
 export const SECURITY_HEADERS = {
   'X-Content-Type-Options': 'nosniff',
   'X-Frame-Options': 'DENY',
-  'X-XSS-Protection': '1; mode=block',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'Permissions-Policy': 'camera=(), microphone=(), geolocation=()'
 };

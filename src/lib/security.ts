@@ -2,8 +2,10 @@
  * Security utilities for input sanitization and validation
  */
 
+import DOMPurify from 'dompurify';
+
 /**
- * Sanitizes user input to prevent XSS attacks
+ * Sanitizes user input to prevent XSS attacks using DOMPurify
  * @param input - The user input to sanitize
  * @returns Sanitized string
  */
@@ -12,11 +14,7 @@ export const sanitizeInput = (input: string): string => {
     return '';
   }
   
-  return input
-    .replace(/[<>]/g, '') // Remove < and > to prevent basic XSS
-    .replace(/javascript:/gi, '') // Remove javascript: protocol
-    .replace(/on\w+=/gi, '') // Remove event handlers like onclick=
-    .trim();
+  return DOMPurify.sanitize(input);
 };
 
 /**
@@ -60,7 +58,11 @@ export const validatePasswordStrength = (password: string) => {
   }
 
   // Check for common passwords (basic list)
-  const commonPasswords = ['password', '123456', 'password123', 'admin', 'qwerty'];
+  const commonPasswords = [
+    'password', '123456', '123456789', '12345678', '12345', '1234567', '1234', '1234567890',
+    'qwerty', 'password123', 'iloveyou', 'admin', 'administrator', 'welcome', 'test',
+    'secret', 'root', '111111', 'p@ssword'
+  ];
   if (commonPasswords.some(common => password.toLowerCase().includes(common))) {
     result.isValid = false;
     result.errors.push('Password contains common patterns');
