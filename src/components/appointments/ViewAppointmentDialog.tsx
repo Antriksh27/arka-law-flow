@@ -159,22 +159,30 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
   };
 
   const handleConvertToClient = () => {
+    console.log('🚀 ViewAppointmentDialog: handleConvertToClient called');
+    console.log('📄 Available contactData:', contactData);
+    console.log('👤 Appointment client_name:', appointment.client_name);
+    
     closeDialog();
     
-    // Use contact data if available to autofill the form
+    // Use contact data if available to autofill the form, otherwise create from appointment data
     const contactToConvert = contactData || {
       id: 'temp-id',
       name: appointment.client_name || '',
       email: '',
       phone: '',
-      notes: '',
+      notes: appointment.notes || '',
       address_line_1: '',
       address_line_2: '',
       pin_code: '',
       state_id: '',
       district_id: '',
-      visit_purpose: ''
+      visit_purpose: appointment.title || '',
+      referred_by_name: '',
+      referred_by_phone: ''
     };
+    
+    console.log('📝 Contact data being passed to dialog:', contactToConvert);
     
     openDialog(
       <ConvertContactToClientDialog
