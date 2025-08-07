@@ -2,6 +2,7 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ClientOverview } from './ClientOverview';
+import { ClientInformation } from './ClientInformation';
 import { ClientCases } from './ClientCases';
 import { ClientAppointments } from './ClientAppointments';
 import { ClientDocuments } from './ClientDocuments';
@@ -17,7 +18,8 @@ import {
   DollarSign, 
   StickyNote, 
   FileText, 
-  Mail 
+  Mail,
+  User
 } from 'lucide-react';
 
 interface ClientTabsProps {
@@ -34,6 +36,7 @@ export const ClientTabs: React.FC<ClientTabsProps> = ({
   // Arrange tab modules in the same style/order as in case detail page where applicable
   const tabs = [
     { value: 'overview-stats', label: 'Overview', icon: BarChart3 },
+    { value: 'client-information', label: 'Client Information', icon: User },
     { value: 'cases', label: 'Cases', icon: Briefcase },
     { value: 'appointments', label: 'Appointments', icon: Calendar },
     { value: 'documents', label: 'Documents', icon: FileText },
@@ -68,6 +71,9 @@ export const ClientTabs: React.FC<ClientTabsProps> = ({
         <div className="p-6">
           <TabsContent value="overview-stats" className="m-0">
             <ClientOverview clientId={clientId} />
+          </TabsContent>
+          <TabsContent value="client-information" className="m-0">
+            <ClientInformation clientId={clientId} />
           </TabsContent>
           <TabsContent value="cases" className="m-0">
             <ClientCases clientId={clientId} />
