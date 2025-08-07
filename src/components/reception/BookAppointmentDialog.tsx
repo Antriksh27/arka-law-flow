@@ -159,49 +159,44 @@ const BookAppointmentDialog = ({
   };
   const bookAppointmentMutation = useMutation({
     mutationFn: async (data: AppointmentFormData) => {
-      // First try to find existing client by email
+      console.log('🚀 BookAppointmentDialog: Creating appointment with data:', data);
+      console.log('🔍 Selected client value:', selectedClientValue);
+      
+      // Only use client_id if an existing client was selected
       let clientId = null;
-      if (data.client_email) {
-        const {
-          data: existingClient
-        } = await supabase.from('clients').select('id').eq('email', data.client_email).eq('firm_id', firmId).single();
-        if (existingClient) {
-          clientId = existingClient.id;
-        } else {
-          // Create new client
-          const {
-            data: newClient,
-            error: clientError
-          } = await supabase.from('clients').insert({
-            full_name: data.client_name,
-            email: data.client_email,
-            phone: data.client_phone,
-            firm_id: firmId,
-            created_by: user?.id
-          }).select().single();
-          if (clientError) throw clientError;
-          clientId = newClient.id;
-        }
+      if (selectedClientValue && selectedClientValue.startsWith('client-')) {
+        clientId = selectedClientValue.replace('client-', '');
+        console.log('📝 Using existing client ID:', clientId);
+      } else {
+        console.log('📝 No existing client selected - appointment will be created without client_id');
       }
 
-      // Create appointment
-      const {
-        data: newAppointment,
-        error
-      } = await supabase.from('appointments').insert({
+      // Create appointment - store client name directly for contacts
+      const appointmentData: any = {
         lawyer_id: data.lawyer_id,
-        client_id: clientId,
         appointment_date: data.appointment_date,
         appointment_time: data.appointment_time,
         duration_minutes: data.duration_minutes,
-        title: data.title,
+        title: data.title || `Appointment with ${data.client_name}`,
         notes: data.notes,
         firm_id: firmId,
         created_by: user?.id,
         created_by_user_id: user?.id,
         type: 'in-person',
         status: 'upcoming'
-      }).select().single();
+      };
+
+      // Only set client_id if an existing client was selected
+      if (clientId) {
+        appointmentData.client_id = clientId;
+      }
+
+      console.log('📅 Creating appointment with data:', appointmentData);
+
+      const {
+        data: newAppointment,
+        error
+      } = await supabase.from('appointments').insert(appointmentData).select().single();
       if (error) throw error;
       return {
         appointment: newAppointment,
