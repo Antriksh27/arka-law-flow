@@ -52,19 +52,37 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
       
       console.log('🔍 ViewAppointmentDialog: Searching for contact with name:', appointment.client_name);
       
-      const { data, error } = await supabase
+      // Try multiple search strategies to find the contact
+      let data = null;
+      
+      // First try exact match
+      const exactMatch = await supabase
         .from('contacts')
         .select('*')
         .eq('firm_id', firmId)
-        .ilike('name', appointment.client_name.trim())
+        .eq('name', appointment.client_name.trim())
         .maybeSingle();
       
-      if (error) {
-        console.log('❌ ViewAppointmentDialog: Error fetching contact:', error);
-        return null;
+      if (exactMatch.data) {
+        data = exactMatch.data;
+        console.log('✅ Found contact with exact match:', data);
+      } else {
+        // Try case-insensitive search
+        const fuzzyMatch = await supabase
+          .from('contacts')
+          .select('*')
+          .eq('firm_id', firmId)
+          .ilike('name', `%${appointment.client_name.trim()}%`)
+          .maybeSingle();
+        
+        if (fuzzyMatch.data) {
+          data = fuzzyMatch.data;
+          console.log('✅ Found contact with fuzzy match:', data);
+        } else {
+          console.log('❌ No contact found for name:', appointment.client_name);
+        }
       }
       
-      console.log('✅ ViewAppointmentDialog: Contact query result:', data);
       return data;
     },
     enabled: !!appointment.client_name && !!firmId,
