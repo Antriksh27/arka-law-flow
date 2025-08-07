@@ -22,6 +22,7 @@ import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useDialog } from '@/hooks/use-dialog';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 interface Client {
@@ -47,6 +48,7 @@ interface CreateAppointmentDialogProps {
 
 export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = ({ preSelectedDate }) => {
   const { closeDialog } = useDialog();
+  const { firmId } = useAuth();
   const [loading, setLoading] = useState(false);
   const [clients, setClients] = useState<Client[]>([]);
   const [cases, setCases] = useState<Case[]>([]);
@@ -87,18 +89,23 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
   };
 
   const fetchUsers = async () => {
-    const { data } = await supabase
-      .from('profiles')
+    const { data, error } = await supabase
+      .from('team_members')
       .select(`
-        id, 
-        full_name, 
-        role,
-        law_firm_members!inner(
-          role,
-          law_firm_id
-        )
+        user_id,
+        full_name,
+        role
       `)
-      .in('law_firm_members.role', ['admin', 'lawyer', 'partner', 'associate', 'junior', 'Junior', 'paralegal']);
+      .in('role', ['admin', 'lawyer', 'junior'])
+      .eq('firm_id', firmId);
+    
+    console.log('Fetching lawyers:', { data, error, firmId });
+    
+    if (error) {
+      console.error('Error fetching lawyers:', error);
+      return;
+    }
+    
     
     // Sort to always show "chitrajeet upadhyaya" first
     const sortedData = (data || []).sort((a, b) => {
@@ -109,7 +116,7 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
       if (nameB.includes('chitrajeet upadhyaya')) return 1;
       return nameA.localeCompare(nameB);
     });
-    setUsers(sortedData);
+    setUsers(sortedData.map(user => ({ id: user.user_id, full_name: user.full_name, role: user.role })));
   };
 
   const generateTitle = () => {

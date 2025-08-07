@@ -160,14 +160,30 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
 
   const handleConvertToClient = () => {
     closeDialog();
+    
+    // Use contact data if available to autofill the form
+    const contactToConvert = contactData || {
+      id: 'temp-id',
+      name: appointment.client_name || '',
+      email: '',
+      phone: '',
+      notes: '',
+      address_line_1: '',
+      address_line_2: '',
+      pin_code: '',
+      state_id: '',
+      district_id: '',
+      visit_purpose: ''
+    };
+    
     openDialog(
-      <ConvertToClientDialog
-        appointmentId={appointment.id}
-        clientName={appointment.client_name || ''}
-        onSuccess={() => {
-          queryClient.invalidateQueries({ queryKey: ['appointments'] });
-          queryClient.invalidateQueries({ queryKey: ['appointments-timeline'] });
-          queryClient.invalidateQueries({ queryKey: ['clients'] });
+      <ConvertContactToClientDialog
+        contact={contactToConvert}
+        open={true}
+        onOpenChange={(open) => {
+          if (!open) {
+            closeDialog();
+          }
         }}
       />
     );
@@ -236,7 +252,7 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
   };
 
   return (
-    <Dialog open={true} onOpenChange={closeDialog}>
+    <Dialog open={true} onOpenChange={(open) => !open && closeDialog()}>
       <DialogContent className="max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto p-6">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold text-gray-900">
