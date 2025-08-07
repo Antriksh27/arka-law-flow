@@ -375,11 +375,11 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
           )}
           <Button
             variant="secondary"
-            onClick={() => console.log('Custom button clicked')}
+            onClick={handleConvertToClient}
             className="flex-1"
           >
-            <Plus className="h-4 w-4 mr-2" />
-            Custom Action
+            <UserPlus className="h-4 w-4 mr-2" />
+            Convert to Client
           </Button>
         </div>
       </DialogContent>
