@@ -2371,14 +2371,6 @@ export type Database = {
       }
     }
     Views: {
-      _update_license_count: {
-        Row: {
-          firm_id: string | null
-          id: string | null
-          new_license_count: number | null
-        }
-        Relationships: []
-      }
       appointment_details: {
         Row: {
           appointment_date: string | null
@@ -2472,7 +2464,6 @@ export type Database = {
           created_by_name: string | null
           description: string | null
           district: string | null
-          docket_number: string | null
           document_count: number | null
           fetch_message: string | null
           fetch_status: string | null
@@ -2485,7 +2476,6 @@ export type Database = {
           is_auto_fetched: boolean | null
           next_hearing_date: string | null
           objection: string | null
-          order_link: string | null
           orders: string[] | null
           petitioner: string | null
           petitioner_advocate: string | null
@@ -2495,9 +2485,7 @@ export type Database = {
           respondent: string | null
           respondent_advocate: string | null
           status: Database["public"]["Enums"]["case_status_enum"] | null
-          tags: string[] | null
           task_count: number | null
-          team_name: string | null
           title: string | null
           updated_at: string | null
         }
@@ -2598,28 +2586,6 @@ export type Database = {
         }
         Relationships: []
       }
-      security_dashboard: {
-        Row: {
-          action: string | null
-          count: number | null
-          date: string | null
-          entity_type: string | null
-          unique_users: number | null
-        }
-        Relationships: []
-      }
-      security_monitoring: {
-        Row: {
-          action: string | null
-          details: Json | null
-          entity_type: string | null
-          severity_level: string | null
-          timestamp: string | null
-          user_name: string | null
-          user_role: string | null
-        }
-        Relationships: []
-      }
     }
     Functions: {
       can_assign_to_role: {
@@ -2639,6 +2605,10 @@ export type Database = {
         Returns: boolean
       }
       check_appointment_rate_limit: {
+        Args: { p_user_id?: string }
+        Returns: boolean
+      }
+      check_appointment_rate_limit_enhanced: {
         Args: { p_user_id?: string }
         Returns: boolean
       }
