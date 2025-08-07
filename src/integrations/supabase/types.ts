@@ -858,6 +858,7 @@ export type Database = {
           client_portal_enabled: boolean | null
           created_at: string | null
           created_by: string | null
+          district: string | null
           email: string | null
           firm_id: string | null
           full_name: string
@@ -869,6 +870,7 @@ export type Database = {
           referred_by_phone: string | null
           services: string[] | null
           source: string | null
+          state: string | null
           status: Database["public"]["Enums"]["client_status_enum"] | null
           total_billed_amount: number | null
           type: string | null
@@ -883,6 +885,7 @@ export type Database = {
           client_portal_enabled?: boolean | null
           created_at?: string | null
           created_by?: string | null
+          district?: string | null
           email?: string | null
           firm_id?: string | null
           full_name: string
@@ -894,6 +897,7 @@ export type Database = {
           referred_by_phone?: string | null
           services?: string[] | null
           source?: string | null
+          state?: string | null
           status?: Database["public"]["Enums"]["client_status_enum"] | null
           total_billed_amount?: number | null
           type?: string | null
@@ -908,6 +912,7 @@ export type Database = {
           client_portal_enabled?: boolean | null
           created_at?: string | null
           created_by?: string | null
+          district?: string | null
           email?: string | null
           firm_id?: string | null
           full_name?: string
@@ -919,6 +924,7 @@ export type Database = {
           referred_by_phone?: string | null
           services?: string[] | null
           source?: string | null
+          state?: string | null
           status?: Database["public"]["Enums"]["client_status_enum"] | null
           total_billed_amount?: number | null
           type?: string | null

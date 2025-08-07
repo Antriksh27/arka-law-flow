@@ -64,7 +64,9 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
 
   const addressInfo = [
     { label: 'Address', value: client.address },
-    { label: 'City', value: client.city }
+    { label: 'City', value: client.city },
+    { label: 'State', value: client.state },
+    { label: 'District', value: client.district }
   ];
 
   const companyInfo = [
@@ -174,7 +176,7 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
         )}
 
         {/* Address Information */}
-        {(client.address || client.city) && (
+        {(client.address || client.city || client.state || client.district) && (
           <Card className="lg:col-span-2">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-lg">
