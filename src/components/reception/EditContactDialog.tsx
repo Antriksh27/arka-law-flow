@@ -101,7 +101,9 @@ const EditContactDialog: React.FC<EditContactDialogProps> = ({ open, onOpenChang
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-none w-screen h-screen p-0 m-0 rounded-none">
+        <div className="h-full overflow-y-auto p-6">
+          <div className="max-w-2xl mx-auto">
         <DialogHeader>
           <DialogTitle>Edit Contact</DialogTitle>
           <DialogDescription>
@@ -195,6 +197,8 @@ const EditContactDialog: React.FC<EditContactDialogProps> = ({ open, onOpenChang
             </Button>
           </DialogFooter>
         </form>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
