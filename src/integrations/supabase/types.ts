@@ -2586,6 +2586,31 @@ export type Database = {
         }
         Relationships: []
       }
+      security_dashboard_secure: {
+        Row: {
+          action: string | null
+          critical_events: number | null
+          entity_type: string | null
+          event_count: number | null
+          high_risk_events: number | null
+          log_date: string | null
+          unique_users: number | null
+        }
+        Relationships: []
+      }
+      security_monitoring_secure: {
+        Row: {
+          action: string | null
+          details: Json | null
+          entity_type: string | null
+          event_category: string | null
+          risk_level: string | null
+          timestamp: string | null
+          user_name: string | null
+          user_role: Database["public"]["Enums"]["team_role_enum"] | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       can_assign_to_role: {
@@ -2707,6 +2732,15 @@ export type Database = {
           timeframe: string
         }[]
       }
+      get_security_summary: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          metric_name: string
+          metric_value: number
+          risk_level: string
+          last_updated: string
+        }[]
+      }
       get_user_firm_id_from_team: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -2756,6 +2790,10 @@ export type Database = {
       get_user_team_role_secure: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      has_admin_access: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
       has_case_access: {
         Args: { case_id: string }
@@ -2850,6 +2888,14 @@ export type Database = {
       users_in_same_firm: {
         Args: { user_id_1: string; user_id_2: string }
         Returns: boolean
+      }
+      validate_security_setup: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          check_name: string
+          status: string
+          details: string
+        }[]
       }
     }
     Enums: {
