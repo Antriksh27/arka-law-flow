@@ -59,6 +59,7 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
   open,
   onOpenChange
 }) => {
+  console.log('🔍 ConvertContactToClientDialog: Component rendered with:', { contact: contact?.name, open });
   console.log('ConvertContactToClientDialog: Received contact data:', contact);
   const {
     toast
@@ -251,6 +252,8 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
   }, [firmId]);
   const convertMutation = useMutation({
     mutationFn: async (formData: ConvertContactFormData) => {
+      console.log('🔥 ConvertContactToClientDialog: MUTATION STARTED - This should only happen when user clicks Convert!');
+      console.log('🔥 ConvertContactToClientDialog: Mutation triggered with formData:', formData);
       // Validate required data
       if (!firmId || !user?.id) {
         throw new Error('Missing required authentication data');
@@ -381,6 +384,8 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
     }
   });
   const onSubmit = (data: ConvertContactFormData) => {
+    console.log('🚨 ConvertContactToClientDialog: onSubmit triggered with data:', data);
+    console.log('🚨 ConvertContactToClientDialog: Contact being converted:', contact);
     convertMutation.mutate(data);
   };
   const handleAddDistrict = () => {
@@ -394,13 +399,14 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
     }
     addDistrictMutation.mutate(newDistrictName.trim());
   };
-  return <div className=" bg-background overflow-y-auto">
-      <div className="h-full flex flex-col">
-        <div className="mb-6">
-          <h1 className="text-2xl font-semibold">Convert Contact to Client</h1>
-        </div>
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Convert Contact to Client</DialogTitle>
+        </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 space-y-6 overflow-y-auto p-6 bg-card rounded-lg shadow-sm">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Client Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Client Information</h3>
@@ -611,16 +617,21 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
               </div>
             </div>
           </div>
-
-          <div className="flex gap-4 pt-6">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Converting...' : 'Convert to Client'}
-            </Button>
-          </div>
         </form>
-      </div>
-    </div>;
+
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button 
+            type="button" 
+            onClick={handleSubmit(onSubmit)} 
+            disabled={isSubmitting || convertMutation.isPending}
+          >
+            {isSubmitting || convertMutation.isPending ? 'Converting...' : 'Convert to Client'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 };
