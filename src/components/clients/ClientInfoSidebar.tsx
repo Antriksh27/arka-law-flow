@@ -98,17 +98,26 @@ export const ClientInfoSidebar: React.FC<ClientInfoSidebarProps> = ({
           </div>
         )}
 
-        {/* Additional Notes */}
-        {client.notes && (
-          <div className="space-y-4">
-            <h4 className="text-sm font-medium text-gray-900 border-b border-gray-200 pb-2">
-              Notes
-            </h4>
-            <div className="bg-gray-50 p-3 rounded-md">
-              <p className="text-sm text-gray-700">{client.notes}</p>
+        {/* Reference Contact */}
+        <div className="space-y-4">
+          <h4 className="text-sm font-medium text-gray-900 border-b border-gray-200 pb-2">
+            Reference Contact
+          </h4>
+          <div className="flex items-center gap-3 text-sm">
+            <Users className="w-4 h-4 text-gray-400" />
+            <div>
+              <span className="text-gray-600">Name: </span>
+              <span className="text-gray-900">{client.referred_by_name || 'NA'}</span>
             </div>
           </div>
-        )}
+          <div className="flex items-center gap-3 text-sm">
+            <Phone className="w-4 h-4 text-gray-400" />
+            <div>
+              <span className="text-gray-600">Phone: </span>
+              <span className="text-gray-900">{client.referred_by_phone || 'NA'}</span>
+            </div>
+          </div>
+        </div>
       </CardContent>
     </Card>;
 };
