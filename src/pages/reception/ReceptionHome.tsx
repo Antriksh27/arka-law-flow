@@ -12,6 +12,7 @@ import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import AddContactDialog from '@/components/reception/AddContactDialog';
 import BookAppointmentDialog from '@/components/reception/BookAppointmentDialog';
+import EditContactDialog from '@/components/reception/EditContactDialog';
 const ReceptionHome = () => {
   const {
     user,
@@ -20,6 +21,8 @@ const ReceptionHome = () => {
   const navigate = useNavigate();
   const [addContactOpen, setAddContactOpen] = useState(false);
   const [bookAppointmentOpen, setBookAppointmentOpen] = useState(false);
+  const [editContactOpen, setEditContactOpen] = useState(false);
+  const [selectedContact, setSelectedContact] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
   // Get today's appointments
@@ -298,7 +301,15 @@ const ReceptionHome = () => {
                           {contact.visit_purpose || 'General Inquiry'}
                         </div>
                       </div>
-                      <Button variant="ghost" size="sm" className="gap-2">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="gap-2"
+                        onClick={() => {
+                          setSelectedContact(contact);
+                          setEditContactOpen(true);
+                        }}
+                      >
                         <Edit2 className="w-3 h-3" />
                         Edit
                       </Button>
@@ -314,6 +325,11 @@ const ReceptionHome = () => {
       {/* Modals */}
       <AddContactDialog open={addContactOpen} onOpenChange={setAddContactOpen} />
       <BookAppointmentDialog open={bookAppointmentOpen} onOpenChange={setBookAppointmentOpen} />
+      <EditContactDialog 
+        open={editContactOpen} 
+        onOpenChange={setEditContactOpen}
+        contact={selectedContact}
+      />
     </div>;
 };
 export default ReceptionHome;
