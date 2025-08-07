@@ -185,15 +185,16 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {addressInfo.map((item, index) => 
-                  item.value ? (
-                    <div key={index}>
-                      <span className="text-sm text-gray-600">{item.label}:</span>
-                      <p className="text-sm font-medium text-gray-900">{item.value}</p>
-                    </div>
-                  ) : null
-                )}
+              <div className="text-sm">
+                <span className="text-gray-600">Complete Address:</span>
+                <p className="text-sm font-medium text-gray-900 mt-1 leading-relaxed">
+                  {[
+                    client.address,
+                    client.city,
+                    client.district,
+                    client.state
+                  ].filter(Boolean).join(', ') || 'No address information available'}
+                </p>
               </div>
             </CardContent>
           </Card>
