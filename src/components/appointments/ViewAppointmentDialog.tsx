@@ -39,6 +39,14 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
   console.log('🎯 ViewAppointmentDialog: Full appointment object:', appointment);
   console.log('🎯 ViewAppointmentDialog: Client name specifically:', appointment.client_name);
   
+  // Extract client name from title if client_name is null
+  const extractedClientName = appointment.client_name || 
+    (appointment.title?.startsWith('Appointment with ') 
+      ? appointment.title.replace('Appointment with ', '') 
+      : null);
+  
+  console.log('🎯 Extracted client name:', extractedClientName);
+  
   const { closeDialog, openDialog } = useDialog();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -46,20 +54,21 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
 
   // Fetch contact data by client name if available
   const { data: contactData, isLoading: contactLoading, error: contactError } = useQuery({
-    queryKey: ['contact-by-name', appointment.client_name, firmId],
+    queryKey: ['contact-by-name', extractedClientName, firmId],
     queryFn: async () => {
       console.log('🔍 ViewAppointmentDialog: Query function called with:', {
         client_name: appointment.client_name,
+        extractedClientName: extractedClientName,
         firmId: firmId,
-        enabled: !!appointment.client_name && !!firmId
+        enabled: !!extractedClientName && !!firmId
       });
       
-      if (!appointment.client_name || !firmId) {
-        console.log('❌ ViewAppointmentDialog: No client_name or firmId - skipping query');
+      if (!extractedClientName || !firmId) {
+        console.log('❌ ViewAppointmentDialog: No extractedClientName or firmId - skipping query');
         return null;
       }
       
-      console.log('🔍 ViewAppointmentDialog: Executing contact search for:', appointment.client_name);
+      console.log('🔍 ViewAppointmentDialog: Executing contact search for:', extractedClientName);
       
       // First try exact match
       console.log('🔍 Trying exact match...');
@@ -67,7 +76,7 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
         .from('contacts')
         .select('*')
         .eq('firm_id', firmId)
-        .eq('name', appointment.client_name.trim());
+        .eq('name', extractedClientName.trim());
       
       console.log('🔍 Exact match result:', { data: exactData, error: exactError });
       
@@ -82,7 +91,7 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
         .from('contacts')
         .select('*')
         .eq('firm_id', firmId)
-        .ilike('name', `%${appointment.client_name.trim()}%`);
+        .ilike('name', `%${extractedClientName.trim()}%`);
       
       console.log('🔍 Fuzzy match result:', { data: fuzzyData, error: fuzzyError });
       
@@ -91,10 +100,10 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
         return fuzzyData[0];
       }
       
-      console.log('❌ No contact found for name:', appointment.client_name);
+      console.log('❌ No contact found for name:', extractedClientName);
       return null;
     },
-    enabled: !!appointment.client_name && !!firmId && appointment.client_name !== 'Unknown Client',
+    enabled: !!extractedClientName && !!firmId && extractedClientName !== 'Unknown Client',
   });
 
   console.log('🔍 Contact query state:', { contactData, contactLoading, contactError });
@@ -195,6 +204,7 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
     console.log('👤 Appointment details:', {
       id: appointment.id,
       client_name: appointment.client_name,
+      extractedClientName: extractedClientName,
       title: appointment.title,
       notes: appointment.notes
     });
@@ -210,7 +220,7 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
       referred_by_phone: contactData.referred_by_phone || ''
     } : {
       id: `temp-${Date.now()}`,
-      name: appointment.client_name || 'Unknown Client',
+      name: extractedClientName || 'Unknown Client',
       email: '',
       phone: '',
       notes: appointment.notes || '',
