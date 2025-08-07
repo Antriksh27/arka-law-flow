@@ -39,7 +39,7 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
   const { closeDialog, openDialog } = useDialog();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { firmId } = useAuth();
+  const { firmId, role } = useAuth();
 
   // Fetch contact data by client name if available
   const { data: contactData } = useQuery({
@@ -355,7 +355,7 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
             <X className="h-4 w-4 mr-2" />
             {cancelMutation.isPending ? 'Cancelling...' : 'Cancel'}
           </Button>
-          {appointment.client_name && !appointment.client_id && contactData && (
+          {appointment.client_name && !appointment.client_id && contactData && (role === 'lawyer' || role === 'junior') && (
             <Button
               onClick={handleConvertContactToClient}
               className="flex-1"
@@ -364,7 +364,7 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
               Convert Contact
             </Button>
           )}
-          {appointment.client_name && !appointment.client_id && !contactData && (
+          {appointment.client_name && !appointment.client_id && !contactData && (role === 'lawyer' || role === 'junior') && (
             <Button
               onClick={handleConvertToClient}
               className="flex-1"
