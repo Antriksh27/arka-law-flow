@@ -41,7 +41,6 @@ const ReceptionContacts = () => {
         .from('contacts')
         .select('*')
         .eq('firm_id', firmId)
-        .eq('converted_to_client', false)
         .order('created_at', { ascending: false });
 
       if (searchTerm.trim()) {
@@ -55,56 +54,7 @@ const ReceptionContacts = () => {
     enabled: !!firmId
   });
 
-  // Convert to client mutation
-  const convertToClientMutation = useMutation({
-    mutationFn: async (contact: any) => {
-      // First create the client
-      const { data: clientData, error: clientError } = await supabase
-        .from('clients')
-        .insert({
-          full_name: contact.name,
-          email: contact.email,
-          phone: contact.phone,
-          notes: contact.notes,
-          firm_id: firmId,
-          created_by: user?.id,
-        })
-        .select()
-        .single();
-
-      if (clientError) throw clientError;
-
-      // Then update the contact as converted
-      const { error: updateError } = await supabase
-        .from('contacts')
-        .update({
-          converted_to_client: true,
-          converted_client_id: clientData.id,
-        })
-        .eq('id', contact.id);
-
-      if (updateError) throw updateError;
-
-      return clientData;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reception-contacts'] });
-      toast({
-        title: "Success",
-        description: "Contact converted to client successfully!",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to convert contact to client.",
-        variant: "destructive",
-      });
-    }
-  });
-
   const handleConvertToClient = (contact: any) => {
-    console.log('ReceptionContacts: Converting contact to client, contact data:', contact);
     setSelectedContact(contact);
     setConvertDialogOpen(true);
   };
@@ -204,23 +154,16 @@ const ReceptionContacts = () => {
                         </div>
                       </td>
                       <td className="py-3 px-4">
-                        {contact.converted_to_client ? (
-                          <Badge className="bg-green-100 text-green-800 border-green-200">Converted</Badge>
-                        ) : (
-                          <Badge variant="outline">Active</Badge>
-                        )}
+                        <Badge variant="outline">Active</Badge>
                       </td>
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2">
-                          {!contact.converted_to_client && (
-                            <Button
-                              size="sm"
-                              onClick={() => handleConvertToClient(contact)}
-                              disabled={convertToClientMutation.isPending}
-                            >
-                              Convert to Client
-                            </Button>
-                          )}
+                          <Button
+                            size="sm"
+                            onClick={() => handleConvertToClient(contact)}
+                          >
+                            Convert to Client
+                          </Button>
                           <Button variant="outline" size="sm">
                             Edit
                           </Button>

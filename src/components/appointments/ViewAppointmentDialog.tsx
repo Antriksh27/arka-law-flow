@@ -54,8 +54,7 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
         .select('*')
         .eq('firm_id', firmId)
         .ilike('name', appointment.client_name.trim())
-        .eq('converted_to_client', false)
-        .single();
+        .maybeSingle();
       
       if (error) {
         console.log('ViewAppointmentDialog: Contact not found or error:', error);

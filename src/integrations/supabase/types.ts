@@ -958,8 +958,6 @@ export type Database = {
         Row: {
           address_line_1: string | null
           address_line_2: string | null
-          converted_client_id: string | null
-          converted_to_client: boolean | null
           created_at: string | null
           created_by: string | null
           district_id: string | null
@@ -980,8 +978,6 @@ export type Database = {
         Insert: {
           address_line_1?: string | null
           address_line_2?: string | null
-          converted_client_id?: string | null
-          converted_to_client?: boolean | null
           created_at?: string | null
           created_by?: string | null
           district_id?: string | null
@@ -1002,8 +998,6 @@ export type Database = {
         Update: {
           address_line_1?: string | null
           address_line_2?: string | null
-          converted_client_id?: string | null
-          converted_to_client?: boolean | null
           created_at?: string | null
           created_by?: string | null
           district_id?: string | null
