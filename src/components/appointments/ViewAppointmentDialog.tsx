@@ -355,7 +355,16 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
             <X className="h-4 w-4 mr-2" />
             {cancelMutation.isPending ? 'Cancelling...' : 'Cancel'}
           </Button>
-          {appointment.client_name && !appointment.client_id && (
+          {appointment.client_name && !appointment.client_id && contactData && (
+            <Button
+              onClick={handleConvertContactToClient}
+              className="flex-1"
+            >
+              <Users className="h-4 w-4 mr-2" />
+              Convert Contact
+            </Button>
+          )}
+          {appointment.client_name && !appointment.client_id && !contactData && (
             <Button
               onClick={handleConvertToClient}
               className="flex-1"
@@ -364,14 +373,6 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
               Convert to Client
             </Button>
           )}
-          <Button
-            variant="outline"
-            onClick={handleConvertContactToClient}
-            className="flex-1"
-          >
-            <Users className="h-4 w-4 mr-2" />
-            Convert Contact
-          </Button>
         </div>
       </DialogContent>
     </Dialog>
