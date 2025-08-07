@@ -156,51 +156,6 @@ const ReceptionHome = () => {
       </div>
 
       <div className="flex w-full items-start gap-6">
-        {/* Sidebar */}
-        <div className="flex w-64 flex-none flex-col items-start gap-4">
-          {/* Lawyers Section */}
-          <Card className="w-full">
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold text-[#111827] mb-4">Lawyers</h3>
-              <div className="flex flex-col gap-2">
-                {lawyers?.map(lawyer => <div key={lawyer.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-[#F3F4F6]">
-                    <Avatar className="w-8 h-8">
-                      <AvatarFallback className="text-xs">
-                        {lawyer.full_name?.charAt(0) || 'L'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="flex-1 text-sm font-medium text-[#111827]">
-                      {lawyer.full_name || 'Unnamed Lawyer'}
-                    </span>
-                     <Badge variant="outline" className="text-xs">
-                       {lawyer.role}
-                     </Badge>
-                  </div>)}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Filters Section */}
-          <Card className="w-full">
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold text-[#111827] mb-4">Filters</h3>
-              <div className="flex flex-col gap-2">
-                <Button variant="ghost" className="justify-start h-8 text-sm">
-                  Today
-                </Button>
-                <Button variant="ghost" className="justify-start h-8 text-sm">
-                  This Week
-                </Button>
-                <Button variant="ghost" className="justify-start h-8 text-sm">
-                  Pending
-                </Button>
-                <Button variant="ghost" className="justify-start h-8 text-sm">
-                  Confirmed
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* Main Content */}
         <div className="flex grow shrink-0 basis-0 flex-col items-start gap-4">
