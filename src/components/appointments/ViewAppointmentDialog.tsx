@@ -45,9 +45,12 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
   const { data: contactData } = useQuery({
     queryKey: ['contact-by-name', appointment.client_name, firmId],
     queryFn: async () => {
-      if (!appointment.client_name || !firmId) return null;
+      if (!appointment.client_name || !firmId) {
+        console.log('❌ ViewAppointmentDialog: No client_name or firmId:', { client_name: appointment.client_name, firmId });
+        return null;
+      }
       
-      console.log('ViewAppointmentDialog: Searching for contact with name:', appointment.client_name);
+      console.log('🔍 ViewAppointmentDialog: Searching for contact with name:', appointment.client_name);
       
       const { data, error } = await supabase
         .from('contacts')
@@ -57,11 +60,11 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
         .maybeSingle();
       
       if (error) {
-        console.log('ViewAppointmentDialog: Contact not found or error:', error);
+        console.log('❌ ViewAppointmentDialog: Error fetching contact:', error);
         return null;
       }
       
-      console.log('ViewAppointmentDialog: Found contact data:', data);
+      console.log('✅ ViewAppointmentDialog: Contact query result:', data);
       return data;
     },
     enabled: !!appointment.client_name && !!firmId,
@@ -160,29 +163,44 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
 
   const handleConvertToClient = () => {
     console.log('🚀 ViewAppointmentDialog: handleConvertToClient called');
+    console.log('👤 Appointment details:', {
+      id: appointment.id,
+      client_name: appointment.client_name,
+      title: appointment.title,
+      notes: appointment.notes
+    });
     console.log('📄 Available contactData:', contactData);
-    console.log('👤 Appointment client_name:', appointment.client_name);
     
     closeDialog();
     
-    // Use contact data if available to autofill the form, otherwise create from appointment data
-    const contactToConvert = contactData || {
-      id: 'temp-id',
-      name: appointment.client_name || '',
+    // Create contact data from appointment if no existing contact found
+    const contactToConvert = contactData ? {
+      ...contactData,
+      // Ensure all required fields exist
+      referred_by_name: contactData.referred_by_name || '',
+      referred_by_phone: contactData.referred_by_phone || ''
+    } : {
+      id: `temp-${Date.now()}`,
+      name: appointment.client_name || 'Unknown Client',
       email: '',
       phone: '',
       notes: appointment.notes || '',
       address_line_1: '',
       address_line_2: '',
       pin_code: '',
-      state_id: '',
-      district_id: '',
-      visit_purpose: appointment.title || '',
+      state_id: null,
+      district_id: null,
+      visit_purpose: appointment.title || 'Appointment consultation',
       referred_by_name: '',
-      referred_by_phone: ''
+      referred_by_phone: '',
+      firm_id: firmId,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      created_by: null,
+      last_visited_at: new Date().toISOString()
     };
     
-    console.log('📝 Contact data being passed to dialog:', contactToConvert);
+    console.log('📝 Final contact data being passed to dialog:', contactToConvert);
     
     openDialog(
       <ConvertContactToClientDialog
