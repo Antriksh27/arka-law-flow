@@ -2835,6 +2835,14 @@ export type Database = {
         Args: { user_id: string; task_id: string }
         Returns: boolean
       }
+      security_health_check: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          check_name: string
+          status: string
+          details: string
+        }[]
+      }
       set_super_admin_role: {
         Args: { user_id: string }
         Returns: undefined
