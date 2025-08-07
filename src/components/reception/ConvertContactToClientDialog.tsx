@@ -61,6 +61,12 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
 }) => {
   console.log('🔍 ConvertContactToClientDialog: Component rendered with:', { contact: contact?.name, open });
   console.log('ConvertContactToClientDialog: Received contact data:', contact);
+  
+  // Early return if no contact or dialog is not open
+  if (!contact || !open) {
+    console.log('🚫 ConvertContactToClientDialog: Early return - no contact or dialog closed');
+    return null;
+  }
   const {
     toast
   } = useToast();
