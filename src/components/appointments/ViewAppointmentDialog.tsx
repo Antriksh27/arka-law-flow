@@ -8,7 +8,7 @@ import RescheduleAppointmentDialog from '../reception/RescheduleAppointmentDialo
 import { ConvertToClientDialog } from './ConvertToClientDialog';
 import { ConvertContactToClientDialog } from '../reception/ConvertContactToClientDialog';
 import { format, parseISO } from 'date-fns';
-import { Calendar, Clock, User, MapPin, FileText, Edit, RotateCcw, X, UserPlus, Users } from 'lucide-react';
+import { Calendar, Clock, User, MapPin, FileText, Edit, RotateCcw, X, UserPlus, Users, Plus } from 'lucide-react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -373,6 +373,14 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
               Convert to Client
             </Button>
           )}
+          <Button
+            variant="secondary"
+            onClick={() => console.log('Custom button clicked')}
+            className="flex-1"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Custom Action
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
