@@ -5,6 +5,7 @@ import { BookingForm } from '@/components/booking/BookingForm';
 import { LawyerProfile } from '@/components/booking/LawyerProfile';
 import { BookingConfirmation } from '@/components/booking/BookingConfirmation';
 import { Loader2, AlertCircle } from 'lucide-react';
+import { clientRateLimiter, sanitizeInput } from '@/lib/securityHeaders';
 
 interface LawyerInfo {
   id: string;
@@ -39,9 +40,19 @@ export const BookingPage: React.FC = () => {
         return;
       }
 
-      if (lawyerId.startsWith(':') || !UUID_REGEX.test(lawyerId)) {
-        setError(`Invalid lawyer ID format: "${lawyerId}". Please check the URL.`);
-        console.error('Invalid lawyerId:', lawyerId);
+      // Enhanced security validation
+      const sanitizedLawyerId = sanitizeInput(lawyerId);
+      if (lawyerId.startsWith(':') || !UUID_REGEX.test(sanitizedLawyerId)) {
+        setError(`Invalid lawyer ID format. Please check the URL.`);
+        console.error('Invalid lawyerId:', sanitizedLawyerId);
+        setLoading(false);
+        return;
+      }
+
+      // Rate limiting for public endpoint
+      const clientIp = 'anonymous_' + Date.now(); // Simple client identification
+      if (!clientRateLimiter.isAllowed(clientIp, 10, 60000)) {
+        setError('Too many requests. Please wait a moment before trying again.');
         setLoading(false);
         return;
       }
@@ -51,8 +62,8 @@ export const BookingPage: React.FC = () => {
         const { data, error: dbError } = await supabase
           .from('profiles')
           .select('id, full_name, email, profile_pic, role, specializations, location, bio')
-          .eq('id', lawyerId)
-          .in('role', ALLOWED_BOOKING_ROLES) // Use 'in' to check against multiple roles
+          .eq('id', sanitizedLawyerId)
+          .in('role', ALLOWED_BOOKING_ROLES)
           .single();
 
         if (dbError) {

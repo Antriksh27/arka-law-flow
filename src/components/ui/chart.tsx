@@ -65,6 +65,17 @@ const ChartContainer = React.forwardRef<
 })
 ChartContainer.displayName = "Chart"
 
+// Helper function to sanitize CSS values
+const sanitizeCSSValue = (value: string): string => {
+  // Remove potentially dangerous characters and patterns
+  return value
+    .replace(/[<>'"&]/g, '') // Remove HTML/script chars
+    .replace(/\/\*|\*\//g, '') // Remove CSS comment markers
+    .replace(/expression\(|javascript:/gi, '') // Remove JS expressions
+    .replace(/[{}();]/g, '') // Remove dangerous CSS chars
+    .trim();
+};
+
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
   const colorConfig = Object.entries(config).filter(
     ([_, config]) => config.theme || config.color
@@ -74,28 +85,40 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
     return null
   }
 
-  return (
-    <style
-      dangerouslySetInnerHTML={{
-        __html: Object.entries(THEMES)
-          .map(
-            ([theme, prefix]) => `
-${prefix} [data-chart=${id}] {
-${colorConfig
-  .map(([key, itemConfig]) => {
-    const color =
-      itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
-      itemConfig.color
-    return color ? `  --color-${key}: ${color};` : null
-  })
-  .join("\n")}
-}
-`
-          )
-          .join("\n"),
-      }}
-    />
-  )
+  // Generate CSS safely without dangerouslySetInnerHTML
+  const cssText = Object.entries(THEMES)
+    .map(([theme, prefix]) => {
+      const sanitizedId = sanitizeCSSValue(id);
+      const colorRules = colorConfig
+        .map(([key, itemConfig]) => {
+          const color =
+            itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
+            itemConfig.color;
+          
+          if (!color || typeof color !== 'string') return null;
+          
+          const sanitizedKey = sanitizeCSSValue(key);
+          const sanitizedColor = sanitizeCSSValue(color);
+          
+          return sanitizedColor ? `  --color-${sanitizedKey}: ${sanitizedColor};` : null;
+        })
+        .filter(Boolean)
+        .join('\n');
+      
+      return `${prefix} [data-chart="${sanitizedId}"] {\n${colorRules}\n}`;
+    })
+    .join('\n');
+
+  // Create style element safely using React's ref approach
+  const styleRef = React.useRef<HTMLStyleElement>(null);
+  
+  React.useEffect(() => {
+    if (styleRef.current) {
+      styleRef.current.textContent = cssText;
+    }
+  }, [cssText]);
+
+  return <style ref={styleRef} />;
 }
 
 const ChartTooltip = RechartsPrimitive.Tooltip
