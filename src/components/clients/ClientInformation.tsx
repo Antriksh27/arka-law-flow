@@ -12,7 +12,8 @@ import {
   Calendar,
   UserCheck,
   FileText,
-  Globe
+  Globe,
+  CheckSquare
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -57,7 +58,8 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
     { label: 'Full Name', value: client.full_name, icon: User },
     { label: 'Email', value: client.email, icon: Mail },
     { label: 'Phone', value: client.phone, icon: Phone },
-    { label: 'Aadhaar Number', value: client.aadhaar_no, icon: FileText }
+    { label: 'Aadhaar Number', value: client.aadhaar_no, icon: FileText },
+    { label: 'Client Type', value: client.type, icon: User }
   ];
 
   const addressInfo = [
@@ -73,7 +75,18 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
     { label: 'Status', value: client.status },
     { label: 'Assigned Lawyer', value: client.profiles?.full_name },
     { label: 'Case Reference', value: client.case_ref },
-    { label: 'Appointment Date', value: client.appointment_date ? new Date(client.appointment_date).toLocaleDateString() : null }
+    { label: 'Appointment Date', value: client.appointment_date ? new Date(client.appointment_date).toLocaleDateString() : null },
+    { label: 'Source', value: client.source },
+    { label: 'Total Billed Amount', value: client.total_billed_amount ? `₹${client.total_billed_amount}` : null }
+  ];
+
+  const referralInfo = [
+    { label: 'Referred By', value: client.referred_by_name },
+    { label: 'Referral Phone', value: client.referred_by_phone }
+  ];
+
+  const servicesInfo = [
+    { label: 'Services', value: client.services ? client.services.join(', ') : null }
   ];
 
   const InfoSection = ({ title, items, icon: SectionIcon }: any) => (
@@ -139,27 +152,50 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
           />
         )}
 
+        {/* Services Information */}
+        {client.services && client.services.length > 0 && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <CheckSquare className="w-5 h-5" />
+                Services
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2">
+                {client.services.map((service, index) => (
+                  <Badge key={index} variant="outline" className="text-sm">
+                    {service}
+                  </Badge>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Address Information */}
-        <Card className="lg:col-span-2">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <MapPin className="w-5 h-5" />
-              Address Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {addressInfo.map((item, index) => 
-                item.value ? (
-                  <div key={index}>
-                    <span className="text-sm text-gray-600">{item.label}:</span>
-                    <p className="text-sm font-medium text-gray-900">{item.value}</p>
-                  </div>
-                ) : null
-              )}
-            </div>
-          </CardContent>
-        </Card>
+        {(client.address || client.city) && (
+          <Card className="lg:col-span-2">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <MapPin className="w-5 h-5" />
+                Address Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {addressInfo.map((item, index) => 
+                  item.value ? (
+                    <div key={index}>
+                      <span className="text-sm text-gray-600">{item.label}:</span>
+                      <p className="text-sm font-medium text-gray-900">{item.value}</p>
+                    </div>
+                  ) : null
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Professional Information */}
         <Card className="lg:col-span-2">
@@ -180,6 +216,82 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
                 ) : null
               )}
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Referral Information */}
+        {(client.referred_by_name || client.referred_by_phone) && (
+          <Card className="lg:col-span-2">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <UserCheck className="w-5 h-5" />
+                Referral Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {referralInfo.map((item, index) => 
+                  item.value ? (
+                    <div key={index}>
+                      <span className="text-sm text-gray-600">{item.label}:</span>
+                      <p className="text-sm font-medium text-gray-900">{item.value}</p>
+                    </div>
+                  ) : null
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* Additional Information */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Client Portal Status */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Globe className="w-5 h-5" />
+              Client Portal
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2">
+              <Badge 
+                variant={client.client_portal_enabled ? 'success' : 'outline'}
+                className="capitalize"
+              >
+                {client.client_portal_enabled ? 'Enabled' : 'Disabled'}
+              </Badge>
+              {client.client_portal_enabled && (
+                <span className="text-sm text-gray-600">Client has portal access</span>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Account Information */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Calendar className="w-5 h-5" />
+              Account Information
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div>
+              <span className="text-sm text-gray-600">Client Since:</span>
+              <p className="text-sm font-medium text-gray-900">
+                {new Date(client.created_at).toLocaleDateString()}
+              </p>
+            </div>
+            {client.total_billed_amount && client.total_billed_amount > 0 && (
+              <div>
+                <span className="text-sm text-gray-600">Total Billed:</span>
+                <p className="text-sm font-medium text-gray-900">
+                  ₹{Number(client.total_billed_amount).toLocaleString()}
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
