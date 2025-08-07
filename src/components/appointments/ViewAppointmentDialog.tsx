@@ -36,57 +36,68 @@ interface ViewAppointmentDialogProps {
 export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
   appointment,
 }) => {
+  console.log('🎯 ViewAppointmentDialog: Full appointment object:', appointment);
+  console.log('🎯 ViewAppointmentDialog: Client name specifically:', appointment.client_name);
+  
   const { closeDialog, openDialog } = useDialog();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { firmId, role } = useAuth();
 
   // Fetch contact data by client name if available
-  const { data: contactData } = useQuery({
+  const { data: contactData, isLoading: contactLoading, error: contactError } = useQuery({
     queryKey: ['contact-by-name', appointment.client_name, firmId],
     queryFn: async () => {
+      console.log('🔍 ViewAppointmentDialog: Query function called with:', {
+        client_name: appointment.client_name,
+        firmId: firmId,
+        enabled: !!appointment.client_name && !!firmId
+      });
+      
       if (!appointment.client_name || !firmId) {
-        console.log('❌ ViewAppointmentDialog: No client_name or firmId:', { client_name: appointment.client_name, firmId });
+        console.log('❌ ViewAppointmentDialog: No client_name or firmId - skipping query');
         return null;
       }
       
-      console.log('🔍 ViewAppointmentDialog: Searching for contact with name:', appointment.client_name);
-      
-      // Try multiple search strategies to find the contact
-      let data = null;
+      console.log('🔍 ViewAppointmentDialog: Executing contact search for:', appointment.client_name);
       
       // First try exact match
-      const exactMatch = await supabase
+      console.log('🔍 Trying exact match...');
+      const { data: exactData, error: exactError } = await supabase
         .from('contacts')
         .select('*')
         .eq('firm_id', firmId)
-        .eq('name', appointment.client_name.trim())
-        .maybeSingle();
+        .eq('name', appointment.client_name.trim());
       
-      if (exactMatch.data) {
-        data = exactMatch.data;
-        console.log('✅ Found contact with exact match:', data);
-      } else {
-        // Try case-insensitive search
-        const fuzzyMatch = await supabase
-          .from('contacts')
-          .select('*')
-          .eq('firm_id', firmId)
-          .ilike('name', `%${appointment.client_name.trim()}%`)
-          .maybeSingle();
-        
-        if (fuzzyMatch.data) {
-          data = fuzzyMatch.data;
-          console.log('✅ Found contact with fuzzy match:', data);
-        } else {
-          console.log('❌ No contact found for name:', appointment.client_name);
-        }
+      console.log('🔍 Exact match result:', { data: exactData, error: exactError });
+      
+      if (exactData && exactData.length > 0) {
+        console.log('✅ Found contact with exact match:', exactData[0]);
+        return exactData[0];
       }
       
-      return data;
+      // Try case-insensitive search  
+      console.log('🔍 Trying fuzzy match...');
+      const { data: fuzzyData, error: fuzzyError } = await supabase
+        .from('contacts')
+        .select('*')
+        .eq('firm_id', firmId)
+        .ilike('name', `%${appointment.client_name.trim()}%`);
+      
+      console.log('🔍 Fuzzy match result:', { data: fuzzyData, error: fuzzyError });
+      
+      if (fuzzyData && fuzzyData.length > 0) {
+        console.log('✅ Found contact with fuzzy match:', fuzzyData[0]);
+        return fuzzyData[0];
+      }
+      
+      console.log('❌ No contact found for name:', appointment.client_name);
+      return null;
     },
-    enabled: !!appointment.client_name && !!firmId,
+    enabled: !!appointment.client_name && !!firmId && appointment.client_name !== 'Unknown Client',
   });
+
+  console.log('🔍 Contact query state:', { contactData, contactLoading, contactError });
 
   const cancelMutation = useMutation({
     mutationFn: async () => {
