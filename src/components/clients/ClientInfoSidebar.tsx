@@ -82,6 +82,34 @@ export const ClientInfoSidebar: React.FC<ClientInfoSidebarProps> = ({
           </div>
         )}
 
+        {/* Complete Address */}
+        <div className="space-y-4">
+          <h4 className="text-sm font-medium text-gray-900 border-b border-gray-200 pb-2">
+            Complete Address
+          </h4>
+          <div className="flex items-start gap-3 text-sm">
+            <MapPin className="w-4 h-4 text-gray-400 mt-0.5" />
+            <div className="space-y-1">
+              <div>
+                <span className="text-gray-600">Address: </span>
+                <span className="text-gray-900">{client.address || 'NA'}</span>
+              </div>
+              <div>
+                <span className="text-gray-600">City: </span>
+                <span className="text-gray-900">{client.city || 'NA'}</span>
+              </div>
+              <div>
+                <span className="text-gray-600">State: </span>
+                <span className="text-gray-900">{client.state || 'NA'}</span>
+              </div>
+              <div>
+                <span className="text-gray-600">District: </span>
+                <span className="text-gray-900">{client.district || 'NA'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Case Reference */}
         {client.case_ref && (
           <div className="space-y-4">
