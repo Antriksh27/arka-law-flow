@@ -43,8 +43,8 @@ function TeamDirectory() {
   const [addMemberOpen, setAddMemberOpen] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
 
-  // Check if user can add members - admin or lawyer role
-  const canAddMembers = userRole === 'admin' || userRole === 'lawyer';
+  // Check if user can add members - admin only
+  const canAddMembers = userRole === 'admin';
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
