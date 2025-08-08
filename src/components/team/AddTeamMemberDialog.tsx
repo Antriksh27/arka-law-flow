@@ -132,8 +132,8 @@ const AddTeamMemberDialog = ({ open, onOpenChange }: AddTeamMemberDialogProps) =
   };
 
   const generatePassword = () => {
-    // Generate a strong password with mixed case, numbers, and symbols
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()+=[]{}|;:,.<>?';
+    // Generate exactly 8 character password with mixed case, numbers, and symbols
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
     let password = '';
     
     // Ensure at least one character from each category
@@ -141,16 +141,16 @@ const AddTeamMemberDialog = ({ open, onOpenChange }: AddTeamMemberDialogProps) =
       'ABCDEFGHIJKLMNOPQRSTUVWXYZ', // uppercase
       'abcdefghijklmnopqrstuvwxyz', // lowercase
       '0123456789', // numbers
-      '!@#$%^&*()+=[]{}|;:,.<>?' // symbols
+      '!@#$%^&*' // symbols
     ];
     
-    // Add one char from each category first
+    // Add one char from each category first (4 chars)
     categories.forEach(category => {
       password += category.charAt(Math.floor(Math.random() * category.length));
     });
     
-    // Fill remaining 8 characters randomly
-    for (let i = 4; i < 16; i++) {
+    // Fill remaining 4 characters randomly
+    for (let i = 4; i < 8; i++) {
       password += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     
@@ -270,8 +270,12 @@ const AddTeamMemberDialog = ({ open, onOpenChange }: AddTeamMemberDialogProps) =
               rules={{ 
                 required: "Password is required",
                 minLength: {
-                  value: 12,
-                  message: "Password must be at least 12 characters"
+                  value: 8,
+                  message: "Password must be exactly 8 characters"
+                },
+                maxLength: {
+                  value: 8,
+                  message: "Password must be exactly 8 characters"
                 },
                 validate: {
                   hasUppercase: (value) => /[A-Z]/.test(value) || "Password must contain at least one uppercase letter",
