@@ -15,6 +15,7 @@ interface CreateTaskDialogProps {
   open: boolean;
   onClose: () => void;
   caseId?: string;
+  clientId?: string;
 }
 
 interface TaskFormData {
@@ -33,7 +34,8 @@ interface TaskFormData {
 export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   open,
   onClose,
-  caseId
+  caseId,
+  clientId
 }) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -49,8 +51,9 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
     defaultValues: {
       priority: 'medium',
       status: 'todo',
-      link_type: caseId ? 'case' : 'none',
-      case_id: caseId || ''
+      link_type: caseId ? 'case' : (clientId ? 'client' : 'none'),
+      case_id: caseId || '',
+      client_id: clientId || ''
     }
   });
 
@@ -133,6 +136,9 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['case-tasks'] });
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      if (clientId) {
+        queryClient.invalidateQueries({ queryKey: ['client-tasks', clientId] });
+      }
       toast({ title: "Task created successfully" });
       reset();
       onClose();
@@ -191,7 +197,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
             </Label>
             <Select 
               onValueChange={(value) => setValue('link_type', value as any)} 
-              defaultValue={caseId ? 'case' : 'none'}
+              defaultValue={caseId ? 'case' : (clientId ? 'client' : 'none')}
             >
               <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                 <SelectValue />
@@ -229,7 +235,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
               <Label htmlFor="client_id" className="text-sm font-medium text-gray-700">
                 Select Client
               </Label>
-              <Select onValueChange={(value) => setValue('client_id', value)}>
+              <Select onValueChange={(value) => setValue('client_id', value)} defaultValue={clientId ? clientId : undefined}>
                 <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                   <SelectValue placeholder="Select a client..." />
                 </SelectTrigger>

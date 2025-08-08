@@ -3,14 +3,17 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, ListTodo, Calendar, User } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Loader2, ListTodo, Calendar, User, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { CreateTaskDialog } from '../tasks/CreateTaskDialog';
 
 interface ClientTasksProps {
   clientId: string;
 }
 
 export const ClientTasks: React.FC<ClientTasksProps> = ({ clientId }) => {
+  const [showCreateDialog, setShowCreateDialog] = React.useState(false);
   const { data: tasks = [], isLoading } = useQuery({
     queryKey: ['client-tasks', clientId],
     queryFn: async () => {
@@ -66,10 +69,14 @@ export const ClientTasks: React.FC<ClientTasksProps> = ({ clientId }) => {
     );
   }
 
-  return (
+  return (<>
     <Card className="bg-white rounded-2xl shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-xl font-semibold">Tasks</CardTitle>
+        <Button onClick={() => setShowCreateDialog(true)}>
+          <Plus className="w-4 h-4" />
+          Add Task
+        </Button>
       </CardHeader>
       <CardContent>
         {tasks.length === 0 ? (
@@ -109,5 +116,6 @@ export const ClientTasks: React.FC<ClientTasksProps> = ({ clientId }) => {
         )}
       </CardContent>
     </Card>
-  );
+    <CreateTaskDialog open={showCreateDialog} onClose={() => setShowCreateDialog(false)} clientId={clientId} />
+  </>);
 };

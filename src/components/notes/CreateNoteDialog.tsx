@@ -32,7 +32,8 @@ interface NoteFormData {
 export const CreateNoteDialog: React.FC<CreateNoteDialogProps> = ({
   open,
   onClose,
-  caseId
+  caseId,
+  clientId
 }) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
