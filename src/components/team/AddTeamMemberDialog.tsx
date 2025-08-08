@@ -271,11 +271,7 @@ const AddTeamMemberDialog = ({ open, onOpenChange }: AddTeamMemberDialogProps) =
                 required: "Password is required",
                 minLength: {
                   value: 8,
-                  message: "Password must be exactly 8 characters"
-                },
-                maxLength: {
-                  value: 8,
-                  message: "Password must be exactly 8 characters"
+                  message: "Password must be at least 8 characters"
                 },
                 validate: {
                   hasUppercase: (value) => /[A-Z]/.test(value) || "Password must contain at least one uppercase letter",
