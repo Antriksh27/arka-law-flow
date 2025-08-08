@@ -17,6 +17,7 @@ interface CreateNoteDialogProps {
   open: boolean;
   onClose: () => void;
   caseId?: string;
+  clientId?: string;
 }
 
 interface NoteFormData {
@@ -77,7 +78,7 @@ export const CreateNoteDialog: React.FC<CreateNoteDialogProps> = ({
       const user = await supabase.auth.getUser();
       if (!user.data.user) throw new Error('Not authenticated');
 
-      const noteData = {
+      const noteData: any = {
         title: data.title,
         content: data.content || null,
         case_id: data.case_id || null,
@@ -86,11 +87,19 @@ export const CreateNoteDialog: React.FC<CreateNoteDialogProps> = ({
         tags: data.tags
       };
 
+      // Attach client_id if provided
+      if (clientId) {
+        noteData.client_id = clientId;
+      }
+
       const { error } = await supabase.from('notes_v2').insert(noteData);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notes'] });
+      if (clientId) {
+        queryClient.invalidateQueries({ queryKey: ['client-notes-v2', clientId] });
+      }
       toast({ title: "Note created successfully" });
       reset();
       onClose();
@@ -99,7 +108,7 @@ export const CreateNoteDialog: React.FC<CreateNoteDialogProps> = ({
       console.error('Note creation error:', error);
       toast({
         title: "Failed to create note",
-        description: error.message,
+        description: (error as any).message,
         variant: "destructive"
       });
     }

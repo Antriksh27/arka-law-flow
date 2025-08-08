@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { Calendar, Plus, Clock } from 'lucide-react';
+import { useDialog } from '@/hooks/use-dialog';
+import { CreateAppointmentDialog } from '@/components/appointments/CreateAppointmentDialog';
 
 interface ClientAppointmentsProps {
   clientId: string;
@@ -57,6 +59,8 @@ export const ClientAppointments: React.FC<ClientAppointmentsProps> = ({ clientId
     }
   });
 
+  const { openDialog } = useDialog();
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending':
@@ -86,7 +90,7 @@ export const ClientAppointments: React.FC<ClientAppointmentsProps> = ({ clientId
     <Card className="bg-white rounded-2xl shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-xl font-semibold">Appointments</CardTitle>
-        <Button size="sm" className="bg-primary hover:bg-primary/90">
+        <Button size="sm" className="bg-primary hover:bg-primary/90" onClick={() => openDialog(<CreateAppointmentDialog />)}>
           <Plus className="w-4 h-4 mr-2" />
           Schedule
         </Button>

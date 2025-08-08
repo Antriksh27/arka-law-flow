@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { Plus, Pin, Eye, EyeOff } from 'lucide-react';
+import { CreateNoteDialog } from '@/components/notes/CreateNoteDialog';
 
 interface ClientNotesProps {
   clientId: string;
@@ -48,6 +49,8 @@ export const ClientNotes: React.FC<ClientNotesProps> = ({ clientId }) => {
   });
 
   const isLoading = notesV2Loading || clientLoading;
+
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   // Combine both types of notes
   const allNotes = [];
@@ -95,7 +98,7 @@ export const ClientNotes: React.FC<ClientNotesProps> = ({ clientId }) => {
     <Card className="bg-white rounded-2xl shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-xl font-semibold">Notes</CardTitle>
-        <Button size="sm" className="bg-primary hover:bg-primary/90">
+        <Button size="sm" className="bg-primary hover:bg-primary/90" onClick={() => setShowCreateDialog(true)}>
           <Plus className="w-4 h-4 mr-2" />
           Add Note
         </Button>
