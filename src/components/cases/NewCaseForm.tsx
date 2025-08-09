@@ -123,7 +123,9 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
         respondent: data.respondent || null,
         advocate_name: data.advocate_name || null,
         district: data.district || null,
-        assigned_users: data.assigned_users || [],
+        assigned_users: Array.isArray(data.assigned_users)
+          ? data.assigned_users
+          : (data.assigned_users ? [data.assigned_users] : []),
         created_by: (await supabase.auth.getUser()).data.user?.id
       };
 
