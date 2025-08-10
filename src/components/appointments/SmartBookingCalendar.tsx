@@ -344,6 +344,7 @@ export const SmartBookingCalendar: React.FC<SmartBookingCalendarProps> = ({
                     {timeSlots.map(slot => (
                       <Button
                         key={slot.time}
+                        type="button"
                         variant={selectedTime === slot.time ? "default" : "outline"}
                         size="sm"
                         disabled={!slot.available}

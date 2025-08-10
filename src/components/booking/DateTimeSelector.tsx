@@ -64,6 +64,7 @@ export const DateTimeSelector: React.FC<DateTimeSelectorProps> = ({
             {timeSlots.map((time) => (
               <Button
                 key={time}
+                type="button"
                 variant={selectedTime === time ? "default" : "outline"}
                 size="sm"
                 onClick={() => handleTimeSelect(time)}
