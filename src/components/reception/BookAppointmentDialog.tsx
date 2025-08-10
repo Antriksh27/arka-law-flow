@@ -68,6 +68,14 @@ const BookAppointmentDialog = ({
     }
   });
 
+  useEffect(() => {
+    if (open) {
+      if (initialLawyerId) form.setValue('lawyer_id', initialLawyerId);
+      if (initialDate) form.setValue('appointment_date', initialDate);
+      if (initialTime) form.setValue('appointment_time', initialTime);
+    }
+  }, [open, initialLawyerId, initialDate, initialTime, form]);
+
   const selectedLawyerId = form.watch('lawyer_id');
 
   // Fetch lawyers for selection

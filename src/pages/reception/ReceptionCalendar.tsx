@@ -71,6 +71,95 @@ function MultiUserCalendar({
     return lawyers.filter((l) => selectedLawyerIds.includes(l.id));
   }, [lawyers, selectedLawyerIds]);
 
+  // Availability & exceptions for displayed lawyers
+  type AvailabilityRule = {
+    id: string;
+    user_id: string;
+    day_of_week: number;
+    start_time: string; // HH:mm or ISO partial
+    end_time: string;
+    appointment_duration: number;
+    buffer_time: number;
+    max_appointments_per_day: number | null;
+    is_active: boolean;
+  };
+  type AvailabilityException = { id: string; user_id: string; date: string; is_blocked: boolean };
+
+  const userIds = useMemo(() => displayedLawyers.map(l => l.userId).filter(Boolean), [displayedLawyers]);
+  const selectedDateStr = useMemo(() => format(selectedDate, 'yyyy-MM-dd'), [selectedDate]);
+  const dayOfWeek = selectedDate.getDay();
+
+  const { data: availRules = [] } = useQuery({
+    queryKey: ['multi-avail-rules', userIds],
+    queryFn: async () => {
+      if (!userIds.length) return [] as AvailabilityRule[];
+      const { data, error } = await supabase
+        .from('availability_rules')
+        .select('*')
+        .in('user_id', userIds)
+        .eq('is_active', true);
+      if (error) throw error;
+      return (data || []) as AvailabilityRule[];
+    },
+    enabled: userIds.length > 0,
+  });
+
+  const { data: exceptions = [] } = useQuery({
+    queryKey: ['multi-avail-exc', userIds, selectedDateStr],
+    queryFn: async () => {
+      if (!userIds.length) return [] as AvailabilityException[];
+      const { data, error } = await supabase
+        .from('availability_exceptions')
+        .select('id, user_id, date, is_blocked')
+        .eq('date', selectedDateStr)
+        .in('user_id', userIds);
+      if (error) throw error;
+      return (data || []) as AvailabilityException[];
+    },
+    enabled: userIds.length > 0,
+  });
+
+  const rulesByUser = useMemo(() => {
+    const map = new Map<string, AvailabilityRule[]>();
+    for (const r of availRules) {
+      if (!map.has(r.user_id)) map.set(r.user_id, []);
+      map.get(r.user_id)!.push(r);
+    }
+    return map;
+  }, [availRules]);
+
+  const blockedByUser = useMemo(() => new Set(exceptions.filter(e => e.is_blocked).map(e => e.user_id)), [exceptions]);
+
+  const timeToMinutes = (t: string) => {
+    const [h, m] = t.split(':').map(Number);
+    return (h || 0) * 60 + (m || 0);
+  };
+
+  const getRuleForTime = (userId: string, time: string): AvailabilityRule | undefined => {
+    const rules = rulesByUser.get(userId) || [];
+    return rules.find(r => r.day_of_week === dayOfWeek && r.start_time <= time && r.end_time > time);
+  };
+
+  const slotHasConflict = (lawyerTeamId: string, time: string, durationMin: number) => {
+    const start = timeToMinutes(time);
+    const end = start + durationMin;
+    return appointments.some(a => a.lawyerId === lawyerTeamId && isSameDay(a.date, selectedDate) && (() => {
+      const aStart = timeToMinutes(a.time);
+      const aEnd = aStart + (a.duration || 60);
+      return start < aEnd && end > aStart;
+    })());
+  };
+
+  const isBookableSlot = (lawyer: Lawyer, time: string): boolean => {
+    // Blocked day
+    if (blockedByUser.has(lawyer.userId)) return false;
+    // Must have a rule covering this time
+    const rule = getRuleForTime(lawyer.userId, time);
+    if (!rule) return false;
+    // Check conflicts using rule duration
+    return !slotHasConflict(lawyer.id, time, rule.appointment_duration || 30);
+  };
+
   const timeSlots = useMemo(() => (
     Array.from({ length: 18 }, (_, i) => {
       const hour = Math.floor(9 + i * 0.5);
@@ -92,7 +181,6 @@ function MultiUserCalendar({
   };
 
   const dayAppointments = getAppointmentsForDate(selectedDate);
-
   return (
     <div className="h-full w-full bg-background overflow-auto">
       <div className="max-w-7xl mx-auto p-6">
@@ -318,24 +406,30 @@ function MultiUserCalendar({
                                         </DropdownMenu>
                                       </div>
                                     ) : (
-                                      <Button
-                                        variant="ghost"
-                                        className="h-full w-full border-2 border-dashed border-border hover:border-primary hover:bg-primary/5 rounded-xl transition-all duration-200 hover:scale-105"
-                                        onClick={() => {
-                                          onAppointmentCreate?.({
-                                            lawyerId: lawyer.id,
-                                            clientName: 'New Client',
-                                            time,
-                                            duration: 60,
-                                            type: 'Consultation',
-                                            date: selectedDate
-                                          });
-                                        }}
-                                      >
-                                        <Plus className="h-4 w-4 text-muted-foreground" />
-                                      </Button>
-                                    )}
-                                  </div>
+                                      isBookableSlot(lawyer, time) ? (
+                                        <Button
+                                          variant="ghost"
+                                          className="h-full w-full border-2 border-dashed border-border hover:border-primary hover:bg-primary/5 rounded-xl transition-all duration-200 hover:scale-105"
+                                          onClick={() => {
+                                            onAppointmentCreate?.({
+                                              lawyerId: lawyer.id,
+                                              clientName: 'New Client',
+                                              time,
+                                              duration: 60,
+                                              type: 'Consultation',
+                                              date: selectedDate
+                                            });
+                                          }}
+                                        >
+                                          <Plus className="h-4 w-4 text-muted-foreground" />
+                                        </Button>
+                                      ) : (
+                                        <div className="h-full w-full rounded-xl border bg-muted/20 text-muted-foreground text-[11px] flex items-center justify-center">
+                                          Not Available
+                                        </div>
+                                      )
+                                      )}
+                                    </div>
                                 );
                               })}
                             </div>
