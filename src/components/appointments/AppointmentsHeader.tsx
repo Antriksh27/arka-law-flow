@@ -8,6 +8,7 @@ import { CreateAppointmentDialog } from './CreateAppointmentDialog';
 import { ViewType } from '../../pages/Appointments';
 import { useAuth } from '../../contexts/AuthContext';
 import { toast } from '@/components/ui/use-toast';
+import { getPublicBaseUrl } from '@/lib/appConfig';
 interface AppointmentsHeaderProps {
   currentView: ViewType;
   onViewChange: (view: ViewType) => void;
@@ -43,17 +44,17 @@ export const AppointmentsHeader: React.FC<AppointmentsHeaderProps> = ({
               <Button
                 variant="secondary"
                 onClick={() => {
-                  const url = `${window.location.origin}/book/${user.id}`;
+                  const url = `${getPublicBaseUrl()}/book/${user.id}`;
                   navigator.clipboard.writeText(url);
                   toast({
-                    title: 'Link copied',
+                    title: 'Public link copied',
                     description: 'Share this booking link with clients.',
                   });
                 }}
-                aria-label="Copy booking link"
+                aria-label="Copy public booking link"
               >
                 <Copy className="w-4 h-4" />
-                Copy link
+                Public Link
               </Button>
             </>
           )}

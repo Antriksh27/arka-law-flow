@@ -16,6 +16,7 @@ import { useDialog } from '@/hooks/use-dialog';
 import { CreateAppointmentDialog } from '../components/appointments/CreateAppointmentDialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/components/ui/use-toast';
+import { getPublicBaseUrl } from '@/lib/appConfig';
 
 export type ViewType = 'timeline' | 'calendar';
 
@@ -67,17 +68,17 @@ const Appointments = () => {
               <Button
                 variant="outline"
                 onClick={() => {
-                  const url = `${window.location.origin}/book/${user.id}`;
+                  const url = `${getPublicBaseUrl()}/book/${user.id}`;
                   navigator.clipboard.writeText(url);
                   toast({
-                    title: 'Link copied',
+                    title: 'Public link copied',
                     description: 'Share this booking link with clients.',
                   });
                 }}
-                aria-label="Copy booking link"
+                aria-label="Copy public booking link"
               >
                 <Copy className="w-4 h-4 mr-2" />
-                Copy link
+                Public Link
               </Button>
             )}
             <Button variant="outline" onClick={() => {}}>
