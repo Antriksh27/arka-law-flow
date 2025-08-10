@@ -9,6 +9,7 @@ import { ViewType } from '../../pages/Appointments';
 import { useAuth } from '../../contexts/AuthContext';
 import { toast } from '@/components/ui/use-toast';
 import { getPublicBaseUrl } from '@/lib/appConfig';
+import { ALLOWED_BOOKING_ROLES } from '@/lib/bookingConfig';
 interface AppointmentsHeaderProps {
   currentView: ViewType;
   onViewChange: (view: ViewType) => void;
@@ -19,7 +20,7 @@ export const AppointmentsHeader: React.FC<AppointmentsHeaderProps> = ({
   onViewChange
 }) => {
   const { openDialog } = useDialog();
-  const { user } = useAuth();
+  const { user, role } = useAuth();
 
   return (
     <div className="flex w-full flex-col items-start gap-4">
@@ -33,7 +34,7 @@ export const AppointmentsHeader: React.FC<AppointmentsHeaderProps> = ({
           </span>
         </div>
         <div className="flex items-center gap-2">
-          {user && user.id && (
+          {user && user.id && role && ALLOWED_BOOKING_ROLES.includes(role) && (
             <>
               <Button asChild variant="outline" className="border-primary text-primary hover:bg-primary/10">
                 <Link to={`/book/${user.id}`} target="_blank" rel="noopener noreferrer">

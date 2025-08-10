@@ -17,6 +17,7 @@ import { CreateAppointmentDialog } from '../components/appointments/CreateAppoin
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/components/ui/use-toast';
 import { getPublicBaseUrl } from '@/lib/appConfig';
+import { ALLOWED_BOOKING_ROLES } from '@/lib/bookingConfig';
 
 export type ViewType = 'timeline' | 'calendar';
 
@@ -43,7 +44,7 @@ const Appointments = () => {
   });
   const { openDialog } = useDialog();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, role } = useAuth();
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setFilters({
@@ -64,7 +65,7 @@ const Appointments = () => {
               <Clock className="w-4 h-4 mr-2" />
               My Availability
             </Button>
-            {user?.id && (
+            {user?.id && role && ALLOWED_BOOKING_ROLES.includes(role) && (
               <Button
                 variant="outline"
                 onClick={() => {

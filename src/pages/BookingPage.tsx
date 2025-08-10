@@ -6,6 +6,7 @@ import { LawyerProfile } from '@/components/booking/LawyerProfile';
 import { BookingConfirmation } from '@/components/booking/BookingConfirmation';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { clientRateLimiter, sanitizeInput } from '@/lib/securityHeaders';
+import { ALLOWED_BOOKING_ROLES } from '@/lib/bookingConfig';
 
 interface LawyerInfo {
   id: string;
@@ -21,8 +22,6 @@ interface LawyerInfo {
 // Basic UUID regex (simplified)
 const UUID_REGEX = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 
-// Roles that are allowed to have a public booking page
-const ALLOWED_BOOKING_ROLES = ['lawyer', 'admin', 'partner', 'associate', 'paralegal'];
 
 export const BookingPage: React.FC = () => {
   const { lawyerId } = useParams<{ lawyerId: string }>();
