@@ -73,8 +73,8 @@ export const ClientTasks: React.FC<ClientTasksProps> = ({ clientId }) => {
     <Card className="bg-white rounded-2xl shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-xl font-semibold">Tasks</CardTitle>
-        <Button onClick={() => setShowCreateDialog(true)}>
-          <Plus className="w-4 h-4" />
+        <Button size="sm" className="bg-primary hover:bg-primary/90" onClick={() => setShowCreateDialog(true)}>
+          <Plus className="w-4 h-4 mr-2" />
           Add Task
         </Button>
       </CardHeader>
