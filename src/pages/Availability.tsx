@@ -27,16 +27,16 @@ const Availability = () => {
 
         {/* Top Tabs like Calendly */}
         <Tabs defaultValue="schedules" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="schedules">Schedules</TabsTrigger>
-            <TabsTrigger value="holidays">Holidays</TabsTrigger>
-            <TabsTrigger value="settings">Calendar settings</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3 rounded-xl border bg-gray-50 p-1">
+            <TabsTrigger value="schedules" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm hover-scale">Schedules</TabsTrigger>
+            <TabsTrigger value="holidays" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm hover-scale">Holidays</TabsTrigger>
+            <TabsTrigger value="settings" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm hover-scale">Calendar settings</TabsTrigger>
           </TabsList>
 
           {/* Schedules Tab */}
           <TabsContent value="schedules" className="space-y-6">
             {/* Schedule Header Bar */}
-            <div className="rounded-2xl border bg-white p-5 shadow-sm">
+            <div className="rounded-2xl border bg-white p-5 shadow-sm hover:shadow-md transition-shadow animate-fade-in">
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
                   <div className="text-sm text-muted-foreground">Schedule</div>
