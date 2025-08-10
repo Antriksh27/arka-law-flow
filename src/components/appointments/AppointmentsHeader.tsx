@@ -2,12 +2,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../ui/button';
-import { Plus, Calendar, List, ArrowRight } from 'lucide-react';
+import { Plus, Calendar, List, ArrowRight, Copy } from 'lucide-react';
 import { useDialog } from '@/hooks/use-dialog';
 import { CreateAppointmentDialog } from './CreateAppointmentDialog';
 import { ViewType } from '../../pages/Appointments';
 import { useAuth } from '../../contexts/AuthContext';
-
+import { toast } from '@/components/ui/use-toast';
 interface AppointmentsHeaderProps {
   currentView: ViewType;
   onViewChange: (view: ViewType) => void;
@@ -33,12 +33,29 @@ export const AppointmentsHeader: React.FC<AppointmentsHeaderProps> = ({
         </div>
         <div className="flex items-center gap-2">
           {user && user.id && (
-            <Button asChild variant="outline" className="border-primary text-primary hover:bg-primary/10">
-              <Link to={`/book/${user.id}`} target="_blank" rel="noopener noreferrer">
-                My Booking Page
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            </Button>
+            <>
+              <Button asChild variant="outline" className="border-primary text-primary hover:bg-primary/10">
+                <Link to={`/book/${user.id}`} target="_blank" rel="noopener noreferrer">
+                  My Booking Page
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  const url = `${window.location.origin}/book/${user.id}`;
+                  navigator.clipboard.writeText(url);
+                  toast({
+                    title: 'Link copied',
+                    description: 'Share this booking link with clients.',
+                  });
+                }}
+                aria-label="Copy booking link"
+              >
+                <Copy className="w-4 h-4" />
+                Copy link
+              </Button>
+            </>
           )}
           <Button 
             onClick={() => openDialog(<CreateAppointmentDialog />)} 
