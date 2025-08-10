@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight, Clock, User, Plus, Edit, Trash2, Calendar as CalendarIcon } from "lucide-react";
 import { DayPicker } from "react-day-picker";
-import { format, addDays, isSameDay } from "date-fns";
+import { format, addDays, isSameDay, getDay } from "date-fns";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -18,6 +18,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 const BookAppointmentDialog = React.lazy(() => import('@/components/reception/BookAppointmentDialog'));
 import EditAppointmentDialog from '@/components/reception/EditAppointmentDialog';
+import { toast } from '@/hooks/use-toast';
 
 interface Lawyer {
   id: string; // team_members.id
@@ -45,6 +46,8 @@ interface MultiUserCalendarProps {
   onAppointmentCreate?: (appointment: Omit<Appointment, 'id'>) => void;
   onAppointmentEdit?: (appointment: Appointment) => void;
   onAppointmentDelete?: (appointmentId: string) => void;
+  isSlotBookable?: (lawyer: Lawyer, date: Date, time: string) => boolean;
+  onAppointmentMove?: (appointmentId: string, targetLawyerId: string, date: Date, time: string) => void;
 }
 
 function MultiUserCalendar({
@@ -54,15 +57,27 @@ function MultiUserCalendar({
   onSelectedDateChange,
   onAppointmentCreate,
   onAppointmentEdit,
-  onAppointmentDelete
+  onAppointmentDelete,
+  isSlotBookable,
+  onAppointmentMove,
 }: MultiUserCalendarProps) {
   const [selectedLawyer, setSelectedLawyer] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
+  const [selectedLawyerIds, setSelectedLawyerIds] = useState<string[]>([]);
 
-  const timeSlots = Array.from({ length: 18 }, (_, i) => {
-    const hour = Math.floor(9 + i * 0.5);
-    const minute = (i % 2) * 30;
-    return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-  });
+  const displayedLawyers = useMemo(() => {
+    if (!lawyers?.length) return [] as Lawyer[];
+    if (!selectedLawyerIds.length) return lawyers; // default: show all
+    return lawyers.filter((l) => selectedLawyerIds.includes(l.id));
+  }, [lawyers, selectedLawyerIds]);
+
+  const timeSlots = useMemo(() => (
+    Array.from({ length: 18 }, (_, i) => {
+      const hour = Math.floor(9 + i * 0.5);
+      const minute = (i % 2) * 30;
+      return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+    })
+  ), []);
 
   const getAppointmentsForDate = (date: Date) => {
     return appointments.filter(apt => isSameDay(apt.date, date));
@@ -165,9 +180,23 @@ function MultiUserCalendar({
                             {dayAppointments.filter(apt => apt.lawyerId === lawyer.id).length} appointments today
                           </p>
                         </div>
-                        <Badge variant={selectedLawyer === lawyer.id ? "default" : "outline"} className="text-xs">
-                          {dayAppointments.filter(apt => apt.lawyerId === lawyer.id).length}
-                        </Badge>
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 accent-primary"
+                          checked={!selectedLawyerIds.length || selectedLawyerIds.includes(lawyer.id)}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            setSelectedLawyerIds((prev) => {
+                              if (!prev.length) {
+                                // default all selected -> start from all minus unchecked
+                                return e.target.checked ? lawyers.map(l => l.id) : lawyers.filter(l => l.id !== lawyer.id).map(l => l.id);
+                              }
+                              if (e.target.checked) return Array.from(new Set([...prev, lawyer.id]));
+                              return prev.filter(id => id !== lawyer.id);
+                            });
+                          }}
+                          aria-label={`Toggle ${lawyer.name}`}
+                        />
                       </div>
                     ))
                   )}
@@ -180,16 +209,30 @@ function MultiUserCalendar({
           <div className="xl:col-span-4">
             <Card className="shadow-lg border-0 bg-white/50 backdrop-blur">
               <CardHeader className="pb-4">
-                <CardTitle className="text-xl font-semibold flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-primary" />
-                  Schedule for {format(selectedDate, "EEEE, MMMM d, yyyy")}
-                  <Badge variant="outline" className="ml-auto">
-                    {dayAppointments.length} appointments
-                  </Badge>
-                </CardTitle>
+                <div className="flex items-center gap-3">
+                  <CardTitle className="text-xl font-semibold flex items-center gap-2">
+                    <Clock className="h-5 w-5 text-primary" />
+                    Schedule for {format(selectedDate, "EEEE, MMMM d, yyyy")}
+                  </CardTitle>
+                  <div className="ml-auto flex items-center gap-2">
+                    <div className="hidden sm:flex rounded-lg border bg-background p-1">
+                      <Button variant={viewMode === 'day' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('day')}>Day</Button>
+                      <Button variant={viewMode === 'week' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('week')}>Week</Button>
+                    </div>
+                    <Button variant="outline" size="icon" onClick={() => onSelectedDateChange(addDays(selectedDate, viewMode === 'day' ? -1 : -7))}>
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <Button variant="outline" size="icon" onClick={() => onSelectedDateChange(addDays(selectedDate, viewMode === 'day' ? 1 : 7))}>
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                    <Badge variant="outline" className="ml-2">
+                      {dayAppointments.length} appointments
+                    </Badge>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className="p-6">
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto max-h-[70vh] overflow-y-auto">
                   <div className="min-w-[900px]">
                     {lawyers.length === 0 ? (
                       <div className="text-center py-16 text-muted-foreground">
@@ -200,9 +243,9 @@ function MultiUserCalendar({
                     ) : (
                       <>
                         {/* Header */}
-                        <div className="grid gap-3 mb-6" style={{ gridTemplateColumns: `120px repeat(${lawyers.length}, 1fr)` }}>
-                          <div className="font-semibold text-muted-foreground text-center py-3">Time</div>
-                          {lawyers.map((lawyer) => (
+                        <div className="grid gap-3 mb-6 sticky top-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75" style={{ gridTemplateColumns: `120px repeat(${displayedLawyers.length}, 1fr)` }}>
+                          <div className="font-semibold text-muted-foreground text-center py-3 sticky left-0 z-20 bg-background/95 rounded-lg">Time</div>
+                          {displayedLawyers.map((lawyer) => (
                             <div key={lawyer.id} className="text-center p-3 bg-white/80 rounded-xl border">
                               <div className={cn(
                                 "w-10 h-10 rounded-full mx-auto mb-2 flex items-center justify-center text-white text-sm font-bold shadow-lg",
@@ -224,12 +267,12 @@ function MultiUserCalendar({
                             <div 
                               key={time} 
                               className="grid gap-3 items-center" 
-                              style={{ gridTemplateColumns: `120px repeat(${lawyers.length}, 1fr)` }}
+                              style={{ gridTemplateColumns: `120px repeat(${displayedLawyers.length}, 1fr)` }}
                             >
                               <div className="text-center py-3 text-sm font-medium text-muted-foreground bg-white/60 rounded-lg border">
                                 {time}
                               </div>
-                              {lawyers.map((lawyer) => {
+                              {displayedLawyers.map((lawyer) => {
                                 const appointment = getAppointmentForSlot(lawyer.id, time, selectedDate);
                                 
                                 return (
