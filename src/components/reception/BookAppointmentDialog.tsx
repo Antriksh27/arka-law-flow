@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -19,6 +19,9 @@ import { SmartBookingCalendar } from '@/components/appointments/SmartBookingCale
 interface BookAppointmentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialLawyerId?: string;
+  initialDate?: string; // yyyy-MM-dd
+  initialTime?: string; // HH:mm
 }
 interface AppointmentFormData {
   lawyer_id: string;
@@ -34,7 +37,10 @@ interface AppointmentFormData {
 }
 const BookAppointmentDialog = ({
   open,
-  onOpenChange
+  onOpenChange,
+  initialLawyerId,
+  initialDate,
+  initialTime
 }: BookAppointmentDialogProps) => {
   const {
     user,

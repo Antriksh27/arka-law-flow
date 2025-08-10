@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight, Clock, User, Plus, Edit, Trash2, Calendar as CalendarIcon } from "lucide-react";
 import { DayPicker } from "react-day-picker";
 import { format, addDays, isSameDay } from "date-fns";
@@ -16,9 +16,12 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import BookAppointmentDialog from '@/components/reception/BookAppointmentDialog';
+import EditAppointmentDialog from '@/components/reception/EditAppointmentDialog';
 
 interface Lawyer {
-  id: string;
+  id: string; // team_members.id
+  userId: string; // auth user id
   name: string;
   initials: string;
   color: string;
@@ -37,6 +40,8 @@ interface Appointment {
 interface MultiUserCalendarProps {
   lawyers?: Lawyer[];
   appointments?: Appointment[];
+  selectedDate: Date;
+  onSelectedDateChange: (date: Date) => void;
   onAppointmentCreate?: (appointment: Omit<Appointment, 'id'>) => void;
   onAppointmentEdit?: (appointment: Appointment) => void;
   onAppointmentDelete?: (appointmentId: string) => void;
@@ -44,40 +49,13 @@ interface MultiUserCalendarProps {
 
 function MultiUserCalendar({
   lawyers = [],
-  appointments = [
-    {
-      id: '1',
-      lawyerId: '1',
-      clientName: 'John Smith',
-      time: '09:00',
-      duration: 60,
-      type: 'Consultation',
-      date: new Date()
-    },
-    {
-      id: '2',
-      lawyerId: '2',
-      clientName: 'Jane Doe',
-      time: '10:30',
-      duration: 90,
-      type: 'Contract Review',
-      date: new Date()
-    },
-    {
-      id: '3',
-      lawyerId: '1',
-      clientName: 'Bob Johnson',
-      time: '14:00',
-      duration: 45,
-      type: 'Legal Advice',
-      date: addDays(new Date(), 1)
-    },
-  ],
+  appointments = [],
+  selectedDate,
+  onSelectedDateChange,
   onAppointmentCreate,
   onAppointmentEdit,
   onAppointmentDelete
 }: MultiUserCalendarProps) {
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedLawyer, setSelectedLawyer] = useState<string | null>(null);
 
   const timeSlots = Array.from({ length: 18 }, (_, i) => {
@@ -133,7 +111,7 @@ function MultiUserCalendar({
                   selected={selectedDate}
                   onSelect={(date) => {
                     if (date) {
-                      setSelectedDate(date);
+                      onSelectedDateChange(date);
                       setSelectedLawyer(null);
                     }
                   }}
@@ -392,6 +370,12 @@ function MultiUserCalendar({
 
 const ReceptionCalendar = () => {
   const { firmId } = useAuth();
+  const queryClient = useQueryClient();
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [bookOpen, setBookOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState<any | null>(null);
+  const [initialBooking, setInitialBooking] = useState<{ lawyerUserId?: string; date?: string; time?: string }>({});
 
   // Get lawyers with colors
   const { data: lawyers = [] } = useQuery({
@@ -403,11 +387,9 @@ const ReceptionCalendar = () => {
         .eq('firm_id', firmId)
         .in('role', ['lawyer', 'admin', 'junior']);
       
-      // Sort to always show "chitrajeet upadhyaya" first
       const sortedData = data?.sort((a, b) => {
         const nameA = a.full_name?.toLowerCase() || '';
         const nameB = b.full_name?.toLowerCase() || '';
-        
         if (nameA.includes('chitrajeet upadhyaya')) return -1;
         if (nameB.includes('chitrajeet upadhyaya')) return 1;
         return nameA.localeCompare(nameB);
@@ -426,6 +408,7 @@ const ReceptionCalendar = () => {
       
       return sortedData.map((lawyer, index) => ({
         id: lawyer.id,
+        userId: lawyer.user_id,
         name: lawyer.full_name || 'Unnamed Lawyer',
         initials: lawyer.full_name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'UL',
         color: colors[index % colors.length]
@@ -434,25 +417,98 @@ const ReceptionCalendar = () => {
     enabled: !!firmId
   });
 
+  const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
+
+  // Fetch appointments for selected date
+  const { data: rawAppointments = [] } = useQuery({
+    queryKey: ['reception-appointments', firmId, selectedDateStr],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('appointments')
+        .select('*')
+        .eq('firm_id', firmId)
+        .eq('appointment_date', selectedDateStr)
+        .order('appointment_time', { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!firmId && !!selectedDate
+  });
+
+  const lawyerIdByUserId = new Map(lawyers.map(l => [l.userId, l.id]));
+  const calendarAppointments: Appointment[] = rawAppointments
+    .map((apt: any) => ({
+      id: apt.id,
+      lawyerId: lawyerIdByUserId.get(apt.lawyer_id) || '',
+      clientName: apt.title || 'Appointment',
+      time: apt.appointment_time ? String(apt.appointment_time).slice(0, 5) : '',
+      duration: apt.duration_minutes ?? 60,
+      type: apt.type || 'Consultation',
+      date: new Date(apt.appointment_date)
+    }))
+    .filter(a => a.lawyerId && a.time);
+
   const handleAppointmentCreate = (appointment: Omit<Appointment, 'id'>) => {
-    console.log('Creating appointment:', appointment);
+    const lawyerUserId = lawyers.find(l => l.id === appointment.lawyerId)?.userId;
+    setInitialBooking({
+      lawyerUserId,
+      date: format(appointment.date, 'yyyy-MM-dd'),
+      time: appointment.time
+    });
+    setBookOpen(true);
   };
 
   const handleAppointmentEdit = (appointment: Appointment) => {
-    console.log('Editing appointment:', appointment);
+    const found = (rawAppointments as any[]).find(a => a.id === appointment.id) || null;
+    setSelectedAppointment(found);
+    setEditOpen(true);
   };
 
-  const handleAppointmentDelete = (appointmentId: string) => {
-    console.log('Deleting appointment:', appointmentId);
+  const handleAppointmentDelete = async (appointmentId: string) => {
+    // Soft-delete by marking as cancelled to respect RLS
+    await supabase
+      .from('appointments')
+      .update({ status: 'cancelled' })
+      .eq('id', appointmentId);
+    queryClient.invalidateQueries({ queryKey: ['reception-appointments'] });
   };
 
   return (
-    <MultiUserCalendar
-      lawyers={lawyers}
-      onAppointmentCreate={handleAppointmentCreate}
-      onAppointmentEdit={handleAppointmentEdit}
-      onAppointmentDelete={handleAppointmentDelete}
-    />
+    <>
+      <MultiUserCalendar
+        lawyers={lawyers}
+        appointments={calendarAppointments}
+        selectedDate={selectedDate}
+        onSelectedDateChange={setSelectedDate}
+        onAppointmentCreate={handleAppointmentCreate}
+        onAppointmentEdit={handleAppointmentEdit}
+        onAppointmentDelete={handleAppointmentDelete}
+      />
+
+      {/* Dialogs */}
+      <BookAppointmentDialog 
+        open={bookOpen} 
+        onOpenChange={(o) => {
+          setBookOpen(o);
+          if (!o) setInitialBooking({});
+        }}
+        // @ts-ignore - extra props handled in component
+        initialLawyerId={initialBooking.lawyerUserId}
+        initialDate={initialBooking.date}
+        initialTime={initialBooking.time}
+      />
+
+      {selectedAppointment && (
+        <EditAppointmentDialog 
+          open={editOpen} 
+          onOpenChange={(o) => {
+            setEditOpen(o);
+            if (!o) setSelectedAppointment(null);
+          }}
+          appointment={selectedAppointment}
+        />
+      )}
+    </>
   );
 };
 
