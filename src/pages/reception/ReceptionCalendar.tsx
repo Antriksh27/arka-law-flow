@@ -160,13 +160,17 @@ function MultiUserCalendar({
     return !slotHasConflict(lawyer.id, time, rule.appointment_duration || 30);
   };
 
-  const timeSlots = useMemo(() => (
-    Array.from({ length: 18 }, (_, i) => {
-      const hour = Math.floor(9 + i * 0.5);
-      const minute = (i % 2) * 30;
-      return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-    })
-  ), []);
+  const timeSlots = useMemo(() => {
+    const startMinutes = 9 * 60;
+    const endMinutes = 21 * 60; // exclusive - last slot starts at 20:30
+    const slots: string[] = [];
+    for (let m = startMinutes; m < endMinutes; m += 30) {
+      const h = Math.floor(m / 60);
+      const min = m % 60;
+      slots.push(`${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`);
+    }
+    return slots;
+  }, []);
 
   const getAppointmentsForDate = (date: Date) => {
     return appointments.filter(apt => isSameDay(apt.date, date));
@@ -181,6 +185,21 @@ function MultiUserCalendar({
   };
 
   const dayAppointments = getAppointmentsForDate(selectedDate);
+
+  const coveredSlots = useMemo(() => {
+    const set = new Set<string>();
+    for (const apt of dayAppointments) {
+      const startIdx = timeSlots.indexOf(apt.time);
+      if (startIdx === -1) continue;
+      const span = Math.max(1, Math.ceil((apt.duration || 60) / 30));
+      for (let k = 1; k < span; k++) {
+        const t = timeSlots[startIdx + k];
+        if (t) set.add(`${apt.lawyerId}-${t}`);
+      }
+    }
+    return set;
+  }, [dayAppointments, timeSlots]);
+
   return (
     <div className="h-full w-full bg-background overflow-auto">
       <div className="max-w-7xl mx-auto p-6">
@@ -362,49 +381,61 @@ function MultiUserCalendar({
                               </div>
                               {displayedLawyers.map((lawyer) => {
                                 const appointment = getAppointmentForSlot(lawyer.id, time, selectedDate);
+                                const isCovered = coveredSlots.has(`${lawyer.id}-${time}`);
                                 
                                 return (
                                   <div key={`${lawyer.id}-${time}`} className="h-14">
                                     {appointment ? (
-                                      <div className={cn(
-                                        "h-full rounded-xl p-3 text-white text-xs relative group shadow-lg border-2 border-white/20 hover:scale-105 transition-transform",
-                                        lawyer.color
-                                      )}>
-                                        <div className="font-semibold truncate mb-1">
-                                          {appointment.clientName}
-                                        </div>
-                                        <div className="text-xs opacity-90 truncate">
-                                          {appointment.type}
-                                        </div>
-                                        
-                                        <DropdownMenu>
-                                          <DropdownMenuTrigger asChild>
-                                            <Button
-                                              variant="ghost"
-                                              size="icon"
-                                              className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-white hover:bg-white/20 rounded-md"
-                                            >
-                                              <Edit className="h-3 w-3" />
-                                            </Button>
-                                          </DropdownMenuTrigger>
-                                          <DropdownMenuContent align="end">
-                                            <DropdownMenuItem
-                                              onClick={() => onAppointmentEdit?.(appointment)}
-                                            >
-                                              <Edit className="h-4 w-4 mr-2" />
-                                              Edit Appointment
-                                            </DropdownMenuItem>
-                                            <DropdownMenuSeparator />
-                                            <DropdownMenuItem
-                                              onClick={() => onAppointmentDelete?.(appointment.id)}
-                                              className="text-destructive hover:bg-destructive/10 hover:text-destructive focus:bg-destructive/10 focus:text-destructive"
-                                            >
-                                              <Trash2 className="h-4 w-4 mr-2" />
-                                              Delete Appointment
-                                            </DropdownMenuItem>
-                                          </DropdownMenuContent>
-                                        </DropdownMenu>
-                                      </div>
+                                      (() => {
+                                        const span = Math.max(1, Math.ceil((appointment.duration || 60) / 30));
+                                        const heightPx = 56 * span + 8 * (span - 1); // h-14 (56px) + space-y-2 (8px) per extra slot
+                                        return (
+                                          <div
+                                            className={cn(
+                                              "rounded-xl p-3 text-white text-xs relative group shadow-lg border-2 border-white/20 hover:scale-105 transition-transform",
+                                              lawyer.color
+                                            )}
+                                            style={{ height: `${heightPx}px` }}
+                                          >
+                                            <div className="font-semibold truncate mb-1">
+                                              {appointment.clientName}
+                                            </div>
+                                            <div className="text-xs opacity-90 truncate">
+                                              {appointment.type}
+                                            </div>
+                                            
+                                            <DropdownMenu>
+                                              <DropdownMenuTrigger asChild>
+                                                <Button
+                                                  variant="ghost"
+                                                  size="icon"
+                                                  className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-white hover:bg-white/20 rounded-md"
+                                                >
+                                                  <Edit className="h-3 w-3" />
+                                                </Button>
+                                              </DropdownMenuTrigger>
+                                              <DropdownMenuContent align="end">
+                                                <DropdownMenuItem
+                                                  onClick={() => onAppointmentEdit?.(appointment)}
+                                                >
+                                                  <Edit className="h-4 w-4 mr-2" />
+                                                  Edit Appointment
+                                                </DropdownMenuItem>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem
+                                                  onClick={() => onAppointmentDelete?.(appointment.id)}
+                                                  className="text-destructive hover:bg-destructive/10 hover:text-destructive focus:bg-destructive/10 focus:text-destructive"
+                                                >
+                                                  <Trash2 className="h-4 w-4 mr-2" />
+                                                  Delete Appointment
+                                                </DropdownMenuItem>
+                                              </DropdownMenuContent>
+                                            </DropdownMenu>
+                                          </div>
+                                        );
+                                      })()
+                                    ) : isCovered ? (
+                                      <div className="h-full w-full" />
                                     ) : (
                                       isBookableSlot(lawyer, time) ? (
                                         <Button
@@ -428,8 +459,8 @@ function MultiUserCalendar({
                                           Not Available
                                         </div>
                                       )
-                                      )}
-                                    </div>
+                                    )}
+                                  </div>
                                 );
                               })}
                             </div>
