@@ -7,6 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Bell, X, Check, Clock, Calendar, FileText, User } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { formatDateTimeIST } from '@/lib/timezone';
 import { useToast } from '@/hooks/use-toast';
 
 interface Notification {
@@ -203,9 +204,10 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
                           {notification.message}
                         </p>
                         <p className="text-xs text-gray-400 mt-2">
-                          {formatDistanceToNow(new Date(notification.created_at), {
-                            addSuffix: true,
-                          })}
+                          {formatDateTimeIST(notification.created_at)}{' '}
+                          <span className="text-[11px] text-gray-400">
+                            ({formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })})
+                          </span>
                         </p>
                       </div>
                       {!notification.read && (
