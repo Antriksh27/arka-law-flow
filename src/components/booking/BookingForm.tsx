@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DateTimeSelector } from './DateTimeSelector';
+import { SmartBookingCalendar } from '@/components/appointments/SmartBookingCalendar';
 import { Calendar, Clock, User, Mail, Phone, FileText, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -25,6 +25,7 @@ interface BookingFormProps {
 interface FormData {
   selectedDate: Date | null;
   selectedTime: string;
+  durationMinutes: number;
   clientName: string;
   clientEmail: string;
   clientPhone: string;
@@ -39,6 +40,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ lawyer, onSuccess }) =
   const [formData, setFormData] = useState<FormData>({
     selectedDate: null,
     selectedTime: '',
+    durationMinutes: 30,
     clientName: '',
     clientEmail: '',
     clientPhone: '',
@@ -47,11 +49,12 @@ export const BookingForm: React.FC<BookingFormProps> = ({ lawyer, onSuccess }) =
     caseTitle: '',
   });
 
-  const handleDateTimeSelect = (date: Date | null, time: string) => {
+  const handleDateTimeSelect = (date: Date, time: string, duration: number) => {
     setFormData(prev => ({
       ...prev,
       selectedDate: date,
-      selectedTime: time
+      selectedTime: time,
+      durationMinutes: duration
     }));
   };
 
@@ -81,7 +84,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ lawyer, onSuccess }) =
           lawyer_id: lawyer.id,
           appointment_date: format(formData.selectedDate, 'yyyy-MM-dd'),
           appointment_time: formData.selectedTime,
-          duration_minutes: 30,
+          duration_minutes: formData.durationMinutes,
           client_name: formData.clientName,
           client_email: formData.clientEmail,
           client_phone: formData.clientPhone,
@@ -142,10 +145,12 @@ export const BookingForm: React.FC<BookingFormProps> = ({ lawyer, onSuccess }) =
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <DateTimeSelector
-          selectedDate={formData.selectedDate}
+        <SmartBookingCalendar
+          selectedLawyer={lawyer.id}
+          selectedDate={formData.selectedDate || undefined}
           selectedTime={formData.selectedTime}
-          onDateTimeSelect={handleDateTimeSelect}
+          hideLawyerPicker
+          onTimeSlotSelect={(date, time, duration) => handleDateTimeSelect(date, time, duration)}
         />
         <div className="mt-6 flex justify-end">
           <Button 
@@ -271,7 +276,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ lawyer, onSuccess }) =
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Duration:</span>
-                <span className="font-medium">30 minutes</span>
+                <span className="font-medium">{formData.durationMinutes} minutes</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">With:</span>

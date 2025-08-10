@@ -45,13 +45,17 @@ interface SmartBookingCalendarProps {
   onTimeSlotSelect: (date: Date, time: string, duration: number) => void;
   selectedDate?: Date;
   selectedTime?: string;
+  hideLawyerPicker?: boolean;
+  onLawyerChange?: (lawyerId: string) => void;
 }
 
 export const SmartBookingCalendar: React.FC<SmartBookingCalendarProps> = ({
   selectedLawyer,
   onTimeSlotSelect,
   selectedDate,
-  selectedTime
+  selectedTime,
+  hideLawyerPicker,
+  onLawyerChange
 }) => {
   const [internalSelectedDate, setInternalSelectedDate] = useState<Date | undefined>(selectedDate);
 
@@ -244,31 +248,32 @@ export const SmartBookingCalendar: React.FC<SmartBookingCalendarProps> = ({
   return (
     <div className="space-y-6">
       {/* Lawyer Selection */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <User className="h-5 w-5" />
-            Select Lawyer
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Select value={selectedLawyer || ''} onValueChange={(value) => {
-            // This would need to be handled by parent component
-            console.log('Selected lawyer:', value);
-          }}>
-            <SelectTrigger>
-              <SelectValue placeholder="Choose a lawyer..." />
-            </SelectTrigger>
-            <SelectContent>
-              {lawyers?.map(lawyer => (
-                <SelectItem key={lawyer.id} value={lawyer.id}>
-                  {lawyer.name} ({lawyer.role})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </CardContent>
-      </Card>
+      {!hideLawyerPicker && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <User className="h-5 w-5" />
+              Select Lawyer
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Select value={selectedLawyer || ''} onValueChange={(value) => {
+              if (onLawyerChange) onLawyerChange(value);
+            }}>
+              <SelectTrigger>
+                <SelectValue placeholder="Choose a lawyer..." />
+              </SelectTrigger>
+              <SelectContent>
+                {lawyers?.map(lawyer => (
+                  <SelectItem key={lawyer.id} value={lawyer.id}>
+                    {lawyer.name} ({lawyer.role})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </CardContent>
+        </Card>
+      )}
 
       {selectedLawyer && (
         <>

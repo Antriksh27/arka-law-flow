@@ -15,6 +15,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Plus, Check, ChevronsUpDown } from 'lucide-react';
 import { sendAppointmentNotification } from '@/lib/appointmentNotifications';
+import { SmartBookingCalendar } from '@/components/appointments/SmartBookingCalendar';
 interface BookAppointmentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -60,6 +61,8 @@ const BookAppointmentDialog = ({
       notes: ''
     }
   });
+
+  const selectedLawyerId = form.watch('lawyer_id');
 
   // Fetch lawyers for selection
   const {
@@ -399,49 +402,18 @@ const BookAppointmentDialog = ({
             {/* Show contact details in a info box when selected */}
             {!showAddContact && selectedClientValue && selectedClientValue !== 'add-new'}
 
-            <div className="grid grid-cols-2 gap-3">
-              <FormField control={form.control} name="appointment_date" rules={{
-              required: "Date is required"
-            }} render={({
-              field
-            }) => <FormItem>
-                    <FormLabel>Date *</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>} />
-
-              <FormField control={form.control} name="appointment_time" rules={{
-              required: "Time is required"
-            }} render={({
-              field
-            }) => <FormItem>
-                    <FormLabel>Time *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select time" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="max-h-[200px]">
-                        {Array.from({
-                    length: 48
-                  }, (_, i) => {
-                    const hour = Math.floor(i / 4) + 8; // Start from 8 AM
-                    const minute = i % 4 * 15;
-                    if (hour >= 20) return null; // Stop at 8 PM
-                    const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-                    const displayTime = `${hour > 12 ? hour - 12 : hour === 0 ? 12 : hour}:${minute.toString().padStart(2, '0')} ${hour >= 12 ? 'PM' : 'AM'}`;
-                    return <SelectItem key={timeString} value={timeString}>
-                              {displayTime}
-                            </SelectItem>;
-                  }).filter(Boolean)}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>} />
-            </div>
+            {/* Availability-based selection */}
+            <SmartBookingCalendar
+              selectedLawyer={selectedLawyerId || null}
+              selectedDate={form.watch('appointment_date') ? new Date(form.watch('appointment_date')) : undefined}
+              selectedTime={form.watch('appointment_time')}
+              hideLawyerPicker
+              onTimeSlotSelect={(date, time, duration) => {
+                form.setValue('appointment_date', format(date, 'yyyy-MM-dd'));
+                form.setValue('appointment_time', time);
+                form.setValue('duration_minutes', duration);
+              }}
+            />
 
             <FormField control={form.control} name="duration_minutes" render={({
             field

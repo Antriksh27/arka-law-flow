@@ -24,6 +24,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useDialog } from '@/hooks/use-dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { SmartBookingCalendar } from '@/components/appointments/SmartBookingCalendar';
 
 interface Client {
   id: string;
@@ -203,47 +204,18 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
         
         <div className="overflow-y-auto px-1 max-h-[calc(90vh-120px)]">
           <form onSubmit={handleSubmit} className="space-y-4 pr-3">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-900">Date *</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start text-left bg-white border-gray-300 text-gray-900 hover:bg-gray-50">
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formData.appointment_date ? format(
-                        typeof formData.appointment_date === 'string' 
-                          ? new Date(formData.appointment_date) 
-                          : formData.appointment_date, 
-                        'PPP'
-                      ) : 'Select date'}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 bg-white border-gray-300">
-                    <Calendar
-                      mode="single"
-                      selected={typeof formData.appointment_date === 'string' 
-                        ? new Date(formData.appointment_date) 
-                        : formData.appointment_date}
-                      onSelect={(date) => handleInputChange('appointment_date', date || new Date())}
-                      initialFocus
-                      className="bg-white"
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="appointment_time" className="text-sm font-medium text-gray-900">Time</Label>
-                <Input
-                  id="appointment_time"
-                  type="time"
-                  value={formData.appointment_time}
-                  onChange={(e) => handleInputChange('appointment_time', e.target.value)}
-                  required
-                  className="bg-white border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-            </div>
+            {/* Availability-based selection bound to selected lawyer */}
+            <SmartBookingCalendar
+              selectedLawyer={formData.lawyer_id || null}
+              selectedDate={typeof formData.appointment_date === 'string' ? new Date(formData.appointment_date) : formData.appointment_date}
+              selectedTime={formData.appointment_time}
+              hideLawyerPicker
+              onTimeSlotSelect={(date, time, duration) => {
+                handleInputChange('appointment_date', date);
+                handleInputChange('appointment_time', time);
+                handleInputChange('duration_minutes', duration);
+              }}
+            />
             
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
