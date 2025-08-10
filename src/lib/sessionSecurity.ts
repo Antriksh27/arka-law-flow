@@ -7,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 export class SessionManager {
   private static instance: SessionManager;
   private inactivityTimeout: NodeJS.Timeout | null = null;
-  private readonly INACTIVITY_LIMIT = 30 * 60 * 1000; // 30 minutes
+  private readonly INACTIVITY_LIMIT: number | null = null; // Disabled (no auto-logout)
   private readonly WARNING_TIME = 5 * 60 * 1000; // 5 minutes before logout
   private lastActivity: number = Date.now();
 
@@ -98,18 +98,24 @@ export class SessionManager {
   private resetInactivityTimer(): void {
     if (this.inactivityTimeout) {
       clearTimeout(this.inactivityTimeout);
+      this.inactivityTimeout = null;
     }
 
-    // Set warning timer (5 minutes before logout)
+    if (this.INACTIVITY_LIMIT === null) {
+      return; // Inactivity monitoring disabled
+    }
+
+    const delay = Math.max(0, this.INACTIVITY_LIMIT - this.WARNING_TIME);
     this.inactivityTimeout = setTimeout(() => {
       this.showInactivityWarning();
-    }, this.INACTIVITY_LIMIT - this.WARNING_TIME);
+    }, delay);
   }
 
   /**
    * Show inactivity warning to user
    */
   private showInactivityWarning(): void {
+    if (this.INACTIVITY_LIMIT === null) return;
     const timeUntilLogout = Math.ceil(this.WARNING_TIME / 1000 / 60); // minutes
     
     if (confirm(`You will be logged out in ${timeUntilLogout} minutes due to inactivity. Click OK to stay logged in.`)) {
@@ -127,6 +133,7 @@ export class SessionManager {
    * Check if session is expired based on inactivity
    */
   public isSessionExpired(): boolean {
+    if (this.INACTIVITY_LIMIT === null) return false;
     return Date.now() - this.lastActivity > this.INACTIVITY_LIMIT;
   }
 
@@ -134,6 +141,7 @@ export class SessionManager {
    * Get remaining session time in milliseconds
    */
   public getRemainingSessionTime(): number {
+    if (this.INACTIVITY_LIMIT === null) return Number.POSITIVE_INFINITY;
     return Math.max(0, this.INACTIVITY_LIMIT - (Date.now() - this.lastActivity));
   }
 
