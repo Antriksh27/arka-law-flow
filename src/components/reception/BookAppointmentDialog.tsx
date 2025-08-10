@@ -82,7 +82,7 @@ const BookAppointmentDialog = ({
   const {
     data: lawyers
   } = useQuery({
-    queryKey: ['reception-lawyers', firmId],
+    queryKey: ['reception-lawyers-dialog', firmId],
     queryFn: async () => {
       const {
         data,
