@@ -66,22 +66,17 @@ export const BookingPage: React.FC = () => {
           setError('Could not find the professional. They may not exist or are not available for booking.');
         } else if (Array.isArray(data) && data.length > 0) {
           const row = data[0] as { id: string; full_name: string; role: string };
-          // Ensure only allowed roles can be booked
-          if (!ALLOWED_BOOKING_ROLES.includes(row.role)) {
-            setError('Professional not found or not eligible for booking.');
-          } else {
-            // Map minimal RPC result to LawyerInfo; optional fields left null
-            setLawyer({
-              id: row.id,
-              full_name: row.full_name,
-              email: '',
-              profile_pic: null,
-              role: row.role,
-              specializations: null,
-              location: null,
-              bio: null,
-            });
-          }
+          // Map minimal RPC result to LawyerInfo; accept profile regardless of role availability
+          setLawyer({
+            id: row.id,
+            full_name: row.full_name,
+            email: '',
+            profile_pic: null,
+            role: row.role,
+            specializations: null,
+            location: null,
+            bio: null,
+          });
         } else {
           setError('Professional not found or not eligible for booking.');
         }
