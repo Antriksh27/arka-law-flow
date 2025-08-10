@@ -23,6 +23,7 @@ import { format, parseISO } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useDialog } from '@/hooks/use-dialog';
 import { toast } from 'sonner';
+import { SmartBookingCalendar } from '@/components/appointments/SmartBookingCalendar';
 
 interface Appointment {
   id: string;
@@ -198,58 +199,25 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-900">Date *</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start text-left bg-white border-gray-300 text-gray-900 hover:bg-gray-50">
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formData.appointment_date ? format(formData.appointment_date, 'PPP') : 'Select date'}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 bg-white border-gray-300">
-                    <Calendar
-                      mode="single"
-                      selected={formData.appointment_date}
-                      onSelect={(date) => handleInputChange('appointment_date', date || new Date())}
-                      initialFocus
-                      className="bg-white"
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="appointment_time" className="text-sm font-medium text-gray-900">Time *</Label>
-                <Input
-                  id="appointment_time"
-                  type="time"
-                  value={formData.appointment_time}
-                  onChange={(e) => handleInputChange('appointment_time', e.target.value)}
-                  required
-                  className="bg-white border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-            </div>
+            {/* Enforced availability: pick from lawyer's available slots */}
+            <SmartBookingCalendar
+              selectedLawyer={formData.lawyer_id || null}
+              selectedDate={formData.appointment_date}
+              selectedTime={formData.appointment_time}
+              hideLawyerPicker
+              onTimeSlotSelect={(date, time, duration) => {
+                handleInputChange('appointment_date', date);
+                handleInputChange('appointment_time', time);
+                handleInputChange('duration_minutes', duration);
+              }}
+            />
             
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="duration_minutes" className="text-sm font-medium text-gray-900">Duration (minutes)</Label>
-                <Select
-                  value={formData.duration_minutes.toString()}
-                  onValueChange={(value) => handleInputChange('duration_minutes', parseInt(value))}
-                >
-                  <SelectTrigger className="bg-white border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border-gray-300">
-                    <SelectItem value="30" className="text-gray-900">30 minutes</SelectItem>
-                    <SelectItem value="60" className="text-gray-900">1 hour</SelectItem>
-                    <SelectItem value="90" className="text-gray-900">1.5 hours</SelectItem>
-                    <SelectItem value="120" className="text-gray-900">2 hours</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label className="text-sm font-medium text-gray-900">Duration</Label>
+                <div className="rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900">
+                  {formData.duration_minutes} minutes
+                </div>
               </div>
               
               <div className="space-y-2">

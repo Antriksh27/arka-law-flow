@@ -22,6 +22,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { sendAppointmentNotification } from '@/lib/appointmentNotifications';
+import { SmartBookingCalendar } from '@/components/appointments/SmartBookingCalendar';
+import { format } from 'date-fns';
 
 interface RescheduleAppointmentDialogProps {
   open: boolean;
@@ -188,55 +190,18 @@ const RescheduleAppointmentDialog = ({ open, onOpenChange, appointment }: Resche
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <FormField
-                control={form.control}
-                name="appointment_date"
-                rules={{ required: "New date is required" }}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>New Date *</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="appointment_time"
-                rules={{ required: "New time is required" }}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>New Time *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select time" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="max-h-[200px]">
-                        {Array.from({ length: 48 }, (_, i) => {
-                          const hour = Math.floor(i / 4) + 8; // Start from 8 AM
-                          const minute = (i % 4) * 15;
-                          if (hour >= 20) return null; // Stop at 8 PM
-                          const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-                          const displayTime = `${hour > 12 ? hour - 12 : hour === 0 ? 12 : hour}:${minute.toString().padStart(2, '0')} ${hour >= 12 ? 'PM' : 'AM'}`;
-                          return (
-                            <SelectItem key={timeString} value={timeString}>
-                              {displayTime}
-                            </SelectItem>
-                          );
-                        }).filter(Boolean)}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            {/* Enforced availability: pick from lawyer's available slots */}
+            <SmartBookingCalendar
+              selectedLawyer={appointment?.lawyer_id || null}
+              selectedDate={form.watch('appointment_date') ? new Date(form.watch('appointment_date')) : undefined}
+              selectedTime={form.watch('appointment_time')}
+              hideLawyerPicker
+              onTimeSlotSelect={(date, time, duration) => {
+                form.setValue('appointment_date', format(date, 'yyyy-MM-dd'));
+                form.setValue('appointment_time', time);
+                form.setValue('duration_minutes', duration);
+              }}
+            />
 
             <FormField
               control={form.control}
@@ -246,7 +211,7 @@ const RescheduleAppointmentDialog = ({ open, onOpenChange, appointment }: Resche
                   <FormLabel>Duration (minutes)</FormLabel>
                   <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value.toString()}>
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger disabled className="opacity-70 pointer-events-none">
                         <SelectValue />
                       </SelectTrigger>
                     </FormControl>
