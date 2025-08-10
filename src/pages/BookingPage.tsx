@@ -59,18 +59,30 @@ export const BookingPage: React.FC = () => {
 
       setLoading(true); 
       try {
-        const { data, error: dbError } = await supabase
-          .from('profiles')
-          .select('id, full_name, email, profile_pic, role, specializations, location, bio')
-          .eq('id', sanitizedLawyerId)
-          .in('role', ALLOWED_BOOKING_ROLES)
-          .single();
+        const { data, error: rpcError } = await supabase
+          .rpc('get_profile_by_id', { user_id: sanitizedLawyerId });
 
-        if (dbError) {
-          console.error('Error fetching profile for booking:', dbError);
+        if (rpcError) {
+          console.error('Error fetching profile for booking (RPC):', rpcError);
           setError('Could not find the professional. They may not exist or are not available for booking.');
-        } else if (data) {
-          setLawyer(data);
+        } else if (Array.isArray(data) && data.length > 0) {
+          const row = data[0] as { id: string; full_name: string; role: string };
+          // Ensure only allowed roles can be booked
+          if (!ALLOWED_BOOKING_ROLES.includes(row.role)) {
+            setError('Professional not found or not eligible for booking.');
+          } else {
+            // Map minimal RPC result to LawyerInfo; optional fields left null
+            setLawyer({
+              id: row.id,
+              full_name: row.full_name,
+              email: '',
+              profile_pic: null,
+              role: row.role,
+              specializations: null,
+              location: null,
+              bio: null,
+            });
+          }
         } else {
           setError('Professional not found or not eligible for booking.');
         }
