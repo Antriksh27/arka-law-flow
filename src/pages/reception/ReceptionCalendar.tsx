@@ -135,9 +135,11 @@ function MultiUserCalendar({
     return (h || 0) * 60 + (m || 0);
   };
 
+  const normalizeTime = (t?: string | null) => (t ? String(t).slice(0, 5) : '');
+
   const getRuleForTime = (userId: string, time: string): AvailabilityRule | undefined => {
     const rules = rulesByUser.get(userId) || [];
-    return rules.find(r => r.day_of_week === dayOfWeek && r.start_time <= time && r.end_time > time);
+    return rules.find(r => r.day_of_week === dayOfWeek && normalizeTime(r.start_time) <= time && normalizeTime(r.end_time) > time);
   };
 
   const slotHasConflict = (lawyerTeamId: string, time: string, durationMin: number) => {

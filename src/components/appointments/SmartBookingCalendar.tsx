@@ -243,10 +243,11 @@ export const SmartBookingCalendar: React.FC<SmartBookingCalendarProps> = ({
     if (!internalSelectedDate || !selectedLawyer || !availabilityRules) return;
     
     const dayOfWeek = internalSelectedDate.getDay();
+    const norm = (t?: string | null) => (t ? String(t).slice(0, 5) : '');
     const ruleForTime = availabilityRules.find(rule => 
       rule.day_of_week === dayOfWeek && 
-      rule.start_time <= time && 
-      rule.end_time > time
+      norm(rule.start_time) <= time && 
+      norm(rule.end_time) > time
     );
     
     if (ruleForTime) {
