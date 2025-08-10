@@ -16,7 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import BookAppointmentDialog from '@/components/reception/BookAppointmentDialog';
+const BookAppointmentDialog = React.lazy(() => import('@/components/reception/BookAppointmentDialog'));
 import EditAppointmentDialog from '@/components/reception/EditAppointmentDialog';
 
 interface Lawyer {
@@ -486,17 +486,19 @@ const ReceptionCalendar = () => {
       />
 
       {/* Dialogs */}
-      <BookAppointmentDialog 
-        open={bookOpen} 
-        onOpenChange={(o) => {
-          setBookOpen(o);
-          if (!o) setInitialBooking({});
-        }}
-        // @ts-ignore - extra props handled in component
-        initialLawyerId={initialBooking.lawyerUserId}
-        initialDate={initialBooking.date}
-        initialTime={initialBooking.time}
-      />
+      <React.Suspense fallback={null}>
+        <BookAppointmentDialog 
+          open={bookOpen} 
+          onOpenChange={(o) => {
+            setBookOpen(o);
+            if (!o) setInitialBooking({});
+          }}
+          // @ts-ignore - extra props handled in component
+          initialLawyerId={initialBooking.lawyerUserId}
+          initialDate={initialBooking.date}
+          initialTime={initialBooking.time}
+        />
+      </React.Suspense>
 
       {selectedAppointment && (
         <EditAppointmentDialog 
