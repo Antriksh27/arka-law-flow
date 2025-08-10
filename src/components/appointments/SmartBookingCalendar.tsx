@@ -149,6 +149,13 @@ export const SmartBookingCalendar: React.FC<SmartBookingCalendarProps> = ({
     return true;
   };
 
+  // Safely parse a date/time that may be ISO or just a time string (HH:mm or HH:mm:ss)
+  const parseDateTime = (dateStr: string, value?: string | null): Date | null => {
+    if (!value || typeof value !== 'string') return null;
+    const normalized = value.includes('T') ? value : `${dateStr}T${value}`;
+    return parseISO(normalized);
+  };
+
   const generateTimeSlots = (): TimeSlot[] => {
     if (!selectedLawyer || !internalSelectedDate || !availabilityRules) return [];
     
@@ -172,33 +179,37 @@ export const SmartBookingCalendar: React.FC<SmartBookingCalendarProps> = ({
     const slots: TimeSlot[] = [];
     
     rulesForDay.forEach(rule => {
-      const startTime = parseISO(`${dateStr}T${rule.start_time}`);
-      const endTime = parseISO(`${dateStr}T${rule.end_time}`);
+      if (!rule.start_time || !rule.end_time) return;
+      const startTime = parseDateTime(dateStr, rule.start_time)!;
+      const endTime = parseDateTime(dateStr, rule.end_time)!;
       const duration = rule.appointment_duration;
       const buffer = rule.buffer_time;
-      
+
+      if (!startTime || !endTime) return;
+
       let currentTime = startTime;
-      
-      while (isBefore(addMinutes(currentTime, duration), endTime) || 
+
+      while (isBefore(addMinutes(currentTime, duration), endTime) ||
              currentTime.getTime() === endTime.getTime() - duration * 60000) {
         const timeStr = format(currentTime, 'HH:mm');
         const slotEndTime = addMinutes(currentTime, duration);
-        
-        // Check if slot conflicts with existing appointments
+
+        // Check if slot conflicts with existing appointments (safely)
         const hasConflict = existingAppointments?.some(apt => {
-          const aptStart = parseISO(apt.start_time);
-          const aptEnd = parseISO(apt.end_time);
+          const aptStart = parseDateTime(dateStr, apt.start_time);
+          const aptEnd = parseDateTime(dateStr, apt.end_time);
+          if (!aptStart || !aptEnd) return false;
           return (
             isBefore(currentTime, aptEnd) && isAfter(slotEndTime, aptStart)
           );
-        });
-        
+        }) ?? false;
+
         slots.push({
           time: timeStr,
           available: !hasConflict,
           reason: hasConflict ? 'Time slot is already booked' : undefined
         });
-        
+
         currentTime = addMinutes(currentTime, duration + buffer);
       }
     });
