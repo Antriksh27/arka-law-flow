@@ -11,9 +11,11 @@ import DefaultPageLayout from '../components/messages/ui/DefaultPageLayout';
 import { Button } from '../components/ui/button';
 import { TextField } from '../components/messages/ui/TextField';
 import { ToggleGroup, ToggleGroupItem } from '../components/ui/toggle-group';
-import { Filter, Plus, Search, LayoutList, Calendar, Clock } from 'lucide-react';
+import { Filter, Plus, Search, LayoutList, Calendar, Clock, Copy } from 'lucide-react';
 import { useDialog } from '@/hooks/use-dialog';
 import { CreateAppointmentDialog } from '../components/appointments/CreateAppointmentDialog';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from '@/components/ui/use-toast';
 
 export type ViewType = 'timeline' | 'calendar';
 
@@ -40,6 +42,7 @@ const Appointments = () => {
   });
   const { openDialog } = useDialog();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setFilters({
@@ -60,6 +63,23 @@ const Appointments = () => {
               <Clock className="w-4 h-4 mr-2" />
               My Availability
             </Button>
+            {user?.id && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const url = `${window.location.origin}/book/${user.id}`;
+                  navigator.clipboard.writeText(url);
+                  toast({
+                    title: 'Link copied',
+                    description: 'Share this booking link with clients.',
+                  });
+                }}
+                aria-label="Copy booking link"
+              >
+                <Copy className="w-4 h-4 mr-2" />
+                Copy link
+              </Button>
+            )}
             <Button variant="outline" onClick={() => {}}>
               <Filter className="w-4 h-4 mr-2" />
               Filter
