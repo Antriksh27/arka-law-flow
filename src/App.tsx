@@ -41,7 +41,7 @@ function App() {
                 } />
               </Routes>
               <Toaster />
-              {!window.location.pathname.startsWith('/book/') && <ExpandableChatDemo />}
+              {!window.location.pathname.startsWith('/book') && <ExpandableChatDemo />}
             </DialogProvider>
           </AuthProvider>
         </QueryClientProvider>
