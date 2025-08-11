@@ -8,7 +8,7 @@ import RoleBasedRouter from './components/routing/RoleBasedRouter';
 import Auth from './pages/Auth';
 import { BookingPage } from './pages/BookingPage';
 import { Toaster } from './components/ui/toaster';
-
+import { BookRedirect } from './pages/BookRedirect';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,7 +28,9 @@ function App() {
           <AuthProvider>
             <DialogProvider>
               <Routes>
-                {/* Public booking route - no authentication required */}
+                {/* Public booking routes - no authentication required */}
+                <Route path="/b/:code" element={<BookRedirect />} />
+                <Route path="/bk/:compact" element={<BookRedirect />} />
                 <Route path="/book/:lawyerId" element={<BookingPage />} />
                 
                 {/* Auth route */}
