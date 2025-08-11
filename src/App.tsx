@@ -8,7 +8,7 @@ import RoleBasedRouter from './components/routing/RoleBasedRouter';
 import Auth from './pages/Auth';
 import { BookingPage } from './pages/BookingPage';
 import { Toaster } from './components/ui/toaster';
-import { ExpandableChatDemo } from './components/ui/demo';
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -18,10 +18,11 @@ const queryClient = new QueryClient({
     },
   },
 });
-
+const BUILD_INFO = new Date().toISOString();
+console.log('App build:', BUILD_INFO);
 function App() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50" data-build={BUILD_INFO}>
       <Router>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
@@ -36,10 +37,7 @@ function App() {
                 {/* Protected routes with role-based routing */}
                 <Route path="/*" element={
                   <ProtectedRoute>
-                    <>
-                      <RoleBasedRouter />
-                      <ExpandableChatDemo />
-                    </>
+                    <RoleBasedRouter />
                   </ProtectedRoute>
                 } />
               </Routes>

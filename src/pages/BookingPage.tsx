@@ -5,7 +5,7 @@ import { BookingForm } from '@/components/booking/BookingForm';
 import { LawyerProfile } from '@/components/booking/LawyerProfile';
 import { BookingConfirmation } from '@/components/booking/BookingConfirmation';
 import { Loader2, AlertCircle } from 'lucide-react';
-import { clientRateLimiter, sanitizeInput } from '@/lib/securityHeaders';
+
 import { ALLOWED_BOOKING_ROLES } from '@/lib/bookingConfig';
 
 interface LawyerInfo {
@@ -39,66 +39,61 @@ export const BookingPage: React.FC = () => {
         return;
       }
 
-      // Enhanced security validation
-      const sanitizedLawyerId = sanitizeInput(lawyerId);
-      if (lawyerId.startsWith(':') || !UUID_REGEX.test(sanitizedLawyerId)) {
-        setError(`Invalid lawyer ID format. Please check the URL.`);
-        console.error('Invalid lawyerId:', sanitizedLawyerId);
-        setLoading(false);
-        return;
-      }
+      const sanitizedLawyerId = lawyerId.trim();
 
-      // Rate limiting for public endpoint
-      const clientIp = 'anonymous_' + Date.now(); // Simple client identification
-      if (!clientRateLimiter.isAllowed(clientIp, 10, 60000)) {
-        setError('Too many requests. Please wait a moment before trying again.');
-        setLoading(false);
-        return;
-      }
+      // Rate limiting removed for public booking endpoint
 
       setLoading(true); 
       try {
-        const { data, error: rpcError } = await supabase
+        // 1) Try RPC for minimal profile
+        const { data: rpcData, error: rpcError } = await supabase
           .rpc('get_profile_by_id', { user_id: sanitizedLawyerId });
 
-        if (rpcError) {
-          console.error('Error fetching profile for booking (RPC), using fallback profile:', rpcError);
-          setLawyer({
-            id: sanitizedLawyerId,
-            full_name: 'Legal Professional',
-            email: '',
-            profile_pic: null,
-            role: 'lawyer',
-            specializations: null,
-            location: null,
-            bio: null,
-          });
-        } else if (Array.isArray(data) && data.length > 0) {
-          const row = data[0] as { id: string; full_name: string; role: string };
-          // Map minimal RPC result to LawyerInfo; accept profile regardless of role availability
-          setLawyer({
-            id: row.id,
-            full_name: row.full_name,
-            email: '',
-            profile_pic: null,
-            role: row.role,
-            specializations: null,
-            location: null,
-            bio: null,
-          });
-        } else {
-          // Fallback: proceed with minimal profile to allow booking via direct link
-          setLawyer({
-            id: sanitizedLawyerId,
-            full_name: 'Legal Professional',
-            email: '',
-            profile_pic: null,
-            role: 'lawyer',
-            specializations: null,
-            location: null,
-            bio: null,
-          });
+        let base: { id: string; full_name: string; role: string } | null = null;
+        if (!rpcError && rpcData) {
+          if (Array.isArray(rpcData) && rpcData.length > 0) {
+            base = rpcData[0] as { id: string; full_name: string; role: string };
+          } else if (!Array.isArray(rpcData) && (rpcData as any).id) {
+            base = rpcData as { id: string; full_name: string; role: string };
+          }
         }
+
+        // 2) Try to enrich from profiles (may be blocked by RLS for public users)
+        let enrich: Partial<LawyerInfo> = {};
+        try {
+          const { data: p, error: selectError } = await supabase
+            .from('profiles')
+            .select('email, profile_pic, specializations, location, bio, role, full_name')
+            .eq('id', sanitizedLawyerId)
+            .maybeSingle();
+
+          if (p && !selectError) {
+            enrich = {
+              email: p.email ?? '',
+              profile_pic: p.profile_pic ?? null,
+              role: p.role ?? base?.role ?? 'lawyer',
+              specializations: p.specializations ?? null,
+              location: p.location ?? null,
+              bio: p.bio ?? null,
+              full_name: p.full_name ?? base?.full_name ?? 'Legal Professional',
+            } as Partial<LawyerInfo>;
+          }
+        } catch (enrichErr) {
+          console.warn('Profiles enrichment skipped (likely RLS on public):', enrichErr);
+        }
+
+        const resolved: LawyerInfo = {
+          id: sanitizedLawyerId,
+          full_name: (base?.full_name || (enrich.full_name as string) || 'Legal Professional'),
+          email: (enrich.email as string) || '',
+          profile_pic: (enrich.profile_pic as string | null) ?? null,
+          role: (base?.role || (enrich.role as string) || 'lawyer'),
+          specializations: (enrich.specializations as string | null) ?? null,
+          location: (enrich.location as string | null) ?? null,
+          bio: (enrich.bio as string | null) ?? null,
+        };
+
+        setLawyer(resolved);
       } catch (err) {
         console.error('Exception fetching professional for booking, using fallback profile:', err);
         setLawyer({
