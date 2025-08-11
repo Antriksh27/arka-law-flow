@@ -36,12 +36,14 @@ function App() {
                 {/* Protected routes with role-based routing */}
                 <Route path="/*" element={
                   <ProtectedRoute>
-                    <RoleBasedRouter />
+                    <>
+                      <RoleBasedRouter />
+                      <ExpandableChatDemo />
+                    </>
                   </ProtectedRoute>
                 } />
               </Routes>
               <Toaster />
-              {!window.location.pathname.startsWith('/book') && <ExpandableChatDemo />}
             </DialogProvider>
           </AuthProvider>
         </QueryClientProvider>

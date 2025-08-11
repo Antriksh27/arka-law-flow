@@ -135,7 +135,7 @@ export const BookingPage: React.FC = () => {
     );
   }
 
-  if (error || !lawyer) {
+  if (!lawyer) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center p-6 bg-white shadow-lg rounded-xl">
