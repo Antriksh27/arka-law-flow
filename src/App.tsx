@@ -7,6 +7,7 @@ import { DialogProvider } from './hooks/use-dialog';
 import RoleBasedRouter from './components/routing/RoleBasedRouter';
 import Auth from './pages/Auth';
 import { BookingPage } from './pages/BookingPage';
+import { LawyerSelection } from './pages/LawyerSelection';
 import { Toaster } from './components/ui/toaster';
 import { BookRedirect } from './pages/BookRedirect';
 
@@ -32,6 +33,7 @@ function App() {
                 <Route path="/b/:code" element={<BookRedirect />} />
                 <Route path="/bk/:compact" element={<BookRedirect />} />
                 <Route path="/book/:lawyerId" element={<BookingPage />} />
+                <Route path="/book" element={<LawyerSelection />} />
                 
                 {/* Auth route */}
                 <Route path="/auth" element={<Auth />} />

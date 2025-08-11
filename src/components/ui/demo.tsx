@@ -171,6 +171,7 @@ export function ExpandableChatDemo() {
 }
 
 const DemoOne = () => {
+  if (!ENABLE_CHAT) return null;
   return <ExpandableChatDemo />;
 };
 
