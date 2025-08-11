@@ -25,7 +25,21 @@ const UUID_REGEX = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}
 
 export const BookingPage: React.FC = () => {
   const { lawyerId } = useParams<{ lawyerId: string }>();
-  const [lawyer, setLawyer] = useState<LawyerInfo | null>(null);
+  const [lawyer, setLawyer] = useState<LawyerInfo | null>(() => {
+    const id = lawyerId?.trim();
+    return id
+      ? {
+          id,
+          full_name: 'Legal Professional',
+          email: '',
+          profile_pic: null,
+          role: 'lawyer',
+          specializations: null,
+          location: null,
+          bio: null,
+        }
+      : null;
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [bookingComplete, setBookingComplete] = useState(false);
@@ -130,7 +144,7 @@ export const BookingPage: React.FC = () => {
     );
   }
 
-  if (!lawyer) {
+  if (!lawyer && !loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center p-6 bg-white shadow-lg rounded-xl">
