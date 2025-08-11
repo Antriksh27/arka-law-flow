@@ -17,7 +17,7 @@ import {
   ExpandableChatFooter,
 } from "@/components/ui/expandable-chat"
 import { ChatMessageList } from "@/components/ui/chat-message-list"
-
+const ENABLE_CHAT = false;
 export function ExpandableChatDemo() {
   const [messages, setMessages] = useState([
     {
@@ -39,6 +39,8 @@ export function ExpandableChatDemo() {
 
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+
+  if (!ENABLE_CHAT) return null
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
