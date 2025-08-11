@@ -29,7 +29,7 @@ function App() {
           <AuthProvider>
             <DialogProvider>
               <Routes>
-                {/* Public booking routes - no authentication required */}
+                {/* Public booking routes - completely public, no authentication */}
                 <Route path="/b/:code" element={<BookRedirect />} />
                 <Route path="/bk/:compact" element={<BookRedirect />} />
                 <Route path="/book/:lawyerId" element={<BookingPage />} />
@@ -38,7 +38,7 @@ function App() {
                 {/* Auth route */}
                 <Route path="/auth" element={<Auth />} />
                 
-                {/* Protected routes with role-based routing */}
+                {/* All other routes require authentication */}
                 <Route path="/*" element={
                   <ProtectedRoute>
                     <RoleBasedRouter />
