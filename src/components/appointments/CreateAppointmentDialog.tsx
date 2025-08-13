@@ -50,7 +50,7 @@ interface CreateAppointmentDialogProps {
 
 export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = ({ preSelectedDate }) => {
   const { closeDialog } = useDialog();
-  const { firmId } = useAuth();
+  const { firmId, user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [clients, setClients] = useState<Client[]>([]);
   const [cases, setCases] = useState<Case[]>([]);
@@ -73,6 +73,16 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
     fetchCases();
     fetchUsers();
   }, []);
+
+  // Auto-select current user if they are a lawyer
+  useEffect(() => {
+    if (user?.id && users.length > 0) {
+      const currentUserInList = users.find(u => u.id === user.id);
+      if (currentUserInList && !formData.lawyer_id) {
+        setFormData(prev => ({ ...prev, lawyer_id: user.id }));
+      }
+    }
+  }, [user?.id, users, formData.lawyer_id]);
 
   const fetchClients = async () => {
     const { data } = await supabase
