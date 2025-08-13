@@ -23,6 +23,7 @@ import {
   Flag
 } from 'lucide-react';
 import { format } from 'date-fns';
+import TimeUtils from '@/lib/timeUtils';
 
 interface CaseActivityProps {
   caseId: string;
@@ -222,7 +223,7 @@ export const CaseActivity: React.FC<CaseActivityProps> = ({ caseId }) => {
                     {getActivityTypeLabel(activity.activity_type)}
                   </Badge>
                   <span className="text-xs text-gray-500">
-                    {format(new Date(activity.created_at), 'MMM d, h:mm a')}
+                    {TimeUtils.formatDateTime(activity.created_at)}
                   </span>
                 </div>
                 

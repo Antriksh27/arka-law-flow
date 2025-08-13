@@ -26,6 +26,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { SmartBookingCalendar } from '@/components/appointments/SmartBookingCalendar';
 import { ClientSelector } from '@/components/appointments/ClientSelector';
+import TimeUtils from '@/lib/timeUtils';
 
 interface Client {
   id: string;
@@ -57,7 +58,7 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
   const [users, setUsers] = useState<User[]>([]);
   
   const [formData, setFormData] = useState({
-    appointment_date: preSelectedDate || new Date(),
+    appointment_date: preSelectedDate || TimeUtils.nowDate(),
     appointment_time: '',
     duration_minutes: 60,
     client_id: '',
@@ -173,7 +174,7 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
         title: generateTitle(),
         appointment_date: typeof formData.appointment_date === 'string' 
           ? formData.appointment_date 
-          : format(formData.appointment_date, 'yyyy-MM-dd'),
+          : TimeUtils.formatDateInput(formData.appointment_date),
         appointment_time: formData.appointment_time,
         duration_minutes: Number(formData.duration_minutes),
         client_id: formData.client_id || null,
@@ -183,7 +184,8 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
         status: formData.status,
         type: formData.type,
         firm_id: firmData?.law_firm_id,
-        created_by: currentUser.user.id
+        created_by: currentUser.user.id,
+        created_at: TimeUtils.createTimestamp()
       };
 
       const { error } = await supabase

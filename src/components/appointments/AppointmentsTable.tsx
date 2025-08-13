@@ -10,6 +10,7 @@ import { useDialog } from '@/hooks/use-dialog';
 import { EditAppointmentDialog } from './EditAppointmentDialog';
 import { FilterState } from '../../pages/Appointments';
 import { format, isBefore, startOfDay } from 'date-fns';
+import TimeUtils from '@/lib/timeUtils';
 import { useAuth } from '@/contexts/AuthContext';
 interface Appointment {
   id: string;
@@ -53,7 +54,7 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
       
       // Filter by date - show only future appointments by default
       if (!filters.showPastAppointments) {
-        const today = format(startOfDay(new Date()), 'yyyy-MM-dd');
+        const today = TimeUtils.formatDateInput(TimeUtils.nowDate());
         query = query.gte('appointment_date', today);
       }
       
@@ -109,41 +110,36 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
         return <MapPin className="w-4 h-4 text-gray-400" />;
     }
   };
-  const formatDateTime = (date: string, time: string): {
-    date: string;
-    time: string;
-  } => {
-    if (!date) return {
-      date: 'Not set',
-      time: ''
-    };
+  const formatDateTime = (date: string, time: string): { date: string; time: string } => {
+    if (!date) return { date: 'Not set', time: '' };
+    
     try {
-      const dateObj = new Date(date);
+      const dateObj = TimeUtils.parseDate(date);
+      if (!dateObj) return { date: 'Invalid date', time: '' };
+      
       let formattedDate = '';
-      const today = new Date();
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
-      if (dateObj.toDateString() === today.toDateString()) {
+      if (TimeUtils.isToday(dateObj)) {
         formattedDate = 'Today';
-      } else if (dateObj.toDateString() === tomorrow.toDateString()) {
-        formattedDate = 'Tomorrow';
-      } else if (dateObj.toDateString() === yesterday.toDateString()) {
-        formattedDate = 'Yesterday';
       } else {
-        formattedDate = format(dateObj, 'MMM dd, yyyy');
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        if (dateObj.toDateString() === tomorrow.toDateString()) {
+          formattedDate = 'Tomorrow';
+        } else {
+          const yesterday = new Date();
+          yesterday.setDate(yesterday.getDate() - 1);
+          if (dateObj.toDateString() === yesterday.toDateString()) {
+            formattedDate = 'Yesterday';
+          } else {
+            formattedDate = TimeUtils.formatDate(dateObj, 'MMM dd, yyyy');
+          }
+        }
       }
-      const formattedTime = time ? format(new Date(`2000-01-01T${time}`), 'h:mm a') : '';
-      return {
-        date: formattedDate,
-        time: formattedTime
-      };
+      
+      const formattedTime = time ? TimeUtils.formatTime(`2000-01-01T${time}`, 'h:mm a') : '';
+      return { date: formattedDate, time: formattedTime };
     } catch (error) {
-      return {
-        date: date,
-        time: time || ''
-      };
+      return { date: date, time: time || '' };
     }
   };
   const handleEdit = (appointment: Appointment) => {
