@@ -74,10 +74,7 @@ export const ClientSelector: React.FC<ClientSelectorProps> = ({
 
   const allOptions = [...clients, ...contacts];
   
-  const filteredOptions = allOptions.filter(option =>
-    option.full_name.toLowerCase().includes(searchValue.toLowerCase())
-  );
-
+  // Don't filter here, let Command component handle it
   const selectedOption = allOptions.find(option => option.id === value);
 
   const handleRefresh = () => {
@@ -151,65 +148,57 @@ export const ClientSelector: React.FC<ClientSelectorProps> = ({
               
               {clients.length > 0 && (
                 <CommandGroup heading="Clients" className="text-gray-700">
-                  {clients
-                    .filter(client =>
-                      client.full_name.toLowerCase().includes(searchValue.toLowerCase())
-                    )
-                    .map((client) => (
-                      <CommandItem
-                        key={client.id}
-                        value={client.id}
-                        onSelect={() => {
-                          onValueChange(client.id);
-                          setOpen(false);
-                        }}
-                        className="flex items-center gap-2 text-gray-900 cursor-pointer"
-                      >
-                        <User className="h-4 w-4 text-blue-500" />
-                        <span className="flex-1">{client.full_name}</span>
-                        <span className="text-xs text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
-                          Client
-                        </span>
-                        <Check
-                          className={cn(
-                            "ml-auto h-4 w-4",
-                            value === client.id ? "opacity-100" : "opacity-0"
-                          )}
-                        />
-                      </CommandItem>
-                    ))}
+                  {clients.map((client) => (
+                    <CommandItem
+                      key={client.id}
+                      value={client.full_name}
+                      onSelect={() => {
+                        onValueChange(client.id);
+                        setOpen(false);
+                      }}
+                      className="flex items-center gap-2 text-gray-900 cursor-pointer"
+                    >
+                      <User className="h-4 w-4 text-blue-500" />
+                      <span className="flex-1">{client.full_name}</span>
+                      <span className="text-xs text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
+                        Client
+                      </span>
+                      <Check
+                        className={cn(
+                          "ml-auto h-4 w-4",
+                          value === client.id ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                    </CommandItem>
+                  ))}
                 </CommandGroup>
               )}
 
               {contacts.length > 0 && (
                 <CommandGroup heading="Contacts" className="text-gray-700">
-                  {contacts
-                    .filter(contact =>
-                      contact.full_name.toLowerCase().includes(searchValue.toLowerCase())
-                    )
-                    .map((contact) => (
-                      <CommandItem
-                        key={contact.id}
-                        value={contact.id}
-                        onSelect={() => {
-                          onValueChange(contact.id);
-                          setOpen(false);
-                        }}
-                        className="flex items-center gap-2 text-gray-900 cursor-pointer"
-                      >
-                        <User className="h-4 w-4 text-green-500" />
-                        <span className="flex-1">{contact.full_name}</span>
-                        <span className="text-xs text-green-600 bg-green-50 px-1.5 py-0.5 rounded">
-                          Contact
-                        </span>
-                        <Check
-                          className={cn(
-                            "ml-auto h-4 w-4",
-                            value === contact.id ? "opacity-100" : "opacity-0"
-                          )}
-                        />
-                      </CommandItem>
-                    ))}
+                  {contacts.map((contact) => (
+                    <CommandItem
+                      key={contact.id}
+                      value={contact.full_name}
+                      onSelect={() => {
+                        onValueChange(contact.id);
+                        setOpen(false);
+                      }}
+                      className="flex items-center gap-2 text-gray-900 cursor-pointer"
+                    >
+                      <User className="h-4 w-4 text-green-500" />
+                      <span className="flex-1">{contact.full_name}</span>
+                      <span className="text-xs text-green-600 bg-green-50 px-1.5 py-0.5 rounded">
+                        Contact
+                      </span>
+                      <Check
+                        className={cn(
+                          "ml-auto h-4 w-4",
+                          value === contact.id ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                    </CommandItem>
+                  ))}
                 </CommandGroup>
               )}
 
