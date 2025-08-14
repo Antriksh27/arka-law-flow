@@ -42,6 +42,8 @@ interface ContactFormData {
   pin_code?: string;
   state_id?: string;
   district_id?: string;
+  referred_by_name?: string;
+  referred_by_phone?: string;
 }
 
 const AddContactDialog = ({ open, onOpenChange }: AddContactDialogProps) => {
@@ -93,6 +95,8 @@ const AddContactDialog = ({ open, onOpenChange }: AddContactDialogProps) => {
       pin_code: '',
       state_id: '',
       district_id: '',
+      referred_by_name: '',
+      referred_by_phone: '',
     },
   });
 
@@ -425,6 +429,41 @@ const AddContactDialog = ({ open, onOpenChange }: AddContactDialogProps) => {
                       </SelectContent>
                     </Select>
                   )}
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="referred_by_name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Referred By Name</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="Name of person who referred this contact" 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="referred_by_phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Referred By Phone</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="tel"
+                      placeholder="Phone number of referrer" 
+                      {...field} 
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
