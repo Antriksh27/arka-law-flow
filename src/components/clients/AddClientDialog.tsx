@@ -25,8 +25,8 @@ interface ClientFormData {
   organization?: string;
   address?: string;
   city?: string;
-  state_id?: string;
-  district_id?: string;
+  state?: string;
+  district?: string;
   aadhaar_no?: string;
   type: 'Individual' | 'Corporate';
   status: 'active' | 'inactive' | 'lead' | 'prospect' | 'new';
@@ -140,7 +140,7 @@ export const AddClientDialog: React.FC<AddClientDialogProps> = ({
     
     try {
       const newDistrict = await addDistrictMutation(newDistrictName.trim());
-      setValue('district_id', newDistrict.id);
+      setValue('district', newDistrict.name);
       setShowAddDistrict(false);
       setNewDistrictName('');
       toast({
@@ -159,14 +159,26 @@ export const AddClientDialog: React.FC<AddClientDialogProps> = ({
 
   const onSubmit = async (data: ClientFormData) => {
     try {
+      // Convert state_id and district_id to state and district names
+      const selectedState = states.find(s => s.id === selectedStateId);
+      const selectedDistrict = districts.find(d => d.id === data.district);
+      
+      const clientData = {
+        ...data,
+        state: selectedState?.name || data.state,
+        district: selectedDistrict?.name || data.district,
+        assigned_lawyer_id: data.assigned_lawyer_id || null,
+        firm_id: firmId,
+        created_by: user?.id
+      };
+      
+      // Remove fields that don't exist in the clients table
+      delete (clientData as any).district_id;
+      delete (clientData as any).state_id;
+
       const { error } = await supabase
         .from('clients')
-        .insert([{
-          ...data,
-          assigned_lawyer_id: data.assigned_lawyer_id || null,
-          firm_id: firmId,
-          created_by: user?.id
-        }]);
+        .insert([clientData]);
 
       if (error) throw error;
 
@@ -346,20 +358,23 @@ export const AddClientDialog: React.FC<AddClientDialogProps> = ({
             </div>
 
             <div>
-              <Label htmlFor="state_id">State</Label>
+              <Label htmlFor="state">State</Label>
               <select
-                id="state_id"
-                {...register('state_id')}
+                id="state"
+                {...register('state')}
                 onChange={(e) => {
-                  setValue('state_id', e.target.value);
-                  setSelectedStateId(e.target.value);
-                  setValue('district_id', ''); // Reset district when state changes
+                  const selectedState = states.find(s => s.name === e.target.value);
+                  if (selectedState) {
+                    setValue('state', e.target.value);
+                    setSelectedStateId(selectedState.id);
+                    setValue('district', ''); // Reset district when state changes
+                  }
                 }}
                 className="w-full px-3 py-2 mt-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Select state</option>
                 {states.map((state) => (
-                  <option key={state.id} value={state.id}>
+                  <option key={state.id} value={state.name}>
                     {state.name}
                   </option>
                 ))}
@@ -367,7 +382,7 @@ export const AddClientDialog: React.FC<AddClientDialogProps> = ({
             </div>
 
             <div>
-              <Label htmlFor="district_id">District</Label>
+              <Label htmlFor="district">District</Label>
               {showAddDistrict ? (
                 <div className="space-y-2 mt-2">
                   <div className="flex gap-2">
@@ -405,14 +420,14 @@ export const AddClientDialog: React.FC<AddClientDialogProps> = ({
               ) : (
                 <div className="mt-2">
                   <select
-                    id="district_id"
-                    {...register('district_id')}
+                    id="district"
+                    {...register('district')}
                     disabled={!selectedStateId}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
                   >
                     <option value="">{!selectedStateId ? "Select state first" : "Select district"}</option>
                     {districts.map((district) => (
-                      <option key={district.id} value={district.id}>
+                      <option key={district.id} value={district.name}>
                         {district.name}
                       </option>
                     ))}
