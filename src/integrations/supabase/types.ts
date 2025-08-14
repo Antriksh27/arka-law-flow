@@ -2913,6 +2913,10 @@ export type Database = {
           last_updated: string
         }[]
       }
+      get_system_timestamp: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_user_firm_id_from_team: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -3010,6 +3014,10 @@ export type Database = {
       is_task_creator: {
         Args: { user_id: string; task_id: string }
         Returns: boolean
+      }
+      normalize_timestamp: {
+        Args: { input_timestamp: string }
+        Returns: string
       }
       security_health_check: {
         Args: Record<PropertyKey, never>
