@@ -1,14 +1,16 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { Plus } from 'lucide-react';
 
 interface AddClientDialogProps {
   open: boolean;
@@ -23,8 +25,8 @@ interface ClientFormData {
   organization?: string;
   address?: string;
   city?: string;
-  state?: string;
-  district?: string;
+  state_id?: string;
+  district_id?: string;
   aadhaar_no?: string;
   type: 'Individual' | 'Corporate';
   status: 'active' | 'inactive' | 'lead' | 'prospect' | 'new';
@@ -42,16 +44,49 @@ export const AddClientDialog: React.FC<AddClientDialogProps> = ({
 }) => {
   const { toast } = useToast();
   const { user, firmId } = useAuth();
+  const [selectedStateId, setSelectedStateId] = useState<string>('');
+  const [showAddDistrict, setShowAddDistrict] = useState(false);
+  const [newDistrictName, setNewDistrictName] = useState('');
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors, isSubmitting }
   } = useForm<ClientFormData>({
     defaultValues: {
       status: 'lead',
       type: 'Individual'
     }
+  });
+
+  // Fetch states
+  const { data: states = [] } = useQuery({
+    queryKey: ['states'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('states')
+        .select('id, name')
+        .order('name');
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Fetch districts based on selected state
+  const { data: districts = [] } = useQuery({
+    queryKey: ['districts', selectedStateId],
+    queryFn: async () => {
+      if (!selectedStateId) return [];
+      const { data, error } = await supabase
+        .from('districts')
+        .select('id, name')
+        .eq('state_id', selectedStateId)
+        .order('name');
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!selectedStateId,
   });
 
   // Fetch lawyers for assignment
@@ -76,6 +111,52 @@ export const AddClientDialog: React.FC<AddClientDialogProps> = ({
     }
   });
 
+  // Add district mutation
+  const addDistrictMutation = async (districtName: string) => {
+    if (!selectedStateId) throw new Error('No state selected');
+    
+    const { data, error } = await supabase
+      .from('districts')
+      .insert({
+        name: districtName,
+        state_id: selectedStateId,
+      })
+      .select('id, name')
+      .single();
+
+    if (error) throw error;
+    return data;
+  };
+
+  const handleAddDistrict = async () => {
+    if (!newDistrictName.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a district name.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      const newDistrict = await addDistrictMutation(newDistrictName.trim());
+      setValue('district_id', newDistrict.id);
+      setShowAddDistrict(false);
+      setNewDistrictName('');
+      toast({
+        title: "Success",
+        description: "District added successfully!",
+      });
+    } catch (error) {
+      console.error('Error adding district:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add district. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const onSubmit = async (data: ClientFormData) => {
     try {
       const { error } = await supabase
@@ -94,6 +175,9 @@ export const AddClientDialog: React.FC<AddClientDialogProps> = ({
         description: "Client added successfully"
       });
       reset();
+      setSelectedStateId('');
+      setShowAddDistrict(false);
+      setNewDistrictName('');
       onSuccess();
     } catch (error) {
       console.error('Error adding client:', error);
@@ -240,7 +324,7 @@ export const AddClientDialog: React.FC<AddClientDialogProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <Label htmlFor="address">Address</Label>
               <Input 
@@ -262,23 +346,94 @@ export const AddClientDialog: React.FC<AddClientDialogProps> = ({
             </div>
 
             <div>
-              <Label htmlFor="state">State</Label>
-              <Input 
-                id="state" 
-                {...register('state')} 
-                className="mt-2"
-                placeholder="State"
-              />
+              <Label htmlFor="state_id">State</Label>
+              <select
+                id="state_id"
+                {...register('state_id')}
+                onChange={(e) => {
+                  setValue('state_id', e.target.value);
+                  setSelectedStateId(e.target.value);
+                  setValue('district_id', ''); // Reset district when state changes
+                }}
+                className="w-full px-3 py-2 mt-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select state</option>
+                {states.map((state) => (
+                  <option key={state.id} value={state.id}>
+                    {state.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>
-              <Label htmlFor="district">District</Label>
-              <Input 
-                id="district" 
-                {...register('district')} 
-                className="mt-2"
-                placeholder="District"
-              />
+              <Label htmlFor="district_id">District</Label>
+              {showAddDistrict ? (
+                <div className="space-y-2 mt-2">
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Enter new district name"
+                      value={newDistrictName}
+                      onChange={(e) => setNewDistrictName(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddDistrict();
+                        }
+                      }}
+                    />
+                    <Button 
+                      type="button" 
+                      onClick={handleAddDistrict}
+                      size="sm"
+                    >
+                      Add
+                    </Button>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => {
+                        setShowAddDistrict(false);
+                        setNewDistrictName('');
+                      }}
+                      size="sm"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-2">
+                  <select
+                    id="district_id"
+                    {...register('district_id')}
+                    disabled={!selectedStateId}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                  >
+                    <option value="">{!selectedStateId ? "Select state first" : "Select district"}</option>
+                    {districts.map((district) => (
+                      <option key={district.id} value={district.id}>
+                        {district.name}
+                      </option>
+                    ))}
+                    {selectedStateId && (
+                      <option value="add_new">+ Add New District</option>
+                    )}
+                  </select>
+                  {selectedStateId && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowAddDistrict(true)}
+                      className="mt-2 flex items-center gap-2"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add New District
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
