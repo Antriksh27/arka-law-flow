@@ -6,6 +6,7 @@ import { FilterState } from '../../pages/Appointments';
 import { FullScreenCalendar } from '@/components/ui/fullscreen-calendar';
 import { useDialog } from '@/hooks/use-dialog';
 import { CreateAppointmentDialog } from './CreateAppointmentDialog';
+import { DayAppointmentsDialog } from './DayAppointmentsDialog';
 import { ViewAppointmentDialog } from './ViewAppointmentDialog';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -189,7 +190,21 @@ export const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({
   
   const handleDateSelect = (date: Date) => {
     console.log("Date selected:", date);
-    openDialog(<CreateAppointmentDialog preSelectedDate={date} />);
+    
+    // Get appointments for the selected date
+    const selectedDateString = format(date, 'yyyy-MM-dd');
+    const appointmentsForDate = rawAppointments?.filter(app => 
+      app.appointment_date === selectedDateString
+    ) || [];
+    
+    // Open the day appointments dialog
+    openDialog(
+      <DayAppointmentsDialog 
+        selectedDate={date}
+        appointments={appointmentsForDate}
+        onClose={() => {}}
+      />
+    );
   };
 
   const handleEventClick = (eventId: string) => {
