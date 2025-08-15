@@ -4,6 +4,7 @@ import { Badge } from '../ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Button } from '../ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../ui/alert-dialog';
 import { Clock, Check, Video, MapPin, Phone, MoreVertical, Edit2, Calendar, Trash } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useDialog } from '@/hooks/use-dialog';
@@ -33,6 +34,8 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
 }) => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [appointmentToDelete, setAppointmentToDelete] = useState<string | null>(null);
   const { openDialog } = useDialog();
   const { user } = useAuth();
   useEffect(() => {
@@ -161,6 +164,33 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
       console.error('Error cancelling appointment:', error);
     }
   };
+
+  const handleDeleteClick = (appointmentId: string) => {
+    setAppointmentToDelete(appointmentId);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!appointmentToDelete) return;
+    
+    try {
+      const { error } = await supabase
+        .from('appointments')
+        .delete()
+        .eq('id', appointmentToDelete);
+
+      if (error) {
+        console.error('Error deleting appointment:', error);
+        return;
+      }
+
+      fetchAppointments();
+      setDeleteConfirmOpen(false);
+      setAppointmentToDelete(null);
+    } catch (error) {
+      console.error('Error deleting appointment:', error);
+    }
+  };
   if (loading) {
     return <div className="p-8 text-center">
         <div className="text-gray-500">Loading appointments...</div>
@@ -247,9 +277,13 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
                             <Calendar className="h-4 w-4 mr-2" />
                             Reschedule
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleCancel(appointment.id)} className="text-red-600">
-                            <Trash className="h-4 w-4 mr-2" />
+                          <DropdownMenuItem onClick={() => handleCancel(appointment.id)} className="text-orange-600">
+                            <Calendar className="h-4 w-4 mr-2" />
                             Cancel
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDeleteClick(appointment.id)} className="text-red-600">
+                            <Trash className="h-4 w-4 mr-2" />
+                            Delete
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -259,5 +293,22 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
         })}
         </TableBody>
       </Table>
+
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Appointment</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this appointment? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-red-600 hover:bg-red-700">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>;
 };
