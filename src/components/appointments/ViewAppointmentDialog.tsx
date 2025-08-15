@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useDialog } from '@/hooks/use-dialog';
@@ -8,7 +9,7 @@ import RescheduleAppointmentDialog from '../reception/RescheduleAppointmentDialo
 import { ConvertToClientDialog } from './ConvertToClientDialog';
 import { ConvertContactToClientDialog } from '../reception/ConvertContactToClientDialog';
 import { format, parseISO } from 'date-fns';
-import { Calendar, Clock, User, MapPin, FileText, Edit, RotateCcw, X, UserPlus, Users, Plus } from 'lucide-react';
+import { Calendar, Clock, User, MapPin, FileText, Edit, RotateCcw, X, UserPlus, Users, Plus, Trash } from 'lucide-react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -36,6 +37,7 @@ interface ViewAppointmentDialogProps {
 export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
   appointment,
 }) => {
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   console.log('🎯 ViewAppointmentDialog: Full appointment object:', appointment);
   console.log('🎯 ViewAppointmentDialog: Client name specifically:', appointment.client_name);
   
@@ -130,6 +132,33 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
       toast({
         title: "Error",
         description: "Failed to cancel appointment",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from('appointments')
+        .delete()
+        .eq('id', appointment.id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Appointment deleted successfully"
+      });
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['appointments-timeline'] });
+      closeDialog();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to delete appointment",
         variant: "destructive"
       });
     }
@@ -293,6 +322,15 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
     }
   };
 
+  const handleDeleteClick = () => {
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    deleteMutation.mutate();
+    setDeleteConfirmOpen(false);
+  };
+
   const getStatusColor = (status: string | null) => {
     switch (status?.toLowerCase()) {
       case 'completed':
@@ -436,6 +474,15 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
             <X className="h-4 w-4 mr-2" />
             {cancelMutation.isPending ? 'Cancelling...' : 'Cancel'}
           </Button>
+          <Button
+            variant="destructive"
+            onClick={handleDeleteClick}
+            disabled={deleteMutation.isPending}
+            className="flex-1"
+          >
+            <Trash className="h-4 w-4 mr-2" />
+            {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+          </Button>
           {appointment.client_name && !appointment.client_id && contactData && (role === 'lawyer' || role === 'junior') && (
             <Button
               onClick={handleConvertContactToClient}
@@ -464,6 +511,23 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
           </Button>
         </div>
       </DialogContent>
+      
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Appointment</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this appointment? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-red-600 hover:bg-red-700">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 };
