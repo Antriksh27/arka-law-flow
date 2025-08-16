@@ -119,9 +119,11 @@ export const GoogleCalendarSync = () => {
     
     try {
       // Call edge function to sync appointments
+      const { data: { user } } = await supabase.auth.getUser();
       const { data, error } = await supabase.functions.invoke('google-calendar-sync', {
         body: { 
           action: 'sync_appointments',
+          user_id: user?.id,
           settings: {
             calendar_id: settings?.calendar_id,
             access_token: settings?.access_token
