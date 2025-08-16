@@ -280,7 +280,7 @@ export const AppointmentsTimeline: React.FC<AppointmentsTimelineProps> = ({
                       </AvatarFallback>
                     </Avatar>
                     <span className="text-xs text-gray-600">
-                      {appointment.client_name || 'No client'}
+                      {appointment.client_name || 'Contact'}
                     </span>
                   </div>
                   <div className="flex items-center gap-1">
