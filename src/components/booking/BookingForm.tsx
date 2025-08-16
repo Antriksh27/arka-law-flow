@@ -77,7 +77,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ lawyer, onSuccess }) =
     setLoading(true);
 
     try {
-      // First create the public appointment
+      // Create confirmed public appointment
       const { data: publicAppointment, error } = await supabase
         .from('public_appointments')
         .insert({
@@ -90,6 +90,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ lawyer, onSuccess }) =
           client_phone: formData.clientPhone,
           reason: formData.reason,
           case_title: formData.isCaseRelated ? formData.caseTitle : null,
+          status: 'confirmed'
         })
         .select()
         .single();

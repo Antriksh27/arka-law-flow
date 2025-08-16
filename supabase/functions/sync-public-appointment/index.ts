@@ -135,7 +135,7 @@ serve(async (req) => {
     // Update public appointment status to processed
     await supabaseClient
       .from('public_appointments')
-      .update({ status: 'confirmed' })
+      .update({ status: 'processed' })
       .eq('id', publicAppointmentId)
 
     return new Response(

@@ -35,13 +35,13 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
             <CheckCircle className="h-8 w-8 text-green-600" />
           </div>
           <CardTitle className="text-2xl text-green-800">
-            Appointment Request Submitted!
+            Appointment Confirmed!
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="text-center text-gray-600">
             <p>
-              Your appointment request has been successfully submitted. 
+              Your appointment has been confirmed and added to our calendar. 
               You will receive a confirmation email shortly.
             </p>
           </div>
@@ -87,10 +87,10 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <h4 className="font-medium text-blue-900 mb-2">What happens next?</h4>
             <ul className="text-sm text-blue-800 space-y-1">
-              <li>• Our team will review your appointment request</li>
-              <li>• You'll receive a confirmation email within 24 hours</li>
-              <li>• If approved, you'll get calendar invite and meeting details</li>
-              <li>• For urgent matters, please call our office directly</li>
+              <li>• Your appointment is confirmed and reserved</li>
+              <li>• You'll receive a confirmation email with meeting details</li>
+              <li>• Please arrive 5 minutes early for your appointment</li>
+              <li>• For any changes, please contact our office directly</li>
             </ul>
           </div>
 
