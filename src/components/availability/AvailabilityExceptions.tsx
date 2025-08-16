@@ -122,7 +122,6 @@ export const AvailabilityExceptions = () => {
 
   const today = new Date();
   const upcomingExceptions = exceptions?.filter(exc => new Date(exc.date) >= today) || [];
-  const pastExceptions = exceptions?.filter(exc => new Date(exc.date) < today) || [];
 
   return (
     <div className="space-y-6">
@@ -261,48 +260,7 @@ export const AvailabilityExceptions = () => {
           </Card>
         )}
 
-        {pastExceptions.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                Past Blocked Dates
-                <Badge variant="outline">{pastExceptions.length}</Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {pastExceptions.slice(-10).map(exception => (
-                  <div key={exception.id} className="flex items-center justify-between p-3 border rounded-lg opacity-60">
-                    <div>
-                      <div className="font-medium">
-                        {format(new Date(exception.date), 'EEEE, MMMM d, yyyy')}
-                      </div>
-                      {exception.reason && (
-                        <div className="text-sm text-muted-foreground mt-1">
-                          {exception.reason}
-                        </div>
-                      )}
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => deleteExceptionMutation.mutate(exception.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-                {pastExceptions.length > 10 && (
-                  <div className="text-center text-sm text-muted-foreground">
-                    ... and {pastExceptions.length - 10} more past dates
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {exceptions?.length === 0 && (
+        {upcomingExceptions.length === 0 && (
           <Card>
             <CardContent className="text-center py-8">
               <AlertCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
