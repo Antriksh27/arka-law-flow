@@ -270,7 +270,7 @@ export const AppointmentsTimeline: React.FC<AppointmentsTimelineProps> = ({
                   <span className="text-sm font-semibold text-gray-900">
                     {appointment.client_name 
                       ? `Appointment with ${appointment.client_name}` 
-                      : appointment.title || 'Appointment'
+                      : appointment.title?.replace(/^(In-Person Meeting|Video Call|Phone Call)/i, 'Appointment') || 'Appointment'
                     }
                   </span>
                   {getStatusBadge(appointment.status)}
