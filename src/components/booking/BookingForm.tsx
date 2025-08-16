@@ -94,6 +94,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ lawyer, onSuccess }) =
       const { data: appointment, error } = await supabase
         .from('appointments')
         .insert({
+          lawyer_id: lawyer.id,
           appointment_date: format(formData.selectedDate, 'yyyy-MM-dd'),
           appointment_time: formData.selectedTime,
           duration_minutes: formData.durationMinutes,
@@ -103,8 +104,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ lawyer, onSuccess }) =
           status: 'upcoming',
           firm_id: teamMember.firm_id,
           is_visible_to_team: true,
-          created_by: lawyer.id,
-          created_by_user_id: lawyer.id
+          created_by: lawyer.id
         })
         .select()
         .single();
