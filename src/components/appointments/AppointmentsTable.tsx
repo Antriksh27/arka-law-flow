@@ -290,7 +290,7 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
                     <div className="flex items-center gap-2">
                       {getLocationIcon(appointment.location)}
                       <span className="text-sm text-gray-600">
-                        {appointment.client_name ? `Appointment with ${appointment.client_name}` : appointment.location === 'online' ? 'Video Call' : appointment.location === 'phone' ? 'Phone Call' : appointment.location === 'in_person' ? 'Office Visit' : appointment.location || 'Not specified'}
+                        {appointment.location === 'online' ? 'Video Call' : appointment.location === 'phone' ? 'Phone Call' : appointment.location === 'in_person' ? 'Office Visit' : appointment.location || 'Not specified'}
                       </span>
                     </div>
                   </TableCell>

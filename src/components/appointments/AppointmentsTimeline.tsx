@@ -268,7 +268,7 @@ export const AppointmentsTimeline: React.FC<AppointmentsTimelineProps> = ({
               <div className="flex grow shrink-0 basis-0 flex-col items-start gap-1">
                 <div className="flex w-full items-center gap-2">
                   <span className="text-sm font-semibold text-gray-900">
-                    {appointment.title || 'Appointment'}
+                    {appointment.client_name ? `Appointment with ${appointment.client_name}` : appointment.title || 'Appointment'}
                   </span>
                   {getStatusBadge(appointment.status)}
                 </div>
@@ -286,8 +286,7 @@ export const AppointmentsTimeline: React.FC<AppointmentsTimelineProps> = ({
                   <div className="flex items-center gap-1">
                     {getLocationIcon(appointment.location)}
                     <span className="text-xs text-gray-600">
-                      {appointment.client_name ? `Appointment with ${appointment.client_name}` : 
-                       appointment.location === 'online' ? 'Video Call' : 
+                      {appointment.location === 'online' ? 'Video Call' : 
                        appointment.location === 'phone' ? 'Phone Call' : 
                        appointment.location === 'in_person' ? 'Office Visit' : 
                        appointment.location || 'Not specified'}
