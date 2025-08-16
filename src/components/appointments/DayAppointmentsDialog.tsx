@@ -119,99 +119,99 @@ export const DayAppointmentsDialog: React.FC<DayAppointmentsDialogProps> = ({
   });
 
   return (
-    <div className="max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto bg-white rounded-lg">
-      <div className="p-6">
-        <div className="flex items-center gap-2 text-xl font-semibold text-gray-900 mb-6">
+    <div className="max-w-4xl mx-auto">
+      <DialogHeader>
+        <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-gray-900">
           <Calendar className="h-5 w-5 text-blue-600" />
           Appointments for {format(selectedDate, 'EEEE, MMMM d, yyyy')}
+        </DialogTitle>
+      </DialogHeader>
+
+      <div className="mt-6 space-y-4">
+        {/* Add New Appointment Button */}
+        <div className="flex justify-end">
+          <Button onClick={handleNewAppointment} className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            New Appointment
+          </Button>
         </div>
 
-        <div className="space-y-4">
-          {/* Add New Appointment Button */}
-          <div className="flex justify-end">
-            <Button onClick={handleNewAppointment} className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              New Appointment
-            </Button>
+        {/* Appointments List */}
+        {sortedAppointments.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            <Calendar className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+            <p className="text-lg font-medium">No appointments scheduled</p>
+            <p className="text-sm">Click "New Appointment" to schedule one for this date.</p>
           </div>
+        ) : (
+          <div className="space-y-3 max-h-[60vh] overflow-y-auto">
+            {sortedAppointments.map((appointment) => (
+              <div
+                key={appointment.id}
+                className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
+                onClick={() => handleAppointmentClick(appointment)}
+              >
+                {/* Time */}
+                <div className="flex flex-col items-center gap-1 min-w-[80px]">
+                  <div className="flex items-center gap-1 text-sm font-semibold text-gray-700">
+                    <Clock className="h-4 w-4" />
+                    {formatTime(appointment.appointment_time)}
+                  </div>
+                  {appointment.duration_minutes && (
+                    <span className="text-xs text-gray-500">
+                      {appointment.duration_minutes} min
+                    </span>
+                  )}
+                </div>
 
-          {/* Appointments List */}
-          {sortedAppointments.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <Calendar className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-              <p className="text-lg font-medium">No appointments scheduled</p>
-              <p className="text-sm">Click "New Appointment" to schedule one for this date.</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {sortedAppointments.map((appointment) => (
-                <div
-                  key={appointment.id}
-                  className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
-                  onClick={() => handleAppointmentClick(appointment)}
-                >
-                  {/* Time */}
-                  <div className="flex flex-col items-center gap-1 min-w-[80px]">
-                    <div className="flex items-center gap-1 text-sm font-semibold text-gray-700">
-                      <Clock className="h-4 w-4" />
-                      {formatTime(appointment.appointment_time)}
-                    </div>
-                    {appointment.duration_minutes && (
-                      <span className="text-xs text-gray-500">
-                        {appointment.duration_minutes} min
-                      </span>
+                {/* Appointment Details */}
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-medium text-gray-900 line-clamp-1">
+                      {appointment.title || 'Untitled Appointment'}
+                    </h3>
+                    {getStatusBadge(appointment.status)}
+                  </div>
+
+                  <div className="flex items-center gap-4 text-sm text-gray-600">
+                    {/* Client */}
+                    {appointment.client_name && (
+                      <div className="flex items-center gap-1">
+                        <User className="h-4 w-4" />
+                        <span>{appointment.client_name}</span>
+                      </div>
+                    )}
+
+                    {/* Lawyer */}
+                    {appointment.lawyer_name && (
+                      <div className="flex items-center gap-1">
+                        <Avatar className="h-4 w-4">
+                          <AvatarFallback className="text-xs">
+                            {appointment.lawyer_name.split(' ').map(n => n[0]).join('')}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span>{appointment.lawyer_name}</span>
+                      </div>
+                    )}
+
+                    {/* Location */}
+                    {appointment.location && (
+                      <div className="flex items-center gap-1">
+                        {getLocationIcon(appointment.location)}
+                        <span>
+                          {appointment.location === 'online' ? 'Video Call' : 
+                           appointment.location === 'phone' ? 'Phone Call' : 
+                           appointment.location === 'in_person' ? 'Office' : 
+                           appointment.location}
+                        </span>
+                      </div>
                     )}
                   </div>
-
-                  {/* Appointment Details */}
-                  <div className="flex-1 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-medium text-gray-900 line-clamp-1">
-                        {appointment.title || 'Untitled Appointment'}
-                      </h3>
-                      {getStatusBadge(appointment.status)}
-                    </div>
-
-                    <div className="flex items-center gap-4 text-sm text-gray-600">
-                      {/* Client */}
-                      {appointment.client_name && (
-                        <div className="flex items-center gap-1">
-                          <User className="h-4 w-4" />
-                          <span>{appointment.client_name}</span>
-                        </div>
-                      )}
-
-                      {/* Lawyer */}
-                      {appointment.lawyer_name && (
-                        <div className="flex items-center gap-1">
-                          <Avatar className="h-4 w-4">
-                            <AvatarFallback className="text-xs">
-                              {appointment.lawyer_name.split(' ').map(n => n[0]).join('')}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span>{appointment.lawyer_name}</span>
-                        </div>
-                      )}
-
-                      {/* Location */}
-                      {appointment.location && (
-                        <div className="flex items-center gap-1">
-                          {getLocationIcon(appointment.location)}
-                          <span>
-                            {appointment.location === 'online' ? 'Video Call' : 
-                             appointment.location === 'phone' ? 'Phone Call' : 
-                             appointment.location === 'in_person' ? 'Office' : 
-                             appointment.location}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
