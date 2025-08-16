@@ -82,7 +82,7 @@ export const DayAppointmentsDialog: React.FC<DayAppointmentsDialogProps> = ({
   };
 
   const handleAppointmentClick = (appointment: AppointmentData) => {
-    onClose(); // Close the current dialog first
+    closeDialog(); // Close the current dialog first
     openDialog(
       <ViewAppointmentDialog 
         appointment={{
@@ -106,7 +106,7 @@ export const DayAppointmentsDialog: React.FC<DayAppointmentsDialogProps> = ({
   };
 
   const handleNewAppointment = () => {
-    onClose(); // Close the current dialog first
+    closeDialog(); // Close the current dialog first
     openDialog(<CreateAppointmentDialog preSelectedDate={selectedDate} />);
   };
 
@@ -119,14 +119,12 @@ export const DayAppointmentsDialog: React.FC<DayAppointmentsDialogProps> = ({
   });
 
   return (
-    <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-gray-900">
-            <Calendar className="h-5 w-5 text-blue-600" />
-            Appointments for {format(selectedDate, 'EEEE, MMMM d, yyyy')}
-          </DialogTitle>
-        </DialogHeader>
+    <div className="max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto bg-white rounded-lg">
+      <div className="p-6">
+        <div className="flex items-center gap-2 text-xl font-semibold text-gray-900 mb-6">
+          <Calendar className="h-5 w-5 text-blue-600" />
+          Appointments for {format(selectedDate, 'EEEE, MMMM d, yyyy')}
+        </div>
 
         <div className="space-y-4">
           {/* Add New Appointment Button */}
@@ -214,7 +212,7 @@ export const DayAppointmentsDialog: React.FC<DayAppointmentsDialogProps> = ({
             </div>
           )}
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 };
