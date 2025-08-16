@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -7,41 +7,225 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
 import { Calendar, Link, Unlink, Settings, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 export const GoogleCalendarSync = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [syncDirection, setSyncDirection] = useState<'one_way' | 'two_way'>('one_way');
   const [autoSync, setAutoSync] = useState(false);
   const [syncInterval, setSyncInterval] = useState(60);
   const [syncEnabled, setSyncEnabled] = useState(true);
+  const [settings, setSettings] = useState<any>(null);
+
+  // Load user's Google Calendar settings on component mount
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const loadSettings = async () => {
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) return;
+
+      const { data, error } = await supabase
+        .from('google_calendar_settings')
+        .select('*')
+        .eq('user_id', user.user.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error loading settings:', error);
+        return;
+      }
+
+      if (data) {
+        setSettings(data);
+        setIsConnected(!!data.access_token);
+        setSyncDirection(data.sync_direction as 'one_way' | 'two_way');
+        setAutoSync(data.auto_sync);
+        setSyncInterval(data.sync_interval_minutes);
+        setSyncEnabled(data.sync_enabled);
+      }
+    } catch (error) {
+      console.error('Error loading settings:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleConnect = async () => {
     setIsConnecting(true);
     
-    // Simulate connection process
-    setTimeout(() => {
-      setIsConnected(true);
+    try {
+      // Call edge function to get Google OAuth URL
+      const { data, error } = await supabase.functions.invoke('google-calendar-auth', {
+        body: { action: 'get_auth_url' }
+      });
+
+      if (error) throw error;
+
+      if (data.auth_url) {
+        // Redirect to Google OAuth
+        window.location.href = data.auth_url;
+      }
+    } catch (error) {
+      console.error('Error connecting to Google Calendar:', error);
+      toast({ 
+        title: 'Connection Failed', 
+        description: 'Failed to connect to Google Calendar. Please try again.',
+        variant: 'destructive'
+      });
       setIsConnecting(false);
-      toast({ title: 'Google Calendar connected successfully!' });
-    }, 2000);
+    }
   };
 
-  const handleDisconnect = () => {
-    setIsConnected(false);
-    toast({ title: 'Google Calendar disconnected' });
+  const handleDisconnect = async () => {
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) return;
+
+      // Delete Google Calendar settings
+      const { error } = await supabase
+        .from('google_calendar_settings')
+        .delete()
+        .eq('user_id', user.user.id);
+
+      if (error) throw error;
+
+      setIsConnected(false);
+      setSettings(null);
+      toast({ title: 'Google Calendar disconnected successfully!' });
+    } catch (error) {
+      console.error('Error disconnecting:', error);
+      toast({ 
+        title: 'Disconnection Failed', 
+        description: 'Failed to disconnect Google Calendar. Please try again.',
+        variant: 'destructive'
+      });
+    }
   };
 
   const handleSync = async () => {
     setIsSyncing(true);
     
-    // Simulate sync process
-    setTimeout(() => {
+    try {
+      // Call edge function to sync appointments
+      const { data, error } = await supabase.functions.invoke('google-calendar-sync', {
+        body: { 
+          action: 'sync_appointments',
+          settings: {
+            calendar_id: settings?.calendar_id,
+            access_token: settings?.access_token
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      toast({ 
+        title: 'Sync Completed', 
+        description: `Successfully synced ${data.synced_count || 0} appointments.`
+      });
+    } catch (error) {
+      console.error('Error syncing calendar:', error);
+      toast({ 
+        title: 'Sync Failed', 
+        description: 'Failed to sync calendar. Please try again.',
+        variant: 'destructive'
+      });
+    } finally {
       setIsSyncing(false);
-      toast({ title: 'Calendar sync completed successfully!' });
-    }, 3000);
+    }
   };
+
+  const updateSettings = async (updates: Partial<any>) => {
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user || !settings) return;
+
+      const { error } = await supabase
+        .from('google_calendar_settings')
+        .update(updates)
+        .eq('user_id', user.user.id);
+
+      if (error) throw error;
+
+      setSettings({ ...settings, ...updates });
+    } catch (error) {
+      console.error('Error updating settings:', error);
+      toast({ 
+        title: 'Update Failed', 
+        description: 'Failed to update settings. Please try again.',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  // Handle OAuth callback if URL contains authorization code
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    
+    if (code && !isConnected) {
+      handleOAuthCallback(code);
+    }
+  }, [isConnected]);
+
+  const handleOAuthCallback = async (code: string) => {
+    setIsConnecting(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('google-calendar-auth', {
+        body: { 
+          action: 'handle_callback',
+          code: code
+        }
+      });
+
+      if (error) throw error;
+
+      // Reload settings to get the updated connection status
+      await loadSettings();
+      
+      toast({ title: 'Google Calendar connected successfully!' });
+      
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } catch (error) {
+      console.error('Error handling OAuth callback:', error);
+      toast({ 
+        title: 'Connection Failed', 
+        description: 'Failed to complete Google Calendar connection.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Google Calendar Integration
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-8">
+              <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-muted-foreground" />
+              <p className="text-muted-foreground">Loading calendar settings...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -116,7 +300,14 @@ export const GoogleCalendarSync = () => {
             {/* Sync Direction */}
             <div className="space-y-2">
               <Label>Sync Direction</Label>
-              <Select value={syncDirection} onValueChange={(value) => setSyncDirection(value as 'one_way' | 'two_way')}>
+              <Select 
+                value={syncDirection} 
+                onValueChange={(value) => {
+                  const newDirection = value as 'one_way' | 'two_way';
+                  setSyncDirection(newDirection);
+                  updateSettings({ sync_direction: newDirection });
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -135,14 +326,27 @@ export const GoogleCalendarSync = () => {
                   Automatically sync appointments at regular intervals
                 </div>
               </div>
-              <Switch checked={autoSync} onCheckedChange={setAutoSync} />
+              <Switch 
+                checked={autoSync} 
+                onCheckedChange={(checked) => {
+                  setAutoSync(checked);
+                  updateSettings({ auto_sync: checked });
+                }} 
+              />
             </div>
 
             {/* Sync Interval */}
             {autoSync && (
               <div className="space-y-2">
                 <Label>Sync Interval</Label>
-                <Select value={syncInterval.toString()} onValueChange={(value) => setSyncInterval(parseInt(value))}>
+                <Select 
+                  value={syncInterval.toString()} 
+                  onValueChange={(value) => {
+                    const newInterval = parseInt(value);
+                    setSyncInterval(newInterval);
+                    updateSettings({ sync_interval_minutes: newInterval });
+                  }}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -164,7 +368,13 @@ export const GoogleCalendarSync = () => {
                   Turn sync on or off for this calendar
                 </div>
               </div>
-              <Switch checked={syncEnabled} onCheckedChange={setSyncEnabled} />
+              <Switch 
+                checked={syncEnabled} 
+                onCheckedChange={(checked) => {
+                  setSyncEnabled(checked);
+                  updateSettings({ sync_enabled: checked });
+                }} 
+              />
             </div>
           </CardContent>
         </Card>
