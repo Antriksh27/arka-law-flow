@@ -176,16 +176,9 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
     setLoading(true);
 
     try {
-      // Get current user's firm_id
-      const { data: currentUser } = await supabase.auth.getUser();
-      if (!currentUser.user) throw new Error('Not authenticated');
-
-      const { data: firmData } = await supabase
-        .from('law_firm_members')
-        .select('law_firm_id')
-        .eq('user_id', currentUser.user.id)
-        .single();
-
+      // Determine if selected ID is a client or contact
+      const isClient = clients.some(client => client.id === formData.client_id);
+      
       const appointmentData = {
         title: generateTitle(),
         appointment_date: typeof formData.appointment_date === 'string' 
@@ -193,14 +186,14 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
           : TimeUtils.formatDateInput(formData.appointment_date),
         appointment_time: formData.appointment_time,
         duration_minutes: Number(formData.duration_minutes),
-        client_id: formData.client_id || null,
+        client_id: isClient ? formData.client_id : null, // Only set if it's a client
         lawyer_id: formData.lawyer_id,
         case_id: formData.case_id || null,
         notes: formData.notes,
         status: formData.status,
         type: formData.type,
-        firm_id: firmData?.law_firm_id,
-        created_by: currentUser.user.id,
+        firm_id: firmId, // Use firmId from AuthContext instead of fetching
+        created_by: user?.id, // Use user.id from AuthContext
         created_at: TimeUtils.createTimestamp()
       };
 
