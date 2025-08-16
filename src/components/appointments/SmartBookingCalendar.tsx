@@ -9,6 +9,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
 import { format, addMinutes, isAfter, isBefore, startOfDay, endOfDay, parseISO } from 'date-fns';
 import { Calendar as CalendarIcon, Clock, User } from 'lucide-react';
+import { getUserBlockedDates } from '@/lib/availabilityUtils';
 
 interface AvailabilityRule {
   id: string;
@@ -95,19 +96,12 @@ export const SmartBookingCalendar: React.FC<SmartBookingCalendarProps> = ({
     enabled: !!selectedLawyer
   });
 
-  // Fetch exceptions for selected lawyer
-  const { data: exceptions } = useQuery({
-    queryKey: ['availability-exceptions', selectedLawyer],
+  // Fetch blocked dates (including firm holidays) for selected lawyer
+  const { data: blockedDates } = useQuery({
+    queryKey: ['blocked-dates', selectedLawyer],
     queryFn: async () => {
       if (!selectedLawyer) return [];
-      
-      const { data, error } = await supabase
-        .from('availability_exceptions')
-        .select('*')
-        .eq('user_id', selectedLawyer);
-
-      if (error) throw error;
-      return data as AvailabilityException[];
+      return await getUserBlockedDates(selectedLawyer);
     },
     enabled: !!selectedLawyer
   });
@@ -142,8 +136,8 @@ export const SmartBookingCalendar: React.FC<SmartBookingCalendarProps> = ({
     const hasRulesForDay = availabilityRules.some(rule => rule.day_of_week === dayOfWeek);
     if (!hasRulesForDay) return false;
     
-    // Check if date is blocked
-    const isBlocked = exceptions?.some(exc => exc.date === dateStr && exc.is_blocked);
+    // Check if date is blocked (individual exceptions or firm holidays)
+    const isBlocked = blockedDates?.some(blocked => blocked.date === dateStr && blocked.is_blocked);
     if (isBlocked) return false;
     
     return true;
@@ -166,13 +160,17 @@ export const SmartBookingCalendar: React.FC<SmartBookingCalendarProps> = ({
     const rulesForDay = availabilityRules.filter(rule => rule.day_of_week === dayOfWeek);
     if (rulesForDay.length === 0) return [];
     
-    // Check if date is blocked
-    const isBlocked = exceptions?.some(exc => exc.date === dateStr && exc.is_blocked);
-    if (isBlocked) {
+    // Check if date is blocked (individual exceptions or firm holidays)
+    const blockedDate = blockedDates?.find(blocked => blocked.date === dateStr && blocked.is_blocked);
+    if (blockedDate) {
+      const reasonText = blockedDate.source === 'firm_holiday' 
+        ? `Firm Holiday: ${blockedDate.reason}` 
+        : blockedDate.reason || 'Date is blocked';
+      
       return [{
         time: 'blocked',
         available: false,
-        reason: 'Date is blocked'
+        reason: reasonText
       }];
     }
     

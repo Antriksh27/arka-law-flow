@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import DefaultPageLayout from '@/components/messages/ui/DefaultPageLayout';
 import { AvailabilitySchedule } from '@/components/availability/AvailabilitySchedule';
 import { AvailabilityExceptions } from '@/components/availability/AvailabilityExceptions';
+import { FirmHolidays } from '@/components/availability/FirmHolidays';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar, Clock, AlertCircle, List, LayoutGrid } from 'lucide-react';
 
@@ -108,8 +109,12 @@ const Availability = () => {
           {/* Holidays Tab */}
           <TabsContent value="holidays" className="space-y-6">
             <div className="rounded-2xl border bg-white p-5 shadow-sm">
-              <h2 className="text-base font-medium text-gray-900 mb-2">Holidays</h2>
-              <p className="text-xs text-muted-foreground mb-4">Add blocked dates and tag the reason as "Holiday".</p>
+              <FirmHolidays />
+            </div>
+            
+            <div className="rounded-2xl border bg-white p-5 shadow-sm">
+              <h2 className="text-base font-medium text-gray-900 mb-2">Personal Blocked Dates</h2>
+              <p className="text-xs text-muted-foreground mb-4">Add your personal blocked dates in addition to firm holidays.</p>
               <AvailabilityExceptions />
             </div>
           </TabsContent>
