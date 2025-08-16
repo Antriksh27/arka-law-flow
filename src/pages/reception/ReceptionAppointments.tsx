@@ -93,6 +93,22 @@ const ReceptionAppointments = () => {
               .eq('id', appointment.client_id)
               .single();
             clientName = client?.full_name;
+          } else if (appointment.title?.startsWith('Appointment with ')) {
+            // If no client but title exists, try to find contact
+            const extractedName = appointment.title.replace('Appointment with ', '');
+            
+            const { data: contactData } = await supabase
+              .from('contacts')
+              .select('name')
+              .eq('firm_id', firmId)
+              .ilike('name', `%${extractedName.trim()}%`)
+              .limit(1);
+            
+            if (contactData && contactData.length > 0) {
+              clientName = contactData[0].name;
+            } else {
+              clientName = extractedName;
+            }
           }
 
           // Get lawyer name if lawyer_id exists

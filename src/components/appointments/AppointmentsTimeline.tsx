@@ -66,7 +66,41 @@ export const AppointmentsTimeline: React.FC<AppointmentsTimelineProps> = ({
 
       const { data, error } = await query;
       if (error) throw error;
-      return data || [];
+
+      // Enrich appointments with contact names when no client is present
+      const enrichedAppointments = await Promise.all(
+        (data || []).map(async (appointment) => {
+          // If no client_name but title exists, try to extract client name and find contact
+          if (!appointment.client_name && appointment.title?.startsWith('Appointment with ')) {
+            const extractedName = appointment.title.replace('Appointment with ', '');
+            
+            // Try to find contact with this name
+            const { data: contactData } = await supabase
+              .from('contacts')
+              .select('name')
+              .ilike('name', `%${extractedName.trim()}%`)
+              .limit(1);
+            
+            if (contactData && contactData.length > 0) {
+              return {
+                ...appointment,
+                client_name: contactData[0].name,
+                is_contact: true
+              };
+            }
+            
+            return {
+              ...appointment,
+              client_name: extractedName,
+              is_contact: true
+            };
+          }
+          
+          return appointment;
+        })
+      );
+
+      return enrichedAppointments || [];
     },
   });
 
