@@ -3137,6 +3137,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      process_sync_queue_manually: {
+        Args: { user_id_param?: string }
+        Returns: Json
+      }
       security_health_check: {
         Args: Record<PropertyKey, never>
         Returns: {
