@@ -119,7 +119,7 @@ export const DayAppointmentsDialog: React.FC<DayAppointmentsDialogProps> = ({
   });
 
   return (
-    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-gray-900">
