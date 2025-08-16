@@ -25,7 +25,7 @@ export const DialogProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       {children}
       {/* This Dialog provides the required context/portal */}
       <Dialog open={!!dialogContent} onOpenChange={(open) => { if (!open) closeDialog(); }}>
-        <DialogContent className="max-w-none w-screen h-screen p-4">
+        <DialogContent className="max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto p-6">
           {dialogContent}
         </DialogContent>
       </Dialog>
