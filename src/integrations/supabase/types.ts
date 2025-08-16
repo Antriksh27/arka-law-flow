@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -2786,7 +2786,7 @@ export type Database = {
     }
     Functions: {
       can_assign_to_role: {
-        Args: { assigner_id: string; assignee_id: string }
+        Args: { assignee_id: string; assigner_id: string }
         Returns: boolean
       }
       can_cancel_invoice: {
@@ -2794,11 +2794,11 @@ export type Database = {
         Returns: boolean
       }
       can_edit_task: {
-        Args: { user_id: string; task_id: string }
+        Args: { task_id: string; user_id: string }
         Returns: boolean
       }
       can_view_task: {
-        Args: { user_id: string; task_id: string }
+        Args: { task_id: string; user_id: string }
         Returns: boolean
       }
       check_appointment_rate_limit: {
@@ -2814,11 +2814,11 @@ export type Database = {
         Returns: boolean
       }
       check_user_in_firm: {
-        Args: { user_id: string; firm_id: string }
+        Args: { firm_id: string; user_id: string }
         Returns: boolean
       }
       check_username_availability: {
-        Args: { input_username: string; current_user_id: string }
+        Args: { current_user_id: string; input_username: string }
         Returns: {
           available: boolean
         }[]
@@ -2830,24 +2830,24 @@ export type Database = {
       create_law_firm_with_admin: {
         Args:
           | {
-              firm_name: string
-              firm_address: string
-              admin_email: string
-              admin_full_name: string
-            }
-          | {
-              firm_name: string
-              firm_address: string
               admin_email: string
               admin_full_name: string
               admin_password: string
+              firm_address: string
+              firm_name: string
             }
           | {
-              firm_name: string
-              firm_address: string
               admin_email: string
               admin_full_name: string
               created_by?: string
+              firm_address: string
+              firm_name: string
+            }
+          | {
+              admin_email: string
+              admin_full_name: string
+              firm_address: string
+              firm_name: string
             }
         Returns: string
       }
@@ -2858,8 +2858,8 @@ export type Database = {
       get_all_lawyers_and_admin: {
         Args: Record<PropertyKey, never>
         Returns: {
-          id: string
           full_name: string
+          id: string
           role: string
         }[]
       }
@@ -2874,9 +2874,9 @@ export type Database = {
       get_current_user_profile: {
         Args: Record<PropertyKey, never>
         Returns: {
-          id: string
-          full_name: string
           email: string
+          full_name: string
+          id: string
           role: string
         }[]
       }
@@ -2891,8 +2891,8 @@ export type Database = {
       get_profile_by_id: {
         Args: { user_id: string }
         Returns: {
-          id: string
           full_name: string
+          id: string
           role: string
         }[]
       }
@@ -2900,17 +2900,17 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: {
           metric: string
-          value: number
           timeframe: string
+          value: number
         }[]
       }
       get_security_summary: {
         Args: Record<PropertyKey, never>
         Returns: {
+          last_updated: string
           metric_name: string
           metric_value: number
           risk_level: string
-          last_updated: string
         }[]
       }
       get_system_timestamp: {
@@ -2932,31 +2932,31 @@ export type Database = {
       get_user_profile: {
         Args: { user_id: string }
         Returns: {
-          id: string
-          full_name: string
-          email: string
-          phone: string
-          role: string
-          profile_pic: string
-          date_of_birth: string
-          gender: string
-          bar_registration: string
-          experience_years: number
-          specializations: string
-          bio: string
-          languages: string
-          availability: Json
+          accepting_clients: boolean
           address: string
-          location: string
-          website: string
+          availability: Json
+          bar_registration: string
+          bio: string
+          court_affiliations: string
+          date_of_birth: string
+          email: string
+          experience_years: number
+          full_name: string
+          gender: string
+          id: string
+          jurisdiction: string
+          languages: string
           linkedin: string
-          other_links: string
+          location: string
           notification_email: boolean
           notification_sms: boolean
-          accepting_clients: boolean
-          jurisdiction: string
-          court_affiliations: string
+          other_links: string
+          phone: string
           pin_code: string
+          profile_pic: string
+          role: string
+          specializations: string
+          website: string
         }[]
       }
       get_user_role: {
@@ -3004,7 +3004,7 @@ export type Database = {
         Returns: boolean
       }
       is_participant: {
-        Args: { p_user_id: string; p_thread_id: string }
+        Args: { p_thread_id: string; p_user_id: string }
         Returns: boolean
       }
       is_super_admin: {
@@ -3012,7 +3012,7 @@ export type Database = {
         Returns: boolean
       }
       is_task_creator: {
-        Args: { user_id: string; task_id: string }
+        Args: { task_id: string; user_id: string }
         Returns: boolean
       }
       normalize_timestamp: {
@@ -3023,8 +3023,8 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: {
           check_name: string
-          status: string
           details: string
+          status: string
         }[]
       }
       set_super_admin_role: {
@@ -3040,41 +3040,41 @@ export type Database = {
         Returns: undefined
       }
       update_profile_picture: {
-        Args: { user_id: string; profile_pic_url: string }
+        Args: { profile_pic_url: string; user_id: string }
         Returns: undefined
       }
       update_user_profile: {
         Args: {
-          user_id: string
-          full_name?: string
-          phone?: string
-          date_of_birth?: string
-          gender?: string
-          role?: string
-          bar_registration?: string
-          experience_years?: number
-          specializations?: string
-          bio?: string
+          accepting_clients?: boolean
           address?: string
-          location?: string
-          pin_code?: string
-          jurisdiction?: string
-          court_affiliations?: string
           availability?: Json
+          bar_registration?: string
+          bio?: string
+          court_affiliations?: string
+          date_of_birth?: string
+          experience_years?: number
+          full_name?: string
+          gender?: string
+          jurisdiction?: string
+          languages?: string
+          linkedin?: string
+          location?: string
           notification_email?: boolean
           notification_sms?: boolean
-          accepting_clients?: boolean
-          website?: string
-          linkedin?: string
           other_links?: string
-          languages?: string
+          phone?: string
+          pin_code?: string
           profile_pic?: string
+          role?: string
+          specializations?: string
+          user_id: string
           username?: string
+          website?: string
         }
         Returns: undefined
       }
       user_has_case_access: {
-        Args: { user_id: string; case_id: string }
+        Args: { case_id: string; user_id: string }
         Returns: boolean
       }
       users_in_same_firm: {
@@ -3085,8 +3085,8 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: {
           check_name: string
-          status: string
           details: string
+          status: string
         }[]
       }
     }
