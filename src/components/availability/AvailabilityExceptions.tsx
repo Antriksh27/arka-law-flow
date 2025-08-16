@@ -11,8 +11,9 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { toast } from '@/hooks/use-toast';
 import { CalendarIcon, Plus, Trash2, AlertCircle } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, eachDayOfInterval, isValid } from 'date-fns';
 import { cn } from '@/lib/utils';
+import type { DateRange } from 'react-day-picker';
 
 interface AvailabilityException {
   id: string;
@@ -23,7 +24,7 @@ interface AvailabilityException {
 
 export const AvailabilityExceptions = () => {
   const [isAddingException, setIsAddingException] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  const [selectedDateRange, setSelectedDateRange] = useState<DateRange | undefined>();
   const [reason, setReason] = useState('');
   const queryClient = useQueryClient();
 
@@ -41,30 +42,39 @@ export const AvailabilityExceptions = () => {
   });
 
   const createExceptionMutation = useMutation({
-    mutationFn: async ({ date, reason }: { date: string; reason: string }) => {
+    mutationFn: async ({ dates, reason }: { dates: string[]; reason: string }) => {
+      const user = await supabase.auth.getUser();
+      if (!user.data.user?.id) throw new Error('User not authenticated');
+
+      // Create multiple blocked dates for the range
+      const exceptions = dates.map(date => ({
+        user_id: user.data.user!.id,
+        date,
+        reason: reason || null,
+        is_blocked: true
+      }));
+
       const { data, error } = await supabase
         .from('availability_exceptions')
-        .insert([{
-          user_id: (await supabase.auth.getUser()).data.user?.id,
-          date,
-          reason: reason || null,
-          is_blocked: true
-        }])
-        .select()
-        .single();
+        .insert(exceptions)
+        .select();
 
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['availability-exceptions'] });
-      toast({ title: 'Blocked date added successfully' });
+      const count = data.length;
+      toast({ 
+        title: `${count} blocked date${count > 1 ? 's' : ''} added successfully`,
+        description: count > 1 ? `Added ${count} consecutive blocked dates` : undefined
+      });
       setIsAddingException(false);
-      setSelectedDate(undefined);
+      setSelectedDateRange(undefined);
       setReason('');
     },
     onError: (error) => {
-      toast({ title: 'Error adding blocked date', description: error.message, variant: 'destructive' });
+      toast({ title: 'Error adding blocked dates', description: error.message, variant: 'destructive' });
     }
   });
 
@@ -87,10 +97,23 @@ export const AvailabilityExceptions = () => {
   });
 
   const handleAddException = async () => {
-    if (!selectedDate) return;
+    if (!selectedDateRange?.from) return;
 
-    const dateStr = format(selectedDate, 'yyyy-MM-dd');
-    await createExceptionMutation.mutateAsync({ date: dateStr, reason });
+    const dates: string[] = [];
+    
+    if (selectedDateRange.to && selectedDateRange.from !== selectedDateRange.to) {
+      // Range selection - get all dates between from and to
+      const allDates = eachDayOfInterval({
+        start: selectedDateRange.from,
+        end: selectedDateRange.to
+      });
+      dates.push(...allDates.map(date => format(date, 'yyyy-MM-dd')));
+    } else {
+      // Single date selection
+      dates.push(format(selectedDateRange.from, 'yyyy-MM-dd'));
+    }
+
+    await createExceptionMutation.mutateAsync({ dates, reason });
   };
 
   if (isLoading) {
@@ -121,42 +144,60 @@ export const AvailabilityExceptions = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <AlertCircle className="h-5 w-5" />
-              Block New Date
+              Block Date(s)
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label>Select Date</Label>
+                <Label>Select Date(s)</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
                       className={cn(
                         "w-full justify-start text-left font-normal",
-                        !selectedDate && "text-muted-foreground"
+                        !selectedDateRange?.from && "text-muted-foreground"
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {selectedDate ? format(selectedDate, "PPP") : "Pick a date"}
+                      {selectedDateRange?.from ? (
+                        selectedDateRange.to && selectedDateRange.from !== selectedDateRange.to ? (
+                          `${format(selectedDateRange.from, "MMM dd")} - ${format(selectedDateRange.to, "MMM dd, yyyy")}`
+                        ) : (
+                          format(selectedDateRange.from, "PPP")
+                        )
+                      ) : (
+                        "Pick date(s)"
+                      )}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
-                      mode="single"
-                      selected={selectedDate}
-                      onSelect={setSelectedDate}
-                      disabled={(date) => date < today}
+                      mode="range"
+                      selected={selectedDateRange}
+                      onSelect={setSelectedDateRange}
+                      disabled={(date) => {
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        return date < today;
+                      }}
                       initialFocus
                       className="pointer-events-auto"
+                      numberOfMonths={2}
                     />
                   </PopoverContent>
                 </Popover>
+                {selectedDateRange?.from && selectedDateRange?.to && selectedDateRange.from !== selectedDateRange.to && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {eachDayOfInterval({ start: selectedDateRange.from, end: selectedDateRange.to }).length} days selected
+                  </p>
+                )}
               </div>
               <div>
                 <Label>Reason (Optional)</Label>
                 <Textarea
-                  placeholder="e.g., Holiday, Out of office, Personal day..."
+                  placeholder="e.g., Holiday, Out of office, Personal days, Vacation..."
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   rows={3}
@@ -164,12 +205,16 @@ export const AvailabilityExceptions = () => {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button onClick={handleAddException} disabled={!selectedDate}>
-                Block Date
+              <Button 
+                onClick={handleAddException} 
+                disabled={!selectedDateRange?.from || createExceptionMutation.isPending}
+              >
+                {createExceptionMutation.isPending ? 'Adding...' : 
+                 selectedDateRange?.to && selectedDateRange.from !== selectedDateRange.to ? 'Block Date Range' : 'Block Date'}
               </Button>
               <Button variant="outline" onClick={() => {
                 setIsAddingException(false);
-                setSelectedDate(undefined);
+                setSelectedDateRange(undefined);
                 setReason('');
               }}>
                 Cancel
