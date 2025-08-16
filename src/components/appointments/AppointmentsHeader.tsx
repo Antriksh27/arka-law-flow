@@ -10,7 +10,6 @@ import { useAuth } from '../../contexts/AuthContext';
 import { toast } from '@/components/ui/use-toast';
 import { getPublicBaseUrl } from '@/lib/appConfig';
 import { ALLOWED_BOOKING_ROLES } from '@/lib/bookingConfig';
-import { SyncAppointmentsButton } from './SyncAppointmentsButton';
 interface AppointmentsHeaderProps {
   currentView: ViewType;
   onViewChange: (view: ViewType) => void;
@@ -35,7 +34,6 @@ export const AppointmentsHeader: React.FC<AppointmentsHeaderProps> = ({
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <SyncAppointmentsButton />
           {user && user.id && role && ALLOWED_BOOKING_ROLES.includes(role) && (
             <>
               <Button asChild variant="outline" className="border-primary text-primary hover:bg-primary/10">

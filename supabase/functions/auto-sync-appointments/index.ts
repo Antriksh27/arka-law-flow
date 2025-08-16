@@ -19,11 +19,11 @@ serve(async (req) => {
 
     console.log('Starting auto-sync of pending appointments...')
 
-    // Get all pending public appointments
+    // Get all unprocessed public appointments
     const { data: pendingAppointments, error: fetchError } = await supabaseClient
       .from('public_appointments')
       .select('*')
-      .eq('status', 'pending')
+      .neq('status', 'processed')
 
     if (fetchError) {
       console.error('Error fetching pending appointments:', fetchError)
@@ -37,9 +37,9 @@ serve(async (req) => {
     }
 
     if (!pendingAppointments || pendingAppointments.length === 0) {
-      console.log('No pending appointments to process')
+      console.log('No unprocessed appointments to process')
       return new Response(
-        JSON.stringify({ success: true, message: 'No pending appointments to process', processed: 0 }),
+        JSON.stringify({ success: true, message: 'No unprocessed appointments to process', processed: 0 }),
         { 
           status: 200, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -47,7 +47,7 @@ serve(async (req) => {
       )
     }
 
-    console.log(`Found ${pendingAppointments.length} pending appointments to process`)
+    console.log(`Found ${pendingAppointments.length} unprocessed appointments to process`)
 
     let processed = 0
     let errors = []
