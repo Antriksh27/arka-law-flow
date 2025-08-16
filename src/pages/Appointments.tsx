@@ -82,7 +82,7 @@ const Appointments = () => {
                 Public Link
               </Button>
             )}
-            <Button variant="outline" onClick={() => {}}>
+            <Button variant="outline" onClick={() => console.log('Filter clicked')}>
               <Filter className="w-4 h-4 mr-2" />
               Filter
             </Button>

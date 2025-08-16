@@ -75,6 +75,17 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
     fetchUsers();
   }, []);
 
+  // Fetch cases when client changes
+  useEffect(() => {
+    if (formData.client_id) {
+      fetchCases(formData.client_id);
+      // Reset case selection when client changes
+      setFormData(prev => ({ ...prev, case_id: '' }));
+    } else {
+      fetchCases(); // Show all cases when no client selected
+    }
+  }, [formData.client_id]);
+
   // Auto-select current user if they are a lawyer
   useEffect(() => {
     if (user?.id && users.length > 0) {
@@ -93,11 +104,16 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
     setClients(data || []);
   };
 
-  const fetchCases = async () => {
-    const { data } = await supabase
+  const fetchCases = async (clientId?: string) => {
+    let query = supabase
       .from('cases')
-      .select('id, case_title, case_number')
-      .order('case_title');
+      .select('id, case_title, case_number');
+    
+    if (clientId) {
+      query = query.eq('client_id', clientId);
+    }
+    
+    const { data } = await query.order('case_title');
     setCases(data || []);
   };
 
