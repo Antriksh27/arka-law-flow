@@ -3,6 +3,7 @@ import DefaultPageLayout from '@/components/messages/ui/DefaultPageLayout';
 import { AvailabilitySchedule } from '@/components/availability/AvailabilitySchedule';
 import { AvailabilityExceptions } from '@/components/availability/AvailabilityExceptions';
 import { FirmHolidays } from '@/components/availability/FirmHolidays';
+import { GoogleCalendarSync } from '@/components/availability/GoogleCalendarSync';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar, Clock, AlertCircle, List, LayoutGrid } from 'lucide-react';
 
@@ -121,12 +122,15 @@ const Availability = () => {
 
           {/* Settings Tab */}
           <TabsContent value="settings" className="space-y-6">
+            <GoogleCalendarSync />
+            
             <div className="rounded-2xl border bg-white p-5 shadow-sm">
-              <h2 className="text-base font-medium text-gray-900 mb-2">Calendar settings</h2>
+              <h2 className="text-base font-medium text-gray-900 mb-2">General Settings</h2>
               <ul className="text-sm text-muted-foreground list-disc pl-5 space-y-2">
                 <li>Appointment duration and buffer are configured per day in Weekly hours.</li>
                 <li>Blocked dates override weekly hours.</li>
                 <li>Your firm can book you only within these available times.</li>
+                <li>Google Calendar sync allows you to keep your calendars synchronized.</li>
               </ul>
             </div>
           </TabsContent>
