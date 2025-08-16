@@ -7,10 +7,43 @@ const corsHeaders = {
 }
 
 interface GoogleCalendarSyncRequest {
-  action: 'list_calendars' | 'sync_appointments';
+  action: 'list_calendars' | 'sync_appointments' | 'auto_sync';
   access_token?: string;
   user_id?: string;
   settings?: any;
+  appointment?: any;
+  operation?: string;
+}
+
+interface GoogleCalendarEvent {
+  summary: string
+  description?: string
+  start: {
+    dateTime: string
+    timeZone: string
+  }
+  end: {
+    dateTime: string
+    timeZone: string
+  }
+  attendees?: Array<{
+    email?: string
+    displayName?: string
+  }>
+  location?: string
+}
+
+interface AppointmentData {
+  id: string
+  title: string
+  appointment_date: string
+  appointment_time: string
+  duration_minutes: number
+  client_name?: string
+  notes?: string
+  lawyer_id: string
+  status: string
+  location?: string
 }
 
 serve(async (req) => {
@@ -20,12 +53,25 @@ serve(async (req) => {
   }
 
   try {
-    const { action, access_token, user_id, settings }: GoogleCalendarSyncRequest = await req.json();
+    const { action, access_token, user_id, settings, appointment, operation }: GoogleCalendarSyncRequest = await req.json();
     
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
+
+    // For auto_sync, we don't need auth header validation
+    if (action === 'auto_sync') {
+      console.log('Processing auto-sync request for user:', user_id)
+      await processAutoSync(supabaseClient, user_id, appointment, operation);
+      
+      return new Response(
+        JSON.stringify({ success: true, message: 'Auto sync completed' }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
 
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
@@ -101,47 +147,16 @@ serve(async (req) => {
 
       for (const appointment of appointments || []) {
         try {
-          // Create event in Google Calendar
-          const startDateTime = new Date(`${appointment.appointment_date}T${appointment.appointment_time}`);
-          const endDateTime = new Date(startDateTime.getTime() + (appointment.duration_minutes * 60000));
-
-          const event = {
-            summary: appointment.title || 'Appointment',
-            description: appointment.notes || '',
-            start: {
-              dateTime: startDateTime.toISOString(),
-              timeZone: 'UTC',
-            },
-            end: {
-              dateTime: endDateTime.toISOString(),
-              timeZone: 'UTC',
-            },
-            location: appointment.location || '',
-          };
-
-          const response = await fetch(
-            `https://www.googleapis.com/calendar/v3/calendars/${settings.calendar_id}/events`,
-            {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${settings.access_token}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(event),
-            }
-          );
-
-          if (response.ok) {
-            syncedCount++;
-            console.log('Synced appointment:', appointment.id);
-          } else {
-            console.error('Failed to sync appointment:', appointment.id, await response.text());
-          }
-
+          await syncAppointmentToGoogle(settings, appointment, 'INSERT');
+          syncedCount++;
+          console.log('Synced appointment:', appointment.id);
         } catch (error) {
           console.error('Error syncing individual appointment:', appointment.id, error.message);
         }
       }
+
+      // Also process any pending queue items
+      await processSyncQueue(supabaseClient, user_id);
 
       console.log('Sync completed for user:', user_id, 'Synced:', syncedCount, 'appointments');
 
@@ -171,3 +186,233 @@ serve(async (req) => {
     );
   }
 });
+
+async function processAutoSync(supabaseClient: any, userId: string, appointment: AppointmentData, operation: string) {
+  console.log('Processing auto sync for user:', userId, 'operation:', operation);
+
+  // Get Google Calendar settings for the user
+  const { data: googleSettings, error: settingsError } = await supabaseClient
+    .from('google_calendar_settings')
+    .select('*')
+    .eq('user_id', userId)
+    .single();
+
+  if (settingsError || !googleSettings?.access_token) {
+    console.log('No Google Calendar settings found for user:', userId);
+    return;
+  }
+
+  if (!googleSettings.sync_enabled) {
+    console.log('Google Calendar sync is disabled for user:', userId);
+    return;
+  }
+
+  try {
+    await syncAppointmentToGoogle(googleSettings, appointment, operation);
+    console.log('Auto sync completed for appointment:', appointment.id);
+  } catch (error) {
+    console.error('Auto sync failed for appointment:', appointment.id, error.message);
+  }
+}
+
+async function processSyncQueue(supabaseClient: any, userId: string) {
+  // Get unprocessed items from the sync queue for this user
+  const { data: queueItems, error } = await supabaseClient
+    .from('google_calendar_sync_queue')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('processed', false)
+    .order('created_at', { ascending: true })
+    .limit(10);
+
+  if (error || !queueItems?.length) {
+    return;
+  }
+
+  // Get Google Calendar settings
+  const { data: googleSettings } = await supabaseClient
+    .from('google_calendar_settings')
+    .select('*')
+    .eq('user_id', userId)
+    .single();
+
+  if (!googleSettings?.access_token || !googleSettings.sync_enabled) {
+    return;
+  }
+
+  for (const item of queueItems) {
+    try {
+      await syncAppointmentToGoogle(googleSettings, item.appointment_data, item.operation);
+
+      // Mark as processed
+      await supabaseClient
+        .from('google_calendar_sync_queue')
+        .update({ processed: true, processed_at: new Date().toISOString() })
+        .eq('id', item.id);
+
+    } catch (error) {
+      console.error('Error processing sync queue item:', item.id, error);
+      
+      // Mark as processed with error
+      await supabaseClient
+        .from('google_calendar_sync_queue')
+        .update({ 
+          processed: true, 
+          processed_at: new Date().toISOString(),
+          error_message: error.message 
+        })
+        .eq('id', item.id);
+    }
+  }
+}
+
+async function syncAppointmentToGoogle(settings: any, appointment: AppointmentData, operation: string) {
+  const calendarId = settings.calendar_id || 'primary';
+  
+  switch (operation) {
+    case 'INSERT':
+      await createGoogleCalendarEvent(settings.access_token, calendarId, appointment);
+      break;
+    case 'UPDATE':
+      await updateGoogleCalendarEvent(settings.access_token, calendarId, appointment);
+      break;
+    case 'DELETE':
+      await deleteGoogleCalendarEvent(settings.access_token, calendarId, appointment);
+      break;
+  }
+}
+
+async function createGoogleCalendarEvent(accessToken: string, calendarId: string, appointment: AppointmentData) {
+  const event = buildGoogleCalendarEvent(appointment);
+  
+  const response = await fetch(
+    `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events`,
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(event),
+    }
+  );
+
+  if (!response.ok) {
+    const error = await response.text();
+    console.error('Failed to create Google Calendar event:', error);
+    throw new Error(`Failed to create Google Calendar event: ${error}`);
+  }
+
+  const createdEvent = await response.json();
+  console.log('Created Google Calendar event:', createdEvent.id);
+  return createdEvent;
+}
+
+async function updateGoogleCalendarEvent(accessToken: string, calendarId: string, appointment: AppointmentData) {
+  // Search for existing event by title and date
+  const event = buildGoogleCalendarEvent(appointment);
+  
+  const searchResponse = await fetch(
+    `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events?q=${encodeURIComponent(appointment.title)}`,
+    {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    }
+  );
+
+  if (searchResponse.ok) {
+    const searchResults = await searchResponse.json();
+    const existingEvent = searchResults.items?.find((item: any) => 
+      item.summary === appointment.title &&
+      item.start?.dateTime?.includes(appointment.appointment_date)
+    );
+
+    if (existingEvent) {
+      const updateResponse = await fetch(
+        `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events/${existingEvent.id}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(event),
+        }
+      );
+
+      if (!updateResponse.ok) {
+        const error = await updateResponse.text();
+        console.error('Failed to update Google Calendar event:', error);
+        throw new Error(`Failed to update Google Calendar event: ${error}`);
+      }
+
+      console.log('Updated Google Calendar event:', existingEvent.id);
+    } else {
+      // If not found, create new event
+      await createGoogleCalendarEvent(accessToken, calendarId, appointment);
+    }
+  }
+}
+
+async function deleteGoogleCalendarEvent(accessToken: string, calendarId: string, appointment: AppointmentData) {
+  // Search for existing event by title and date
+  const searchResponse = await fetch(
+    `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events?q=${encodeURIComponent(appointment.title)}`,
+    {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    }
+  );
+
+  if (searchResponse.ok) {
+    const searchResults = await searchResponse.json();
+    const existingEvent = searchResults.items?.find((item: any) => 
+      item.summary === appointment.title &&
+      item.start?.dateTime?.includes(appointment.appointment_date)
+    );
+
+    if (existingEvent) {
+      const deleteResponse = await fetch(
+        `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events/${existingEvent.id}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      if (!deleteResponse.ok) {
+        const error = await deleteResponse.text();
+        console.error('Failed to delete Google Calendar event:', error);
+        throw new Error(`Failed to delete Google Calendar event: ${error}`);
+      }
+
+      console.log('Deleted Google Calendar event:', existingEvent.id);
+    }
+  }
+}
+
+function buildGoogleCalendarEvent(appointment: AppointmentData): GoogleCalendarEvent {
+  const startDateTime = new Date(`${appointment.appointment_date}T${appointment.appointment_time}`);
+  const endDateTime = new Date(startDateTime.getTime() + (appointment.duration_minutes * 60000));
+
+  return {
+    summary: appointment.title || 'Appointment',
+    description: `${appointment.notes || ''}\n\nClient: ${appointment.client_name || 'N/A'}\nStatus: ${appointment.status}`,
+    start: {
+      dateTime: startDateTime.toISOString(),
+      timeZone: 'Asia/Kolkata' // Adjust timezone as needed
+    },
+    end: {
+      dateTime: endDateTime.toISOString(),
+      timeZone: 'Asia/Kolkata' // Adjust timezone as needed
+    },
+    location: appointment.location || '',
+    attendees: appointment.client_name ? [{
+      displayName: appointment.client_name
+    }] : undefined
+  };
+}
