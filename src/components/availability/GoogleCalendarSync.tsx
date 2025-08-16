@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from '@/hooks/use-toast';
 import { Calendar, Link, Unlink, Settings, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { ManualSyncButton } from './ManualSyncButton';
 
 export const GoogleCalendarSync = () => {
   const [isConnected, setIsConnected] = useState(false);
@@ -277,6 +278,7 @@ export const GoogleCalendarSync = () => {
                   <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
                   {isSyncing ? 'Syncing...' : 'Sync Now'}
                 </Button>
+                <ManualSyncButton />
                 <Button 
                   variant="outline" 
                   size="sm" 
