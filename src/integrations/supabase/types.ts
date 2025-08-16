@@ -1311,6 +1311,51 @@ export type Database = {
         }
         Relationships: []
       }
+      google_calendar_settings: {
+        Row: {
+          access_token: string | null
+          auto_sync: boolean
+          calendar_id: string | null
+          created_at: string
+          id: string
+          last_sync_at: string | null
+          refresh_token: string | null
+          sync_direction: string
+          sync_enabled: boolean
+          sync_interval_minutes: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token?: string | null
+          auto_sync?: boolean
+          calendar_id?: string | null
+          created_at?: string
+          id?: string
+          last_sync_at?: string | null
+          refresh_token?: string | null
+          sync_direction?: string
+          sync_enabled?: boolean
+          sync_interval_minutes?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string | null
+          auto_sync?: boolean
+          calendar_id?: string | null
+          created_at?: string
+          id?: string
+          last_sync_at?: string | null
+          refresh_token?: string | null
+          sync_direction?: string
+          sync_enabled?: boolean
+          sync_interval_minutes?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       hearings: {
         Row: {
           assigned_to: string | null
