@@ -1356,6 +1356,42 @@ export type Database = {
         }
         Relationships: []
       }
+      google_calendar_sync_queue: {
+        Row: {
+          appointment_data: Json
+          appointment_id: string | null
+          created_at: string | null
+          error_message: string | null
+          id: string
+          operation: string
+          processed: boolean | null
+          processed_at: string | null
+          user_id: string
+        }
+        Insert: {
+          appointment_data: Json
+          appointment_id?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          operation: string
+          processed?: boolean | null
+          processed_at?: string | null
+          user_id: string
+        }
+        Update: {
+          appointment_data?: Json
+          appointment_id?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          operation?: string
+          processed?: boolean | null
+          processed_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       hearings: {
         Row: {
           assigned_to: string | null
@@ -3096,6 +3132,10 @@ export type Database = {
       normalize_timestamp: {
         Args: { input_timestamp: string }
         Returns: string
+      }
+      process_google_calendar_sync_queue: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       security_health_check: {
         Args: Record<PropertyKey, never>
