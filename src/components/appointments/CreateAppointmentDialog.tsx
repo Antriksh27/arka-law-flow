@@ -23,7 +23,7 @@ import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useDialog } from '@/hooks/use-dialog';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 import { SmartBookingCalendar } from '@/components/appointments/SmartBookingCalendar';
 import { ClientSelector } from '@/components/appointments/ClientSelector';
 import TimeUtils from '@/lib/timeUtils';
@@ -210,11 +210,18 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
 
       if (error) throw error;
 
-      toast.success('Appointment created successfully');
+      toast({
+        title: "Success",
+        description: "Appointment created successfully",
+      });
       closeDialog();
     } catch (error) {
       console.error('Error creating appointment:', error);
-      toast.error('Failed to create appointment');
+      toast({
+        title: "Error",
+        description: "Failed to create appointment",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -222,6 +229,16 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
 
   const handleInputChange = (field: keyof typeof formData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  // Check if required fields are filled
+  const isFormValid = () => {
+    return (
+      formData.appointment_date &&
+      formData.appointment_time &&
+      formData.client_id &&
+      formData.lawyer_id
+    );
   };
 
   return (
@@ -291,6 +308,10 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
                   value={formData.client_id}
                   onValueChange={(value) => handleInputChange('client_id', value)}
                   placeholder="Select or add client/contact..."
+                  onClientAdded={(clientId) => {
+                    // Auto-select the newly created client while preserving date/time
+                    handleInputChange('client_id', clientId);
+                  }}
                 />
               </div>
               
@@ -358,7 +379,7 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
               <Button 
                 type="submit" 
                 className="bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
-                disabled={loading}
+                disabled={loading || !isFormValid()}
               >
                 {loading ? 'Creating...' : 'Create Appointment'}
               </Button>

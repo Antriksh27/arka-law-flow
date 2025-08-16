@@ -37,12 +37,14 @@ interface ClientSelectorProps {
   value: string;
   onValueChange: (value: string) => void;
   placeholder?: string;
+  onClientAdded?: (clientId: string) => void;
 }
 
 export const ClientSelector: React.FC<ClientSelectorProps> = ({
   value,
   onValueChange,
-  placeholder = "Select client/contact..."
+  placeholder = "Select client/contact...",
+  onClientAdded
 }) => {
   const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
@@ -232,8 +234,11 @@ export const ClientSelector: React.FC<ClientSelectorProps> = ({
       <AddClientDialog
         open={showAddClientDialog}
         onOpenChange={setShowAddClientDialog}
-        onSuccess={() => {
+        onSuccess={(clientId?: string) => {
           handleRefresh();
+          if (clientId && onClientAdded) {
+            onClientAdded(clientId);
+          }
           setShowAddClientDialog(false);
         }}
       />
