@@ -89,8 +89,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ lawyer, onSuccess }) =
           client_email: formData.clientEmail,
           client_phone: formData.clientPhone,
           reason: formData.reason,
-          case_title: formData.isCaseRelated ? formData.caseTitle : null,
-          status: 'confirmed'
+          case_title: formData.isCaseRelated ? formData.caseTitle : null
         })
         .select()
         .single();
