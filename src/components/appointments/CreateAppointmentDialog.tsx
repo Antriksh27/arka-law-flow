@@ -148,7 +148,7 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
     setUsers(sortedData.map(user => ({ id: user.user_id, full_name: user.full_name, role: user.role })));
   };
 
-  const generateTitle = () => {
+  const generateTitle = async () => {
     const client = clients.find(c => c.id === formData.client_id);
     const case_ = cases.find(c => c.id === formData.case_id);
     const typeMap = {
@@ -159,9 +159,25 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
     };
     
     let title = typeMap[formData.type];
+    let personName = '';
     
     if (client) {
-      title = `${title} with ${client.full_name}`;
+      personName = client.full_name;
+    } else if (formData.client_id) {
+      // Check if it's a contact
+      const { data: contactData } = await supabase
+        .from('contacts')
+        .select('name')
+        .eq('id', formData.client_id)
+        .single();
+      
+      if (contactData) {
+        personName = contactData.name;
+      }
+    }
+    
+    if (personName) {
+      title = `${title} with ${personName}`;
     }
     
     if (case_) {
@@ -178,9 +194,24 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
     try {
       // Determine if selected ID is a client or contact
       const isClient = clients.some(client => client.id === formData.client_id);
+      const title = await generateTitle();
+      
+      // Get contact name if it's a contact
+      let contactName = '';
+      if (!isClient && formData.client_id) {
+        const { data: contactData } = await supabase
+          .from('contacts')
+          .select('name')
+          .eq('id', formData.client_id)
+          .single();
+        
+        if (contactData) {
+          contactName = contactData.name;
+        }
+      }
       
       const appointmentData = {
-        title: generateTitle(),
+        title,
         appointment_date: typeof formData.appointment_date === 'string' 
           ? formData.appointment_date 
           : TimeUtils.formatDateInput(formData.appointment_date),
@@ -194,7 +225,11 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
         type: formData.type,
         firm_id: firmId, // Use firmId from AuthContext instead of fetching
         created_by: user?.id, // Use user.id from AuthContext
-        created_at: TimeUtils.createTimestamp()
+        created_at: TimeUtils.createTimestamp(),
+        // Store contact information in notes or title for contacts
+        ...(contactName && { 
+          notes: formData.notes ? `Contact: ${contactName}\n\n${formData.notes}` : `Contact: ${contactName}` 
+        })
       };
 
       const { error } = await supabase

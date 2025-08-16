@@ -79,30 +79,30 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
       // Enrich appointments with contact names when no client is present
       const enrichedAppointments = await Promise.all(
         (data || []).map(async (appointment) => {
-          // If no client_name but title exists, try to extract client name and find contact
-          if (!appointment.client_name && appointment.title?.startsWith('Appointment with ')) {
-            const extractedName = appointment.title.replace('Appointment with ', '');
-            
-            // Try to find contact with this name
-            const { data: contactData } = await supabase
-              .from('contacts')
-              .select('name')
-              .ilike('name', `%${extractedName.trim()}%`)
-              .limit(1);
-            
-            if (contactData && contactData.length > 0) {
+          // If no client_name, try to extract from title or check if it's a contact ID
+          if (!appointment.client_name && appointment.title) {
+            // First, try to extract name from title format "Type with Name"
+            const withMatch = appointment.title.match(/with\s+(.+?)(?:\s+-|$)/);
+            if (withMatch) {
+              const extractedName = withMatch[1].trim();
               return {
                 ...appointment,
-                client_name: contactData[0].name,
+                client_name: extractedName,
                 is_contact: true
               };
             }
-            
-            return {
-              ...appointment,
-              client_name: extractedName,
-              is_contact: true
-            };
+          }
+          
+          // If still no client name, check if there's contact info in notes
+          if (!appointment.client_name && appointment.notes?.startsWith('Contact: ')) {
+            const contactNameMatch = appointment.notes.match(/Contact:\s*([^\n]+)/);
+            if (contactNameMatch) {
+              return {
+                ...appointment,
+                client_name: contactNameMatch[1].trim(),
+                is_contact: true
+              };
+            }
           }
           
           return appointment;
