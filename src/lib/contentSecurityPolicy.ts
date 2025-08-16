@@ -30,7 +30,10 @@ export const CSP_DIRECTIVES = {
     "'self'",
     "https://hpcnipcbymruvsnqrmjx.supabase.co",
     "https://*.supabase.co",
-    "wss://hpcnipcbymruvsnqrmjx.supabase.co"
+    "wss://hpcnipcbymruvsnqrmjx.supabase.co",
+    "https://accounts.google.com",
+    "https://oauth2.googleapis.com",
+    "https://www.googleapis.com"
   ],
   'object-src': ["'none'"],
   'frame-src': ["'none'"],
