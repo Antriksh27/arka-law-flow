@@ -102,19 +102,15 @@ export const BookingForm: React.FC<BookingFormProps> = ({ lawyer, onSuccess }) =
 
       // Sync to main appointments table via edge function
       try {
-        const response = await fetch('https://hpcnipcbymruvsnqrmjx.supabase.co/functions/v1/sync-public-appointment', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            publicAppointmentId: publicAppointment.id
-          })
+        const { data: syncData, error: syncError } = await supabase.functions.invoke('sync-public-appointment', {
+          body: { publicAppointmentId: publicAppointment.id }
         });
 
-        if (!response.ok) {
-          console.error('Error syncing appointment to CRM');
+        if (syncError) {
+          console.error('Error syncing appointment to CRM:', syncError);
           // Still show success to user since public appointment was created
+        } else {
+          console.log('Appointment synced successfully:', syncData);
         }
       } catch (syncError) {
         console.error('Error calling sync function:', syncError);

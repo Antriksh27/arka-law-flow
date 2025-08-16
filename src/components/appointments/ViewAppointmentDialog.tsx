@@ -483,16 +483,7 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
             <Trash className="h-4 w-4 mr-2" />
             {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
           </Button>
-          {appointment.client_name && !appointment.client_id && contactData && (role === 'lawyer' || role === 'junior') && (
-            <Button
-              onClick={handleConvertContactToClient}
-              className="flex-1"
-            >
-              <Users className="h-4 w-4 mr-2" />
-              Convert Contact
-            </Button>
-          )}
-          {appointment.client_name && !appointment.client_id && !contactData && (role === 'lawyer' || role === 'junior') && (
+          {appointment.client_name && !appointment.client_id && (role === 'lawyer' || role === 'junior') && (
             <Button
               onClick={handleConvertToClient}
               className="flex-1"
@@ -501,14 +492,6 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
               Convert to Client
             </Button>
           )}
-          <Button
-            variant="secondary"
-            onClick={handleConvertToClient}
-            className="flex-1"
-          >
-            <UserPlus className="h-4 w-4 mr-2" />
-            Convert to Client
-          </Button>
         </div>
       </DialogContent>
       
