@@ -60,9 +60,15 @@ export const GoogleCalendarSync = () => {
     setIsConnecting(true);
     
     try {
+      // Get current URL for redirect
+      const redirectUri = window.location.origin + window.location.pathname;
+      
       // Call edge function to get Google OAuth URL
       const { data, error } = await supabase.functions.invoke('google-calendar-auth', {
-        body: { action: 'get_auth_url' }
+        body: { 
+          action: 'get_auth_url',
+          redirect_uri: redirectUri
+        }
       });
 
       if (error) throw error;
@@ -178,10 +184,14 @@ export const GoogleCalendarSync = () => {
     setIsConnecting(true);
     
     try {
+      const redirectUri = window.location.origin + window.location.pathname;
+      
       const { data, error } = await supabase.functions.invoke('google-calendar-auth', {
         body: { 
           action: 'handle_callback',
-          code: code
+          code: code,
+          redirect_uri: redirectUri,
+          state: new URLSearchParams(window.location.search).get('state')
         }
       });
 
