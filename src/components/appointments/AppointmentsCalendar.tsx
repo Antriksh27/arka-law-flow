@@ -202,7 +202,9 @@ export const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({
       <DayAppointmentsDialog 
         selectedDate={date}
         appointments={appointmentsForDate}
-        onClose={() => {}}
+        onClose={() => {
+          // This will be handled by the dialog hook automatically
+        }}
       />
     );
   };

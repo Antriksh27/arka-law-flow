@@ -82,7 +82,7 @@ export const DayAppointmentsDialog: React.FC<DayAppointmentsDialogProps> = ({
   };
 
   const handleAppointmentClick = (appointment: AppointmentData) => {
-    closeDialog();
+    onClose(); // Close the current dialog first
     openDialog(
       <ViewAppointmentDialog 
         appointment={{
@@ -106,7 +106,7 @@ export const DayAppointmentsDialog: React.FC<DayAppointmentsDialogProps> = ({
   };
 
   const handleNewAppointment = () => {
-    closeDialog();
+    onClose(); // Close the current dialog first
     openDialog(<CreateAppointmentDialog preSelectedDate={selectedDate} />);
   };
 
