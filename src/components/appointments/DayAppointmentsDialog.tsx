@@ -119,15 +119,15 @@ export const DayAppointmentsDialog: React.FC<DayAppointmentsDialogProps> = ({
   });
 
   return (
-    <div className="max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto p-6">
-      <DialogHeader>
+    <div className="max-w-2xl w-full mx-auto">
+      <DialogHeader className="pb-4">
         <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-gray-900">
           <Calendar className="h-5 w-5 text-blue-600" />
           Appointments for {format(selectedDate, 'EEEE, MMMM d, yyyy')}
         </DialogTitle>
       </DialogHeader>
 
-      <div className="mt-6 space-y-4">
+      <div className="space-y-4">
         {/* Add New Appointment Button */}
         <div className="flex justify-end">
           <Button onClick={handleNewAppointment} className="flex items-center gap-2">
@@ -138,13 +138,13 @@ export const DayAppointmentsDialog: React.FC<DayAppointmentsDialogProps> = ({
 
         {/* Appointments List */}
         {sortedAppointments.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-6 text-gray-500">
             <Calendar className="h-12 w-12 mx-auto mb-3 text-gray-300" />
             <p className="text-lg font-medium">No appointments scheduled</p>
             <p className="text-sm">Click "New Appointment" to schedule one for this date.</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-3 max-h-[50vh] overflow-y-auto">
             {sortedAppointments.map((appointment) => (
               <div
                 key={appointment.id}
