@@ -119,7 +119,7 @@ export const DayAppointmentsDialog: React.FC<DayAppointmentsDialogProps> = ({
   });
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto p-6">
       <DialogHeader>
         <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-gray-900">
           <Calendar className="h-5 w-5 text-blue-600" />
@@ -144,7 +144,7 @@ export const DayAppointmentsDialog: React.FC<DayAppointmentsDialogProps> = ({
             <p className="text-sm">Click "New Appointment" to schedule one for this date.</p>
           </div>
         ) : (
-          <div className="space-y-3 max-h-[60vh] overflow-y-auto">
+          <div className="space-y-3">
             {sortedAppointments.map((appointment) => (
               <div
                 key={appointment.id}
