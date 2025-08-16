@@ -103,7 +103,8 @@ export const BookingForm: React.FC<BookingFormProps> = ({ lawyer, onSuccess }) =
           status: 'upcoming',
           firm_id: teamMember.firm_id,
           is_visible_to_team: true,
-          created_by: lawyer.id
+          created_by: lawyer.id,
+          created_by_user_id: lawyer.id
         })
         .select()
         .single();
