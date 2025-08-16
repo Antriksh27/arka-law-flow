@@ -77,45 +77,57 @@ export const BookingForm: React.FC<BookingFormProps> = ({ lawyer, onSuccess }) =
     setLoading(true);
 
     try {
-      // Create confirmed public appointment
-      const { data: publicAppointment, error } = await supabase
-        .from('public_appointments')
+      // Get lawyer's firm_id first
+      const { data: teamMember, error: teamError } = await supabase
+        .from('team_members')
+        .select('firm_id')
+        .eq('user_id', lawyer.id)
+        .single();
+
+      if (teamError || !teamMember) {
+        console.error('Error finding lawyer firm:', teamError);
+        alert('Failed to book appointment. Please try again.');
+        return;
+      }
+
+      // Create appointment directly in main appointments table
+      const { data: appointment, error } = await supabase
+        .from('appointments')
         .insert({
-          lawyer_id: lawyer.id,
           appointment_date: format(formData.selectedDate, 'yyyy-MM-dd'),
           appointment_time: formData.selectedTime,
           duration_minutes: formData.durationMinutes,
-          client_name: formData.clientName,
-          client_email: formData.clientEmail,
-          client_phone: formData.clientPhone,
-          reason: formData.reason,
-          case_title: formData.isCaseRelated ? formData.caseTitle : null
+          title: `Appointment with ${formData.clientName}`,
+          notes: formData.reason,
+          type: 'in-person',
+          status: 'upcoming',
+          firm_id: teamMember.firm_id,
+          is_visible_to_team: true,
+          created_by: lawyer.id
         })
         .select()
         .single();
 
       if (error) {
-        console.error('Error creating public appointment:', error);
+        console.error('Error creating appointment:', error);
         alert('Failed to book appointment. Please try again.');
         return;
       }
 
-      // Auto-sync all pending appointments via edge function
-      try {
-        console.log('Triggering auto-sync of appointments...');
-        const { data: syncData, error: syncError } = await supabase.functions.invoke('auto-sync-appointments', {
-          body: {}
+      // Send notification to the lawyer
+      const { error: notificationError } = await supabase
+        .from('notifications')
+        .insert({
+          recipient_id: lawyer.id,
+          notification_type: 'appointment',
+          title: 'New Appointment Scheduled',
+          message: `New appointment scheduled with ${formData.clientName} on ${format(formData.selectedDate, 'yyyy-MM-dd')} at ${formData.selectedTime}`,
+          reference_id: appointment.id,
+          read: false
         });
 
-        if (syncError) {
-          console.error('Error syncing appointments to CRM:', syncError);
-          console.error('Sync error details:', JSON.stringify(syncError, null, 2));
-        } else {
-          console.log('Appointments synced successfully:', syncData);
-        }
-      } catch (syncError) {
-        console.error('Error calling auto-sync function:', syncError);
-        console.error('Sync catch error:', syncError);
+      if (notificationError) {
+        console.error('Error creating notification:', notificationError);
       }
 
       onSuccess({
