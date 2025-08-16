@@ -100,21 +100,22 @@ export const BookingForm: React.FC<BookingFormProps> = ({ lawyer, onSuccess }) =
         return;
       }
 
-      // Sync to main appointments table via edge function
+      // Auto-sync all pending appointments via edge function
       try {
-        const { data: syncData, error: syncError } = await supabase.functions.invoke('sync-public-appointment', {
-          body: { publicAppointmentId: publicAppointment.id }
+        console.log('Triggering auto-sync of appointments...');
+        const { data: syncData, error: syncError } = await supabase.functions.invoke('auto-sync-appointments', {
+          body: {}
         });
 
         if (syncError) {
-          console.error('Error syncing appointment to CRM:', syncError);
-          // Still show success to user since public appointment was created
+          console.error('Error syncing appointments to CRM:', syncError);
+          console.error('Sync error details:', JSON.stringify(syncError, null, 2));
         } else {
-          console.log('Appointment synced successfully:', syncData);
+          console.log('Appointments synced successfully:', syncData);
         }
       } catch (syncError) {
-        console.error('Error calling sync function:', syncError);
-        // Still show success to user since public appointment was created
+        console.error('Error calling auto-sync function:', syncError);
+        console.error('Sync catch error:', syncError);
       }
 
       onSuccess({
