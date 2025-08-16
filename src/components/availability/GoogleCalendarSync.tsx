@@ -61,7 +61,10 @@ export const GoogleCalendarSync = () => {
       }
 
       if (data) {
-        setSettings(data);
+        setSettings({
+          ...data,
+          sync_direction: data.sync_direction as 'one_way' | 'two_way'
+        });
         setIsConnected(!!data.access_token);
         if (data.access_token) {
           loadCalendars(data.access_token);
