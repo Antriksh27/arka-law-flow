@@ -43,8 +43,11 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
   
   // Extract client name from title if client_name is null
   const extractedClientName = appointment.client_name || 
-    (appointment.title?.startsWith('Appointment with ') 
-      ? appointment.title.replace('Appointment with ', '') 
+    (appointment.title?.includes(' with ') 
+      ? appointment.title.split(' with ')[1]?.trim() 
+      : null) ||
+    (appointment.notes?.startsWith('Contact: ')
+      ? appointment.notes.replace('Contact: ', '').trim()
       : null);
   
   console.log('🎯 Extracted client name:', extractedClientName);
@@ -483,7 +486,7 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
             <Trash className="h-4 w-4 mr-2" />
             {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
           </Button>
-          {appointment.client_name && !appointment.client_id && (role === 'lawyer' || role === 'junior') && (
+          {extractedClientName && !appointment.client_id && (role === 'lawyer' || role === 'junior') && (
             <Button
               onClick={handleConvertToClient}
               className="flex-1"
