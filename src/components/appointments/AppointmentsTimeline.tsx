@@ -268,7 +268,10 @@ export const AppointmentsTimeline: React.FC<AppointmentsTimelineProps> = ({
               <div className="flex grow shrink-0 basis-0 flex-col items-start gap-1">
                 <div className="flex w-full items-center gap-2">
                   <span className="text-sm font-semibold text-gray-900">
-                    {appointment.client_name ? `Appointment with ${appointment.client_name}` : appointment.title || 'Appointment'}
+                    {appointment.client_name 
+                      ? `Appointment with ${appointment.client_name}` 
+                      : appointment.title || 'Appointment'
+                    }
                   </span>
                   {getStatusBadge(appointment.status)}
                 </div>
