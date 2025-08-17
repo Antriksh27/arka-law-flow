@@ -24,18 +24,27 @@ export class NotificationSounds {
 
   // Generate different notification sounds based on type
   private static async generateTone(frequency: number, duration: number, volume: number = 0.3): Promise<void> {
-    if (!this.isEnabled) return;
+    if (!this.isEnabled) {
+      console.log('🔇 Sounds disabled, skipping tone generation');
+      return;
+    }
 
     try {
       const audioContext = this.getAudioContext();
       
       // Resume audio context if suspended (required for Chrome)
       if (audioContext.state === 'suspended') {
-        console.log('Resuming audio context...');
+        console.log('🎵 Resuming suspended audio context...');
         await audioContext.resume();
       }
 
-      console.log('Audio context state:', audioContext.state);
+      console.log('🎵 Generating tone - frequency:', frequency, 'duration:', duration, 'volume:', volume);
+      console.log('🎵 Audio context state:', audioContext.state);
+
+      if (audioContext.state !== 'running') {
+        console.error('🔇 Audio context not running:', audioContext.state);
+        return;
+      }
 
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
@@ -54,9 +63,14 @@ export class NotificationSounds {
       oscillator.start(audioContext.currentTime);
       oscillator.stop(audioContext.currentTime + duration);
       
-      console.log('Sound generated successfully');
+      console.log('🔊 Sound generated successfully');
+      
+      // Return a promise that resolves when the sound finishes
+      return new Promise(resolve => {
+        setTimeout(resolve, duration * 1000);
+      });
     } catch (error) {
-      console.warn('Failed to play notification sound:', error);
+      console.error('🔇 Failed to play notification sound:', error);
     }
   }
 

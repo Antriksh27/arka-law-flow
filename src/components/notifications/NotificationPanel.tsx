@@ -53,45 +53,8 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
     enabled: !!user?.id,
   });
 
-  // Listen for real-time notifications
-  useEffect(() => {
-    if (!user?.id) return;
-
-    const channel = supabase
-      .channel('notifications')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
-          filter: `recipient_id=eq.${user.id}`,
-        },
-        (payload) => {
-          const newNotification = payload.new as Notification;
-          
-          // Play notification sound based on type
-          const soundType = newNotification.notification_type === 'appointment' ? 'info' : 'default';
-          NotificationSounds.play(soundType);
-
-          // Show toast with sound disabled (already played above)
-          toast({
-            title: newNotification.title,
-            description: newNotification.message,
-            duration: 5000,
-            sound: false, // Don't double-play sound
-          });
-
-          // Refresh notifications
-          queryClient.invalidateQueries({ queryKey: ['notifications'] });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user?.id, toast, queryClient]);
+  // Real-time subscriptions are now handled by useRealtimeNotifications hook
+  // This component just fetches and displays the notifications
 
   // Mark notification as read
   const markAsRead = async (notificationId: string) => {

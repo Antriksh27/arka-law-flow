@@ -28,6 +28,17 @@ const Header = () => {
     await initializeAudio();
     setIsNotificationPanelOpen(!isNotificationPanelOpen);
   };
+
+  const handleTestSound = async () => {
+    console.log('🧪 Testing notification sound...');
+    await initializeAudio();
+    try {
+      await NotificationSounds.testSound();
+      console.log('🧪 Test sound completed');
+    } catch (error) {
+      console.error('🧪 Test sound failed:', error);
+    }
+  };
   return <header className="border-b border-[#E5E7EB] px-8 py-4 bg-slate-900">
       <div className="flex items-center justify-between">
         {/* Logo Section */}
@@ -55,7 +66,13 @@ const Header = () => {
               onClose={() => setIsNotificationPanelOpen(false)}
             />
           </div>
-          <Button variant="ghost" size="icon" className="focus:ring-[#111827] bg-slate-50 text-slate-900">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="focus:ring-[#111827] bg-slate-50 text-slate-900" 
+            onClick={handleTestSound}
+            title="Test notification sound"
+          >
             <Settings className="w-5 h-5" />
           </Button>
           {/* User Profile Dropdown */}
