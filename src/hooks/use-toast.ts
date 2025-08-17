@@ -142,7 +142,7 @@ type Toast = Omit<ToasterToast, "id"> & {
   sound?: NotificationSoundType | boolean;
 }
 
-function toast({ sound = true, ...props }: Toast) {
+function toast({ sound = false, ...props }: Toast) {
   const id = genId()
 
   const update = (props: ToasterToast) =>
