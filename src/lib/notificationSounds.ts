@@ -242,10 +242,10 @@ export class NotificationSounds {
     return this.playProminentSound(type, 0.7); // Higher default volume
   }
 
-  // Method to test sound system (requires user interaction)
+  // Method to test sound system (requires user interaction) - now uses prominent sounds
   static async testSound(): Promise<boolean> {
     try {
-      console.log('🧪 Testing notification sound system...');
+      console.log('🧪 Testing NEW prominent notification sound system...');
       const audioContext = this.getAudioContext();
       
       if (audioContext.state === 'suspended') {
@@ -255,8 +255,10 @@ export class NotificationSounds {
       console.log('🧪 Audio context state:', audioContext.state);
       
       if (audioContext.state === 'running') {
-        await this.generateTone(440, 0.2, 0.2);
-        console.log('🧪 Test sound completed successfully');
+        // Test the new prominent notification sound
+        console.log('🧪 Playing new prominent test sound...');
+        await this.playProminentSound('info', 0.8);
+        console.log('🧪 New prominent test sound completed successfully');
         return true;
       } else {
         console.log('🧪 Audio context not running:', audioContext.state);
