@@ -1,5 +1,5 @@
 import { format, formatDistanceToNow, parseISO, isValid } from 'date-fns';
-import { fromZonedTime, toZonedTime, formatInTimeZone } from 'date-fns-tz';
+import { formatInTimeZone } from 'date-fns-tz';
 
 /**
  * Comprehensive time utility for consistent IST timezone handling
@@ -81,11 +81,12 @@ export class TimeUtils {
     if (!date) return '';
     
     try {
-      // Convert UTC date to IST for proper comparison
-      const istDate = toZonedTime(date, IST_TIMEZONE);
-      const istNow = toZonedTime(new Date(), IST_TIMEZONE);
+      // For IST timezone, we need to adjust the comparison properly
+      // Since formatDistanceToNow works with local time, we convert the UTC date to IST
+      const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
+      const adjustedDate = new Date(date.getTime() + istOffset);
       
-      return formatDistanceToNow(istDate, { addSuffix: true });
+      return formatDistanceToNow(adjustedDate, { addSuffix: true });
     } catch {
       return '';
     }
@@ -149,8 +150,11 @@ export class TimeUtils {
     const date = this.parseDate(input);
     if (!date) return false;
     
-    const istDate = toZonedTime(date, IST_TIMEZONE);
-    const istToday = toZonedTime(new Date(), IST_TIMEZONE);
+    // Simple IST check using timezone offset
+    const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
+    const istDate = new Date(date.getTime() + istOffset);
+    const istToday = new Date(new Date().getTime() + istOffset);
+    
     return istDate.toDateString() === istToday.toDateString();
   }
 
@@ -161,8 +165,11 @@ export class TimeUtils {
     const date = this.parseDate(input);
     if (!date) return false;
     
-    const istDate = toZonedTime(date, IST_TIMEZONE);
-    const istNow = toZonedTime(new Date(), IST_TIMEZONE);
+    // Simple IST comparison using timezone offset
+    const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
+    const istDate = new Date(date.getTime() + istOffset);
+    const istNow = new Date(new Date().getTime() + istOffset);
+    
     return istDate < istNow;
   }
 
@@ -173,8 +180,11 @@ export class TimeUtils {
     const date = this.parseDate(input);
     if (!date) return false;
     
-    const istDate = toZonedTime(date, IST_TIMEZONE);
-    const istNow = toZonedTime(new Date(), IST_TIMEZONE);
+    // Simple IST comparison using timezone offset
+    const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
+    const istDate = new Date(date.getTime() + istOffset);
+    const istNow = new Date(new Date().getTime() + istOffset);
+    
     return istDate > istNow;
   }
 
