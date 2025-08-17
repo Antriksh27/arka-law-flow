@@ -62,39 +62,81 @@ export class NotificationSounds {
 
   // Play sound based on notification type
   static async play(type: NotificationSoundType = 'default'): Promise<void> {
-    if (!this.isEnabled) return;
+    console.log('🔊 NotificationSounds.play called with type:', type, 'enabled:', this.isEnabled);
+    
+    if (!this.isEnabled) {
+      console.log('🔇 Notification sounds are disabled');
+      return;
+    }
 
-    // Debug logging
-    console.log('Playing notification sound:', type);
+    try {
+      // Check if we need user interaction first
+      const audioContext = this.getAudioContext();
+      if (audioContext.state === 'suspended') {
+        console.log('🎵 Audio context suspended, attempting to resume...');
+        await audioContext.resume();
+        console.log('🎵 Audio context state after resume:', audioContext.state);
+      }
 
-    switch (type) {
-      case 'success':
-        // Pleasant ascending tones
-        await this.generateTone(523.25, 0.15, 0.2); // C5
-        setTimeout(() => this.generateTone(659.25, 0.15, 0.2), 100); // E5
-        break;
+      console.log('🎵 Playing notification sound:', type);
 
-      case 'error':
-        // Lower, more serious tone
-        await this.generateTone(220, 0.3, 0.25); // A3
-        break;
+      switch (type) {
+        case 'success':
+          // Pleasant ascending tones
+          await this.generateTone(523.25, 0.15, 0.2); // C5
+          setTimeout(() => this.generateTone(659.25, 0.15, 0.2), 100); // E5
+          break;
 
-      case 'warning':
-        // Double beep
-        await this.generateTone(440, 0.15, 0.2); // A4
-        setTimeout(() => this.generateTone(440, 0.15, 0.2), 200);
-        break;
+        case 'error':
+          // Lower, more serious tone
+          await this.generateTone(220, 0.3, 0.25); // A3
+          break;
 
-      case 'info':
-        // Single soft tone
-        await this.generateTone(523.25, 0.2, 0.15); // C5
-        break;
+        case 'warning':
+          // Double beep
+          await this.generateTone(440, 0.15, 0.2); // A4
+          setTimeout(() => this.generateTone(440, 0.15, 0.2), 200);
+          break;
 
-      case 'default':
-      default:
-        // Standard notification tone
-        await this.generateTone(800, 0.2, 0.2);
-        break;
+        case 'info':
+          // Single soft tone
+          await this.generateTone(523.25, 0.2, 0.15); // C5
+          break;
+
+        case 'default':
+        default:
+          // Standard notification tone
+          await this.generateTone(800, 0.2, 0.2);
+          break;
+      }
+    } catch (error) {
+      console.error('🔊 Error playing notification sound:', error);
+    }
+  }
+
+  // Method to test sound system (requires user interaction)
+  static async testSound(): Promise<boolean> {
+    try {
+      console.log('🧪 Testing notification sound system...');
+      const audioContext = this.getAudioContext();
+      
+      if (audioContext.state === 'suspended') {
+        await audioContext.resume();
+      }
+      
+      console.log('🧪 Audio context state:', audioContext.state);
+      
+      if (audioContext.state === 'running') {
+        await this.generateTone(440, 0.2, 0.2);
+        console.log('🧪 Test sound completed successfully');
+        return true;
+      } else {
+        console.log('🧪 Audio context not running:', audioContext.state);
+        return false;
+      }
+    } catch (error) {
+      console.error('🧪 Test sound failed:', error);
+      return false;
     }
   }
 

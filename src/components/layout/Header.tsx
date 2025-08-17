@@ -1,14 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bell, Settings, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { NotificationPanel } from '@/components/notifications/NotificationPanel';
 import { useNotifications } from '@/hooks/useNotifications';
+import NotificationSounds from '@/lib/notificationSounds';
 const Header = () => {
   const { user, signOut } = useAuth();
   const { unreadCount } = useNotifications();
   const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
+  const [audioInitialized, setAudioInitialized] = useState(false);
+
+  // Initialize audio context on first user interaction
+  const initializeAudio = async () => {
+    if (!audioInitialized) {
+      console.log('🎵 Initializing audio context from user interaction...');
+      const success = await NotificationSounds.testSound();
+      if (success) {
+        setAudioInitialized(true);
+        console.log('🎵 Audio context initialized successfully');
+      }
+    }
+  };
+
+  const handleNotificationClick = async () => {
+    await initializeAudio();
+    setIsNotificationPanelOpen(!isNotificationPanelOpen);
+  };
   return <header className="border-b border-[#E5E7EB] px-8 py-4 bg-slate-900">
       <div className="flex items-center justify-between">
         {/* Logo Section */}
@@ -22,7 +41,7 @@ const Header = () => {
               variant="ghost" 
               size="icon" 
               className="focus:ring-[#111827] relative bg-slate-200 hover:bg-slate-100 text-slate-900"
-              onClick={() => setIsNotificationPanelOpen(!isNotificationPanelOpen)}
+              onClick={handleNotificationClick}
             >
               <Bell className="w-5 h-5" />
               {unreadCount > 0 && (
