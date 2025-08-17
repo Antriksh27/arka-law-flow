@@ -14,6 +14,8 @@ export class NotificationSounds {
 
   static setEnabled(enabled: boolean) {
     this.isEnabled = enabled;
+    // Save preference
+    localStorage.setItem('notification-sounds-enabled', enabled.toString());
   }
 
   static isAudioEnabled(): boolean {
@@ -29,8 +31,11 @@ export class NotificationSounds {
       
       // Resume audio context if suspended (required for Chrome)
       if (audioContext.state === 'suspended') {
+        console.log('Resuming audio context...');
         await audioContext.resume();
       }
+
+      console.log('Audio context state:', audioContext.state);
 
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
@@ -48,6 +53,8 @@ export class NotificationSounds {
 
       oscillator.start(audioContext.currentTime);
       oscillator.stop(audioContext.currentTime + duration);
+      
+      console.log('Sound generated successfully');
     } catch (error) {
       console.warn('Failed to play notification sound:', error);
     }
@@ -56,6 +63,9 @@ export class NotificationSounds {
   // Play sound based on notification type
   static async play(type: NotificationSoundType = 'default'): Promise<void> {
     if (!this.isEnabled) return;
+
+    // Debug logging
+    console.log('Playing notification sound:', type);
 
     switch (type) {
       case 'success':

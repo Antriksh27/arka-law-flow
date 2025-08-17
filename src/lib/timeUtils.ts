@@ -1,9 +1,12 @@
 import { format, formatDistanceToNow, parseISO, isValid } from 'date-fns';
+import { fromZonedTime, toZonedTime, formatInTimeZone } from 'date-fns-tz';
 
 /**
- * Comprehensive time utility for consistent system time handling
- * All functions use the user's system timezone
+ * Comprehensive time utility for consistent IST timezone handling
+ * All functions now properly handle IST (Indian Standard Time)
  */
+
+const IST_TIMEZONE = 'Asia/Kolkata';
 
 export class TimeUtils {
   /**
@@ -35,21 +38,21 @@ export class TimeUtils {
   }
 
   /**
-   * Format date for display using system timezone
+   * Format date for display using IST timezone
    */
   static formatDisplay(input: string | Date | null | undefined, formatString: string = 'MMM d, yyyy'): string {
     const date = this.parseDate(input);
     if (!date) return '';
     
     try {
-      return format(date, formatString);
+      return formatInTimeZone(date, IST_TIMEZONE, formatString);
     } catch {
       return '';
     }
   }
 
   /**
-   * Format datetime for display using system timezone
+   * Format datetime for display using IST timezone
    */
   static formatDateTime(input: string | Date | null | undefined, formatString: string = 'MMM d, yyyy h:mm a'): string {
     return this.formatDisplay(input, formatString);
@@ -70,7 +73,7 @@ export class TimeUtils {
   }
 
   /**
-   * Format relative time (e.g., "2 hours ago")
+   * Format relative time (e.g., "2 hours ago") in IST
    * Properly handles UTC timestamps from database
    */
   static formatRelative(input: string | Date | null | undefined): string {
@@ -78,24 +81,26 @@ export class TimeUtils {
     if (!date) return '';
     
     try {
-      // Ensure we're comparing with current time in the same timezone context
-      const now = new Date();
-      return formatDistanceToNow(date, { addSuffix: true });
+      // Convert UTC date to IST for proper comparison
+      const istDate = toZonedTime(date, IST_TIMEZONE);
+      const istNow = toZonedTime(new Date(), IST_TIMEZONE);
+      
+      return formatDistanceToNow(istDate, { addSuffix: true });
     } catch {
       return '';
     }
   }
 
   /**
-   * Format for notifications with both absolute and relative time
-   * Handles UTC timestamps properly
+   * Format for notifications with IST timezone
+   * Handles UTC timestamps properly for IST display
    */
   static formatNotificationTime(input: string | Date | null | undefined): string {
     const date = this.parseDate(input);
     if (!date) return '';
     
     try {
-      // For notifications, show only relative time to avoid confusion
+      // For notifications, show only relative time in IST context
       return this.formatRelative(date);
     } catch {
       return '';
@@ -138,54 +143,57 @@ export class TimeUtils {
   }
 
   /**
-   * Check if a date is today (system timezone)
+   * Check if a date is today (IST timezone)
    */
   static isToday(input: string | Date | null | undefined): boolean {
     const date = this.parseDate(input);
     if (!date) return false;
     
-    const today = new Date();
-    return date.toDateString() === today.toDateString();
+    const istDate = toZonedTime(date, IST_TIMEZONE);
+    const istToday = toZonedTime(new Date(), IST_TIMEZONE);
+    return istDate.toDateString() === istToday.toDateString();
   }
 
   /**
-   * Check if a date is in the past (system timezone)
+   * Check if a date is in the past (IST timezone)
    */
   static isPast(input: string | Date | null | undefined): boolean {
     const date = this.parseDate(input);
     if (!date) return false;
     
-    return date < new Date();
+    const istDate = toZonedTime(date, IST_TIMEZONE);
+    const istNow = toZonedTime(new Date(), IST_TIMEZONE);
+    return istDate < istNow;
   }
 
   /**
-   * Check if a date is in the future (system timezone)
+   * Check if a date is in the future (IST timezone)
    */
   static isFuture(input: string | Date | null | undefined): boolean {
     const date = this.parseDate(input);
     if (!date) return false;
     
-    return date > new Date();
+    const istDate = toZonedTime(date, IST_TIMEZONE);
+    const istNow = toZonedTime(new Date(), IST_TIMEZONE);
+    return istDate > istNow;
   }
 
   /**
-   * Get timezone name of the user's system
+   * Get IST timezone name
    */
   static getSystemTimezone(): string {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+    return IST_TIMEZONE;
   }
 
   /**
-   * Format with explicit timezone display
+   * Format with explicit IST timezone display
    */
   static formatWithTimezone(input: string | Date | null | undefined): string {
     const date = this.parseDate(input);
     if (!date) return '';
     
-    const timezone = this.getSystemTimezone();
     const formatted = this.formatDateTime(date);
-    
-    return `${formatted} (${timezone})`;
+    return `${formatted} (IST)`;
   }
 }
 
