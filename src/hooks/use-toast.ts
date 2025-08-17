@@ -1,4 +1,5 @@
 import * as React from "react"
+import NotificationSounds, { type NotificationSoundType } from "@/lib/notificationSounds"
 
 import type {
   ToastActionElement,
@@ -137,9 +138,11 @@ function dispatch(action: Action) {
   })
 }
 
-type Toast = Omit<ToasterToast, "id">
+type Toast = Omit<ToasterToast, "id"> & {
+  sound?: NotificationSoundType | boolean;
+}
 
-function toast({ ...props }: Toast) {
+function toast({ sound = true, ...props }: Toast) {
   const id = genId()
 
   const update = (props: ToasterToast) =>
@@ -148,6 +151,21 @@ function toast({ ...props }: Toast) {
       toast: { ...props, id },
     })
   const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id })
+
+  // Play sound if enabled
+  if (sound) {
+    if (typeof sound === 'string') {
+      NotificationSounds.play(sound);
+    } else {
+      // Auto-detect sound type based on variant or use default
+      const variant = props.variant;
+      if (variant === 'destructive') {
+        NotificationSounds.error();
+      } else {
+        NotificationSounds.default();
+      }
+    }
+  }
 
   dispatch({
     type: "ADD_TOAST",

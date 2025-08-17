@@ -9,6 +9,7 @@ import { Bell, X, Check, Clock, Calendar, FileText, User } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import TimeUtils from '@/lib/timeUtils';
 import { useToast } from '@/hooks/use-toast';
+import NotificationSounds from '@/lib/notificationSounds';
 
 interface Notification {
   id: string;
@@ -69,16 +70,16 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
         (payload) => {
           const newNotification = payload.new as Notification;
           
-          // Play notification sound
-          const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBECJ0fPTgjEGHm7C7+OZSA0PVKzn77BdGAg+ltryxnkpBSl+zPLaizsIGGS+8+OUOwwOUarm7blpGgU8ltDzun4xBSF2xfLZiDwIF2m98+SXOgsPU6nl77ZfGAo7lcDz'); 
-          audio.volume = 0.3;
-          audio.play().catch(console.error);
+          // Play notification sound based on type
+          const soundType = newNotification.notification_type === 'appointment' ? 'info' : 'default';
+          NotificationSounds.play(soundType);
 
-          // Show toast
+          // Show toast with sound disabled (already played above)
           toast({
             title: newNotification.title,
             description: newNotification.message,
             duration: 5000,
+            sound: false, // Don't double-play sound
           });
 
           // Refresh notifications
