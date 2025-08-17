@@ -75,8 +75,8 @@ export class NotificationSounds {
   }
 
   // Play sound based on notification type
-  static async play(type: NotificationSoundType = 'default'): Promise<void> {
-    console.log('🔊 NotificationSounds.play called with type:', type, 'enabled:', this.isEnabled);
+  static async playProminentSound(type: NotificationSoundType, volume: number = 0.6): Promise<void> {
+    console.log('🔊 NotificationSounds.playProminentSound called with type:', type, 'enabled:', this.isEnabled);
     
     if (!this.isEnabled) {
       console.log('🔇 Notification sounds are disabled');
@@ -84,7 +84,6 @@ export class NotificationSounds {
     }
 
     try {
-      // Check if we need user interaction first
       const audioContext = this.getAudioContext();
       if (audioContext.state === 'suspended') {
         console.log('🎵 Audio context suspended, attempting to resume...');
@@ -92,40 +91,155 @@ export class NotificationSounds {
         console.log('🎵 Audio context state after resume:', audioContext.state);
       }
 
-      console.log('🎵 Playing notification sound:', type);
+      console.log('🎵 Playing prominent notification sound:', type);
 
       switch (type) {
         case 'success':
-          // Pleasant ascending tones
-          await this.generateTone(523.25, 0.15, 0.2); // C5
-          setTimeout(() => this.generateTone(659.25, 0.15, 0.2), 100); // E5
+          // Pleasant ascending chord progression
+          await this.playChord([523.25, 659.25, 783.99], 0.4, volume); // C5, E5, G5
+          setTimeout(() => this.playChord([659.25, 783.99, 987.77], 0.4, volume), 200); // E5, G5, B5
           break;
 
         case 'error':
-          // Lower, more serious tone
-          await this.generateTone(220, 0.3, 0.25); // A3
+          // Urgent descending tones
+          await this.playTone(659.25, 0.2, volume, 'sawtooth'); // E5
+          setTimeout(() => this.playTone(554.37, 0.2, volume, 'sawtooth'), 150); // C#5
+          setTimeout(() => this.playTone(440, 0.3, volume, 'sawtooth'), 300); // A4
           break;
 
         case 'warning':
-          // Double beep
-          await this.generateTone(440, 0.15, 0.2); // A4
-          setTimeout(() => this.generateTone(440, 0.15, 0.2), 200);
+          // Attention-grabbing double tone with vibrato
+          await this.playToneWithVibrato(880, 0.25, volume, 5); // A5 with vibrato
+          setTimeout(() => this.playToneWithVibrato(880, 0.25, volume, 5), 300);
           break;
 
         case 'info':
-          // Single soft tone
-          await this.generateTone(523.25, 0.2, 0.15); // C5
-          break;
-
         case 'default':
         default:
-          // Standard notification tone
-          await this.generateTone(800, 0.2, 0.2);
+          // Professional notification sound - like system notifications
+          await this.playNotificationMelody(volume);
           break;
       }
     } catch (error) {
       console.error('🔊 Error playing notification sound:', error);
     }
+  }
+
+  // Enhanced tone generation with different waveforms
+  private static async playTone(frequency: number, duration: number, volume: number, waveform: OscillatorType = 'sine'): Promise<void> {
+    const audioContext = this.getAudioContext();
+    
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+    oscillator.type = waveform;
+
+    // Enhanced envelope for more professional sound
+    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+    gainNode.gain.linearRampToValueAtTime(volume, audioContext.currentTime + 0.02);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
+
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + duration);
+
+    return new Promise(resolve => {
+      setTimeout(resolve, duration * 1000);
+    });
+  }
+
+  // Play multiple frequencies simultaneously (chord)
+  private static async playChord(frequencies: number[], duration: number, volume: number): Promise<void> {
+    const audioContext = this.getAudioContext();
+    const promises = frequencies.map(frequency => {
+      return new Promise<void>(resolve => {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+        oscillator.type = 'sine';
+
+        // Distribute volume across multiple oscillators
+        const chordVolume = volume / frequencies.length;
+        gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+        gainNode.gain.linearRampToValueAtTime(chordVolume, audioContext.currentTime + 0.02);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
+
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + duration);
+
+        setTimeout(resolve, duration * 1000);
+      });
+    });
+
+    await Promise.all(promises);
+  }
+
+  // Add vibrato effect for attention-grabbing sounds
+  private static async playToneWithVibrato(frequency: number, duration: number, volume: number, vibratoRate: number): Promise<void> {
+    const audioContext = this.getAudioContext();
+    
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    const vibratoOsc = audioContext.createOscillator();
+    const vibratoGain = audioContext.createGain();
+
+    // Set up vibrato
+    vibratoOsc.frequency.setValueAtTime(vibratoRate, audioContext.currentTime);
+    vibratoGain.gain.setValueAtTime(10, audioContext.currentTime); // Vibrato depth
+
+    vibratoOsc.connect(vibratoGain);
+    vibratoGain.connect(oscillator.frequency);
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+    oscillator.type = 'sine';
+
+    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+    gainNode.gain.linearRampToValueAtTime(volume, audioContext.currentTime + 0.02);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
+
+    vibratoOsc.start(audioContext.currentTime);
+    oscillator.start(audioContext.currentTime);
+    
+    vibratoOsc.stop(audioContext.currentTime + duration);
+    oscillator.stop(audioContext.currentTime + duration);
+
+    return new Promise(resolve => {
+      setTimeout(resolve, duration * 1000);
+    });
+  }
+
+  // Professional notification melody similar to system sounds
+  private static async playNotificationMelody(volume: number): Promise<void> {
+    // Play a pleasant ascending melody
+    const notes = [
+      { freq: 659.25, duration: 0.15 }, // E5
+      { freq: 783.99, duration: 0.15 }, // G5
+      { freq: 1046.5, duration: 0.25 }  // C6
+    ];
+
+    for (let i = 0; i < notes.length; i++) {
+      const note = notes[i];
+      await this.playTone(note.freq, note.duration, volume * 0.8, 'sine');
+      if (i < notes.length - 1) {
+        // Small gap between notes
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+    }
+  }
+
+  // Main play function - now uses prominent sounds
+  static async play(type: NotificationSoundType = 'default'): Promise<void> {
+    return this.playProminentSound(type, 0.7); // Higher default volume
   }
 
   // Method to test sound system (requires user interaction)
