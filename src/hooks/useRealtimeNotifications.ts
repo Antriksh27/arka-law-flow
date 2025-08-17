@@ -49,18 +49,50 @@ export const useRealtimeNotifications = () => {
           const newNotification = payload.new as Notification;
           
           try {
-            // Play notification sound based on type
-            const soundType = newNotification.notification_type === 'appointment' ? 'info' : 'default';
-            console.log('🔊 Playing notification sound:', soundType);
-            await NotificationSounds.play(soundType);
-            
-            // Show toast notification
+            console.log('🔔 Processing notification:', {
+              type: newNotification.notification_type,
+              title: newNotification.title,
+              message: newNotification.message
+            });
+
+            // Always show toast first
             toast({
               title: newNotification.title,
               description: newNotification.message,
-              duration: 5000,
-              sound: false, // Don't double-play sound since we already played it above
+              duration: 8000, // Longer duration for better visibility
+              sound: false, // We'll handle sound separately
             });
+            console.log('✅ Toast notification shown');
+
+            // Play notification sound - with better error handling
+            try {
+              const soundType = newNotification.notification_type === 'appointment' ? 'info' : 'default';
+              console.log('🔊 Attempting to play notification sound:', soundType);
+              
+              // Ensure audio context is ready
+              const testResult = await NotificationSounds.testSound();
+              if (testResult) {
+                console.log('🔊 Audio context ready, playing notification sound...');
+                await NotificationSounds.play(soundType);
+                console.log('✅ Notification sound played successfully');
+              } else {
+                console.error('❌ Audio context not ready for notification sound');
+                // Still show a visual indicator that sound failed
+                toast({
+                  title: "🔇 Sound Alert",
+                  description: "Click Settings to enable notification sounds",
+                  duration: 3000,
+                });
+              }
+            } catch (soundError) {
+              console.error('❌ Error playing notification sound:', soundError);
+              // Fallback: show visual notification that sound failed
+              toast({
+                title: "🔇 Sound Error",
+                description: "Notification sound failed to play",
+                duration: 3000,
+              });
+            }
 
             // Refresh notification queries
             queryClient.invalidateQueries({ queryKey: ['notifications'] });
@@ -69,6 +101,13 @@ export const useRealtimeNotifications = () => {
             console.log('🔔 Notification processed successfully');
           } catch (error) {
             console.error('🔔 Error processing notification:', error);
+            
+            // Fallback toast even if everything fails
+            toast({
+              title: "New Notification",
+              description: newNotification.message || "You have a new notification",
+              duration: 5000,
+            });
           }
         }
       )

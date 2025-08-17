@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Settings, User, LogOut } from 'lucide-react';
+import { Bell, Settings, User, LogOut, TestTube } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { NotificationPanel } from '@/components/notifications/NotificationPanel';
 import { useNotifications } from '@/hooks/useNotifications';
 import NotificationSounds from '@/lib/notificationSounds';
+import { sendTestNotification } from '@/utils/testNotification';
 const Header = () => {
   const { user, signOut } = useAuth();
   const { unreadCount } = useNotifications();
@@ -37,6 +38,20 @@ const Header = () => {
       console.log('🧪 Test sound completed');
     } catch (error) {
       console.error('🧪 Test sound failed:', error);
+    }
+  };
+
+  const handleTestNotification = async () => {
+    if (!user?.id) return;
+    
+    console.log('🧪 Sending test notification...');
+    await initializeAudio();
+    
+    try {
+      await sendTestNotification(user.id);
+      console.log('🧪 Test notification sent successfully');
+    } catch (error) {
+      console.error('🧪 Test notification failed:', error);
     }
   };
   return <header className="border-b border-[#E5E7EB] px-8 py-4 bg-slate-900">
@@ -90,6 +105,14 @@ const Header = () => {
               <div className="px-2 py-1.5 text-sm text-muted-foreground bg-slate-50">
                 {user?.email}
               </div>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={handleTestNotification} 
+                className="text-blue-600 focus:text-blue-600 bg-slate-50"
+              >
+                <TestTube className="w-4 h-4 mr-2" />
+                Test Notification
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={signOut} className="text-red-600 focus:text-red-600 bg-slate-50">
                 <LogOut className="w-4 h-4 mr-2" />
