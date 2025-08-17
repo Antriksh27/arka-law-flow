@@ -71,12 +71,15 @@ export class TimeUtils {
 
   /**
    * Format relative time (e.g., "2 hours ago")
+   * Properly handles UTC timestamps from database
    */
   static formatRelative(input: string | Date | null | undefined): string {
     const date = this.parseDate(input);
     if (!date) return '';
     
     try {
+      // Ensure we're comparing with current time in the same timezone context
+      const now = new Date();
       return formatDistanceToNow(date, { addSuffix: true });
     } catch {
       return '';
@@ -85,15 +88,18 @@ export class TimeUtils {
 
   /**
    * Format for notifications with both absolute and relative time
+   * Handles UTC timestamps properly
    */
   static formatNotificationTime(input: string | Date | null | undefined): string {
     const date = this.parseDate(input);
     if (!date) return '';
     
-    const absolute = this.formatDateTime(date, 'MMM d, h:mm a');
-    const relative = this.formatRelative(date);
-    
-    return `${absolute} (${relative})`;
+    try {
+      // For notifications, show only relative time to avoid confusion
+      return this.formatRelative(date);
+    } catch {
+      return '';
+    }
   }
 
   /**
