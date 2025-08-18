@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { InvoicesHeader } from '@/features/invoices/components/InvoicesHeader';
@@ -9,29 +9,83 @@ import { InvoiceViewDialog } from '@/features/invoices/components/InvoiceViewDia
 import { DeleteInvoiceDialog } from '@/features/invoices/components/DeleteInvoiceDialog';
 import { useInvoiceStats } from '@/features/invoices/hooks/useInvoiceStats';
 import type { InvoiceListData } from '@/features/invoices/types';
-import { Loader2, AlertCircle, Search, Plus, Download, RefreshCw } from 'lucide-react';
+import { Loader2, AlertCircle, Search, Plus, Download, RefreshCw, Calendar, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-const fetchInvoices = async (firmId: string | undefined): Promise<InvoiceListData[]> => {
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
+interface FilterState {
+  searchQuery: string;
+  status: string;
+  caseId: string;
+  dateFrom: Date | undefined;
+  dateTo: Date | undefined;
+}
+
+const fetchInvoices = async (firmId: string | undefined, filters: FilterState): Promise<InvoiceListData[]> => {
   if (!firmId) {
     throw new Error('Firm ID is required to fetch invoices.');
   }
-  const {
-    data,
-    error
-  } = await supabase.from('invoices').select(`
+  
+  let query = supabase
+    .from('invoices')
+    .select(`
       *,
       client:clients(full_name),
       case:cases(title)
-    `).eq('firm_id', firmId).order('created_at', {
-    ascending: false
-  });
+    `)
+    .eq('firm_id', firmId);
+
+  // Apply filters
+  if (filters.searchQuery) {
+    query = query.or(`invoice_number.ilike.%${filters.searchQuery}%,client.full_name.ilike.%${filters.searchQuery}%`);
+  }
+  
+  if (filters.status && filters.status !== 'all') {
+    query = query.eq('status', filters.status as 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled');
+  }
+  
+  if (filters.caseId && filters.caseId !== 'all') {
+    query = query.eq('case_id', filters.caseId);
+  }
+  
+  if (filters.dateFrom) {
+    query = query.gte('issue_date', format(filters.dateFrom, 'yyyy-MM-dd'));
+  }
+  
+  if (filters.dateTo) {
+    query = query.lte('issue_date', format(filters.dateTo, 'yyyy-MM-dd'));
+  }
+
+  query = query.order('created_at', { ascending: false });
+
+  const { data, error } = await query;
+  
   if (error) {
     console.error('Error fetching invoices:', error);
     throw new Error(error.message);
   }
   return data as InvoiceListData[];
+};
+
+const fetchCases = async (firmId: string | undefined) => {
+  if (!firmId) return [];
+  
+  const { data, error } = await supabase
+    .from('cases')
+    .select('id, title')
+    .eq('firm_id', firmId)
+    .order('title');
+    
+  if (error) {
+    console.error('Error fetching cases:', error);
+    return [];
+  }
+  return data;
 };
 const InvoiceStats = ({ firmId }: { firmId: string | undefined }) => {
   const { data: stats, isLoading } = useInvoiceStats(firmId);
@@ -70,36 +124,136 @@ const InvoiceStats = ({ firmId }: { firmId: string | undefined }) => {
       </div>
     </div>;
 };
-const InvoiceToolbar = ({
-  total = 0,
-  onNewInvoice
-}: {
+interface InvoiceToolbarProps {
   total: number;
   onNewInvoice: () => void;
+  filters: FilterState;
+  onFiltersChange: (filters: FilterState) => void;
+  onRefresh: () => void;
+  onDownload: () => void;
+  cases: Array<{ id: string; title: string }>;
+}
+
+const InvoiceToolbar: React.FC<InvoiceToolbarProps> = ({
+  total = 0,
+  onNewInvoice,
+  filters,
+  onFiltersChange,
+  onRefresh,
+  onDownload,
+  cases
 }) => {
-  return <div className="flex w-full flex-wrap items-center gap-4 mb-2">
+  const [dateFromOpen, setDateFromOpen] = useState(false);
+  const [dateToOpen, setDateToOpen] = useState(false);
+
+  const updateFilters = (updates: Partial<FilterState>) => {
+    onFiltersChange({ ...filters, ...updates });
+  };
+
+  return (
+    <div className="flex w-full flex-wrap items-center gap-4 mb-2">
       <div className="flex grow shrink-0 basis-0 items-center gap-3">
-        {/* Make search styling match hearings -- bg-white, border, text-base */}
+        {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-          <Input className="max-w-xs pl-10 bg-white rounded-lg border border-gray-200 text-base focus:ring-2 focus:ring-primary outline-none" placeholder="Search invoices..." />
+          <Input 
+            className="max-w-xs pl-10 bg-white rounded-lg border border-gray-200 text-base focus:ring-2 focus:ring-primary outline-none" 
+            placeholder="Search invoices..."
+            value={filters.searchQuery}
+            onChange={(e) => updateFilters({ searchQuery: e.target.value })}
+          />
         </div>
-        <Button variant="outline" className="flex items-center gap-2 border-gray-200 text-slate-50 bg-slate-900 hover:bg-slate-800">
-          Status
-        </Button>
-        <Button variant="outline" className="flex items-center gap-2 border-gray-200 text-slate-50 bg-slate-900 hover:bg-slate-800">
-          Date Range
-        </Button>
-        <Button variant="outline" className="flex items-center gap-2 border-gray-200 text-slate-50 bg-slate-900 hover:bg-slate-800">
-          Case
-        </Button>
+        
+        {/* Status Filter */}
+        <Select value={filters.status} onValueChange={(value) => updateFilters({ status: value })}>
+          <SelectTrigger className="w-32 bg-white border-gray-200">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="draft">Draft</SelectItem>
+            <SelectItem value="sent">Sent</SelectItem>
+            <SelectItem value="paid">Paid</SelectItem>
+            <SelectItem value="overdue">Overdue</SelectItem>
+            <SelectItem value="cancelled">Cancelled</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {/* Date Range */}
+        <div className="flex items-center gap-2">
+          <Popover open={dateFromOpen} onOpenChange={setDateFromOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="bg-white border-gray-200 justify-start text-left font-normal">
+                <Calendar className="mr-2 h-4 w-4" />
+                {filters.dateFrom ? format(filters.dateFrom, 'MMM d, yyyy') : 'From'}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 bg-white border border-gray-200 shadow-lg z-50">
+              <CalendarComponent
+                mode="single"
+                selected={filters.dateFrom}
+                onSelect={(date) => {
+                  updateFilters({ dateFrom: date });
+                  setDateFromOpen(false);
+                }}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+          
+          <Popover open={dateToOpen} onOpenChange={setDateToOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="bg-white border-gray-200 justify-start text-left font-normal">
+                <Calendar className="mr-2 h-4 w-4" />
+                {filters.dateTo ? format(filters.dateTo, 'MMM d, yyyy') : 'To'}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 bg-white border border-gray-200 shadow-lg z-50">
+              <CalendarComponent
+                mode="single"
+                selected={filters.dateTo}
+                onSelect={(date) => {
+                  updateFilters({ dateTo: date });
+                  setDateToOpen(false);
+                }}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        {/* Case Filter */}
+        <Select value={filters.caseId} onValueChange={(value) => updateFilters({ caseId: value })}>
+          <SelectTrigger className="w-48 bg-white border-gray-200">
+            <SelectValue placeholder="All Cases" />
+          </SelectTrigger>
+          <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+            <SelectItem value="all">All Cases</SelectItem>
+            {cases.map((case_) => (
+              <SelectItem key={case_.id} value={case_.id}>
+                {case_.title}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
+      
       <div className="flex items-center gap-2">
-        <Button variant="secondary" size="icon" className="border-gray-200 text-slate-50 bg-slate-900 hover:bg-slate-800">
+        <Button 
+          variant="secondary" 
+          size="icon" 
+          className="border-gray-200 text-slate-50 bg-slate-900 hover:bg-slate-800"
+          onClick={onDownload}
+        >
           <Download className="w-4 h-4" />
           <span className="sr-only">Download as CSV</span>
         </Button>
-        <Button variant="secondary" size="icon" className="border-gray-200 text-slate-50 bg-slate-900 hover:bg-slate-800">
+        <Button 
+          variant="secondary" 
+          size="icon" 
+          className="border-gray-200 text-slate-50 bg-slate-900 hover:bg-slate-800"
+          onClick={onRefresh}
+        >
           <RefreshCw className="w-4 h-4" />
           <span className="sr-only">Refresh</span>
         </Button>
@@ -108,7 +262,8 @@ const InvoiceToolbar = ({
           New Invoice
         </Button>
       </div>
-    </div>;
+    </div>
+  );
 };
 const Breadcrumbs = () => <nav className="mb-4 flex items-center space-x-3 text-sm text-muted-foreground" aria-label="Breadcrumb">
     <span className="font-medium">Arka</span>
@@ -116,27 +271,75 @@ const Breadcrumbs = () => <nav className="mb-4 flex items-center space-x-3 text-
     
   </nav>;
 const Invoices: React.FC = () => {
-  const {
-    firmId,
-    loading,
-    firmError
-  } = useAuth();
+  const { firmId, loading, firmError } = useAuth();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string>('');
+  
+  const [filters, setFilters] = useState<FilterState>({
+    searchQuery: '',
+    status: 'all',
+    caseId: 'all',
+    dateFrom: undefined,
+    dateTo: undefined,
+  });
 
-  const {
-    data: invoices,
-    isLoading,
-    error
-  } = useQuery({
-    queryKey: ['invoices', firmId],
-    queryFn: () => fetchInvoices(firmId),
+  const { data: invoices, isLoading, error } = useQuery({
+    queryKey: ['invoices', firmId, filters],
+    queryFn: () => fetchInvoices(firmId, filters),
     enabled: !!firmId
   });
+
+  const { data: cases = [] } = useQuery({
+    queryKey: ['cases', firmId],
+    queryFn: () => fetchCases(firmId),
+    enabled: !!firmId
+  });
+
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['invoices', firmId] });
+    toast({ title: 'Refreshed', description: 'Invoice data has been refreshed.' });
+  };
+
+  const handleDownload = () => {
+    if (!invoices || invoices.length === 0) {
+      toast({ title: 'No data', description: 'No invoices to download.', variant: 'destructive' });
+      return;
+    }
+
+    // Create CSV content
+    const headers = ['Invoice Number', 'Client', 'Case', 'Issue Date', 'Due Date', 'Amount', 'Status'];
+    const csvContent = [
+      headers.join(','),
+      ...invoices.map(invoice => [
+        invoice.invoice_number,
+        invoice.client?.full_name || 'N/A',
+        invoice.case?.title || 'N/A',
+        invoice.issue_date || 'N/A',
+        invoice.due_date || 'N/A',
+        invoice.total_amount || 0,
+        invoice.status
+      ].join(','))
+    ].join('\n');
+
+    // Download the file
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `invoices_${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    
+    toast({ title: 'Downloaded', description: 'Invoice data has been downloaded as CSV.' });
+  };
   return <div className="max-w-7xl mx-auto p-6 space-y-6">
       {/* Breadcrumbs */}
       {/* Header */}
@@ -153,7 +356,15 @@ const Invoices: React.FC = () => {
       {/* Stats Row (cards) */}
       <InvoiceStats firmId={firmId} />
       {/* Filters/Search Bar */}
-      <InvoiceToolbar total={invoices?.length || 0} onNewInvoice={() => setCreateDialogOpen(true)} />
+      <InvoiceToolbar 
+        total={invoices?.length || 0} 
+        onNewInvoice={() => setCreateDialogOpen(true)}
+        filters={filters}
+        onFiltersChange={setFilters}
+        onRefresh={handleRefresh}
+        onDownload={handleDownload}
+        cases={cases}
+      />
       {/* Table / Loading / Error */}
       {(isLoading || loading) && <div className="flex items-center justify-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
