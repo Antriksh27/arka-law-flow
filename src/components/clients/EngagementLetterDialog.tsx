@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { FileText, Printer, Upload, Loader2 } from 'lucide-react';
 
 interface EngagementLetterDialogProps {
@@ -36,6 +37,7 @@ interface EngagementLetterData {
   retainer_amount: number;
   expenses: number;
   tax_rate: number; // percentage
+  including_tax: boolean; // if true, amounts include tax
   
   // Payment Details
   payment_schedule: string;
@@ -70,6 +72,7 @@ export const EngagementLetterDialog: React.FC<EngagementLetterDialogProps> = ({
       issue_date: new Date().toISOString().split('T')[0],
       payment_method: 'UPI/Bank Transfer',
       tax_rate: 18,
+      including_tax: false,
       scope_description: 'Legal consultation, research, drafting, court appearances, and related legal services as required for the matter.'
     }
   });
@@ -119,29 +122,59 @@ export const EngagementLetterDialog: React.FC<EngagementLetterDialogProps> = ({
   });
 
   const calculateTotals = (data: EngagementLetterData) => {
-    const professionalTax = Math.round((data.professional_fee * data.tax_rate) / 100);
-    const retainerTax = Math.round((data.retainer_amount * data.tax_rate) / 100);
-    const expensesTax = Math.round((data.expenses * data.tax_rate) / 100);
-    
-    const professionalTotal = data.professional_fee + professionalTax;
-    const retainerTotal = data.retainer_amount + retainerTax;
-    const expensesTotal = data.expenses + expensesTax;
-    
-    const subtotal = data.professional_fee + data.retainer_amount + data.expenses;
-    const totalTax = professionalTax + retainerTax + expensesTax;
-    const grandTotal = subtotal + totalTax;
+    if (data.including_tax) {
+      // When amounts include tax, calculate the base amount and tax separately
+      const taxMultiplier = 1 + (data.tax_rate / 100);
+      
+      const professionalBase = Math.round(data.professional_fee / taxMultiplier);
+      const retainerBase = Math.round(data.retainer_amount / taxMultiplier);
+      const expensesBase = Math.round(data.expenses / taxMultiplier);
+      
+      const professionalTax = data.professional_fee - professionalBase;
+      const retainerTax = data.retainer_amount - retainerBase;
+      const expensesTax = data.expenses - expensesBase;
+      
+      const subtotal = professionalBase + retainerBase + expensesBase;
+      const totalTax = professionalTax + retainerTax + expensesTax;
+      const grandTotal = data.professional_fee + data.retainer_amount + data.expenses;
 
-    return {
-      professionalTax,
-      retainerTax,
-      expensesTax,
-      professionalTotal,
-      retainerTotal,
-      expensesTotal,
-      subtotal,
-      totalTax,
-      grandTotal
-    };
+      return {
+        professionalTax,
+        retainerTax,
+        expensesTax,
+        professionalTotal: data.professional_fee,
+        retainerTotal: data.retainer_amount,
+        expensesTotal: data.expenses,
+        subtotal,
+        totalTax,
+        grandTotal
+      };
+    } else {
+      // When amounts exclude tax, add tax on top
+      const professionalTax = Math.round((data.professional_fee * data.tax_rate) / 100);
+      const retainerTax = Math.round((data.retainer_amount * data.tax_rate) / 100);
+      const expensesTax = Math.round((data.expenses * data.tax_rate) / 100);
+      
+      const professionalTotal = data.professional_fee + professionalTax;
+      const retainerTotal = data.retainer_amount + retainerTax;
+      const expensesTotal = data.expenses + expensesTax;
+      
+      const subtotal = data.professional_fee + data.retainer_amount + data.expenses;
+      const totalTax = professionalTax + retainerTax + expensesTax;
+      const grandTotal = subtotal + totalTax;
+
+      return {
+        professionalTax,
+        retainerTax,
+        expensesTax,
+        professionalTotal,
+        retainerTotal,
+        expensesTotal,
+        subtotal,
+        totalTax,
+        grandTotal
+      };
+    }
   };
 
   const generateLetter = (data: EngagementLetterData) => {
@@ -470,49 +503,82 @@ export const EngagementLetterDialog: React.FC<EngagementLetterDialogProps> = ({
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-primary">Fee Structure</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="professional_fee">Professional Fee (₹) *</Label>
-                  <Input
-                    id="professional_fee"
-                    type="number"
-                    {...register('professional_fee', { required: 'Professional fee is required', min: 0, valueAsNumber: true })}
-                    placeholder="100000"
-                  />
-                  {errors.professional_fee && <p className="text-sm text-red-600">{errors.professional_fee.message}</p>}
-                </div>
+                 <div className="space-y-2">
+                   <Label htmlFor="professional_fee">Professional Fee (₹) *</Label>
+                   <Input
+                     id="professional_fee"
+                     type="number"
+                     {...register('professional_fee', { required: 'Professional fee is required', min: 0, valueAsNumber: true })}
+                     placeholder="100000"
+                     style={{ 
+                       MozAppearance: 'textfield',
+                       WebkitAppearance: 'none',
+                       appearance: 'none'
+                     }}
+                     className="[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                   />
+                   {errors.professional_fee && <p className="text-sm text-red-600">{errors.professional_fee.message}</p>}
+                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="retainer_amount">Retainer Amount (₹) *</Label>
-                  <Input
-                    id="retainer_amount"
-                    type="number"
-                    {...register('retainer_amount', { required: 'Retainer amount is required', min: 0, valueAsNumber: true })}
-                    placeholder="50000"
-                  />
-                  {errors.retainer_amount && <p className="text-sm text-red-600">{errors.retainer_amount.message}</p>}
-                </div>
+                 <div className="space-y-2">
+                   <Label htmlFor="retainer_amount">Retainer Amount (₹) *</Label>
+                   <Input
+                     id="retainer_amount"
+                     type="number"
+                     {...register('retainer_amount', { required: 'Retainer amount is required', min: 0, valueAsNumber: true })}
+                     placeholder="50000"
+                     style={{ 
+                       MozAppearance: 'textfield',
+                       WebkitAppearance: 'none',
+                       appearance: 'none'
+                     }}
+                     className="[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                   />
+                   {errors.retainer_amount && <p className="text-sm text-red-600">{errors.retainer_amount.message}</p>}
+                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="expenses">Out-of-Pocket Expenses (₹)</Label>
-                  <Input
-                    id="expenses"
-                    type="number"
-                    {...register('expenses', { min: 0, valueAsNumber: true })}
-                    placeholder="10000"
-                  />
-                </div>
+                 <div className="space-y-2">
+                   <Label htmlFor="expenses">Out-of-Pocket Expenses (₹)</Label>
+                   <Input
+                     id="expenses"
+                     type="number"
+                     {...register('expenses', { min: 0, valueAsNumber: true })}
+                     placeholder="25000"
+                     style={{ 
+                       MozAppearance: 'textfield',
+                       WebkitAppearance: 'none',
+                       appearance: 'none'
+                     }}
+                     className="[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                   />
+                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="tax_rate">Tax Rate (%)</Label>
-                  <Input
-                    id="tax_rate"
-                    type="number"
-                    step="0.1"
-                    {...register('tax_rate', { min: 0, valueAsNumber: true })}
-                    placeholder="18"
-                  />
-                </div>
-              </div>
+                 <div className="space-y-2">
+                   <Label htmlFor="tax_rate">Tax Rate (%)</Label>
+                   <Select value={watchedValues.tax_rate?.toString()} onValueChange={(value) => setValue('tax_rate', parseInt(value))}>
+                     <SelectTrigger>
+                       <SelectValue placeholder="Select tax rate" />
+                     </SelectTrigger>
+                     <SelectContent>
+                       <SelectItem value="18">18% (GST)</SelectItem>
+                       <SelectItem value="12">12%</SelectItem>
+                       <SelectItem value="5">5%</SelectItem>
+                       <SelectItem value="0">0% (Tax Exempt)</SelectItem>
+                     </SelectContent>
+                   </Select>
+                 </div>
+               </div>
+
+               <div className="flex items-center space-x-2">
+                 <Checkbox
+                   id="including_tax"
+                   checked={watchedValues.including_tax}
+                   onCheckedChange={(checked) => setValue('including_tax', Boolean(checked))}
+                 />
+                 <Label htmlFor="including_tax" className="text-sm font-normal">
+                   The amounts entered above include tax
+                 </Label>
+               </div>
 
               {/* Fee Calculator Display */}
               <div className="bg-blue-50 p-4 rounded-lg">
