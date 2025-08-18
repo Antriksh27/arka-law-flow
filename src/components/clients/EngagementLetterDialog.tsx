@@ -122,44 +122,48 @@ export const EngagementLetterDialog: React.FC<EngagementLetterDialogProps> = ({
   });
 
   const calculateTotals = (data: EngagementLetterData) => {
+    const professionalFee = data.professional_fee || 0;
+    const retainerAmount = data.retainer_amount || 0;
+    const expenses = data.expenses || 0;
+    
     if (data.including_tax) {
       // When amounts include tax, calculate the base amount and tax separately
       const taxMultiplier = 1 + (data.tax_rate / 100);
       
-      const professionalBase = Math.round(data.professional_fee / taxMultiplier);
-      const retainerBase = Math.round(data.retainer_amount / taxMultiplier);
-      const expensesBase = Math.round(data.expenses / taxMultiplier);
+      const professionalBase = professionalFee > 0 ? Math.round(professionalFee / taxMultiplier) : 0;
+      const retainerBase = retainerAmount > 0 ? Math.round(retainerAmount / taxMultiplier) : 0;
+      const expensesBase = expenses > 0 ? Math.round(expenses / taxMultiplier) : 0;
       
-      const professionalTax = data.professional_fee - professionalBase;
-      const retainerTax = data.retainer_amount - retainerBase;
-      const expensesTax = data.expenses - expensesBase;
+      const professionalTax = professionalFee > 0 ? professionalFee - professionalBase : 0;
+      const retainerTax = retainerAmount > 0 ? retainerAmount - retainerBase : 0;
+      const expensesTax = expenses > 0 ? expenses - expensesBase : 0;
       
       const subtotal = professionalBase + retainerBase + expensesBase;
       const totalTax = professionalTax + retainerTax + expensesTax;
-      const grandTotal = data.professional_fee + data.retainer_amount + data.expenses;
+      const grandTotal = professionalFee + retainerAmount + expenses;
 
       return {
         professionalTax,
         retainerTax,
         expensesTax,
-        professionalTotal: data.professional_fee,
-        retainerTotal: data.retainer_amount,
-        expensesTotal: data.expenses,
+        professionalTotal: professionalFee,
+        retainerTotal: retainerAmount,
+        expensesTotal: expenses,
         subtotal,
         totalTax,
         grandTotal
       };
     } else {
       // When amounts exclude tax, add tax on top
-      const professionalTax = Math.round((data.professional_fee * data.tax_rate) / 100);
-      const retainerTax = Math.round((data.retainer_amount * data.tax_rate) / 100);
-      const expensesTax = Math.round((data.expenses * data.tax_rate) / 100);
+      const professionalTax = professionalFee > 0 ? Math.round((professionalFee * data.tax_rate) / 100) : 0;
+      const retainerTax = retainerAmount > 0 ? Math.round((retainerAmount * data.tax_rate) / 100) : 0;
+      const expensesTax = expenses > 0 ? Math.round((expenses * data.tax_rate) / 100) : 0;
       
-      const professionalTotal = data.professional_fee + professionalTax;
-      const retainerTotal = data.retainer_amount + retainerTax;
-      const expensesTotal = data.expenses + expensesTax;
+      const professionalTotal = professionalFee + professionalTax;
+      const retainerTotal = retainerAmount + retainerTax;
+      const expensesTotal = expenses + expensesTax;
       
-      const subtotal = data.professional_fee + data.retainer_amount + data.expenses;
+      const subtotal = professionalFee + retainerAmount + expenses;
       const totalTax = professionalTax + retainerTax + expensesTax;
       const grandTotal = subtotal + totalTax;
 
@@ -275,32 +279,41 @@ export const EngagementLetterDialog: React.FC<EngagementLetterDialogProps> = ({
         <th>Total (₹)</th>
       </tr>
     </thead>
-    <tbody>
-      <tr>
-        <td>Professional Fee</td>
-        <td>${data.professional_fee.toLocaleString()}</td>
-        <td>${totals.professionalTax.toLocaleString()}</td>
-        <td>${totals.professionalTotal.toLocaleString()}</td>
-      </tr>
-      <tr>
-        <td>Retainer Amount</td>
-        <td>${data.retainer_amount.toLocaleString()}</td>
-        <td>${totals.retainerTax.toLocaleString()}</td>
-        <td>${totals.retainerTotal.toLocaleString()}</td>
-      </tr>
-      <tr>
-        <td>Out-of-Pocket Expenses</td>
-        <td>${data.expenses.toLocaleString()}</td>
-        <td>${totals.expensesTax.toLocaleString()}</td>
-        <td>${totals.expensesTotal.toLocaleString()}</td>
-      </tr>
-      <tr>
-        <th style="text-align:right">Grand Total</th>
-        <th>${totals.subtotal.toLocaleString()}</th>
-        <th>${totals.totalTax.toLocaleString()}</th>
-        <th>${totals.grandTotal.toLocaleString()}</th>
-      </tr>
-    </tbody>
+     <tbody>
+       ${data.professional_fee > 0 ? `<tr>
+         <td>Professional Fee</td>
+         <td>${data.professional_fee.toLocaleString()}</td>
+         <td>${totals.professionalTax.toLocaleString()}</td>
+         <td>${totals.professionalTotal.toLocaleString()}</td>
+       </tr>` : `<tr>
+         <td>Professional Fee</td>
+         <td colspan="3" style="text-align:center; font-style:italic; color:var(--muted);">Not Applicable</td>
+       </tr>`}
+       ${data.retainer_amount > 0 ? `<tr>
+         <td>Retainer Amount</td>
+         <td>${data.retainer_amount.toLocaleString()}</td>
+         <td>${totals.retainerTax.toLocaleString()}</td>
+         <td>${totals.retainerTotal.toLocaleString()}</td>
+       </tr>` : `<tr>
+         <td>Retainer Amount</td>
+         <td colspan="3" style="text-align:center; font-style:italic; color:var(--muted);">Not Applicable</td>
+       </tr>`}
+       ${data.expenses > 0 ? `<tr>
+         <td>Out-of-Pocket Expenses</td>
+         <td>${data.expenses.toLocaleString()}</td>
+         <td>${totals.expensesTax.toLocaleString()}</td>
+         <td>${totals.expensesTotal.toLocaleString()}</td>
+       </tr>` : `<tr>
+         <td>Out-of-Pocket Expenses</td>
+         <td colspan="3" style="text-align:center; font-style:italic; color:var(--muted);">Not Applicable</td>
+       </tr>`}
+       ${totals.grandTotal > 0 ? `<tr>
+         <th style="text-align:right">Grand Total</th>
+         <th>${totals.subtotal.toLocaleString()}</th>
+         <th>${totals.totalTax.toLocaleString()}</th>
+         <th>${totals.grandTotal.toLocaleString()}</th>
+       </tr>` : ''}
+     </tbody>
   </table>
 
   <div class="accent">
@@ -504,12 +517,12 @@ export const EngagementLetterDialog: React.FC<EngagementLetterDialogProps> = ({
               <h3 className="text-lg font-semibold text-primary">Fee Structure</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                  <div className="space-y-2">
-                   <Label htmlFor="professional_fee">Professional Fee (₹) *</Label>
+                   <Label htmlFor="professional_fee">Professional Fee (₹)</Label>
                    <Input
                      id="professional_fee"
                      type="number"
-                     {...register('professional_fee', { required: 'Professional fee is required', min: 0, valueAsNumber: true })}
-                     placeholder="100000"
+                     {...register('professional_fee', { min: 0, valueAsNumber: true })}
+                     placeholder="100000 (leave empty for N/A)"
                      style={{ 
                        MozAppearance: 'textfield',
                        WebkitAppearance: 'none',
@@ -517,16 +530,15 @@ export const EngagementLetterDialog: React.FC<EngagementLetterDialogProps> = ({
                      }}
                      className="[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                    />
-                   {errors.professional_fee && <p className="text-sm text-red-600">{errors.professional_fee.message}</p>}
                  </div>
 
                  <div className="space-y-2">
-                   <Label htmlFor="retainer_amount">Retainer Amount (₹) *</Label>
+                   <Label htmlFor="retainer_amount">Retainer Amount (₹)</Label>
                    <Input
                      id="retainer_amount"
                      type="number"
-                     {...register('retainer_amount', { required: 'Retainer amount is required', min: 0, valueAsNumber: true })}
-                     placeholder="50000"
+                     {...register('retainer_amount', { min: 0, valueAsNumber: true })}
+                     placeholder="50000 (leave empty for N/A)"
                      style={{ 
                        MozAppearance: 'textfield',
                        WebkitAppearance: 'none',
@@ -534,7 +546,6 @@ export const EngagementLetterDialog: React.FC<EngagementLetterDialogProps> = ({
                      }}
                      className="[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                    />
-                   {errors.retainer_amount && <p className="text-sm text-red-600">{errors.retainer_amount.message}</p>}
                  </div>
 
                  <div className="space-y-2">
