@@ -1278,6 +1278,84 @@ export type Database = {
           },
         ]
       }
+      engagement_letters: {
+        Row: {
+          case_id: string | null
+          case_number: string | null
+          client_id: string
+          court_name: string | null
+          created_at: string
+          created_by: string
+          expenses: number | null
+          firm_id: string
+          generated_at: string | null
+          id: string
+          including_tax: boolean
+          issue_date: string
+          matter_title: string
+          payment_method: string
+          payment_schedule: string
+          primary_lawyer_name: string
+          professional_fee: number | null
+          retainer_amount: number | null
+          scope_description: string
+          signed_at: string | null
+          status: string
+          tax_rate: number
+          updated_at: string
+        }
+        Insert: {
+          case_id?: string | null
+          case_number?: string | null
+          client_id: string
+          court_name?: string | null
+          created_at?: string
+          created_by: string
+          expenses?: number | null
+          firm_id: string
+          generated_at?: string | null
+          id?: string
+          including_tax?: boolean
+          issue_date: string
+          matter_title: string
+          payment_method: string
+          payment_schedule: string
+          primary_lawyer_name: string
+          professional_fee?: number | null
+          retainer_amount?: number | null
+          scope_description: string
+          signed_at?: string | null
+          status?: string
+          tax_rate?: number
+          updated_at?: string
+        }
+        Update: {
+          case_id?: string | null
+          case_number?: string | null
+          client_id?: string
+          court_name?: string | null
+          created_at?: string
+          created_by?: string
+          expenses?: number | null
+          firm_id?: string
+          generated_at?: string | null
+          id?: string
+          including_tax?: boolean
+          issue_date?: string
+          matter_title?: string
+          payment_method?: string
+          payment_schedule?: string
+          primary_lawyer_name?: string
+          professional_fee?: number | null
+          retainer_amount?: number | null
+          scope_description?: string
+          signed_at?: string | null
+          status?: string
+          tax_rate?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       firm_holidays: {
         Row: {
           created_at: string

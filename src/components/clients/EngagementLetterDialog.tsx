@@ -417,10 +417,77 @@ export const EngagementLetterDialog: React.FC<EngagementLetterDialogProps> = ({
     }
   });
 
-  const onSubmit = (data: EngagementLetterData) => {
-    const letter = generateLetter(data);
-    setGeneratedLetter(letter);
-    setStep('print');
+  const saveEngagementLetter = useMutation({
+    mutationFn: async (data: EngagementLetterData) => {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error('Not authenticated');
+
+      const { data: teamMember } = await supabase
+        .from('team_members')
+        .select('firm_id')
+        .eq('user_id', user.user.id)
+        .single();
+
+      if (!teamMember) throw new Error('No firm found');
+
+      const engagementLetterData = {
+        client_id: clientId,
+        firm_id: teamMember.firm_id,
+        case_id: null, // Can be linked to a case later if needed
+        matter_title: data.matter_title,
+        case_number: data.case_number || null,
+        primary_lawyer_name: data.primary_lawyer_name,
+        court_name: data.court_name || null,
+        professional_fee: data.professional_fee || 0,
+        retainer_amount: data.retainer_amount || 0,
+        expenses: data.expenses || 0,
+        tax_rate: data.tax_rate,
+        including_tax: data.including_tax,
+        payment_schedule: data.payment_schedule,
+        payment_method: data.payment_method,
+        issue_date: data.issue_date,
+        scope_description: data.scope_description,
+        status: 'generated',
+        generated_at: new Date().toISOString(),
+        created_by: user.user.id
+      };
+
+      const { data: savedLetter, error } = await supabase
+        .from('engagement_letters')
+        .insert(engagementLetterData)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return savedLetter;
+    },
+    onSuccess: (savedLetter) => {
+      toast({
+        title: "Engagement letter saved",
+        description: "The engagement letter details have been saved successfully."
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Save failed",
+        description: error.message || "Failed to save engagement letter details.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const onSubmit = async (data: EngagementLetterData) => {
+    try {
+      // Save to database first
+      await saveEngagementLetter.mutateAsync(data);
+      
+      // Then generate the letter
+      const letter = generateLetter(data);
+      setGeneratedLetter(letter);
+      setStep('print');
+    } catch (error) {
+      console.error('Failed to save engagement letter:', error);
+    }
   };
 
   const handlePrint = () => {
@@ -686,8 +753,19 @@ export const EngagementLetterDialog: React.FC<EngagementLetterDialogProps> = ({
               <Button type="button" variant="outline" onClick={handleClose}>
                 Cancel
               </Button>
-              <Button type="submit">
-                Generate Letter
+              <Button 
+                type="submit" 
+                disabled={saveEngagementLetter.isPending}
+                className="min-w-[120px]"
+              >
+                {saveEngagementLetter.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Generate Letter'
+                )}
               </Button>
             </DialogFooter>
           </form>
