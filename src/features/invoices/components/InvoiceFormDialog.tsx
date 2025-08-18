@@ -79,7 +79,7 @@ export const InvoiceFormDialog: React.FC<InvoiceFormDialogProps> = ({
     queryFn: async () => {
       const { data, error } = await supabase
         .from('clients')
-        .select('id, full_name')
+        .select('id, full_name, address, organization')
         .eq('firm_id', firmId)
         .order('full_name');
       if (error) throw error;
@@ -103,6 +103,22 @@ export const InvoiceFormDialog: React.FC<InvoiceFormDialogProps> = ({
       }
       
       const { data, error } = await query.order('case_title');
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!firmId && open,
+  });
+
+  // Fetch team members for owner selection
+  const { data: teamMembers } = useQuery({
+    queryKey: ['team-members-for-invoice', firmId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .neq('role', 'client')
+        .order('full_name');
+      
       if (error) throw error;
       return data;
     },
@@ -295,9 +311,104 @@ export const InvoiceFormDialog: React.FC<InvoiceFormDialogProps> = ({
     }));
   };
 
-  // Cases are already filtered by the query based on selected client
+  // Calculate totals
+  const flatFeeSubtotal = flatFees.reduce((sum, fee) => {
+    const total = fee.unit_rate - fee.discount_amount - (fee.unit_rate * fee.discount_percentage / 100);
+    return sum + total;
+  }, 0);
 
-  const totalAmount = formData.items.reduce((sum, item) => sum + (item.quantity * item.rate), 0);
+  const expenseSubtotal = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+
+  const adjustmentTotal = adjustments.reduce((sum, adj) => {
+    return adj.adjustment_type === 'addition' 
+      ? sum + adj.adjustment_value 
+      : sum - adj.adjustment_value;
+  }, 0);
+
+  const itemsSubtotal = formData.items.reduce((sum, item) => sum + (item.quantity * item.rate), 0);
+  const subtotal = flatFeeSubtotal + expenseSubtotal + adjustmentTotal + itemsSubtotal;
+  const taxAmount = (subtotal * (formData.tax_rate || 0)) / 100;
+  const totalAmount = subtotal + taxAmount;
+
+  // Helper functions for managing sections
+  const addFlatFee = () => {
+    setFlatFees([...flatFees, {
+      user_id: '',
+      date: new Date().toISOString().split('T')[0],
+      fixed_fee_type: '',
+      city: '',
+      unit_rate: 0,
+      discount_amount: 0,
+      discount_percentage: 0,
+    }]);
+  };
+
+  const removeFlatFee = (index: number) => {
+    setFlatFees(flatFees.filter((_, i) => i !== index));
+  };
+
+  const updateFlatFee = (index: number, field: keyof FlatFeeItem, value: any) => {
+    const updated = [...flatFees];
+    updated[index] = { ...updated[index], [field]: value };
+    setFlatFees(updated);
+  };
+
+  const addExpense = () => {
+    setExpenses([...expenses, {
+      owner_id: '',
+      date: new Date().toISOString().split('T')[0],
+      expense_type: '',
+      amount: 0,
+    }]);
+  };
+
+  const removeExpense = (index: number) => {
+    setExpenses(expenses.filter((_, i) => i !== index));
+  };
+
+  const updateExpense = (index: number, field: keyof ExpenseItem, value: any) => {
+    const updated = [...expenses];
+    updated[index] = { ...updated[index], [field]: value };
+    setExpenses(updated);
+  };
+
+  const addAdjustment = () => {
+    setAdjustments([...adjustments, {
+      adjustment_type: 'addition',
+      adjustment_value: 0,
+      description: '',
+    }]);
+  };
+
+  const removeAdjustment = (index: number) => {
+    setAdjustments(adjustments.filter((_, i) => i !== index));
+  };
+
+  const updateAdjustment = (index: number, field: keyof AdjustmentItem, value: any) => {
+    const updated = [...adjustments];
+    updated[index] = { ...updated[index], [field]: value };
+    setAdjustments(updated);
+  };
+
+  // Dropdown options
+  const fixedFeeTypes = [
+    { value: 'consultation', label: 'Consultation' },
+    { value: 'court_appearance', label: 'Court Appearance' },
+    { value: 'document_review', label: 'Document Review' },
+    { value: 'legal_research', label: 'Legal Research' },
+    { value: 'drafting', label: 'Drafting' },
+    { value: 'other', label: 'Other' }
+  ];
+
+  const expenseTypes = [
+    { value: 'court_fees', label: 'Court Fees' },
+    { value: 'travel', label: 'Travel' },
+    { value: 'documentation', label: 'Documentation' },
+    { value: 'expert_witness', label: 'Expert Witness' },
+    { value: 'photocopying', label: 'Photocopying' },
+    { value: 'postage', label: 'Postage' },
+    { value: 'other', label: 'Other' }
+  ];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -308,225 +419,611 @@ export const InvoiceFormDialog: React.FC<InvoiceFormDialogProps> = ({
           </DialogTitle>
         </DialogHeader>
 
-        {/* Invoice Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Invoice Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="issue_date">Date *</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start text-left font-normal">
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {format(formData.issue_date, "PPP")}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={formData.issue_date}
-                      onSelect={(date) => date && setFormData(prev => ({ ...prev, issue_date: date }))}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          createUpdateMutation.mutate(formData);
+        }} className="space-y-6">
+          {/* Basic Invoice Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Invoice Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="issue_date">Date *</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start text-left font-normal">
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {format(formData.issue_date, "PPP")}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={formData.issue_date}
+                        onSelect={(date) => date && setFormData(prev => ({ ...prev, issue_date: date }))}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                
+                <div>
+                  <Label htmlFor="client_id">Client Name *</Label>
+                  <Popover open={clientSearchOpen} onOpenChange={setClientSearchOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={clientSearchOpen}
+                        className="w-full justify-between"
+                      >
+                        {formData.client_id
+                          ? clients?.find((client) => client.id === formData.client_id)?.full_name
+                          : "Select client"}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0 bg-background border z-50">
+                      <Command>
+                        <CommandInput placeholder="Search clients..." />
+                        <CommandList>
+                          <CommandEmpty>No client found.</CommandEmpty>
+                          <CommandGroup>
+                            {clients?.map((client) => (
+                              <CommandItem
+                                key={client.id}
+                                value={client.full_name}
+                                onSelect={() => {
+                                  setFormData(prev => ({ 
+                                    ...prev, 
+                                    client_id: client.id,
+                                    case_id: ''
+                                  }));
+                                  setClientSearchOpen(false);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    formData.client_id === client.id ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                {client.full_name}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div>
+                  <Label htmlFor="kind_attention">Kind Attention</Label>
+                  <Input
+                    id="kind_attention"
+                    value={formData.kind_attention || ''}
+                    onChange={(e) => setFormData({ ...formData, kind_attention: e.target.value })}
+                    placeholder="Kind attention to..."
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="client_address">Client Address</Label>
+                  <Textarea
+                    id="client_address"
+                    value={formData.client_address || ''}
+                    onChange={(e) => setFormData({ ...formData, client_address: e.target.value })}
+                    placeholder="Client address"
+                    rows={2}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="secondary_client_name">Secondary Client Name</Label>
+                  <Input
+                    id="secondary_client_name"
+                    value={formData.secondary_client_name || ''}
+                    onChange={(e) => setFormData({ ...formData, secondary_client_name: e.target.value })}
+                    placeholder="Secondary client name"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="secondary_client_address">Secondary Client Address</Label>
+                  <Textarea
+                    id="secondary_client_address"
+                    value={formData.secondary_client_address || ''}
+                    onChange={(e) => setFormData({ ...formData, secondary_client_address: e.target.value })}
+                    placeholder="Secondary client address"
+                    rows={2}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="gstin">GSTIN</Label>
+                  <Input
+                    id="gstin"
+                    value={formData.gstin || ''}
+                    onChange={(e) => setFormData({ ...formData, gstin: e.target.value })}
+                    placeholder="GST Identification Number"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="state_code">State Code</Label>
+                  <Select 
+                    value={formData.state_code || ''} 
+                    onValueChange={(value) => setFormData({ ...formData, state_code: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select state code" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border z-50">
+                      <SelectItem value="24">24-GUJARAT</SelectItem>
+                      <SelectItem value="27">27-MAHARASHTRA</SelectItem>
+                      <SelectItem value="07">07-DELHI</SelectItem>
+                      <SelectItem value="09">09-UTTAR PRADESH</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="case_id">Case</Label>
+                  <Select 
+                    value={formData.case_id || ''} 
+                    onValueChange={(value) => setFormData({ ...formData, case_id: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select case (optional)" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border z-50">
+                      {cases?.map((case_item) => (
+                        <SelectItem key={case_item.id} value={case_item.id}>
+                          {case_item.case_title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="col-span-full">
+                  <Label htmlFor="invoice_subject">Invoice Subject</Label>
+                  <Input
+                    id="invoice_subject"
+                    value={formData.invoice_subject || ''}
+                    onChange={(e) => setFormData({ ...formData, invoice_subject: e.target.value })}
+                    placeholder="Invoice subject"
+                  />
+                </div>
+
+                <div className="col-span-full">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={formData.description || ''}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="Invoice description"
+                    rows={3}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="signature_name">Signature Name</Label>
+                  <Input
+                    id="signature_name"
+                    value={formData.signature_name || ''}
+                    onChange={(e) => setFormData({ ...formData, signature_name: e.target.value })}
+                    placeholder="Authorized signatory name"
+                  />
+                </div>
               </div>
-              
-              <div>
-                <Label htmlFor="client_id">Client Name *</Label>
-                <Popover open={clientSearchOpen} onOpenChange={setClientSearchOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={clientSearchOpen}
-                      className="w-full justify-between"
-                    >
-                      {formData.client_id
-                        ? clients?.find((client) => client.id === formData.client_id)?.full_name
-                        : "Select client"}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-full p-0 bg-background border z-50">
-                    <Command>
-                      <CommandInput placeholder="Search clients..." />
-                      <CommandList>
-                        <CommandEmpty>No client found.</CommandEmpty>
-                        <CommandGroup>
-                          {clients?.map((client) => (
-                            <CommandItem
-                              key={client.id}
-                              value={client.full_name}
-                              onSelect={() => {
-                                setFormData(prev => ({ 
-                                  ...prev, 
-                                  client_id: client.id,
-                                  case_id: ''
-                                }));
-                                setClientSearchOpen(false);
-                              }}
+            </CardContent>
+          </Card>
+
+          {/* Tabbed Sections */}
+          <Tabs defaultValue="flat-fees" className="w-full">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="flat-fees">Flat Fees</TabsTrigger>
+              <TabsTrigger value="expenses">Expenses</TabsTrigger>
+              <TabsTrigger value="adjustments">Adjustments</TabsTrigger>
+              <TabsTrigger value="summary">Summary</TabsTrigger>
+            </TabsList>
+
+            {/* Flat Fees Section */}
+            <TabsContent value="flat-fees">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle>Flat Fee Section</CardTitle>
+                  <Button type="button" onClick={addFlatFee} size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Flat Fee
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {flatFees.map((fee, index) => (
+                      <div key={index} className="border rounded-lg p-4 space-y-4">
+                        <div className="flex justify-between items-start">
+                          <h4 className="font-medium">Flat Fee {index + 1}</h4>
+                          <Button 
+                            type="button" 
+                            variant="destructive" 
+                            size="sm"
+                            onClick={() => removeFlatFee(index)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          <div>
+                            <Label>User (Owner)</Label>
+                            <Select 
+                              value={fee.user_id || ''} 
+                              onValueChange={(value) => updateFlatFee(index, 'user_id', value)}
                             >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  formData.client_id === client.id ? "opacity-100" : "opacity-0"
-                                )}
-                              />
-                              {client.full_name}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </div>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select owner" />
+                              </SelectTrigger>
+                              <SelectContent className="bg-background border z-50">
+                                {teamMembers?.map((member) => (
+                                  <SelectItem key={member.id} value={member.id}>
+                                    {member.full_name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
 
-              <div>
-                <Label htmlFor="kind_attention">Kind Attention</Label>
-                <Input
-                  id="kind_attention"
-                  value={formData.kind_attention || ''}
-                  onChange={(e) => setFormData({ ...formData, kind_attention: e.target.value })}
-                  placeholder="Kind attention to..."
-                />
-              </div>
+                          <div>
+                            <Label>Date</Label>
+                            <Input
+                              type="date"
+                              value={fee.date || ''}
+                              onChange={(e) => updateFlatFee(index, 'date', e.target.value)}
+                            />
+                          </div>
 
-              <div>
-                <Label htmlFor="client_address">Client Address</Label>
-                <Textarea
-                  id="client_address"
-                  value={formData.client_address || ''}
-                  onChange={(e) => setFormData({ ...formData, client_address: e.target.value })}
-                  placeholder="Client address"
-                  rows={2}
-                />
-              </div>
+                          <div>
+                            <Label>Fixed Fee Type</Label>
+                            <Select 
+                              value={fee.fixed_fee_type || ''} 
+                              onValueChange={(value) => updateFlatFee(index, 'fixed_fee_type', value)}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select type" />
+                              </SelectTrigger>
+                              <SelectContent className="bg-background border z-50">
+                                {fixedFeeTypes.map((type) => (
+                                  <SelectItem key={type.value} value={type.value}>
+                                    {type.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
 
-              <div>
-                <Label htmlFor="gstin">GSTIN</Label>
-                <Input
-                  id="gstin"
-                  value={formData.gstin || ''}
-                  onChange={(e) => setFormData({ ...formData, gstin: e.target.value })}
-                  placeholder="GST Identification Number"
-                />
-              </div>
+                          <div>
+                            <Label>City</Label>
+                            <Input
+                              value={fee.city || ''}
+                              onChange={(e) => updateFlatFee(index, 'city', e.target.value)}
+                              placeholder="City"
+                            />
+                          </div>
 
-              <div>
-                <Label htmlFor="state_code">State Code</Label>
-                <Select 
-                  value={formData.state_code || ''} 
-                  onValueChange={(value) => setFormData({ ...formData, state_code: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select state code" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background border z-50">
-                    <SelectItem value="24">24-GUJARAT</SelectItem>
-                    <SelectItem value="27">27-MAHARASHTRA</SelectItem>
-                    <SelectItem value="07">07-DELHI</SelectItem>
-                    <SelectItem value="09">09-UTTAR PRADESH</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                          <div>
+                            <Label>Unit Rate</Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={fee.unit_rate}
+                              onChange={(e) => updateFlatFee(index, 'unit_rate', parseFloat(e.target.value) || 0)}
+                              placeholder="0.00"
+                            />
+                          </div>
 
-              <div>
-                <Label htmlFor="case_id">Case</Label>
-                <Select 
-                  value={formData.case_id || ''} 
-                  onValueChange={(value) => setFormData({ ...formData, case_id: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select case (optional)" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background border z-50">
-                    {cases?.map((case_item) => (
-                      <SelectItem key={case_item.id} value={case_item.id}>
-                        {case_item.case_title}
-                      </SelectItem>
+                          <div>
+                            <Label>Discount (Amount)</Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={fee.discount_amount}
+                              onChange={(e) => updateFlatFee(index, 'discount_amount', parseFloat(e.target.value) || 0)}
+                              placeholder="0.00"
+                            />
+                          </div>
+
+                          <div>
+                            <Label>Discount (%)</Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={fee.discount_percentage}
+                              onChange={(e) => updateFlatFee(index, 'discount_percentage', parseFloat(e.target.value) || 0)}
+                              placeholder="0.00"
+                            />
+                          </div>
+
+                          <div>
+                            <Label>Total</Label>
+                            <Input
+                              value={(fee.unit_rate - fee.discount_amount - (fee.unit_rate * fee.discount_percentage / 100)).toFixed(2)}
+                              disabled
+                            />
+                          </div>
+                        </div>
+                      </div>
                     ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-              <div className="col-span-full">
-                <Label htmlFor="invoice_subject">Invoice Subject</Label>
-                <Input
-                  id="invoice_subject"
-                  value={formData.invoice_subject || ''}
-                  onChange={(e) => setFormData({ ...formData, invoice_subject: e.target.value })}
-                  placeholder="Invoice subject"
-                />
-              </div>
+            {/* Expenses Section */}
+            <TabsContent value="expenses">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle>Expenses Section</CardTitle>
+                  <Button type="button" onClick={addExpense} size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Expense
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {expenses.map((expense, index) => (
+                      <div key={index} className="border rounded-lg p-4 space-y-4">
+                        <div className="flex justify-between items-start">
+                          <h4 className="font-medium">Expense {index + 1}</h4>
+                          <Button 
+                            type="button" 
+                            variant="destructive" 
+                            size="sm"
+                            onClick={() => removeExpense(index)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                          <div>
+                            <Label>Owner</Label>
+                            <Select 
+                              value={expense.owner_id || ''} 
+                              onValueChange={(value) => updateExpense(index, 'owner_id', value)}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select owner" />
+                              </SelectTrigger>
+                              <SelectContent className="bg-background border z-50">
+                                 {teamMembers?.map((member) => (
+                                   <SelectItem key={member.id} value={member.id}>
+                                     {member.full_name}
+                                   </SelectItem>
+                                 ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
 
-              <div className="col-span-full">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description || ''}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Invoice description"
-                  rows={3}
-                />
-              </div>
+                          <div>
+                            <Label>Date</Label>
+                            <Input
+                              type="date"
+                              value={expense.date || ''}
+                              onChange={(e) => updateExpense(index, 'date', e.target.value)}
+                            />
+                          </div>
 
-              <div>
-                <Label htmlFor="signature_name">Signature Name</Label>
-                <Input
-                  id="signature_name"
-                  value={formData.signature_name || ''}
-                  onChange={(e) => setFormData({ ...formData, signature_name: e.target.value })}
-                  placeholder="Authorized signatory name"
-                />
-              </div>
+                          <div>
+                            <Label>Expense Type</Label>
+                            <Select 
+                              value={expense.expense_type || ''} 
+                              onValueChange={(value) => updateExpense(index, 'expense_type', value)}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select type" />
+                              </SelectTrigger>
+                              <SelectContent className="bg-background border z-50">
+                                {expenseTypes.map((type) => (
+                                  <SelectItem key={type.value} value={type.value}>
+                                    {type.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
 
-              <div>
-                <Label htmlFor="tax_rate">Tax Rate (%)</Label>
-                <Input
-                  id="tax_rate"
-                  type="number"
-                  step="0.01"
-                  value={formData.tax_rate || 0}
-                  onChange={(e) => setFormData({ ...formData, tax_rate: parseFloat(e.target.value) || 0 })}
-                  placeholder="18.00"
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+                          <div>
+                            <Label>Amount</Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={expense.amount}
+                              onChange={(e) => updateExpense(index, 'amount', parseFloat(e.target.value) || 0)}
+                              placeholder="0.00"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-        {/* Notes */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Notes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Textarea
-              value={formData.notes || ''}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              placeholder="Additional notes for the invoice"
-              rows={4}
-            />
-          </CardContent>
-        </Card>
+            {/* Adjustments Section */}
+            <TabsContent value="adjustments">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle>Adjustments Section</CardTitle>
+                  <Button type="button" onClick={addAdjustment} size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Adjustment
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {adjustments.map((adjustment, index) => (
+                      <div key={index} className="border rounded-lg p-4 space-y-4">
+                        <div className="flex justify-between items-start">
+                          <h4 className="font-medium">Adjustment {index + 1}</h4>
+                          <Button 
+                            type="button" 
+                            variant="destructive" 
+                            size="sm"
+                            onClick={() => removeAdjustment(index)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                            <Label>Adjustment Type</Label>
+                            <Select 
+                              value={adjustment.adjustment_type} 
+                              onValueChange={(value: 'addition' | 'deduction') => updateAdjustment(index, 'adjustment_type', value)}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select type" />
+                              </SelectTrigger>
+                              <SelectContent className="bg-background border z-50">
+                                <SelectItem value="addition">Addition</SelectItem>
+                                <SelectItem value="deduction">Deduction</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
 
-        <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            onClick={() => createUpdateMutation.mutate(formData)}
-            disabled={!formData.client_id || formData.items.some(item => !item.description) || createUpdateMutation.isPending}
-          >
-            {createUpdateMutation.isPending ? 'Saving...' : (invoiceId ? 'Update Invoice' : 'Create Invoice')}
-          </Button>
-        </DialogFooter>
+                          <div>
+                            <Label>Adjustment Value</Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={adjustment.adjustment_value}
+                              onChange={(e) => updateAdjustment(index, 'adjustment_value', parseFloat(e.target.value) || 0)}
+                              placeholder="0.00"
+                            />
+                          </div>
+
+                          <div>
+                            <Label>Description</Label>
+                            <Input
+                              value={adjustment.description || ''}
+                              onChange={(e) => updateAdjustment(index, 'description', e.target.value)}
+                              placeholder="Adjustment description"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Summary Section */}
+            <TabsContent value="summary">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Invoice Summary & Totals</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <Label htmlFor="notes">Notes</Label>
+                      <Textarea
+                        id="notes"
+                        value={formData.notes || ''}
+                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                        placeholder="Additional notes for the invoice"
+                        rows={4}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="tax_rate">Tax Rate (%)</Label>
+                      <Input
+                        id="tax_rate"
+                        type="number"
+                        step="0.01"
+                        value={formData.tax_rate || 0}
+                        onChange={(e) => setFormData({ ...formData, tax_rate: parseFloat(e.target.value) || 0 })}
+                        placeholder="18.00"
+                      />
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* Totals Section */}
+                  <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                    <h3 className="font-semibold text-lg mb-4">Totals (Auto-calculated)</h3>
+                    
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="flex justify-between">
+                        <span>Items Subtotal:</span>
+                        <span className="font-medium">₹{itemsSubtotal.toFixed(2)}</span>
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <span>Flat Fee Subtotal:</span>
+                        <span className="font-medium">₹{flatFeeSubtotal.toFixed(2)}</span>
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <span>Expense Subtotal:</span>
+                        <span className="font-medium">₹{expenseSubtotal.toFixed(2)}</span>
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <span>Adjustment:</span>
+                        <span className="font-medium">
+                          {adjustmentTotal >= 0 ? '+' : ''}₹{adjustmentTotal.toFixed(2)}
+                        </span>
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <span>Sub-total:</span>
+                        <span className="font-medium">₹{subtotal.toFixed(2)}</span>
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <span>Tax ({formData.tax_rate || 0}%):</span>
+                        <span className="font-medium">₹{taxAmount.toFixed(2)}</span>
+                      </div>
+                      
+                      <Separator className="col-span-2 my-2" />
+                      
+                      <div className="flex justify-between col-span-2 text-lg font-bold">
+                        <span>Total:</span>
+                        <span>₹{totalAmount.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={createUpdateMutation.isPending}>
+              {createUpdateMutation.isPending 
+                ? 'Saving...' 
+                : invoiceId 
+                  ? 'Update Invoice' 
+                  : 'Create Invoice'
+              }
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
