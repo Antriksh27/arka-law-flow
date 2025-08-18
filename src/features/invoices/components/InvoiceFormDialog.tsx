@@ -14,6 +14,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -21,7 +24,7 @@ import { format } from 'date-fns';
 import { Calendar as CalendarIcon, Plus, Trash2, Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import type { InvoiceFormData } from '../types';
+import type { InvoiceFormData, FlatFeeItem, ExpenseItem, AdjustmentItem } from '../types';
 
 interface InvoiceItem {
   description: string;
@@ -46,23 +49,29 @@ export const InvoiceFormDialog: React.FC<InvoiceFormDialogProps> = ({
 
   const [clientSearchOpen, setClientSearchOpen] = useState(false);
   
-  const [formData, setFormData] = useState<{
-    title: string;
-    client_id: string;
-    case_id: string;
-    issue_date: Date;
-    due_date: Date;
-    notes: string;
-    items: InvoiceItem[];
-  }>({
+  const [formData, setFormData] = useState<any>({
     title: '',
     client_id: '',
     case_id: '',
     issue_date: new Date(),
-    due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+    due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
     notes: '',
     items: [{ description: '', quantity: 1, rate: 0 }],
+    kind_attention: '',
+    client_address: '',
+    secondary_client_name: '',
+    secondary_client_address: '',
+    gstin: '',
+    state_code: '',
+    invoice_subject: '',
+    description: '',
+    signature_name: '',
+    tax_rate: 18,
   });
+
+  const [flatFees, setFlatFees] = useState<FlatFeeItem[]>([]);
+  const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
+  const [adjustments, setAdjustments] = useState<AdjustmentItem[]>([]);
 
   // Fetch clients for dropdown
   const { data: clients } = useQuery({
@@ -299,233 +308,212 @@ export const InvoiceFormDialog: React.FC<InvoiceFormDialogProps> = ({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="grid gap-6 py-4">
-          {/* Basic Info */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="title">Invoice Title</Label>
-              <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                placeholder="Legal Services Invoice"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="client">Client *</Label>
-              <Popover open={clientSearchOpen} onOpenChange={setClientSearchOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={clientSearchOpen}
-                    className="w-full justify-between"
-                  >
-                    {formData.client_id
-                      ? clients?.find((client) => client.id === formData.client_id)?.full_name
-                      : "Select a client..."}
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-full p-0 bg-white z-[60]">
-                  <Command>
-                    <CommandInput placeholder="Search clients..." />
-                    <CommandList>
-                      <CommandEmpty>No client found.</CommandEmpty>
-                      <CommandGroup>
-                        {clients?.map((client) => (
-                          <CommandItem
-                            key={client.id}
-                            value={client.full_name}
-                            onSelect={() => {
-                              const value = client.id;
-                              setFormData(prev => ({ 
-                                ...prev, 
-                                client_id: value,
-                                case_id: '' // Reset case when client changes
-                              }));
-                              // Auto-populate case if client has only one case
-                              if (cases) {
-                                const clientCases = cases.filter(case_ => case_.client_id === value);
-                                if (clientCases.length === 1) {
-                                  setTimeout(() => {
-                                    setFormData(prev => ({ 
-                                      ...prev, 
-                                      case_id: clientCases[0].id 
-                                    }));
-                                  }, 100);
-                                }
-                              }
-                              setClientSearchOpen(false);
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                formData.client_id === client.id ? "opacity-100" : "opacity-0"
-                              )}
-                            />
-                            {client.full_name}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="case">Case (Optional)</Label>
-              <Select
-                value={formData.case_id}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, case_id: value }))}
-                disabled={!formData.client_id}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a case" />
-                </SelectTrigger>
-                <SelectContent>
-                  {cases?.map((case_) => (
-                    <SelectItem key={case_.id} value={case_.id}>
-                      {case_.case_title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Issue Date *</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start text-left font-normal">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {format(formData.issue_date, "PPP")}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={formData.issue_date}
-                    onSelect={(date) => date && setFormData(prev => ({ ...prev, issue_date: date }))}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Due Date *</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start text-left font-normal">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {format(formData.due_date, "PPP")}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={formData.due_date}
-                    onSelect={(date) => date && setFormData(prev => ({ ...prev, due_date: date }))}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-
-          {/* Invoice Items */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label className="text-lg font-semibold">Invoice Items</Label>
-              <Button type="button" variant="outline" size="sm" onClick={addItem}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Item
-              </Button>
-            </div>
-
-            <div className="space-y-3">
-              {formData.items.map((item, index) => (
-                <div key={index} className="grid grid-cols-12 gap-2 items-end">
-                  <div className="col-span-5">
-                    <Label htmlFor={`desc-${index}`}>Description</Label>
-                    <Input
-                      id={`desc-${index}`}
-                      value={item.description}
-                      onChange={(e) => updateItem(index, 'description', e.target.value)}
-                      placeholder="Service description"
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <Label htmlFor={`qty-${index}`}>Quantity</Label>
-                    <Input
-                      id={`qty-${index}`}
-                      type="number"
-                      min="1"
-                      value={item.quantity}
-                      onChange={(e) => updateItem(index, 'quantity', Number(e.target.value))}
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <Label htmlFor={`rate-${index}`}>Rate (₹)</Label>
-                    <Input
-                      id={`rate-${index}`}
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={item.rate}
-                      onChange={(e) => updateItem(index, 'rate', Number(e.target.value))}
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <Label>Amount (₹)</Label>
-                    <Input
-                      value={(item.quantity * item.rate).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                      readOnly
-                      className="bg-gray-50"
-                    />
-                  </div>
-                  <div className="col-span-1">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeItem(index)}
-                      disabled={formData.items.length === 1}
-                    >
-                      <Trash2 className="h-4 w-4" />
+        {/* Invoice Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Invoice Information</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="issue_date">Date *</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start text-left font-normal">
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {format(formData.issue_date, "PPP")}
                     </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={formData.issue_date}
+                      onSelect={(date) => date && setFormData(prev => ({ ...prev, issue_date: date }))}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              
+              <div>
+                <Label htmlFor="client_id">Client Name *</Label>
+                <Popover open={clientSearchOpen} onOpenChange={setClientSearchOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={clientSearchOpen}
+                      className="w-full justify-between"
+                    >
+                      {formData.client_id
+                        ? clients?.find((client) => client.id === formData.client_id)?.full_name
+                        : "Select client"}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0 bg-background border z-50">
+                    <Command>
+                      <CommandInput placeholder="Search clients..." />
+                      <CommandList>
+                        <CommandEmpty>No client found.</CommandEmpty>
+                        <CommandGroup>
+                          {clients?.map((client) => (
+                            <CommandItem
+                              key={client.id}
+                              value={client.full_name}
+                              onSelect={() => {
+                                setFormData(prev => ({ 
+                                  ...prev, 
+                                  client_id: client.id,
+                                  case_id: ''
+                                }));
+                                setClientSearchOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  formData.client_id === client.id ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {client.full_name}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
 
-            <div className="flex justify-end">
-              <div className="text-right">
-                <Label className="text-lg font-semibold">
-                  Total: ₹{totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                </Label>
+              <div>
+                <Label htmlFor="kind_attention">Kind Attention</Label>
+                <Input
+                  id="kind_attention"
+                  value={formData.kind_attention || ''}
+                  onChange={(e) => setFormData({ ...formData, kind_attention: e.target.value })}
+                  placeholder="Kind attention to..."
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="client_address">Client Address</Label>
+                <Textarea
+                  id="client_address"
+                  value={formData.client_address || ''}
+                  onChange={(e) => setFormData({ ...formData, client_address: e.target.value })}
+                  placeholder="Client address"
+                  rows={2}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="gstin">GSTIN</Label>
+                <Input
+                  id="gstin"
+                  value={formData.gstin || ''}
+                  onChange={(e) => setFormData({ ...formData, gstin: e.target.value })}
+                  placeholder="GST Identification Number"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="state_code">State Code</Label>
+                <Select 
+                  value={formData.state_code || ''} 
+                  onValueChange={(value) => setFormData({ ...formData, state_code: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select state code" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border z-50">
+                    <SelectItem value="24">24-GUJARAT</SelectItem>
+                    <SelectItem value="27">27-MAHARASHTRA</SelectItem>
+                    <SelectItem value="07">07-DELHI</SelectItem>
+                    <SelectItem value="09">09-UTTAR PRADESH</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="case_id">Case</Label>
+                <Select 
+                  value={formData.case_id || ''} 
+                  onValueChange={(value) => setFormData({ ...formData, case_id: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select case (optional)" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border z-50">
+                    {cases?.map((case_item) => (
+                      <SelectItem key={case_item.id} value={case_item.id}>
+                        {case_item.case_title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="col-span-full">
+                <Label htmlFor="invoice_subject">Invoice Subject</Label>
+                <Input
+                  id="invoice_subject"
+                  value={formData.invoice_subject || ''}
+                  onChange={(e) => setFormData({ ...formData, invoice_subject: e.target.value })}
+                  placeholder="Invoice subject"
+                />
+              </div>
+
+              <div className="col-span-full">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description || ''}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Invoice description"
+                  rows={3}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="signature_name">Signature Name</Label>
+                <Input
+                  id="signature_name"
+                  value={formData.signature_name || ''}
+                  onChange={(e) => setFormData({ ...formData, signature_name: e.target.value })}
+                  placeholder="Authorized signatory name"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="tax_rate">Tax Rate (%)</Label>
+                <Input
+                  id="tax_rate"
+                  type="number"
+                  step="0.01"
+                  value={formData.tax_rate || 0}
+                  onChange={(e) => setFormData({ ...formData, tax_rate: parseFloat(e.target.value) || 0 })}
+                  placeholder="18.00"
+                />
               </div>
             </div>
-          </div>
+          </CardContent>
+        </Card>
 
-          {/* Notes */}
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
+        {/* Notes */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Notes</CardTitle>
+          </CardHeader>
+          <CardContent>
             <Textarea
-              id="notes"
-              value={formData.notes}
-              onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-              placeholder="Additional notes or terms"
-              rows={3}
+              value={formData.notes || ''}
+              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              placeholder="Additional notes for the invoice"
+              rows={4}
             />
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

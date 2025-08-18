@@ -1634,6 +1634,138 @@ export type Database = {
         }
         Relationships: []
       }
+      invoice_adjustments: {
+        Row: {
+          adjustment_type: string | null
+          adjustment_value: number | null
+          created_at: string | null
+          description: string | null
+          id: string
+          invoice_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          adjustment_type?: string | null
+          adjustment_value?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          invoice_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          adjustment_type?: string | null
+          adjustment_value?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          invoice_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_adjustments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoice_expenses: {
+        Row: {
+          amount: number | null
+          created_at: string | null
+          date: string | null
+          expense_type: string | null
+          id: string
+          invoice_id: string
+          owner_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string | null
+          date?: string | null
+          expense_type?: string | null
+          id?: string
+          invoice_id: string
+          owner_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string | null
+          date?: string | null
+          expense_type?: string | null
+          id?: string
+          invoice_id?: string
+          owner_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_expenses_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoice_flat_fees: {
+        Row: {
+          city: string | null
+          created_at: string | null
+          date: string | null
+          discount_amount: number | null
+          discount_percentage: number | null
+          fixed_fee_type: string | null
+          id: string
+          invoice_id: string
+          total: number | null
+          unit_rate: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string | null
+          date?: string | null
+          discount_amount?: number | null
+          discount_percentage?: number | null
+          fixed_fee_type?: string | null
+          id?: string
+          invoice_id: string
+          total?: number | null
+          unit_rate?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          city?: string | null
+          created_at?: string | null
+          date?: string | null
+          discount_amount?: number | null
+          discount_percentage?: number | null
+          fixed_fee_type?: string | null
+          id?: string
+          invoice_id?: string
+          total?: number | null
+          unit_rate?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_flat_fees_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoice_items: {
         Row: {
           amount: number | null
@@ -1678,15 +1810,24 @@ export type Database = {
       invoices: {
         Row: {
           case_id: string | null
+          client_address: string | null
           client_id: string
           created_at: string
           created_by: string
+          description: string | null
           due_date: string
           firm_id: string
+          gstin: string | null
           id: string
           invoice_number: string
+          invoice_subject: string | null
           issue_date: string
+          kind_attention: string | null
           notes: string | null
+          secondary_client_address: string | null
+          secondary_client_name: string | null
+          signature_name: string | null
+          state_code: string | null
           status: Database["public"]["Enums"]["invoice_status_enum"]
           title: string | null
           total_amount: number | null
@@ -1694,15 +1835,24 @@ export type Database = {
         }
         Insert: {
           case_id?: string | null
+          client_address?: string | null
           client_id: string
           created_at?: string
           created_by: string
+          description?: string | null
           due_date: string
           firm_id: string
+          gstin?: string | null
           id?: string
           invoice_number: string
+          invoice_subject?: string | null
           issue_date: string
+          kind_attention?: string | null
           notes?: string | null
+          secondary_client_address?: string | null
+          secondary_client_name?: string | null
+          signature_name?: string | null
+          state_code?: string | null
           status?: Database["public"]["Enums"]["invoice_status_enum"]
           title?: string | null
           total_amount?: number | null
@@ -1710,15 +1860,24 @@ export type Database = {
         }
         Update: {
           case_id?: string | null
+          client_address?: string | null
           client_id?: string
           created_at?: string
           created_by?: string
+          description?: string | null
           due_date?: string
           firm_id?: string
+          gstin?: string | null
           id?: string
           invoice_number?: string
+          invoice_subject?: string | null
           issue_date?: string
+          kind_attention?: string | null
           notes?: string | null
+          secondary_client_address?: string | null
+          secondary_client_name?: string | null
+          signature_name?: string | null
+          state_code?: string | null
           status?: Database["public"]["Enums"]["invoice_status_enum"]
           title?: string | null
           total_amount?: number | null
