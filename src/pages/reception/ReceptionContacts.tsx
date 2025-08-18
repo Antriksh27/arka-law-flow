@@ -13,6 +13,7 @@ import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import AddContactDialog from '@/components/reception/AddContactDialog';
 import { ConvertContactToClientDialog } from '@/components/reception/ConvertContactToClientDialog';
+import EditContactDialog from '@/components/reception/EditContactDialog';
 import ReceptionClientList from '@/components/reception/ReceptionClientList';
 
 const ReceptionContacts = () => {
@@ -23,6 +24,7 @@ const ReceptionContacts = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [addContactOpen, setAddContactOpen] = useState(false);
   const [convertDialogOpen, setConvertDialogOpen] = useState(false);
+  const [editContactOpen, setEditContactOpen] = useState(false);
   const [selectedContact, setSelectedContact] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('contacts');
 
@@ -60,6 +62,11 @@ const ReceptionContacts = () => {
   const handleConvertToClient = (contact: any) => {
     setSelectedContact(contact);
     setConvertDialogOpen(true);
+  };
+
+  const handleEditContact = (contact: any) => {
+    setSelectedContact(contact);
+    setEditContactOpen(true);
   };
 
   return (
@@ -181,7 +188,11 @@ const ReceptionContacts = () => {
                           >
                             Convert to Client
                           </Button>
-                          <Button variant="outline" size="sm">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleEditContact(contact)}
+                          >
                             Edit
                           </Button>
                         </div>
@@ -206,6 +217,15 @@ const ReceptionContacts = () => {
         open={addContactOpen} 
         onOpenChange={setAddContactOpen} 
       />
+
+      {/* Edit Contact Modal */}
+      {selectedContact && (
+        <EditContactDialog
+          contact={selectedContact}
+          open={editContactOpen}
+          onOpenChange={setEditContactOpen}
+        />
+      )}
 
       {/* Convert Contact to Client Modal */}
       {selectedContact && (
