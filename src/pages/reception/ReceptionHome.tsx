@@ -220,7 +220,14 @@ const ReceptionHome = () => {
                           </div>
                         </div>
                       </div>
-                      <Button variant="ghost" size="sm">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => {
+                          // Navigate to appointment details or show options
+                          navigate(`/reception/appointments?id=${appointment.id}`);
+                        }}
+                      >
                         <MoreHorizontal className="w-4 h-4" />
                       </Button>
                     </div>) : <div className="p-8 text-center text-[#6B7280]">
