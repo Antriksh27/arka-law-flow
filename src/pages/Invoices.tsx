@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { InvoicesHeader } from '@/features/invoices/components/InvoicesHeader';
 import { InvoicesTable } from '@/features/invoices/components/InvoicesTable';
+import { InvoiceFormDialog } from '@/features/invoices/components/InvoiceFormDialog';
+import { InvoiceViewDialog } from '@/features/invoices/components/InvoiceViewDialog';
+import { useInvoiceStats } from '@/features/invoices/hooks/useInvoiceStats';
 import type { InvoiceListData } from '@/features/invoices/types';
 import { Loader2, AlertCircle, Search, Plus, Download, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -29,34 +32,49 @@ const fetchInvoices = async (firmId: string | undefined): Promise<InvoiceListDat
   }
   return data as InvoiceListData[];
 };
-const InvoiceStats = () => {
+const InvoiceStats = ({ firmId }: { firmId: string | undefined }) => {
+  const { data: stats, isLoading } = useInvoiceStats(firmId);
+
+  if (isLoading) {
+    return <div className="flex w-full flex-wrap items-start gap-4 mobile:flex-col">
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-2xl border border-gray-200 px-6 py-6 shadow-sm bg-slate-100 animate-pulse">
+          <div className="h-4 bg-gray-300 rounded w-20"></div>
+          <div className="h-8 bg-gray-300 rounded w-16"></div>
+        </div>
+      ))}
+    </div>;
+  }
+
   return <div className="flex w-full flex-wrap items-start gap-4 mobile:flex-col">
       {/* Outstanding */}
       <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-2xl border border-gray-200 px-6 py-6 shadow-sm hover:shadow-md transition-shadow bg-slate-100">
         <span className="text-sm font-medium text-muted-foreground">Outstanding</span>
-        <span className="text-2xl font-semibold text-cyan-500">₹4.2L</span>
+        <span className="text-2xl font-semibold text-cyan-500">₹{stats?.outstanding.toLocaleString('en-IN') || '0'}</span>
       </div>
       {/* Overdue */}
       <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-2xl border border-gray-200 px-6 py-6 shadow-sm hover:shadow-md transition-shadow bg-slate-100">
         <span className="text-sm font-medium text-muted-foreground">Overdue</span>
-        <span className="text-2xl font-semibold text-red-600">₹1.8L</span>
+        <span className="text-2xl font-semibold text-red-600">₹{stats?.overdue.toLocaleString('en-IN') || '0'}</span>
       </div>
       {/* Paid this month */}
       <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-2xl border border-gray-200 px-6 py-6 shadow-sm hover:shadow-md transition-shadow bg-slate-100">
         <span className="text-sm font-medium text-muted-foreground">Paid this month</span>
-        <span className="text-2xl font-semibold text-green-600">₹2.6L</span>
+        <span className="text-2xl font-semibold text-green-600">₹{stats?.paidThisMonth.toLocaleString('en-IN') || '0'}</span>
       </div>
       {/* Draft */}
       <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-2xl border border-gray-200 px-6 py-6 shadow-sm hover:shadow-md transition-shadow bg-slate-100">
         <span className="text-sm font-medium text-muted-foreground">Draft</span>
-        <span className="text-2xl font-semibold text-yellow-500">12</span>
+        <span className="text-2xl font-semibold text-yellow-500">{stats?.draftCount || 0}</span>
       </div>
     </div>;
 };
 const InvoiceToolbar = ({
-  total = 0
+  total = 0,
+  onNewInvoice
 }: {
   total: number;
+  onNewInvoice: () => void;
 }) => {
   return <div className="flex w-full flex-wrap items-center gap-4 mb-2">
       <div className="flex grow shrink-0 basis-0 items-center gap-3">
@@ -84,7 +102,7 @@ const InvoiceToolbar = ({
           <RefreshCw className="w-4 h-4" />
           <span className="sr-only">Refresh</span>
         </Button>
-        <Button className="text-white px-4 bg-slate-900 hover:bg-slate-800">
+        <Button className="text-white px-4 bg-slate-900 hover:bg-slate-800" onClick={onNewInvoice}>
           <Plus className="w-4 h-4 mr-1" />
           New Invoice
         </Button>
@@ -102,6 +120,12 @@ const Invoices: React.FC = () => {
     loading,
     firmError
   } = useAuth();
+
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string>('');
+
   const {
     data: invoices,
     isLoading,
@@ -119,15 +143,15 @@ const Invoices: React.FC = () => {
           <h1 className="text-2xl font-semibold text-gray-900">Invoices</h1>
           <Badge variant="default">{invoices ? `${invoices.length} total` : "--"}</Badge>
         </div>
-        <Button className="bg-primary hover:bg-primary/90 text-white px-4">
+        <Button className="bg-primary hover:bg-primary/90 text-white px-4" onClick={() => setCreateDialogOpen(true)}>
           <Plus className="w-4 h-4 mr-2" />
           New Invoice
         </Button>
       </div>
       {/* Stats Row (cards) */}
-      <InvoiceStats />
+      <InvoiceStats firmId={firmId} />
       {/* Filters/Search Bar */}
-      <InvoiceToolbar total={invoices?.length || 0} />
+      <InvoiceToolbar total={invoices?.length || 0} onNewInvoice={() => setCreateDialogOpen(true)} />
       {/* Table / Loading / Error */}
       {(isLoading || loading) && <div className="flex items-center justify-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -146,7 +170,18 @@ const Invoices: React.FC = () => {
         </div>
       </div>}
       {!isLoading && !loading && !error && invoices && <div className="bg-white shadow-sm rounded-2xl border border-gray-200 p-0 mt-2">
-        <InvoicesTable invoices={invoices} isLoading={isLoading} />
+        <InvoicesTable 
+          invoices={invoices} 
+          isLoading={isLoading}
+          onView={(id) => {
+            setSelectedInvoiceId(id);
+            setViewDialogOpen(true);
+          }}
+          onEdit={(id) => {
+            setSelectedInvoiceId(id);
+            setEditDialogOpen(true);
+          }}
+        />
       </div>}
       {!isLoading && !loading && !error && (!invoices || invoices.length === 0) && firmId && <div className="text-center py-12">
         <p className="text-gray-500">No invoices found for this firm.</p>
@@ -155,6 +190,26 @@ const Invoices: React.FC = () => {
         <p className="text-gray-500">Firm information not available. Cannot load invoices.</p>
         {firmError && <p className="mt-2 text-red-400 text-sm">{firmError}</p>}
       </div>}
+
+      {/* Dialogs */}
+      <InvoiceFormDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+      />
+      <InvoiceFormDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        invoiceId={selectedInvoiceId}
+      />
+      <InvoiceViewDialog
+        open={viewDialogOpen}
+        onOpenChange={setViewDialogOpen}
+        invoiceId={selectedInvoiceId}
+        onEdit={() => {
+          setViewDialogOpen(false);
+          setEditDialogOpen(true);
+        }}
+      />
     </div>;
 };
 export default Invoices;

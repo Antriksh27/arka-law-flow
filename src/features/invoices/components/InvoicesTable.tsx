@@ -23,12 +23,18 @@ import { format } from 'date-fns';
 interface InvoicesTableProps {
   invoices: InvoiceListData[];
   isLoading: boolean;
-  // onEdit: (invoiceId: string) => void;
-  // onView: (invoiceId: string) => void;
-  // onDelete: (invoiceId: string) => void;
+  onEdit?: (invoiceId: string) => void;
+  onView?: (invoiceId: string) => void;
+  onDelete?: (invoiceId: string) => void;
 }
 
-export const InvoicesTable: React.FC<InvoicesTableProps> = ({ invoices, isLoading }) => {
+export const InvoicesTable: React.FC<InvoicesTableProps> = ({ 
+  invoices, 
+  isLoading, 
+  onEdit, 
+  onView, 
+  onDelete 
+}) => {
   if (isLoading) {
     return <p>Loading invoices...</p>; // Replace with Skeleton loader later
   }
@@ -72,13 +78,13 @@ export const InvoicesTable: React.FC<InvoicesTableProps> = ({ invoices, isLoadin
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => alert('View: ' + invoice.id)}>
+                  <DropdownMenuItem onClick={() => onView?.(invoice.id)}>
                     <Eye className="mr-2 h-4 w-4" /> View
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => alert('Edit: ' + invoice.id)}>
+                  <DropdownMenuItem onClick={() => onEdit?.(invoice.id)}>
                     <Edit className="mr-2 h-4 w-4" /> Edit
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => alert('Delete: ' + invoice.id)} className="text-red-600">
+                  <DropdownMenuItem onClick={() => onDelete?.(invoice.id)} className="text-red-600">
                     <Trash2 className="mr-2 h-4 w-4" /> Delete
                   </DropdownMenuItem>
                 </DropdownMenuContent>
