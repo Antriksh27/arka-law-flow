@@ -6,6 +6,7 @@ import { InvoicesHeader } from '@/features/invoices/components/InvoicesHeader';
 import { InvoicesTable } from '@/features/invoices/components/InvoicesTable';
 import { InvoiceFormDialog } from '@/features/invoices/components/InvoiceFormDialog';
 import { InvoiceViewDialog } from '@/features/invoices/components/InvoiceViewDialog';
+import { DeleteInvoiceDialog } from '@/features/invoices/components/DeleteInvoiceDialog';
 import { useInvoiceStats } from '@/features/invoices/hooks/useInvoiceStats';
 import type { InvoiceListData } from '@/features/invoices/types';
 import { Loader2, AlertCircle, Search, Plus, Download, RefreshCw } from 'lucide-react';
@@ -124,6 +125,7 @@ const Invoices: React.FC = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string>('');
 
   const {
@@ -181,6 +183,10 @@ const Invoices: React.FC = () => {
             setSelectedInvoiceId(id);
             setEditDialogOpen(true);
           }}
+          onDelete={(id) => {
+            setSelectedInvoiceId(id);
+            setDeleteDialogOpen(true);
+          }}
         />
       </div>}
       {!isLoading && !loading && !error && (!invoices || invoices.length === 0) && firmId && <div className="text-center py-12">
@@ -209,6 +215,12 @@ const Invoices: React.FC = () => {
           setViewDialogOpen(false);
           setEditDialogOpen(true);
         }}
+      />
+      <DeleteInvoiceDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        invoiceId={selectedInvoiceId}
+        invoiceNumber={invoices?.find(inv => inv.id === selectedInvoiceId)?.invoice_number}
       />
     </div>;
 };
