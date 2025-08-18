@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation, NavLink } from 'react-router-dom';
-import { LayoutDashboard, FolderOpen, FileText, CheckSquare, MessageSquareText, Upload, Plus, LogOut, Settings } from 'lucide-react';
+import { LayoutDashboard, FolderOpen, FileText, CheckSquare, MessageSquareText, Upload, Plus, LogOut, Settings, Receipt } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,10 @@ const menuItems = [{
   name: 'Instructions',
   href: '/staff/instructions',
   icon: MessageSquareText
+}, {
+  name: 'Invoices',
+  href: '/staff/invoices',
+  icon: Receipt
 }];
 const quickActions = [{
   name: 'Upload Document',
