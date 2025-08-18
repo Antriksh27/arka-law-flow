@@ -7,12 +7,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Calendar, Users, UserPlus, Search, MoreHorizontal, User, Video, MapPin, Edit2, CalendarPlus, Briefcase, LayoutList } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Calendar, Users, UserPlus, Search, MoreHorizontal, User, Video, MapPin, Edit2, CalendarPlus, Briefcase, LayoutList, Edit, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import AddContactDialog from '@/components/reception/AddContactDialog';
 import BookAppointmentDialog from '@/components/reception/BookAppointmentDialog';
 import EditContactDialog from '@/components/reception/EditContactDialog';
+import EditAppointmentDialog from '@/components/reception/EditAppointmentDialog';
+import RescheduleAppointmentDialog from '@/components/reception/RescheduleAppointmentDialog';
 const ReceptionHome = () => {
   const {
     user,
@@ -22,7 +25,10 @@ const ReceptionHome = () => {
   const [addContactOpen, setAddContactOpen] = useState(false);
   const [bookAppointmentOpen, setBookAppointmentOpen] = useState(false);
   const [editContactOpen, setEditContactOpen] = useState(false);
+  const [editAppointmentOpen, setEditAppointmentOpen] = useState(false);
+  const [rescheduleAppointmentOpen, setRescheduleAppointmentOpen] = useState(false);
   const [selectedContact, setSelectedContact] = useState(null);
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
   // Get today's appointments
@@ -220,16 +226,33 @@ const ReceptionHome = () => {
                           </div>
                         </div>
                       </div>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => {
-                          // Navigate to appointment details or show options
-                          navigate(`/reception/appointments?id=${appointment.id}`);
-                        }}
-                      >
-                        <MoreHorizontal className="w-4 h-4" />
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreHorizontal className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem 
+                            onClick={() => {
+                              setSelectedAppointment(appointment);
+                              setEditAppointmentOpen(true);
+                            }}
+                          >
+                            <Edit className="w-4 h-4 mr-2" />
+                            Edit Appointment
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => {
+                              setSelectedAppointment(appointment);
+                              setRescheduleAppointmentOpen(true);
+                            }}
+                          >
+                            <Clock className="w-4 h-4 mr-2" />
+                            Reschedule
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>) : <div className="p-8 text-center text-[#6B7280]">
                     No appointments scheduled for today
                   </div>}
@@ -291,6 +314,16 @@ const ReceptionHome = () => {
         open={editContactOpen} 
         onOpenChange={setEditContactOpen}
         contact={selectedContact}
+      />
+      <EditAppointmentDialog
+        open={editAppointmentOpen}
+        onOpenChange={setEditAppointmentOpen}
+        appointment={selectedAppointment}
+      />
+      <RescheduleAppointmentDialog
+        open={rescheduleAppointmentOpen}
+        onOpenChange={setRescheduleAppointmentOpen}
+        appointment={selectedAppointment}
       />
     </div>;
 };
