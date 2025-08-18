@@ -75,15 +75,21 @@ export const InvoiceFormDialog: React.FC<InvoiceFormDialogProps> = ({
     enabled: !!firmId && open,
   });
 
-  // Fetch cases for dropdown
+  // Fetch cases for dropdown - filtered by selected client
   const { data: cases } = useQuery({
-    queryKey: ['cases', firmId],
+    queryKey: ['cases', firmId, formData.client_id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('cases')
         .select('id, case_title, client_id')
-        .eq('firm_id', firmId)
-        .order('case_title');
+        .eq('firm_id', firmId);
+      
+      // Filter by client if selected
+      if (formData.client_id) {
+        query = query.eq('client_id', formData.client_id);
+      }
+      
+      const { data, error } = await query.order('case_title');
       if (error) throw error;
       return data;
     },
@@ -276,9 +282,7 @@ export const InvoiceFormDialog: React.FC<InvoiceFormDialogProps> = ({
     }));
   };
 
-  const filteredCases = cases?.filter(case_ => 
-    !formData.client_id || case_.client_id === formData.client_id
-  );
+  // Cases are already filtered by the query based on selected client
 
   const totalAmount = formData.items.reduce((sum, item) => sum + (item.quantity * item.rate), 0);
 
@@ -308,11 +312,25 @@ export const InvoiceFormDialog: React.FC<InvoiceFormDialogProps> = ({
               <Label htmlFor="client">Client *</Label>
               <Select
                 value={formData.client_id}
-                onValueChange={(value) => setFormData(prev => ({ 
-                  ...prev, 
-                  client_id: value,
-                  case_id: '' // Reset case when client changes
-                }))}
+                onValueChange={(value) => {
+                  setFormData(prev => ({ 
+                    ...prev, 
+                    client_id: value,
+                    case_id: '' // Reset case when client changes
+                  }));
+                  // Auto-populate case if client has only one case
+                  if (cases) {
+                    const clientCases = cases.filter(case_ => case_.client_id === value);
+                    if (clientCases.length === 1) {
+                      setTimeout(() => {
+                        setFormData(prev => ({ 
+                          ...prev, 
+                          case_id: clientCases[0].id 
+                        }));
+                      }, 100);
+                    }
+                  }
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select a client" />
@@ -340,7 +358,7 @@ export const InvoiceFormDialog: React.FC<InvoiceFormDialogProps> = ({
                   <SelectValue placeholder="Select a case" />
                 </SelectTrigger>
                 <SelectContent>
-                  {filteredCases?.map((case_) => (
+                  {cases?.map((case_) => (
                     <SelectItem key={case_.id} value={case_.id}>
                       {case_.case_title}
                     </SelectItem>
