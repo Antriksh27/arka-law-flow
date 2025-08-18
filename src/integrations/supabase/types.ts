@@ -64,6 +64,7 @@ export type Database = {
           status: string | null
           title: string | null
           type: Database["public"]["Enums"]["appointment_type"]
+          updated_at: string | null
         }
         Insert: {
           appointment_date?: string | null
@@ -87,6 +88,7 @@ export type Database = {
           status?: string | null
           title?: string | null
           type: Database["public"]["Enums"]["appointment_type"]
+          updated_at?: string | null
         }
         Update: {
           appointment_date?: string | null
@@ -110,6 +112,7 @@ export type Database = {
           status?: string | null
           title?: string | null
           type?: Database["public"]["Enums"]["appointment_type"]
+          updated_at?: string | null
         }
         Relationships: [
           {
