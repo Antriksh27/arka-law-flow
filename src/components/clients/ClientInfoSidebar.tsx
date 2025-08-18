@@ -1,7 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, Mail, Phone, MapPin, Building, UserCheck, Users } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { EditClientDialog } from './EditClientDialog';
+import { EngagementLetterDialog } from './EngagementLetterDialog';
+import { AddCaseDialog } from '../cases/AddCaseDialog';
+import { Badge } from '@/components/ui/badge';
+import { User, Mail, Phone, MapPin, Building, UserCheck, Users, Edit, Plus, FileText } from 'lucide-react';
 
 interface ClientInfoSidebarProps {
   client: any;
@@ -12,112 +16,210 @@ export const ClientInfoSidebar: React.FC<ClientInfoSidebarProps> = ({
   client,
   onUpdate
 }) => {
-  return <Card className="bg-white border border-gray-200">
-      <CardHeader>
-        <CardTitle className="text-lg font-semibold text-gray-900">
-          Litigant & Reference Details
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Litigant Information */}
-        <div className="space-y-4">
-          <h4 className="text-sm font-medium text-gray-900 border-b border-gray-200 pb-2">
-            Litigant Name
-          </h4>
-          <div className="flex items-center gap-3 text-sm">
-            <User className="w-4 h-4 text-gray-400" />
-            <span className="text-gray-900 font-medium">{client.full_name}</span>
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showAddCaseDialog, setShowAddCaseDialog] = useState(false);
+  const [showEngagementLetterDialog, setShowEngagementLetterDialog] = useState(false);
+
+  return (
+    <div className="space-y-6">
+      {/* Quick Actions */}
+      <Card className="bg-white border border-gray-200">
+        <CardHeader>
+          <CardTitle className="text-lg font-semibold text-gray-900">
+            Quick Actions
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              onClick={() => setShowEditDialog(true)}
+              className="flex-1 bg-primary hover:bg-primary/90 text-white"
+            >
+              <Edit className="w-4 h-4 mr-2" />
+              Edit Client
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setShowAddCaseDialog(true)}
+              className="flex-1"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Case
+            </Button>
           </div>
           
-          {client.type && <div className="flex items-center gap-3 text-sm">
-              <UserCheck className="w-4 h-4 text-gray-400" />
-              <div>
-                <span className="text-gray-600">Type: </span>
-                <span className="text-gray-900">{client.type}</span>
-              </div>
-            </div>}
-          
-          {client.organization && <div className="flex items-center gap-3 text-sm">
-              <Building className="w-4 h-4 text-gray-400" />
-              <div>
-                <span className="text-gray-600">Organization: </span>
-                <span className="text-gray-900">{client.organization}</span>
-              </div>
-            </div>}
-        </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setShowEngagementLetterDialog(true)}
+            className="w-full border-blue-200 text-blue-700 hover:bg-blue-50"
+          >
+            <FileText className="w-4 h-4 mr-2" />
+            Engagement Letter
+          </Button>
+        </CardContent>
+      </Card>
 
-        {/* Reference Information */}
-        {(client.referred_by_name || client.referred_by_phone || client.source) && (
+      {/* Client Details */}
+      <Card className="bg-white border border-gray-200">
+        <CardHeader>
+          <CardTitle className="text-lg font-semibold text-gray-900">
+            Litigant & Reference Details
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Litigant Information */}
           <div className="space-y-4">
             <h4 className="text-sm font-medium text-gray-900 border-b border-gray-200 pb-2">
-              Reference Details
-            </h4>
-            {client.referred_by_name && (
-              <div className="flex items-center gap-3 text-sm">
-                <Users className="w-4 h-4 text-gray-400" />
-                <div>
-                  <span className="text-gray-600">Referred By: </span>
-                  <span className="text-gray-900 font-medium">{client.referred_by_name}</span>
-                </div>
-              </div>
-            )}
-            {client.referred_by_phone && (
-              <div className="flex items-center gap-3 text-sm">
-                <Phone className="w-4 h-4 text-gray-400" />
-                <div>
-                  <span className="text-gray-600">Reference Phone: </span>
-                  <span className="text-gray-900">{client.referred_by_phone}</span>
-                </div>
-              </div>
-            )}
-            {client.source && (
-              <div className="flex items-center gap-3 text-sm">
-                <MapPin className="w-4 h-4 text-gray-400" />
-                <div>
-                  <span className="text-gray-600">Source: </span>
-                  <span className="text-gray-900">{client.source}</span>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Case Reference */}
-        {client.case_ref && (
-          <div className="space-y-4">
-            <h4 className="text-sm font-medium text-gray-900 border-b border-gray-200 pb-2">
-              Case Reference
+              Litigant Name
             </h4>
             <div className="flex items-center gap-3 text-sm">
               <User className="w-4 h-4 text-gray-400" />
-              <div>
-                <span className="text-gray-600">Reference Number: </span>
-                <span className="text-gray-900 font-mono">{client.case_ref}</span>
+              <span className="text-gray-900 font-medium">{client.full_name}</span>
+            </div>
+            
+            {client.type && (
+              <div className="flex items-center gap-3 text-sm">
+                <UserCheck className="w-4 h-4 text-gray-400" />
+                <div>
+                  <span className="text-gray-600">Type: </span>
+                  <span className="text-gray-900">{client.type}</span>
+                </div>
+              </div>
+            )}
+            
+            {client.organization && (
+              <div className="flex items-center gap-3 text-sm">
+                <Building className="w-4 h-4 text-gray-400" />
+                <div>
+                  <span className="text-gray-600">Organization: </span>
+                  <span className="text-gray-900">{client.organization}</span>
+                </div>
+              </div>
+            )}
+
+            {client.status && (
+              <div className="flex items-center gap-3 text-sm">
+                <div className="w-4 h-4"></div>
+                <div>
+                  <span className="text-gray-600">Status: </span>
+                  <Badge variant={client.status === 'active' ? 'success' : 'outline'}>
+                    {client.status}
+                  </Badge>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Contact Information */}
+          {(client.email || client.phone || client.address) && (
+            <div className="space-y-4">
+              <h4 className="text-sm font-medium text-gray-900 border-b border-gray-200 pb-2">
+                Contact Information
+              </h4>
+              {client.email && (
+                <div className="flex items-center gap-3 text-sm">
+                  <Mail className="w-4 h-4 text-gray-400" />
+                  <span className="text-gray-900">{client.email}</span>
+                </div>
+              )}
+              {client.phone && (
+                <div className="flex items-center gap-3 text-sm">
+                  <Phone className="w-4 h-4 text-gray-400" />
+                  <span className="text-gray-900">{client.phone}</span>
+                </div>
+              )}
+              {client.address && (
+                <div className="flex items-center gap-3 text-sm">
+                  <MapPin className="w-4 h-4 text-gray-400" />
+                  <span className="text-gray-900">{client.address}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Reference Information */}
+          {(client.referred_by_name || client.referred_by_phone || client.source) && (
+            <div className="space-y-4">
+              <h4 className="text-sm font-medium text-gray-900 border-b border-gray-200 pb-2">
+                Reference Details
+              </h4>
+              {client.referred_by_name && (
+                <div className="flex items-center gap-3 text-sm">
+                  <Users className="w-4 h-4 text-gray-400" />
+                  <div>
+                    <span className="text-gray-600">Referred By: </span>
+                    <span className="text-gray-900 font-medium">{client.referred_by_name}</span>
+                  </div>
+                </div>
+              )}
+              {client.referred_by_phone && (
+                <div className="flex items-center gap-3 text-sm">
+                  <Phone className="w-4 h-4 text-gray-400" />
+                  <div>
+                    <span className="text-gray-600">Reference Phone: </span>
+                    <span className="text-gray-900">{client.referred_by_phone}</span>
+                  </div>
+                </div>
+              )}
+              {client.source && (
+                <div className="flex items-center gap-3 text-sm">
+                  <MapPin className="w-4 h-4 text-gray-400" />
+                  <div>
+                    <span className="text-gray-600">Source: </span>
+                    <span className="text-gray-900">{client.source}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Case Reference */}
+          {client.case_ref && (
+            <div className="space-y-4">
+              <h4 className="text-sm font-medium text-gray-900 border-b border-gray-200 pb-2">
+                Case Reference
+              </h4>
+              <div className="flex items-center gap-3 text-sm">
+                <User className="w-4 h-4 text-gray-400" />
+                <div>
+                  <span className="text-gray-600">Reference Number: </span>
+                  <span className="text-gray-900 font-mono">{client.case_ref}</span>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </CardContent>
+      </Card>
 
-        {/* Reference Contact */}
-        <div className="space-y-4">
-          <h4 className="text-sm font-medium text-gray-900 border-b border-gray-200 pb-2">
-            Reference Contact
-          </h4>
-          <div className="flex items-center gap-3 text-sm">
-            <Users className="w-4 h-4 text-gray-400" />
-            <div>
-              <span className="text-gray-600">Name: </span>
-              <span className="text-gray-900">{client.referred_by_name || 'NA'}</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 text-sm">
-            <Phone className="w-4 h-4 text-gray-400" />
-            <div>
-              <span className="text-gray-600">Phone: </span>
-              <span className="text-gray-900">{client.referred_by_phone || 'NA'}</span>
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>;
+      {/* Dialogs */}
+      {showEditDialog && (
+        <EditClientDialog
+          open={showEditDialog}
+          onOpenChange={setShowEditDialog}
+          client={client}
+          onSuccess={onUpdate}
+        />
+      )}
+
+      {showAddCaseDialog && (
+        <AddCaseDialog
+          open={showAddCaseDialog}
+          onClose={() => setShowAddCaseDialog(false)}
+          preSelectedClientId={client.id}
+        />
+      )}
+
+      {showEngagementLetterDialog && (
+        <EngagementLetterDialog
+          open={showEngagementLetterDialog}
+          onClose={() => setShowEngagementLetterDialog(false)}
+          clientId={client.id}
+          clientName={client.full_name}
+        />
+      )}
+    </div>
+  );
 };

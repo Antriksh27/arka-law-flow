@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Plus } from 'lucide-react';
+import { EngagementLetterDialog } from './EngagementLetterDialog';
 
 interface AddClientDialogProps {
   open: boolean;
@@ -47,11 +48,15 @@ export const AddClientDialog: React.FC<AddClientDialogProps> = ({
   const [selectedStateId, setSelectedStateId] = useState<string>('');
   const [showAddDistrict, setShowAddDistrict] = useState(false);
   const [newDistrictName, setNewDistrictName] = useState('');
+  const [showEngagementLetter, setShowEngagementLetter] = useState(false);
+  const [newClientId, setNewClientId] = useState<string | null>(null);
   const {
     register,
     handleSubmit,
     reset,
     setValue,
+    watch,
+    getValues,
     formState: { errors, isSubmitting }
   } = useForm<ClientFormData>({
     defaultValues: {
@@ -176,20 +181,25 @@ export const AddClientDialog: React.FC<AddClientDialogProps> = ({
       delete (clientData as any).district_id;
       delete (clientData as any).state_id;
 
-      const { error } = await supabase
+      const { data: newClient, error } = await supabase
         .from('clients')
-        .insert([clientData]);
+        .insert([clientData])
+        .select('id')
+        .single();
 
       if (error) throw error;
 
       toast({
         title: "Success",
-        description: "Client added successfully"
+        description: "Client added successfully. You can now create an engagement letter."
       });
+      
+      setNewClientId(newClient.id);
       reset();
       setSelectedStateId('');
       setShowAddDistrict(false);
       setNewDistrictName('');
+      setShowEngagementLetter(true);
       onSuccess();
     } catch (error) {
       console.error('Error adding client:', error);
@@ -473,6 +483,18 @@ export const AddClientDialog: React.FC<AddClientDialogProps> = ({
           </DialogFooter>
         </form>
       </DialogContent>
+      
+      {showEngagementLetter && newClientId && (
+        <EngagementLetterDialog
+          open={showEngagementLetter}
+          onClose={() => {
+            setShowEngagementLetter(false);
+            setNewClientId(null);
+          }}
+          clientId={newClientId}
+          clientName={getValues('full_name') || 'New Client'}
+        />
+      )}
     </Dialog>
   );
 };
