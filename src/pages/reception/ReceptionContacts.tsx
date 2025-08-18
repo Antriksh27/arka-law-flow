@@ -7,11 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { UserPlus, Search, Phone, Mail, Calendar, Plus, Filter } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { UserPlus, Search, Phone, Mail, Calendar, Plus, Filter, Users } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import AddContactDialog from '@/components/reception/AddContactDialog';
 import { ConvertContactToClientDialog } from '@/components/reception/ConvertContactToClientDialog';
+import ReceptionClientList from '@/components/reception/ReceptionClientList';
 
 const ReceptionContacts = () => {
   const { user, firmId } = useAuth();
@@ -22,6 +24,7 @@ const ReceptionContacts = () => {
   const [addContactOpen, setAddContactOpen] = useState(false);
   const [convertDialogOpen, setConvertDialogOpen] = useState(false);
   const [selectedContact, setSelectedContact] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState('contacts');
 
   // Check for action parameter to auto-open dialogs
   useEffect(() => {
@@ -64,8 +67,8 @@ const ReceptionContacts = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-semibold text-[#111827]">Contacts</h1>
-          <p className="text-[#6B7280] mt-1">Manage pre-client contacts and convert them to clients</p>
+          <h1 className="text-2xl font-semibold text-[#111827]">Contacts & Clients</h1>
+          <p className="text-[#6B7280] mt-1">Manage contacts and clients</p>
         </div>
         <Button 
           className="gap-2"
@@ -76,22 +79,36 @@ const ReceptionContacts = () => {
         </Button>
       </div>
 
-      {/* Search */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#6B7280] w-4 h-4" />
-            <Input
-              placeholder="Search contacts by name, phone, or email..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </CardContent>
-      </Card>
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="contacts" className="flex items-center gap-2">
+            <UserPlus className="w-4 h-4" />
+            Contacts
+          </TabsTrigger>
+          <TabsTrigger value="clients" className="flex items-center gap-2">
+            <Users className="w-4 h-4" />
+            Clients
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Contacts Table */}
+        <TabsContent value="contacts" className="space-y-6">
+          {/* Search */}
+          <Card>
+            <CardContent className="p-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#6B7280] w-4 h-4" />
+                <Input
+                  placeholder="Search contacts by name, phone, or email..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Contacts Table */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg font-medium text-[#111827]">
@@ -177,6 +194,12 @@ const ReceptionContacts = () => {
           )}
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="clients">
+          <ReceptionClientList />
+        </TabsContent>
+      </Tabs>
 
       {/* Add Contact Modal */}
       <AddContactDialog 
