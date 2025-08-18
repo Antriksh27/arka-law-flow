@@ -14,10 +14,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, Plus, Trash2 } from 'lucide-react';
+import { Calendar as CalendarIcon, Plus, Trash2, Check, ChevronsUpDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import type { InvoiceFormData } from '../types';
 
@@ -42,6 +44,8 @@ export const InvoiceFormDialog: React.FC<InvoiceFormDialogProps> = ({
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  const [clientSearchOpen, setClientSearchOpen] = useState(false);
+  
   const [formData, setFormData] = useState<{
     title: string;
     client_id: string;
@@ -310,39 +314,66 @@ export const InvoiceFormDialog: React.FC<InvoiceFormDialogProps> = ({
 
             <div className="space-y-2">
               <Label htmlFor="client">Client *</Label>
-              <Select
-                value={formData.client_id}
-                onValueChange={(value) => {
-                  setFormData(prev => ({ 
-                    ...prev, 
-                    client_id: value,
-                    case_id: '' // Reset case when client changes
-                  }));
-                  // Auto-populate case if client has only one case
-                  if (cases) {
-                    const clientCases = cases.filter(case_ => case_.client_id === value);
-                    if (clientCases.length === 1) {
-                      setTimeout(() => {
-                        setFormData(prev => ({ 
-                          ...prev, 
-                          case_id: clientCases[0].id 
-                        }));
-                      }, 100);
-                    }
-                  }
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a client" />
-                </SelectTrigger>
-                <SelectContent>
-                  {clients?.map((client) => (
-                    <SelectItem key={client.id} value={client.id}>
-                      {client.full_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover open={clientSearchOpen} onOpenChange={setClientSearchOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={clientSearchOpen}
+                    className="w-full justify-between"
+                  >
+                    {formData.client_id
+                      ? clients?.find((client) => client.id === formData.client_id)?.full_name
+                      : "Select a client..."}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0 bg-white z-[60]">
+                  <Command>
+                    <CommandInput placeholder="Search clients..." />
+                    <CommandList>
+                      <CommandEmpty>No client found.</CommandEmpty>
+                      <CommandGroup>
+                        {clients?.map((client) => (
+                          <CommandItem
+                            key={client.id}
+                            value={client.full_name}
+                            onSelect={() => {
+                              const value = client.id;
+                              setFormData(prev => ({ 
+                                ...prev, 
+                                client_id: value,
+                                case_id: '' // Reset case when client changes
+                              }));
+                              // Auto-populate case if client has only one case
+                              if (cases) {
+                                const clientCases = cases.filter(case_ => case_.client_id === value);
+                                if (clientCases.length === 1) {
+                                  setTimeout(() => {
+                                    setFormData(prev => ({ 
+                                      ...prev, 
+                                      case_id: clientCases[0].id 
+                                    }));
+                                  }, 100);
+                                }
+                              }
+                              setClientSearchOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                formData.client_id === client.id ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            {client.full_name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
 
