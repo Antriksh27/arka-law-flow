@@ -137,20 +137,6 @@ const ReceptionAppointments = () => {
   // Mark arrived mutation
   const markArrivedMutation = useMutation({
     mutationFn: async (appointmentId: string) => {
-      // Find the appointment to validate timing
-      const appointment = appointments?.find(apt => apt.id === appointmentId);
-      if (!appointment) throw new Error('Appointment not found');
-      
-      const appointmentDateTime = parseISO(`${appointment.appointment_date}T${appointment.appointment_time}`);
-      const fifteenMinutesBefore = subMinutes(appointmentDateTime, 15);
-      const fifteenMinutesAfter = new Date(appointmentDateTime.getTime() + 15 * 60 * 1000);
-      const now = new Date();
-      
-      // Check if current time is within the allowed window (15 min before to 15 min after)
-      if (now < fifteenMinutesBefore || now > fifteenMinutesAfter) {
-        throw new Error('Can only mark as arrived within 15 minutes before and 15 minutes after scheduled time');
-      }
-      
       const { error } = await supabase
         .from('appointments')
         .update({ status: 'arrived' })
@@ -259,17 +245,7 @@ const ReceptionAppointments = () => {
   };
 
   const getArrivedButtonText = (appointment: any) => {
-    if (!appointment.appointment_date || !appointment.appointment_time) return 'Mark Arrived';
-    
-    const appointmentDateTime = parseISO(`${appointment.appointment_date}T${appointment.appointment_time}`);
-    const fifteenMinutesAfter = new Date(appointmentDateTime.getTime() + 15 * 60 * 1000);
-    const now = new Date();
-    
-    if (now > fifteenMinutesAfter) {
-      return 'Too Late';
-    } else {
-      return 'Mark Arrived';
-    }
+    return 'Mark Arrived';
   };
 
   const handleEdit = (appointment: any) => {
