@@ -96,6 +96,49 @@ export const GoogleCalendarSync = () => {
     }
   };
 
+  const handleReconnect = async () => {
+    setIsConnecting(true);
+    
+    try {
+      // First disconnect current connection
+      await handleDisconnect();
+      
+      // Short delay to ensure cleanup is complete
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Then initiate new connection
+      const redirectUri = window.location.origin + window.location.pathname;
+      
+      const { data, error } = await supabase.functions.invoke('google-calendar-auth', {
+        body: { 
+          action: 'get_auth_url',
+          redirect_uri: redirectUri
+        }
+      });
+
+      if (error) throw error;
+      
+      toast({
+        title: 'Reconnecting...',
+        description: 'Redirecting to Google for re-authentication.',
+      });
+      
+      if (data.auth_url) {
+        // Redirect to Google OAuth
+        window.location.href = data.auth_url;
+      }
+    } catch (error) {
+      console.error('Error reconnecting to Google Calendar:', error);
+      toast({ 
+        title: 'Reconnection Failed', 
+        description: 'Failed to reconnect to Google Calendar. Please try again.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
   const handleDisconnect = async () => {
     try {
       const { data: user } = await supabase.auth.getUser();
@@ -111,6 +154,7 @@ export const GoogleCalendarSync = () => {
 
       setIsConnected(false);
       setSettings(null);
+      setCalendars([]);
       toast({ title: 'Google Calendar disconnected successfully!' });
     } catch (error) {
       console.error('Error disconnecting:', error);
@@ -319,12 +363,21 @@ export const GoogleCalendarSync = () => {
                   variant="outline" 
                   size="sm" 
                   onClick={handleSync}
-                  disabled={isSyncing}
+                  disabled={isSyncing || !settings?.calendar_id}
                 >
                   <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
                   {isSyncing ? 'Syncing...' : 'Sync Now'}
                 </Button>
                 <ManualSyncButton />
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleReconnect}
+                  disabled={isConnecting}
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${isConnecting ? 'animate-spin' : ''}`} />
+                  {isConnecting ? 'Reconnecting...' : 'Reconnect'}
+                </Button>
                 <Button 
                   variant="outline" 
                   size="sm" 
