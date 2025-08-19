@@ -139,14 +139,19 @@ const AddContactDialog = ({ open, onOpenChange }: AddContactDialogProps) => {
 
   const addContactMutation = useMutation({
     mutationFn: async (data: ContactFormData) => {
+      // Convert empty string UUIDs to null to prevent PostgreSQL errors
+      const cleanedData = {
+        ...data,
+        state_id: data.state_id || null,
+        district_id: data.district_id || null,
+        firm_id: firmId,
+        created_by: user?.id,
+        last_visited_at: new Date().toISOString(),
+      };
+
       const { error } = await supabase
         .from('contacts')
-        .insert({
-          ...data,
-          firm_id: firmId,
-          created_by: user?.id,
-          last_visited_at: new Date().toISOString(),
-        });
+        .insert(cleanedData);
 
       if (error) throw error;
     },
