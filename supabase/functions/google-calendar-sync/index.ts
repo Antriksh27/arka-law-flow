@@ -88,8 +88,19 @@ serve(async (req) => {
 
     if (action === 'list_calendars') {
       if (!access_token) {
-        throw new Error('Access token is required');
+        throw new Error('Google Calendar not connected. Please connect your calendar first.');
       }
+
+      // Check if we have the required Google credentials
+      const clientId = Deno.env.get('GOOGLE_CLIENT_ID');
+      const clientSecret = Deno.env.get('GOOGLE_CLIENT_SECRET');
+      
+      if (!clientId || !clientSecret) {
+        console.error('Missing Google OAuth credentials:', { clientId: !!clientId, clientSecret: !!clientSecret });
+        throw new Error('Google OAuth credentials not configured. Please contact administrator.');
+      }
+
+      console.log('Fetching calendar list for user:', user.id);
 
       const response = await fetch('https://www.googleapis.com/calendar/v3/users/me/calendarList', {
         headers: {
@@ -100,8 +111,15 @@ serve(async (req) => {
 
       if (!response.ok) {
         const errorData = await response.text();
-        console.error('Calendar list fetch failed:', errorData);
-        throw new Error('Failed to fetch calendar list');
+        console.error('Calendar list fetch failed:', response.status, errorData);
+        
+        if (response.status === 401) {
+          throw new Error('Google Calendar access token expired. Please reconnect your calendar.');
+        } else if (response.status === 403) {
+          throw new Error('Access denied to Google Calendar. Please check your OAuth setup and permissions.');
+        }
+        
+        throw new Error(`Failed to fetch calendar list: ${response.status} ${response.statusText}`);
       }
 
       const data = await response.json();
