@@ -15,6 +15,8 @@ export const GoogleCalendarSync = () => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [calendars, setCalendars] = useState<any[]>([]);
+  const [loadingCalendars, setLoadingCalendars] = useState(false);
   const [syncDirection, setSyncDirection] = useState<'one_way' | 'two_way'>('one_way');
   const [autoSync, setAutoSync] = useState(false);
   const [syncInterval, setSyncInterval] = useState(60);
@@ -49,6 +51,11 @@ export const GoogleCalendarSync = () => {
         setAutoSync(data.auto_sync);
         setSyncInterval(data.sync_interval_minutes);
         setSyncEnabled(data.sync_enabled);
+        
+        // Load calendars if connected but no calendar selected
+        if (data.access_token && !data.calendar_id) {
+          loadCalendars();
+        }
       }
     } catch (error) {
       console.error('Error loading settings:', error);
@@ -119,34 +126,73 @@ export const GoogleCalendarSync = () => {
     setIsSyncing(true);
     
     try {
+      // First check if we have valid settings and calendar_id
+      if (!settings?.access_token) {
+        throw new Error('Google Calendar not connected. Please connect first.');
+      }
+      
+      if (!settings?.calendar_id) {
+        throw new Error('No calendar selected. Please select a calendar in settings.');
+      }
+
       // Call edge function to sync appointments
       const { data: { user } } = await supabase.auth.getUser();
       const { data, error } = await supabase.functions.invoke('google-calendar-sync', {
         body: { 
           action: 'sync_appointments',
-          user_id: user?.id,
-          settings: {
-            calendar_id: settings?.calendar_id,
-            access_token: settings?.access_token
-          }
+          user_id: user?.id
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        // Check if it's an auth error and suggest reconnection
+        if (error.message?.includes('401') || error.message?.includes('authentication')) {
+          throw new Error('Authentication expired. Please disconnect and reconnect Google Calendar.');
+        }
+        throw error;
+      }
+
+      // Update last sync time
+      await updateSettings({ last_sync_at: new Date().toISOString() });
 
       toast({ 
         title: 'Sync Completed', 
-        description: `Successfully synced ${data.synced_count || 0} appointments.`
+        description: `Successfully synced ${data?.synced_count || 0} appointments.`
       });
+      
+      // Reload settings to get updated sync time
+      await loadSettings();
     } catch (error) {
       console.error('Error syncing calendar:', error);
       toast({ 
         title: 'Sync Failed', 
-        description: 'Failed to sync calendar. Please try again.',
+        description: error instanceof Error ? error.message : 'Failed to sync calendar. Please try again.',
         variant: 'destructive'
       });
     } finally {
       setIsSyncing(false);
+    }
+  };
+
+  const loadCalendars = async () => {
+    setLoadingCalendars(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('google-calendar-sync', {
+        body: { action: 'list_calendars' }
+      });
+
+      if (error) throw error;
+
+      setCalendars(data.calendars || []);
+    } catch (error) {
+      console.error('Error loading calendars:', error);
+      toast({
+        title: 'Calendar Load Failed',
+        description: 'Failed to load Google Calendars. Please try reconnecting.',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoadingCalendars(false);
     }
   };
 
@@ -311,6 +357,49 @@ export const GoogleCalendarSync = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
+            {/* Calendar Selection */}
+            {!settings?.calendar_id && (
+              <div className="p-4 border border-orange-200 bg-orange-50 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <AlertCircle className="h-4 w-4 text-orange-600" />
+                  <div className="font-medium text-orange-900">Calendar Selection Required</div>
+                </div>
+                <div className="text-sm text-orange-700 mb-3">
+                  Please select a Google Calendar to sync with your appointments.
+                </div>
+                <div className="space-y-2">
+                  <Label>Google Calendar</Label>
+                  <div className="flex gap-2">
+                    <Select 
+                      onValueChange={(value) => {
+                        updateSettings({ calendar_id: value });
+                      }}
+                      disabled={loadingCalendars}
+                    >
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder={loadingCalendars ? "Loading calendars..." : "Select a calendar"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {calendars.map((calendar) => (
+                          <SelectItem key={calendar.id} value={calendar.id}>
+                            {calendar.summary} {calendar.primary ? '(Primary)' : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={loadCalendars}
+                      disabled={loadingCalendars}
+                    >
+                      <RefreshCw className={`h-4 w-4 ${loadingCalendars ? 'animate-spin' : ''}`} />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Sync Direction */}
             <div className="space-y-2">
               <Label>Sync Direction</Label>
