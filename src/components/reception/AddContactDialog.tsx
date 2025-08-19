@@ -139,21 +139,48 @@ const AddContactDialog = ({ open, onOpenChange }: AddContactDialogProps) => {
 
   const addContactMutation = useMutation({
     mutationFn: async (data: ContactFormData) => {
+      // Validate required fields
+      if (!data.name?.trim()) {
+        throw new Error('Name is required');
+      }
+
+      if (!firmId) {
+        throw new Error('User is not associated with a firm');
+      }
+
+      if (!user?.id) {
+        throw new Error('User is not authenticated');
+      }
+
       // Convert empty string UUIDs to null to prevent PostgreSQL errors
       const cleanedData = {
-        ...data,
-        state_id: data.state_id || null,
-        district_id: data.district_id || null,
+        name: data.name.trim(),
+        email: data.email?.trim() || null,
+        phone: data.phone?.trim() || null,
+        visit_purpose: data.visit_purpose?.trim() || null,
+        address_line_1: data.address_line_1?.trim() || null,
+        address_line_2: data.address_line_2?.trim() || null,
+        pin_code: data.pin_code?.trim() || null,
+        referred_by_name: data.referred_by_name?.trim() || null,
+        referred_by_phone: data.referred_by_phone?.trim() || null,
+        notes: data.notes?.trim() || null,
+        state_id: data.state_id && data.state_id.trim() ? data.state_id : null,
+        district_id: data.district_id && data.district_id.trim() ? data.district_id : null,
         firm_id: firmId,
-        created_by: user?.id,
+        created_by: user.id,
         last_visited_at: new Date().toISOString(),
       };
+
+      console.log('Attempting to insert contact with data:', cleanedData);
 
       const { error } = await supabase
         .from('contacts')
         .insert(cleanedData);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database error:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reception-contacts'] });
@@ -168,11 +195,27 @@ const AddContactDialog = ({ open, onOpenChange }: AddContactDialogProps) => {
       setNewDistrictName('');
       onOpenChange(false);
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Error adding contact:', error);
+      let errorMessage = "Failed to add contact. Please try again.";
+      
+      if (error?.message === 'Name is required') {
+        errorMessage = "Please enter a contact name.";
+      } else if (error?.message === 'User is not associated with a firm') {
+        errorMessage = "You are not associated with a firm. Please contact your administrator.";
+      } else if (error?.message === 'User is not authenticated') {
+        errorMessage = "Please log in again and try.";
+      } else if (error?.code === '22P02') {
+        errorMessage = "Invalid data format. Please check your input and try again.";
+      } else if (error?.code === '23505') {
+        errorMessage = "A contact with this information already exists.";
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "Error",
-        description: "Failed to add contact. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     },
