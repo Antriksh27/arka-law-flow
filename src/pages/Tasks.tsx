@@ -5,14 +5,22 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CheckSquare, Plus, Calendar, User, Tag, Search } from 'lucide-react';
+import { CheckSquare, Plus, Calendar, User, Tag, Search, Edit, Trash2, Eye, MoreHorizontal } from 'lucide-react';
 import { format } from 'date-fns';
 import { CreateTaskDialog } from '../components/tasks/CreateTaskDialog';
+import { EditTaskDialog } from '../components/tasks/EditTaskDialog';
+import { TaskDetailDialog } from '../components/tasks/TaskDetailDialog';
+import { DeleteTaskDialog } from '../components/tasks/DeleteTaskDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 const Tasks = () => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [selectedTaskId, setSelectedTaskId] = useState<string>('');
+  const [selectedTaskTitle, setSelectedTaskTitle] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
@@ -116,13 +124,48 @@ const Tasks = () => {
     updateTaskMutation.mutate({ taskId, status: newStatus });
   };
 
+  const handleEditTask = (taskId: string) => {
+    setSelectedTaskId(taskId);
+    setShowEditDialog(true);
+  };
+
+  const handleViewTask = (taskId: string) => {
+    setSelectedTaskId(taskId);
+    setShowDetailDialog(true);
+  };
+
+  const handleDeleteTask = (taskId: string, taskTitle: string) => {
+    setSelectedTaskId(taskId);
+    setSelectedTaskTitle(taskTitle);
+    setShowDeleteDialog(true);
+  };
+
+  const isOverdue = (dueDate: string | null, status: string) => {
+    if (!dueDate || status === 'completed') return false;
+    return new Date(dueDate) < new Date();
+  };
+
   const TaskCard = ({ task }: { task: any }) => (
-    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 shadow-sm hover:shadow-md transition-shadow hover:bg-white">
+    <div className={`bg-gray-50 rounded-lg p-4 border shadow-sm hover:shadow-md transition-shadow hover:bg-white ${
+      isOverdue(task.due_date, task.status) ? 'border-red-300 bg-red-50' : 'border-gray-200'
+    }`}>
       <div className="flex items-start justify-between mb-3">
-        <h4 className="font-medium text-sm text-gray-900 line-clamp-2">{task.title}</h4>
-        <Badge className={`${getPriorityColor(task.priority)} text-xs rounded-full border`}>
-          {task.priority}
-        </Badge>
+        <h4 
+          className="font-medium text-sm text-gray-900 line-clamp-2 cursor-pointer hover:text-blue-600"
+          onClick={() => handleViewTask(task.id)}
+        >
+          {task.title}
+        </h4>
+        <div className="flex items-center gap-1">
+          <Badge className={`${getPriorityColor(task.priority)} text-xs rounded-full border`}>
+            {task.priority}
+          </Badge>
+          {isOverdue(task.due_date, task.status) && (
+            <Badge className="bg-red-100 text-red-700 border-red-200 text-xs rounded-full border">
+              Overdue
+            </Badge>
+          )}
+        </div>
       </div>
       
       {task.description && (
@@ -147,9 +190,10 @@ const Tasks = () => {
           <span className="truncate">{task.assigned_user?.full_name || 'Unassigned'}</span>
         </div>
         {task.due_date && (
-          <div className="flex items-center gap-1">
+          <div className={`flex items-center gap-1 ${isOverdue(task.due_date, task.status) ? 'text-red-600 font-medium' : ''}`}>
             <Calendar className="w-3 h-3" />
             {format(new Date(task.due_date), 'MMM d')}
+            {isOverdue(task.due_date, task.status) && ' (Overdue)'}
           </div>
         )}
       </div>
@@ -170,12 +214,13 @@ const Tasks = () => {
         </div>
       )}
 
-      {task.status !== 'completed' && (
-        <div className="flex gap-2 mt-3">
+      {/* Action Buttons */}
+      <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-200">
+        <div className="flex gap-2">
           {task.status === 'todo' && (
             <button
               onClick={() => handleStatusChange(task.id, 'in_progress')}
-              className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-b from-green-400 to-green-600 border border-green-600 rounded-lg shadow-lg hover:from-green-500 hover:to-green-700 hover:shadow-xl active:scale-95 transition-all duration-150 transform hover:-translate-y-0.5"
+              className="px-3 py-1 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
             >
               Start
             </button>
@@ -183,13 +228,37 @@ const Tasks = () => {
           {task.status === 'in_progress' && (
             <button
               onClick={() => handleStatusChange(task.id, 'completed')}
-              className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-b from-red-400 to-red-600 border border-red-600 rounded-lg shadow-lg hover:from-red-500 hover:to-red-700 hover:shadow-xl active:scale-95 transition-all duration-150 transform hover:-translate-y-0.5"
+              className="px-3 py-1 text-xs font-medium text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors"
             >
               Complete
             </button>
           )}
         </div>
-      )}
+        
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => handleViewTask(task.id)}
+            className="p-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+            title="View Details"
+          >
+            <Eye className="w-3 h-3" />
+          </button>
+          <button
+            onClick={() => handleEditTask(task.id)}
+            className="p-1 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded transition-colors"
+            title="Edit Task"
+          >
+            <Edit className="w-3 h-3" />
+          </button>
+          <button
+            onClick={() => handleDeleteTask(task.id, task.title)}
+            className="p-1 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+            title="Delete Task"
+          >
+            <Trash2 className="w-3 h-3" />
+          </button>
+        </div>
+      </div>
     </div>
   );
 
@@ -335,6 +404,31 @@ const Tasks = () => {
       )}
 
       <CreateTaskDialog open={showCreateDialog} onClose={() => setShowCreateDialog(false)} />
+      
+      <EditTaskDialog 
+        open={showEditDialog} 
+        onClose={() => setShowEditDialog(false)}
+        taskId={selectedTaskId}
+      />
+      
+      <TaskDetailDialog 
+        open={showDetailDialog} 
+        onClose={() => setShowDetailDialog(false)}
+        taskId={selectedTaskId}
+        onEdit={handleEditTask}
+        onDelete={(taskId) => {
+          // We need to get the task title for the delete dialog
+          const task = tasks.find(t => t.id === taskId);
+          handleDeleteTask(taskId, task?.title || 'Unknown Task');
+        }}
+      />
+      
+      <DeleteTaskDialog 
+        open={showDeleteDialog} 
+        onClose={() => setShowDeleteDialog(false)}
+        taskId={selectedTaskId}
+        taskTitle={selectedTaskTitle}
+      />
     </div>
   );
 };
