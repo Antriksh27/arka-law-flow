@@ -20,9 +20,11 @@ interface GoogleCalendarEvent {
   description?: string
   start: {
     dateTime: string
+    timeZone?: string
   }
   end: {
     dateTime: string
+    timeZone?: string
   }
   attendees?: Array<{
     email?: string
@@ -412,72 +414,36 @@ async function deleteGoogleCalendarEvent(accessToken: string, calendarId: string
 }
 
 function buildGoogleCalendarEvent(appointment: AppointmentData): GoogleCalendarEvent {
-  // Convert IST time to UTC for Google Calendar
-  // If appointment is at 12:00 PM IST, we need to subtract 5.5 hours to get UTC
+  // Use the exact timezone format that Google Calendar expects for IST
+  // The appointment time is stored in IST, so we specify the timezone explicitly
+  const startDateTime = `${appointment.appointment_date}T${appointment.appointment_time}`;
+  
+  // Calculate end time in the same timezone
   const timeParts = appointment.appointment_time.split(':');
-  const istHour = parseInt(timeParts[0]);
-  const istMinute = parseInt(timeParts[1]);
+  const startHour = parseInt(timeParts[0]);
+  const startMinute = parseInt(timeParts[1]);
   
-  // Convert IST to UTC by subtracting 5 hours 30 minutes (330 minutes)
-  const istTotalMinutes = istHour * 60 + istMinute;
-  const utcTotalMinutes = istTotalMinutes - 330; // 5.5 hours = 330 minutes
+  const totalMinutes = startHour * 60 + startMinute + appointment.duration_minutes;
+  const endHour = Math.floor(totalMinutes / 60) % 24;
+  const endMinute = totalMinutes % 60;
   
-  let utcHour = Math.floor(utcTotalMinutes / 60);
-  let utcMinute = utcTotalMinutes % 60;
-  let utcDate = appointment.appointment_date;
-  
-  // Handle day rollover
-  if (utcHour < 0) {
-    utcHour += 24;
-    // Subtract one day
-    const date = new Date(appointment.appointment_date);
-    date.setDate(date.getDate() - 1);
-    utcDate = date.toISOString().split('T')[0];
-  } else if (utcHour >= 24) {
-    utcHour -= 24;
-    // Add one day
-    const date = new Date(appointment.appointment_date);
-    date.setDate(date.getDate() + 1);
-    utcDate = date.toISOString().split('T')[0];
-  }
-  
-  const startTimeUTC = `${utcHour.toString().padStart(2, '0')}:${utcMinute.toString().padStart(2, '0')}:00`;
-  const startDateTimeUTC = `${utcDate}T${startTimeUTC}Z`;
-  
-  // Calculate end time in UTC
-  const endUtcTotalMinutes = utcTotalMinutes + appointment.duration_minutes;
-  let endUtcHour = Math.floor(endUtcTotalMinutes / 60);
-  let endUtcMinute = endUtcTotalMinutes % 60;
-  let endUtcDate = utcDate;
-  
-  // Handle day rollover for end time
-  if (endUtcHour < 0) {
-    endUtcHour += 24;
-    const date = new Date(endUtcDate);
-    date.setDate(date.getDate() - 1);
-    endUtcDate = date.toISOString().split('T')[0];
-  } else if (endUtcHour >= 24) {
-    endUtcHour -= 24;
-    const date = new Date(endUtcDate);
-    date.setDate(date.getDate() + 1);
-    endUtcDate = date.toISOString().split('T')[0];
-  }
-  
-  const endTimeUTC = `${endUtcHour.toString().padStart(2, '0')}:${endUtcMinute.toString().padStart(2, '0')}:00`;
-  const endDateTimeUTC = `${endUtcDate}T${endTimeUTC}Z`;
+  const endTime = `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}:00`;
+  const endDateTime = `${appointment.appointment_date}T${endTime}`;
 
-  console.log('IST time:', `${appointment.appointment_date}T${appointment.appointment_time}`);
-  console.log('UTC start:', startDateTimeUTC);
-  console.log('UTC end:', endDateTimeUTC);
+  console.log('Appointment stored time:', appointment.appointment_time);
+  console.log('Google Calendar start:', startDateTime);
+  console.log('Google Calendar end:', endDateTime);
 
   return {
     summary: appointment.title || 'Appointment',
     description: `${appointment.notes || ''}\n\nClient: ${appointment.client_name || 'N/A'}\nStatus: ${appointment.status}`,
     start: {
-      dateTime: startDateTimeUTC
+      dateTime: startDateTime,
+      timeZone: 'Asia/Kolkata'
     },
     end: {
-      dateTime: endDateTimeUTC
+      dateTime: endDateTime,
+      timeZone: 'Asia/Kolkata'
     },
     location: appointment.location || '',
     attendees: appointment.client_name ? [{
