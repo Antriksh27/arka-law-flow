@@ -414,21 +414,13 @@ async function deleteGoogleCalendarEvent(accessToken: string, calendarId: string
 }
 
 function buildGoogleCalendarEvent(appointment: AppointmentData): GoogleCalendarEvent {
-  // Debug: Log the raw appointment data
-  console.log('Raw appointment data:', {
-    date: appointment.appointment_date,
-    time: appointment.appointment_time,
-    title: appointment.title
-  });
+  // The appointment times are already in IST. Don't add timezone offset here.
+  // Let Google Calendar handle the timezone interpretation.
+  const startDateTimeString = `${appointment.appointment_date}T${appointment.appointment_time}`;
+  console.log('Creating datetime string without timezone offset:', startDateTimeString);
   
-  // Create the datetime string with IST timezone offset (+05:30)
-  const startDateTimeString = `${appointment.appointment_date}T${appointment.appointment_time}+05:30`;
-  console.log('DateTime string with IST offset:', startDateTimeString);
-  
+  // Create date object treating the time as local (IST)
   const startDateTime = new Date(startDateTimeString);
-  console.log('Parsed start datetime:', startDateTime.toISOString());
-  console.log('Local time representation:', startDateTime.toString());
-  
   const endDateTime = new Date(startDateTime.getTime() + (appointment.duration_minutes * 60000));
 
   const event = {
@@ -448,6 +440,6 @@ function buildGoogleCalendarEvent(appointment: AppointmentData): GoogleCalendarE
     }] : undefined
   };
   
-  console.log('Final Google Calendar event data:', JSON.stringify(event, null, 2));
+  console.log('Final event start time:', event.start.dateTime, 'with timezone:', event.start.timeZone);
   return event;
 }
