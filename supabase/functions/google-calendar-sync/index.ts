@@ -414,20 +414,25 @@ async function deleteGoogleCalendarEvent(accessToken: string, calendarId: string
 }
 
 function buildGoogleCalendarEvent(appointment: AppointmentData): GoogleCalendarEvent {
-  // Create the datetime string with timezone offset for IST (+05:30)
-  const startDateTimeString = `${appointment.appointment_date}T${appointment.appointment_time}+05:30`;
+  // Assume appointment time is already in IST, create datetime without timezone offset
+  const startDateTimeString = `${appointment.appointment_date}T${appointment.appointment_time}`;
   const startDateTime = new Date(startDateTimeString);
-  const endDateTime = new Date(startDateTime.getTime() + (appointment.duration_minutes * 60000));
+  
+  // Since our appointment times are stored in IST, we need to adjust to UTC for Google Calendar
+  // IST is UTC+5:30, so we subtract 5.5 hours to get UTC
+  const istOffsetMs = 5.5 * 60 * 60 * 1000;
+  const startDateTimeUTC = new Date(startDateTime.getTime() - istOffsetMs);
+  const endDateTimeUTC = new Date(startDateTimeUTC.getTime() + (appointment.duration_minutes * 60000));
 
   return {
     summary: appointment.title || 'Appointment',
     description: `${appointment.notes || ''}\n\nClient: ${appointment.client_name || 'N/A'}\nStatus: ${appointment.status}`,
     start: {
-      dateTime: startDateTime.toISOString(),
+      dateTime: startDateTimeUTC.toISOString(),
       timeZone: 'Asia/Kolkata'
     },
     end: {
-      dateTime: endDateTime.toISOString(),
+      dateTime: endDateTimeUTC.toISOString(),
       timeZone: 'Asia/Kolkata'
     },
     location: appointment.location || '',
