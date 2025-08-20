@@ -414,24 +414,31 @@ async function deleteGoogleCalendarEvent(accessToken: string, calendarId: string
 }
 
 function buildGoogleCalendarEvent(appointment: AppointmentData): GoogleCalendarEvent {
-  // The key fix: Explicitly specify that the time is in IST timezone
-  // by adding the +05:30 offset to the datetime string
-  const startDateTimeString = `${appointment.appointment_date}T${appointment.appointment_time}+05:30`;
-  console.log('Creating datetime with explicit IST timezone:', startDateTimeString);
+  // DEFINITIVE FIX: Google Calendar expects datetime in RFC3339 format
+  // Since appointment times are stored as IST times, we need to treat them as such
+  // Method: Use the date and time as-is and specify Asia/Kolkata timezone
   
-  const startDateTime = new Date(startDateTimeString);
-  const endDateTime = new Date(startDateTime.getTime() + (appointment.duration_minutes * 60000));
+  // Create the datetime in the format: YYYY-MM-DDTHH:mm:ss (no timezone, treated as local to specified timezone)
+  const startDateTimeString = `${appointment.appointment_date}T${appointment.appointment_time}`;
+  console.log('Raw datetime string:', startDateTimeString);
+  
+  const endTime = appointment.appointment_time.split(':');
+  const endHour = parseInt(endTime[0]);
+  const endMinute = parseInt(endTime[1]) + appointment.duration_minutes;
+  const finalEndHour = endHour + Math.floor(endMinute / 60);
+  const finalEndMinute = endMinute % 60;
+  const endTimeString = `${finalEndHour.toString().padStart(2, '0')}:${finalEndMinute.toString().padStart(2, '0')}:00`;
+  const endDateTimeString = `${appointment.appointment_date}T${endTimeString}`;
 
-  // Now send the UTC times to Google Calendar but specify the display timezone
   const event = {
     summary: appointment.title || 'Appointment',
     description: `${appointment.notes || ''}\n\nClient: ${appointment.client_name || 'N/A'}\nStatus: ${appointment.status}`,
     start: {
-      dateTime: startDateTime.toISOString(),
+      dateTime: startDateTimeString,
       timeZone: 'Asia/Kolkata'
     },
     end: {
-      dateTime: endDateTime.toISOString(),  
+      dateTime: endDateTimeString,
       timeZone: 'Asia/Kolkata'
     },
     location: appointment.location || '',
@@ -440,7 +447,6 @@ function buildGoogleCalendarEvent(appointment: AppointmentData): GoogleCalendarE
     }] : undefined
   };
   
-  console.log('Appointment time stored as:', appointment.appointment_time);
-  console.log('Final UTC time sent to Google:', event.start.dateTime);
+  console.log('Sending to Google Calendar:', JSON.stringify(event.start, null, 2));
   return event;
 }
