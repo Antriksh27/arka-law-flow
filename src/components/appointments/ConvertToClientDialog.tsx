@@ -32,7 +32,7 @@ interface ConvertToClientFormData {
   assigned_lawyer_id?: string;
   case_title?: string;
   case_description?: string;
-  case_type?: 'civil' | 'criminal' | 'family' | 'corporate' | 'tax' | 'other' | 'labor' | 'intellectual_property' | 'real_estate' | 'immigration' | 'constitutional';
+  case_type?: 'civil' | 'criminal' | 'family' | 'corporate' | 'other' | 'labor' | 'intellectual_property' | 'real_estate' | 'immigration' | 'constitutional';
   estimated_fees?: number;
   payment_terms?: string;
   additional_notes?: string;
@@ -285,8 +285,11 @@ export const ConvertToClientDialog: React.FC<ConvertToClientDialogProps> = ({
                     <SelectItem value="criminal">Criminal</SelectItem>
                     <SelectItem value="family">Family</SelectItem>
                     <SelectItem value="corporate">Corporate</SelectItem>
-                    <SelectItem value="tax">Tax</SelectItem>
+                    <SelectItem value="labor">Labor</SelectItem>
+                    <SelectItem value="intellectual_property">Intellectual Property</SelectItem>
                     <SelectItem value="real_estate">Real Estate</SelectItem>
+                    <SelectItem value="immigration">Immigration</SelectItem>
+                    <SelectItem value="constitutional">Constitutional</SelectItem>
                     <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>

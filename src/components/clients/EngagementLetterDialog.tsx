@@ -36,8 +36,6 @@ interface EngagementLetterData {
   professional_fee: number;
   retainer_amount: number;
   expenses: number;
-  tax_rate: number; // percentage
-  including_tax: boolean; // if true, amounts include tax
   
   // Payment Details
   payment_schedule: string;
@@ -71,8 +69,6 @@ export const EngagementLetterDialog: React.FC<EngagementLetterDialogProps> = ({
     defaultValues: {
       issue_date: new Date().toISOString().split('T')[0],
       payment_method: 'UPI/Bank Transfer',
-      tax_rate: 18,
-      including_tax: false,
       scope_description: 'Legal consultation, research, drafting, court appearances, and related legal services as required for the matter.'
     }
   });
@@ -126,59 +122,14 @@ export const EngagementLetterDialog: React.FC<EngagementLetterDialogProps> = ({
     const retainerAmount = data.retainer_amount || 0;
     const expenses = data.expenses || 0;
     
-    if (data.including_tax) {
-      // When amounts include tax, calculate the base amount and tax separately
-      const taxMultiplier = 1 + (data.tax_rate / 100);
-      
-      const professionalBase = professionalFee > 0 ? Math.round(professionalFee / taxMultiplier) : 0;
-      const retainerBase = retainerAmount > 0 ? Math.round(retainerAmount / taxMultiplier) : 0;
-      const expensesBase = expenses > 0 ? Math.round(expenses / taxMultiplier) : 0;
-      
-      const professionalTax = professionalFee > 0 ? professionalFee - professionalBase : 0;
-      const retainerTax = retainerAmount > 0 ? retainerAmount - retainerBase : 0;
-      const expensesTax = expenses > 0 ? expenses - expensesBase : 0;
-      
-      const subtotal = professionalBase + retainerBase + expensesBase;
-      const totalTax = professionalTax + retainerTax + expensesTax;
-      const grandTotal = professionalFee + retainerAmount + expenses;
+    const grandTotal = professionalFee + retainerAmount + expenses;
 
-      return {
-        professionalTax,
-        retainerTax,
-        expensesTax,
-        professionalTotal: professionalFee,
-        retainerTotal: retainerAmount,
-        expensesTotal: expenses,
-        subtotal,
-        totalTax,
-        grandTotal
-      };
-    } else {
-      // When amounts exclude tax, add tax on top
-      const professionalTax = professionalFee > 0 ? Math.round((professionalFee * data.tax_rate) / 100) : 0;
-      const retainerTax = retainerAmount > 0 ? Math.round((retainerAmount * data.tax_rate) / 100) : 0;
-      const expensesTax = expenses > 0 ? Math.round((expenses * data.tax_rate) / 100) : 0;
-      
-      const professionalTotal = professionalFee + professionalTax;
-      const retainerTotal = retainerAmount + retainerTax;
-      const expensesTotal = expenses + expensesTax;
-      
-      const subtotal = professionalFee + retainerAmount + expenses;
-      const totalTax = professionalTax + retainerTax + expensesTax;
-      const grandTotal = subtotal + totalTax;
-
-      return {
-        professionalTax,
-        retainerTax,
-        expensesTax,
-        professionalTotal,
-        retainerTotal,
-        expensesTotal,
-        subtotal,
-        totalTax,
-        grandTotal
-      };
-    }
+    return {
+      professionalTotal: professionalFee,
+      retainerTotal: retainerAmount,
+      expensesTotal: expenses,
+      grandTotal
+    };
   };
 
   const generateLetter = (data: EngagementLetterData) => {
@@ -275,42 +226,32 @@ export const EngagementLetterDialog: React.FC<EngagementLetterDialogProps> = ({
       <tr>
         <th>Description</th>
         <th>Amount (₹)</th>
-        <th>Tax (${data.tax_rate}%)</th>
-        <th>Total (₹)</th>
       </tr>
     </thead>
      <tbody>
        ${data.professional_fee > 0 ? `<tr>
          <td>Professional Fee</td>
-         <td>${data.professional_fee.toLocaleString()}</td>
-         <td>${totals.professionalTax.toLocaleString()}</td>
          <td>${totals.professionalTotal.toLocaleString()}</td>
        </tr>` : `<tr>
          <td>Professional Fee</td>
-         <td colspan="3" style="text-align:center; font-style:italic; color:var(--muted);">Not Applicable</td>
+         <td style="text-align:center; font-style:italic; color:var(--muted);">Not Applicable</td>
        </tr>`}
        ${data.retainer_amount > 0 ? `<tr>
          <td>Retainer Amount</td>
-         <td>${data.retainer_amount.toLocaleString()}</td>
-         <td>${totals.retainerTax.toLocaleString()}</td>
          <td>${totals.retainerTotal.toLocaleString()}</td>
        </tr>` : `<tr>
          <td>Retainer Amount</td>
-         <td colspan="3" style="text-align:center; font-style:italic; color:var(--muted);">Not Applicable</td>
+         <td style="text-align:center; font-style:italic; color:var(--muted);">Not Applicable</td>
        </tr>`}
        ${data.expenses > 0 ? `<tr>
          <td>Out-of-Pocket Expenses</td>
-         <td>${data.expenses.toLocaleString()}</td>
-         <td>${totals.expensesTax.toLocaleString()}</td>
          <td>${totals.expensesTotal.toLocaleString()}</td>
        </tr>` : `<tr>
          <td>Out-of-Pocket Expenses</td>
-         <td colspan="3" style="text-align:center; font-style:italic; color:var(--muted);">Not Applicable</td>
+         <td style="text-align:center; font-style:italic; color:var(--muted);">Not Applicable</td>
        </tr>`}
        ${totals.grandTotal > 0 ? `<tr>
          <th style="text-align:right">Grand Total</th>
-         <th>${totals.subtotal.toLocaleString()}</th>
-         <th>${totals.totalTax.toLocaleString()}</th>
          <th>${totals.grandTotal.toLocaleString()}</th>
        </tr>` : ''}
      </tbody>
@@ -514,8 +455,6 @@ export const EngagementLetterDialog: React.FC<EngagementLetterDialogProps> = ({
         professional_fee: data.professional_fee || 0,
         retainer_amount: data.retainer_amount || 0,
         expenses: data.expenses || 0,
-        tax_rate: data.tax_rate,
-        including_tax: data.including_tax,
         payment_schedule: data.payment_schedule,
         payment_method: data.payment_method,
         issue_date: data.issue_date,
@@ -704,62 +643,29 @@ export const EngagementLetterDialog: React.FC<EngagementLetterDialogProps> = ({
                    />
                  </div>
 
-                 <div className="space-y-2">
-                   <Label htmlFor="tax_rate">Tax Rate (%)</Label>
-                   <Select value={watchedValues.tax_rate?.toString()} onValueChange={(value) => setValue('tax_rate', parseInt(value))}>
-                     <SelectTrigger>
-                       <SelectValue placeholder="Select tax rate" />
-                     </SelectTrigger>
-                     <SelectContent>
-                       <SelectItem value="18">18% (GST)</SelectItem>
-                       <SelectItem value="12">12%</SelectItem>
-                       <SelectItem value="5">5%</SelectItem>
-                       <SelectItem value="0">0% (Tax Exempt)</SelectItem>
-                     </SelectContent>
-                   </Select>
-                 </div>
-               </div>
-
-               <div className="flex items-center space-x-2">
-                 <Checkbox
-                   id="including_tax"
-                   checked={watchedValues.including_tax}
-                   onCheckedChange={(checked) => setValue('including_tax', Boolean(checked))}
-                 />
-                 <Label htmlFor="including_tax" className="text-sm font-normal">
-                   The amounts entered above include tax
-                 </Label>
-               </div>
-
-              {/* Fee Calculator Display */}
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <h4 className="font-medium mb-3">Fee Calculation</h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                  <div>
-                    <p className="text-muted-foreground">Professional Fee</p>
-                    <p className="font-semibold">₹{(watchedValues.professional_fee || 0).toLocaleString()}</p>
-                    <p className="text-xs text-muted-foreground">+ Tax: ₹{totals.professionalTax.toLocaleString()}</p>
-                    <p className="font-medium">Total: ₹{totals.professionalTotal.toLocaleString()}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Retainer</p>
-                    <p className="font-semibold">₹{(watchedValues.retainer_amount || 0).toLocaleString()}</p>
-                    <p className="text-xs text-muted-foreground">+ Tax: ₹{totals.retainerTax.toLocaleString()}</p>
-                    <p className="font-medium">Total: ₹{totals.retainerTotal.toLocaleString()}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Expenses</p>
-                    <p className="font-semibold">₹{(watchedValues.expenses || 0).toLocaleString()}</p>
-                    <p className="text-xs text-muted-foreground">+ Tax: ₹{totals.expensesTax.toLocaleString()}</p>
-                    <p className="font-medium">Total: ₹{totals.expensesTotal.toLocaleString()}</p>
-                  </div>
-                  <div className="bg-primary/10 p-3 rounded">
-                    <p className="text-muted-foreground">Grand Total</p>
-                    <p className="text-xl font-bold text-primary">₹{totals.grandTotal.toLocaleString()}</p>
+                <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                  <h4 className="font-medium">Fee Summary</h4>
+                  {totals.professionalTotal > 0 && (
+                    <div className="text-sm">
+                     <p>Professional Fee: ₹{totals.professionalTotal.toLocaleString()}</p>
+                    </div>
+                  )}
+                  {totals.retainerTotal > 0 && (
+                    <div className="text-sm">
+                     <p>Retainer Amount: ₹{totals.retainerTotal.toLocaleString()}</p>
+                    </div>
+                  )}
+                  {totals.expensesTotal > 0 && (
+                    <div className="text-sm">
+                     <p>Expenses: ₹{totals.expensesTotal.toLocaleString()}</p>
+                    </div>
+                  )}
+                  <div className="border-t pt-2 font-semibold">
+                    Grand Total: ₹{totals.grandTotal.toLocaleString()}
                   </div>
                 </div>
               </div>
-            </div>
+              </div>
 
             {/* Payment Details */}
             <div className="space-y-4">

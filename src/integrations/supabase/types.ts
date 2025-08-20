@@ -1293,7 +1293,6 @@ export type Database = {
           firm_id: string
           generated_at: string | null
           id: string
-          including_tax: boolean
           issue_date: string
           matter_title: string
           payment_method: string
@@ -1304,7 +1303,6 @@ export type Database = {
           scope_description: string
           signed_at: string | null
           status: string
-          tax_rate: number
           updated_at: string
         }
         Insert: {
@@ -1318,7 +1316,6 @@ export type Database = {
           firm_id: string
           generated_at?: string | null
           id?: string
-          including_tax?: boolean
           issue_date: string
           matter_title: string
           payment_method: string
@@ -1329,7 +1326,6 @@ export type Database = {
           scope_description: string
           signed_at?: string | null
           status?: string
-          tax_rate?: number
           updated_at?: string
         }
         Update: {
@@ -1343,7 +1339,6 @@ export type Database = {
           firm_id?: string
           generated_at?: string | null
           id?: string
-          including_tax?: boolean
           issue_date?: string
           matter_title?: string
           payment_method?: string
@@ -1354,7 +1349,6 @@ export type Database = {
           scope_description?: string
           signed_at?: string | null
           status?: string
-          tax_rate?: number
           updated_at?: string
         }
         Relationships: []
