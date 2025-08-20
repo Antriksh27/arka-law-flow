@@ -205,9 +205,9 @@ export const GoogleCalendarSyncStatus: React.FC = () => {
             <div className="text-muted-foreground">Connection</div>
             <div className="flex items-center gap-1">
               {syncStatus.isConnected ? (
-                <Badge variant="success" className="text-xs">Connected</Badge>
+                <Badge variant="default" className="text-xs bg-green-100 text-green-800">Connected</Badge>
               ) : (
-                <Badge variant="destructive" className="text-xs">Disconnected</Badge>
+                <Badge variant="default" className="text-xs bg-red-100 text-red-800">Disconnected</Badge>
               )}
             </div>
           </div>

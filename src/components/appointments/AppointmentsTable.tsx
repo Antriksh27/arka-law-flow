@@ -13,6 +13,7 @@ import { FilterState } from '../../pages/Appointments';
 import { format, isBefore, startOfDay } from 'date-fns';
 import TimeUtils from '@/lib/timeUtils';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from '@/hooks/use-toast';
 interface Appointment {
   id: string;
   title: string;
@@ -215,14 +216,29 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
 
       if (error) {
         console.error('Error deleting appointment:', error);
+        toast({
+          title: "Error",
+          description: `Failed to delete appointment: ${error.message}`,
+          variant: "destructive"
+        });
         return;
       }
+
+      toast({
+        title: "Success",
+        description: "Appointment deleted successfully"
+      });
 
       fetchAppointments();
       setDeleteConfirmOpen(false);
       setAppointmentToDelete(null);
     } catch (error) {
       console.error('Error deleting appointment:', error);
+      toast({
+        title: "Error",
+        description: `Failed to delete appointment: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive"
+      });
     }
   };
   if (loading) {

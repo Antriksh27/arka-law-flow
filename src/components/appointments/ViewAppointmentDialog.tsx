@@ -159,9 +159,10 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
       closeDialog();
     },
     onError: (error) => {
+      console.error('Delete appointment error:', error);
       toast({
         title: "Error",
-        description: "Failed to delete appointment",
+        description: `Failed to delete appointment: ${error.message}`,
         variant: "destructive"
       });
     }
