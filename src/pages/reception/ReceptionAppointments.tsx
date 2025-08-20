@@ -8,11 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Clock, User, Plus, UserCheck } from 'lucide-react';
+import { Calendar, Clock, User, Plus, UserCheck, Trash2 } from 'lucide-react';
 import { format, parseISO, isWithinInterval, subMinutes } from 'date-fns';
 import BookAppointmentDialog from '@/components/reception/BookAppointmentDialog';
 import EditAppointmentDialog from '@/components/reception/EditAppointmentDialog';
 import RescheduleAppointmentDialog from '@/components/reception/RescheduleAppointmentDialog';
+import DeleteAppointmentDialog from '@/components/reception/DeleteAppointmentDialog';
 import { sendAppointmentNotification } from '@/lib/appointmentNotifications';
 
 const ReceptionAppointments = () => {
@@ -25,6 +26,7 @@ const ReceptionAppointments = () => {
   const [bookAppointmentOpen, setBookAppointmentOpen] = useState(false);
   const [editAppointmentOpen, setEditAppointmentOpen] = useState(false);
   const [rescheduleAppointmentOpen, setRescheduleAppointmentOpen] = useState(false);
+  const [deleteAppointmentOpen, setDeleteAppointmentOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
 
   // Check for action parameter to auto-open dialogs
@@ -258,6 +260,11 @@ const ReceptionAppointments = () => {
     setRescheduleAppointmentOpen(true);
   };
 
+  const handleDelete = (appointment: any) => {
+    setSelectedAppointment(appointment);
+    setDeleteAppointmentOpen(true);
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'upcoming':
@@ -427,6 +434,15 @@ const ReceptionAppointments = () => {
                       >
                         Reschedule
                       </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="text-red-600 border-red-200 hover:bg-red-50"
+                        onClick={() => handleDelete(appointment)}
+                      >
+                        <Trash2 className="w-4 h-4 mr-1" />
+                        Delete
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -451,6 +467,12 @@ const ReceptionAppointments = () => {
       <RescheduleAppointmentDialog
         open={rescheduleAppointmentOpen}
         onOpenChange={setRescheduleAppointmentOpen}
+        appointment={selectedAppointment}
+      />
+
+      <DeleteAppointmentDialog
+        open={deleteAppointmentOpen}
+        onOpenChange={setDeleteAppointmentOpen}
         appointment={selectedAppointment}
       />
     </div>
