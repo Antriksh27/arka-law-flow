@@ -89,6 +89,8 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
         return <FileText className="w-4 h-4 text-green-600" />;
       case 'task':
         return <Clock className="w-4 h-4 text-orange-600" />;
+      case 'client':
+        return <User className="w-4 h-4 text-purple-600" />;
       default:
         return <Bell className="w-4 h-4 text-gray-600" />;
     }
