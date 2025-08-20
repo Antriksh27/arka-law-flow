@@ -3416,6 +3416,10 @@ export type Database = {
         Args: { user_id: string }
         Returns: undefined
       }
+      trigger_sync_queue_processing: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       update_law_firm_license_count: {
         Args: { firm_id: string; new_license_count: number }
         Returns: undefined
