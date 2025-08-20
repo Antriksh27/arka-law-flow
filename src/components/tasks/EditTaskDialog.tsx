@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { ClientSelector } from './ClientSelector';
 
 interface EditTaskDialogProps {
   open: boolean;
@@ -274,18 +275,12 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
               <Label htmlFor="client_id" className="text-sm font-medium text-gray-700">
                 Select Client
               </Label>
-              <Select onValueChange={(value) => setValue('client_id', value)} value={watch('client_id')}>
-                <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                  <SelectValue placeholder="Select a client..." />
-                </SelectTrigger>
-                <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                  {clients.map((client) => (
-                    <SelectItem key={client.id} value={client.id} className="hover:bg-gray-50">
-                      {client.full_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <ClientSelector
+                clients={clients}
+                value={watch('client_id')}
+                onValueChange={(value) => setValue('client_id', value)}
+                placeholder="Search and select a client..."
+              />
             </div>
           )}
 

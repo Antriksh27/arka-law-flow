@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { ClientSelector } from './ClientSelector';
 
 interface CreateTaskDialogProps {
   open: boolean;
@@ -56,6 +57,13 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       client_id: clientId || ''
     }
   });
+
+  // Set default client_id if provided as prop
+  useEffect(() => {
+    if (clientId) {
+      setValue('client_id', clientId);
+    }
+  }, [clientId, setValue]);
 
   const linkType = watch('link_type');
 
@@ -234,18 +242,12 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
               <Label htmlFor="client_id" className="text-sm font-medium text-gray-700">
                 Select Client
               </Label>
-              <Select onValueChange={(value) => setValue('client_id', value)} defaultValue={clientId ? clientId : undefined}>
-                <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                  <SelectValue placeholder="Select a client..." />
-                </SelectTrigger>
-                <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                  {clients.map((client) => (
-                    <SelectItem key={client.id} value={client.id} className="hover:bg-gray-50">
-                      {client.full_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <ClientSelector
+                clients={clients}
+                value={watch('client_id')}
+                onValueChange={(value) => setValue('client_id', value)}
+                placeholder="Search and select a client..."
+              />
             </div>
           )}
 
