@@ -6,6 +6,24 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+interface GoogleCalendarSettings {
+  user_id: string;
+  access_token: string;
+  refresh_token?: string;
+  calendar_id?: string;
+  sync_enabled: boolean;
+  token_expires_at?: string;
+}
+
+interface QueueItem {
+  id: string;
+  user_id: string;
+  appointment_data: any;
+  operation: 'INSERT' | 'UPDATE' | 'DELETE';
+  created_at: string;
+  retry_count?: number;
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -67,7 +85,7 @@ serve(async (req) => {
           .eq('user_id', userId)
           .single();
 
-        if (settingsError || !googleSettings?.access_token || !googleSettings.sync_enabled) {
+        if (settingsError || !googleSettings?.sync_enabled) {
           console.log(`Skipping user ${userId}: No valid Google Calendar settings`);
           
           // Mark items as processed with error
@@ -86,10 +104,51 @@ serve(async (req) => {
           continue;
         }
 
-        // Process each item for this user
+        // Check and refresh token if needed
+        const validToken = await ensureValidAccessToken(supabaseClient, googleSettings);
+        if (!validToken) {
+          console.log(`Skipping user ${userId}: Invalid or expired access token`);
+          
+          // Mark items as processed with error
+          for (const item of items) {
+            await supabaseClient
+              .from('google_calendar_sync_queue')
+              .update({ 
+                processed: true, 
+                processed_at: new Date().toISOString(),
+                error_message: 'Google Calendar access token expired or invalid'
+              })
+              .eq('id', item.id);
+          }
+          
+          errorCount += items.length;
+          continue;
+        }
+
+        // Process each item for this user with deduplication
+        const processedAppointmentIds = new Set<string>();
+        
         for (const item of items) {
           try {
-            await processQueueItem(googleSettings, item);
+            // Skip if we've already processed this appointment in this batch
+            const appointmentKey = `${item.appointment_data.id}_${item.operation}`;
+            if (processedAppointmentIds.has(appointmentKey)) {
+              console.log(`Skipping duplicate item: ${item.id} for appointment ${item.appointment_data.id}`);
+              
+              // Mark as processed (duplicate)
+              await supabaseClient
+                .from('google_calendar_sync_queue')
+                .update({ 
+                  processed: true, 
+                  processed_at: new Date().toISOString(),
+                  error_message: 'Duplicate item skipped'
+                })
+                .eq('id', item.id);
+              
+              continue;
+            }
+            
+            await processQueueItem(validToken, item);
             
             // Mark as processed
             await supabaseClient
@@ -97,27 +156,45 @@ serve(async (req) => {
               .update({ processed: true, processed_at: new Date().toISOString() })
               .eq('id', item.id);
             
+            processedAppointmentIds.add(appointmentKey);
             processedCount++;
-            console.log(`Processed sync queue item: ${item.id}`);
+            console.log(`Processed sync queue item: ${item.id} for appointment ${item.appointment_data.id}`);
 
           } catch (error) {
             console.error(`Error processing sync queue item ${item.id}:`, error);
             
-            // Mark as processed with error
-            await supabaseClient
-              .from('google_calendar_sync_queue')
-              .update({ 
-                processed: true, 
-                processed_at: new Date().toISOString(),
-                error_message: error.message 
-              })
-              .eq('id', item.id);
+            // Check if it's a retryable error
+            const retryCount = (item.retry_count || 0) + 1;
+            const isRetryable = error.message.includes('rate limit') || error.message.includes('timeout');
+            
+            if (isRetryable && retryCount <= 3) {
+              // Update retry count but don't mark as processed
+              await supabaseClient
+                .from('google_calendar_sync_queue')
+                .update({ 
+                  retry_count: retryCount,
+                  error_message: `Retry ${retryCount}: ${error.message}`
+                })
+                .eq('id', item.id);
+              
+              console.log(`Will retry item ${item.id} (attempt ${retryCount})`);
+            } else {
+              // Mark as processed with error
+              await supabaseClient
+                .from('google_calendar_sync_queue')
+                .update({ 
+                  processed: true, 
+                  processed_at: new Date().toISOString(),
+                  error_message: error.message 
+                })
+                .eq('id', item.id);
+            }
             
             errorCount++;
           }
 
           // Add a small delay to avoid rate limiting
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise(resolve => setTimeout(resolve, 150));
         }
 
       } catch (error) {
@@ -166,22 +243,110 @@ serve(async (req) => {
   }
 });
 
-async function processQueueItem(googleSettings: any, queueItem: any) {
+async function ensureValidAccessToken(supabaseClient: any, settings: GoogleCalendarSettings): Promise<string | null> {
+  try {
+    // If no access token, return null
+    if (!settings.access_token) {
+      return null;
+    }
+
+    // Check if token is expired (if we have expiry info)
+    if (settings.token_expires_at) {
+      const expiryTime = new Date(settings.token_expires_at);
+      const now = new Date();
+      const bufferTime = 5 * 60 * 1000; // 5 minutes buffer
+      
+      if (now.getTime() > (expiryTime.getTime() - bufferTime)) {
+        console.log(`Token expired for user ${settings.user_id}, attempting refresh`);
+        
+        if (settings.refresh_token) {
+          const newToken = await refreshAccessToken(supabaseClient, settings);
+          return newToken;
+        } else {
+          console.log(`No refresh token available for user ${settings.user_id}`);
+          return null;
+        }
+      }
+    }
+
+    return settings.access_token;
+  } catch (error) {
+    console.error('Error checking token validity:', error);
+    return null;
+  }
+}
+
+async function refreshAccessToken(supabaseClient: any, settings: GoogleCalendarSettings): Promise<string | null> {
+  try {
+    const clientId = Deno.env.get('GOOGLE_CLIENT_ID');
+    const clientSecret = Deno.env.get('GOOGLE_CLIENT_SECRET');
+    
+    if (!clientId || !clientSecret) {
+      console.error('Missing Google OAuth credentials for token refresh');
+      return null;
+    }
+
+    const response = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        client_id: clientId,
+        client_secret: clientSecret,
+        refresh_token: settings.refresh_token!,
+        grant_type: 'refresh_token',
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error('Token refresh failed:', errorData);
+      return null;
+    }
+
+    const tokenData = await response.json();
+    
+    // Update the access token in the database
+    const expiresAt = new Date(Date.now() + (tokenData.expires_in * 1000));
+    
+    await supabaseClient
+      .from('google_calendar_settings')
+      .update({
+        access_token: tokenData.access_token,
+        token_expires_at: expiresAt.toISOString(),
+        // Update refresh token if provided
+        ...(tokenData.refresh_token && { refresh_token: tokenData.refresh_token })
+      })
+      .eq('user_id', settings.user_id);
+
+    console.log(`Token refreshed successfully for user ${settings.user_id}`);
+    return tokenData.access_token;
+    
+  } catch (error) {
+    console.error('Error refreshing access token:', error);
+    return null;
+  }
+}
+
+async function processQueueItem(accessToken: string, queueItem: QueueItem) {
   const appointment = queueItem.appointment_data;
   const operation = queueItem.operation;
-  const calendarId = googleSettings.calendar_id || 'primary';
+  
+  // Get calendar ID from the user's settings
+  const calendarId = 'primary'; // Default to primary for now
 
   console.log(`Processing ${operation} for appointment:`, appointment.id);
 
   switch (operation) {
     case 'INSERT':
-      await createGoogleCalendarEvent(googleSettings.access_token, calendarId, appointment);
+      await createGoogleCalendarEvent(accessToken, calendarId, appointment);
       break;
     case 'UPDATE':
-      await updateGoogleCalendarEvent(googleSettings.access_token, calendarId, appointment);
+      await updateGoogleCalendarEvent(accessToken, calendarId, appointment);
       break;
     case 'DELETE':
-      await deleteGoogleCalendarEvent(googleSettings.access_token, calendarId, appointment);
+      await deleteGoogleCalendarEvent(accessToken, calendarId, appointment);
       break;
     default:
       throw new Error(`Unknown operation: ${operation}`);
@@ -304,20 +469,44 @@ async function deleteGoogleCalendarEvent(accessToken: string, calendarId: string
   }
 }
 
+function getUserTimezone(): string {
+  // For now, default to IST. In a real implementation, you'd get this from user settings
+  return 'Asia/Kolkata';
+}
+
 function buildGoogleCalendarEvent(appointment: any) {
-  const startDateTime = new Date(`${appointment.appointment_date}T${appointment.appointment_time}`);
-  const endDateTime = new Date(startDateTime.getTime() + (appointment.duration_minutes * 60000));
+  const userTimezone = getUserTimezone();
+  
+  // Parse the appointment date and time properly
+  const appointmentDate = appointment.appointment_date;
+  const appointmentTime = appointment.appointment_time;
+  
+  // Create ISO datetime string in the user's timezone
+  const startDateTime = `${appointmentDate}T${appointmentTime}`;
+  
+  // Calculate end time
+  const startDate = new Date(`${appointmentDate}T${appointmentTime}`);
+  const endDate = new Date(startDate.getTime() + (appointment.duration_minutes * 60000));
+  
+  // Format end time back to time string
+  const endTimeString = endDate.toTimeString().substring(0, 8);
+  const endDateTime = `${appointmentDate}T${endTimeString}`;
+
+  console.log('Building Google Calendar event:');
+  console.log('  Start:', startDateTime, 'Timezone:', userTimezone);
+  console.log('  End:', endDateTime, 'Timezone:', userTimezone);
+  console.log('  Duration:', appointment.duration_minutes, 'minutes');
 
   return {
     summary: appointment.title || 'Appointment',
     description: `${appointment.notes || ''}\n\nClient: ${appointment.client_name || 'N/A'}\nStatus: ${appointment.status}`,
     start: {
-      dateTime: startDateTime.toISOString(),
-      timeZone: 'Asia/Kolkata'
+      dateTime: startDateTime,
+      timeZone: userTimezone
     },
     end: {
-      dateTime: endDateTime.toISOString(),
-      timeZone: 'Asia/Kolkata'
+      dateTime: endDateTime,
+      timeZone: userTimezone
     },
     location: appointment.location || '',
     attendees: appointment.client_name ? [{
