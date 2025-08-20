@@ -18,7 +18,7 @@ export const GoogleCalendarSync = () => {
   const [calendars, setCalendars] = useState<any[]>([]);
   const [loadingCalendars, setLoadingCalendars] = useState(false);
   const [syncDirection, setSyncDirection] = useState<'one_way' | 'two_way'>('one_way');
-  const [autoSync, setAutoSync] = useState(false);
+  const [autoSync, setAutoSync] = useState(true);
   const [syncInterval, setSyncInterval] = useState(60);
   const [syncEnabled, setSyncEnabled] = useState(true);
   const [settings, setSettings] = useState<any>(null);
@@ -492,63 +492,15 @@ export const GoogleCalendarSync = () => {
               </Select>
             </div>
 
-            {/* Auto Sync */}
-            <div className="flex items-center justify-between">
-              <div>
-                <Label>Automatic Sync</Label>
-                <div className="text-sm text-muted-foreground">
-                  Automatically sync appointments at regular intervals
-                </div>
+            {/* Automatic Sync Status */}
+            <div className="p-4 border border-green-200 bg-green-50 rounded-lg">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <div className="font-medium text-green-900">Automatic Sync Enabled</div>
               </div>
-              <Switch 
-                checked={autoSync} 
-                onCheckedChange={(checked) => {
-                  setAutoSync(checked);
-                  updateSettings({ auto_sync: checked });
-                }} 
-              />
-            </div>
-
-            {/* Sync Interval */}
-            {autoSync && (
-              <div className="space-y-2">
-                <Label>Sync Interval</Label>
-                <Select 
-                  value={syncInterval.toString()} 
-                  onValueChange={(value) => {
-                    const newInterval = parseInt(value);
-                    setSyncInterval(newInterval);
-                    updateSettings({ sync_interval_minutes: newInterval });
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="15">Every 15 minutes</SelectItem>
-                    <SelectItem value="30">Every 30 minutes</SelectItem>
-                    <SelectItem value="60">Every hour</SelectItem>
-                    <SelectItem value="120">Every 2 hours</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="text-sm text-green-700 mt-1">
+                Your appointments will automatically sync to Google Calendar every 15 seconds
               </div>
-            )}
-
-            {/* Enable/Disable Sync */}
-            <div className="flex items-center justify-between pt-4 border-t">
-              <div>
-                <Label>Enable Sync</Label>
-                <div className="text-sm text-muted-foreground">
-                  Turn sync on or off for this calendar
-                </div>
-              </div>
-              <Switch 
-                checked={syncEnabled} 
-                onCheckedChange={(checked) => {
-                  setSyncEnabled(checked);
-                  updateSettings({ sync_enabled: checked });
-                }} 
-              />
             </div>
           </CardContent>
         </Card>
