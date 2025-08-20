@@ -1,1 +1,32 @@
 project_id = "hpcnipcbymruvsnqrmjx"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[functions.create-team-member]
+verify_jwt = true
+
+[functions.notify-appointment-changes]
+verify_jwt = false
+
+[functions.google-calendar-auth]
+verify_jwt = true
+
+[functions.google-calendar-sync]
+verify_jwt = true
+
+[functions.process-calendar-sync-queue]
+verify_jwt = false
+
+[functions.auto-sync-appointments]
+verify_jwt = false
+
+[functions.sync-public-appointment]
+verify_jwt = false
+
+[functions.auto-sync-trigger]
+verify_jwt = false

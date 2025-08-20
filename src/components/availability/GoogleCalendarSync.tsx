@@ -9,6 +9,7 @@ import { toast } from '@/hooks/use-toast';
 import { Calendar, Link, Unlink, Settings, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { ManualSyncButton } from './ManualSyncButton';
+import { GoogleCalendarSyncStatus } from './GoogleCalendarSyncStatus';
 
 export const GoogleCalendarSync = () => {
   const [isConnected, setIsConnected] = useState(false);
@@ -504,6 +505,11 @@ export const GoogleCalendarSync = () => {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Real-time Sync Status */}
+      {isConnected && (
+        <GoogleCalendarSyncStatus />
       )}
 
       {/* Help & Information */}
