@@ -104,18 +104,40 @@ export const AppointmentsTimeline: React.FC<AppointmentsTimelineProps> = ({
     },
   });
 
-  // Group appointments by date
-  const groupedAppointments = useMemo(() => {
-    if (!appointments) return {};
+  // Group appointments by category: today, upcoming, past
+  const categorizedAppointments = useMemo(() => {
+    if (!appointments) return { today: {}, upcoming: {}, past: {} };
     
-    return appointments.reduce((groups, appointment) => {
-      const date = appointment.appointment_date;
-      if (!groups[date]) {
-        groups[date] = [];
+    const today = new Date();
+    const todayStr = format(today, 'yyyy-MM-dd');
+    
+    const categories = {
+      today: {} as Record<string, Appointment[]>,
+      upcoming: {} as Record<string, Appointment[]>,
+      past: {} as Record<string, Appointment[]>
+    };
+    
+    appointments.forEach((appointment) => {
+      const appointmentDate = parseISO(appointment.appointment_date);
+      const dateStr = appointment.appointment_date;
+      
+      let category: 'today' | 'upcoming' | 'past';
+      
+      if (dateStr === todayStr) {
+        category = 'today';
+      } else if (appointmentDate > today) {
+        category = 'upcoming';
+      } else {
+        category = 'past';
       }
-      groups[date].push(appointment);
-      return groups;
-    }, {} as Record<string, Appointment[]>);
+      
+      if (!categories[category][dateStr]) {
+        categories[category][dateStr] = [];
+      }
+      categories[category][dateStr].push(appointment);
+    });
+    
+    return categories;
   }, [appointments]);
 
   const getStatusBadge = (status: string) => {
@@ -239,18 +261,31 @@ export const AppointmentsTimeline: React.FC<AppointmentsTimelineProps> = ({
     );
   }
 
-  return (
-    <div className="flex w-full flex-col items-start">
-      {Object.entries(groupedAppointments)
-        .sort(([a], [b]) => new Date(b).getTime() - new Date(a).getTime())
-        .map(([date, dayAppointments]) => (
-        <div key={date} className="flex w-full flex-col items-start">
-          <div className="flex w-full items-center gap-2 px-4 py-4">
-            <span className="text-xl font-semibold text-gray-900">
-              {formatDateHeader(date)}
-            </span>
-          </div>
-          {dayAppointments.map((appointment, index) => (
+  const renderAppointmentSection = (title: string, appointments: Record<string, Appointment[]>, sortOrder: 'asc' | 'desc') => {
+    const entries = Object.entries(appointments);
+    if (entries.length === 0) return null;
+
+    return (
+      <div className="flex w-full flex-col items-start">
+        <div className="flex w-full items-center gap-2 px-4 py-3 bg-gray-50">
+          <span className="text-lg font-semibold text-gray-700">
+            {title}
+          </span>
+        </div>
+        {entries
+          .sort(([a], [b]) => {
+            const dateA = new Date(a).getTime();
+            const dateB = new Date(b).getTime();
+            return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+          })
+          .map(([date, dayAppointments]) => (
+          <div key={date} className="flex w-full flex-col items-start">
+            <div className="flex w-full items-center gap-2 px-4 py-3 border-b border-gray-100">
+              <span className="text-base font-medium text-gray-900">
+                {formatDateHeader(date)}
+              </span>
+            </div>
+            {dayAppointments.map((appointment, index) => (
             <div
               key={appointment.id}
               className="flex w-full items-center gap-4 border-b border-gray-200 px-4 py-4 hover:bg-gray-50 cursor-pointer"
@@ -305,9 +340,18 @@ export const AppointmentsTimeline: React.FC<AppointmentsTimelineProps> = ({
                 }}
               />
             </div>
-          ))}
-        </div>
-      ))}
+            ))}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  return (
+    <div className="flex w-full flex-col items-start">
+      {renderAppointmentSection("Today's Appointments", categorizedAppointments.today, 'asc')}
+      {renderAppointmentSection("Upcoming Appointments", categorizedAppointments.upcoming, 'asc')}
+      {renderAppointmentSection("Past Appointments", categorizedAppointments.past, 'desc')}
     </div>
   );
 };
