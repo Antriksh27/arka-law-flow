@@ -24,6 +24,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useDialog } from '@/hooks/use-dialog';
 import { toast } from 'sonner';
 import { SmartBookingCalendar } from '@/components/appointments/SmartBookingCalendar';
+import { ClientSelector } from '@/components/appointments/ClientSelector';
 
 interface Appointment {
   id: string;
@@ -54,6 +55,11 @@ interface Client {
   full_name: string;
 }
 
+interface Contact {
+  id: string;
+  full_name: string;
+}
+
 interface Case {
   id: string;
   case_title: string;
@@ -71,7 +77,6 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
 }) => {
   const { closeDialog } = useDialog();
   const [loading, setLoading] = useState(false);
-  const [clients, setClients] = useState<Client[]>([]);
   const [cases, setCases] = useState<Case[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   
@@ -90,18 +95,9 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
   });
 
   useEffect(() => {
-    fetchClients();
     fetchCases();
     fetchUsers();
   }, []);
-
-  const fetchClients = async () => {
-    const { data } = await supabase
-      .from('clients')
-      .select('id, full_name')
-      .order('full_name');
-    setClients(data || []);
-  };
 
   const fetchCases = async () => {
     const { data } = await supabase
@@ -265,22 +261,12 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
             
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="client_id" className="text-sm font-medium text-gray-900">Client</Label>
-                <Select
+                <Label className="text-sm font-medium text-gray-900">Client / Contact</Label>
+                <ClientSelector
                   value={formData.client_id}
                   onValueChange={(value) => handleInputChange('client_id', value)}
-                >
-                  <SelectTrigger className="bg-white border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500">
-                    <SelectValue placeholder="Select client" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border-gray-300">
-                    {clients.map((client) => (
-                      <SelectItem key={client.id} value={client.id} className="text-gray-900">
-                        {client.full_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  placeholder="Select client or contact"
+                />
               </div>
               
               <div className="space-y-2">
