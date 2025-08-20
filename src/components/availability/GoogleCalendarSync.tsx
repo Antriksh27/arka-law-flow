@@ -267,11 +267,12 @@ export const GoogleCalendarSync = () => {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
+    const state = urlParams.get('state');
     
-    if (code && !isConnected) {
+    if (code && state) {
       handleOAuthCallback(code);
     }
-  }, [isConnected]);
+  }, []); // Remove dependency on isConnected to prevent blocking
 
   const handleOAuthCallback = async (code: string) => {
     setIsConnecting(true);
