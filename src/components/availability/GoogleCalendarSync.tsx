@@ -221,8 +221,25 @@ export const GoogleCalendarSync = () => {
   const loadCalendars = async () => {
     setLoadingCalendars(true);
     try {
+      // First, get the user's access token from the database
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error('User not authenticated');
+
+      const { data: settingsData, error: settingsError } = await supabase
+        .from('google_calendar_settings')
+        .select('access_token')
+        .eq('user_id', user.user.id)
+        .single();
+
+      if (settingsError || !settingsData?.access_token) {
+        throw new Error('Google Calendar not connected. Please connect first.');
+      }
+
       const { data, error } = await supabase.functions.invoke('google-calendar-sync', {
-        body: { action: 'list_calendars' }
+        body: { 
+          action: 'list_calendars',
+          access_token: settingsData.access_token
+        }
       });
 
       if (error) throw error;
