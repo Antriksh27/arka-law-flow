@@ -106,6 +106,10 @@ serve(async (req) => {
 
       const tokenData = await tokenResponse.json();
       
+      // Calculate token expiration time
+      const expiresAt = new Date();
+      expiresAt.setSeconds(expiresAt.getSeconds() + (tokenData.expires_in || 3600));
+      
       // Store tokens in database
       const { error: dbError } = await supabaseClient
         .from('google_calendar_settings')
@@ -113,6 +117,7 @@ serve(async (req) => {
           user_id: user.id,
           access_token: tokenData.access_token,
           refresh_token: tokenData.refresh_token,
+          token_expires_at: expiresAt.toISOString(),
           sync_enabled: true,
           sync_direction: 'one_way',
           auto_sync: false,

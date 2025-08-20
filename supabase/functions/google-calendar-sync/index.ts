@@ -102,9 +102,18 @@ serve(async (req) => {
 
       console.log('Fetching calendar list for user:', user.id);
 
+      // Get fresh settings with potential token refresh
+      const { data: currentSettings } = await supabaseClient
+        .from('google_calendar_settings')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      const validToken = await ensureValidAccessToken(currentSettings || { access_token });
+
       const response = await fetch('https://www.googleapis.com/calendar/v3/users/me/calendarList', {
         headers: {
-          'Authorization': `Bearer ${access_token}`,
+          'Authorization': `Bearer ${validToken}`,
           'Content-Type': 'application/json',
         },
       });
@@ -287,15 +296,18 @@ async function processSyncQueue(supabaseClient: any, userId: string) {
 async function syncAppointmentToGoogle(settings: any, appointment: AppointmentData, operation: string) {
   const calendarId = settings.calendar_id || 'primary';
   
+  // Check if access token is expired and refresh if needed
+  const validToken = await ensureValidAccessToken(settings);
+  
   switch (operation) {
     case 'INSERT':
-      await createGoogleCalendarEvent(settings.access_token, calendarId, appointment);
+      await createGoogleCalendarEvent(validToken, calendarId, appointment);
       break;
     case 'UPDATE':
-      await updateGoogleCalendarEvent(settings.access_token, calendarId, appointment);
+      await updateGoogleCalendarEvent(validToken, calendarId, appointment);
       break;
     case 'DELETE':
-      await deleteGoogleCalendarEvent(settings.access_token, calendarId, appointment);
+      await deleteGoogleCalendarEvent(validToken, calendarId, appointment);
       break;
   }
 }
@@ -450,4 +462,78 @@ function buildGoogleCalendarEvent(appointment: AppointmentData): GoogleCalendarE
       displayName: appointment.client_name
     }] : undefined
   };
+}
+
+async function ensureValidAccessToken(settings: any): Promise<string> {
+  // If no expiration time is set, assume token is still valid (backward compatibility)
+  if (!settings.token_expires_at) {
+    return settings.access_token;
+  }
+
+  const expiresAt = new Date(settings.token_expires_at);
+  const now = new Date();
+  
+  // If token expires within the next 5 minutes, refresh it
+  if (expiresAt.getTime() - now.getTime() < 5 * 60 * 1000) {
+    console.log('Access token expired or expiring soon, refreshing...');
+    return await refreshAccessToken(settings);
+  }
+
+  return settings.access_token;
+}
+
+async function refreshAccessToken(settings: any): Promise<string> {
+  const clientId = Deno.env.get('GOOGLE_CLIENT_ID');
+  const clientSecret = Deno.env.get('GOOGLE_CLIENT_SECRET');
+  
+  if (!clientId || !clientSecret) {
+    throw new Error('Google OAuth credentials not configured');
+  }
+
+  const response = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      refresh_token: settings.refresh_token,
+      grant_type: 'refresh_token',
+    }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.text();
+    console.error('Token refresh failed:', errorData);
+    throw new Error('Failed to refresh Google Calendar access token. Please reconnect your calendar.');
+  }
+
+  const tokenData = await response.json();
+  
+  // Calculate new expiration time
+  const expiresAt = new Date();
+  expiresAt.setSeconds(expiresAt.getSeconds() + (tokenData.expires_in || 3600));
+  
+  // Update the database with new access token
+  const supabaseClient = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+  );
+
+  const { error: dbError } = await supabaseClient
+    .from('google_calendar_settings')
+    .update({
+      access_token: tokenData.access_token,
+      token_expires_at: expiresAt.toISOString(),
+    })
+    .eq('user_id', settings.user_id);
+
+  if (dbError) {
+    console.error('Failed to update refreshed token:', dbError);
+    throw new Error('Failed to store refreshed access token');
+  }
+
+  console.log('Successfully refreshed Google Calendar access token for user:', settings.user_id);
+  return tokenData.access_token;
 }
