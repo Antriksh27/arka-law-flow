@@ -412,34 +412,72 @@ async function deleteGoogleCalendarEvent(accessToken: string, calendarId: string
 }
 
 function buildGoogleCalendarEvent(appointment: AppointmentData): GoogleCalendarEvent {
-  // FINAL CORRECT FIX: Format both start and end times directly in IST
-  const startDateTimeRFC3339 = `${appointment.appointment_date}T${appointment.appointment_time}+05:30`;
-  
-  // Calculate end time properly in IST without Date object conversion
+  // Convert IST time to UTC for Google Calendar
+  // If appointment is at 12:00 PM IST, we need to subtract 5.5 hours to get UTC
   const timeParts = appointment.appointment_time.split(':');
-  const startHour = parseInt(timeParts[0]);
-  const startMinute = parseInt(timeParts[1]);
+  const istHour = parseInt(timeParts[0]);
+  const istMinute = parseInt(timeParts[1]);
   
-  // Add duration to get end time
-  const totalMinutes = startHour * 60 + startMinute + appointment.duration_minutes;
-  const endHour = Math.floor(totalMinutes / 60);
-  const endMinute = totalMinutes % 60;
+  // Convert IST to UTC by subtracting 5 hours 30 minutes (330 minutes)
+  const istTotalMinutes = istHour * 60 + istMinute;
+  const utcTotalMinutes = istTotalMinutes - 330; // 5.5 hours = 330 minutes
   
-  // Format end time with leading zeros
-  const endTimeString = `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}:00`;
-  const endDateTimeRFC3339 = `${appointment.appointment_date}T${endTimeString}+05:30`;
+  let utcHour = Math.floor(utcTotalMinutes / 60);
+  let utcMinute = utcTotalMinutes % 60;
+  let utcDate = appointment.appointment_date;
+  
+  // Handle day rollover
+  if (utcHour < 0) {
+    utcHour += 24;
+    // Subtract one day
+    const date = new Date(appointment.appointment_date);
+    date.setDate(date.getDate() - 1);
+    utcDate = date.toISOString().split('T')[0];
+  } else if (utcHour >= 24) {
+    utcHour -= 24;
+    // Add one day
+    const date = new Date(appointment.appointment_date);
+    date.setDate(date.getDate() + 1);
+    utcDate = date.toISOString().split('T')[0];
+  }
+  
+  const startTimeUTC = `${utcHour.toString().padStart(2, '0')}:${utcMinute.toString().padStart(2, '0')}:00`;
+  const startDateTimeUTC = `${utcDate}T${startTimeUTC}Z`;
+  
+  // Calculate end time in UTC
+  const endUtcTotalMinutes = utcTotalMinutes + appointment.duration_minutes;
+  let endUtcHour = Math.floor(endUtcTotalMinutes / 60);
+  let endUtcMinute = endUtcTotalMinutes % 60;
+  let endUtcDate = utcDate;
+  
+  // Handle day rollover for end time
+  if (endUtcHour < 0) {
+    endUtcHour += 24;
+    const date = new Date(endUtcDate);
+    date.setDate(date.getDate() - 1);
+    endUtcDate = date.toISOString().split('T')[0];
+  } else if (endUtcHour >= 24) {
+    endUtcHour -= 24;
+    const date = new Date(endUtcDate);
+    date.setDate(date.getDate() + 1);
+    endUtcDate = date.toISOString().split('T')[0];
+  }
+  
+  const endTimeUTC = `${endUtcHour.toString().padStart(2, '0')}:${endUtcMinute.toString().padStart(2, '0')}:00`;
+  const endDateTimeUTC = `${endUtcDate}T${endTimeUTC}Z`;
 
-  console.log('Start time:', startDateTimeRFC3339);
-  console.log('End time:', endDateTimeRFC3339);
+  console.log('IST time:', `${appointment.appointment_date}T${appointment.appointment_time}`);
+  console.log('UTC start:', startDateTimeUTC);
+  console.log('UTC end:', endDateTimeUTC);
 
   return {
     summary: appointment.title || 'Appointment',
     description: `${appointment.notes || ''}\n\nClient: ${appointment.client_name || 'N/A'}\nStatus: ${appointment.status}`,
     start: {
-      dateTime: startDateTimeRFC3339
+      dateTime: startDateTimeUTC
     },
     end: {
-      dateTime: endDateTimeRFC3339
+      dateTime: endDateTimeUTC
     },
     location: appointment.location || '',
     attendees: appointment.client_name ? [{
