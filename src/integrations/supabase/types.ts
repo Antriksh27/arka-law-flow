@@ -3396,10 +3396,6 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
-      process_google_calendar_sync_queue_auto: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
       process_sync_queue_manually: {
         Args: { user_id_param?: string }
         Returns: Json
