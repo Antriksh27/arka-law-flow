@@ -414,7 +414,9 @@ async function deleteGoogleCalendarEvent(accessToken: string, calendarId: string
 }
 
 function buildGoogleCalendarEvent(appointment: AppointmentData): GoogleCalendarEvent {
-  const startDateTime = new Date(`${appointment.appointment_date}T${appointment.appointment_time}`);
+  // Create the datetime string with timezone offset for IST (+05:30)
+  const startDateTimeString = `${appointment.appointment_date}T${appointment.appointment_time}+05:30`;
+  const startDateTime = new Date(startDateTimeString);
   const endDateTime = new Date(startDateTime.getTime() + (appointment.duration_minutes * 60000));
 
   return {
@@ -422,11 +424,11 @@ function buildGoogleCalendarEvent(appointment: AppointmentData): GoogleCalendarE
     description: `${appointment.notes || ''}\n\nClient: ${appointment.client_name || 'N/A'}\nStatus: ${appointment.status}`,
     start: {
       dateTime: startDateTime.toISOString(),
-      timeZone: 'Asia/Kolkata' // Adjust timezone as needed
+      timeZone: 'Asia/Kolkata'
     },
     end: {
       dateTime: endDateTime.toISOString(),
-      timeZone: 'Asia/Kolkata' // Adjust timezone as needed
+      timeZone: 'Asia/Kolkata'
     },
     location: appointment.location || '',
     attendees: appointment.client_name ? [{
