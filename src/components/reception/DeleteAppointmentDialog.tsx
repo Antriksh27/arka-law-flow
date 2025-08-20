@@ -67,7 +67,7 @@ const DeleteAppointmentDialog: React.FC<DeleteAppointmentDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md bg-white border border-gray-200 shadow-lg">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader className="pb-4 border-b border-gray-100">
           <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-red-600">
             <AlertTriangle className="h-5 w-5" />
