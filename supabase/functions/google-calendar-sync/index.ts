@@ -414,31 +414,49 @@ async function deleteGoogleCalendarEvent(accessToken: string, calendarId: string
 }
 
 function buildGoogleCalendarEvent(appointment: AppointmentData): GoogleCalendarEvent {
-  // DEFINITIVE FIX: Google Calendar expects datetime in RFC3339 format
-  // Since appointment times are stored as IST times, we need to treat them as such
-  // Method: Use the date and time as-is and specify Asia/Kolkata timezone
+  console.log('=== TIMEZONE DEBUG START ===');
+  console.log('Input appointment data:', {
+    date: appointment.appointment_date,
+    time: appointment.appointment_time,
+    duration: appointment.duration_minutes
+  });
   
-  // Create the datetime in the format: YYYY-MM-DDTHH:mm:ss (no timezone, treated as local to specified timezone)
-  const startDateTimeString = `${appointment.appointment_date}T${appointment.appointment_time}`;
-  console.log('Raw datetime string:', startDateTimeString);
+  // Split the time to get hours and minutes
+  const timeParts = appointment.appointment_time.split(':');
+  const hours = parseInt(timeParts[0]);
+  const minutes = parseInt(timeParts[1]);
   
-  const endTime = appointment.appointment_time.split(':');
-  const endHour = parseInt(endTime[0]);
-  const endMinute = parseInt(endTime[1]) + appointment.duration_minutes;
-  const finalEndHour = endHour + Math.floor(endMinute / 60);
-  const finalEndMinute = endMinute % 60;
-  const endTimeString = `${finalEndHour.toString().padStart(2, '0')}:${finalEndMinute.toString().padStart(2, '0')}:00`;
-  const endDateTimeString = `${appointment.appointment_date}T${endTimeString}`;
+  console.log('Parsed time parts:', { hours, minutes });
+  
+  // Create a proper IST datetime using the date constructor with explicit timezone
+  // This approach: create the exact datetime as if it's in IST
+  const year = parseInt(appointment.appointment_date.split('-')[0]);
+  const month = parseInt(appointment.appointment_date.split('-')[1]) - 1; // JS months are 0-indexed
+  const day = parseInt(appointment.appointment_date.split('-')[2]);
+  
+  console.log('Parsed date parts:', { year, month: month + 1, day });
+  
+  // Create date in IST by manually calculating UTC equivalent
+  // IST is UTC+5:30, so we subtract 5.5 hours from IST to get UTC
+  const istDate = new Date(year, month, day, hours, minutes, 0);
+  console.log('Created IST date (as local):', istDate.toString());
+  
+  // Convert to UTC by subtracting IST offset (5.5 hours = 19800000 ms)
+  const utcStartTime = new Date(istDate.getTime() - (5.5 * 60 * 60 * 1000));
+  const utcEndTime = new Date(utcStartTime.getTime() + (appointment.duration_minutes * 60000));
+  
+  console.log('UTC start time:', utcStartTime.toISOString());
+  console.log('UTC end time:', utcEndTime.toISOString());
 
   const event = {
     summary: appointment.title || 'Appointment',
     description: `${appointment.notes || ''}\n\nClient: ${appointment.client_name || 'N/A'}\nStatus: ${appointment.status}`,
     start: {
-      dateTime: startDateTimeString,
+      dateTime: utcStartTime.toISOString(),
       timeZone: 'Asia/Kolkata'
     },
     end: {
-      dateTime: endDateTimeString,
+      dateTime: utcEndTime.toISOString(),
       timeZone: 'Asia/Kolkata'
     },
     location: appointment.location || '',
@@ -447,6 +465,7 @@ function buildGoogleCalendarEvent(appointment: AppointmentData): GoogleCalendarE
     }] : undefined
   };
   
-  console.log('Sending to Google Calendar:', JSON.stringify(event.start, null, 2));
+  console.log('Final event object:', JSON.stringify(event, null, 2));
+  console.log('=== TIMEZONE DEBUG END ===');
   return event;
 }
