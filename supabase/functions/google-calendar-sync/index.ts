@@ -412,14 +412,25 @@ async function deleteGoogleCalendarEvent(accessToken: string, calendarId: string
 }
 
 function buildGoogleCalendarEvent(appointment: AppointmentData): GoogleCalendarEvent {
-  // FINAL FIX: Use the exact RFC3339 format that Google Calendar expects
-  // The stored time is in IST, so we format it with the IST timezone offset
+  // FINAL CORRECT FIX: Format both start and end times directly in IST
   const startDateTimeRFC3339 = `${appointment.appointment_date}T${appointment.appointment_time}+05:30`;
   
-  // Calculate end time
-  const startTime = new Date(startDateTimeRFC3339);
-  const endTime = new Date(startTime.getTime() + (appointment.duration_minutes * 60000));
-  const endDateTimeRFC3339 = endTime.toISOString().replace('Z', '+05:30');
+  // Calculate end time properly in IST without Date object conversion
+  const timeParts = appointment.appointment_time.split(':');
+  const startHour = parseInt(timeParts[0]);
+  const startMinute = parseInt(timeParts[1]);
+  
+  // Add duration to get end time
+  const totalMinutes = startHour * 60 + startMinute + appointment.duration_minutes;
+  const endHour = Math.floor(totalMinutes / 60);
+  const endMinute = totalMinutes % 60;
+  
+  // Format end time with leading zeros
+  const endTimeString = `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}:00`;
+  const endDateTimeRFC3339 = `${appointment.appointment_date}T${endTimeString}+05:30`;
+
+  console.log('Start time:', startDateTimeRFC3339);
+  console.log('End time:', endDateTimeRFC3339);
 
   return {
     summary: appointment.title || 'Appointment',
