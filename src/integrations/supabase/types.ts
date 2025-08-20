@@ -1399,11 +1399,14 @@ export type Database = {
           calendar_id: string | null
           created_at: string
           id: string
+          last_error: string | null
+          last_error_at: string | null
           last_sync_at: string | null
           refresh_token: string | null
           sync_direction: string
           sync_enabled: boolean
           sync_interval_minutes: number
+          token_expires_at: string | null
           updated_at: string
           user_id: string
         }
@@ -1413,11 +1416,14 @@ export type Database = {
           calendar_id?: string | null
           created_at?: string
           id?: string
+          last_error?: string | null
+          last_error_at?: string | null
           last_sync_at?: string | null
           refresh_token?: string | null
           sync_direction?: string
           sync_enabled?: boolean
           sync_interval_minutes?: number
+          token_expires_at?: string | null
           updated_at?: string
           user_id: string
         }
@@ -1427,11 +1433,14 @@ export type Database = {
           calendar_id?: string | null
           created_at?: string
           id?: string
+          last_error?: string | null
+          last_error_at?: string | null
           last_sync_at?: string | null
           refresh_token?: string | null
           sync_direction?: string
           sync_enabled?: boolean
           sync_interval_minutes?: number
+          token_expires_at?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -1444,9 +1453,11 @@ export type Database = {
           created_at: string | null
           error_message: string | null
           id: string
+          last_retry_at: string | null
           operation: string
           processed: boolean | null
           processed_at: string | null
+          retry_count: number | null
           user_id: string
         }
         Insert: {
@@ -1455,9 +1466,11 @@ export type Database = {
           created_at?: string | null
           error_message?: string | null
           id?: string
+          last_retry_at?: string | null
           operation: string
           processed?: boolean | null
           processed_at?: string | null
+          retry_count?: number | null
           user_id: string
         }
         Update: {
@@ -1466,9 +1479,11 @@ export type Database = {
           created_at?: string | null
           error_message?: string | null
           id?: string
+          last_retry_at?: string | null
           operation?: string
           processed?: boolean | null
           processed_at?: string | null
+          retry_count?: number | null
           user_id?: string
         }
         Relationships: []
@@ -3176,6 +3191,10 @@ export type Database = {
         Returns: {
           available: boolean
         }[]
+      }
+      cleanup_old_sync_queue_items: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       client_has_case_access: {
         Args: { case_id: string }
