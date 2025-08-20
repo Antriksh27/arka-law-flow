@@ -103,7 +103,6 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       const { data, error } = await supabase
         .from('clients')
         .select('id, full_name')
-        .eq('status', 'active')
         .order('full_name');
       if (error) throw error;
       return data || [];
