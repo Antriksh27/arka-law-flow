@@ -148,7 +148,24 @@ serve(async (req) => {
               continue;
             }
             
-            await processQueueItem(validToken, item);
+            try {
+              await processQueueItem(validToken, item);
+            } catch (error) {
+              // If token expired, try to refresh and retry once
+              if (error.message.includes('Token expired') || error.message.includes('401')) {
+                console.log(`Token expired error for user ${userId}, attempting refresh and retry`);
+                const refreshedToken = await refreshAccessToken(supabaseClient, googleSettings);
+                
+                if (refreshedToken) {
+                  console.log(`Retrying with refreshed token for user ${userId}`);
+                  await processQueueItem(refreshedToken, item);
+                } else {
+                  throw new Error('Failed to refresh token after 401 error');
+                }
+              } else {
+                throw error;
+              }
+            }
             
             // Mark as processed
             await supabaseClient
@@ -267,12 +284,22 @@ async function ensureValidAccessToken(supabaseClient: any, settings: GoogleCalen
           return null;
         }
       }
+    } else {
+      // If no expiration time is set, assume token might be old and set expiration to now
+      // This will force a refresh if the token is actually expired
+      console.log(`No expiration time for user ${settings.user_id}, setting to expired to force refresh check`);
+      
+      if (settings.refresh_token) {
+        console.log(`Proactively refreshing token for user ${settings.user_id}`);
+        const newToken = await refreshAccessToken(supabaseClient, settings);
+        return newToken || settings.access_token;
+      }
     }
 
     return settings.access_token;
   } catch (error) {
     console.error('Error checking token validity:', error);
-    return null;
+    return settings.access_token; // Return original token as fallback
   }
 }
 
@@ -371,6 +398,12 @@ async function createGoogleCalendarEvent(accessToken: string, calendarId: string
   if (!response.ok) {
     const error = await response.text();
     console.error('Failed to create Google Calendar event:', error);
+    
+    // If it's a 401 error, the token might be expired even if we thought it was valid
+    if (response.status === 401) {
+      throw new Error(`Token expired: ${error}`);
+    }
+    
     throw new Error(`Failed to create Google Calendar event: ${response.status} ${error}`);
   }
 
