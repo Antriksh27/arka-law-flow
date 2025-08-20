@@ -414,11 +414,8 @@ async function deleteGoogleCalendarEvent(accessToken: string, calendarId: string
 }
 
 function buildGoogleCalendarEvent(appointment: AppointmentData): GoogleCalendarEvent {
-  // Create the datetime string and treat it as local IST time
-  const startDateTimeString = `${appointment.appointment_date}T${appointment.appointment_time}`;
-  
-  // Parse as local time, then specify it's in IST timezone for Google Calendar
-  // Google Calendar will handle the timezone conversion properly
+  // Create the datetime string with IST timezone offset (+05:30)
+  const startDateTimeString = `${appointment.appointment_date}T${appointment.appointment_time}+05:30`;
   const startDateTime = new Date(startDateTimeString);
   const endDateTime = new Date(startDateTime.getTime() + (appointment.duration_minutes * 60000));
 
