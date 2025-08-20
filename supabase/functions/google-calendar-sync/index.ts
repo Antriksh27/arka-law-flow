@@ -414,15 +414,15 @@ async function deleteGoogleCalendarEvent(accessToken: string, calendarId: string
 }
 
 function buildGoogleCalendarEvent(appointment: AppointmentData): GoogleCalendarEvent {
-  // The appointment times are already in IST. Don't add timezone offset here.
-  // Let Google Calendar handle the timezone interpretation.
-  const startDateTimeString = `${appointment.appointment_date}T${appointment.appointment_time}`;
-  console.log('Creating datetime string without timezone offset:', startDateTimeString);
+  // The key fix: Explicitly specify that the time is in IST timezone
+  // by adding the +05:30 offset to the datetime string
+  const startDateTimeString = `${appointment.appointment_date}T${appointment.appointment_time}+05:30`;
+  console.log('Creating datetime with explicit IST timezone:', startDateTimeString);
   
-  // Create date object treating the time as local (IST)
   const startDateTime = new Date(startDateTimeString);
   const endDateTime = new Date(startDateTime.getTime() + (appointment.duration_minutes * 60000));
 
+  // Now send the UTC times to Google Calendar but specify the display timezone
   const event = {
     summary: appointment.title || 'Appointment',
     description: `${appointment.notes || ''}\n\nClient: ${appointment.client_name || 'N/A'}\nStatus: ${appointment.status}`,
@@ -431,7 +431,7 @@ function buildGoogleCalendarEvent(appointment: AppointmentData): GoogleCalendarE
       timeZone: 'Asia/Kolkata'
     },
     end: {
-      dateTime: endDateTime.toISOString(),
+      dateTime: endDateTime.toISOString(),  
       timeZone: 'Asia/Kolkata'
     },
     location: appointment.location || '',
@@ -440,6 +440,7 @@ function buildGoogleCalendarEvent(appointment: AppointmentData): GoogleCalendarE
     }] : undefined
   };
   
-  console.log('Final event start time:', event.start.dateTime, 'with timezone:', event.start.timeZone);
+  console.log('Appointment time stored as:', appointment.appointment_time);
+  console.log('Final UTC time sent to Google:', event.start.dateTime);
   return event;
 }
