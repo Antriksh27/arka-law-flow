@@ -493,15 +493,36 @@ export const GoogleCalendarSync = () => {
               </Select>
             </div>
 
-            {/* Automatic Sync Status */}
-            <div className="p-4 border border-green-200 bg-green-50 rounded-lg">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                <div className="font-medium text-green-900">Automatic Sync Enabled</div>
+            {/* Automatic Sync Toggle */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <Label htmlFor="auto-sync">Automatic Sync</Label>
+                  <div className="text-sm text-muted-foreground">
+                    Enable automatic syncing of appointments to Google Calendar
+                  </div>
+                </div>
+                <Switch
+                  id="auto-sync"
+                  checked={autoSync}
+                  onCheckedChange={(checked) => {
+                    setAutoSync(checked);
+                    updateSettings({ auto_sync: checked });
+                  }}
+                />
               </div>
-              <div className="text-sm text-green-700 mt-1">
-                Your appointments will automatically sync to Google Calendar every 15 seconds
-              </div>
+              
+              {autoSync && (
+                <div className="p-4 border border-green-200 bg-green-50 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <div className="font-medium text-green-900">Auto-sync Active</div>
+                  </div>
+                  <div className="text-sm text-green-700 mt-1">
+                    Your appointments will automatically sync to Google Calendar in real-time
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

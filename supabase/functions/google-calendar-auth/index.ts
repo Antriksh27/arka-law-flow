@@ -120,7 +120,7 @@ serve(async (req) => {
           token_expires_at: expiresAt.toISOString(),
           sync_enabled: true,
           sync_direction: 'one_way',
-          auto_sync: false,
+          auto_sync: true,
           sync_interval_minutes: 60,
         });
 
