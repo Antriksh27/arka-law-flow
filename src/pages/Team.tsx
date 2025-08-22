@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useTeamMembers } from "@/components/team/useTeamMembers";
+import { useTeamMemberStats } from "@/hooks/useTeamMemberStats";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -18,8 +19,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 // FIXED: Updated icon imports to available names in lucide-react
-import { UserPlus, Search, Check, Mail, Phone, MoreHorizontal, User, Briefcase, CheckSquare, Settings, X, Calendar } from "lucide-react";
+import { UserPlus, Search, Check, Mail, Phone, MoreHorizontal, User, Briefcase, CheckSquare, Settings, X, Calendar, Edit, Trash2 } from "lucide-react";
 import AddTeamMemberDialog from "@/components/team/AddTeamMemberDialog";
+import EditTeamMemberDialog from "@/components/team/EditTeamMemberDialog";
+import DeleteTeamMemberDialog from "@/components/team/DeleteTeamMemberDialog";
 
 const roleLabels: Record<string, string> = {
   admin: "Admin",
@@ -41,6 +44,9 @@ function TeamDirectory() {
   const [search, setSearch] = useState("");
   const [sidebarMember, setSidebarMember] = useState<any | null>(null);
   const [addMemberOpen, setAddMemberOpen] = useState(false);
+  const [editMemberOpen, setEditMemberOpen] = useState(false);
+  const [deleteMemberOpen, setDeleteMemberOpen] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<any | null>(null);
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
 
   // Check if user can add members - admin only
@@ -76,6 +82,19 @@ function TeamDirectory() {
 
   // Show selected member details (null = none)
   const detailMember = sidebarMember || filtered[0] || null;
+  
+  // Get stats for the selected member
+  const { data: memberStats } = useTeamMemberStats(detailMember?.user_id);
+
+  const handleEditMember = (member: any) => {
+    setSelectedMember(member);
+    setEditMemberOpen(true);
+  };
+
+  const handleDeleteMember = (member: any) => {
+    setSelectedMember(member);
+    setDeleteMemberOpen(true);
+  };
 
   if (authLoading) {
     return (
@@ -178,13 +197,13 @@ function TeamDirectory() {
                       </TableCell>
                       {/* Status */}
                       <TableCell>
-                        <Badge className={`rounded-full px-3 py-1 text-xs font-medium ${member.status === "active" ? "bg-green-100 text-green-800" : member.status === "inactive" ? "bg-gray-100 text-gray-500" : "bg-blue-100 text-blue-800"}`}>
+                        <Badge className={`rounded-full px-3 py-1 text-xs font-medium ${member.status === "active" ? "bg-green-100 text-green-800" : member.status === "suspended" ? "bg-red-100 text-red-500" : "bg-blue-100 text-blue-800"}`}>
                           {member.status.charAt(0).toUpperCase() + member.status.slice(1)}
                         </Badge>
                       </TableCell>
-                      {/* Dummy Cases Count */}
+                      {/* Real Cases Count */}
                       <TableCell>
-                        <span className="text-base font-body text-default-font">{Math.floor(Math.random() * 15) + 4}</span>
+                        <CaseCountCell memberId={member.user_id} />
                       </TableCell>
                       {/* Contact Buttons */}
                       <TableCell>
@@ -223,9 +242,25 @@ function TeamDirectory() {
                                 <CheckSquare className="w-4 h-4 mr-2" /> Assign Task
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem>
-                                <Settings className="w-4 h-4 mr-2" /> Manage Role
-                              </DropdownMenuItem>
+                              {userRole === 'admin' && (
+                                <>
+                                  <DropdownMenuItem onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditMember(member);
+                                  }}>
+                                    <Edit className="w-4 h-4 mr-2" /> Edit Member
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteMember(member);
+                                    }}
+                                    className="text-destructive focus:text-destructive"
+                                  >
+                                    <Trash2 className="w-4 h-4 mr-2" /> Remove Member
+                                  </DropdownMenuItem>
+                                </>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
@@ -282,49 +317,98 @@ function TeamDirectory() {
                   </DataFieldHorizontal>
                 </div>
               </div>
-              {/* Placeholders for active cases */}
+              {/* Statistics */}
               <div className="flex w-full flex-col items-start gap-2">
                 <span className="font-medium text-gray-900">
-                  Active Cases
+                  Statistics
                 </span>
-                <div className="flex w-full flex-col items-start">
-                  <div className="flex w-full items-center justify-between border-b border-solid border-gray-200 px-2 py-3">
-                    <span className="text-sm text-gray-900">
-                      Placeholder vs Placeholder
-                    </span>
-                    <Badge variant="outline">In Court</Badge>
+                <div className="grid grid-cols-2 gap-4 w-full">
+                  <div className="text-center p-3 bg-primary/5 rounded-lg">
+                    <div className="text-2xl font-bold text-primary">
+                      {memberStats?.caseCount || 0}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Active Cases</div>
                   </div>
-                  <div className="flex w-full items-center justify-between border-b border-solid border-gray-200 px-2 py-3">
-                    <span className="text-sm text-gray-900">
-                      Placeholder Holdings
-                    </span>
-                    <Badge variant="outline">Review</Badge>
+                  <div className="text-center p-3 bg-accent/20 rounded-lg">
+                    <div className="text-2xl font-bold text-accent-foreground">
+                      {memberStats?.taskCount || 0}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Tasks</div>
                   </div>
                 </div>
               </div>
-              {/* Member permissions */}
+              {/* Recent cases */}
               <div className="flex w-full flex-col items-start gap-2">
-                <span className="font-medium text-gray-900">Permissions</span>
+                <span className="font-medium text-gray-900">
+                  Recent Cases
+                </span>
+                <div className="flex w-full flex-col items-start">
+                  {memberStats?.recentCases?.length > 0 ? (
+                    memberStats.recentCases.map((case_item: any) => (
+                      <div key={case_item.id} className="flex w-full items-center justify-between border-b border-solid border-border px-2 py-3">
+                        <span className="text-sm text-foreground truncate">
+                          {case_item.case_title}
+                        </span>
+                        <Badge variant="outline" className="ml-2">
+                          {case_item.status}
+                        </Badge>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-sm text-muted-foreground py-4 text-center w-full">
+                      No recent cases found
+                    </div>
+                  )}
+                </div>
+              </div>
+              {/* Role-based permissions */}
+              <div className="flex w-full flex-col items-start gap-2">
+                <span className="font-medium text-gray-900">Role Permissions</span>
                 <div className="flex w-full flex-col items-start gap-2">
-                  <Checkbox checked={false} id="assign-tasks">
-                    <span className="text-sm text-gray-900 ml-2">Can assign tasks</span>
-                  </Checkbox>
-                  <Checkbox checked={false} id="upload-documents">
-                    <span className="text-sm text-gray-900 ml-2">Can upload documents</span>
-                  </Checkbox>
-                  <Checkbox checked={false} id="manage-team">
-                    <span className="text-sm text-gray-900 ml-2">Can manage team</span>
-                  </Checkbox>
+                  <div className="flex items-center gap-2">
+                    <Checkbox 
+                      checked={['admin', 'lawyer'].includes(detailMember.role)} 
+                      disabled
+                      id="assign-tasks"
+                    />
+                    <span className="text-sm text-muted-foreground ml-2">Can assign tasks</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Checkbox 
+                      checked={['admin', 'lawyer', 'paralegal', 'office_staff'].includes(detailMember.role)} 
+                      disabled
+                      id="upload-documents"
+                    />
+                    <span className="text-sm text-muted-foreground ml-2">Can upload documents</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Checkbox 
+                      checked={detailMember.role === 'admin'} 
+                      disabled
+                      id="manage-team"
+                    />
+                    <span className="text-sm text-muted-foreground ml-2">Can manage team</span>
+                  </div>
                 </div>
               </div>
             </div>}
         </div>
       </div>
 
-      {/* Add Team Member Dialog */}
+      {/* Dialogs */}
       <AddTeamMemberDialog 
         open={addMemberOpen} 
         onOpenChange={setAddMemberOpen} 
+      />
+      <EditTeamMemberDialog 
+        open={editMemberOpen} 
+        onOpenChange={setEditMemberOpen}
+        member={selectedMember}
+      />
+      <DeleteTeamMemberDialog 
+        open={deleteMemberOpen} 
+        onOpenChange={setDeleteMemberOpen}
+        member={selectedMember}
       />
     </div>
   );
@@ -341,10 +425,20 @@ function FilterBadge({
   onClick?: () => void;
 }) {
   return <button className={`rounded-full px-4 py-1 text-sm font-medium border 
-        ${selected ? "bg-primary text-white" : "bg-gray-100 text-gray-800 border-gray-200"} 
-        transition-colors hover:bg-primary/10`} type="button" onClick={onClick}>
+        ${selected ? "bg-primary text-primary-foreground border-primary" : "bg-muted text-muted-foreground border-border hover:bg-muted/80"} 
+        transition-colors`} type="button" onClick={onClick}>
       {label} <span className="ml-1 opacity-75">{count}</span>
     </button>;
+}
+
+// Case Count Cell Component
+function CaseCountCell({ memberId }: { memberId: string }) {
+  const { data: stats } = useTeamMemberStats(memberId);
+  return (
+    <span className="text-base font-body text-default-font">
+      {stats?.caseCount || 0}
+    </span>
+  );
 }
 
 // Utility: Initials from name
@@ -362,8 +456,8 @@ function DataFieldHorizontal({
   children: React.ReactNode;
 }) {
   return <div className="flex items-center gap-2">
-      <span className="text-gray-400">{icon}</span>
-      <span className="text-xs text-gray-600 min-w-[56px]">{label}</span>
+      <span className="text-muted-foreground">{icon}</span>
+      <span className="text-xs text-muted-foreground min-w-[56px]">{label}</span>
       {children}
     </div>;
 }
