@@ -74,9 +74,9 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Check if user is admin
+    // Check if user is admin using admin client to bypass RLS
     console.log('Checking admin role for user:', user.id)
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
       .select('role')
       .eq('id', user.id)
