@@ -75,18 +75,25 @@ Deno.serve(async (req) => {
     }
 
     // Check if user is admin
-    const { data: profile } = await supabase
+    console.log('Checking admin role for user:', user.id)
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single()
 
+    console.log('Profile data:', profile)
+    console.log('Profile error:', profileError)
+
     if (profile?.role !== 'admin') {
+      console.log('User role check failed. Role found:', profile?.role)
       return new Response(
         JSON.stringify({ error: 'Only administrators can add team members' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
+
+    console.log('Admin check passed for user:', user.id)
 
     // Parse request body
     const requestData: CreateTeamMemberRequest = await req.json()
