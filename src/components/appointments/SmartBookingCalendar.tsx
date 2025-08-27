@@ -48,6 +48,7 @@ interface SmartBookingCalendarProps {
   selectedTime?: string;
   hideLawyerPicker?: boolean;
   onLawyerChange?: (lawyerId: string) => void;
+  allowOverride?: boolean; // Allow receptionists to override availability
 }
 
 export const SmartBookingCalendar: React.FC<SmartBookingCalendarProps> = ({
@@ -56,7 +57,8 @@ export const SmartBookingCalendar: React.FC<SmartBookingCalendarProps> = ({
   selectedDate,
   selectedTime,
   hideLawyerPicker,
-  onLawyerChange
+  onLawyerChange,
+  allowOverride = false
 }) => {
   const [internalSelectedDate, setInternalSelectedDate] = useState<Date | undefined>(selectedDate);
 
@@ -127,7 +129,12 @@ export const SmartBookingCalendar: React.FC<SmartBookingCalendarProps> = ({
   });
 
   const isDateAvailable = (date: Date): boolean => {
-    if (!selectedLawyer || !availabilityRules) return false;
+    if (!selectedLawyer) return false;
+    
+    // If override is allowed (for receptionists), all dates are available
+    if (allowOverride) return true;
+    
+    if (!availabilityRules) return false;
     
     const dayOfWeek = date.getDay();
     const dateStr = format(date, 'yyyy-MM-dd');
@@ -151,10 +158,49 @@ export const SmartBookingCalendar: React.FC<SmartBookingCalendarProps> = ({
   };
 
   const generateTimeSlots = (): TimeSlot[] => {
-    if (!selectedLawyer || !internalSelectedDate || !availabilityRules) return [];
+    if (!selectedLawyer || !internalSelectedDate) return [];
     
     const dayOfWeek = internalSelectedDate.getDay();
     const dateStr = format(internalSelectedDate, 'yyyy-MM-dd');
+    
+    // If override is allowed (for receptionists), generate slots from 7am to 10pm
+    if (allowOverride) {
+      const slots: TimeSlot[] = [];
+      const startHour = 7; // 7am
+      const endHour = 22; // 10pm
+      const duration = 60; // Default 60 minutes
+      
+      for (let hour = startHour; hour < endHour; hour++) {
+        for (let minute = 0; minute < 60; minute += 30) { // 30-minute intervals
+          const timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+          const currentTime = parseDateTime(dateStr, timeStr);
+          const slotEndTime = currentTime ? addMinutes(currentTime, duration) : null;
+          
+          if (!currentTime || !slotEndTime) continue;
+          
+          // Only check for existing appointment conflicts, ignore availability rules
+          const hasConflict = existingAppointments?.some(apt => {
+            const aptStart = parseDateTime(dateStr, apt.start_time);
+            const aptEnd = parseDateTime(dateStr, apt.end_time);
+            if (!aptStart || !aptEnd) return false;
+            return (
+              isBefore(currentTime, aptEnd) && isAfter(slotEndTime, aptStart)
+            );
+          }) ?? false;
+          
+          slots.push({
+            time: timeStr,
+            available: !hasConflict,
+            reason: hasConflict ? 'Time slot is already booked' : undefined
+          });
+        }
+      }
+      
+      return slots.sort((a, b) => a.time.localeCompare(b.time));
+    }
+    
+    // Normal availability-based booking for non-receptionists
+    if (!availabilityRules) return [];
     
     // Get rules for this day
     const rulesForDay = availabilityRules.filter(rule => rule.day_of_week === dayOfWeek);
@@ -238,7 +284,15 @@ export const SmartBookingCalendar: React.FC<SmartBookingCalendarProps> = ({
   };
 
   const handleTimeSlotClick = (time: string) => {
-    if (!internalSelectedDate || !selectedLawyer || !availabilityRules) return;
+    if (!internalSelectedDate || !selectedLawyer) return;
+    
+    // If override is allowed, use default duration of 60 minutes
+    if (allowOverride) {
+      onTimeSlotSelect(internalSelectedDate, time, 60);
+      return;
+    }
+    
+    if (!availabilityRules) return;
     
     const dayOfWeek = internalSelectedDate.getDay();
     const norm = (t?: string | null) => (t ? String(t).slice(0, 5) : '');
@@ -318,6 +372,11 @@ export const SmartBookingCalendar: React.FC<SmartBookingCalendarProps> = ({
                   <div className="flex items-center gap-2">
                     <Clock className="h-5 w-5" />
                     Available Times
+                    {allowOverride && (
+                      <Badge variant="warning" className="ml-2 text-xs">
+                        Override Mode: 7AM-10PM
+                      </Badge>
+                    )}
                   </div>
                   <Badge variant="outline">
                     {format(internalSelectedDate, 'EEEE, MMMM d')}

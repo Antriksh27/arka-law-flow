@@ -1,8 +1,9 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   Dialog,
   DialogContent,
@@ -40,7 +41,34 @@ interface RescheduleFormData {
 
 const RescheduleAppointmentDialog = ({ open, onOpenChange, appointment }: RescheduleAppointmentDialogProps) => {
   const { toast } = useToast();
+  const { user, firmId } = useAuth();
   const queryClient = useQueryClient();
+
+  // Get current user's role to enable override for receptionists
+  const { data: currentUserRole } = useQuery({
+    queryKey: ['current-user-role', user?.id],
+    queryFn: async () => {
+      if (!user?.id || !firmId) return null;
+      
+      const { data, error } = await supabase
+        .from('team_members')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('firm_id', firmId)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching user role:', error);
+        return null;
+      }
+      
+      return data?.role;
+    },
+    enabled: !!user?.id && !!firmId
+  });
+
+  // Allow override for receptionists and office staff
+  const allowOverride = currentUserRole === 'receptionist' || currentUserRole === 'office_staff';
 
   const form = useForm<RescheduleFormData>({
     defaultValues: {
@@ -196,6 +224,7 @@ const RescheduleAppointmentDialog = ({ open, onOpenChange, appointment }: Resche
               selectedDate={form.watch('appointment_date') ? new Date(form.watch('appointment_date')) : undefined}
               selectedTime={form.watch('appointment_time')}
               hideLawyerPicker
+              allowOverride={allowOverride}
               onTimeSlotSelect={(date, time, duration) => {
                 form.setValue('appointment_date', format(date, 'yyyy-MM-dd'));
                 form.setValue('appointment_time', time);

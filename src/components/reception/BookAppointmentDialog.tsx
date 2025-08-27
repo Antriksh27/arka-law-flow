@@ -78,6 +78,32 @@ const BookAppointmentDialog = ({
 
   const selectedLawyerId = form.watch('lawyer_id');
 
+  // Get current user's role to enable override for receptionists
+  const { data: currentUserRole } = useQuery({
+    queryKey: ['current-user-role', user?.id],
+    queryFn: async () => {
+      if (!user?.id || !firmId) return null;
+      
+      const { data, error } = await supabase
+        .from('team_members')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('firm_id', firmId)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching user role:', error);
+        return null;
+      }
+      
+      return data?.role;
+    },
+    enabled: !!user?.id && !!firmId
+  });
+
+  // Allow override for receptionists and office staff
+  const allowOverride = currentUserRole === 'receptionist' || currentUserRole === 'office_staff';
+
   // Fetch lawyers for selection
   const {
     data: lawyers
@@ -422,6 +448,7 @@ const BookAppointmentDialog = ({
               selectedDate={form.watch('appointment_date') ? new Date(form.watch('appointment_date')) : undefined}
               selectedTime={form.watch('appointment_time')}
               hideLawyerPicker
+              allowOverride={allowOverride}
               onTimeSlotSelect={(date, time, duration) => {
                 form.setValue('appointment_date', format(date, 'yyyy-MM-dd'));
                 form.setValue('appointment_time', time);
