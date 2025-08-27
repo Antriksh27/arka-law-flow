@@ -134,7 +134,7 @@ const BookAppointmentDialog = ({
   } = useQuery({
     queryKey: ['clients-contacts', firmId],
     queryFn: async () => {
-      const [clientsResponse, contactsResponse] = await Promise.all([supabase.from('clients').select('id, full_name, email, phone, address').eq('firm_id', firmId).order('full_name'), supabase.from('contacts').select('id, name, email, phone, address_line_1, address_line_2, visit_purpose, notes').eq('firm_id', firmId).order('name')]);
+      const [clientsResponse, contactsResponse] = await Promise.all([supabase.from('clients').select('id, full_name, email, phone, address').eq('firm_id', firmId).order('full_name'), supabase.from('contacts').select('id, name, organization, email, phone, address_line_1, address_line_2, visit_purpose, notes').eq('firm_id', firmId).order('name')]);
       if (clientsResponse.error) throw clientsResponse.error;
       if (contactsResponse.error) throw contactsResponse.error;
       const clients = clientsResponse.data?.map(client => ({
@@ -149,6 +149,7 @@ const BookAppointmentDialog = ({
       const contacts = contactsResponse.data?.map(contact => ({
         id: contact.id,
         name: contact.name,
+        organization: contact.organization,
         email: contact.email,
         phone: contact.phone,
         address: contact.address_line_1 ? [contact.address_line_1, contact.address_line_2].filter(Boolean).join(', ') : null,

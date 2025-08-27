@@ -976,6 +976,7 @@ export type Database = {
           last_visited_at: string | null
           name: string
           notes: string | null
+          organization: string | null
           phone: string | null
           pin_code: string | null
           referred_by_name: string | null
@@ -996,6 +997,7 @@ export type Database = {
           last_visited_at?: string | null
           name: string
           notes?: string | null
+          organization?: string | null
           phone?: string | null
           pin_code?: string | null
           referred_by_name?: string | null
@@ -1016,6 +1018,7 @@ export type Database = {
           last_visited_at?: string | null
           name?: string
           notes?: string | null
+          organization?: string | null
           phone?: string | null
           pin_code?: string | null
           referred_by_name?: string | null

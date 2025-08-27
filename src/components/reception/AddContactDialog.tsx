@@ -33,6 +33,7 @@ interface AddContactDialogProps {
 
 interface ContactFormData {
   name: string;
+  organization?: string;
   email?: string;
   phone?: string;
   visit_purpose?: string;
@@ -86,6 +87,7 @@ const AddContactDialog = ({ open, onOpenChange }: AddContactDialogProps) => {
   const form = useForm<ContactFormData>({
     defaultValues: {
       name: '',
+      organization: '',
       email: '',
       phone: '',
       visit_purpose: '',
@@ -155,6 +157,7 @@ const AddContactDialog = ({ open, onOpenChange }: AddContactDialogProps) => {
       // Convert empty string UUIDs to null to prevent PostgreSQL errors
       const cleanedData = {
         name: data.name.trim(),
+        organization: data.organization?.trim() || null,
         email: data.email?.trim() || null,
         phone: data.phone?.trim() || null,
         visit_purpose: data.visit_purpose?.trim() || null,
@@ -258,6 +261,20 @@ const AddContactDialog = ({ open, onOpenChange }: AddContactDialogProps) => {
                   <FormLabel>Name *</FormLabel>
                   <FormControl>
                     <Input placeholder="Enter contact name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="organization"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Organization</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter organization/company name" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

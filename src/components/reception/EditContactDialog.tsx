@@ -33,6 +33,7 @@ interface EditContactDialogProps {
 
 interface ContactFormData {
   name: string;
+  organization?: string;
   email?: string;
   phone?: string;
   visit_purpose?: string;
@@ -83,6 +84,7 @@ const EditContactDialog: React.FC<EditContactDialogProps> = ({ open, onOpenChang
   const form = useForm<ContactFormData>({
     defaultValues: {
       name: '',
+      organization: '',
       email: '',
       phone: '',
       visit_purpose: '',
@@ -100,6 +102,7 @@ const EditContactDialog: React.FC<EditContactDialogProps> = ({ open, onOpenChang
     if (contact) {
       form.reset({
         name: contact.name || '',
+        organization: contact.organization || '',
         email: contact.email || '',
         phone: contact.phone || '',
         visit_purpose: contact.visit_purpose || '',
@@ -153,6 +156,7 @@ const EditContactDialog: React.FC<EditContactDialogProps> = ({ open, onOpenChang
         .from('contacts')
         .update({
           name: data.name,
+          organization: data.organization || null,
           email: data.email || null,
           phone: data.phone || null,
           visit_purpose: data.visit_purpose || null,
@@ -217,6 +221,20 @@ const EditContactDialog: React.FC<EditContactDialogProps> = ({ open, onOpenChang
                       <FormLabel>Name *</FormLabel>
                       <FormControl>
                         <Input placeholder="Enter contact name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="organization"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Organization</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter organization/company name" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

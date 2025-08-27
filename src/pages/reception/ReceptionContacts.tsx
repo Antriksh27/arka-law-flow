@@ -139,6 +139,7 @@ const ReceptionContacts = () => {
                 <thead>
                   <tr className="border-b border-[#E5E7EB]">
                     <th className="text-left py-3 px-4 font-medium text-[#111827]">Name</th>
+                    <th className="text-left py-3 px-4 font-medium text-[#111827]">Organization</th>
                     <th className="text-left py-3 px-4 font-medium text-[#111827]">Contact</th>
                     <th className="text-left py-3 px-4 font-medium text-[#111827]">Purpose</th>
                     <th className="text-left py-3 px-4 font-medium text-[#111827]">Last Visit</th>
@@ -151,6 +152,9 @@ const ReceptionContacts = () => {
                     <tr key={contact.id} className="border-b border-[#E5E7EB] hover:bg-[#F9FAFB]">
                       <td className="py-3 px-4">
                         <div className="font-medium text-[#111827]">{contact.name}</div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className="text-sm text-[#6B7280]">{contact.organization || '-'}</span>
                       </td>
                       <td className="py-3 px-4">
                         <div className="space-y-1">
