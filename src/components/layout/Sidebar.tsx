@@ -15,21 +15,32 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import ReceptionistSidebar from './ReceptionistSidebar';
 
-const navigation = [
-  { name: 'Dashboard', href: '/', icon: Inbox },
-  { name: 'Cases', href: '/cases', icon: Folder },
-  { name: 'Clients', href: '/clients', icon: Users },
-  { name: 'Appointments', href: '/appointments', icon: Calendar },
-  { name: 'Availability', href: '/availability', icon: Clock },
-  { name: 'Hearings', href: '/hearings', icon: Calendar },
-  { name: 'Tasks', href: '/tasks', icon: File },
-  { name: 'Instructions', href: '/instructions', icon: ClipboardList },
-  { name: 'Invoices', href: '/invoices', icon: File },
-  { name: 'Notes', href: '/notes', icon: File },
-  { name: 'Messages', href: '/messages', icon: MessageSquare },
-  { name: 'Documents', href: '/documents', icon: Folder },
-  { name: 'Team', href: '/team', icon: Users },
-];
+const getNavigationForRole = (role: string | null) => {
+  const baseNavigation = [
+    { name: 'Dashboard', href: '/', icon: Inbox },
+    { name: 'Cases', href: '/cases', icon: Folder },
+    { name: 'Clients', href: '/clients', icon: Users },
+    { name: 'Appointments', href: '/appointments', icon: Calendar },
+    { name: 'Availability', href: '/availability', icon: Clock },
+    { name: 'Hearings', href: '/hearings', icon: Calendar },
+    { name: 'Tasks', href: '/tasks', icon: File },
+    { name: 'Instructions', href: '/instructions', icon: ClipboardList },
+    { name: 'Notes', href: '/notes', icon: File },
+    { name: 'Messages', href: '/messages', icon: MessageSquare },
+    { name: 'Documents', href: '/documents', icon: Folder },
+  ];
+
+  // Add role-specific navigation items
+  if (role && !['junior'].includes(role)) {
+    baseNavigation.push({ name: 'Invoices', href: '/invoices', icon: File });
+  }
+
+  if (role && ['admin', 'lawyer'].includes(role)) {
+    baseNavigation.push({ name: 'Team', href: '/team', icon: Users });
+  }
+
+  return baseNavigation;
+};
 
 const Sidebar = () => {
   const location = useLocation();
@@ -76,7 +87,7 @@ const Sidebar = () => {
 
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-1">
-        {navigation.map((item) => {
+        {getNavigationForRole(userRole).map((item) => {
           const isActive = location.pathname === item.href;
           const Icon = item.icon;
           

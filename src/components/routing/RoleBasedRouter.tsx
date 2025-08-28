@@ -96,6 +96,34 @@ const RoleBasedRouter = () => {
     );
   }
 
+  // Junior users with limited access
+  if (role === 'junior') {
+    return (
+      <DashboardLayout>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/cases" element={<Cases />} />
+          <Route path="/cases/:id" element={<CaseDetail />} />
+          <Route path="/clients" element={<Clients />} />
+          <Route path="/clients/:id" element={<ClientInfo />} />
+          <Route path="/appointments" element={<Appointments />} />
+          <Route path="/tasks" element={<Tasks />} />
+          <Route path="/hearings" element={<Hearings />} />
+          <Route path="/documents" element={<Documents />} />
+          <Route path="/notes" element={<Notes />} />
+          <Route path="/messages" element={<Messages />} />
+          <Route path="/instructions" element={<Instructions />} />
+          <Route path="/availability" element={<Availability />} />
+          {/* Redirect invoices to dashboard for juniors */}
+          <Route path="/invoices" element={<Index />} />
+          <Route path="/team" element={<Index />} />
+          <Route path="/reception/*" element={<Index />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </DashboardLayout>
+    );
+  }
+
   // Standard layout for all other roles (admin, lawyer, paralegal, etc.)
   return (
     <DashboardLayout>
