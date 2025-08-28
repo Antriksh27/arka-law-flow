@@ -185,19 +185,18 @@ Deno.serve(async (req) => {
     if (existingTeamMember) {
       console.log('User is already a team member, updating existing record:', existingTeamMember)
       
-      // Update existing team member record instead of creating new one
-      const { error: updateError } = await supabaseAdmin
-        .from('team_members')
-        .update({
-          full_name: requestData.full_name,
-          email: requestData.email,
-          phone_number: requestData.phone,
-          role: requestData.role,
-          status: 'active',
-          notes: requestData.notes,
-          invited_by: requestData.invited_by,
-        })
-        .eq('id', existingTeamMember.id)
+        // Update existing team member record instead of creating new one
+        const { error: updateError } = await supabaseAdmin
+          .from('team_members')
+          .update({
+            full_name: requestData.full_name,
+            email: requestData.email,
+            phone_number: requestData.phone,
+            role: requestData.role,
+            status: 'active',
+            notes: requestData.notes,
+          })
+          .eq('id', existingTeamMember.id)
 
       if (updateError) {
         return new Response(
@@ -228,7 +227,6 @@ Deno.serve(async (req) => {
         role: requestData.role,
         status: 'active',
         notes: requestData.notes,
-        invited_by: requestData.invited_by,
       })
 
     if (teamError) {
