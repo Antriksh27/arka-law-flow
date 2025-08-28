@@ -183,6 +183,7 @@ Deno.serve(async (req) => {
       .single()
 
     if (existingTeamMember) {
+      console.log('User is already a team member of this firm:', existingTeamMember)
       return new Response(
         JSON.stringify({ error: 'User is already a member of this firm' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
