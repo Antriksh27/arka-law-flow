@@ -183,10 +183,36 @@ Deno.serve(async (req) => {
       .single()
 
     if (existingTeamMember) {
-      console.log('User is already a team member of this firm:', existingTeamMember)
+      console.log('User is already a team member, updating existing record:', existingTeamMember)
+      
+      // Update existing team member record instead of creating new one
+      const { error: updateError } = await supabaseAdmin
+        .from('team_members')
+        .update({
+          full_name: requestData.full_name,
+          email: requestData.email,
+          phone_number: requestData.phone,
+          role: requestData.role,
+          status: 'active',
+          notes: requestData.notes,
+          invited_by: requestData.invited_by,
+        })
+        .eq('id', existingTeamMember.id)
+
+      if (updateError) {
+        return new Response(
+          JSON.stringify({ error: `Failed to update team member: ${updateError.message}` }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
       return new Response(
-        JSON.stringify({ error: 'User is already a member of this firm' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ 
+          success: true, 
+          user_id: userId,
+          message: 'Team member updated successfully'
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
