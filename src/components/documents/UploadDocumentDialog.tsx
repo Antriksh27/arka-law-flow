@@ -10,6 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Upload, X, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { uploadFileToPydio } from '@/lib/pydioIntegration';
 
 interface UploadDocumentDialogProps {
   open: boolean;
@@ -149,6 +150,38 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
             }
 
             console.log('Document record created successfully:', insertData);
+            
+            // Also upload to Pydio
+            try {
+              console.log('Uploading to Pydio:', file.name);
+              
+              // Handle different file types
+              let fileContent: string;
+              if (file.type.startsWith('text/') || file.name.endsWith('.txt')) {
+                fileContent = await file.text();
+              } else {
+                // For binary files, convert to base64
+                const arrayBuffer = await file.arrayBuffer();
+                const uint8Array = new Uint8Array(arrayBuffer);
+                fileContent = btoa(String.fromCharCode(...uint8Array));
+              }
+              
+              const pydioResult = await uploadFileToPydio({
+                filename: file.name,
+                content: fileContent
+              });
+              
+              if (pydioResult.success) {
+                console.log('Pydio upload successful:', pydioResult.message);
+              } else {
+                console.error('Pydio upload failed:', pydioResult.error);
+                // Don't fail the entire upload if Pydio fails, just log the error
+              }
+            } catch (pydioError) {
+              console.error('Error uploading to Pydio:', pydioError);
+              // Don't fail the entire upload if Pydio fails
+            }
+            
             return insertData;
           } catch (error) {
             console.error('Error uploading file:', file.name, error);

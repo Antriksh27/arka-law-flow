@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { uploadFileToPydio } from '@/lib/pydioIntegration';
 import { useForm } from 'react-hook-form';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -138,6 +139,37 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
           .single();
 
         if (documentError) throw documentError;
+
+        // Also upload to Pydio
+        try {
+          console.log('Uploading to Pydio:', file.name);
+          
+          // Handle different file types
+          let fileContent: string;
+          if (file.type.startsWith('text/') || file.name.endsWith('.txt')) {
+            fileContent = await file.text();
+          } else {
+            // For binary files, convert to base64
+            const arrayBuffer = await file.arrayBuffer();
+            const uint8Array = new Uint8Array(arrayBuffer);
+            fileContent = btoa(String.fromCharCode(...uint8Array));
+          }
+          
+          const pydioResult = await uploadFileToPydio({
+            filename: file.name,
+            content: fileContent
+          });
+          
+          if (pydioResult.success) {
+            console.log('Pydio upload successful:', pydioResult.message);
+          } else {
+            console.error('Pydio upload failed:', pydioResult.error);
+            // Don't fail the entire upload if Pydio fails, just log the error
+          }
+        } catch (pydioError) {
+          console.error('Error uploading to Pydio:', pydioError);
+          // Don't fail the entire upload if Pydio fails
+        }
 
         results.push(documentData);
       }
