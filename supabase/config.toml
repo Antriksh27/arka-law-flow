@@ -30,3 +30,6 @@ verify_jwt = false
 
 [functions.auto-sync-trigger]
 verify_jwt = false
+
+[functions.uploadToPydio]
+verify_jwt = false
