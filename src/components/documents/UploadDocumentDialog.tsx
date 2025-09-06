@@ -153,32 +153,39 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
             
             // Also upload to Pydio
             try {
-              console.log('Uploading to Pydio:', file.name);
+              console.log('Starting Pydio upload for:', file.name);
               
               // Handle different file types
               let fileContent: string;
               if (file.type.startsWith('text/') || file.name.endsWith('.txt')) {
                 fileContent = await file.text();
+                console.log('Text file content length:', fileContent.length);
               } else {
                 // For binary files, convert to base64
                 const arrayBuffer = await file.arrayBuffer();
                 const uint8Array = new Uint8Array(arrayBuffer);
                 fileContent = btoa(String.fromCharCode(...uint8Array));
+                console.log('Binary file converted to base64, length:', fileContent.length);
               }
               
+              console.log('Calling uploadFileToPydio function...');
               const pydioResult = await uploadFileToPydio({
                 filename: file.name,
                 content: fileContent
               });
               
+              console.log('Pydio result:', pydioResult);
+              
               if (pydioResult.success) {
-                console.log('Pydio upload successful:', pydioResult.message);
+                console.log('✅ Pydio upload successful:', pydioResult.message);
               } else {
-                console.error('Pydio upload failed:', pydioResult.error);
+                console.error('❌ Pydio upload failed:', pydioResult.error);
+                console.error('Pydio error details:', pydioResult.details);
                 // Don't fail the entire upload if Pydio fails, just log the error
               }
             } catch (pydioError) {
-              console.error('Error uploading to Pydio:', pydioError);
+              console.error('❌ Exception during Pydio upload:', pydioError);
+              console.error('Pydio error stack:', pydioError instanceof Error ? pydioError.stack : 'No stack trace');
               // Don't fail the entire upload if Pydio fails
             }
             
