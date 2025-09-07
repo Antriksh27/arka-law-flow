@@ -64,8 +64,100 @@ serve(async (req) => {
         const uploadUrl = `${baseUrl}${filename}`;
 
         console.log(`📤 Uploading to: ${uploadUrl}`);
+        console.log(`🔑 Auth header present: ${authHeader ? 'Yes' : 'No'}`);
 
-        // Upload to WebDAV using PUT method
+        // First, try to test the WebDAV connection with a PROPFIND request
+        console.log(`🧪 Testing WebDAV connection to base URL: ${baseUrl}`);
+        const testResponse = await fetch(baseUrl, {
+          method: 'PROPFIND',
+          headers: {
+            'Authorization': authHeader,
+            'Depth': '1',
+          },
+        });
+
+        console.log(`🧪 Test response: ${testResponse.status} ${testResponse.statusText}`);
+        
+        if (!testResponse.ok && testResponse.status === 404) {
+          // Try common WebDAV paths
+          const commonPaths = [
+            '/webdav/',
+            '/remote.php/webdav/',
+            '/dav/',
+            '/files/'
+          ];
+          
+          let workingPath = null;
+          for (const path of commonPaths) {
+            const testUrl = webdavUrl.replace(/\/[^\/]*\/$/, path);
+            console.log(`🧪 Testing WebDAV path: ${testUrl}`);
+            
+            const pathTestResponse = await fetch(testUrl, {
+              method: 'PROPFIND',
+              headers: {
+                'Authorization': authHeader,
+                'Depth': '1',
+              },
+            });
+            
+            if (pathTestResponse.ok || pathTestResponse.status === 207) {
+              workingPath = testUrl;
+              console.log(`✅ Found working WebDAV path: ${workingPath}`);
+              break;
+            }
+          }
+          
+          if (workingPath) {
+            const correctedUploadUrl = `${workingPath}${workingPath.endsWith('/') ? '' : '/'}${filename}`;
+            console.log(`📤 Retrying upload to corrected URL: ${correctedUploadUrl}`);
+            
+            const uploadResponse = await fetch(correctedUploadUrl, {
+              method: 'PUT',
+              headers: {
+                'Authorization': authHeader,
+                'Content-Type': 'application/octet-stream',
+              },
+              body: content,
+            });
+
+            if (!uploadResponse.ok) {
+              console.error(`❌ WebDAV upload failed even with corrected path: ${uploadResponse.status} ${uploadResponse.statusText}`);
+              const errorText = await uploadResponse.text();
+              console.error(`❌ Error details: ${errorText}`);
+              
+              return new Response(
+                JSON.stringify({
+                  success: false,
+                  message: 'Failed to upload to WebDAV (tried multiple paths)',
+                  error: `WebDAV error: ${uploadResponse.status} ${uploadResponse.statusText}`,
+                  details: errorText,
+                  testedPaths: commonPaths,
+                  workingPath: workingPath
+                }),
+            {
+              status: uploadResponse.status,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            },
+          )
+          } else {
+            return new Response(
+              JSON.stringify({
+                success: false,
+                message: 'WebDAV endpoint not found - tried multiple common paths',
+                error: `WebDAV 404 error: No working WebDAV endpoint found`,
+                details: 'Tested paths: /webdav/, /remote.php/webdav/, /dav/, /files/',
+                testedPaths: commonPaths,
+                suggestion: 'Please check your WebDAV server configuration and URL'
+              }),
+              {
+                status: 404,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              },
+            )
+          }
+        }
+
+        // Normal upload to the original URL if PROPFIND test passed
         const uploadResponse = await fetch(uploadUrl, {
           method: 'PUT',
           headers: {
@@ -93,8 +185,6 @@ serve(async (req) => {
             },
           )
         }
-
-        console.log('✅ Upload successful');
 
         return new Response(
           JSON.stringify({
