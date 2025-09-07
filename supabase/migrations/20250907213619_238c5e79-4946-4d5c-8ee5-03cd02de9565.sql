@@ -1,0 +1,7 @@
+-- Add WebDAV sync status fields to documents table
+ALTER TABLE public.documents 
+ADD COLUMN IF NOT EXISTS webdav_synced BOOLEAN DEFAULT FALSE,
+ADD COLUMN IF NOT EXISTS webdav_path TEXT,
+ADD COLUMN IF NOT EXISTS webdav_error TEXT,
+ADD COLUMN IF NOT EXISTS synced_at TIMESTAMP WITH TIME ZONE,
+ADD COLUMN IF NOT EXISTS sync_attempted_at TIMESTAMP WITH TIME ZONE;

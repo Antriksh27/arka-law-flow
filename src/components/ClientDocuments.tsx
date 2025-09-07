@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { uploadToPydio } from "../lib/supabaseUpload";
 import { supabase } from "@/integrations/supabase/client";
+import { uploadFileToWebDAV } from '@/lib/pydioIntegration';
 
 interface Client {
   id: string;
@@ -81,16 +81,30 @@ export default function ClientDocuments() {
       const selectedClient = clients.find(c => c.id === selectedClientId);
       const selectedCase = cases.find(c => c.id === selectedCaseId);
 
-      const result = await uploadToPydio({
-        clientName: selectedClient?.full_name || selectedClientId,
-        caseName: selectedCase?.case_title || selectedCaseId,
-        docType,
-        file,
+      // Convert file to base64 for WebDAV upload
+      const arrayBuffer = await file.arrayBuffer();
+      const base64Content = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+      
+      // Create organized filename: ClientName/CaseName/DocumentType/filename
+      const clientName = selectedClient?.full_name || 'Unknown Client';
+      const caseName = selectedCase?.case_title || 'Unknown Case';
+      const organizedFilename = `${clientName}/${caseName}/${docType}/${file.name}`;
+      
+      console.log('🔧 Starting WebDAV upload for:', organizedFilename);
+      
+      const result = await uploadFileToWebDAV({
+        filename: organizedFilename,
+        content: base64Content
       });
 
-      alert("✅ File uploaded successfully!");
-      console.log(result);
+      if (result.success) {
+        alert("✅ File uploaded successfully to WebDAV!");
+        console.log('WebDAV upload result:', result);
+      } else {
+        throw new Error(result.error || 'WebDAV upload failed');
+      }
     } catch (err: any) {
+      console.error('Upload error:', err);
       alert("❌ Upload failed: " + err.message);
     }
   }

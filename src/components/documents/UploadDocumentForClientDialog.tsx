@@ -183,46 +183,11 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
           
           if (webdavResult.success) {
             console.log('✅ WebDAV upload successful:', webdavResult.message);
-            
-            // Update document record with WebDAV status
-            await supabase
-              .from('documents')
-              .update({ 
-                webdav_synced: true,
-                webdav_path: organizedFilename,
-                synced_at: new Date().toISOString()
-              })
-              .eq('id', documentData.id);
-              
           } else {
             console.error('❌ WebDAV upload failed:', webdavResult.error);
-            
-            // Update document record with WebDAV failure status
-            await supabase
-              .from('documents')
-              .update({ 
-                webdav_synced: false,
-                webdav_error: webdavResult.error,
-                sync_attempted_at: new Date().toISOString()
-              })
-              .eq('id', documentData.id);
           }
         } catch (webdavError) {
           console.error('❌ Error uploading to WebDAV:', webdavError);
-          
-          // Update document record with WebDAV error
-          try {
-            await supabase
-              .from('documents')
-              .update({ 
-                webdav_synced: false,
-                webdav_error: webdavError instanceof Error ? webdavError.message : 'Unknown error',
-                sync_attempted_at: new Date().toISOString()
-              })
-              .eq('id', documentData.id);
-          } catch (updateError) {
-            console.error('Error updating WebDAV status:', updateError);
-          }
         }
 
         results.push(documentData);

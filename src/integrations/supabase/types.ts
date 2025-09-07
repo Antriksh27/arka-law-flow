@@ -1181,10 +1181,15 @@ export type Database = {
           is_shared_with_client: boolean | null
           notes: string | null
           original_copy_retained: boolean | null
+          sync_attempted_at: string | null
+          synced_at: string | null
           title: string | null
           uploaded_at: string | null
           uploaded_by: string | null
           uploaded_by_user_id: string | null
+          webdav_error: string | null
+          webdav_path: string | null
+          webdav_synced: boolean | null
         }
         Insert: {
           case_id?: string | null
@@ -1204,10 +1209,15 @@ export type Database = {
           is_shared_with_client?: boolean | null
           notes?: string | null
           original_copy_retained?: boolean | null
+          sync_attempted_at?: string | null
+          synced_at?: string | null
           title?: string | null
           uploaded_at?: string | null
           uploaded_by?: string | null
           uploaded_by_user_id?: string | null
+          webdav_error?: string | null
+          webdav_path?: string | null
+          webdav_synced?: boolean | null
         }
         Update: {
           case_id?: string | null
@@ -1227,10 +1237,15 @@ export type Database = {
           is_shared_with_client?: boolean | null
           notes?: string | null
           original_copy_retained?: boolean | null
+          sync_attempted_at?: string | null
+          synced_at?: string | null
           title?: string | null
           uploaded_at?: string | null
           uploaded_by?: string | null
           uploaded_by_user_id?: string | null
+          webdav_error?: string | null
+          webdav_path?: string | null
+          webdav_synced?: boolean | null
         }
         Relationships: [
           {
