@@ -68,110 +68,102 @@ serve(async (req) => {
 
         // First, try to test the WebDAV connection with a PROPFIND request
         console.log(`🧪 Testing WebDAV connection to base URL: ${baseUrl}`);
-        const testResponse = await fetch(baseUrl, {
-          method: 'PROPFIND',
-          headers: {
-            'Authorization': authHeader,
-            'Depth': '1',
-          },
-        });
-
-        console.log(`🧪 Test response: ${testResponse.status} ${testResponse.statusText}`);
         
-        if (!testResponse.ok && testResponse.status === 404) {
-          // Try common WebDAV paths
-          const commonPaths = [
-            '/webdav/',
-            '/remote.php/webdav/',
-            '/dav/',
-            '/files/'
-          ];
+        // Try multiple WebDAV endpoint configurations for better compatibility
+        const webdavPaths = [
+          '', // Try the base URL as-is
+          'webdav/',
+          'remote.php/webdav/',
+          'dav/',
+          'files/',
+          'public.php/webdav/',
+          'remote.php/dav/files/',
+          'index.php/apps/files_external/ajax/upload.php',
+        ];
+        
+        let workingPath = null;
+        let testResults = [];
+        
+        for (const path of webdavPaths) {
+          const testUrl = webdavUrl.endsWith('/') ? 
+            `${webdavUrl}${path}` : 
+            `${webdavUrl}/${path}`;
           
-          let workingPath = null;
-          for (const path of commonPaths) {
-            const testUrl = webdavUrl.replace(/\/[^\/]*\/$/, path);
-            console.log(`🧪 Testing WebDAV path: ${testUrl}`);
-            
-            const pathTestResponse = await fetch(testUrl, {
+          console.log(`🧪 Testing WebDAV path: ${testUrl}`);
+          
+          try {
+            // Test with PROPFIND first
+            const propfindResponse = await fetch(testUrl, {
               method: 'PROPFIND',
               headers: {
                 'Authorization': authHeader,
-                'Depth': '1',
+                'Depth': '0',
+                'Content-Type': 'text/xml',
               },
             });
             
-            if (pathTestResponse.ok || pathTestResponse.status === 207) {
+            testResults.push({
+              path: testUrl,
+              method: 'PROPFIND',
+              status: propfindResponse.status,
+              statusText: propfindResponse.statusText
+            });
+            
+            console.log(`🧪 PROPFIND ${testUrl}: ${propfindResponse.status} ${propfindResponse.statusText}`);
+            
+            if (propfindResponse.ok || propfindResponse.status === 207 || propfindResponse.status === 405) {
               workingPath = testUrl;
               console.log(`✅ Found working WebDAV path: ${workingPath}`);
               break;
             }
-          }
-          
-          if (workingPath) {
-            const correctedUploadUrl = `${workingPath}${workingPath.endsWith('/') ? '' : '/'}${filename}`;
-            console.log(`📤 Retrying upload to corrected URL: ${correctedUploadUrl}`);
             
-            const uploadResponse = await fetch(correctedUploadUrl, {
-              method: 'PUT',
+            // If PROPFIND fails, try OPTIONS to see if WebDAV methods are supported
+            const optionsResponse = await fetch(testUrl, {
+              method: 'OPTIONS',
               headers: {
                 'Authorization': authHeader,
-                'Content-Type': 'application/octet-stream',
               },
-              body: content,
             });
-
-            if (!uploadResponse.ok) {
-              console.error(`❌ WebDAV upload failed even with corrected path: ${uploadResponse.status} ${uploadResponse.statusText}`);
-              const errorText = await uploadResponse.text();
-              console.error(`❌ Error details: ${errorText}`);
-              
-              return new Response(
-                JSON.stringify({
-                  success: false,
-                  message: 'Failed to upload to WebDAV (tried multiple paths)',
-                  error: `WebDAV error: ${uploadResponse.status} ${uploadResponse.statusText}`,
-                  details: errorText,
-                  testedPaths: commonPaths,
-                  workingPath: workingPath
-                }),
-                {
-                  status: uploadResponse.status,
-                  headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-                },
-              )
+            
+            console.log(`🧪 OPTIONS ${testUrl}: ${optionsResponse.status} ${optionsResponse.statusText}`);
+            const allowHeader = optionsResponse.headers.get('Allow') || '';
+            
+            if (allowHeader.includes('PUT') || allowHeader.includes('PROPFIND')) {
+              workingPath = testUrl;
+              console.log(`✅ Found WebDAV-capable path via OPTIONS: ${workingPath}`);
+              break;
             }
-
-            console.log('✅ Upload successful with corrected path');
-            return new Response(
-              JSON.stringify({
-                success: true,
-                message: 'File uploaded successfully to WebDAV',
-                path: filename
-              }),
-              {
-                status: 200,
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-              },
-            )
-          } else {
-            return new Response(
-              JSON.stringify({
-                success: false,
-                message: 'WebDAV endpoint not found - tried multiple common paths',
-                error: `WebDAV 404 error: No working WebDAV endpoint found`,
-                details: 'Tested paths: /webdav/, /remote.php/webdav/, /dav/, /files/',
-                testedPaths: commonPaths,
-                suggestion: 'Please check your WebDAV server configuration and URL'
-              }),
-              {
-                status: 404,
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-              },
-            )
+            
+          } catch (error) {
+            console.log(`❌ Error testing ${testUrl}: ${error.message}`);
+            testResults.push({
+              path: testUrl,
+              error: error.message
+            });
           }
         }
+        
+        if (!workingPath) {
+          console.error('❌ No working WebDAV endpoint found');
+          return new Response(
+            JSON.stringify({
+              success: false,
+              message: 'WebDAV endpoint not accessible - no working path found',
+              error: `Tested ${webdavPaths.length} different WebDAV paths, none responded correctly`,
+              testResults: testResults,
+              suggestion: 'Please verify your WebDAV server URL and credentials. Common WebDAV endpoints: /webdav/, /remote.php/webdav/, /dav/'
+            }),
+            {
+              status: 404,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            },
+          )
+        }
 
-        // Normal upload to the original URL if PROPFIND test passed
+        // Upload to the working WebDAV path
+        const uploadUrl = `${workingPath}${workingPath.endsWith('/') ? '' : '/'}${filename}`;
+        console.log(`📤 Uploading to verified WebDAV URL: ${uploadUrl}`);
+
         const uploadResponse = await fetch(uploadUrl, {
           method: 'PUT',
           headers: {
@@ -191,7 +183,9 @@ serve(async (req) => {
               success: false,
               message: 'Failed to upload to WebDAV',
               error: `WebDAV error: ${uploadResponse.status} ${uploadResponse.statusText}`,
-              details: errorText
+              details: errorText,
+              workingPath: workingPath,
+              uploadUrl: uploadUrl
             }),
             {
               status: uploadResponse.status,
@@ -200,11 +194,13 @@ serve(async (req) => {
           )
         }
 
+        console.log('✅ Upload successful');
         return new Response(
           JSON.stringify({
             success: true,
             message: 'File uploaded successfully to WebDAV',
-            path: filename
+            path: filename,
+            uploadUrl: uploadUrl
           }),
           {
             status: 200,
