@@ -1,15 +1,15 @@
 import { supabase } from '@/integrations/supabase/client';
 
-export interface PydioUploadParams {
+export interface WebDAVUploadParams {
   filename: string;
   content: string;
 }
 
-export interface PydioDownloadParams {
+export interface WebDAVDownloadParams {
   filePath: string;
 }
 
-export interface PydioResponse {
+export interface WebDAVResponse {
   success: boolean;
   message: string;
   data?: any;
@@ -20,11 +20,11 @@ export interface PydioResponse {
 }
 
 /**
- * Upload a file to Pydio
+ * Upload a file to WebDAV
  */
-export async function uploadFileToPydio(params: PydioUploadParams): Promise<PydioResponse> {
+export async function uploadFileToWebDAV(params: WebDAVUploadParams): Promise<WebDAVResponse> {
   try {
-    console.log('🔧 Starting Pydio integration - calling uploadToPydio edge function');
+    console.log('🔧 Starting WebDAV integration - calling uploadToPydio edge function');
     console.log('📁 File params:', { filename: params.filename, contentLength: params.content.length });
     
     const { data, error } = await supabase.functions.invoke('uploadToPydio', {
@@ -50,7 +50,7 @@ export async function uploadFileToPydio(params: PydioUploadParams): Promise<Pydi
 
     return data;
   } catch (error) {
-    console.error('Unexpected error uploading to Pydio:', error);
+    console.error('Unexpected error uploading to WebDAV:', error);
     return {
       success: false,
       message: 'Unexpected error occurred',
@@ -60,9 +60,9 @@ export async function uploadFileToPydio(params: PydioUploadParams): Promise<Pydi
 }
 
 /**
- * Download a file from Pydio
+ * Download a file from WebDAV
  */
-export async function downloadFileFromPydio(params: PydioDownloadParams): Promise<PydioResponse> {
+export async function downloadFileFromWebDAV(params: WebDAVDownloadParams): Promise<WebDAVResponse> {
   try {
     const { data, error } = await supabase.functions.invoke('uploadToPydio', {
       body: {
@@ -72,7 +72,7 @@ export async function downloadFileFromPydio(params: PydioDownloadParams): Promis
     });
 
     if (error) {
-      console.error('Error downloading from Pydio:', error);
+      console.error('Error downloading from WebDAV:', error);
       return {
         success: false,
         message: 'Failed to download file',
@@ -82,7 +82,7 @@ export async function downloadFileFromPydio(params: PydioDownloadParams): Promis
 
     return data;
   } catch (error) {
-    console.error('Unexpected error downloading from Pydio:', error);
+    console.error('Unexpected error downloading from WebDAV:', error);
     return {
       success: false,
       message: 'Unexpected error occurred',
@@ -95,7 +95,7 @@ export async function downloadFileFromPydio(params: PydioDownloadParams): Promis
  * Example usage for uploading a file
  */
 export async function exampleUpload() {
-  const result = await uploadFileToPydio({
+  const result = await uploadFileToWebDAV({
     filename: 'test-document.txt',
     content: 'This is test content for the document.',
   });
@@ -113,7 +113,7 @@ export async function exampleUpload() {
  * Example usage for downloading a file
  */
 export async function exampleDownload() {
-  const result = await downloadFileFromPydio({
+  const result = await downloadFileFromWebDAV({
     filePath: '/documents/test-document.txt',
   });
 
@@ -128,12 +128,12 @@ export async function exampleDownload() {
 }
 
 /**
- * Upload document content from the existing document system to Pydio
+ * Upload document content from the existing document system to WebDAV
  */
-export async function syncDocumentToPydio(document: {
+export async function syncDocumentToWebDAV(document: {
   file_name: string;
   file_url: string;
-}): Promise<PydioResponse> {
+}): Promise<WebDAVResponse> {
   try {
     // First, fetch the content from Supabase storage
     const { data: fileData, error: downloadError } = await supabase.storage
@@ -147,17 +147,22 @@ export async function syncDocumentToPydio(document: {
     // Convert blob to text
     const content = await fileData.text();
 
-    // Upload to Pydio
-    return await uploadFileToPydio({
+    // Upload to WebDAV
+    return await uploadFileToWebDAV({
       filename: document.file_name,
       content,
     });
   } catch (error) {
-    console.error('Error syncing document to Pydio:', error);
+    console.error('Error syncing document to WebDAV:', error);
     return {
       success: false,
-      message: 'Failed to sync document to Pydio',
+      message: 'Failed to sync document to WebDAV',
       error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
+
+// Legacy function names for backward compatibility
+export const uploadFileToPydio = uploadFileToWebDAV;
+export const downloadFileFromPydio = downloadFileFromWebDAV;
+export const syncDocumentToPydio = syncDocumentToWebDAV;

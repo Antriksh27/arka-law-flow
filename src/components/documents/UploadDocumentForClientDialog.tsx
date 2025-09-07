@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { uploadFileToPydio } from '@/lib/pydioIntegration';
+import { uploadFileToWebDAV } from '@/lib/pydioIntegration';
 import { useForm } from 'react-hook-form';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -155,19 +155,19 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
             fileContent = btoa(String.fromCharCode(...uint8Array));
           }
           
-          const pydioResult = await uploadFileToPydio({
+          const webdavResult = await uploadFileToWebDAV({
             filename: file.name,
             content: fileContent
           });
           
-          if (pydioResult.success) {
-            console.log('Pydio upload successful:', pydioResult.message);
+          if (webdavResult.success) {
+            console.log('WebDAV upload successful:', webdavResult.message);
           } else {
-            console.error('Pydio upload failed:', pydioResult.error);
-            // Don't fail the entire upload if Pydio fails, just log the error
+            console.error('WebDAV upload failed:', webdavResult.error);
+            // Don't fail the entire upload if WebDAV fails, just log the error
           }
-        } catch (pydioError) {
-          console.error('Error uploading to Pydio:', pydioError);
+        } catch (webdavError) {
+          console.error('Error uploading to WebDAV:', webdavError);
           // Don't fail the entire upload if Pydio fails
         }
 

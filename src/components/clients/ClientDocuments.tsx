@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Download, Plus, File, Eye, FileText, Shield, Award, Copy, Clock, TestTube } from 'lucide-react';
 import { UploadDocumentForClientDialog } from '../documents/UploadDocumentForClientDialog';
 import { FileViewer } from '../documents/FileViewer';
-import { uploadFileToPydio } from '@/lib/pydioIntegration';
+import { uploadFileToWebDAV } from '@/lib/pydioIntegration';
 
 interface ClientDocumentsProps {
   clientId: string;
@@ -89,26 +89,26 @@ export const ClientDocuments: React.FC<ClientDocumentsProps> = ({ clientId }) =>
     return File;
   };
 
-  // Test Pydio integration
-  const testPydioIntegration = async () => {
-    console.log('🧪 Testing Pydio integration...');
+  // Test WebDAV integration
+  const testWebDAVIntegration = async () => {
+    console.log('🧪 Testing WebDAV integration...');
     
     try {
-      const result = await uploadFileToPydio({
+      const result = await uploadFileToWebDAV({
         filename: 'test-file.txt',
-        content: 'This is a test file content for Pydio integration testing.'
+        content: 'This is a test file content for WebDAV integration testing.'
       });
       
       console.log('🧪 Test result:', result);
       
       if (result.success) {
         toast({
-          title: "Pydio Test Successful",
-          description: "Test file uploaded to Pydio successfully!",
+          title: "WebDAV Test Successful",
+          description: "Test file uploaded to WebDAV successfully!",
         });
       } else {
         toast({
-          title: "Pydio Test Failed",
+          title: "WebDAV Test Failed",
           description: result.error || 'Unknown error occurred',
           variant: "destructive"
         });
@@ -116,7 +116,7 @@ export const ClientDocuments: React.FC<ClientDocumentsProps> = ({ clientId }) =>
     } catch (error) {
       console.error('🧪 Test error:', error);
       toast({
-        title: "Pydio Test Error",
+        title: "WebDAV Test Error",
         description: error instanceof Error ? error.message : 'Unknown error',
         variant: "destructive"
       });
@@ -140,13 +140,13 @@ export const ClientDocuments: React.FC<ClientDocumentsProps> = ({ clientId }) =>
           <CardTitle className="text-xl font-semibold">Documents</CardTitle>
           <div className="flex gap-2">
             <Button
-              onClick={testPydioIntegration}
+              onClick={testWebDAVIntegration}
               variant="outline"
               size="sm"
               className="flex items-center gap-2"
             >
               <TestTube className="w-4 h-4" />
-              Test Pydio
+              Test WebDAV
             </Button>
             <Button 
               size="sm" 

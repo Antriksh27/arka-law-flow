@@ -6,186 +6,223 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  console.log('🔧 WebDAV function called');
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const { 
-      filename, 
-      content, 
-      operation = 'upload',
-      filePath 
-    } = await req.json();
+    // Parse the request body
+    const { operation, filename, content, filePath } = await req.json()
+    console.log(`📋 Operation: ${operation}`);
 
-    const pydioApiUrl = Deno.env.get('PYDIO_API_URL');
-    const pydioToken = Deno.env.get('PYDIO_API_TOKEN');
-    const workspaceId = Deno.env.get('PYDIO_WORKSPACE_ID');
+    // Get WebDAV configuration from environment
+    const webdavUrl = Deno.env.get('WEBDAV_URL');
+    const webdavUsername = Deno.env.get('WEBDAV_USERNAME');
+    const webdavPassword = Deno.env.get('WEBDAV_PASSWORD');
 
-    if (!pydioApiUrl || !pydioToken || !workspaceId) {
-      console.error('Missing Pydio configuration');
+    if (!webdavUrl || !webdavUsername || !webdavPassword) {
+      console.error('❌ Missing WebDAV configuration');
       return new Response(
-        JSON.stringify({ 
-          error: 'Pydio configuration incomplete',
-          details: 'Missing API URL, token, or workspace ID'
+        JSON.stringify({
+          success: false,
+          message: 'WebDAV configuration is not complete',
+          error: 'Missing required environment variables: WEBDAV_URL, WEBDAV_USERNAME, or WEBDAV_PASSWORD'
         }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
+      )
     }
 
+    // Create basic auth header
+    const authHeader = 'Basic ' + btoa(`${webdavUsername}:${webdavPassword}`);
+
     if (operation === 'upload') {
+      console.log(`📁 Starting upload of file: ${filename}`);
+      
       if (!filename || !content) {
         return new Response(
-          JSON.stringify({ 
-            error: 'Missing required fields',
-            details: 'filename and content are required for upload'
+          JSON.stringify({
+            success: false,
+            message: 'Missing required parameters for upload',
+            error: 'filename and content are required'
           }),
-          { 
-            status: 400, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        );
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          },
+        )
       }
 
-      console.log(`Starting upload of file: ${filename}`);
+      try {
+        // Ensure WebDAV URL ends with /
+        const baseUrl = webdavUrl.endsWith('/') ? webdavUrl : `${webdavUrl}/`;
+        const uploadUrl = `${baseUrl}${filename}`;
 
-      // Create form data for file upload
-      const formData = new FormData();
-      
-      // Convert content to blob
-      const blob = new Blob([content], { type: 'text/plain' });
-      formData.append('file', blob, filename);
-      formData.append('workspace', workspaceId);
+        console.log(`📤 Uploading to: ${uploadUrl}`);
 
-      // Upload file to Pydio
-      const uploadResponse = await fetch(`${pydioApiUrl}/api/v2/files/upload`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${pydioToken}`,
-        },
-        body: formData,
-      });
+        // Upload to WebDAV using PUT method
+        const uploadResponse = await fetch(uploadUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': authHeader,
+            'Content-Type': 'application/octet-stream',
+          },
+          body: content,
+        });
 
-      if (!uploadResponse.ok) {
-        const errorText = await uploadResponse.text();
-        console.error('Pydio upload failed:', errorText);
-        return new Response(
-          JSON.stringify({ 
-            error: 'Upload failed',
-            details: errorText,
-            status: uploadResponse.status
-          }),
-          { 
-            status: uploadResponse.status, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        );
-      }
-
-      const uploadResult = await uploadResponse.json();
-      console.log(`Successfully uploaded file: ${filename}`);
-
-      return new Response(
-        JSON.stringify({
-          success: true,
-          message: `File ${filename} uploaded successfully`,
-          data: uploadResult
-        }),
-        { 
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        if (!uploadResponse.ok) {
+          console.error(`❌ WebDAV upload failed: ${uploadResponse.status} ${uploadResponse.statusText}`);
+          const errorText = await uploadResponse.text();
+          console.error(`❌ Error details: ${errorText}`);
+          
+          return new Response(
+            JSON.stringify({
+              success: false,
+              message: 'Failed to upload to WebDAV',
+              error: `WebDAV error: ${uploadResponse.status} ${uploadResponse.statusText}`,
+              details: errorText
+            }),
+            {
+              status: uploadResponse.status,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            },
+          )
         }
-      );
+
+        console.log('✅ Upload successful');
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            message: 'File uploaded successfully to WebDAV',
+            path: filename
+          }),
+          {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          },
+        )
+
+      } catch (error) {
+        console.error('❌ WebDAV upload failed:', error.message);
+        return new Response(
+          JSON.stringify({
+            success: false,
+            message: 'Failed to upload file',
+            error: error.message
+          }),
+          {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          },
+        )
+      }
 
     } else if (operation === 'download') {
+      console.log(`📥 Starting download of file: ${filePath}`);
+      
       if (!filePath) {
         return new Response(
-          JSON.stringify({ 
-            error: 'Missing required fields',
-            details: 'filePath is required for download'
+          JSON.stringify({
+            success: false,
+            message: 'Missing required parameters for download',
+            error: 'filePath is required'
           }),
-          { 
-            status: 400, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        );
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          },
+        )
       }
 
-      console.log(`Starting download of file: ${filePath}`);
+      try {
+        // Ensure WebDAV URL ends with /
+        const baseUrl = webdavUrl.endsWith('/') ? webdavUrl : `${webdavUrl}/`;
+        const downloadUrl = `${baseUrl}${filePath}`;
 
-      // Download file from Pydio
-      const downloadResponse = await fetch(`${pydioApiUrl}/api/v2/files/download`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${pydioToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          workspace: workspaceId,
-          path: filePath
-        }),
-      });
+        console.log(`📥 Downloading from: ${downloadUrl}`);
 
-      if (!downloadResponse.ok) {
-        const errorText = await downloadResponse.text();
-        console.error('Pydio download failed:', errorText);
-        return new Response(
-          JSON.stringify({ 
-            error: 'Download failed',
-            details: errorText,
-            status: downloadResponse.status
-          }),
-          { 
-            status: downloadResponse.status, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        );
-      }
+        // Download from WebDAV using GET method
+        const downloadResponse = await fetch(downloadUrl, {
+          method: 'GET',
+          headers: {
+            'Authorization': authHeader,
+          },
+        });
 
-      const fileContent = await downloadResponse.text();
-      console.log(`Successfully downloaded file: ${filePath}`);
-
-      return new Response(
-        JSON.stringify({
-          success: true,
-          message: `File ${filePath} downloaded successfully`,
-          content: fileContent,
-          path: filePath
-        }),
-        { 
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        if (!downloadResponse.ok) {
+          return new Response(
+            JSON.stringify({
+              success: false,
+              message: 'Failed to download from WebDAV',
+              error: `WebDAV error: ${downloadResponse.status} ${downloadResponse.statusText}`
+            }),
+            {
+              status: downloadResponse.status,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            },
+          )
         }
-      );
+
+        const fileContent = await downloadResponse.text();
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            message: 'File downloaded successfully from WebDAV',
+            content: fileContent
+          }),
+          {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          },
+        )
+
+      } catch (error) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            message: 'Failed to download file',
+            error: error.message
+          }),
+          {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          },
+        )
+      }
 
     } else {
       return new Response(
-        JSON.stringify({ 
-          error: 'Invalid operation',
-          details: 'Operation must be either "upload" or "download"'
+        JSON.stringify({
+          success: false,
+          message: 'Invalid operation',
+          error: 'Operation must be "upload" or "download"'
         }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
+      )
     }
 
   } catch (error) {
-    console.error('Error in uploadToPydio function:', error);
+    console.error('❌ General error:', error);
     return new Response(
       JSON.stringify({
-        error: 'Internal server error',
-        details: error.message
+        success: false,
+        message: 'Internal server error',
+        error: error.message
       }),
-      { 
+      {
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    );
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      },
+    )
   }
 })
