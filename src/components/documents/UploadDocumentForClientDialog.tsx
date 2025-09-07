@@ -140,35 +140,89 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
 
         if (documentError) throw documentError;
 
-        // Also upload to Pydio
+        // Also upload to WebDAV/Pydio
         try {
-          console.log('Uploading to Pydio:', file.name);
+          console.log('🔧 Starting WebDAV upload for:', file.name);
           
-          // Handle different file types
-          let fileContent: string;
-          if (file.type.startsWith('text/') || file.name.endsWith('.txt')) {
-            fileContent = await file.text();
-          } else {
-            // For binary files, convert to base64
-            const arrayBuffer = await file.arrayBuffer();
-            const uint8Array = new Uint8Array(arrayBuffer);
-            fileContent = btoa(String.fromCharCode(...uint8Array));
+          // Get client and case info for proper organization
+          const { data: clientData } = await supabase
+            .from('clients')
+            .select('full_name')
+            .eq('id', clientId)
+            .single();
+          
+          const clientName = clientData?.full_name || 'Unknown Client';
+          
+          let caseName = 'General Documents';
+          if (data.case_id) {
+            const { data: caseData } = await supabase
+              .from('cases')
+              .select('case_title')
+              .eq('id', data.case_id)
+              .single();
+            caseName = caseData?.case_title || 'Unknown Case';
           }
           
+          // Convert file to base64 for WebDAV upload
+          const arrayBuffer = await file.arrayBuffer();
+          const base64Content = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+          
+          // Create organized filename: ClientName/CaseName/DocumentType/filename
+          const docType = data.document_type_id ? 
+            documentTypes.find(dt => dt.id === data.document_type_id)?.name || 'General' : 
+            'General';
+          
+          const organizedFilename = `${clientName}/${caseName}/${docType}/${file.name}`;
+          
+          console.log('📁 WebDAV organized path:', organizedFilename);
+          
           const webdavResult = await uploadFileToWebDAV({
-            filename: file.name,
-            content: fileContent
+            filename: organizedFilename,
+            content: base64Content
           });
           
           if (webdavResult.success) {
-            console.log('WebDAV upload successful:', webdavResult.message);
+            console.log('✅ WebDAV upload successful:', webdavResult.message);
+            
+            // Update document record with WebDAV status
+            await supabase
+              .from('documents')
+              .update({ 
+                webdav_synced: true,
+                webdav_path: organizedFilename,
+                synced_at: new Date().toISOString()
+              })
+              .eq('id', documentData.id);
+              
           } else {
-            console.error('WebDAV upload failed:', webdavResult.error);
-            // Don't fail the entire upload if WebDAV fails, just log the error
+            console.error('❌ WebDAV upload failed:', webdavResult.error);
+            
+            // Update document record with WebDAV failure status
+            await supabase
+              .from('documents')
+              .update({ 
+                webdav_synced: false,
+                webdav_error: webdavResult.error,
+                sync_attempted_at: new Date().toISOString()
+              })
+              .eq('id', documentData.id);
           }
         } catch (webdavError) {
-          console.error('Error uploading to WebDAV:', webdavError);
-          // Don't fail the entire upload if Pydio fails
+          console.error('❌ Error uploading to WebDAV:', webdavError);
+          
+          // Update document record with WebDAV error
+          try {
+            await supabase
+              .from('documents')
+              .update({ 
+                webdav_synced: false,
+                webdav_error: webdavError instanceof Error ? webdavError.message : 'Unknown error',
+                sync_attempted_at: new Date().toISOString()
+              })
+              .eq('id', documentData.id);
+          } catch (updateError) {
+            console.error('Error updating WebDAV status:', updateError);
+          }
         }
 
         results.push(documentData);

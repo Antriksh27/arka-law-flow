@@ -61,9 +61,7 @@ serve(async (req) => {
       try {
         // Ensure WebDAV URL ends with /
         const baseUrl = webdavUrl.endsWith('/') ? webdavUrl : `${webdavUrl}/`;
-        const uploadUrl = `${baseUrl}${filename}`;
 
-        console.log(`📤 Uploading to: ${uploadUrl}`);
         console.log(`🔑 Auth header present: ${authHeader ? 'Yes' : 'No'}`);
 
         // First, try to test the WebDAV connection with a PROPFIND request
