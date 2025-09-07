@@ -24,6 +24,9 @@ export interface PydioResponse {
  */
 export async function uploadFileToPydio(params: PydioUploadParams): Promise<PydioResponse> {
   try {
+    console.log('🔧 Starting Pydio integration - calling uploadToPydio edge function');
+    console.log('📁 File params:', { filename: params.filename, contentLength: params.content.length });
+    
     const { data, error } = await supabase.functions.invoke('uploadToPydio', {
       body: {
         operation: 'upload',
@@ -32,12 +35,16 @@ export async function uploadFileToPydio(params: PydioUploadParams): Promise<Pydi
       },
     });
 
+    console.log('📡 Edge function response - data:', data);
+    console.log('📡 Edge function response - error:', error);
+
     if (error) {
-      console.error('Error uploading to Pydio:', error);
+      console.error('❌ Supabase function invoke error:', error);
       return {
         success: false,
         message: 'Failed to upload file',
         error: error.message,
+        details: JSON.stringify(error)
       };
     }
 

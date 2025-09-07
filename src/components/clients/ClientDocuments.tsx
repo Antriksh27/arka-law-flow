@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Download, Plus, File, Eye, FileText, Shield, Award, Copy, Clock } from 'lucide-react';
+import { Download, Plus, File, Eye, FileText, Shield, Award, Copy, Clock, TestTube } from 'lucide-react';
 import { UploadDocumentForClientDialog } from '../documents/UploadDocumentForClientDialog';
 import { FileViewer } from '../documents/FileViewer';
+import { uploadFileToPydio } from '@/lib/pydioIntegration';
 
 interface ClientDocumentsProps {
   clientId: string;
@@ -88,6 +89,40 @@ export const ClientDocuments: React.FC<ClientDocumentsProps> = ({ clientId }) =>
     return File;
   };
 
+  // Test Pydio integration
+  const testPydioIntegration = async () => {
+    console.log('🧪 Testing Pydio integration...');
+    
+    try {
+      const result = await uploadFileToPydio({
+        filename: 'test-file.txt',
+        content: 'This is a test file content for Pydio integration testing.'
+      });
+      
+      console.log('🧪 Test result:', result);
+      
+      if (result.success) {
+        toast({
+          title: "Pydio Test Successful",
+          description: "Test file uploaded to Pydio successfully!",
+        });
+      } else {
+        toast({
+          title: "Pydio Test Failed",
+          description: result.error || 'Unknown error occurred',
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('🧪 Test error:', error);
+      toast({
+        title: "Pydio Test Error",
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: "destructive"
+      });
+    }
+  };
+
   if (isLoading) {
     return (
       <Card className="bg-white rounded-2xl shadow-sm">
@@ -103,14 +138,25 @@ export const ClientDocuments: React.FC<ClientDocumentsProps> = ({ clientId }) =>
       <Card className="bg-white rounded-2xl shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-xl font-semibold">Documents</CardTitle>
-          <Button 
-            size="sm" 
-            className="bg-primary hover:bg-primary/90"
-            onClick={() => setUploadDialogOpen(true)}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Upload
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={testPydioIntegration}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <TestTube className="w-4 h-4" />
+              Test Pydio
+            </Button>
+            <Button 
+              size="sm" 
+              className="bg-primary hover:bg-primary/90"
+              onClick={() => setUploadDialogOpen(true)}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Upload
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {documents.length === 0 ? (
