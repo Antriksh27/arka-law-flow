@@ -158,9 +158,40 @@ serve(async (req) => {
           )
         }
 
-        // Upload to the working WebDAV path
+        // Create directory structure if filename contains paths
         const uploadUrl = `${workingPath}${workingPath.endsWith('/') ? '' : '/'}${filename}`;
         console.log(`📤 Uploading to verified WebDAV URL: ${uploadUrl}`);
+        
+        // If filename contains directories, create them first
+        if (filename.includes('/')) {
+          const pathParts = filename.split('/');
+          const directories = pathParts.slice(0, -1); // Remove filename from path
+          let currentPath = workingPath;
+          
+          for (const dir of directories) {
+            currentPath = `${currentPath}${currentPath.endsWith('/') ? '' : '/'}${encodeURIComponent(dir)}`;
+            console.log(`📁 Creating directory: ${currentPath}`);
+            
+            try {
+              const mkcolResponse = await fetch(currentPath, {
+                method: 'MKCOL',
+                headers: {
+                  'Authorization': authHeader,
+                },
+              });
+              
+              // 201 = created, 405 = already exists (method not allowed on existing resource)
+              if (mkcolResponse.ok || mkcolResponse.status === 405) {
+                console.log(`✅ Directory exists or created: ${currentPath}`);
+              } else {
+                console.log(`⚠️ Directory creation response: ${mkcolResponse.status} ${mkcolResponse.statusText}`);
+              }
+            } catch (dirError) {
+              console.log(`⚠️ Error creating directory ${currentPath}: ${dirError.message}`);
+              // Continue anyway, directory might already exist
+            }
+          }
+        }
 
         const uploadResponse = await fetch(uploadUrl, {
           method: 'PUT',
