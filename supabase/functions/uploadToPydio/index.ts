@@ -134,11 +134,25 @@ serve(async (req) => {
                   testedPaths: commonPaths,
                   workingPath: workingPath
                 }),
-            {
-              status: uploadResponse.status,
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            },
-          )
+                {
+                  status: uploadResponse.status,
+                  headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                },
+              )
+            }
+
+            console.log('✅ Upload successful with corrected path');
+            return new Response(
+              JSON.stringify({
+                success: true,
+                message: 'File uploaded successfully to WebDAV',
+                path: filename
+              }),
+              {
+                status: 200,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              },
+            )
           } else {
             return new Response(
               JSON.stringify({
