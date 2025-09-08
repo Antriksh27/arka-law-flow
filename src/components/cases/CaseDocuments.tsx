@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { FileText, Upload, Download, Eye, Star, StarOff } from 'lucide-react';
 import { format } from 'date-fns';
 import { UploadDocumentDialog } from '../documents/UploadDocumentDialog';
-import { FilePreviewModal } from '../documents/FilePreviewModal';
+import { UnifiedDocumentViewer } from '../documents/UnifiedDocumentViewer';
 import { useToast } from '@/hooks/use-toast';
 import { getFileIcon } from '@/lib/fileUtils';
 import { isWebDAVDocument, getWebDAVFileUrl, parseWebDAVPath } from '@/lib/webdavFileUtils';
@@ -238,6 +238,6 @@ export const CaseDocuments: React.FC<CaseDocumentsProps> = ({
 
       <UploadDocumentDialog open={showUploadDialog} onClose={() => setShowUploadDialog(false)} caseId={caseId} onUploadSuccess={handleUploadSuccess} />
 
-      <FilePreviewModal open={showFileViewer} onClose={() => setShowFileViewer(false)} document={selectedDocument} />
+      <UnifiedDocumentViewer open={showFileViewer} onClose={() => setShowFileViewer(false)} document={selectedDocument} />
     </>;
 };

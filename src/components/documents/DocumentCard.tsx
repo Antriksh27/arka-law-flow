@@ -9,7 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { FileViewer } from './FileViewer';
-import { FilePreviewModal } from './FilePreviewModal';
+import { UnifiedDocumentViewer } from './UnifiedDocumentViewer';
 import { DeleteDocumentDialog } from './DeleteDocumentDialog';
 import { isWebDAVDocument, getWebDAVFileUrl, parseWebDAVPath } from '@/lib/webdavFileUtils';
 
@@ -206,11 +206,11 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({ document, onRefresh 
         </div>
       </div>
 
-      <FilePreviewModal
-        open={showFileViewer}
-        onClose={() => setShowFileViewer(false)}
-        document={document}
-      />
+        <UnifiedDocumentViewer
+          open={showFileViewer}
+          onClose={() => setShowFileViewer(false)}
+          document={document}
+        />
 
       <DeleteDocumentDialog
         open={showDeleteDialog}
