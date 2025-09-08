@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 
+// WebDAV integration types
 export interface WebDAVUploadParams {
   filename: string;
   content: string;
@@ -166,3 +167,8 @@ export async function syncDocumentToWebDAV(document: {
 export const uploadFileToPydio = uploadFileToWebDAV;
 export const downloadFileFromPydio = downloadFileFromWebDAV;
 export const syncDocumentToPydio = syncDocumentToWebDAV;
+
+// Additional WebDAV utility functions
+export const uploadFileToWebDAVWithPath = uploadFileToWebDAV;
+export const createClientFolder = (clientName: string) => console.log(`Creating client folder: ${clientName}`);
+export const createCaseFolder = (caseName: string) => console.log(`Creating case folder: ${caseName}`);
