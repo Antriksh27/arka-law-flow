@@ -7,39 +7,17 @@ import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react';
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
 interface PDFViewerProps {
-  fileUrl: string;
+  fileUrl?: string;
+  pdfData?: ArrayBuffer | string;
   fileName?: string;
 }
 
-export const PDFViewer: React.FC<PDFViewerProps> = ({ fileUrl, fileName }) => {
+export const PDFViewer: React.FC<PDFViewerProps> = ({ fileUrl, pdfData, fileName }) => {
   const [numPages, setNumPages] = useState<number>(0);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [scale, setScale] = useState<number>(1.0);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [pdfData, setPdfData] = useState<string | ArrayBuffer | null>(null);
-
-  React.useEffect(() => {
-    const loadPDF = async () => {
-      if (!fileUrl) return;
-      
-      setLoading(true);
-      setError(null);
-      
-      try {
-        // For blob URLs, fetch the data and convert to ArrayBuffer
-        const response = await fetch(fileUrl);
-        const arrayBuffer = await response.arrayBuffer();
-        setPdfData(arrayBuffer);
-      } catch (err) {
-        console.error('Error loading PDF:', err);
-        setError('Failed to load PDF document');
-        setLoading(false);
-      }
-    };
-
-    loadPDF();
-  }, [fileUrl]);
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
@@ -127,22 +105,20 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({ fileUrl, fileName }) => {
 
       {/* PDF Document */}
       <div className="flex-1 overflow-auto bg-gray-100 flex justify-center p-4">
-        {pdfData && (
-          <Document
-            file={pdfData}
-            onLoadSuccess={onDocumentLoadSuccess}
-            onLoadError={onDocumentLoadError}
-            className="shadow-lg"
-          >
-            <Page
-              pageNumber={pageNumber}
-              scale={scale}
-              renderTextLayer={false}
-              renderAnnotationLayer={false}
-              className="border border-gray-300 bg-white"
-            />
-          </Document>
-        )}
+        <Document
+          file={pdfData || fileUrl}
+          onLoadSuccess={onDocumentLoadSuccess}
+          onLoadError={onDocumentLoadError}
+          className="shadow-lg"
+        >
+          <Page
+            pageNumber={pageNumber}
+            scale={scale}
+            renderTextLayer={false}
+            renderAnnotationLayer={false}
+            className="border border-gray-300 bg-white"
+          />
+        </Document>
       </div>
     </div>
   );

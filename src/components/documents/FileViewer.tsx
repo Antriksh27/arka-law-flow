@@ -15,6 +15,7 @@ interface FileViewerProps {
 
 export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document }) => {
   const [fileUrl, setFileUrl] = useState<string | null>(null);
+  const [pdfData, setPdfData] = useState<ArrayBuffer | null>(null);
   const [loading, setLoading] = useState(false);
   const [zoom, setZoom] = useState(100);
   const [rotation, setRotation] = useState(0);
@@ -51,6 +52,11 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
         const blob = new Blob([bytes], { type: document.file_type });
         const url = URL.createObjectURL(blob);
         setFileUrl(url);
+        
+        // For PDFs, also store the raw data
+        if (document.file_type === 'pdf' || document.file_name?.toLowerCase().endsWith('.pdf')) {
+          setPdfData(bytes.buffer);
+        }
       } else {
         // Legacy Supabase storage files
         let filePath = document.file_url;
@@ -83,6 +89,7 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
       getFileUrl();
     } else {
       setFileUrl(null);
+      setPdfData(null);
       setZoom(100);
       setRotation(0);
     }
@@ -183,6 +190,7 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
           <div className="w-full h-full">
             <PDFViewer 
               fileUrl={fileUrl} 
+              pdfData={pdfData}
               fileName={document.file_name}
             />
           </div>
