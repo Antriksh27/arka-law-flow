@@ -172,7 +172,7 @@ serve(async (req) => {
       const webdavUsername = Deno.env.get('WEBDAV_USERNAME');
       const webdavPassword = Deno.env.get('WEBDAV_PASSWORD');
       
-      console.log(`🔧 WebDAV Config - URL: ${webdavUrl ? 'SET' : 'MISSING'}, Username: ${webdavUsername ? 'SET' : 'MISSING'}, Password: ${webdavPassword ? 'SET' : 'MISSING'}`);
+      console.log(`🔧 WebDAV Config - URL: ${webdavUrl}, Username: ${webdavUsername ? 'SET' : 'MISSING'}, Password: ${webdavPassword ? 'SET' : 'MISSING'}`);
       
       if (!webdavUrl || !webdavUsername || !webdavPassword) {
         return new Response(JSON.stringify({
@@ -280,11 +280,41 @@ serve(async (req) => {
         } else {
           const errorText = await uploadResponse.text();
           console.error('❌ Upload failed:', uploadResponse.status, uploadResponse.statusText, errorText);
+          
+          // Provide more specific error information
+          let errorMessage = `Upload failed: ${uploadResponse.status} ${uploadResponse.statusText}`;
+          let troubleshooting = '';
+          
+          if (uploadResponse.status === 404) {
+            troubleshooting = `
+            
+🔍 TROUBLESHOOTING 404 ERROR:
+- The WebDAV path '${fullUploadUrl}' was not found
+- This usually means either:
+  1. The WebDAV base URL is incorrect
+  2. The folder structure doesn't exist and couldn't be created
+  3. Authentication failed silently
+  
+💡 SOLUTION:
+- Check if your WebDAV URL should be: https://server.hrulegal.com/dav/ (without 'crmdata')
+- Or verify the 'crmdata' folder exists at the WebDAV root
+- Test WebDAV connection manually with these credentials`;
+          } else if (uploadResponse.status === 401 || uploadResponse.status === 403) {
+            troubleshooting = `
+            
+🔍 AUTHENTICATION ERROR:
+- WebDAV credentials are being rejected
+- Check username and password are correct`;
+          }
+          
           return new Response(JSON.stringify({
             success: false,
-            error: `Upload failed: ${uploadResponse.status} ${uploadResponse.statusText}`,
-            details: errorText,
-            uploadUrl: fullUploadUrl
+            error: errorMessage,
+            details: errorText + troubleshooting,
+            uploadUrl: fullUploadUrl,
+            baseUrl: baseUrl,
+            folderPath: currentPath,
+            httpStatus: uploadResponse.status
           }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 400,
