@@ -4,7 +4,7 @@ import { Search, Grid3X3, List, Filter, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { UploadDocumentDialog } from './UploadDocumentDialog';
 
@@ -31,6 +31,7 @@ export const DocumentsHeader: React.FC<DocumentsHeaderProps> = ({
 }) => {
   const [showFilters, setShowFilters] = useState(false);
   const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const queryClient = useQueryClient();
 
   // Fetch cases for filter dropdown
   const { data: cases = [] } = useQuery({
@@ -59,8 +60,9 @@ export const DocumentsHeader: React.FC<DocumentsHeaderProps> = ({
   });
 
   const handleUploadSuccess = () => {
-    // The parent Documents component will automatically refresh due to query invalidation
-    console.log('Upload successful, documents should refresh automatically');
+    // Invalidate queries to refresh document list
+    queryClient.invalidateQueries({ queryKey: ['documents'] });
+    queryClient.invalidateQueries({ queryKey: ['document-folders'] });
   };
 
   return (

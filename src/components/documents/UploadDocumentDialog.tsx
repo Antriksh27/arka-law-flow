@@ -11,7 +11,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Upload, X, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-// Remove old import as we're calling edge function directly
 
 interface UploadDocumentDialogProps {
   open: boolean;
@@ -145,6 +144,19 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
     'others': 'Others'
   };
 
+  // Fetch clients for dropdown
+  const { data: clients = [] } = useQuery({
+    queryKey: ['clients-for-upload'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('id, full_name')
+        .order('full_name');
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
   // Fetch cases for dropdown
   const { data: cases = [] } = useQuery({
     queryKey: ['cases-for-upload'],
@@ -154,19 +166,6 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
         .select('id, title, client_id')
         .eq('status', 'open')
         .order('title');
-      if (error) throw error;
-      return data || [];
-    }
-  });
-
-  // Fetch clients for dropdown
-  const { data: clients = [] } = useQuery({
-    queryKey: ['clients-for-upload'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('clients')
-        .select('id, full_name')
-        .order('full_name');
       if (error) throw error;
       return data || [];
     }
@@ -199,9 +198,9 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
         
         const uploadPromises = selectedFiles.map(async file => {
           try {
-            console.log(`Uploading file: ${file.name} directly to Pydio`);
+            console.log(`Uploading file: ${file.name} directly to WebDAV`);
 
-            // Handle different file types for Pydio upload
+            // Handle different file types for WebDAV upload
             let fileContent: string;
             if (file.type.startsWith('text/') || file.name.endsWith('.txt')) {
               fileContent = await file.text();
@@ -236,6 +235,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
             if (selectedCaseId && selectedCase) {
               caseName = selectedCase.title;
             }
+            
             const category = data.document_category ? categoryLabels[data.document_category as keyof typeof categoryLabels] : 'Others';
             const docType = data.document_type || data.custom_document_type || 'Unspecified';
             
@@ -251,23 +251,23 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
               }
             });
             
-            console.log('Pydio result:', pydioResult);
-            console.log('Pydio error:', pydioError);
+            console.log('WebDAV result:', pydioResult);
+            console.log('WebDAV error:', pydioError);
             
             if (pydioError) {
-              console.error('❌ Pydio upload failed:', pydioError);
-              throw new Error(`Pydio upload failed: ${pydioError.message}`);
+              console.error('❌ WebDAV upload failed:', pydioError);
+              throw new Error(`WebDAV upload failed: ${pydioError.message}`);
             } else if (!pydioResult?.success) {
-              console.error('❌ Pydio upload failed:', pydioResult?.error);
-              throw new Error(`Pydio upload failed: ${pydioResult?.error || 'Unknown error'}`);
+              console.error('❌ WebDAV upload failed:', pydioResult?.error);
+              throw new Error(`WebDAV upload failed: ${pydioResult?.error || 'Unknown error'}`);
             }
 
-            console.log('✅ Pydio upload successful:', pydioResult.message);
+            console.log('✅ WebDAV upload successful:', pydioResult.message);
 
             // Insert document record in database (without Supabase storage URL)
             const documentData = {
               file_name: file.name,
-              file_url: pydioResult.path || `${clientName}/${caseName}/${category}/${docType}/${file.name}`, // Use Pydio path
+              file_url: pydioResult.path || `${clientName}/${caseName}/${category}/${docType}/${file.name}`, // Use WebDAV path
               file_type: file.name.split('.').pop()?.toLowerCase() || null,
               file_size: file.size,
               case_id: data.case_id || null,
@@ -527,26 +527,25 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                     return !selectedClientId || case_item.client_id === selectedClientId;
                   })
                   .map(case_item => (
-                  <SelectItem key={case_item.id} value={case_item.id} className="hover:bg-gray-50">
-                    {case_item.title}
-                  </SelectItem>
-                ))}
+                    <SelectItem key={case_item.id} value={case_item.id} className="hover:bg-gray-50">
+                      {case_item.title}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>
 
-          {/* Document Category Selection */}
+          {/* Document Category */}
           <div className="space-y-2">
             <Label htmlFor="document_category" className="text-sm font-medium text-gray-700">
-              Document Category
+              Document Category <span className="text-red-500">*</span>
             </Label>
-            <Select onValueChange={(value) => {
+            <Select onValueChange={value => {
               setValue('document_category', value);
               setValue('document_type', '');
-              setValue('custom_document_type', '');
-            }} value={watchedValues.document_category}>
+            }} value={selectedCategory}>
               <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                <SelectValue placeholder="Select document category" />
+                <SelectValue placeholder="Select category..." />
               </SelectTrigger>
               <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
                 {Object.entries(categoryLabels).map(([key, label]) => (
@@ -558,10 +557,10 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
             </Select>
           </div>
 
-          {/* Document Type Selection */}
+          {/* Document Type */}
           {selectedCategory && selectedCategory !== 'others' && (
             <div className="space-y-2">
-              <Label htmlFor="document_type" className="text-sm font-medium text-gray-700">
+              <Label className="text-sm font-medium text-gray-700">
                 Document Type <span className="text-red-500">*</span>
               </Label>
               <Select onValueChange={value => setValue('document_type', value)} value={watch('document_type')}>
@@ -575,7 +574,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                     </SelectItem>
                   ))}
                 </SelectContent>
-                </Select>
+              </Select>
             </div>
           )}
 
@@ -587,7 +586,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
               </Label>
               <Input
                 {...register('custom_document_type')}
-                placeholder="Enter custom document type"
+                placeholder="Enter document type..."
                 className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
@@ -678,116 +677,6 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
               ) : (
                 `Upload ${selectedFiles.length > 0 ? `(${selectedFiles.length})` : ''}`
               )}
-            </Button>
-          </div>
-        </form>
-
-        <UploadDocumentDialog
-          open={showUploadDialog}
-          onClose={() => setShowUploadDialog(false)}
-          onUploadSuccess={() => {
-            queryClient.invalidateQueries({ queryKey: ['documents'] });
-          }}
-        />
-      </DialogContent>
-    </Dialog>
-                  className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                />
-              ) : (
-                <Select onValueChange={(value) => setValue('document_type', value)} value={watchedValues.document_type}>
-                  <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                    <SelectValue placeholder="Select document type" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                    {documentTypeMapping[selectedCategory as keyof typeof documentTypeMapping]?.map((type) => (
-                      <SelectItem key={type} value={type} className="hover:bg-gray-50">
-                        {type}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            </div>
-          )}
-
-          {/* Notes */}
-          <div className="space-y-2">
-            <Label htmlFor="notes" className="text-sm font-medium text-gray-700">
-              Notes (Optional)
-            </Label>
-            <Textarea
-              {...register('notes')}
-              placeholder="Add any notes about this document..."
-              className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-              rows={3}
-            />
-          </div>
-
-          {/* Document Properties */}
-          <div className="space-y-3">
-            <Label className="text-sm font-medium text-gray-700">Document Properties</Label>
-            
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="is_evidence" 
-                checked={isImportant} 
-                onCheckedChange={checked => setValue('is_evidence', !!checked)} 
-              />
-              <Label htmlFor="is_evidence" className="text-sm font-medium text-gray-700">
-                Mark as Important
-              </Label>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="confidential" 
-                checked={watchedValues.confidential} 
-                onCheckedChange={checked => setValue('confidential', !!checked)} 
-              />
-              <Label htmlFor="confidential" className="text-sm font-medium text-gray-700">
-                Confidential
-              </Label>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="original_copy_retained" 
-                checked={watchedValues.original_copy_retained} 
-                onCheckedChange={checked => setValue('original_copy_retained', !!checked)} 
-              />
-              <Label htmlFor="original_copy_retained" className="text-sm font-medium text-gray-700">
-                Original Copy Retained
-              </Label>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="certified_copy" 
-                checked={watchedValues.certified_copy} 
-                onCheckedChange={checked => setValue('certified_copy', !!checked)} 
-              />
-              <Label htmlFor="certified_copy" className="text-sm font-medium text-gray-700">
-                Certified Copy
-              </Label>
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={onClose} 
-              className="px-6 py-2 border-gray-300 text-gray-700 hover:bg-gray-50"
-            >
-              Cancel
-            </Button>
-            <Button 
-              type="submit" 
-              disabled={isSubmitting || selectedFiles.length === 0} 
-              className="px-6 py-2 bg-primary hover:bg-primary/90 text-white"
-            >
-              {isSubmitting ? 'Uploading...' : `Upload ${selectedFiles.length} File${selectedFiles.length !== 1 ? 's' : ''}`}
             </Button>
           </div>
         </form>
