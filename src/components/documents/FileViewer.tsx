@@ -290,13 +290,46 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
         );
 
       case 'pdf':
+        if (!fileUrl) {
+          return (
+            <div className="flex flex-col items-center justify-center h-full bg-gray-50 rounded-lg gap-4">
+              <p className="text-gray-600 mb-2">PDF could not be loaded</p>
+              <Button onClick={handleDownload} variant="outline">
+                <Download className="w-4 h-4 mr-2" />
+                Download PDF
+              </Button>
+            </div>
+          );
+        }
+        
+        // For PDFs, use an embed tag which is more reliable than iframe for blob URLs
         return (
-          <div className="w-full h-full bg-gray-50 rounded-lg">
-            <iframe
-              src={fileUrl + '#toolbar=0&navpanes=0&scrollbar=1'}
-              className="w-full h-full rounded-lg border"
-              title={document.file_name}
-            />
+          <div className="w-full h-full bg-gray-50 rounded-lg flex flex-col">
+            <div className="flex items-center justify-between p-3 bg-white border-b">
+              <span className="text-sm font-medium text-gray-700">{document.file_name}</span>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => window.open(fileUrl, '_blank')}
+                >
+                  <ExternalLink className="w-4 h-4 mr-1" />
+                  Open in New Tab
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleDownload}>
+                  <Download className="w-4 h-4 mr-1" />
+                  Download
+                </Button>
+              </div>
+            </div>
+            <div className="flex-1 p-2">
+              <embed
+                src={fileUrl}
+                type="application/pdf"
+                className="w-full h-full rounded border"
+                title={document.file_name}
+              />
+            </div>
           </div>
         );
 
