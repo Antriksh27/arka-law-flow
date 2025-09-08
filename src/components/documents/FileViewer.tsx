@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Download, X, ZoomIn, ZoomOut, RotateCw, ExternalLink } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { SimplePDFViewer } from './SimplePDFViewer';
 import * as mammoth from 'mammoth';
 
 interface FileViewerProps {
@@ -28,52 +27,32 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
     
     setLoading(true);
     try {
-      // Check if this is a WebDAV/Pydio file
+      let fileBlob: Blob;
+      
+      // Always fetch the actual file content to avoid CORS and security issues
       if (document.webdav_synced && document.webdav_path) {
-        // For WebDAV files, try to download through our edge function
-        console.log('Loading WebDAV file:', document.webdav_path);
+        // WebDAV files - get through edge function
+        const { data: downloadResult, error } = await supabase.functions.invoke('pydio-webdav', {
+          body: {
+            operation: 'download',
+            filePath: document.webdav_path
+          }
+        });
         
-        try {
-          const { data: downloadResult, error } = await supabase.functions.invoke('pydio-webdav', {
-            body: {
-              operation: 'download',
-              filePath: document.webdav_path
-            }
-          });
-          
-          if (error || !downloadResult?.success) {
-            console.warn('WebDAV download failed, falling back to direct URL:', downloadResult?.error || error);
-            throw new Error('WebDAV failed');
-          }
-          
-          // Create a blob URL from the returned content
-          const base64Data = downloadResult.content;
-          const binaryData = atob(base64Data);
-          const bytes = new Uint8Array(binaryData.length);
-          for (let i = 0; i < binaryData.length; i++) {
-            bytes[i] = binaryData.charCodeAt(i);
-          }
-          const blob = new Blob([bytes], { type: document.file_type || 'application/octet-stream' });
-          const url = URL.createObjectURL(blob);
-          setFileUrl(url);
-          
-          // For PDFs, also store the raw data
-          if (document.file_type === 'pdf' || document.file_name?.toLowerCase().endsWith('.pdf')) {
-            setPdfData(bytes.buffer);
-          }
-          
-          // For Word documents, process with mammoth.js
-          const fileType = getFileType();
-          if (fileType === 'word') {
-            await processWordDocument(bytes.buffer);
-          }
-        } catch (webdavError) {
-          console.warn('WebDAV failed, trying direct URL fallback');
-          // Fallback: try to use the file_url directly
-          setFileUrl(document.file_url);
+        if (error || !downloadResult?.success) {
+          throw new Error(`WebDAV error: ${downloadResult?.error || error}`);
         }
+        
+        // Convert base64 to blob
+        const base64Data = downloadResult.content;
+        const binaryData = atob(base64Data);
+        const bytes = new Uint8Array(binaryData.length);
+        for (let i = 0; i < binaryData.length; i++) {
+          bytes[i] = binaryData.charCodeAt(i);
+        }
+        fileBlob = new Blob([bytes], { type: document.file_type || 'application/octet-stream' });
       } else {
-        // Legacy Supabase storage files
+        // Supabase storage files
         let filePath = document.file_url;
         
         if (filePath.includes('/storage/v1/object/public/documents/')) {
@@ -82,22 +61,35 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
         
         const { data, error } = await supabase.storage
           .from('documents')
-          .createSignedUrl(filePath, 3600);
+          .download(filePath);
 
         if (error) throw error;
-        setFileUrl(data.signedUrl);
+        fileBlob = data;
       }
+      
+      // Create object URL for safe viewing
+      const url = URL.createObjectURL(fileBlob);
+      setFileUrl(url);
+      
+      // For PDFs, store raw data for better rendering
+      const fileType = getFileType();
+      if (fileType === 'pdf') {
+        const arrayBuffer = await fileBlob.arrayBuffer();
+        setPdfData(arrayBuffer);
+      }
+      
+      // For Word documents, process with mammoth.js
+      if (fileType === 'word') {
+        const arrayBuffer = await fileBlob.arrayBuffer();
+        await processWordDocument(arrayBuffer);
+      }
+      
     } catch (error) {
-      console.error('Error getting file URL:', error);
-      
-      // Final fallback: try using the file_url as-is for direct viewing
-      console.log('Attempting direct URL fallback:', document.file_url);
-      setFileUrl(document.file_url);
-      
+      console.error('Error loading file:', error);
       toast({
-        title: "File loading issue",
-        description: "Using fallback viewer - some features may be limited",
-        variant: "default"
+        title: "Failed to load file",
+        description: "Could not load the file for viewing. You can still download it.",
+        variant: "destructive"
       });
     } finally {
       setLoading(false);
@@ -264,23 +256,14 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
         );
 
       case 'pdf':
-        if (!fileUrl) {
-          return (
-            <div className="flex flex-col items-center justify-center h-full bg-gray-50 rounded-lg gap-4">
-              <p className="text-gray-600 mb-2">PDF could not be loaded</p>
-              <Button onClick={handleDownload} variant="outline">
-                <Download className="w-4 h-4 mr-2" />
-                Download PDF
-              </Button>
-            </div>
-          );
-        }
         return (
-          <SimplePDFViewer
-            fileUrl={fileUrl}
-            fileName={document.file_name || 'Document'}
-            onDownload={handleDownload}
-          />
+          <div className="w-full h-full bg-gray-50 rounded-lg">
+            <iframe
+              src={fileUrl + '#toolbar=0&navpanes=0&scrollbar=1'}
+              className="w-full h-full rounded-lg border"
+              title={document.file_name}
+            />
+          </div>
         );
 
       case 'word':
@@ -296,14 +279,7 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
         }
         return (
           <div className="flex flex-col items-center justify-center h-full bg-gray-50 rounded-lg gap-4">
-            <p className="text-gray-600 mb-2">Word Document Preview</p>
-            <div className="flex gap-2">
-              <iframe
-                src={`https://docs.google.com/gview?url=${encodeURIComponent(fileUrl!)}&embedded=true`}
-                className="w-full h-96 rounded-lg border"
-                title={document.file_name}
-              />
-            </div>
+            <p className="text-gray-600 mb-2">Processing Word document...</p>
             <Button onClick={handleDownload} variant="outline">
               <Download className="w-4 h-4 mr-2" />
               Download Original
@@ -312,52 +288,16 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
         );
 
       case 'excel':
-        return (
-          <div className="flex flex-col items-center justify-center h-full bg-gray-50 rounded-lg gap-4">
-            <p className="text-gray-600 mb-2">Excel Spreadsheet</p>
-            <iframe
-              src={`https://docs.google.com/gview?url=${encodeURIComponent(fileUrl!)}&embedded=true`}
-              className="w-full h-full rounded-lg border"
-              title={document.file_name}
-            />
-            <div className="flex gap-2 mt-4">
-              <Button onClick={handleDownload} variant="outline">
-                <Download className="w-4 h-4 mr-2" />
-                Download
-              </Button>
-              <Button 
-                onClick={() => window.open(`https://docs.google.com/gview?url=${encodeURIComponent(fileUrl!)}`, '_blank')}
-                variant="outline"
-              >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                Open in New Tab
-              </Button>
-            </div>
-          </div>
-        );
-
       case 'powerpoint':
         return (
           <div className="flex flex-col items-center justify-center h-full bg-gray-50 rounded-lg gap-4">
-            <p className="text-gray-600 mb-2">PowerPoint Presentation</p>
-            <iframe
-              src={`https://docs.google.com/gview?url=${encodeURIComponent(fileUrl!)}&embedded=true`}
-              className="w-full h-full rounded-lg border"
-              title={document.file_name}
-            />
-            <div className="flex gap-2 mt-4">
-              <Button onClick={handleDownload} variant="outline">
-                <Download className="w-4 h-4 mr-2" />
-                Download
-              </Button>
-              <Button 
-                onClick={() => window.open(`https://docs.google.com/gview?url=${encodeURIComponent(fileUrl!)}`, '_blank')}
-                variant="outline"
-              >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                Open in New Tab
-              </Button>
-            </div>
+            <p className="text-gray-600 mb-2">
+              {fileType === 'excel' ? 'Excel Spreadsheet' : 'PowerPoint Presentation'}
+            </p>
+            <Button onClick={handleDownload} variant="outline">
+              <Download className="w-4 h-4 mr-2" />
+              Download to View
+            </Button>
           </div>
         );
 
@@ -401,30 +341,12 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
       default:
         return (
           <div className="flex flex-col items-center justify-center h-full bg-gray-50 rounded-lg gap-4">
-            <p className="text-gray-600 mb-2">File Preview</p>
-            <p className="text-sm text-gray-500 mb-4">Trying to preview with Google Docs Viewer...</p>
-            <iframe
-              src={`https://docs.google.com/gview?url=${encodeURIComponent(fileUrl!)}&embedded=true`}
-              className="w-full h-96 rounded-lg border"
-              title={document.file_name}
-              onError={() => {
-                // If Google Docs Viewer fails, show download option
-                console.log('Google Docs Viewer failed for:', document.file_name);
-              }}
-            />
-            <div className="flex gap-2">
-              <Button onClick={handleDownload} variant="outline">
-                <Download className="w-4 h-4 mr-2" />
-                Download File
-              </Button>
-              <Button 
-                onClick={() => window.open(`https://docs.google.com/gview?url=${encodeURIComponent(fileUrl!)}`, '_blank')}
-                variant="outline"
-              >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                Open in New Tab
-              </Button>
-            </div>
+            <p className="text-gray-600 mb-2">File Preview Not Available</p>
+            <p className="text-sm text-gray-500 mb-4">This file type cannot be previewed in the browser</p>
+            <Button onClick={handleDownload} variant="outline">
+              <Download className="w-4 h-4 mr-2" />
+              Download File
+            </Button>
           </div>
         );
     }
