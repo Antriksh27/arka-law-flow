@@ -30,40 +30,47 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
     try {
       // Check if this is a WebDAV/Pydio file
       if (document.webdav_synced && document.webdav_path) {
-        // For WebDAV files, we need to create a download URL through our edge function
+        // For WebDAV files, try to download through our edge function
         console.log('Loading WebDAV file:', document.webdav_path);
         
-        const { data: downloadResult, error } = await supabase.functions.invoke('pydio-webdav', {
-          body: {
-            operation: 'download',
-            filePath: document.webdav_path
+        try {
+          const { data: downloadResult, error } = await supabase.functions.invoke('pydio-webdav', {
+            body: {
+              operation: 'download',
+              filePath: document.webdav_path
+            }
+          });
+          
+          if (error || !downloadResult?.success) {
+            console.warn('WebDAV download failed, falling back to direct URL:', downloadResult?.error || error);
+            throw new Error('WebDAV failed');
           }
-        });
-        
-        if (error || !downloadResult?.success) {
-          throw new Error(downloadResult?.error || 'Failed to download from WebDAV');
-        }
-        
-        // Create a blob URL from the returned content
-        const base64Data = downloadResult.content;
-        const binaryData = atob(base64Data);
-        const bytes = new Uint8Array(binaryData.length);
-        for (let i = 0; i < binaryData.length; i++) {
-          bytes[i] = binaryData.charCodeAt(i);
-        }
-        const blob = new Blob([bytes], { type: document.file_type });
-        const url = URL.createObjectURL(blob);
-        setFileUrl(url);
-        
-        // For PDFs, also store the raw data
-        if (document.file_type === 'pdf' || document.file_name?.toLowerCase().endsWith('.pdf')) {
-          setPdfData(bytes.buffer);
-        }
-        
-        // For Word documents, process with mammoth.js
-        const fileType = getFileType();
-        if (fileType === 'word') {
-          await processWordDocument(bytes.buffer);
+          
+          // Create a blob URL from the returned content
+          const base64Data = downloadResult.content;
+          const binaryData = atob(base64Data);
+          const bytes = new Uint8Array(binaryData.length);
+          for (let i = 0; i < binaryData.length; i++) {
+            bytes[i] = binaryData.charCodeAt(i);
+          }
+          const blob = new Blob([bytes], { type: document.file_type || 'application/octet-stream' });
+          const url = URL.createObjectURL(blob);
+          setFileUrl(url);
+          
+          // For PDFs, also store the raw data
+          if (document.file_type === 'pdf' || document.file_name?.toLowerCase().endsWith('.pdf')) {
+            setPdfData(bytes.buffer);
+          }
+          
+          // For Word documents, process with mammoth.js
+          const fileType = getFileType();
+          if (fileType === 'word') {
+            await processWordDocument(bytes.buffer);
+          }
+        } catch (webdavError) {
+          console.warn('WebDAV failed, trying direct URL fallback');
+          // Fallback: try to use the file_url directly
+          setFileUrl(document.file_url);
         }
       } else {
         // Legacy Supabase storage files
@@ -82,10 +89,15 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
       }
     } catch (error) {
       console.error('Error getting file URL:', error);
+      
+      // Final fallback: try using the file_url as-is for direct viewing
+      console.log('Attempting direct URL fallback:', document.file_url);
+      setFileUrl(document.file_url);
+      
       toast({
-        title: "Failed to load file",
-        description: "Could not load the file for viewing",
-        variant: "destructive"
+        title: "File loading issue",
+        description: "Using fallback viewer - some features may be limited",
+        variant: "default"
       });
     } finally {
       setLoading(false);
@@ -106,7 +118,44 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
 
   const handleDownload = async () => {
     try {
-      // Extract the file path from the public URL for download
+      // Check if this is a WebDAV file first
+      if (document.webdav_synced && document.webdav_path) {
+        try {
+          const { data: downloadResult, error } = await supabase.functions.invoke('pydio-webdav', {
+            body: {
+              operation: 'download',
+              filePath: document.webdav_path
+            }
+          });
+          
+          if (error || !downloadResult?.success) {
+            throw new Error('WebDAV download failed');
+          }
+          
+          // Create a blob from the base64 content
+          const base64Data = downloadResult.content;
+          const binaryData = atob(base64Data);
+          const bytes = new Uint8Array(binaryData.length);
+          for (let i = 0; i < binaryData.length; i++) {
+            bytes[i] = binaryData.charCodeAt(i);
+          }
+          const blob = new Blob([bytes], { type: document.file_type || 'application/octet-stream' });
+          
+          const url = URL.createObjectURL(blob);
+          const a = window.document.createElement('a');
+          a.href = url;
+          a.download = document.file_name;
+          window.document.body.appendChild(a);
+          a.click();
+          window.document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          return;
+        } catch (webdavError) {
+          console.warn('WebDAV download failed, trying fallback');
+        }
+      }
+      
+      // Fallback for legacy Supabase storage files
       let filePath = document.file_url;
       
       // If it's a full URL, extract the path after the bucket name
@@ -129,9 +178,10 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
       window.document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (error) {
+      console.error('Download error:', error);
       toast({
         title: "Download failed",
-        description: "Failed to download the document",
+        description: "Failed to download the document. Please try again.",
         variant: "destructive"
       });
     }
@@ -214,10 +264,21 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
         );
 
       case 'pdf':
+        if (!fileUrl) {
+          return (
+            <div className="flex flex-col items-center justify-center h-full bg-gray-50 rounded-lg gap-4">
+              <p className="text-gray-600 mb-2">PDF could not be loaded</p>
+              <Button onClick={handleDownload} variant="outline">
+                <Download className="w-4 h-4 mr-2" />
+                Download PDF
+              </Button>
+            </div>
+          );
+        }
         return (
           <SimplePDFViewer
-            fileUrl={fileUrl!}
-            fileName={document.file_name}
+            fileUrl={fileUrl}
+            fileName={document.file_name || 'Document'}
             onDownload={handleDownload}
           />
         );
