@@ -53,7 +53,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
   } = useForm<UploadFormData>({
     defaultValues: {
       client_id: '',
-      case_id: caseId || '',
+      case_id: caseId || 'no-case',
       document_category: '',
       document_type: '',
       custom_document_type: '',
@@ -232,7 +232,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
               clientName = selectedClient.full_name;
             }
             
-            if (selectedCaseId && selectedCase) {
+            if (selectedCaseId && selectedCaseId !== 'no-case' && selectedCase) {
               caseName = selectedCase.title;
             }
             
@@ -270,13 +270,13 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
               file_url: pydioResult.path || `${clientName}/${caseName}/${category}/${docType}/${file.name}`, // Use WebDAV path
               file_type: file.name.split('.').pop()?.toLowerCase() || null,
               file_size: file.size,
-              case_id: data.case_id || null,
+              case_id: (data.case_id && data.case_id !== 'no-case') ? data.case_id : null,
               client_id: data.client_id || null,
               uploaded_by: user.id,
               is_evidence: data.is_evidence,
               uploaded_at: new Date().toISOString(),
               firm_id: firmId,
-              folder_name: (!data.client_id && !data.case_id) ? 'General Documents' : null,
+              folder_name: (!data.client_id && (!data.case_id || data.case_id === 'no-case')) ? 'General Documents' : null,
               document_type_id: null, // Using new category/type system
               notes: data.notes || null,
               confidential: data.confidential || false,
@@ -491,7 +491,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
             </Label>
             <Select onValueChange={value => {
               setValue('client_id', value);
-              setValue('case_id', ''); // Reset case when client changes
+              setValue('case_id', 'no-case'); // Reset case when client changes
             }} value={selectedClientId}>
               <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                 <SelectValue placeholder="Select a client..." />
@@ -520,7 +520,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                 <SelectValue placeholder={selectedClientId ? "Select a case..." : "Select client first"} />
               </SelectTrigger>
               <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                <SelectItem value="" className="hover:bg-gray-50">No Case (General Documents)</SelectItem>
+                <SelectItem value="no-case" className="hover:bg-gray-50">No Case (General Documents)</SelectItem>
                 {cases
                   .filter(case_item => {
                     // Only show cases for the selected client

@@ -53,7 +53,7 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
     formState: { isSubmitting }
   } = useForm<UploadFormData>({
     defaultValues: {
-      case_id: caseId || '',
+      case_id: caseId || 'no-case',
       document_category: '',
       document_type: '',
       custom_document_type: '',
@@ -207,7 +207,7 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
 
         const selectedCase = cases.find(c => c.id === selectedCaseId);
         const clientName = client?.full_name || 'Unknown Client';
-        const caseName = selectedCase?.title || 'General Documents';
+        const caseName = (selectedCaseId && selectedCaseId !== 'no-case' && selectedCase) ? selectedCase.title : 'General Documents';
         const category = data.document_category ? categoryLabels[data.document_category as keyof typeof categoryLabels] : 'Others';
         const docType = data.document_type || data.custom_document_type || 'Unspecified';
         
@@ -237,12 +237,12 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
           file_type: file.name.split('.').pop()?.toLowerCase() || null,
           file_size: file.size,
           client_id: clientId,
-          case_id: data.case_id || null,
+          case_id: (data.case_id && data.case_id !== 'no-case') ? data.case_id : null,
           uploaded_by: user.id,
           is_evidence: data.is_evidence,
           uploaded_at: new Date().toISOString(),
           firm_id: teamMember.firm_id,
-          folder_name: !data.case_id ? 'General Documents' : null,
+          folder_name: (!data.case_id || data.case_id === 'no-case') ? 'General Documents' : null,
           notes: data.notes || null,
           confidential: data.confidential || false,
           original_copy_retained: data.original_copy_retained || false,
@@ -402,7 +402,7 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
                 <SelectValue placeholder="Select a case..." />
               </SelectTrigger>
               <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                <SelectItem value="" className="hover:bg-gray-50">No Case (General Documents)</SelectItem>
+                <SelectItem value="no-case" className="hover:bg-gray-50">No Case (General Documents)</SelectItem>
                 {cases.map(case_item => (
                   <SelectItem key={case_item.id} value={case_item.id} className="hover:bg-gray-50">
                     {case_item.title}
