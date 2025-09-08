@@ -1,30 +1,28 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Folder, FolderOpen, Clock, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
 interface DocumentsSidebarProps {
   selectedFolder: string;
   onFolderSelect: (folder: string) => void;
 }
-
 export const DocumentsSidebar: React.FC<DocumentsSidebarProps> = ({
   selectedFolder,
   onFolderSelect
 }) => {
   // Fetch folders (unique folder names from documents)
-  const { data: folders = [] } = useQuery({
+  const {
+    data: folders = []
+  } = useQuery({
     queryKey: ['document-folders'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('documents')
-        .select('folder_name, case_id, cases!inner(title)')
-        .not('folder_name', 'is', null);
-      
+      const {
+        data,
+        error
+      } = await supabase.from('documents').select('folder_name, case_id, cases!inner(title)').not('folder_name', 'is', null);
       if (error) throw error;
-      
+
       // Group by folder name and count documents
       const folderMap = new Map();
       data?.forEach(doc => {
@@ -37,47 +35,40 @@ export const DocumentsSidebar: React.FC<DocumentsSidebarProps> = ({
         }
         folderMap.get(doc.folder_name).count++;
       });
-      
       return Array.from(folderMap.values());
     }
   });
-
-  const sidebarItems = [
-    { id: 'all', name: 'All Documents', icon: Folder, count: null },
-    { id: 'recent', name: 'Recently Added', icon: Clock, count: null },
-    { id: 'starred', name: 'Important', icon: Star, count: null }
-  ];
-
-  return (
-    <div className="w-64 bg-gray-50 border-r border-gray-200 flex flex-col">
+  const sidebarItems = [{
+    id: 'all',
+    name: 'All Documents',
+    icon: Folder,
+    count: null
+  }, {
+    id: 'recent',
+    name: 'Recently Added',
+    icon: Clock,
+    count: null
+  }, {
+    id: 'starred',
+    name: 'Important',
+    icon: Star,
+    count: null
+  }];
+  return <div className="w-64 bg-gray-50 border-r border-gray-200 flex flex-col">
       {/* Main Navigation */}
       <div className="p-4">
         <div className="space-y-1">
-          {sidebarItems.map((item) => {
-            const IconComponent = item.icon;
-            const isSelected = selectedFolder === item.id;
-            
-            return (
-              <button
-                key={item.id}
-                onClick={() => onFolderSelect(item.id)}
-                className={cn(
-                  "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                  isSelected 
-                    ? "bg-primary text-white" 
-                    : "text-gray-700 hover:bg-gray-200"
-                )}
-              >
+          {sidebarItems.map(item => {
+          const IconComponent = item.icon;
+          const isSelected = selectedFolder === item.id;
+          return <button key={item.id} onClick={() => onFolderSelect(item.id)} className={cn("w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors", isSelected ? "bg-primary text-white" : "text-gray-700 hover:bg-gray-200")}>
                 <IconComponent className="w-4 h-4" />
-                <span className="flex-1 text-left">{item.name}</span>
-                {item.count && (
-                  <span className="text-xs bg-gray-300 text-gray-700 px-2 py-1 rounded-full">
+                <span className="flex-1 text-left text-gray-400">{item.name}</span>
+                {item.count && <span className="text-xs bg-gray-300 text-gray-700 px-2 py-1 rounded-full">
                     {item.count}
-                  </span>
-                )}
-              </button>
-            );
-          })}
+                  </span>}
+              </button>;
+        })}
         </div>
       </div>
 
@@ -90,36 +81,19 @@ export const DocumentsSidebar: React.FC<DocumentsSidebarProps> = ({
         </div>
         
         <div className="space-y-1 max-h-96 overflow-y-auto">
-          {folders.map((folder) => {
-            const isSelected = selectedFolder === folder.name;
-            
-            return (
-              <button
-                key={folder.name}
-                onClick={() => onFolderSelect(folder.name)}
-                className={cn(
-                  "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
-                  isSelected 
-                    ? "bg-primary text-white" 
-                    : "text-gray-700 hover:bg-gray-200"
-                )}
-              >
-                {isSelected ? (
-                  <FolderOpen className="w-4 h-4" />
-                ) : (
-                  <Folder className="w-4 h-4" />
-                )}
+          {folders.map(folder => {
+          const isSelected = selectedFolder === folder.name;
+          return <button key={folder.name} onClick={() => onFolderSelect(folder.name)} className={cn("w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors", isSelected ? "bg-primary text-white" : "text-gray-700 hover:bg-gray-200")}>
+                {isSelected ? <FolderOpen className="w-4 h-4" /> : <Folder className="w-4 h-4" />}
                 <span className="flex-1 text-left truncate" title={folder.name}>
                   {folder.name}
                 </span>
                 <span className="text-xs bg-gray-300 text-gray-700 px-2 py-1 rounded-full">
                   {folder.count}
                 </span>
-              </button>
-            );
-          })}
+              </button>;
+        })}
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
