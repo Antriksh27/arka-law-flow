@@ -2,10 +2,11 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Download, X, ZoomIn, ZoomOut, RotateCw } from 'lucide-react';
+import { Download, X, ZoomIn, ZoomOut, RotateCw, ExternalLink } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { PDFViewer } from './PDFViewer';
+import * as mammoth from 'mammoth';
 
 interface FileViewerProps {
   open: boolean;
@@ -16,6 +17,7 @@ interface FileViewerProps {
 export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document }) => {
   const [fileUrl, setFileUrl] = useState<string | null>(null);
   const [pdfData, setPdfData] = useState<ArrayBuffer | null>(null);
+  const [documentHtml, setDocumentHtml] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [zoom, setZoom] = useState(100);
   const [rotation, setRotation] = useState(0);
@@ -57,6 +59,12 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
         if (document.file_type === 'pdf' || document.file_name?.toLowerCase().endsWith('.pdf')) {
           setPdfData(bytes.buffer);
         }
+        
+        // For Word documents, process with mammoth.js
+        const fileType = getFileType();
+        if (fileType === 'word') {
+          await processWordDocument(bytes.buffer);
+        }
       } else {
         // Legacy Supabase storage files
         let filePath = document.file_url;
@@ -90,6 +98,7 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
     } else {
       setFileUrl(null);
       setPdfData(null);
+      setDocumentHtml(null);
       setZoom(100);
       setRotation(0);
     }
@@ -142,12 +151,31 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
     
     if (type.includes('pdf') || extension === 'pdf') return 'pdf';
     if (type.includes('image') || ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'].includes(extension)) return 'image';
-    if (type.includes('doc') || type.includes('docx') || ['doc', 'docx'].includes(extension)) return 'document';
+    if (type.includes('doc') || type.includes('docx') || ['doc', 'docx'].includes(extension)) return 'word';
+    if (type.includes('excel') || type.includes('spreadsheet') || ['xls', 'xlsx'].includes(extension)) return 'excel';
+    if (type.includes('powerpoint') || type.includes('presentation') || ['ppt', 'pptx'].includes(extension)) return 'powerpoint';
     if (type.includes('txt') || type.includes('text') || ['txt', 'text'].includes(extension)) return 'text';
     if (type.includes('video') || ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm'].includes(extension)) return 'video';
     if (type.includes('audio') || ['mp3', 'wav', 'ogg', 'aac', 'm4a'].includes(extension)) return 'audio';
     
     return 'unknown';
+  };
+
+  const processWordDocument = async (arrayBuffer: ArrayBuffer) => {
+    try {
+      const result = await mammoth.convertToHtml({ arrayBuffer });
+      setDocumentHtml(result.value);
+      if (result.messages.length > 0) {
+        console.warn('Mammoth conversion messages:', result.messages);
+      }
+    } catch (error) {
+      console.error('Error processing Word document:', error);
+      toast({
+        title: "Word Document Error",
+        description: "Could not process Word document. Using fallback viewer.",
+        variant: "destructive"
+      });
+    }
   };
 
   const renderFileContent = () => {
@@ -196,14 +224,81 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
           </div>
         );
 
-      case 'document':
+      case 'word':
+        if (documentHtml) {
+          return (
+            <div className="w-full h-full bg-white rounded-lg overflow-auto p-6">
+              <div 
+                dangerouslySetInnerHTML={{ __html: documentHtml }}
+                className="prose prose-sm max-w-none"
+              />
+            </div>
+          );
+        }
         return (
-          <div className="flex flex-col items-center justify-center h-full bg-gray-50 rounded-lg">
-            <p className="text-gray-600 mb-4">Word documents can't be previewed directly</p>
-            <Button onClick={handleDownload}>
+          <div className="flex flex-col items-center justify-center h-full bg-gray-50 rounded-lg gap-4">
+            <p className="text-gray-600 mb-2">Word Document Preview</p>
+            <div className="flex gap-2">
+              <iframe
+                src={`https://docs.google.com/gview?url=${encodeURIComponent(fileUrl!)}&embedded=true`}
+                className="w-full h-96 rounded-lg border"
+                title={document.file_name}
+              />
+            </div>
+            <Button onClick={handleDownload} variant="outline">
               <Download className="w-4 h-4 mr-2" />
-              Download to View
+              Download Original
             </Button>
+          </div>
+        );
+
+      case 'excel':
+        return (
+          <div className="flex flex-col items-center justify-center h-full bg-gray-50 rounded-lg gap-4">
+            <p className="text-gray-600 mb-2">Excel Spreadsheet</p>
+            <iframe
+              src={`https://docs.google.com/gview?url=${encodeURIComponent(fileUrl!)}&embedded=true`}
+              className="w-full h-full rounded-lg border"
+              title={document.file_name}
+            />
+            <div className="flex gap-2 mt-4">
+              <Button onClick={handleDownload} variant="outline">
+                <Download className="w-4 h-4 mr-2" />
+                Download
+              </Button>
+              <Button 
+                onClick={() => window.open(`https://docs.google.com/gview?url=${encodeURIComponent(fileUrl!)}`, '_blank')}
+                variant="outline"
+              >
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Open in New Tab
+              </Button>
+            </div>
+          </div>
+        );
+
+      case 'powerpoint':
+        return (
+          <div className="flex flex-col items-center justify-center h-full bg-gray-50 rounded-lg gap-4">
+            <p className="text-gray-600 mb-2">PowerPoint Presentation</p>
+            <iframe
+              src={`https://docs.google.com/gview?url=${encodeURIComponent(fileUrl!)}&embedded=true`}
+              className="w-full h-full rounded-lg border"
+              title={document.file_name}
+            />
+            <div className="flex gap-2 mt-4">
+              <Button onClick={handleDownload} variant="outline">
+                <Download className="w-4 h-4 mr-2" />
+                Download
+              </Button>
+              <Button 
+                onClick={() => window.open(`https://docs.google.com/gview?url=${encodeURIComponent(fileUrl!)}`, '_blank')}
+                variant="outline"
+              >
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Open in New Tab
+              </Button>
+            </div>
           </div>
         );
 
@@ -246,12 +341,31 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
 
       default:
         return (
-          <div className="flex flex-col items-center justify-center h-full bg-gray-50 rounded-lg">
-            <p className="text-gray-600 mb-4">This file type cannot be previewed</p>
-            <Button onClick={handleDownload}>
-              <Download className="w-4 h-4 mr-2" />
-              Download File
-            </Button>
+          <div className="flex flex-col items-center justify-center h-full bg-gray-50 rounded-lg gap-4">
+            <p className="text-gray-600 mb-2">File Preview</p>
+            <p className="text-sm text-gray-500 mb-4">Trying to preview with Google Docs Viewer...</p>
+            <iframe
+              src={`https://docs.google.com/gview?url=${encodeURIComponent(fileUrl!)}&embedded=true`}
+              className="w-full h-96 rounded-lg border"
+              title={document.file_name}
+              onError={() => {
+                // If Google Docs Viewer fails, show download option
+                console.log('Google Docs Viewer failed for:', document.file_name);
+              }}
+            />
+            <div className="flex gap-2">
+              <Button onClick={handleDownload} variant="outline">
+                <Download className="w-4 h-4 mr-2" />
+                Download File
+              </Button>
+              <Button 
+                onClick={() => window.open(`https://docs.google.com/gview?url=${encodeURIComponent(fileUrl!)}`, '_blank')}
+                variant="outline"
+              >
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Open in New Tab
+              </Button>
+            </div>
           </div>
         );
     }
