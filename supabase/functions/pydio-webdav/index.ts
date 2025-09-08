@@ -192,7 +192,7 @@ serve(async (req) => {
         
         // Create folder structure: {clientName}/{caseName}/{category}/{docType}
         // Use URL encoding for folder names to handle special characters
-        // Note: 'crmdata' is already included in the base WebDAV URL
+        // Note: 'crmdata' is now included in the base WebDAV URL
         const folders = [
           encodeURIComponent(clientName), 
           encodeURIComponent(caseName), 
