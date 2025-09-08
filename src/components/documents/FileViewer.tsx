@@ -128,12 +128,16 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
     if (!document?.file_type) return 'unknown';
     const type = document.file_type.toLowerCase();
     
-    if (type.includes('pdf')) return 'pdf';
-    if (type.includes('image') || ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(type)) return 'image';
-    if (type.includes('doc') || type.includes('docx')) return 'document';
-    if (type.includes('txt') || type.includes('text')) return 'text';
-    if (type.includes('video')) return 'video';
-    if (type.includes('audio')) return 'audio';
+    // Check file extension if MIME type is not reliable
+    const fileName = document.file_name?.toLowerCase() || '';
+    const extension = fileName.split('.').pop() || '';
+    
+    if (type.includes('pdf') || extension === 'pdf') return 'pdf';
+    if (type.includes('image') || ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'].includes(extension)) return 'image';
+    if (type.includes('doc') || type.includes('docx') || ['doc', 'docx'].includes(extension)) return 'document';
+    if (type.includes('txt') || type.includes('text') || ['txt', 'text'].includes(extension)) return 'text';
+    if (type.includes('video') || ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm'].includes(extension)) return 'video';
+    if (type.includes('audio') || ['mp3', 'wav', 'ogg', 'aac', 'm4a'].includes(extension)) return 'audio';
     
     return 'unknown';
   };

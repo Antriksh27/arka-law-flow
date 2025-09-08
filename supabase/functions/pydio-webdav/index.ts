@@ -573,7 +573,19 @@ serve(async (req) => {
 
         // Get file as array buffer for binary files, then convert to base64
         const fileBuffer = await downloadResponse.arrayBuffer();
-        const base64Content = btoa(String.fromCharCode(...new Uint8Array(fileBuffer)));
+        
+        // Convert to base64 without causing stack overflow for large files
+        const uint8Array = new Uint8Array(fileBuffer);
+        let binaryString = '';
+        
+        // Process in chunks to avoid stack overflow
+        const chunkSize = 8192; // 8KB chunks
+        for (let i = 0; i < uint8Array.length; i += chunkSize) {
+          const chunk = uint8Array.subarray(i, i + chunkSize);
+          binaryString += String.fromCharCode(...chunk);
+        }
+        
+        const base64Content = btoa(binaryString);
 
         return new Response(
           JSON.stringify({
