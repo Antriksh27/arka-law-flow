@@ -162,7 +162,7 @@ serve(async (req) => {
   try {
     // Parse the request body
     const { operation, filename, content, filePath, clientName, caseName, category, docType, fileName, fileContent } = await req.json()
-    console.log(`📋 Operation: ${operation}`);
+    console.log(`📋 Operation: ${operation || 'hierarchical-upload'}`);
     
     // Handle new hierarchical structured upload format with category
     if (clientName && caseName && category && docType && fileName && fileContent) {
@@ -184,17 +184,29 @@ serve(async (req) => {
       }
       
       try {
+        // Ensure WebDAV URL is properly formatted
+        const baseUrl = webdavUrl.endsWith('/') ? webdavUrl.slice(0, -1) : webdavUrl;
+        
         // Create folder structure: /crmdata/{clientName}/{caseName}/{category}/{docType}
-        const folders = ['crmdata', clientName, caseName, category, docType];
+        // Use URL encoding for folder names to handle special characters
+        const folders = [
+          'crmdata', 
+          encodeURIComponent(clientName), 
+          encodeURIComponent(caseName), 
+          encodeURIComponent(category), 
+          encodeURIComponent(docType)
+        ];
+        
         let currentPath = '';
         
         for (const folder of folders) {
           currentPath += `/${folder}`;
-          console.log(`📂 Checking/creating folder: ${currentPath}`);
+          const fullFolderUrl = `${baseUrl}${currentPath}`;
+          console.log(`📂 Checking/creating folder: ${currentPath} (${fullFolderUrl})`);
           
           // Try to create folder (MKCOL method)
           try {
-            const mkcolResponse = await fetch(`${webdavUrl}${currentPath}`, {
+            const mkcolResponse = await fetch(fullFolderUrl, {
               method: 'MKCOL',
               headers: {
                 'Authorization': `Basic ${btoa(`${webdavUsername}:${webdavPassword}`)}`,
@@ -204,36 +216,42 @@ serve(async (req) => {
             
             if (mkcolResponse.status === 201) {
               console.log(`✅ Created folder: ${currentPath}`);
-            } else if (mkcolResponse.status === 405) {
+            } else if (mkcolResponse.status === 405 || mkcolResponse.status === 409) {
               console.log(`📁 Folder already exists: ${currentPath}`);
             } else {
-              console.log(`⚠️ Unexpected response for folder ${currentPath}: ${mkcolResponse.status}`);
+              console.log(`⚠️ Unexpected response for folder ${currentPath}: ${mkcolResponse.status} ${mkcolResponse.statusText}`);
+              // Don't fail on folder creation issues, continue with upload
             }
           } catch (folderError) {
-            console.error(`❌ Error creating folder ${currentPath}:`, folderError);
+            console.log(`⚠️ Error creating folder ${currentPath}:`, folderError);
             // Continue anyway, folder might already exist
           }
         }
         
-        // Upload the file
-        const fullPath = `${currentPath}/${fileName}`;
-        console.log(`📤 Uploading file to: ${fullPath}`);
+        // Upload the file with proper encoding
+        const encodedFileName = encodeURIComponent(fileName);
+        const fullPath = `${currentPath}/${encodedFileName}`;
+        const fullUploadUrl = `${baseUrl}${fullPath}`;
+        console.log(`📤 Uploading file to: ${fullPath} (${fullUploadUrl})`);
         
         // Decode base64 content if it appears to be base64
         let fileData;
         try {
           // If it's base64, decode it
-          if (typeof fileContent === 'string' && /^[A-Za-z0-9+/]+=*$/.test(fileContent)) {
-            fileData = Uint8Array.from(atob(fileContent), c => c.charCodeAt(0));
+          if (typeof fileContent === 'string' && /^[A-Za-z0-9+/]+=*$/.test(fileContent.replace(/\s/g, ''))) {
+            const cleanBase64 = fileContent.replace(/\s/g, '');
+            fileData = Uint8Array.from(atob(cleanBase64), c => c.charCodeAt(0));
+            console.log(`📄 Decoded base64 file, size: ${fileData.length} bytes`);
           } else {
             fileData = new TextEncoder().encode(fileContent);
+            console.log(`📄 Text file, size: ${fileData.length} bytes`);
           }
         } catch (decodeError) {
-          console.log('Using content as text');
+          console.log('⚠️ Base64 decode failed, using content as text');
           fileData = new TextEncoder().encode(fileContent);
         }
         
-        const uploadResponse = await fetch(`${webdavUrl}${fullPath}`, {
+        const uploadResponse = await fetch(fullUploadUrl, {
           method: 'PUT',
           headers: {
             'Authorization': `Basic ${btoa(`${webdavUsername}:${webdavPassword}`)}`,
@@ -242,7 +260,7 @@ serve(async (req) => {
           body: fileData,
         });
         
-        if (uploadResponse.ok) {
+        if (uploadResponse.ok || uploadResponse.status === 201 || uploadResponse.status === 204) {
           console.log('✅ File uploaded successfully to hierarchical structure');
           return new Response(JSON.stringify({
             success: true,
@@ -254,11 +272,12 @@ serve(async (req) => {
           });
         } else {
           const errorText = await uploadResponse.text();
-          console.error('❌ Upload failed:', uploadResponse.status, errorText);
+          console.error('❌ Upload failed:', uploadResponse.status, uploadResponse.statusText, errorText);
           return new Response(JSON.stringify({
             success: false,
-            error: `Upload failed: ${uploadResponse.status}`,
-            details: errorText
+            error: `Upload failed: ${uploadResponse.status} ${uploadResponse.statusText}`,
+            details: errorText,
+            uploadUrl: fullUploadUrl
           }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 400,
