@@ -11,6 +11,7 @@ export interface WebDAVFileParams {
 
 /**
  * Generate a direct URL for WebDAV file preview/download
+ * Uses the Supabase Edge Function with proper authorization
  */
 export function getWebDAVFileUrl(params: WebDAVFileParams): string {
   const { clientName, caseName, docType, fileName } = params;

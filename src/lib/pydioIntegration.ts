@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import { callSupabaseFunction, callWebDAVFunction } from './supabaseEdgeFunction';
 import { getWebDAVFileUrl, parseWebDAVPath, WebDAVFileParams } from './webdavFileUtils';
 
 export interface WebDAVUploadParams {
@@ -45,31 +45,18 @@ export function getFileUrlFromDocument(document: any): string | null {
  */
 export async function uploadFileToWebDAV(params: WebDAVUploadParams): Promise<WebDAVResponse> {
   try {
-    console.log('🔧 Starting WebDAV integration - calling uploadToPydio edge function');
+    console.log('🔧 Starting WebDAV integration - calling pydio-webdav edge function');
     console.log('📁 File params:', { filename: params.filename, contentLength: params.content.length });
     
-    const { data, error } = await supabase.functions.invoke('uploadToPydio', {
-      body: {
-        operation: 'upload',
-        filename: params.filename,
-        content: params.content,
-      },
+    const data = await callSupabaseFunction('pydio-webdav', 'POST', {
+      operation: 'upload',
+      filename: params.filename,
+      content: params.content,
     });
 
-    console.log('📡 Edge function response - data:', data);
-    console.log('📡 Edge function response - error:', error);
-
-    if (error) {
-      console.error('❌ Supabase function invoke error:', error);
-      return {
-        success: false,
-        message: 'Failed to upload file',
-        error: error.message,
-        details: JSON.stringify(error)
-      };
-    }
-
+    console.log('📡 Edge function response:', data);
     return data;
+    
   } catch (error) {
     console.error('Unexpected error uploading to WebDAV:', error);
     return {
@@ -85,23 +72,22 @@ export async function uploadFileToWebDAV(params: WebDAVUploadParams): Promise<We
  */
 export async function downloadFileFromWebDAV(params: WebDAVDownloadParams): Promise<WebDAVResponse> {
   try {
-    const { data, error } = await supabase.functions.invoke('uploadToPydio', {
-      body: {
-        operation: 'download',
-        filePath: params.filePath,
-      },
-    });
-
-    if (error) {
-      console.error('Error downloading from WebDAV:', error);
-      return {
-        success: false,
-        message: 'Failed to download file',
-        error: error.message,
-      };
+    console.log('🔧 Downloading from WebDAV:', params.filePath);
+    
+    // Parse the file path to extract parameters
+    const pathParams = parseWebDAVPath(params.filePath);
+    if (!pathParams) {
+      throw new Error('Invalid WebDAV file path format');
     }
-
-    return data;
+    
+    const blob = await callWebDAVFunction('download', pathParams);
+    
+    return {
+      success: true,
+      message: 'File downloaded successfully',
+      data: blob
+    };
+    
   } catch (error) {
     console.error('Unexpected error downloading from WebDAV:', error);
     return {
@@ -156,16 +142,13 @@ export async function syncDocumentToWebDAV(document: {
   file_url: string;
 }): Promise<WebDAVResponse> {
   try {
-    // First, fetch the content from Supabase storage
-    const { data: fileData, error: downloadError } = await supabase.storage
-      .from('documents')
-      .download(document.file_url);
-
-    if (downloadError) {
-      throw new Error(`Failed to download from Supabase: ${downloadError.message}`);
+    // First, fetch the content from Supabase storage using fetch instead of supabase client
+    const response = await fetch(document.file_url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch from Supabase: ${response.statusText}`);
     }
-
-    // Convert blob to text
+    
+    const fileData = await response.blob();
     const content = await fileData.text();
 
     // Upload to WebDAV
@@ -178,6 +161,87 @@ export async function syncDocumentToWebDAV(document: {
     return {
       success: false,
       message: 'Failed to sync document to WebDAV',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
+/**
+ * Create a client folder in WebDAV
+ */
+export async function createClientFolder(clientName: string): Promise<WebDAVResponse> {
+  try {
+    console.log('🔧 Creating client folder:', clientName);
+    
+    const data = await callSupabaseFunction('pydio-webdav', 'POST', {
+      operation: 'createFolder',
+      folderType: 'client',
+      clientName,
+    });
+
+    return data;
+  } catch (error) {
+    console.error('Error creating client folder:', error);
+    return {
+      success: false,
+      message: 'Failed to create client folder',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
+/**
+ * Create a case folder in WebDAV
+ */
+export async function createCaseFolder(clientName: string, caseName: string): Promise<WebDAVResponse> {
+  try {
+    console.log('🔧 Creating case folder:', { clientName, caseName });
+    
+    const data = await callSupabaseFunction('pydio-webdav', 'POST', {
+      operation: 'createFolder',
+      folderType: 'case',
+      clientName,
+      caseName,
+    });
+
+    return data;
+  } catch (error) {
+    console.error('Error creating case folder:', error);
+    return {
+      success: false,
+      message: 'Failed to create case folder',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
+/**
+ * Upload a file to WebDAV with full path parameters
+ */
+export async function uploadFileToWebDAVWithPath(
+  clientName: string,
+  caseName: string,
+  docType: string,
+  fileName: string,
+  fileContent: string
+): Promise<WebDAVResponse> {
+  try {
+    console.log('🔧 Uploading file to WebDAV:', { clientName, caseName, docType, fileName });
+    
+    const data = await callSupabaseFunction('pydio-webdav', 'POST', {
+      clientName,
+      caseName, 
+      docType,
+      fileName,
+      fileContent,
+    });
+
+    return data;
+  } catch (error) {
+    console.error('Error uploading file to WebDAV:', error);
+    return {
+      success: false,
+      message: 'Failed to upload file',
       error: error instanceof Error ? error.message : 'Unknown error',
     };
   }

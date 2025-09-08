@@ -158,6 +158,8 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
               className="w-full h-full border-0"
               title={document.file_name}
               onError={handleFrameError}
+              allow="fullscreen"
+              style={{ minHeight: '500px' }}
             />
             {showControls && (
               <div className="absolute top-2 right-2 flex gap-2 bg-white/90 p-1 rounded">
