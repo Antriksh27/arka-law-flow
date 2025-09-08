@@ -302,7 +302,11 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
           );
         }
         
-        // For PDFs, use an embed tag which is more reliable than iframe for blob URLs
+        // Debug PDF data
+        console.log('PDF fileUrl:', fileUrl);
+        console.log('PDF document type:', document.file_type);
+        console.log('PDF file size:', document.file_size);
+        
         return (
           <div className="w-full h-full bg-gray-50 rounded-lg flex flex-col">
             <div className="flex items-center justify-between p-3 bg-white border-b">
@@ -311,7 +315,20 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  onClick={() => window.open(fileUrl, '_blank')}
+                  onClick={() => {
+                    // Try opening PDF in new window
+                    const newWindow = window.open('', '_blank');
+                    if (newWindow) {
+                      newWindow.document.write(`
+                        <html>
+                          <head><title>${document.file_name}</title></head>
+                          <body style="margin:0;padding:0;">
+                            <iframe src="${fileUrl}" style="width:100vw;height:100vh;border:none;" title="PDF Viewer"></iframe>
+                          </body>
+                        </html>
+                      `);
+                    }
+                  }}
                 >
                   <ExternalLink className="w-4 h-4 mr-1" />
                   Open in New Tab
@@ -322,13 +339,28 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
                 </Button>
               </div>
             </div>
-            <div className="flex-1 p-2">
-              <embed
+            <div className="flex-1 relative bg-white m-2 rounded border">
+              {/* Simple iframe approach with better error handling */}
+              <iframe
                 src={fileUrl}
-                type="application/pdf"
-                className="w-full h-full rounded border"
+                className="absolute inset-0 w-full h-full border-none rounded"
                 title={document.file_name}
+                sandbox="allow-same-origin allow-scripts"
+                onLoad={() => {
+                  console.log('PDF iframe loaded successfully');
+                }}
+                onError={(e) => {
+                  console.error('PDF iframe failed to load:', e);
+                }}
               />
+              
+              {/* Fallback content that shows if iframe fails */}
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-50 rounded pointer-events-none">
+                <div className="text-center p-8">
+                  <p className="text-gray-600 mb-4">Loading PDF...</p>
+                  <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+                </div>
+              </div>
             </div>
           </div>
         );
