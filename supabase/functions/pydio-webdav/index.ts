@@ -187,10 +187,10 @@ serve(async (req) => {
         // Ensure WebDAV URL is properly formatted
         const baseUrl = webdavUrl.endsWith('/') ? webdavUrl.slice(0, -1) : webdavUrl;
         
-        // Create folder structure: /crmdata/{clientName}/{caseName}/{category}/{docType}
+        // Create folder structure: {clientName}/{caseName}/{category}/{docType}
         // Use URL encoding for folder names to handle special characters
+        // Note: 'crmdata' is already included in the base WebDAV URL
         const folders = [
-          'crmdata', 
           encodeURIComponent(clientName), 
           encodeURIComponent(caseName), 
           encodeURIComponent(category), 
