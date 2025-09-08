@@ -28,29 +28,63 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
     setLoading(true);
     try {
       let fileBlob: Blob;
+      let useDirectUrl = false;
       
-      // Always fetch the actual file content to avoid CORS and security issues
+      // Try WebDAV first if it's a WebDAV file
       if (document.webdav_synced && document.webdav_path) {
-        // WebDAV files - get through edge function
-        const { data: downloadResult, error } = await supabase.functions.invoke('pydio-webdav', {
-          body: {
-            operation: 'download',
-            filePath: document.webdav_path
+        try {
+          const { data: downloadResult, error } = await supabase.functions.invoke('pydio-webdav', {
+            body: {
+              operation: 'download',
+              filePath: document.webdav_path
+            }
+          });
+          
+          if (error) {
+            console.warn('WebDAV edge function failed:', error);
+            throw new Error('WebDAV failed');
           }
-        });
-        
-        if (error || !downloadResult?.success) {
-          throw new Error(`WebDAV error: ${downloadResult?.error || error}`);
+          
+          if (!downloadResult?.success) {
+            console.warn('WebDAV returned failure:', downloadResult?.error);
+            throw new Error('WebDAV failed');
+          }
+          
+          // Convert base64 to blob
+          const base64Data = downloadResult.content;
+          const binaryData = atob(base64Data);
+          const bytes = new Uint8Array(binaryData.length);
+          for (let i = 0; i < binaryData.length; i++) {
+            bytes[i] = binaryData.charCodeAt(i);
+          }
+          fileBlob = new Blob([bytes], { type: document.file_type || 'application/octet-stream' });
+          
+        } catch (webdavError) {
+          console.warn('WebDAV failed, trying direct URL approach:', webdavError);
+          
+          // Fallback: try to construct a direct URL
+          // Many WebDAV systems allow direct file access via URL
+          const directUrl = document.file_url;
+          
+          // Try to fetch directly with CORS mode
+          try {
+            const response = await fetch(directUrl, {
+              mode: 'cors',
+              credentials: 'omit'
+            });
+            
+            if (response.ok) {
+              fileBlob = await response.blob();
+              console.log('Direct URL fetch successful');
+            } else {
+              throw new Error(`HTTP ${response.status}`);
+            }
+          } catch (fetchError) {
+            console.warn('Direct fetch also failed:', fetchError);
+            // Last resort: use URL directly for iframe/img viewing
+            useDirectUrl = true;
+          }
         }
-        
-        // Convert base64 to blob
-        const base64Data = downloadResult.content;
-        const binaryData = atob(base64Data);
-        const bytes = new Uint8Array(binaryData.length);
-        for (let i = 0; i < binaryData.length; i++) {
-          bytes[i] = binaryData.charCodeAt(i);
-        }
-        fileBlob = new Blob([bytes], { type: document.file_type || 'application/octet-stream' });
       } else {
         // Supabase storage files
         let filePath = document.file_url;
@@ -67,25 +101,29 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
         fileBlob = data;
       }
       
-      // Create object URL for safe viewing
-      const url = URL.createObjectURL(fileBlob);
-      setFileUrl(url);
-      
-      // For PDFs, store raw data for better rendering
-      const fileType = getFileType();
-      if (fileType === 'pdf') {
-        const arrayBuffer = await fileBlob.arrayBuffer();
-        setPdfData(arrayBuffer);
-      }
-      
-      // For Word documents, process with mammoth.js
-      if (fileType === 'word') {
-        const arrayBuffer = await fileBlob.arrayBuffer();
-        await processWordDocument(arrayBuffer);
+      // Set the file URL
+      if (useDirectUrl) {
+        setFileUrl(document.file_url);
+      } else {
+        const url = URL.createObjectURL(fileBlob!);
+        setFileUrl(url);
+        
+        // For PDFs, store raw data
+        const fileType = getFileType();
+        if (fileType === 'pdf') {
+          const arrayBuffer = await fileBlob!.arrayBuffer();
+          setPdfData(arrayBuffer);
+        }
+        
+        // For Word documents, process with mammoth.js
+        if (fileType === 'word') {
+          const arrayBuffer = await fileBlob!.arrayBuffer();
+          await processWordDocument(arrayBuffer);
+        }
       }
       
     } catch (error) {
-      console.error('Error loading file:', error);
+      console.error('All file loading methods failed:', error);
       toast({
         title: "Failed to load file",
         description: "Could not load the file for viewing. You can still download it.",
@@ -241,6 +279,17 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
 
     switch (fileType) {
       case 'image':
+        if (!fileUrl) {
+          return (
+            <div className="flex flex-col items-center justify-center h-full bg-gray-50 rounded-lg gap-4">
+              <p className="text-gray-600 mb-2">Image could not be loaded</p>
+              <Button onClick={handleDownload} variant="outline">
+                <Download className="w-4 h-4 mr-2" />
+                Download Image
+              </Button>
+            </div>
+          );
+        }
         return (
           <div className="flex justify-center items-center h-full bg-gray-50 rounded-lg">
             <img
@@ -251,17 +300,44 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
                 transform: `scale(${zoom / 100}) rotate(${rotation}deg)`,
                 transformOrigin: 'center'
               }}
+              onError={() => {
+                console.error('Image failed to load');
+                toast({
+                  title: "Image loading issue",
+                  description: "Image could not be displayed. Try downloading it instead.",
+                  variant: "destructive"
+                });
+              }}
             />
           </div>
         );
 
       case 'pdf':
+        if (!fileUrl) {
+          return (
+            <div className="flex flex-col items-center justify-center h-full bg-gray-50 rounded-lg gap-4">
+              <p className="text-gray-600 mb-2">PDF could not be loaded</p>
+              <Button onClick={handleDownload} variant="outline">
+                <Download className="w-4 h-4 mr-2" />
+                Download PDF
+              </Button>
+            </div>
+          );
+        }
         return (
           <div className="w-full h-full bg-gray-50 rounded-lg">
             <iframe
               src={fileUrl + '#toolbar=0&navpanes=0&scrollbar=1'}
               className="w-full h-full rounded-lg border"
               title={document.file_name}
+              onError={() => {
+                console.error('PDF iframe failed to load');
+                toast({
+                  title: "PDF viewing issue",
+                  description: "PDF could not be displayed. Try downloading it instead.",
+                  variant: "destructive"
+                });
+              }}
             />
           </div>
         );
