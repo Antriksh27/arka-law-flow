@@ -17,6 +17,29 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({ fileUrl, fileName }) => {
   const [scale, setScale] = useState<number>(1.0);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [pdfData, setPdfData] = useState<string | ArrayBuffer | null>(null);
+
+  React.useEffect(() => {
+    const loadPDF = async () => {
+      if (!fileUrl) return;
+      
+      setLoading(true);
+      setError(null);
+      
+      try {
+        // For blob URLs, fetch the data and convert to ArrayBuffer
+        const response = await fetch(fileUrl);
+        const arrayBuffer = await response.arrayBuffer();
+        setPdfData(arrayBuffer);
+      } catch (err) {
+        console.error('Error loading PDF:', err);
+        setError('Failed to load PDF document');
+        setLoading(false);
+      }
+    };
+
+    loadPDF();
+  }, [fileUrl]);
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
@@ -104,20 +127,22 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({ fileUrl, fileName }) => {
 
       {/* PDF Document */}
       <div className="flex-1 overflow-auto bg-gray-100 flex justify-center p-4">
-        <Document
-          file={fileUrl}
-          onLoadSuccess={onDocumentLoadSuccess}
-          onLoadError={onDocumentLoadError}
-          className="shadow-lg"
-        >
-          <Page
-            pageNumber={pageNumber}
-            scale={scale}
-            renderTextLayer={true}
-            renderAnnotationLayer={true}
-            className="border border-gray-300 bg-white"
-          />
-        </Document>
+        {pdfData && (
+          <Document
+            file={pdfData}
+            onLoadSuccess={onDocumentLoadSuccess}
+            onLoadError={onDocumentLoadError}
+            className="shadow-lg"
+          >
+            <Page
+              pageNumber={pageNumber}
+              scale={scale}
+              renderTextLayer={false}
+              renderAnnotationLayer={false}
+              className="border border-gray-300 bg-white"
+            />
+          </Document>
+        )}
       </div>
     </div>
   );
