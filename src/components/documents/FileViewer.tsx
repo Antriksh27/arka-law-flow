@@ -316,17 +316,24 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
                   variant="outline" 
                   size="sm" 
                   onClick={() => {
-                    // Try opening PDF in new window
-                    const newWindow = window.open('', '_blank');
-                    if (newWindow) {
-                      newWindow.document.write(`
+                    // Create a simple PDF viewer page
+                    const pdfWindow = window.open('', '_blank');
+                    if (pdfWindow) {
+                      pdfWindow.document.write(`
                         <html>
-                          <head><title>${document.file_name}</title></head>
-                          <body style="margin:0;padding:0;">
-                            <iframe src="${fileUrl}" style="width:100vw;height:100vh;border:none;" title="PDF Viewer"></iframe>
+                          <head>
+                            <title>${document.file_name} - PDF Viewer</title>
+                            <style>
+                              body { margin: 0; padding: 0; background: #f0f0f0; }
+                              iframe { width: 100vw; height: 100vh; border: none; }
+                            </style>
+                          </head>
+                          <body>
+                            <iframe src="${fileUrl}" type="application/pdf"></iframe>
                           </body>
                         </html>
                       `);
+                      pdfWindow.document.close();
                     }
                   }}
                 >
@@ -339,28 +346,19 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
                 </Button>
               </div>
             </div>
-            <div className="flex-1 relative bg-white m-2 rounded border">
-              {/* Simple iframe approach with better error handling */}
+            <div className="flex-1 relative bg-white m-2 rounded border overflow-hidden">
+              {/* PDF iframe without loading overlay */}
               <iframe
                 src={fileUrl}
-                className="absolute inset-0 w-full h-full border-none rounded"
-                title={document.file_name}
-                sandbox="allow-same-origin allow-scripts"
+                className="absolute inset-0 w-full h-full border-none"
+                title={`PDF: ${document.file_name}`}
                 onLoad={() => {
-                  console.log('PDF iframe loaded successfully');
+                  console.log('PDF iframe loaded successfully for:', document.file_name);
                 }}
                 onError={(e) => {
                   console.error('PDF iframe failed to load:', e);
                 }}
               />
-              
-              {/* Fallback content that shows if iframe fails */}
-              <div className="absolute inset-0 flex items-center justify-center bg-gray-50 rounded pointer-events-none">
-                <div className="text-center p-8">
-                  <p className="text-gray-600 mb-4">Loading PDF...</p>
-                  <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
-                </div>
-              </div>
             </div>
           </div>
         );
