@@ -1,15 +1,10 @@
-
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Download, X, ZoomIn, ZoomOut, RotateCw, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Download, X, ZoomIn, ZoomOut, RotateCw, ExternalLink } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import * as mammoth from 'mammoth';
-import * as pdfjsLib from 'pdfjs-dist';
-
-// Disable worker for simpler setup
-pdfjsLib.GlobalWorkerOptions.workerSrc = '';
 
 interface FileViewerProps {
   open: boolean;
@@ -19,74 +14,11 @@ interface FileViewerProps {
 
 export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document }) => {
   const [fileUrl, setFileUrl] = useState<string | null>(null);
-  const [pdfData, setPdfData] = useState<ArrayBuffer | null>(null);
   const [documentHtml, setDocumentHtml] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [zoom, setZoom] = useState(100);
   const [rotation, setRotation] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
-  const [pdfDocument, setPdfDocument] = useState<any>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const { toast } = useToast();
-
-  const renderPdfPage = async (page: any) => {
-    if (!canvasRef.current) return;
-    
-    const canvas = canvasRef.current;
-    const context = canvas.getContext('2d');
-    if (!context) return;
-
-    const viewport = page.getViewport({ scale: zoom / 100, rotation });
-    canvas.height = viewport.height;
-    canvas.width = viewport.width;
-
-    const renderContext = {
-      canvasContext: context,
-      viewport: viewport,
-    };
-
-    try {
-      await page.render(renderContext).promise;
-    } catch (error) {
-      console.error('Error rendering PDF page:', error);
-    }
-  };
-
-  const loadPdfDocument = async (arrayBuffer: ArrayBuffer) => {
-    try {
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-      setPdfDocument(pdf);
-      setTotalPages(pdf.numPages);
-      setCurrentPage(1);
-      
-      // Render first page
-      const page = await pdf.getPage(1);
-      await renderPdfPage(page);
-    } catch (error) {
-      console.error('Error loading PDF document:', error);
-      toast({
-        title: "PDF Load Error",
-        description: "Could not load PDF document",
-        variant: "destructive"
-      });
-    }
-  };
-
-  // Re-render page when zoom or rotation changes
-  useEffect(() => {
-    if (pdfDocument && currentPage) {
-      pdfDocument.getPage(currentPage).then(renderPdfPage);
-    }
-  }, [zoom, rotation, currentPage, pdfDocument]);
-
-  const goToPage = async (pageNum: number) => {
-    if (!pdfDocument || pageNum < 1 || pageNum > totalPages) return;
-    
-    setCurrentPage(pageNum);
-    const page = await pdfDocument.getPage(pageNum);
-    await renderPdfPage(page);
-  };
 
   const getFileUrl = async () => {
     if (!document?.file_url) return;
@@ -115,15 +47,8 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
             const url = URL.createObjectURL(blob);
             setFileUrl(url);
             
-            // For PDFs, store raw data and load with PDF.js
-            const fileType = getFileType();
-            if (fileType === 'pdf') {
-              setPdfData(bytes.buffer);
-              await loadPdfDocument(bytes.buffer);
-            }
-            
             // For Word documents, process with mammoth.js
-            if (fileType === 'word') {
+            if (getFileType() === 'word') {
               await processWordDocument(bytes.buffer);
             }
             
@@ -154,14 +79,7 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
             const url = URL.createObjectURL(data);
             setFileUrl(url);
             
-            const fileType = getFileType();
-            if (fileType === 'pdf') {
-              const arrayBuffer = await data.arrayBuffer();
-              setPdfData(arrayBuffer);
-              await loadPdfDocument(arrayBuffer);
-            }
-            
-            if (fileType === 'word') {
+            if (getFileType() === 'word') {
               const arrayBuffer = await data.arrayBuffer();
               await processWordDocument(arrayBuffer);
             }
@@ -203,11 +121,7 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
       getFileUrl();
     } else {
       setFileUrl(null);
-      setPdfData(null);
       setDocumentHtml(null);
-      setPdfDocument(null);
-      setCurrentPage(1);
-      setTotalPages(0);
       setZoom(100);
       setRotation(0);
     }
@@ -366,42 +280,37 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
             <div className="flex items-center justify-between p-3 bg-white border-b">
               <span className="text-sm font-medium text-gray-700">{document.file_name}</span>
               <div className="flex items-center gap-2">
-                {pdfDocument && (
-                  <>
-                    <Button variant="ghost" size="sm" onClick={() => goToPage(currentPage - 1)} disabled={currentPage <= 1}>
-                      <ChevronLeft className="w-4 h-4" />
-                    </Button>
-                    <span className="text-sm px-2">
-                      {currentPage} / {totalPages}
-                    </span>
-                    <Button variant="ghost" size="sm" onClick={() => goToPage(currentPage + 1)} disabled={currentPage >= totalPages}>
-                      <ChevronRight className="w-4 h-4" />
-                    </Button>
-                    <div className="w-px h-4 bg-gray-300 mx-2"></div>
-                  </>
-                )}
-                <Button variant="outline" size="sm" onClick={handleDownload}>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => {
+                    // Download PDF since inline viewing has security issues
+                    handleDownload();
+                  }}
+                >
                   <Download className="w-4 h-4 mr-1" />
-                  Download
+                  Download PDF
                 </Button>
               </div>
             </div>
             <div className="flex-1 bg-white m-2 rounded border overflow-auto flex items-center justify-center">
-              {pdfDocument ? (
-                <canvas 
-                  ref={canvasRef}
-                  className="max-w-full max-h-full shadow-sm"
-                  style={{ 
-                    transform: `rotate(${rotation}deg)`,
-                    transformOrigin: 'center'
-                  }}
-                />
-              ) : (
-                <div className="flex flex-col items-center justify-center gap-4">
-                  <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                  <p className="text-gray-600">Loading PDF...</p>
+              <div className="flex flex-col items-center justify-center gap-4 p-8">
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-red-100 rounded-lg flex items-center justify-center mb-4">
+                    <svg className="w-8 h-8 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">PDF Preview Not Available</h3>
+                  <p className="text-gray-600 mb-4">
+                    PDF preview is blocked by browser security. Please download the file to view it.
+                  </p>
+                  <Button onClick={handleDownload} className="w-full">
+                    <Download className="w-4 h-4 mr-2" />
+                    Download {document.file_name}
+                  </Button>
                 </div>
-              )}
+              </div>
             </div>
           </div>
         );
