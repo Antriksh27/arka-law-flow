@@ -159,8 +159,128 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
+  // Handle GET requests for downloading files
+  if (req.method === 'GET') {
+    console.log('📥 Starting download of file: ${filePath}');
+    
+    const url = new URL(req.url);
+    const clientName = url.searchParams.get('clientName');
+    const caseName = url.searchParams.get('caseName');
+    const docType = url.searchParams.get('docType');
+    const fileName = url.searchParams.get('fileName');
+    
+    console.log(`📥 Download params: clientName=${clientName}, caseName=${caseName}, docType=${docType}, fileName=${fileName}`);
+    
+    if (!clientName || !caseName || !docType || !fileName) {
+      return new Response(JSON.stringify({
+        error: 'Missing required query parameters: clientName, caseName, docType, fileName'
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
+    // WebDAV credentials and base URL
+    const webdavUsername = 'crm';
+    const webdavPassword = 'Hrulegal@711';
+    const baseUrl = 'https://server.hrulegal.com/dav/crmdata';
+    
+    // Build the WebDAV file path
+    const filePath = `/${clientName}/${caseName}/${docType}/${fileName}`;
+    
+    // Clean the file path to remove any leading /crmdata/ if present
+    const cleanFilePath = filePath.replace(/^\/crmdata\//, '');
+    console.log(`🧹 Cleaned file path from '${filePath}' to '${cleanFilePath}'`);
+    
+    console.log(`📋 Base URL: ${baseUrl}`);
+    console.log(`📋 Clean file path: ${cleanFilePath}`);
+    
+    const fullUrl = `${baseUrl}${cleanFilePath}`;
+    console.log(`📥 Downloading from: ${fullUrl}`);
+    
+    try {
+      const authHeader = `Basic ${btoa(`${webdavUsername}:${webdavPassword}`)}`;
+      
+      const response = await fetch(fullUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': authHeader,
+        },
+      });
+      
+      if (!response.ok) {
+        console.error(`❌ Download failed: ${response.status} ${response.statusText}`);
+        return new Response(JSON.stringify({
+          error: `Failed to download file: ${response.status} ${response.statusText}`,
+          filePath: cleanFilePath
+        }), {
+          status: response.status,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      // Get the file content
+      const fileContent = await response.arrayBuffer();
+      console.log(`✅ Successfully downloaded file, size: ${fileContent.byteLength} bytes`);
+      
+      // Get content type from the WebDAV response or determine from file extension
+      let contentType = response.headers.get('Content-Type') || 'application/octet-stream';
+      
+      // If no content type from WebDAV, determine from file extension
+      if (contentType === 'application/octet-stream' || contentType === 'text/plain') {
+        const extension = fileName.toLowerCase().split('.').pop();
+        switch (extension) {
+          case 'pdf':
+            contentType = 'application/pdf';
+            break;
+          case 'jpg':
+          case 'jpeg':
+            contentType = 'image/jpeg';
+            break;
+          case 'png':
+            contentType = 'image/png';
+            break;
+          case 'gif':
+            contentType = 'image/gif';
+            break;
+          case 'docx':
+            contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+            break;
+          case 'doc':
+            contentType = 'application/msword';
+            break;
+          case 'txt':
+            contentType = 'text/plain';
+            break;
+          default:
+            contentType = 'application/octet-stream';
+        }
+      }
+      
+      // Return the file with proper headers
+      return new Response(fileContent, {
+        status: 200,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': contentType,
+          'Content-Disposition': `inline; filename="${fileName}"`,
+        },
+      });
+      
+    } catch (error) {
+      console.error('❌ Error downloading file:', error);
+      return new Response(JSON.stringify({
+        error: `Failed to download file: ${error.message}`,
+        filePath: cleanFilePath
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+  }
+
   try {
-    // Parse the request body
+    // Parse the request body for POST requests
     const { operation, filename, content, filePath, clientName, caseName, category, docType, fileName, fileContent } = await req.json()
     console.log(`📋 Operation: ${operation || 'hierarchical-upload'}`);
     
