@@ -256,10 +256,31 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
             
             if (pydioError) {
               console.error('❌ WebDAV upload failed:', pydioError);
-              throw new Error(`WebDAV upload failed: ${pydioError.message}`);
+              
+              // Try to get more details from the error
+              let errorMessage = pydioError.message || 'Unknown error';
+              let errorDetails = '';
+              
+              if (pydioError.context) {
+                errorDetails += ` Context: ${JSON.stringify(pydioError.context)}`;
+              }
+              
+              throw new Error(`WebDAV upload failed: ${errorMessage}${errorDetails}`);
             } else if (!pydioResult?.success) {
-              console.error('❌ WebDAV upload failed:', pydioResult?.error);
-              throw new Error(`WebDAV upload failed: ${pydioResult?.error || 'Unknown error'}`);
+              console.error('❌ WebDAV upload failed:', pydioResult);
+              
+              let errorMessage = pydioResult?.error || 'Unknown error';
+              let errorDetails = '';
+              
+              if (pydioResult?.details) {
+                errorDetails += ` Details: ${pydioResult.details}`;
+              }
+              
+              if (pydioResult?.uploadUrl) {
+                errorDetails += ` Upload URL: ${pydioResult.uploadUrl}`;
+              }
+              
+              throw new Error(`WebDAV upload failed: ${errorMessage}${errorDetails}`);
             }
 
             console.log('✅ WebDAV upload successful:', pydioResult.message);
