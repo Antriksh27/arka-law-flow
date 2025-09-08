@@ -166,11 +166,13 @@ serve(async (req) => {
     
     // Handle new hierarchical structured upload format with category
     if (clientName && caseName && category && docType && fileName && fileContent) {
-      console.log(`📁 Hierarchical upload: /crmdata/${clientName}/${caseName}/${category}/${docType}/${fileName}`);
+      console.log(`📁 Hierarchical upload: /${clientName}/${caseName}/${category}/${docType}/${fileName}`);
       
       const webdavUrl = Deno.env.get('WEBDAV_URL');
       const webdavUsername = Deno.env.get('WEBDAV_USERNAME');
       const webdavPassword = Deno.env.get('WEBDAV_PASSWORD');
+      
+      console.log(`🔧 WebDAV Config - URL: ${webdavUrl ? 'SET' : 'MISSING'}, Username: ${webdavUsername ? 'SET' : 'MISSING'}, Password: ${webdavPassword ? 'SET' : 'MISSING'}`);
       
       if (!webdavUrl || !webdavUsername || !webdavPassword) {
         return new Response(JSON.stringify({
@@ -186,6 +188,7 @@ serve(async (req) => {
       try {
         // Ensure WebDAV URL is properly formatted
         const baseUrl = webdavUrl.endsWith('/') ? webdavUrl.slice(0, -1) : webdavUrl;
+        console.log(`🌐 Base URL: ${baseUrl}`);
         
         // Create folder structure: {clientName}/{caseName}/{category}/{docType}
         // Use URL encoding for folder names to handle special characters
@@ -251,6 +254,8 @@ serve(async (req) => {
           fileData = new TextEncoder().encode(fileContent);
         }
         
+        console.log(`🔐 Auth header: Basic ${btoa(`${webdavUsername}:${webdavPassword}`).substring(0, 10)}...`);
+        
         const uploadResponse = await fetch(fullUploadUrl, {
           method: 'PUT',
           headers: {
@@ -259,6 +264,8 @@ serve(async (req) => {
           },
           body: fileData,
         });
+        
+        console.log(`📡 Upload response: ${uploadResponse.status} ${uploadResponse.statusText}`);
         
         if (uploadResponse.ok || uploadResponse.status === 201 || uploadResponse.status === 204) {
           console.log('✅ File uploaded successfully to hierarchical structure');
