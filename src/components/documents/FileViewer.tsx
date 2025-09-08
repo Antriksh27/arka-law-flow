@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Download, X, ZoomIn, ZoomOut, RotateCw, ExternalLink } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { PDFViewer } from './PDFViewer';
+import { SimplePDFViewer } from './SimplePDFViewer';
 import * as mammoth from 'mammoth';
 
 interface FileViewerProps {
@@ -215,13 +215,11 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
 
       case 'pdf':
         return (
-          <div className="w-full h-full">
-            <PDFViewer 
-              fileUrl={fileUrl} 
-              pdfData={pdfData}
-              fileName={document.file_name}
-            />
-          </div>
+          <SimplePDFViewer
+            fileUrl={fileUrl!}
+            fileName={document.file_name}
+            onDownload={handleDownload}
+          />
         );
 
       case 'word':
