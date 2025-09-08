@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Download, X, ZoomIn, ZoomOut, RotateCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { PDFViewer } from './PDFViewer';
 
 interface FileViewerProps {
   open: boolean;
@@ -179,21 +180,11 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
 
       case 'pdf':
         return (
-          <div className="w-full h-full bg-gray-50 rounded-lg">
-            <object
-              data={fileUrl}
-              type="application/pdf"
-              className="w-full h-full rounded-lg"
-              title={document.file_name}
-            >
-              <div className="flex flex-col items-center justify-center h-full">
-                <p className="text-gray-600 mb-4">PDF cannot be displayed in this browser</p>
-                <Button onClick={handleDownload}>
-                  <Download className="w-4 h-4 mr-2" />
-                  Download PDF
-                </Button>
-              </div>
-            </object>
+          <div className="w-full h-full">
+            <PDFViewer 
+              fileUrl={fileUrl} 
+              fileName={document.file_name}
+            />
           </div>
         );
 
