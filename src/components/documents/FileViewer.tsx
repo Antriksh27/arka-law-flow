@@ -28,87 +28,78 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
     
     setLoading(true);
     try {
-      // For WebDAV files, try edge function first, but have better fallbacks
+      // For WebDAV files, use the new direct URL approach
       if (document.webdav_synced && document.webdav_path) {
-        try {
-          const { data: downloadResult, error } = await supabase.functions.invoke('pydio-webdav', {
-            body: {
-              operation: 'download',
-              filePath: document.webdav_path
-            }
-          });
+        // Import the WebDAV utilities
+        const { parseWebDAVPath, getWebDAVFileUrl } = await import('@/lib/webdavFileUtils');
+        
+        const webdavParams = parseWebDAVPath(document.webdav_path);
+        if (webdavParams) {
+          // Use direct URL for WebDAV files - this should work with CORS headers
+          const directUrl = getWebDAVFileUrl(webdavParams);
+          setFileUrl(directUrl);
           
-          if (!error && downloadResult?.success) {
-            // WebDAV worked - create blob URL
-            const base64Data = downloadResult.content;
-            const binaryData = atob(base64Data);
-            const bytes = new Uint8Array(binaryData.length);
-            for (let i = 0; i < binaryData.length; i++) {
-              bytes[i] = binaryData.charCodeAt(i);
+          // For Word documents, we still need to process with mammoth.js
+          if (getFileType() === 'word') {
+            try {
+              const response = await fetch(directUrl);
+              if (response.ok) {
+                const arrayBuffer = await response.arrayBuffer();
+                await processWordDocument(arrayBuffer);
+              }
+            } catch (wordError) {
+              console.warn('Word document processing failed:', wordError);
             }
-            const blob = new Blob([bytes], { type: document.file_type || 'application/octet-stream' });
-            const url = URL.createObjectURL(blob);
-            setFileUrl(url);
-            
-            // For Word documents, process with mammoth.js
-            if (getFileType() === 'word') {
-              await processWordDocument(bytes.buffer);
-            }
-            
-            return;
           }
-        } catch (webdavError) {
-          console.warn('WebDAV failed:', webdavError);
+          
+          return;
+        } else {
+          console.warn('Failed to parse WebDAV path:', document.webdav_path);
         }
-        
-        // WebDAV failed - use file_url directly (this used to work for images)
-        console.log('Using direct URL fallback:', document.file_url);
-        setFileUrl(document.file_url);
-        
-      } else {
-        // Supabase storage files
-        let filePath = document.file_url;
-        
-        if (filePath.includes('/storage/v1/object/public/documents/')) {
-          filePath = filePath.split('/storage/v1/object/public/documents/')[1];
-        }
-        
-        try {
-          const { data, error } = await supabase.storage
-            .from('documents')
-            .download(filePath);
-
-          if (!error && data) {
-            const url = URL.createObjectURL(data);
-            setFileUrl(url);
-            
-            if (getFileType() === 'word') {
-              const arrayBuffer = await data.arrayBuffer();
-              await processWordDocument(arrayBuffer);
-            }
-            return;
-          }
-        } catch (storageError) {
-          console.warn('Supabase storage failed:', storageError);
-        }
-        
-        // Storage failed - try signed URL
-        try {
-          const { data, error } = await supabase.storage
-            .from('documents')
-            .createSignedUrl(filePath, 3600);
-
-          if (!error && data) {
-            setFileUrl(data.signedUrl);
-            return;
-          }
-        } catch (signedUrlError) {
-          console.warn('Signed URL failed:', signedUrlError);
-        }
-        
-        // Last resort: use file_url directly
-        setFileUrl(document.file_url);
       }
+        
+      // Supabase storage files (fallback for legacy files)
+      let filePath = document.file_url;
+      
+      if (filePath.includes('/storage/v1/object/public/documents/')) {
+        filePath = filePath.split('/storage/v1/object/public/documents/')[1];
+      }
+      
+      try {
+        const { data, error } = await supabase.storage
+          .from('documents')
+          .download(filePath);
+
+        if (!error && data) {
+          const url = URL.createObjectURL(data);
+          setFileUrl(url);
+          
+          if (getFileType() === 'word') {
+            const arrayBuffer = await data.arrayBuffer();
+            await processWordDocument(arrayBuffer);
+          }
+          return;
+        }
+      } catch (storageError) {
+        console.warn('Supabase storage failed:', storageError);
+      }
+      
+      // Storage failed - try signed URL
+      try {
+        const { data, error } = await supabase.storage
+          .from('documents')
+          .createSignedUrl(filePath, 3600);
+
+        if (!error && data) {
+          setFileUrl(data.signedUrl);
+          return;
+        }
+      } catch (signedUrlError) {
+        console.warn('Signed URL failed:', signedUrlError);
+      }
+      
+      // Last resort: use file_url directly
+      setFileUrl(document.file_url);
       
     } catch (error) {
       console.error('File loading error:', error);
@@ -135,35 +126,22 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
       // Check if this is a WebDAV file first
       if (document.webdav_synced && document.webdav_path) {
         try {
-          const { data: downloadResult, error } = await supabase.functions.invoke('pydio-webdav', {
-            body: {
-              operation: 'download',
-              filePath: document.webdav_path
-            }
-          });
+          // Import the WebDAV utilities
+          const { parseWebDAVPath, getWebDAVFileUrl } = await import('@/lib/webdavFileUtils');
           
-          if (error || !downloadResult?.success) {
-            throw new Error('WebDAV download failed');
+          const webdavParams = parseWebDAVPath(document.webdav_path);
+          if (webdavParams) {
+            // Use direct download URL
+            const downloadUrl = getWebDAVFileUrl(webdavParams);
+            const a = window.document.createElement('a');
+            a.href = downloadUrl;
+            a.download = document.file_name;
+            a.target = '_blank';
+            window.document.body.appendChild(a);
+            a.click();
+            window.document.body.removeChild(a);
+            return;
           }
-          
-          // Create a blob from the base64 content
-          const base64Data = downloadResult.content;
-          const binaryData = atob(base64Data);
-          const bytes = new Uint8Array(binaryData.length);
-          for (let i = 0; i < binaryData.length; i++) {
-            bytes[i] = binaryData.charCodeAt(i);
-          }
-          const blob = new Blob([bytes], { type: document.file_type || 'application/octet-stream' });
-          
-          const url = URL.createObjectURL(blob);
-          const a = window.document.createElement('a');
-          a.href = url;
-          a.download = document.file_name;
-          window.document.body.appendChild(a);
-          a.click();
-          window.document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-          return;
         } catch (webdavError) {
           console.warn('WebDAV download failed, trying fallback');
         }

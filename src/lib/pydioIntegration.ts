@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { getWebDAVFileUrl, parseWebDAVPath, WebDAVFileParams } from './webdavFileUtils';
 
 export interface WebDAVUploadParams {
   filename: string;
@@ -17,6 +18,26 @@ export interface WebDAVResponse {
   path?: string;
   error?: string;
   details?: string;
+}
+
+/**
+ * Get a direct URL for a WebDAV file for preview/download
+ * This uses the new GET endpoint that returns files directly with CORS headers
+ */
+export function getFileUrl(clientName: string, caseName: string, docType: string, fileName: string): string {
+  return getWebDAVFileUrl({ clientName, caseName, docType, fileName });
+}
+
+/**
+ * Get file URL from document object
+ */
+export function getFileUrlFromDocument(document: any): string | null {
+  if (!document?.webdav_path) return null;
+  
+  const params = parseWebDAVPath(document.webdav_path);
+  if (!params) return null;
+  
+  return getWebDAVFileUrl(params);
 }
 
 /**

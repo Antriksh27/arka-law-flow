@@ -7,9 +7,10 @@ import { Badge } from '@/components/ui/badge';
 import { FileText, Upload, Download, Eye, Star, StarOff } from 'lucide-react';
 import { format } from 'date-fns';
 import { UploadDocumentDialog } from '../documents/UploadDocumentDialog';
-import { FileViewer } from '../documents/FileViewer';
+import { FilePreviewModal } from '../documents/FilePreviewModal';
 import { useToast } from '@/hooks/use-toast';
 import { getFileIcon } from '@/lib/fileUtils';
+import { isWebDAVDocument, getWebDAVFileUrl, parseWebDAVPath } from '@/lib/webdavFileUtils';
 interface CaseDocumentsProps {
   caseId: string;
 }
@@ -84,6 +85,28 @@ export const CaseDocuments: React.FC<CaseDocumentsProps> = ({
   };
   const handleDownload = async (document: any) => {
     try {
+      if (isWebDAVDocument(document)) {
+        // For WebDAV files, use the direct URL
+        const webdavParams = parseWebDAVPath(document.webdav_path);
+        if (webdavParams) {
+          const downloadUrl = getWebDAVFileUrl(webdavParams);
+          const link = window.document.createElement('a');
+          link.href = downloadUrl;
+          link.download = document.file_name;
+          link.target = '_blank';
+          window.document.body.appendChild(link);
+          link.click();
+          window.document.body.removeChild(link);
+          
+          toast({
+            title: "Download Started",
+            description: `Downloading ${document.file_name}`,
+          });
+          return;
+        }
+      }
+      
+      // Fallback for non-WebDAV files
       const {
         data,
         error
@@ -97,6 +120,11 @@ export const CaseDocuments: React.FC<CaseDocumentsProps> = ({
       a.click();
       window.document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Download Started",
+        description: `Downloading ${document.file_name}`,
+      });
     } catch (error) {
       console.error('Download error:', error);
       toast({
@@ -210,6 +238,6 @@ export const CaseDocuments: React.FC<CaseDocumentsProps> = ({
 
       <UploadDocumentDialog open={showUploadDialog} onClose={() => setShowUploadDialog(false)} caseId={caseId} onUploadSuccess={handleUploadSuccess} />
 
-      <FileViewer open={showFileViewer} onClose={() => setShowFileViewer(false)} document={selectedDocument} />
+      <FilePreviewModal open={showFileViewer} onClose={() => setShowFileViewer(false)} document={selectedDocument} />
     </>;
 };
