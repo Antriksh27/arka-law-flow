@@ -24,22 +24,47 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
     
     setLoading(true);
     try {
-      // Extract the file path from the public URL
-      // file_url format: https://xxx.supabase.co/storage/v1/object/public/documents/path/to/file.pdf
-      // We need just: path/to/file.pdf
-      let filePath = document.file_url;
-      
-      // If it's a full URL, extract the path after the bucket name
-      if (filePath.includes('/storage/v1/object/public/documents/')) {
-        filePath = filePath.split('/storage/v1/object/public/documents/')[1];
-      }
-      
-      const { data, error } = await supabase.storage
-        .from('documents')
-        .createSignedUrl(filePath, 3600); // 1 hour expiry
+      // Check if this is a WebDAV/Pydio file
+      if (document.webdav_synced && document.webdav_path) {
+        // For WebDAV files, we need to create a download URL through our edge function
+        console.log('Loading WebDAV file:', document.webdav_path);
+        
+        const { data: downloadResult, error } = await supabase.functions.invoke('pydio-webdav', {
+          body: {
+            operation: 'download',
+            filePath: document.webdav_path
+          }
+        });
+        
+        if (error || !downloadResult?.success) {
+          throw new Error(downloadResult?.error || 'Failed to download from WebDAV');
+        }
+        
+        // Create a blob URL from the returned content
+        const base64Data = downloadResult.content;
+        const binaryData = atob(base64Data);
+        const bytes = new Uint8Array(binaryData.length);
+        for (let i = 0; i < binaryData.length; i++) {
+          bytes[i] = binaryData.charCodeAt(i);
+        }
+        const blob = new Blob([bytes], { type: document.file_type });
+        const url = URL.createObjectURL(blob);
+        setFileUrl(url);
+      } else {
+        // Legacy Supabase storage files
+        let filePath = document.file_url;
+        
+        if (filePath.includes('/storage/v1/object/public/documents/')) {
+          filePath = filePath.split('/storage/v1/object/public/documents/')[1];
+        }
+        
+        const { data, error } = await supabase.storage
+          .from('documents')
+          .createSignedUrl(filePath, 3600);
 
-      if (error) throw error;
-      setFileUrl(data.signedUrl);
+        if (error) throw error;
+        setFileUrl(data.signedUrl);
+      }
     } catch (error) {
       console.error('Error getting file URL:', error);
       toast({

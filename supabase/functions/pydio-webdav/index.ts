@@ -550,7 +550,6 @@ serve(async (req) => {
 
         console.log(`📥 Downloading from: ${downloadUrl}`);
 
-        // Download from WebDAV using GET method
         const downloadResponse = await fetch(downloadUrl, {
           method: 'GET',
           headers: {
@@ -572,13 +571,16 @@ serve(async (req) => {
           )
         }
 
-        const fileContent = await downloadResponse.text();
+        // Get file as array buffer for binary files, then convert to base64
+        const fileBuffer = await downloadResponse.arrayBuffer();
+        const base64Content = btoa(String.fromCharCode(...new Uint8Array(fileBuffer)));
 
         return new Response(
           JSON.stringify({
             success: true,
             message: 'File downloaded successfully from WebDAV',
-            content: fileContent
+            content: base64Content,
+            contentType: downloadResponse.headers.get('content-type') || 'application/octet-stream'
           }),
           {
             status: 200,

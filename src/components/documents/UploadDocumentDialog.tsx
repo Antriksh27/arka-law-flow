@@ -219,14 +219,26 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
               console.log('Binary file converted to base64, length:', fileContent.length);
             }
 
-            // Get client and case names for folder structure
+            // Get client and case names for folder structure  
             const selectedCase = cases.find(c => c.id === selectedCaseId);
-            const clientName = selectedCaseId !== 'all' ? 
-              (selectedCase ? 'Client' : 'Unknown Client') : 
-              'General';
-            const caseName = selectedCaseId !== 'all' ? 
-              (selectedCase?.title || 'Unknown Case') : 
-              'General Documents';
+            let clientName = 'General';
+            let caseName = 'General Documents';
+            
+            if (selectedCaseId && selectedCaseId !== 'all') {
+              // Get actual client name from the URL (we're on client details page)
+              const currentPath = window.location.pathname;
+              const clientIdFromUrl = currentPath.match(/\/clients\/([a-f0-9-]+)/)?.[1];
+              
+              if (clientIdFromUrl) {
+                const { data: clientData } = await supabase
+                  .from('clients')
+                  .select('full_name')
+                  .eq('id', clientIdFromUrl)
+                  .single();
+                clientName = clientData?.full_name || 'Unknown Client';
+              }
+              caseName = selectedCase?.title || 'Unknown Case';
+            }
             const category = data.document_category ? categoryLabels[data.document_category as keyof typeof categoryLabels] : 'Others';
             const docType = data.document_type || data.custom_document_type || 'Unspecified';
             
