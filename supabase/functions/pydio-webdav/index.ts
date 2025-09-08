@@ -602,9 +602,26 @@ serve(async (req) => {
       try {
         // Ensure WebDAV URL ends with /
         const baseUrl = webdavUrl.endsWith('/') ? webdavUrl : `${webdavUrl}/`;
-        const downloadUrl = `${baseUrl}${filePath}`;
+        
+        // Clean the file path to avoid duplicate /crmdata/ in the URL
+        let cleanFilePath = filePath;
+        
+        // If the base URL already contains 'crmdata' and the file path starts with '/crmdata/', remove it
+        if (baseUrl.includes('/crmdata/') && cleanFilePath.startsWith('/crmdata/')) {
+          cleanFilePath = cleanFilePath.substring('/crmdata/'.length);
+          console.log(`🧹 Cleaned file path from '${filePath}' to '${cleanFilePath}'`);
+        }
+        
+        // Remove leading slash if present to avoid double slashes
+        if (cleanFilePath.startsWith('/')) {
+          cleanFilePath = cleanFilePath.substring(1);
+        }
+        
+        const downloadUrl = `${baseUrl}${cleanFilePath}`;
 
         console.log(`📥 Downloading from: ${downloadUrl}`);
+        console.log(`📋 Base URL: ${baseUrl}`);
+        console.log(`📋 Clean file path: ${cleanFilePath}`);
 
         const downloadResponse = await fetch(downloadUrl, {
           method: 'GET',
@@ -614,11 +631,17 @@ serve(async (req) => {
         });
 
         if (!downloadResponse.ok) {
+          console.error(`❌ Download failed: ${downloadResponse.status} ${downloadResponse.statusText}`);
+          console.error(`❌ Attempted URL: ${downloadUrl}`);
+          
           return new Response(
             JSON.stringify({
               success: false,
               message: 'Failed to download from WebDAV',
-              error: `WebDAV error: ${downloadResponse.status} ${downloadResponse.statusText}`
+              error: `WebDAV error: ${downloadResponse.status} ${downloadResponse.statusText}`,
+              downloadUrl: downloadUrl,
+              originalPath: filePath,
+              cleanedPath: cleanFilePath
             }),
             {
               status: downloadResponse.status,
@@ -643,6 +666,8 @@ serve(async (req) => {
         
         const base64Content = btoa(binaryString);
 
+        console.log(`✅ Successfully downloaded file, size: ${uint8Array.length} bytes`);
+
         return new Response(
           JSON.stringify({
             success: true,
@@ -657,6 +682,7 @@ serve(async (req) => {
         )
 
       } catch (error) {
+        console.error(`❌ Download error: ${error.message}`);
         return new Response(
           JSON.stringify({
             success: false,
