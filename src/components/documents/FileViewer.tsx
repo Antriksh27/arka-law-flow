@@ -1,11 +1,15 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Download, X, ZoomIn, ZoomOut, RotateCw, ExternalLink } from 'lucide-react';
+import { Download, X, ZoomIn, ZoomOut, RotateCw, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import * as mammoth from 'mammoth';
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Configure PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.js`;
 
 interface FileViewerProps {
   open: boolean;
@@ -20,7 +24,69 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
   const [loading, setLoading] = useState(false);
   const [zoom, setZoom] = useState(100);
   const [rotation, setRotation] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [pdfDocument, setPdfDocument] = useState<any>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const { toast } = useToast();
+
+  const renderPdfPage = async (page: any) => {
+    if (!canvasRef.current) return;
+    
+    const canvas = canvasRef.current;
+    const context = canvas.getContext('2d');
+    if (!context) return;
+
+    const viewport = page.getViewport({ scale: zoom / 100, rotation });
+    canvas.height = viewport.height;
+    canvas.width = viewport.width;
+
+    const renderContext = {
+      canvasContext: context,
+      viewport: viewport,
+    };
+
+    try {
+      await page.render(renderContext).promise;
+    } catch (error) {
+      console.error('Error rendering PDF page:', error);
+    }
+  };
+
+  const loadPdfDocument = async (arrayBuffer: ArrayBuffer) => {
+    try {
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      setPdfDocument(pdf);
+      setTotalPages(pdf.numPages);
+      setCurrentPage(1);
+      
+      // Render first page
+      const page = await pdf.getPage(1);
+      await renderPdfPage(page);
+    } catch (error) {
+      console.error('Error loading PDF document:', error);
+      toast({
+        title: "PDF Load Error",
+        description: "Could not load PDF document",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Re-render page when zoom or rotation changes
+  useEffect(() => {
+    if (pdfDocument && currentPage) {
+      pdfDocument.getPage(currentPage).then(renderPdfPage);
+    }
+  }, [zoom, rotation, currentPage, pdfDocument]);
+
+  const goToPage = async (pageNum: number) => {
+    if (!pdfDocument || pageNum < 1 || pageNum > totalPages) return;
+    
+    setCurrentPage(pageNum);
+    const page = await pdfDocument.getPage(pageNum);
+    await renderPdfPage(page);
+  };
 
   const getFileUrl = async () => {
     if (!document?.file_url) return;
@@ -49,10 +115,11 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
             const url = URL.createObjectURL(blob);
             setFileUrl(url);
             
-            // For PDFs, store raw data
+            // For PDFs, store raw data and load with PDF.js
             const fileType = getFileType();
             if (fileType === 'pdf') {
               setPdfData(bytes.buffer);
+              await loadPdfDocument(bytes.buffer);
             }
             
             // For Word documents, process with mammoth.js
@@ -91,6 +158,7 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
             if (fileType === 'pdf') {
               const arrayBuffer = await data.arrayBuffer();
               setPdfData(arrayBuffer);
+              await loadPdfDocument(arrayBuffer);
             }
             
             if (fileType === 'word') {
@@ -137,6 +205,9 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
       setFileUrl(null);
       setPdfData(null);
       setDocumentHtml(null);
+      setPdfDocument(null);
+      setCurrentPage(1);
+      setTotalPages(0);
       setZoom(100);
       setRotation(0);
     }
@@ -290,75 +361,47 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
         );
 
       case 'pdf':
-        if (!fileUrl) {
-          return (
-            <div className="flex flex-col items-center justify-center h-full bg-gray-50 rounded-lg gap-4">
-              <p className="text-gray-600 mb-2">PDF could not be loaded</p>
-              <Button onClick={handleDownload} variant="outline">
-                <Download className="w-4 h-4 mr-2" />
-                Download PDF
-              </Button>
-            </div>
-          );
-        }
-        
-        // Debug PDF data
-        console.log('PDF fileUrl:', fileUrl);
-        console.log('PDF document type:', document.file_type);
-        console.log('PDF file size:', document.file_size);
-        
         return (
           <div className="w-full h-full bg-gray-50 rounded-lg flex flex-col">
             <div className="flex items-center justify-between p-3 bg-white border-b">
               <span className="text-sm font-medium text-gray-700">{document.file_name}</span>
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => {
-                    // Create a simple PDF viewer page
-                    const pdfWindow = window.open('', '_blank');
-                    if (pdfWindow) {
-                      pdfWindow.document.write(`
-                        <html>
-                          <head>
-                            <title>${document.file_name} - PDF Viewer</title>
-                            <style>
-                              body { margin: 0; padding: 0; background: #f0f0f0; }
-                              iframe { width: 100vw; height: 100vh; border: none; }
-                            </style>
-                          </head>
-                          <body>
-                            <iframe src="${fileUrl}" type="application/pdf"></iframe>
-                          </body>
-                        </html>
-                      `);
-                      pdfWindow.document.close();
-                    }
-                  }}
-                >
-                  <ExternalLink className="w-4 h-4 mr-1" />
-                  Open in New Tab
-                </Button>
+              <div className="flex items-center gap-2">
+                {pdfDocument && (
+                  <>
+                    <Button variant="ghost" size="sm" onClick={() => goToPage(currentPage - 1)} disabled={currentPage <= 1}>
+                      <ChevronLeft className="w-4 h-4" />
+                    </Button>
+                    <span className="text-sm px-2">
+                      {currentPage} / {totalPages}
+                    </span>
+                    <Button variant="ghost" size="sm" onClick={() => goToPage(currentPage + 1)} disabled={currentPage >= totalPages}>
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                    <div className="w-px h-4 bg-gray-300 mx-2"></div>
+                  </>
+                )}
                 <Button variant="outline" size="sm" onClick={handleDownload}>
                   <Download className="w-4 h-4 mr-1" />
                   Download
                 </Button>
               </div>
             </div>
-            <div className="flex-1 relative bg-white m-2 rounded border overflow-hidden">
-              {/* PDF iframe without loading overlay */}
-              <iframe
-                src={fileUrl}
-                className="absolute inset-0 w-full h-full border-none"
-                title={`PDF: ${document.file_name}`}
-                onLoad={() => {
-                  console.log('PDF iframe loaded successfully for:', document.file_name);
-                }}
-                onError={(e) => {
-                  console.error('PDF iframe failed to load:', e);
-                }}
-              />
+            <div className="flex-1 bg-white m-2 rounded border overflow-auto flex items-center justify-center">
+              {pdfDocument ? (
+                <canvas 
+                  ref={canvasRef}
+                  className="max-w-full max-h-full shadow-sm"
+                  style={{ 
+                    transform: `rotate(${rotation}deg)`,
+                    transformOrigin: 'center'
+                  }}
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center gap-4">
+                  <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                  <p className="text-gray-600">Loading PDF...</p>
+                </div>
+              )}
             </div>
           </div>
         );
