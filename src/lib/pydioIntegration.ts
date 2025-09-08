@@ -1,37 +1,22 @@
-import { parseWebDAVPath } from './webdavFileUtils';
-import { callSupabaseFunction } from './supabaseEdgeFunction';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface WebDAVUploadParams {
-  clientName: string;
-  caseName: string;
-  docType: string;
   filename: string;
-  content: string; // base64 encoded file content
+  content: string;
 }
 
 export interface WebDAVDownloadParams {
-  clientName: string;
-  caseName: string;
-  docType: string;
-  filename: string;
+  filePath: string;
 }
 
 export interface WebDAVResponse {
   success: boolean;
-  message?: string;
+  message: string;
+  data?: any;
+  content?: string;
+  path?: string;
+  error?: string;
   details?: string;
-}
-
-// Legacy function - now just returns a placeholder
-export function getFileUrl(clientName: string, caseName: string, docType: string, fileName: string): string {
-  console.warn('getFileUrl is deprecated - use downloadWebDAVFileDirectly instead');
-  return 'webdav-placeholder';
-}
-
-// Legacy function - now just returns null
-export function getFileUrlFromDocument(document: any): string | null {
-  console.warn('getFileUrlFromDocument is deprecated - use downloadWebDAVFileDirectly instead');
-  return null;
 }
 
 /**
@@ -39,74 +24,145 @@ export function getFileUrlFromDocument(document: any): string | null {
  */
 export async function uploadFileToWebDAV(params: WebDAVUploadParams): Promise<WebDAVResponse> {
   try {
-    console.log('🔧 Starting WebDAV integration - calling pydio-webdav edge function');
+    console.log('🔧 Starting WebDAV integration - calling uploadToPydio edge function');
     console.log('📁 File params:', { filename: params.filename, contentLength: params.content.length });
     
-    const result = await callSupabaseFunction('pydio-webdav', 'POST', {
-      operation: 'upload',
-      clientName: params.clientName,
-      caseName: params.caseName,
-      docType: params.docType,
-      fileName: params.filename,
-      fileContent: params.content
+    const { data, error } = await supabase.functions.invoke('uploadToPydio', {
+      body: {
+        operation: 'upload',
+        filename: params.filename,
+        content: params.content,
+      },
     });
 
-    console.log('✅ WebDAV upload result:', result);
-    
-    if (result && result.success) {
-      return {
-        success: true,
-        message: result.message || 'File uploaded successfully to WebDAV'
-      };
-    } else {
+    console.log('📡 Edge function response - data:', data);
+    console.log('📡 Edge function response - error:', error);
+
+    if (error) {
+      console.error('❌ Supabase function invoke error:', error);
       return {
         success: false,
-        message: result?.message || 'Upload failed',
-        details: result?.details
+        message: 'Failed to upload file',
+        error: error.message,
+        details: JSON.stringify(error)
       };
     }
+
+    return data;
   } catch (error) {
-    console.error('❌ WebDAV upload error:', error);
+    console.error('Unexpected error uploading to WebDAV:', error);
     return {
       success: false,
-      message: 'WebDAV upload failed',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      message: 'Unexpected error occurred',
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
 
+/**
+ * Download a file from WebDAV
+ */
 export async function downloadFileFromWebDAV(params: WebDAVDownloadParams): Promise<WebDAVResponse> {
   try {
-    const result = await callSupabaseFunction('pydio-webdav', 'POST', {
-      operation: 'download',
-      clientName: params.clientName,
-      caseName: params.caseName,
-      docType: params.docType,
-      fileName: params.filename
+    const { data, error } = await supabase.functions.invoke('uploadToPydio', {
+      body: {
+        operation: 'download',
+        filePath: params.filePath,
+      },
     });
 
-    if (result && result.success) {
-      return {
-        success: true,
-        message: 'File downloaded successfully from WebDAV',
-        details: result.content
-      };
-    } else {
+    if (error) {
+      console.error('Error downloading from WebDAV:', error);
       return {
         success: false,
-        message: result?.message || 'Download failed'
+        message: 'Failed to download file',
+        error: error.message,
       };
     }
+
+    return data;
   } catch (error) {
-    console.error('WebDAV download error:', error);
+    console.error('Unexpected error downloading from WebDAV:', error);
     return {
       success: false,
-      message: 'WebDAV download failed',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      message: 'Unexpected error occurred',
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
 
-// Legacy aliases
+/**
+ * Example usage for uploading a file
+ */
+export async function exampleUpload() {
+  const result = await uploadFileToWebDAV({
+    filename: 'test-document.txt',
+    content: 'This is test content for the document.',
+  });
+
+  if (result.success) {
+    console.log('Upload successful:', result.message);
+    return result.data;
+  } else {
+    console.error('Upload failed:', result.error);
+    throw new Error(result.error || 'Upload failed');
+  }
+}
+
+/**
+ * Example usage for downloading a file
+ */
+export async function exampleDownload() {
+  const result = await downloadFileFromWebDAV({
+    filePath: '/documents/test-document.txt',
+  });
+
+  if (result.success) {
+    console.log('Download successful:', result.message);
+    console.log('File content:', result.content);
+    return result.content;
+  } else {
+    console.error('Download failed:', result.error);
+    throw new Error(result.error || 'Download failed');
+  }
+}
+
+/**
+ * Upload document content from the existing document system to WebDAV
+ */
+export async function syncDocumentToWebDAV(document: {
+  file_name: string;
+  file_url: string;
+}): Promise<WebDAVResponse> {
+  try {
+    // First, fetch the content from Supabase storage
+    const { data: fileData, error: downloadError } = await supabase.storage
+      .from('documents')
+      .download(document.file_url);
+
+    if (downloadError) {
+      throw new Error(`Failed to download from Supabase: ${downloadError.message}`);
+    }
+
+    // Convert blob to text
+    const content = await fileData.text();
+
+    // Upload to WebDAV
+    return await uploadFileToWebDAV({
+      filename: document.file_name,
+      content,
+    });
+  } catch (error) {
+    console.error('Error syncing document to WebDAV:', error);
+    return {
+      success: false,
+      message: 'Failed to sync document to WebDAV',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
+// Legacy function names for backward compatibility
 export const uploadFileToPydio = uploadFileToWebDAV;
 export const downloadFileFromPydio = downloadFileFromWebDAV;
+export const syncDocumentToPydio = syncDocumentToWebDAV;

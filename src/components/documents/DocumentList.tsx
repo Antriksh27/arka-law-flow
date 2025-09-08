@@ -7,7 +7,7 @@ import { format } from 'date-fns';
 import { getFileIcon } from '@/lib/fileUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { UnifiedDocumentViewer } from './UnifiedDocumentViewer';
+import { FileViewer } from './FileViewer';
 import { DeleteDocumentDialog } from './DeleteDocumentDialog';
 
 interface DocumentListProps {
@@ -200,7 +200,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
         </Table>
       </div>
 
-      <UnifiedDocumentViewer
+      <FileViewer
         open={showFileViewer}
         onClose={() => setShowFileViewer(false)}
         document={selectedDocument}

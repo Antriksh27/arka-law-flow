@@ -7,10 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { FileText, Upload, Download, Eye, Star, StarOff } from 'lucide-react';
 import { format } from 'date-fns';
 import { UploadDocumentDialog } from '../documents/UploadDocumentDialog';
-import { UnifiedDocumentViewer } from '../documents/UnifiedDocumentViewer';
+import { FileViewer } from '../documents/FileViewer';
 import { useToast } from '@/hooks/use-toast';
 import { getFileIcon } from '@/lib/fileUtils';
-import { isWebDAVDocument, parseWebDAVPath, downloadWebDAVFileDirectly } from '@/lib/webdavFileUtils';
 interface CaseDocumentsProps {
   caseId: string;
 }
@@ -85,24 +84,6 @@ export const CaseDocuments: React.FC<CaseDocumentsProps> = ({
   };
   const handleDownload = async (document: any) => {
     try {
-        if (isWebDAVDocument(document)) {
-          // For WebDAV files, use the direct download approach
-          const webdavParams = parseWebDAVPath(document.webdav_path);
-          if (webdavParams) {
-            try {
-              await downloadWebDAVFileDirectly(webdavParams, document.file_name);
-              toast({
-                title: "Download Started",
-                description: `Downloading ${document.file_name}`,
-              });
-              return;
-            } catch (webdavError) {
-              console.error('WebDAV download failed:', webdavError);
-            }
-          }
-        }
-      
-      // Fallback for non-WebDAV files
       const {
         data,
         error
@@ -116,11 +97,6 @@ export const CaseDocuments: React.FC<CaseDocumentsProps> = ({
       a.click();
       window.document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      
-      toast({
-        title: "Download Started",
-        description: `Downloading ${document.file_name}`,
-      });
     } catch (error) {
       console.error('Download error:', error);
       toast({
@@ -234,6 +210,6 @@ export const CaseDocuments: React.FC<CaseDocumentsProps> = ({
 
       <UploadDocumentDialog open={showUploadDialog} onClose={() => setShowUploadDialog(false)} caseId={caseId} onUploadSuccess={handleUploadSuccess} />
 
-      <UnifiedDocumentViewer open={showFileViewer} onClose={() => setShowFileViewer(false)} document={selectedDocument} />
+      <FileViewer open={showFileViewer} onClose={() => setShowFileViewer(false)} document={selectedDocument} />
     </>;
 };
