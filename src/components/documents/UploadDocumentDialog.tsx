@@ -196,46 +196,77 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
         
         const uploadPromises = selectedFiles.map(async file => {
           try {
-            // Generate unique filename
-            const timestamp = Date.now();
-            const randomId = Math.random().toString(36).substring(2);
-            const fileExtension = file.name.split('.').pop();
-            const filename = `${timestamp}-${randomId}.${fileExtension}`;
+            console.log(`Uploading file: ${file.name} directly to Pydio`);
 
-            console.log(`Uploading file: ${file.name} as ${filename}`);
-
-            // Upload file to storage
-            const { data: uploadData, error: uploadError } = await supabase.storage
-              .from('documents')
-              .upload(filename, file, {
-                cacheControl: '3600',
-                upsert: false
-              });
-            
-            if (uploadError) {
-              console.error('Storage upload error:', uploadError);
-              throw uploadError;
+            // Handle different file types for Pydio upload
+            let fileContent: string;
+            if (file.type.startsWith('text/') || file.name.endsWith('.txt')) {
+              fileContent = await file.text();
+              console.log('Text file content length:', fileContent.length);
+            } else {
+              // For binary files, convert to base64
+              const arrayBuffer = await file.arrayBuffer();
+              const uint8Array = new Uint8Array(arrayBuffer);
+              fileContent = btoa(String.fromCharCode(...uint8Array));
+              console.log('Binary file converted to base64, length:', fileContent.length);
             }
 
-            console.log('File uploaded to storage:', uploadData.path);
+            // Get client and case names for folder structure
+            const selectedCase = cases.find(c => c.id === selectedCaseId);
+            const clientName = selectedCaseId !== 'all' ? 
+              (selectedCase ? 'Client' : 'Unknown Client') : 
+              'General';
+            const caseName = selectedCaseId !== 'all' ? 
+              (selectedCase?.title || 'Unknown Case') : 
+              'General Documents';
+            const category = data.document_category ? categoryLabels[data.document_category as keyof typeof categoryLabels] : 'Others';
+            const docType = data.document_type || data.custom_document_type || 'Unspecified';
+            
+            console.log('Calling pydio-webdav function...');
+            const { data: pydioResult, error: pydioError } = await supabase.functions.invoke('pydio-webdav', {
+              body: {
+                clientName,
+                caseName,
+                category,
+                docType,
+                fileName: file.name,
+                fileContent: fileContent
+              }
+            });
+            
+            console.log('Pydio result:', pydioResult);
+            console.log('Pydio error:', pydioError);
+            
+            if (pydioError) {
+              console.error('❌ Pydio upload failed:', pydioError);
+              throw new Error(`Pydio upload failed: ${pydioError.message}`);
+            } else if (!pydioResult?.success) {
+              console.error('❌ Pydio upload failed:', pydioResult?.error);
+              throw new Error(`Pydio upload failed: ${pydioResult?.error || 'Unknown error'}`);
+            }
 
-            // Insert document record directly without relying on triggers
+            console.log('✅ Pydio upload successful:', pydioResult.message);
+
+            // Insert document record in database (without Supabase storage URL)
             const documentData = {
               file_name: file.name,
-              file_url: uploadData.path,
-              file_type: fileExtension?.toLowerCase() || null,
+              file_url: pydioResult.path || `${clientName}/${caseName}/${category}/${docType}/${file.name}`, // Use Pydio path
+              file_type: file.name.split('.').pop()?.toLowerCase() || null,
               file_size: file.size,
               case_id: data.case_id === 'all' ? null : data.case_id,
               uploaded_by: user.id,
               is_evidence: data.is_evidence,
               uploaded_at: new Date().toISOString(),
-              firm_id: firmId, // Set explicitly
+              firm_id: firmId,
               folder_name: data.case_id === 'all' ? 'General Documents' : null,
               document_type_id: null, // Using new category/type system
               notes: data.notes || null,
               confidential: data.confidential || false,
               original_copy_retained: data.original_copy_retained || false,
-              certified_copy: data.certified_copy || false
+              certified_copy: data.certified_copy || false,
+              webdav_synced: true, // Mark as synced to WebDAV
+              webdav_path: pydioResult.path,
+              synced_at: new Date().toISOString()
             };
 
             console.log('Creating document record:', documentData);
@@ -248,76 +279,10 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
             
             if (insertError) {
               console.error('Database insert error:', insertError);
-              // Clean up uploaded file on error
-              try {
-                await supabase.storage.from('documents').remove([uploadData.path]);
-              } catch (cleanupError) {
-                console.error('Failed to cleanup uploaded file:', cleanupError);
-              }
               throw insertError;
             }
 
             console.log('Document record created successfully:', insertData);
-            
-            // Also upload to Pydio
-            try {
-              console.log('Starting Pydio upload for:', file.name);
-              
-              // Handle different file types
-              let fileContent: string;
-              if (file.type.startsWith('text/') || file.name.endsWith('.txt')) {
-                fileContent = await file.text();
-                console.log('Text file content length:', fileContent.length);
-              } else {
-                // For binary files, convert to base64
-                const arrayBuffer = await file.arrayBuffer();
-                const uint8Array = new Uint8Array(arrayBuffer);
-                fileContent = btoa(String.fromCharCode(...uint8Array));
-                console.log('Binary file converted to base64, length:', fileContent.length);
-              }
-              
-              console.log('Calling pydio-webdav function...');
-              
-              // Get client and case names for folder structure
-              const selectedCase = cases.find(c => c.id === selectedCaseId);
-              const clientName = selectedCaseId !== 'all' ? 
-                (selectedCase ? 'Client' : 'Unknown Client') : 
-                'General';
-              const caseName = selectedCaseId !== 'all' ? 
-                (selectedCase?.title || 'Unknown Case') : 
-                'General Documents';
-              const category = data.document_category ? categoryLabels[data.document_category as keyof typeof categoryLabels] : 'Others';
-              const docType = data.document_type || data.custom_document_type || 'Unspecified';
-              
-              const { data: pydioResult, error: pydioError } = await supabase.functions.invoke('pydio-webdav', {
-                body: {
-                  clientName,
-                  caseName,
-                  category,
-                  docType,
-                  fileName: file.name,
-                  fileContent: fileContent
-                }
-              });
-              
-              console.log('Pydio result:', pydioResult);
-              console.log('Pydio error:', pydioError);
-              
-              if (pydioError) {
-                console.error('❌ Pydio upload failed:', pydioError);
-                // Don't fail the entire upload if Pydio fails, just log the error
-              } else if (pydioResult?.success) {
-                console.log('✅ Pydio upload successful:', pydioResult.message);
-              } else {
-                console.error('❌ Pydio upload failed:', pydioResult?.error);
-                // Don't fail the entire upload if Pydio fails, just log the error
-              }
-            } catch (pydioError) {
-              console.error('❌ Exception during Pydio upload:', pydioError);
-              console.error('Pydio error stack:', pydioError instanceof Error ? pydioError.stack : 'No stack trace');
-              // Don't fail the entire upload if Pydio fails
-            }
-            
             return insertData;
           } catch (error) {
             console.error('Error uploading file:', file.name, error);
