@@ -103,7 +103,7 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({ document, onRefresh 
           </div>
           
           {/* File Name */}
-          <h3 className="text-sm font-medium text-gray-900 text-center line-clamp-2 leading-tight">
+          <h3 className="text-sm font-medium text-gray-900 text-center truncate leading-tight max-w-32" title={document.file_name}>
             {document.file_name}
           </h3>
         </div>
