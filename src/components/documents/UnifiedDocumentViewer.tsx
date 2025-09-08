@@ -7,7 +7,7 @@ import { ImageViewer } from './viewers/ImageViewer';
 import { DocumentViewer } from './viewers/DocumentViewer';
 import { MediaViewer } from './viewers/MediaViewer';
 import { detectFileType, formatFileSize, getFileIcon } from '@/lib/fileTypeDetection';
-import { getWebDAVFileUrl, parseWebDAVPath, isWebDAVDocument } from '@/lib/webdavFileUtils';
+import { getWebDAVFileUrl, downloadWebDAVFile, parseWebDAVPath, isWebDAVDocument } from '@/lib/webdavFileUtils';
 import { callSupabaseFunction } from '@/lib/supabaseEdgeFunction';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -53,10 +53,15 @@ export const UnifiedDocumentViewer: React.FC<UnifiedDocumentViewerProps> = ({
       if (isWebDAVDocument(document)) {
         const webdavParams = parseWebDAVPath(document.webdav_path);
         if (webdavParams) {
-          const directUrl = getWebDAVFileUrl(webdavParams);
-          setFileUrl(directUrl);
-          setLoading(false);
-          return;
+          try {
+            const webdavUrl = await getWebDAVFileUrl(webdavParams);
+            setFileUrl(webdavUrl);
+            setLoading(false);
+            return;
+          } catch (webdavError) {
+            console.error('WebDAV file loading failed:', webdavError);
+            throw new Error('Failed to load WebDAV file: ' + (webdavError instanceof Error ? webdavError.message : 'Unknown error'));
+          }
         } else {
           throw new Error('Invalid WebDAV path format');
         }
@@ -103,24 +108,29 @@ export const UnifiedDocumentViewer: React.FC<UnifiedDocumentViewerProps> = ({
     if (!document) return;
 
     try {
-      // WebDAV download
       if (isWebDAVDocument(document)) {
         const webdavParams = parseWebDAVPath(document.webdav_path);
         if (webdavParams) {
-          const downloadUrl = getWebDAVFileUrl(webdavParams);
-          const link = window.document.createElement('a');
-          link.href = downloadUrl;
-          link.download = document.file_name;
-          link.target = '_blank';
-          window.document.body.appendChild(link);
-          link.click();
-          window.document.body.removeChild(link);
-          
-          toast({
-            title: "Download Started",
-            description: `Downloading ${document.file_name}`,
-          });
-          return;
+          try {
+            const blob = await downloadWebDAVFile(webdavParams);
+            const url = URL.createObjectURL(blob);
+            const link = window.document.createElement('a');
+            link.href = url;
+            link.download = document.file_name;
+            window.document.body.appendChild(link);
+            link.click();
+            window.document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            toast({
+              title: "Download Started",
+              description: `Downloading ${document.file_name}`,
+            });
+            return;
+          } catch (webdavError) {
+            console.error('WebDAV download failed:', webdavError);
+            throw new Error('WebDAV download failed');
+          }
         }
       }
 

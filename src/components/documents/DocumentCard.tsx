@@ -1,17 +1,14 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Download, Eye, Star, StarOff, Trash2 } from 'lucide-react';
-import { format } from 'date-fns';
-import { getFileIcon } from '@/lib/fileUtils';
+import { Eye, Download, Star, StarOff, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
-import { FileViewer } from './FileViewer';
+import { format } from 'date-fns';
+import { getFileIcon } from '@/lib/fileUtils';
+import { getFileTypeFromExtension, isWebDAVDocument, downloadWebDAVFileDirectly, parseWebDAVPath } from '@/lib/webdavFileUtils';
 import { UnifiedDocumentViewer } from './UnifiedDocumentViewer';
 import { DeleteDocumentDialog } from './DeleteDocumentDialog';
-import { isWebDAVDocument, getWebDAVFileUrl, parseWebDAVPath } from '@/lib/webdavFileUtils';
 
 interface DocumentCardProps {
   document: any;
@@ -22,8 +19,14 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({ document, onRefresh 
   const [isHovered, setIsHovered] = useState(false);
   const [showFileViewer, setShowFileViewer] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+
+  if (!document) return null;
+
   const FileIcon = getFileIcon(document.file_type);
+  const fileType = getFileTypeFromExtension(document.file_name);
+  const isWebDAV = isWebDAVDocument(document);
 
   const handleViewDocument = () => {
     setShowFileViewer(true);
@@ -31,19 +34,13 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({ document, onRefresh 
 
   const handleDownload = async () => {
     try {
-      if (isWebDAVDocument(document)) {
-        // For WebDAV files, use the direct URL
+      setLoading(true);
+      
+      if (isWebDAV) {
+        // For WebDAV files, use direct download
         const webdavParams = parseWebDAVPath(document.webdav_path);
         if (webdavParams) {
-          const downloadUrl = getWebDAVFileUrl(webdavParams);
-          const link = window.document.createElement('a');
-          link.href = downloadUrl;
-          link.download = document.file_name;
-          link.target = '_blank';
-          window.document.body.appendChild(link);
-          link.click();
-          window.document.body.removeChild(link);
-          
+          await downloadWebDAVFileDirectly(webdavParams, document.file_name);
           toast({
             title: "Download Started",
             description: `Downloading ${document.file_name}`,
@@ -51,21 +48,26 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({ document, onRefresh 
           return;
         }
       }
-      
-      // Fallback for non-WebDAV files
+
+      // Handle non-WebDAV files (legacy Supabase storage)
+      let filePath = document.file_url;
+      if (filePath.includes('/storage/v1/object/public/documents/')) {
+        filePath = filePath.split('/storage/v1/object/public/documents/')[1];
+      }
+
       const { data, error } = await supabase.storage
         .from('documents')
-        .download(document.file_url);
+        .download(filePath);
 
       if (error) throw error;
 
       const url = URL.createObjectURL(data);
-      const a = window.document.createElement('a');
-      a.href = url;
-      a.download = document.file_name;
-      window.document.body.appendChild(a);
-      a.click();
-      window.document.body.removeChild(a);
+      const link = window.document.createElement('a');
+      link.href = url;
+      link.download = document.file_name;
+      window.document.body.appendChild(link);
+      link.click();
+      window.document.body.removeChild(link);
       URL.revokeObjectURL(url);
       
       toast({
@@ -73,11 +75,14 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({ document, onRefresh 
         description: `Downloading ${document.file_name}`,
       });
     } catch (error) {
+      console.error('Download error:', error);
       toast({
-        title: "Download failed",
-        description: "Failed to download the document",
+        title: "Download Failed",
+        description: "Failed to download the file. Please try again.",
         variant: "destructive"
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -89,24 +94,25 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({ document, onRefresh 
         .eq('id', document.id);
 
       if (error) throw error;
-      
+
       toast({
         title: document.is_evidence ? "Removed from important" : "Marked as important",
-        description: `Document ${document.is_evidence ? 'unmarked' : 'marked'} as important`
+        description: `Document ${document.is_evidence ? 'unmarked' : 'marked'} as important`,
       });
-      
+
       onRefresh();
     } catch (error) {
+      console.error('Toggle important error:', error);
       toast({
         title: "Failed to update document",
-        description: "Please try again",
+        description: "Please try again.",
         variant: "destructive"
       });
     }
   };
 
   const formatFileSize = (bytes: number) => {
-    if (!bytes) return '';
+    if (!bytes) return 'Unknown';
     const kb = bytes / 1024;
     if (kb < 1024) return `${kb.toFixed(1)} KB`;
     return `${(kb / 1024).toFixed(1)} MB`;
@@ -115,102 +121,99 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({ document, onRefresh 
   return (
     <>
       <div
-        className={cn(
-          "bg-white rounded-xl border border-gray-200 p-4 transition-all duration-200 cursor-pointer group",
-          isHovered && "shadow-lg border-gray-300 scale-105"
-        )}
+        className="relative bg-white rounded-2xl border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer group"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {/* File Icon */}
-        <div className="flex flex-col items-center mb-3">
+        {/* File Icon and Name */}
+        <div className="flex flex-col items-center text-center space-y-3">
           <div className="relative">
-            <FileIcon className="w-12 h-12 text-gray-500 mb-2" />
+            <FileIcon className="w-12 h-12 text-blue-600" />
             {document.is_evidence && (
               <Star className="w-4 h-4 text-yellow-500 fill-current absolute -top-1 -right-1" />
             )}
           </div>
           
-          {/* File Name */}
-          <h3 className="text-sm font-medium text-gray-900 text-center truncate leading-tight max-w-32" title={document.file_name}>
-            {document.file_name}
-          </h3>
-        </div>
-
-        {/* File Info */}
-        <div className="space-y-2 mb-3">
-          <div className="flex items-center justify-center">
-            <Badge variant="outline" className="text-xs">
-              {document.file_type?.toUpperCase() || 'Unknown'}
-            </Badge>
-          </div>
-          
-          <div className="text-center">
-            <p className="text-xs text-gray-500">
-              {format(new Date(document.uploaded_at), 'MMM d, yyyy')}
-            </p>
-            <p className="text-xs text-gray-500">
-              {formatFileSize(document.file_size)}
-            </p>
+          <div className="space-y-1">
+            <h3 className="font-medium text-gray-900 text-sm leading-tight line-clamp-2">
+              {document.file_name}
+            </h3>
+            
+            <div className="flex flex-wrap gap-1 justify-center">
+              <Badge variant="outline" className="text-xs">
+                {document.file_type?.toUpperCase() || 'Unknown'}
+              </Badge>
+              {isWebDAV && (
+                <Badge variant="outline" className="text-xs bg-blue-100 text-blue-800">
+                  WebDAV
+                </Badge>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Actions - Show on hover */}
-        <div className={cn(
-          "flex items-center justify-center gap-1 transition-opacity duration-200",
-          isHovered ? "opacity-100" : "opacity-0"
-        )}>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="h-8 w-8 p-0"
-            onClick={handleViewDocument}
-          >
-            <Eye className="w-4 h-4" />
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="h-8 w-8 p-0"
-            onClick={handleDownload}
-          >
-            <Download className="w-4 h-4" />
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="h-8 w-8 p-0"
-            onClick={toggleImportant}
-          >
-            {document.is_evidence ? (
-              <Star className="w-4 h-4 text-yellow-500 fill-current" />
-            ) : (
-              <StarOff className="w-4 h-4 text-gray-400" />
-            )}
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="h-8 w-8 p-0 hover:text-red-600"
-            onClick={() => setShowDeleteDialog(true)}
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
+        {/* File Details */}
+        <div className="mt-3 text-xs text-gray-500 space-y-1">
+          <div>Size: {formatFileSize(document.file_size)}</div>
+          <div>
+            {document.uploaded_at 
+              ? format(new Date(document.uploaded_at), 'MMM d, yyyy')
+              : 'Unknown date'
+            }
+          </div>
         </div>
 
-        {/* Folder/Case Info */}
-        <div className="mt-2 pt-2 border-t border-gray-100">
-          <p className="text-xs text-gray-500 text-center truncate">
-            {document.folder_name || 'General'}
-          </p>
-        </div>
+        {/* Action Buttons - Show on hover */}
+        {isHovered && (
+          <div className="absolute inset-x-2 bottom-2 flex gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleViewDocument}
+              className="flex-1 h-8 text-xs"
+            >
+              <Eye className="w-3 h-3 mr-1" />
+              View
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleDownload}
+              disabled={loading}
+              className="flex-1 h-8 text-xs"
+            >
+              <Download className="w-3 h-3 mr-1" />
+              {loading ? 'Downloading...' : 'Download'}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleImportant}
+              className="p-1 h-8"
+            >
+              {document.is_evidence ? (
+                <Star className="w-3 h-3 text-yellow-500 fill-current" />
+              ) : (
+                <StarOff className="w-3 h-3 text-gray-400" />
+              )}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowDeleteDialog(true)}
+              className="p-1 h-8 hover:text-red-600"
+            >
+              <Trash2 className="w-3 h-3" />
+            </Button>
+          </div>
+        )}
       </div>
 
-        <UnifiedDocumentViewer
-          open={showFileViewer}
-          onClose={() => setShowFileViewer(false)}
-          document={document}
-        />
+      <UnifiedDocumentViewer
+        open={showFileViewer}
+        onClose={() => setShowFileViewer(false)}
+        document={document}
+      />
 
       <DeleteDocumentDialog
         open={showDeleteDialog}

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Eye, Download, Star, StarOff, ExternalLink } from 'lucide-react';
 import { detectFileType, formatFileSize, getFileIcon } from '@/lib/fileTypeDetection';
-import { isWebDAVDocument, getWebDAVFileUrl, parseWebDAVPath } from '@/lib/webdavFileUtils';
+import { isWebDAVDocument, parseWebDAVPath, downloadWebDAVFileDirectly } from '@/lib/webdavFileUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -38,15 +38,7 @@ export const DocumentPreviewCard: React.FC<DocumentPreviewCardProps> = ({
       if (isWebDAVDocument(document)) {
         const webdavParams = parseWebDAVPath(document.webdav_path);
         if (webdavParams) {
-          const downloadUrl = getWebDAVFileUrl(webdavParams);
-          const link = window.document.createElement('a');
-          link.href = downloadUrl;
-          link.download = document.file_name;
-          link.target = '_blank';
-          window.document.body.appendChild(link);
-          link.click();
-          window.document.body.removeChild(link);
-          
+          await downloadWebDAVFileDirectly(webdavParams, document.file_name);
           toast({
             title: "Download Started",
             description: `Downloading ${document.file_name}`,
@@ -120,11 +112,11 @@ export const DocumentPreviewCard: React.FC<DocumentPreviewCardProps> = ({
 
   const handleOpenInNewTab = () => {
     if (isWebDAVDocument(document)) {
-      const webdavParams = parseWebDAVPath(document.webdav_path);
-      if (webdavParams) {
-        const fileUrl = getWebDAVFileUrl(webdavParams);
-        window.open(fileUrl, '_blank');
-      }
+      toast({
+        title: "WebDAV File",
+        description: "Please use download to access WebDAV files.",
+        variant: "default"
+      });
     } else {
       window.open(document.file_url, '_blank');
     }
@@ -145,9 +137,9 @@ export const DocumentPreviewCard: React.FC<DocumentPreviewCardProps> = ({
                   {fileTypeInfo.category.toUpperCase()}
                 </Badge>
                 {isWebDAVDocument(document) && (
-                <Badge variant="outline" className="text-xs bg-blue-100 text-blue-800">
-                  WebDAV
-                </Badge>
+                  <Badge variant="outline" className="text-xs bg-blue-100 text-blue-800">
+                    WebDAV
+                  </Badge>
                 )}
                 {document.is_evidence && (
                   <Badge variant="default" className="text-xs bg-yellow-100 text-yellow-800">

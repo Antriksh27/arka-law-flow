@@ -10,7 +10,7 @@ import { UploadDocumentDialog } from '../documents/UploadDocumentDialog';
 import { UnifiedDocumentViewer } from '../documents/UnifiedDocumentViewer';
 import { useToast } from '@/hooks/use-toast';
 import { getFileIcon } from '@/lib/fileUtils';
-import { isWebDAVDocument, getWebDAVFileUrl, parseWebDAVPath } from '@/lib/webdavFileUtils';
+import { isWebDAVDocument, parseWebDAVPath, downloadWebDAVFileDirectly } from '@/lib/webdavFileUtils';
 interface CaseDocumentsProps {
   caseId: string;
 }
@@ -85,26 +85,22 @@ export const CaseDocuments: React.FC<CaseDocumentsProps> = ({
   };
   const handleDownload = async (document: any) => {
     try {
-      if (isWebDAVDocument(document)) {
-        // For WebDAV files, use the direct URL
-        const webdavParams = parseWebDAVPath(document.webdav_path);
-        if (webdavParams) {
-          const downloadUrl = getWebDAVFileUrl(webdavParams);
-          const link = window.document.createElement('a');
-          link.href = downloadUrl;
-          link.download = document.file_name;
-          link.target = '_blank';
-          window.document.body.appendChild(link);
-          link.click();
-          window.document.body.removeChild(link);
-          
-          toast({
-            title: "Download Started",
-            description: `Downloading ${document.file_name}`,
-          });
-          return;
+        if (isWebDAVDocument(document)) {
+          // For WebDAV files, use the direct download approach
+          const webdavParams = parseWebDAVPath(document.webdav_path);
+          if (webdavParams) {
+            try {
+              await downloadWebDAVFileDirectly(webdavParams, document.file_name);
+              toast({
+                title: "Download Started",
+                description: `Downloading ${document.file_name}`,
+              });
+              return;
+            } catch (webdavError) {
+              console.error('WebDAV download failed:', webdavError);
+            }
+          }
         }
-      }
       
       // Fallback for non-WebDAV files
       const {

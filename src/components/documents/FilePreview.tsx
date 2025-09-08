@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, ExternalLink, AlertCircle } from 'lucide-react';
-import { getWebDAVFileUrl, parseWebDAVPath, getFileTypeFromExtension, isWebDAVDocument } from '@/lib/webdavFileUtils';
+import { parseWebDAVPath, getFileTypeFromExtension, isWebDAVDocument, downloadWebDAVFileDirectly } from '@/lib/webdavFileUtils';
 import { useToast } from '@/hooks/use-toast';
 
 interface FilePreviewProps {
@@ -17,7 +17,36 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
 }) => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [fileUrl, setFileUrl] = useState<string | null>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const loadFile = async () => {
+      if (!document) return;
+      
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const isWebDAV = isWebDAVDocument(document);
+        
+        if (isWebDAV) {
+          // For WebDAV files, we'll handle them in the renderFileContent
+          setFileUrl('webdav-placeholder');
+        } else {
+          // Use existing file_url for non-WebDAV files
+          setFileUrl(document.file_url);
+        }
+      } catch (err) {
+        console.error('Error loading file:', err);
+        setError('Failed to load file');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadFile();
+  }, [document]);
 
   if (!document) {
     return (
@@ -27,57 +56,38 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
     );
   }
 
-  // Check if this is a WebDAV document
   const isWebDAV = isWebDAVDocument(document);
-  
-  let fileUrl: string | null = null;
-  let fileType = 'unknown';
-  
-  if (isWebDAV) {
-    // Parse WebDAV path and generate direct URL
-    const webdavParams = parseWebDAVPath(document.webdav_path);
-    if (webdavParams) {
-      fileUrl = getWebDAVFileUrl(webdavParams);
-      fileType = getFileTypeFromExtension(webdavParams.fileName);
-    } else {
-      setError('Invalid WebDAV path format');
-    }
-  } else {
-    // Use existing file_url for non-WebDAV files
-    fileUrl = document.file_url;
-    fileType = getFileTypeFromExtension(document.file_name);
-  }
+  const fileType = getFileTypeFromExtension(document.file_name);
 
   const handleDownload = async () => {
-    if (!fileUrl) return;
-    
     try {
       setLoading(true);
       
       if (isWebDAV) {
-        // For WebDAV files, the URL already handles the download
-        const link = window.document.createElement('a');
-        link.href = fileUrl;
-        link.download = document.file_name;
-        link.target = '_blank';
-        window.document.body.appendChild(link);
-        link.click();
-        window.document.body.removeChild(link);
-      } else {
-        // Handle non-WebDAV files (legacy Supabase storage)
-        const response = await fetch(fileUrl);
-        if (!response.ok) throw new Error('Download failed');
-        
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        const link = window.document.createElement('a');
-        link.href = url;
-        link.download = document.file_name;
-        window.document.body.appendChild(link);
-        link.click();
-        window.document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+        const webdavParams = parseWebDAVPath(document.webdav_path);
+        if (webdavParams) {
+          await downloadWebDAVFileDirectly(webdavParams, document.file_name);
+          toast({
+            title: "Download Started",
+            description: `Downloading ${document.file_name}`,
+          });
+          return;
+        }
       }
+
+      // Handle non-WebDAV files (legacy Supabase storage)
+      const response = await fetch(document.file_url);
+      if (!response.ok) throw new Error('Download failed');
+      
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = window.document.createElement('a');
+      link.href = url;
+      link.download = document.file_name;
+      window.document.body.appendChild(link);
+      link.click();
+      window.document.body.removeChild(link);
+      URL.revokeObjectURL(url);
       
       toast({
         title: "Download Started",
@@ -104,15 +114,52 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
   };
 
   const renderFileContent = () => {
+    if (loading) {
+      return (
+        <div className="flex items-center justify-center h-full bg-gray-50 rounded-lg">
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-gray-500 text-sm">Loading...</p>
+          </div>
+        </div>
+      );
+    }
+
     if (error) {
       return (
         <div className="flex flex-col items-center justify-center h-full bg-gray-50 rounded-lg gap-4">
           <AlertCircle className="w-8 h-8 text-red-500" />
           <p className="text-red-600 text-center">{error}</p>
           {showControls && (
-            <Button onClick={handleDownload} variant="outline" disabled={loading || !fileUrl}>
+            <Button onClick={handleDownload} variant="outline" disabled={loading}>
               <Download className="w-4 h-4 mr-2" />
               {loading ? 'Downloading...' : 'Download File'}
+            </Button>
+          )}
+        </div>
+      );
+    }
+
+    // For WebDAV files, we can't easily preview them inline due to CORS
+    // Show a preview placeholder with download option
+    if (isWebDAV) {
+      return (
+        <div className="flex flex-col items-center justify-center h-full bg-gray-50 rounded-lg gap-4">
+          <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+            <svg className="w-8 h-8 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            {document.file_name}
+          </h3>
+          <p className="text-gray-600 mb-4 text-center">
+            WebDAV file - Click download to view
+          </p>
+          {showControls && (
+            <Button onClick={handleDownload} disabled={loading}>
+              <Download className="w-4 h-4 mr-2" />
+              {loading ? 'Downloading...' : 'Download to View'}
             </Button>
           )}
         </div>
@@ -139,30 +186,6 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
             />
             {showControls && (
               <div className="absolute top-2 right-2 flex gap-2">
-                <Button size="sm" variant="secondary" onClick={handleDownload} disabled={loading}>
-                  <Download className="w-3 h-3" />
-                </Button>
-                <Button size="sm" variant="secondary" onClick={() => window.open(fileUrl, '_blank')}>
-                  <ExternalLink className="w-3 h-3" />
-                </Button>
-              </div>
-            )}
-          </div>
-        );
-
-      case 'pdf':
-        return (
-          <div className="relative h-full bg-gray-50 rounded-lg overflow-hidden">
-            <iframe
-              src={fileUrl}
-              className="w-full h-full border-0"
-              title={document.file_name}
-              onError={handleFrameError}
-              allow="fullscreen"
-              style={{ minHeight: '500px' }}
-            />
-            {showControls && (
-              <div className="absolute top-2 right-2 flex gap-2 bg-white/90 p-1 rounded">
                 <Button size="sm" variant="secondary" onClick={handleDownload} disabled={loading}>
                   <Download className="w-3 h-3" />
                 </Button>

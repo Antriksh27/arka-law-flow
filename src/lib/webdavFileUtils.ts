@@ -10,21 +10,60 @@ export interface WebDAVFileParams {
 }
 
 /**
- * Generate a direct URL for WebDAV file preview/download
- * Uses the Supabase Edge Function with proper authorization
+ * Download WebDAV file using authenticated request
  */
-export function getWebDAVFileUrl(params: WebDAVFileParams): string {
+export async function downloadWebDAVFile(params: WebDAVFileParams): Promise<Blob> {
+  const { callSupabaseFunction } = await import('./supabaseEdgeFunction');
+  
   const { clientName, caseName, docType, fileName } = params;
   
-  const baseUrl = 'https://hpcnipcbymruvsnqrmjx.functions.supabase.co/pydio-webdav';
-  const searchParams = new URLSearchParams({
+  // Build query string for GET request
+  const queryParams = new URLSearchParams({
     clientName,
     caseName,
     docType,
     fileName
   });
   
-  return `${baseUrl}?${searchParams.toString()}`;
+  // Use authenticated GET request to the edge function
+  const blob = await callSupabaseFunction(`pydio-webdav?${queryParams.toString()}`, 'GET');
+  
+  if (!blob || !(blob instanceof Blob)) {
+    throw new Error('Failed to download WebDAV file');
+  }
+  
+  return blob;
+}
+
+/**
+ * Generate a blob URL for WebDAV file preview
+ * Uses authenticated request to get the file content
+ */
+export async function getWebDAVFileUrl(params: WebDAVFileParams): Promise<string> {
+  try {
+    const blob = await downloadWebDAVFile(params);
+    return URL.createObjectURL(blob);
+  } catch (error) {
+    console.error('Failed to get WebDAV file URL:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get WebDAV download URL (for direct download without blob URL)
+ * This function handles the download directly without creating a blob URL
+ */
+export async function downloadWebDAVFileDirectly(params: WebDAVFileParams, fileName: string): Promise<void> {
+  const blob = await downloadWebDAVFile(params);
+  const url = URL.createObjectURL(blob);
+  const link = window.document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  link.target = '_blank';
+  window.document.body.appendChild(link);
+  link.click();
+  window.document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
 
 /**
