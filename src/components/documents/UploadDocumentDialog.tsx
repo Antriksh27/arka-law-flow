@@ -22,6 +22,7 @@ interface UploadDocumentDialogProps {
 
 interface UploadFormData {
   files: FileList;
+  client_id?: string;
   case_id?: string;
   document_category?: string;
   document_type?: string;
@@ -52,7 +53,8 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
     formState: { isSubmitting }
   } = useForm<UploadFormData>({
     defaultValues: {
-      case_id: caseId || 'all',
+      client_id: '',
+      case_id: caseId || '',
       document_category: '',
       document_type: '',
       custom_document_type: '',
@@ -64,6 +66,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
     }
   });
   
+  const selectedClientId = watch('client_id');
   const selectedCaseId = watch('case_id');
   const selectedCategory = watch('document_category');
   const selectedDocType = watch('document_type');
@@ -148,7 +151,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
     queryFn: async () => {
       const { data, error } = await supabase
         .from('cases')
-        .select('id, title')
+        .select('id, title, client_id')
         .eq('status', 'open')
         .order('title');
       if (error) throw error;
@@ -156,14 +159,14 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
     }
   });
 
-  // Fetch document types
-  const { data: documentTypes = [] } = useQuery({
-    queryKey: ['document-types'],
+  // Fetch clients for dropdown
+  const { data: clients = [] } = useQuery({
+    queryKey: ['clients-for-upload'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('document_types')
-        .select('*')
-        .order('category, name');
+        .from('clients')
+        .select('id, full_name')
+        .order('full_name');
       if (error) throw error;
       return data || [];
     }
@@ -221,23 +224,17 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
 
             // Get client and case names for folder structure  
             const selectedCase = cases.find(c => c.id === selectedCaseId);
+            const selectedClient = clients.find(c => c.id === selectedClientId);
+            
             let clientName = 'General';
             let caseName = 'General Documents';
             
-            if (selectedCaseId && selectedCaseId !== 'all') {
-              // Get actual client name from the URL (we're on client details page)
-              const currentPath = window.location.pathname;
-              const clientIdFromUrl = currentPath.match(/\/clients\/([a-f0-9-]+)/)?.[1];
-              
-              if (clientIdFromUrl) {
-                const { data: clientData } = await supabase
-                  .from('clients')
-                  .select('full_name')
-                  .eq('id', clientIdFromUrl)
-                  .single();
-                clientName = clientData?.full_name || 'Unknown Client';
-              }
-              caseName = selectedCase?.title || 'Unknown Case';
+            if (selectedClientId && selectedClient) {
+              clientName = selectedClient.full_name;
+            }
+            
+            if (selectedCaseId && selectedCase) {
+              caseName = selectedCase.title;
             }
             const category = data.document_category ? categoryLabels[data.document_category as keyof typeof categoryLabels] : 'Others';
             const docType = data.document_type || data.custom_document_type || 'Unspecified';
@@ -273,12 +270,13 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
               file_url: pydioResult.path || `${clientName}/${caseName}/${category}/${docType}/${file.name}`, // Use Pydio path
               file_type: file.name.split('.').pop()?.toLowerCase() || null,
               file_size: file.size,
-              case_id: data.case_id === 'all' ? null : data.case_id,
+              case_id: data.case_id || null,
+              client_id: data.client_id || null,
               uploaded_by: user.id,
               is_evidence: data.is_evidence,
               uploaded_at: new Date().toISOString(),
               firm_id: firmId,
-              folder_name: data.case_id === 'all' ? 'General Documents' : null,
+              folder_name: (!data.client_id && !data.case_id) ? 'General Documents' : null,
               document_type_id: null, // Using new category/type system
               notes: data.notes || null,
               confidential: data.confidential || false,
@@ -371,6 +369,15 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
     }
 
     // Validate required fields
+    if (!data.client_id) {
+      toast({
+        title: "Client selection required",
+        description: "Please select a client",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (!data.document_category) {
       toast({
         title: "Document category required",
@@ -477,18 +484,49 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
             )}
           </div>
 
+          {/* Client Selection */}
+          <div className="space-y-2">
+            <Label htmlFor="client_id" className="text-sm font-medium text-gray-700">
+              Select Client <span className="text-red-500">*</span>
+            </Label>
+            <Select onValueChange={value => {
+              setValue('client_id', value);
+              setValue('case_id', ''); // Reset case when client changes
+            }} value={selectedClientId}>
+              <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                <SelectValue placeholder="Select a client..." />
+              </SelectTrigger>
+              <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                {clients.map(client => (
+                  <SelectItem key={client.id} value={client.id} className="hover:bg-gray-50">
+                    {client.full_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Case Assignment */}
           <div className="space-y-2">
             <Label htmlFor="case_id" className="text-sm font-medium text-gray-700">
               Assign to Case (Optional)
             </Label>
-            <Select onValueChange={value => setValue('case_id', value)} defaultValue={caseId || 'all'}>
+            <Select 
+              onValueChange={value => setValue('case_id', value)} 
+              value={selectedCaseId}
+              disabled={!selectedClientId}
+            >
               <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                <SelectValue placeholder="Select a case..." />
+                <SelectValue placeholder={selectedClientId ? "Select a case..." : "Select client first"} />
               </SelectTrigger>
               <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                <SelectItem value="all" className="hover:bg-gray-50">No Case (General Documents)</SelectItem>
-                {cases.map(case_item => (
+                <SelectItem value="" className="hover:bg-gray-50">No Case (General Documents)</SelectItem>
+                {cases
+                  .filter(case_item => {
+                    // Only show cases for the selected client
+                    return !selectedClientId || case_item.client_id === selectedClientId;
+                  })
+                  .map(case_item => (
                   <SelectItem key={case_item.id} value={case_item.id} className="hover:bg-gray-50">
                     {case_item.title}
                   </SelectItem>
@@ -521,15 +559,138 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
           </div>
 
           {/* Document Type Selection */}
-          {selectedCategory && (
+          {selectedCategory && selectedCategory !== 'others' && (
             <div className="space-y-2">
               <Label htmlFor="document_type" className="text-sm font-medium text-gray-700">
-                Document Type
+                Document Type <span className="text-red-500">*</span>
               </Label>
-              {selectedCategory === 'others' ? (
-                <Input
-                  {...register('custom_document_type')}
-                  placeholder="Enter custom document type"
+              <Select onValueChange={value => setValue('document_type', value)} value={watch('document_type')}>
+                <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                  <SelectValue placeholder="Select document type..." />
+                </SelectTrigger>
+                <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                  {documentTypeMapping[selectedCategory as keyof typeof documentTypeMapping]?.map(type => (
+                    <SelectItem key={type} value={type} className="hover:bg-gray-50">
+                      {type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+                </Select>
+            </div>
+          )}
+
+          {/* Custom Document Type for Others */}
+          {selectedCategory === 'others' && (
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-700">
+                Custom Document Type <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                {...register('custom_document_type')}
+                placeholder="Enter custom document type"
+                className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+              />
+            </div>
+          )}
+
+          {/* Notes */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium text-gray-700">
+              Notes (Optional)
+            </Label>
+            <Textarea
+              {...register('notes')}
+              placeholder="Add any additional notes about this document..."
+              rows={3}
+              className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* Document Properties */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium text-gray-700">
+              Document Properties
+            </Label>
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="is_evidence"
+                  {...register('is_evidence')}
+                  onCheckedChange={(checked) => setValue('is_evidence', !!checked)}
+                />
+                <Label htmlFor="is_evidence" className="text-sm text-gray-600">
+                  Mark as important/evidence
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="confidential"
+                  {...register('confidential')}
+                  onCheckedChange={(checked) => setValue('confidential', !!checked)}
+                />
+                <Label htmlFor="confidential" className="text-sm text-gray-600">
+                  Confidential document
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="certified_copy"
+                  {...register('certified_copy')}
+                  onCheckedChange={(checked) => setValue('certified_copy', !!checked)}
+                />
+                <Label htmlFor="certified_copy" className="text-sm text-gray-600">
+                  Certified copy
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="original_copy_retained"
+                  {...register('original_copy_retained')}
+                  onCheckedChange={(checked) => setValue('original_copy_retained', !!checked)}
+                />
+                <Label htmlFor="original_copy_retained" className="text-sm text-gray-600">
+                  Original copy retained
+                </Label>
+              </div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={uploadMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={selectedFiles.length === 0 || uploadMutation.isPending}
+              className="min-w-[120px]"
+            >
+              {uploadMutation.isPending ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Uploading...
+                </div>
+              ) : (
+                `Upload ${selectedFiles.length > 0 ? `(${selectedFiles.length})` : ''}`
+              )}
+            </Button>
+          </div>
+        </form>
+
+        <UploadDocumentDialog
+          open={showUploadDialog}
+          onClose={() => setShowUploadDialog(false)}
+          onUploadSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ['documents'] });
+          }}
+        />
+      </DialogContent>
+    </Dialog>
                   className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                 />
               ) : (

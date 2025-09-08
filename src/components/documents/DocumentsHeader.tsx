@@ -102,7 +102,7 @@ export const DocumentsHeader: React.FC<DocumentsHeaderProps> = ({
 
           <Button 
             onClick={() => setShowUploadDialog(true)}
-            className="bg-slate-800 hover:bg-slate-700 text-white"
+            className="bg-primary text-white hover:bg-primary/90"
           >
             <Upload className="w-4 h-4 mr-2" />
             Upload Documents

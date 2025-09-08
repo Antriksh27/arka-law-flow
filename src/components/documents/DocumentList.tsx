@@ -31,6 +31,38 @@ export const DocumentList: React.FC<DocumentListProps> = ({
   };
   const handleDownload = async (document: any) => {
     try {
+      // For WebDAV-synced documents, try to download from WebDAV first
+      if (document.webdav_synced && document.webdav_path) {
+        const { data: webdavResult, error: webdavError } = await supabase.functions.invoke('pydio-webdav', {
+          body: {
+            operation: 'download',
+            filePath: document.webdav_path
+          }
+        });
+        
+        if (!webdavError && webdavResult?.success) {
+          // Convert base64 to blob and download
+          const base64 = webdavResult.content;
+          const binaryString = atob(base64);
+          const bytes = new Uint8Array(binaryString.length);
+          for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+          }
+          const blob = new Blob([bytes]);
+          
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = document.file_name;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          return;
+        }
+      }
+      
+      // Fallback to Supabase storage if WebDAV fails or not synced
       const {
         data,
         error
@@ -84,15 +116,15 @@ export const DocumentList: React.FC<DocumentListProps> = ({
       <div className="p-6">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead className="bg-slate-800">Name</TableHead>
-              <TableHead className="bg-slate-800">Type</TableHead>
-              <TableHead className="bg-slate-800">Case</TableHead>
-              <TableHead className="bg-slate-800">Uploaded By</TableHead>
-              <TableHead className="bg-slate-800">Date</TableHead>
-              <TableHead className="bg-slate-800">Size</TableHead>
-              <TableHead className="bg-slate-800">Important</TableHead>
-              <TableHead className="bg-slate-800">Actions</TableHead>
+            <TableRow className="border-b border-gray-200">
+              <TableHead className="bg-gray-50 text-gray-700 font-medium">Name</TableHead>
+              <TableHead className="bg-gray-50 text-gray-700 font-medium">Type</TableHead>
+              <TableHead className="bg-gray-50 text-gray-700 font-medium">Case</TableHead>
+              <TableHead className="bg-gray-50 text-gray-700 font-medium">Uploaded By</TableHead>
+              <TableHead className="bg-gray-50 text-gray-700 font-medium">Date</TableHead>
+              <TableHead className="bg-gray-50 text-gray-700 font-medium">Size</TableHead>
+              <TableHead className="bg-gray-50 text-gray-700 font-medium">Important</TableHead>
+              <TableHead className="bg-gray-50 text-gray-700 font-medium">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
