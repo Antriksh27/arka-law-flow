@@ -5,6 +5,152 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+interface StructuredUploadParams {
+  clientName: string;
+  caseName: string;
+  docType: string;
+  fileName: string;
+  fileContent: string;
+  webdavUrl: string | undefined;
+  webdavUsername: string | undefined;
+  webdavPassword: string | undefined;
+}
+
+async function handleStructuredUpload(params: StructuredUploadParams) {
+  const { clientName, caseName, docType, fileName, fileContent, webdavUrl, webdavUsername, webdavPassword } = params;
+
+  if (!webdavUrl || !webdavUsername || !webdavPassword) {
+    console.error('❌ Missing WebDAV configuration');
+    return new Response(
+      JSON.stringify({
+        success: false,
+        message: 'WebDAV configuration is not complete',
+        error: 'Missing required environment variables: WEBDAV_URL, WEBDAV_USERNAME, or WEBDAV_PASSWORD'
+      }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      },
+    )
+  }
+
+  // Create basic auth header
+  const authHeader = 'Basic ' + btoa(`${webdavUsername}:${webdavPassword}`);
+  
+  try {
+    // Ensure WebDAV URL ends with /
+    const baseUrl = webdavUrl.endsWith('/') ? webdavUrl : `${webdavUrl}/`;
+    
+    // Test WebDAV connection first
+    console.log(`🧪 Testing WebDAV connection to base URL: ${baseUrl}`);
+    const testResponse = await fetch(baseUrl, {
+      method: 'PROPFIND',
+      headers: {
+        'Authorization': authHeader,
+        'Depth': '0',
+        'Content-Type': 'text/xml',
+      },
+    });
+    
+    if (!testResponse.ok && testResponse.status !== 207) {
+      throw new Error(`WebDAV connection failed: ${testResponse.status} ${testResponse.statusText}`);
+    }
+    
+    // Build the folder structure: /Clients/{clientName}/{caseName}/{docType}/
+    const folderStructure = ['Clients', clientName, caseName, docType];
+    let currentPath = baseUrl;
+    
+    console.log(`📁 Creating folder structure: ${folderStructure.join('/')}`);
+    
+    // Create each folder in the hierarchy
+    for (const folder of folderStructure) {
+      currentPath = `${currentPath}${currentPath.endsWith('/') ? '' : '/'}${encodeURIComponent(folder)}`;
+      console.log(`📁 Ensuring folder exists: ${currentPath}`);
+      
+      try {
+        // Try to create the folder
+        const mkcolResponse = await fetch(currentPath, {
+          method: 'MKCOL',
+          headers: {
+            'Authorization': authHeader,
+          },
+        });
+        
+        // 201 = created, 405 = already exists (method not allowed on existing resource)
+        if (mkcolResponse.ok || mkcolResponse.status === 405) {
+          console.log(`✅ Folder exists or created: ${currentPath}`);
+        } else {
+          console.log(`⚠️ Folder creation response: ${mkcolResponse.status} ${mkcolResponse.statusText}`);
+        }
+      } catch (dirError) {
+        console.log(`⚠️ Error creating folder ${currentPath}: ${dirError.message}`);
+        // Continue anyway, folder might already exist
+      }
+    }
+    
+    // Upload the file to the final folder
+    const finalUploadPath = `${currentPath}/${encodeURIComponent(fileName)}`;
+    console.log(`📤 Uploading file to: ${finalUploadPath}`);
+    
+    const uploadResponse = await fetch(finalUploadPath, {
+      method: 'PUT',
+      headers: {
+        'Authorization': authHeader,
+        'Content-Type': 'application/octet-stream',
+      },
+      body: fileContent,
+    });
+
+    if (!uploadResponse.ok) {
+      console.error(`❌ WebDAV upload failed: ${uploadResponse.status} ${uploadResponse.statusText}`);
+      const errorText = await uploadResponse.text();
+      console.error(`❌ Error details: ${errorText}`);
+      
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message: 'Failed to upload to WebDAV',
+          error: `WebDAV error: ${uploadResponse.status} ${uploadResponse.statusText}`,
+          details: errorText,
+          uploadPath: finalUploadPath
+        }),
+        {
+          status: uploadResponse.status,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
+      )
+    }
+
+    console.log('✅ Structured upload successful');
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: 'File uploaded successfully to WebDAV',
+        path: `Clients/${clientName}/${caseName}/${docType}/${fileName}`,
+        uploadPath: finalUploadPath
+      }),
+      {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      },
+    )
+
+  } catch (error) {
+    console.error('❌ Structured upload failed:', error.message);
+    return new Response(
+      JSON.stringify({
+        success: false,
+        message: 'Failed to upload file with structured format',
+        error: error.message
+      }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      },
+    )
+  }
+}
+
 serve(async (req) => {
   console.log('🔧 WebDAV function called');
   
@@ -15,8 +161,23 @@ serve(async (req) => {
 
   try {
     // Parse the request body
-    const { operation, filename, content, filePath } = await req.json()
+    const { operation, filename, content, filePath, clientName, caseName, docType, fileName, fileContent } = await req.json()
     console.log(`📋 Operation: ${operation}`);
+    
+    // Handle new structured upload format
+    if (clientName && caseName && docType && fileName && fileContent) {
+      console.log(`📁 Structured upload: ${clientName}/${caseName}/${docType}/${fileName}`);
+      return await handleStructuredUpload({
+        clientName,
+        caseName, 
+        docType,
+        fileName,
+        fileContent,
+        webdavUrl: Deno.env.get('WEBDAV_URL'),
+        webdavUsername: Deno.env.get('WEBDAV_USERNAME'),
+        webdavPassword: Deno.env.get('WEBDAV_PASSWORD')
+      });
+    }
 
     // Get WebDAV configuration from environment
     const webdavUrl = Deno.env.get('WEBDAV_URL');

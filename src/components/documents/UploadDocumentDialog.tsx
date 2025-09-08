@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Textarea } from '@/components/ui/textarea';
 import { Upload, X, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,7 +23,12 @@ interface UploadDocumentDialogProps {
 interface UploadFormData {
   files: FileList;
   case_id?: string;
+  document_type_id?: string;
+  notes?: string;
   is_evidence: boolean;
+  confidential: boolean;
+  original_copy_retained: boolean;
+  certified_copy: boolean;
 }
 
 export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
@@ -45,12 +51,18 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
   } = useForm<UploadFormData>({
     defaultValues: {
       case_id: caseId || 'all',
-      is_evidence: false
+      document_type_id: '',
+      notes: '',
+      is_evidence: false,
+      confidential: false,
+      original_copy_retained: false,
+      certified_copy: false
     }
   });
   
   const selectedCaseId = watch('case_id');
   const isImportant = watch('is_evidence');
+  const watchedValues = watch();
 
   // Fetch cases for dropdown
   const { data: cases = [] } = useQuery({
@@ -61,6 +73,19 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
         .select('id, title')
         .eq('status', 'open')
         .order('title');
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
+  // Fetch document types
+  const { data: documentTypes = [] } = useQuery({
+    queryKey: ['document-types'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('document_types')
+        .select('*')
+        .order('category, name');
       if (error) throw error;
       return data || [];
     }
@@ -127,7 +152,12 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
               is_evidence: data.is_evidence,
               uploaded_at: new Date().toISOString(),
               firm_id: firmId, // Set explicitly
-              folder_name: data.case_id === 'all' ? 'General Documents' : null
+              folder_name: data.case_id === 'all' ? 'General Documents' : null,
+              document_type_id: data.document_type_id || null,
+              notes: data.notes || null,
+              confidential: data.confidential || false,
+              original_copy_retained: data.original_copy_retained || false,
+              certified_copy: data.certified_copy || false
             };
 
             console.log('Creating document record:', documentData);
@@ -355,16 +385,103 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
             </Select>
           </div>
 
-          {/* Important Toggle */}
-          <div className="flex items-center space-x-2">
-            <Checkbox 
-              id="is_evidence" 
-              checked={isImportant} 
-              onCheckedChange={checked => setValue('is_evidence', !!checked)} 
-            />
-            <Label htmlFor="is_evidence" className="text-sm font-medium text-gray-700">
-              Mark as Important
+          {/* Document Type Selection */}
+          <div className="space-y-2">
+            <Label htmlFor="document_type_id" className="text-sm font-medium text-gray-700">
+              Document Type
             </Label>
+            <Select onValueChange={(value) => setValue('document_type_id', value)} value={watchedValues.document_type_id}>
+              <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                <SelectValue placeholder="Select document type" />
+              </SelectTrigger>
+              <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                {(() => {
+                  const groupedTypes = documentTypes.reduce((acc, docType) => {
+                    const category = docType.category_code || 'Other';
+                    if (!acc[category]) {
+                      acc[category] = [];
+                    }
+                    acc[category].push(docType);
+                    return acc;
+                  }, {} as Record<string, any[]>);
+
+                  return Object.entries(groupedTypes).map(([category, types]) => (
+                    <div key={category}>
+                      <div className="px-2 py-1 text-xs font-semibold text-gray-500 uppercase bg-gray-50">
+                        {category}
+                      </div>
+                      {types.map((type) => (
+                        <SelectItem key={type.id} value={type.id} className="hover:bg-gray-50 pl-4">
+                          {type.name}
+                        </SelectItem>
+                      ))}
+                    </div>
+                  ));
+                })()}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Notes */}
+          <div className="space-y-2">
+            <Label htmlFor="notes" className="text-sm font-medium text-gray-700">
+              Notes (Optional)
+            </Label>
+            <Textarea
+              {...register('notes')}
+              placeholder="Add any notes about this document..."
+              className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+              rows={3}
+            />
+          </div>
+
+          {/* Document Properties */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium text-gray-700">Document Properties</Label>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="is_evidence" 
+                checked={isImportant} 
+                onCheckedChange={checked => setValue('is_evidence', !!checked)} 
+              />
+              <Label htmlFor="is_evidence" className="text-sm font-medium text-gray-700">
+                Mark as Important
+              </Label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="confidential" 
+                checked={watchedValues.confidential} 
+                onCheckedChange={checked => setValue('confidential', !!checked)} 
+              />
+              <Label htmlFor="confidential" className="text-sm font-medium text-gray-700">
+                Confidential
+              </Label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="original_copy_retained" 
+                checked={watchedValues.original_copy_retained} 
+                onCheckedChange={checked => setValue('original_copy_retained', !!checked)} 
+              />
+              <Label htmlFor="original_copy_retained" className="text-sm font-medium text-gray-700">
+                Original Copy Retained
+              </Label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="certified_copy" 
+                checked={watchedValues.certified_copy} 
+                onCheckedChange={checked => setValue('certified_copy', !!checked)} 
+              />
+              <Label htmlFor="certified_copy" className="text-sm font-medium text-gray-700">
+                Certified Copy
+              </Label>
+            </div>
           </div>
 
           {/* Actions */}

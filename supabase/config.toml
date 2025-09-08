@@ -33,3 +33,6 @@ verify_jwt = false
 
 [functions.uploadToPydio]
 verify_jwt = false
+
+[functions.pydio-webdav]
+verify_jwt = false
