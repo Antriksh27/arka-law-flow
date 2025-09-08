@@ -13,6 +13,9 @@ interface FileViewerProps {
 }
 
 export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document }) => {
+  // Force browser cache refresh
+  console.log('FileViewer loaded - version 2.0');
+  
   const [fileUrl, setFileUrl] = useState<string | null>(null);
   const [documentHtml, setDocumentHtml] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
