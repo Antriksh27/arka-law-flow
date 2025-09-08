@@ -204,10 +204,18 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
               fileContent = await file.text();
               console.log('Text file content length:', fileContent.length);
             } else {
-              // For binary files, convert to base64
-              const arrayBuffer = await file.arrayBuffer();
-              const uint8Array = new Uint8Array(arrayBuffer);
-              fileContent = btoa(String.fromCharCode(...uint8Array));
+              // For binary files, convert to base64 using FileReader to avoid stack overflow
+              fileContent = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                  const result = reader.result as string;
+                  // Remove data URL prefix to get just the base64 data
+                  const base64 = result.split(',')[1] || result;
+                  resolve(base64);
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+              });
               console.log('Binary file converted to base64, length:', fileContent.length);
             }
 
