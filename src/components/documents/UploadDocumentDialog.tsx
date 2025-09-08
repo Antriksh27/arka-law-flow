@@ -358,6 +358,34 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
       return;
     }
 
+    // Validate required fields
+    if (!data.document_category) {
+      toast({
+        title: "Document category required",
+        description: "Please select a document category",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (data.document_category !== 'others' && !data.document_type) {
+      toast({
+        title: "Document type required", 
+        description: "Please select a document type",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (data.document_category === 'others' && !data.custom_document_type?.trim()) {
+      toast({
+        title: "Custom document type required",
+        description: "Please enter a custom document type",
+        variant: "destructive"
+      });
+      return;
+    }
+
     console.log('Form submitted with data:', data);
     console.log('Selected files:', selectedFiles);
     uploadMutation.mutate(data);
