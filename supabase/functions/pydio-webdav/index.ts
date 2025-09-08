@@ -161,12 +161,125 @@ serve(async (req) => {
 
   try {
     // Parse the request body
-    const { operation, filename, content, filePath, clientName, caseName, docType, fileName, fileContent } = await req.json()
+    const { operation, filename, content, filePath, clientName, caseName, category, docType, fileName, fileContent } = await req.json()
     console.log(`📋 Operation: ${operation}`);
     
-    // Handle new structured upload format
+    // Handle new hierarchical structured upload format with category
+    if (clientName && caseName && category && docType && fileName && fileContent) {
+      console.log(`📁 Hierarchical upload: /crmdata/${clientName}/${caseName}/${category}/${docType}/${fileName}`);
+      
+      const webdavUrl = Deno.env.get('WEBDAV_URL');
+      const webdavUsername = Deno.env.get('WEBDAV_USERNAME');
+      const webdavPassword = Deno.env.get('WEBDAV_PASSWORD');
+      
+      if (!webdavUrl || !webdavUsername || !webdavPassword) {
+        return new Response(JSON.stringify({
+          success: false,
+          error: 'WebDAV configuration missing',
+          details: 'WebDAV URL, username, or password not configured'
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        });
+      }
+      
+      try {
+        // Create folder structure: /crmdata/{clientName}/{caseName}/{category}/{docType}
+        const folders = ['crmdata', clientName, caseName, category, docType];
+        let currentPath = '';
+        
+        for (const folder of folders) {
+          currentPath += `/${folder}`;
+          console.log(`📂 Checking/creating folder: ${currentPath}`);
+          
+          // Try to create folder (MKCOL method)
+          try {
+            const mkcolResponse = await fetch(`${webdavUrl}${currentPath}`, {
+              method: 'MKCOL',
+              headers: {
+                'Authorization': `Basic ${btoa(`${webdavUsername}:${webdavPassword}`)}`,
+                'Content-Type': 'application/xml',
+              },
+            });
+            
+            if (mkcolResponse.status === 201) {
+              console.log(`✅ Created folder: ${currentPath}`);
+            } else if (mkcolResponse.status === 405) {
+              console.log(`📁 Folder already exists: ${currentPath}`);
+            } else {
+              console.log(`⚠️ Unexpected response for folder ${currentPath}: ${mkcolResponse.status}`);
+            }
+          } catch (folderError) {
+            console.error(`❌ Error creating folder ${currentPath}:`, folderError);
+            // Continue anyway, folder might already exist
+          }
+        }
+        
+        // Upload the file
+        const fullPath = `${currentPath}/${fileName}`;
+        console.log(`📤 Uploading file to: ${fullPath}`);
+        
+        // Decode base64 content if it appears to be base64
+        let fileData;
+        try {
+          // If it's base64, decode it
+          if (typeof fileContent === 'string' && /^[A-Za-z0-9+/]+=*$/.test(fileContent)) {
+            fileData = Uint8Array.from(atob(fileContent), c => c.charCodeAt(0));
+          } else {
+            fileData = new TextEncoder().encode(fileContent);
+          }
+        } catch (decodeError) {
+          console.log('Using content as text');
+          fileData = new TextEncoder().encode(fileContent);
+        }
+        
+        const uploadResponse = await fetch(`${webdavUrl}${fullPath}`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Basic ${btoa(`${webdavUsername}:${webdavPassword}`)}`,
+            'Content-Type': 'application/octet-stream',
+          },
+          body: fileData,
+        });
+        
+        if (uploadResponse.ok) {
+          console.log('✅ File uploaded successfully to hierarchical structure');
+          return new Response(JSON.stringify({
+            success: true,
+            message: `File uploaded successfully to ${fullPath}`,
+            path: fullPath
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200,
+          });
+        } else {
+          const errorText = await uploadResponse.text();
+          console.error('❌ Upload failed:', uploadResponse.status, errorText);
+          return new Response(JSON.stringify({
+            success: false,
+            error: `Upload failed: ${uploadResponse.status}`,
+            details: errorText
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 400,
+          });
+        }
+      } catch (error) {
+        console.error('❌ Error in hierarchical upload:', error);
+        return new Response(JSON.stringify({
+          success: false,
+          error: 'Failed to upload to hierarchical structure',
+          details: error instanceof Error ? error.message : 'Unknown error'
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        });
+      }
+    }
+    
+    // Handle legacy structured upload format (without category)
     if (clientName && caseName && docType && fileName && fileContent) {
-      console.log(`📁 Structured upload: ${clientName}/${caseName}/${docType}/${fileName}`);
+      console.log(`📁 Legacy structured upload: ${clientName}/${caseName}/${docType}/${fileName}`);
       return await handleStructuredUpload({
         clientName,
         caseName, 

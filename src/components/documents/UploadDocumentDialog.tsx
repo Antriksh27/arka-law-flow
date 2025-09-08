@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Upload, X, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { uploadFileToPydio } from '@/lib/pydioIntegration';
+// Remove old import as we're calling edge function directly
 
 interface UploadDocumentDialogProps {
   open: boolean;
@@ -23,7 +23,9 @@ interface UploadDocumentDialogProps {
 interface UploadFormData {
   files: FileList;
   case_id?: string;
-  document_type_id?: string;
+  document_category?: string;
+  document_type?: string;
+  custom_document_type?: string;
   notes?: string;
   is_evidence: boolean;
   confidential: boolean;
@@ -51,7 +53,9 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
   } = useForm<UploadFormData>({
     defaultValues: {
       case_id: caseId || 'all',
-      document_type_id: '',
+      document_category: '',
+      document_type: '',
+      custom_document_type: '',
       notes: '',
       is_evidence: false,
       confidential: false,
@@ -61,8 +65,82 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
   });
   
   const selectedCaseId = watch('case_id');
+  const selectedCategory = watch('document_category');
+  const selectedDocType = watch('document_type');
   const isImportant = watch('is_evidence');
   const watchedValues = watch();
+
+  // Document category to type mapping
+  const documentTypeMapping = {
+    'client_case_setup': [
+      'Engagement Letters',
+      'Power of Attorney', 
+      'Retainer Agreement',
+      'Identity Documents'
+    ],
+    'court_filings': [
+      'Complaints / Petitions',
+      'Responses / Answers',
+      'Motions',
+      'Orders',
+      'Judgments',
+      'Appeals'
+    ],
+    'evidence': [
+      'Witness Statements',
+      'Affidavits',
+      'Expert Reports',
+      'Photos',
+      'Audio Recordings',
+      'Video Evidence',
+      'Digital Evidence'
+    ],
+    'correspondence': [
+      'Client Correspondence',
+      'Opposing Counsel Correspondence',
+      'Court Correspondence',
+      'Government Correspondence'
+    ],
+    'contracts_agreements': [
+      'Contracts',
+      'Amendments',
+      'Settlement Agreements',
+      'Non-Disclosure Agreements'
+    ],
+    'financials': [
+      'Invoices',
+      'Receipts',
+      'Bank Statements',
+      'Payroll Records',
+      'Tax Documents',
+      'Expert Financial Reports'
+    ],
+    'discovery': [
+      'Interrogatories',
+      'Depositions',
+      'Production Requests',
+      'Discovery Responses'
+    ],
+    'research_notes': [
+      'Legal Research',
+      'Internal Memos',
+      'Case Notes',
+      'Strategy Documents'
+    ],
+    'others': []
+  };
+
+  const categoryLabels = {
+    'client_case_setup': 'Client & Case Setup',
+    'court_filings': 'Court Filings',
+    'evidence': 'Evidence',
+    'correspondence': 'Correspondence',
+    'contracts_agreements': 'Contracts & Agreements',
+    'financials': 'Financials',
+    'discovery': 'Discovery',
+    'research_notes': 'Research & Notes',
+    'others': 'Others'
+  };
 
   // Fetch cases for dropdown
   const { data: cases = [] } = useQuery({
@@ -153,7 +231,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
               uploaded_at: new Date().toISOString(),
               firm_id: firmId, // Set explicitly
               folder_name: data.case_id === 'all' ? 'General Documents' : null,
-              document_type_id: data.document_type_id || null,
+              document_type_id: null, // Using new category/type system
               notes: data.notes || null,
               confidential: data.confidential || false,
               original_copy_retained: data.original_copy_retained || false,
@@ -198,19 +276,40 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                 console.log('Binary file converted to base64, length:', fileContent.length);
               }
               
-              console.log('Calling uploadFileToPydio function...');
-              const pydioResult = await uploadFileToPydio({
-                filename: file.name,
-                content: fileContent
+              console.log('Calling pydio-webdav function...');
+              
+              // Get client and case names for folder structure
+              const selectedCase = cases.find(c => c.id === selectedCaseId);
+              const clientName = selectedCaseId !== 'all' ? 
+                (selectedCase ? 'Client' : 'Unknown Client') : 
+                'General';
+              const caseName = selectedCaseId !== 'all' ? 
+                (selectedCase?.title || 'Unknown Case') : 
+                'General Documents';
+              const category = data.document_category ? categoryLabels[data.document_category as keyof typeof categoryLabels] : 'Others';
+              const docType = data.document_type || data.custom_document_type || 'Unspecified';
+              
+              const { data: pydioResult, error: pydioError } = await supabase.functions.invoke('pydio-webdav', {
+                body: {
+                  clientName,
+                  caseName,
+                  category,
+                  docType,
+                  fileName: file.name,
+                  fileContent: fileContent
+                }
               });
               
               console.log('Pydio result:', pydioResult);
+              console.log('Pydio error:', pydioError);
               
-              if (pydioResult.success) {
+              if (pydioError) {
+                console.error('❌ Pydio upload failed:', pydioError);
+                // Don't fail the entire upload if Pydio fails, just log the error
+              } else if (pydioResult?.success) {
                 console.log('✅ Pydio upload successful:', pydioResult.message);
               } else {
-                console.error('❌ Pydio upload failed:', pydioResult.error);
-                console.error('Pydio error details:', pydioResult.details);
+                console.error('❌ Pydio upload failed:', pydioResult?.error);
                 // Don't fail the entire upload if Pydio fails, just log the error
               }
             } catch (pydioError) {
@@ -385,42 +484,57 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
             </Select>
           </div>
 
-          {/* Document Type Selection */}
+          {/* Document Category Selection */}
           <div className="space-y-2">
-            <Label htmlFor="document_type_id" className="text-sm font-medium text-gray-700">
-              Document Type
+            <Label htmlFor="document_category" className="text-sm font-medium text-gray-700">
+              Document Category
             </Label>
-            <Select onValueChange={(value) => setValue('document_type_id', value)} value={watchedValues.document_type_id}>
+            <Select onValueChange={(value) => {
+              setValue('document_category', value);
+              setValue('document_type', '');
+              setValue('custom_document_type', '');
+            }} value={watchedValues.document_category}>
               <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                <SelectValue placeholder="Select document type" />
+                <SelectValue placeholder="Select document category" />
               </SelectTrigger>
               <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                {(() => {
-                  const groupedTypes = documentTypes.reduce((acc, docType) => {
-                    const category = docType.category_code || 'Other';
-                    if (!acc[category]) {
-                      acc[category] = [];
-                    }
-                    acc[category].push(docType);
-                    return acc;
-                  }, {} as Record<string, any[]>);
-
-                  return Object.entries(groupedTypes).map(([category, types]) => (
-                    <div key={category}>
-                      <div className="px-2 py-1 text-xs font-semibold text-gray-500 uppercase bg-gray-50">
-                        {category}
-                      </div>
-                      {types.map((type) => (
-                        <SelectItem key={type.id} value={type.id} className="hover:bg-gray-50 pl-4">
-                          {type.name}
-                        </SelectItem>
-                      ))}
-                    </div>
-                  ));
-                })()}
+                {Object.entries(categoryLabels).map(([key, label]) => (
+                  <SelectItem key={key} value={key} className="hover:bg-gray-50">
+                    {label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
+
+          {/* Document Type Selection */}
+          {selectedCategory && (
+            <div className="space-y-2">
+              <Label htmlFor="document_type" className="text-sm font-medium text-gray-700">
+                Document Type
+              </Label>
+              {selectedCategory === 'others' ? (
+                <Input
+                  {...register('custom_document_type')}
+                  placeholder="Enter custom document type"
+                  className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                />
+              ) : (
+                <Select onValueChange={(value) => setValue('document_type', value)} value={watchedValues.document_type}>
+                  <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                    <SelectValue placeholder="Select document type" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                    {documentTypeMapping[selectedCategory as keyof typeof documentTypeMapping]?.map((type) => (
+                      <SelectItem key={type} value={type} className="hover:bg-gray-50">
+                        {type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+          )}
 
           {/* Notes */}
           <div className="space-y-2">
