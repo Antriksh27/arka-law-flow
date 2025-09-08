@@ -299,7 +299,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl bg-white border border-gray-200 shadow-lg">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="pb-4 border-b border-gray-100">
           <DialogTitle className="text-xl font-semibold text-gray-900 flex items-center gap-2">
             <Upload className="w-5 h-5" />
