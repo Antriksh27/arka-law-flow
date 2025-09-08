@@ -8,8 +8,8 @@ import { useToast } from '@/hooks/use-toast';
 import * as mammoth from 'mammoth';
 import * as pdfjsLib from 'pdfjs-dist';
 
-// Configure PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.js`;
+// Disable worker for simpler setup
+pdfjsLib.GlobalWorkerOptions.workerSrc = '';
 
 interface FileViewerProps {
   open: boolean;
