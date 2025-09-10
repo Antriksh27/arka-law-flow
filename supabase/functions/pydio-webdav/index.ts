@@ -390,7 +390,7 @@ serve(async (req) => {
             details: errorText + troubleshooting,
             uploadUrl: fullUploadUrl,
             baseUrl: workingBaseUrl,
-            testedUrls: [baseUrl, workingBaseUrl],
+            testedUrls: urlVariations.slice(0, foundWorkingUrl ? urlVariations.indexOf(workingBaseUrl) + 1 : urlVariations.length),
             folderPath: currentPath,
             httpStatus: uploadResponse.status,
             attempts: uploadAttempt - 1
