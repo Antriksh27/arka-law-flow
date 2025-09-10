@@ -187,36 +187,30 @@ serve(async (req) => {
       
       try {
         // Ensure WebDAV URL is properly formatted
-        const baseUrl = webdavUrl.endsWith('/') ? webdavUrl.slice(0, -1) : webdavUrl;
-        console.log(`🌐 Base URL: ${baseUrl}`);
+        let workingBaseUrl = webdavUrl.endsWith('/') ? webdavUrl.slice(0, -1) : webdavUrl;
+        console.log(`🌐 Initial Base URL: ${workingBaseUrl}`);
         
-        // Test WebDAV connection first with PROPFIND
-        console.log(`🧪 Testing WebDAV connection to: ${baseUrl}`);
-        const testResponse = await fetch(baseUrl, {
-          method: 'PROPFIND',
-          headers: {
-            'Authorization': `Basic ${btoa(`${webdavUsername}:${webdavPassword}`)}`,
-            'Depth': '0',
-            'Content-Type': 'text/xml',
-          },
-        });
-        console.log(`🧪 WebDAV test response: ${testResponse.status} ${testResponse.statusText}`);
+        // Test different WebDAV URL structures to find the working one
+        const urlVariations = [
+          workingBaseUrl, // Original URL
+          workingBaseUrl.replace('/dav', '/remote.php/dav/files/' + webdavUsername),
+          workingBaseUrl.replace('/dav', '/remote.php/webdav'),
+          workingBaseUrl.replace('/dav', '/webdav'),
+          workingBaseUrl + '/files/' + webdavUsername,
+          workingBaseUrl + '/' + webdavUsername,
+          workingBaseUrl.replace('/dav/', '/dav/' + webdavUsername + '/'),
+          workingBaseUrl.replace('/dav', '') + '/' + webdavUsername,
+        ];
         
-        // If base URL test fails, try common variations
-        let workingBaseUrl = baseUrl;
-        if (!testResponse.ok && testResponse.status !== 207) {
-          const variations = [
-            baseUrl.replace('/dav', '/remote.php/dav/files/' + webdavUsername),
-            baseUrl.replace('/dav', '/remote.php/webdav'),
-            baseUrl.replace('/dav', '/webdav'),
-            baseUrl + '/files/' + webdavUsername,
-            baseUrl + '/' + webdavUsername
-          ];
+        console.log(`🧪 Testing ${urlVariations.length} URL variations...`);
+        let foundWorkingUrl = false;
+        
+        for (let i = 0; i < urlVariations.length; i++) {
+          const testUrl = urlVariations[i];
+          console.log(`🧪 Testing variation ${i + 1}: ${testUrl}`);
           
-          console.log('🔄 Base URL failed, trying variations...');
-          for (const variation of variations) {
-            console.log(`🧪 Testing variation: ${variation}`);
-            const varTest = await fetch(variation, {
+          try {
+            const testResponse = await fetch(testUrl, {
               method: 'PROPFIND',
               headers: {
                 'Authorization': `Basic ${btoa(`${webdavUsername}:${webdavPassword}`)}`,
@@ -224,14 +218,21 @@ serve(async (req) => {
                 'Content-Type': 'text/xml',
               },
             });
-            console.log(`🧪 Variation response: ${varTest.status} ${varTest.statusText}`);
+            console.log(`📡 Test response ${i + 1}: ${testResponse.status} ${testResponse.statusText}`);
             
-            if (varTest.ok || varTest.status === 207) {
-              workingBaseUrl = variation;
+            if (testResponse.ok || testResponse.status === 207 || testResponse.status === 405) {
+              workingBaseUrl = testUrl;
+              foundWorkingUrl = true;
               console.log(`✅ Found working base URL: ${workingBaseUrl}`);
               break;
             }
+          } catch (testError) {
+            console.log(`❌ Test ${i + 1} failed: ${testError.message}`);
           }
+        }
+        
+        if (!foundWorkingUrl) {
+          console.log(`⚠️ No working URL found, using original: ${workingBaseUrl}`);
         }
         
         // Create folder structure: {clientName}/{caseName}/{category}/{docType}
