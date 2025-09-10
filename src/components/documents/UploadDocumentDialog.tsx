@@ -8,9 +8,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
-import { Upload, X, FileText } from 'lucide-react';
+import { Upload, X, FileText, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { ClientSelector } from '@/components/appointments/ClientSelector';
 
 interface UploadDocumentDialogProps {
   open: boolean;
@@ -42,6 +43,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [showSuccessOptions, setShowSuccessOptions] = useState(false);
   
   const {
     register,
@@ -144,7 +146,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
     'others': 'Others'
   };
 
-  // Fetch clients for dropdown
+  // Fetch clients (still needed for case filtering)
   const { data: clients = [] } = useQuery({
     queryKey: ['clients-for-upload'],
     queryFn: async () => {
@@ -355,9 +357,9 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
         onUploadSuccess();
       }
       
-      reset();
+      // Show success options instead of closing immediately
       setSelectedFiles([]);
-      onClose();
+      setShowSuccessOptions(true);
     },
     onError: (error: any) => {
       console.error('Upload mutation failed:', error);
@@ -377,6 +379,33 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
 
   const removeFile = (index: number) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleAddMoreFiles = () => {
+    setShowSuccessOptions(false);
+    // Reset form but keep client/case selections
+    const currentClientId = watch('client_id');
+    const currentCaseId = watch('case_id');
+    const currentCategory = watch('document_category');
+    
+    reset({
+      client_id: currentClientId,
+      case_id: currentCaseId,
+      document_category: currentCategory,
+      document_type: '',
+      custom_document_type: '',
+      notes: '',
+      is_evidence: false,
+      confidential: false,
+      original_copy_retained: false,
+      certified_copy: false
+    });
+  };
+
+  const handleFinishUploading = () => {
+    reset();
+    setShowSuccessOptions(false);
+    onClose();
   };
 
   const onSubmit = (data: UploadFormData) => {
@@ -510,21 +539,19 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
             <Label htmlFor="client_id" className="text-sm font-medium text-gray-700">
               Select Client <span className="text-red-500">*</span>
             </Label>
-            <Select onValueChange={value => {
-              setValue('client_id', value);
-              setValue('case_id', 'no-case'); // Reset case when client changes
-            }} value={selectedClientId}>
-              <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                <SelectValue placeholder="Select a client..." />
-              </SelectTrigger>
-              <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                {clients.map(client => (
-                  <SelectItem key={client.id} value={client.id} className="hover:bg-gray-50">
-                    {client.full_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <ClientSelector
+              value={selectedClientId || ''}
+              onValueChange={(value) => {
+                setValue('client_id', value);
+                setValue('case_id', 'no-case'); // Reset case when client changes
+              }}
+              placeholder="Search and select client or contact..."
+              onClientAdded={(clientId) => {
+                if (clientId) {
+                  setValue('client_id', clientId);
+                }
+              }}
+            />
           </div>
 
           {/* Case Assignment */}
@@ -676,30 +703,56 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={uploadMutation.isPending}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={selectedFiles.length === 0 || uploadMutation.isPending}
-              className="min-w-[120px]"
-            >
-              {uploadMutation.isPending ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Uploading...
-                </div>
-              ) : (
-                `Upload ${selectedFiles.length > 0 ? `(${selectedFiles.length})` : ''}`
-              )}
-            </Button>
-          </div>
+          {showSuccessOptions ? (
+            <div className="flex flex-col gap-4 pt-6 border-t border-gray-100">
+              <div className="text-center">
+                <h4 className="text-lg font-medium text-green-600 mb-2">Files uploaded successfully!</h4>
+                <p className="text-sm text-gray-600">What would you like to do next?</p>
+              </div>
+              <div className="flex justify-center gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleAddMoreFiles}
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add More Files
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleFinishUploading}
+                >
+                  Done
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                disabled={uploadMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={selectedFiles.length === 0 || uploadMutation.isPending}
+                className="min-w-[120px]"
+              >
+                {uploadMutation.isPending ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Uploading...
+                  </div>
+                ) : (
+                  `Upload ${selectedFiles.length > 0 ? `(${selectedFiles.length})` : ''}`
+                )}
+              </Button>
+            </div>
+          )}
         </form>
       </DialogContent>
     </Dialog>
