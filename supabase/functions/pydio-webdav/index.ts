@@ -256,16 +256,48 @@ serve(async (req) => {
         
         console.log(`🔐 Auth header: Basic ${btoa(`${webdavUsername}:${webdavPassword}`).substring(0, 10)}...`);
         
-        const uploadResponse = await fetch(fullUploadUrl, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `Basic ${btoa(`${webdavUsername}:${webdavPassword}`)}`,
-            'Content-Type': 'application/octet-stream',
-          },
-          body: fileData,
-        });
+        // Try the upload with error retry logic
+        let uploadResponse;
+        let uploadAttempt = 1;
+        const maxAttempts = 3;
         
-        console.log(`📡 Upload response: ${uploadResponse.status} ${uploadResponse.statusText}`);
+        while (uploadAttempt <= maxAttempts) {
+          console.log(`📤 Upload attempt ${uploadAttempt}/${maxAttempts} to: ${fullUploadUrl}`);
+          
+          try {
+            uploadResponse = await fetch(fullUploadUrl, {
+              method: 'PUT',
+              headers: {
+                'Authorization': `Basic ${btoa(`${webdavUsername}:${webdavPassword}`)}`,
+                'Content-Type': 'application/octet-stream',
+                'Content-Length': fileData.length.toString(),
+              },
+              body: fileData,
+            });
+            
+            console.log(`📡 Upload response: ${uploadResponse.status} ${uploadResponse.statusText}`);
+            
+            // If successful or client error (don't retry), break
+            if (uploadResponse.ok || uploadResponse.status < 500) {
+              break;
+            }
+            
+            // Server error, retry
+            if (uploadAttempt < maxAttempts) {
+              console.log(`⚠️ Server error ${uploadResponse.status}, retrying in 1 second...`);
+              await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            
+          } catch (fetchError) {
+            console.error(`❌ Upload attempt ${uploadAttempt} failed:`, fetchError);
+            if (uploadAttempt === maxAttempts) {
+              throw fetchError;
+            }
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+          
+          uploadAttempt++;
+        }
         
         if (uploadResponse.ok || uploadResponse.status === 201 || uploadResponse.status === 204) {
           console.log('✅ File uploaded successfully to hierarchical structure');
@@ -286,19 +318,56 @@ serve(async (req) => {
           let troubleshooting = '';
           
           if (uploadResponse.status === 404) {
+            // Try alternative URL structure
+            console.log('🔄 Trying alternative URL structure without crmdata...');
+            const alternativeBaseUrl = baseUrl.replace('/crmdata', '');
+            const alternativeFullUrl = `${alternativeBaseUrl}${fullPath}`;
+            
+            console.log(`📤 Alternative upload URL: ${alternativeFullUrl}`);
+            
+            try {
+              const alternativeResponse = await fetch(alternativeFullUrl, {
+                method: 'PUT',
+                headers: {
+                  'Authorization': `Basic ${btoa(`${webdavUsername}:${webdavPassword}`)}`,
+                  'Content-Type': 'application/octet-stream',
+                  'Content-Length': fileData.length.toString(),
+                },
+                body: fileData,
+              });
+              
+              console.log(`📡 Alternative upload response: ${alternativeResponse.status} ${alternativeResponse.statusText}`);
+              
+              if (alternativeResponse.ok || alternativeResponse.status === 201 || alternativeResponse.status === 204) {
+                console.log('✅ File uploaded successfully to alternative URL structure');
+                return new Response(JSON.stringify({
+                  success: true,
+                  message: `File uploaded successfully to ${fullPath} (using alternative URL)`,
+                  path: fullPath,
+                  actualUrl: alternativeFullUrl
+                }), {
+                  headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                  status: 200,
+                });
+              }
+            } catch (alternativeError) {
+              console.error('❌ Alternative upload also failed:', alternativeError);
+            }
+            
             troubleshooting = `
             
 🔍 TROUBLESHOOTING 404 ERROR:
 - The WebDAV path '${fullUploadUrl}' was not found
+- Tried alternative path '${alternativeBaseUrl}${fullPath}' but that also failed
 - This usually means either:
   1. The WebDAV base URL is incorrect
   2. The folder structure doesn't exist and couldn't be created
   3. Authentication failed silently
   
 💡 SOLUTION:
-- Check if your WebDAV URL should be: https://server.hrulegal.com/dav/ (without 'crmdata')
-- Or verify the 'crmdata' folder exists at the WebDAV root
-- Test WebDAV connection manually with these credentials`;
+- Verify your WebDAV URL configuration
+- Test WebDAV connection manually with these credentials
+- Check if the server requires a different path structure`;
           } else if (uploadResponse.status === 401 || uploadResponse.status === 403) {
             troubleshooting = `
             
@@ -314,7 +383,8 @@ serve(async (req) => {
             uploadUrl: fullUploadUrl,
             baseUrl: baseUrl,
             folderPath: currentPath,
-            httpStatus: uploadResponse.status
+            httpStatus: uploadResponse.status,
+            attempts: uploadAttempt - 1
           }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 400,
