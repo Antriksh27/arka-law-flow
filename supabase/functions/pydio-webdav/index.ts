@@ -190,9 +190,52 @@ serve(async (req) => {
         const baseUrl = webdavUrl.endsWith('/') ? webdavUrl.slice(0, -1) : webdavUrl;
         console.log(`🌐 Base URL: ${baseUrl}`);
         
+        // Test WebDAV connection first with PROPFIND
+        console.log(`🧪 Testing WebDAV connection to: ${baseUrl}`);
+        const testResponse = await fetch(baseUrl, {
+          method: 'PROPFIND',
+          headers: {
+            'Authorization': `Basic ${btoa(`${webdavUsername}:${webdavPassword}`)}`,
+            'Depth': '0',
+            'Content-Type': 'text/xml',
+          },
+        });
+        console.log(`🧪 WebDAV test response: ${testResponse.status} ${testResponse.statusText}`);
+        
+        // If base URL test fails, try common variations
+        let workingBaseUrl = baseUrl;
+        if (!testResponse.ok && testResponse.status !== 207) {
+          const variations = [
+            baseUrl.replace('/dav', '/remote.php/dav/files/' + webdavUsername),
+            baseUrl.replace('/dav', '/remote.php/webdav'),
+            baseUrl.replace('/dav', '/webdav'),
+            baseUrl + '/files/' + webdavUsername,
+            baseUrl + '/' + webdavUsername
+          ];
+          
+          console.log('🔄 Base URL failed, trying variations...');
+          for (const variation of variations) {
+            console.log(`🧪 Testing variation: ${variation}`);
+            const varTest = await fetch(variation, {
+              method: 'PROPFIND',
+              headers: {
+                'Authorization': `Basic ${btoa(`${webdavUsername}:${webdavPassword}`)}`,
+                'Depth': '0',
+                'Content-Type': 'text/xml',
+              },
+            });
+            console.log(`🧪 Variation response: ${varTest.status} ${varTest.statusText}`);
+            
+            if (varTest.ok || varTest.status === 207) {
+              workingBaseUrl = variation;
+              console.log(`✅ Found working base URL: ${workingBaseUrl}`);
+              break;
+            }
+          }
+        }
+        
         // Create folder structure: {clientName}/{caseName}/{category}/{docType}
         // Use URL encoding for folder names to handle special characters
-        // Note: 'crmdata' is now included in the base WebDAV URL
         const folders = [
           encodeURIComponent(clientName), 
           encodeURIComponent(caseName), 
@@ -204,7 +247,7 @@ serve(async (req) => {
         
         for (const folder of folders) {
           currentPath += `/${folder}`;
-          const fullFolderUrl = `${baseUrl}${currentPath}`;
+          const fullFolderUrl = `${workingBaseUrl}${currentPath}`;
           console.log(`📂 Checking/creating folder: ${currentPath} (${fullFolderUrl})`);
           
           // Try to create folder (MKCOL method)
@@ -234,7 +277,7 @@ serve(async (req) => {
         // Upload the file with proper encoding
         const encodedFileName = encodeURIComponent(fileName);
         const fullPath = `${currentPath}/${encodedFileName}`;
-        const fullUploadUrl = `${baseUrl}${fullPath}`;
+        const fullUploadUrl = `${workingBaseUrl}${fullPath}`;
         console.log(`📤 Uploading file to: ${fullPath} (${fullUploadUrl})`);
         
         // Decode base64 content if it appears to be base64
@@ -304,7 +347,8 @@ serve(async (req) => {
           return new Response(JSON.stringify({
             success: true,
             message: `File uploaded successfully to ${fullPath}`,
-            path: fullPath
+            path: fullPath,
+            actualUrl: fullUploadUrl
           }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 200,
@@ -318,54 +362,17 @@ serve(async (req) => {
           let troubleshooting = '';
           
           if (uploadResponse.status === 404) {
-            // Try alternative URL structure
-            console.log('🔄 Trying alternative URL structure without crmdata...');
-            const alternativeBaseUrl = baseUrl.replace('/crmdata', '');
-            const alternativeFullUrl = `${alternativeBaseUrl}${fullPath}`;
-            
-            console.log(`📤 Alternative upload URL: ${alternativeFullUrl}`);
-            
-            try {
-              const alternativeResponse = await fetch(alternativeFullUrl, {
-                method: 'PUT',
-                headers: {
-                  'Authorization': `Basic ${btoa(`${webdavUsername}:${webdavPassword}`)}`,
-                  'Content-Type': 'application/octet-stream',
-                  'Content-Length': fileData.length.toString(),
-                },
-                body: fileData,
-              });
-              
-              console.log(`📡 Alternative upload response: ${alternativeResponse.status} ${alternativeResponse.statusText}`);
-              
-              if (alternativeResponse.ok || alternativeResponse.status === 201 || alternativeResponse.status === 204) {
-                console.log('✅ File uploaded successfully to alternative URL structure');
-                return new Response(JSON.stringify({
-                  success: true,
-                  message: `File uploaded successfully to ${fullPath} (using alternative URL)`,
-                  path: fullPath,
-                  actualUrl: alternativeFullUrl
-                }), {
-                  headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-                  status: 200,
-                });
-              }
-            } catch (alternativeError) {
-              console.error('❌ Alternative upload also failed:', alternativeError);
-            }
-            
             troubleshooting = `
             
 🔍 TROUBLESHOOTING 404 ERROR:
 - The WebDAV path '${fullUploadUrl}' was not found
-- Tried alternative path '${alternativeBaseUrl}${fullPath}' but that also failed
 - This usually means either:
   1. The WebDAV base URL is incorrect
   2. The folder structure doesn't exist and couldn't be created
   3. Authentication failed silently
   
 💡 SOLUTION:
-- Verify your WebDAV URL configuration
+- Verify your WebDAV URL configuration in Supabase secrets
 - Test WebDAV connection manually with these credentials
 - Check if the server requires a different path structure`;
           } else if (uploadResponse.status === 401 || uploadResponse.status === 403) {
@@ -373,7 +380,7 @@ serve(async (req) => {
             
 🔍 AUTHENTICATION ERROR:
 - WebDAV credentials are being rejected
-- Check username and password are correct`;
+- Check username and password are correct in Supabase secrets`;
           }
           
           return new Response(JSON.stringify({
@@ -381,7 +388,8 @@ serve(async (req) => {
             error: errorMessage,
             details: errorText + troubleshooting,
             uploadUrl: fullUploadUrl,
-            baseUrl: baseUrl,
+            baseUrl: workingBaseUrl,
+            testedUrls: [baseUrl, workingBaseUrl],
             folderPath: currentPath,
             httpStatus: uploadResponse.status,
             attempts: uploadAttempt - 1
