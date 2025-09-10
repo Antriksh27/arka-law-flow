@@ -207,7 +207,7 @@ serve(async (req) => {
         
         for (let i = 0; i < urlVariations.length; i++) {
           const testUrl = urlVariations[i];
-          console.log(`🧪 Testing variation ${i + 1}: ${testUrl}`);
+          console.log(`🧪 Testing variation ${i + 1}/${urlVariations.length}: ${testUrl}`);
           
           try {
             const testResponse = await fetch(testUrl, {
@@ -220,19 +220,24 @@ serve(async (req) => {
             });
             console.log(`📡 Test response ${i + 1}: ${testResponse.status} ${testResponse.statusText}`);
             
-            if (testResponse.ok || testResponse.status === 207 || testResponse.status === 405) {
+            // Accept various success codes for WebDAV
+            if (testResponse.ok || testResponse.status === 207 || testResponse.status === 405 || testResponse.status === 403) {
               workingBaseUrl = testUrl;
               foundWorkingUrl = true;
               console.log(`✅ Found working base URL: ${workingBaseUrl}`);
               break;
             }
           } catch (testError) {
-            console.log(`❌ Test ${i + 1} failed: ${testError.message}`);
+            console.log(`❌ Test ${i + 1} failed with error: ${testError.message}`);
+            // Continue to next variation
           }
         }
         
+        console.log(`🔍 Final working URL: ${workingBaseUrl}, Found working: ${foundWorkingUrl}`);
+        console.log(`📋 All tested URLs: ${JSON.stringify(urlVariations)}`);
+        
         if (!foundWorkingUrl) {
-          console.log(`⚠️ No working URL found, using original: ${workingBaseUrl}`);
+          console.log(`⚠️ No working URL found from ${urlVariations.length} variations, using original: ${workingBaseUrl}`);
         }
         
         // Create folder structure: {clientName}/{caseName}/{category}/{docType}
@@ -390,7 +395,8 @@ serve(async (req) => {
             details: errorText + troubleshooting,
             uploadUrl: fullUploadUrl,
             baseUrl: workingBaseUrl,
-            testedUrls: urlVariations.slice(0, foundWorkingUrl ? urlVariations.indexOf(workingBaseUrl) + 1 : urlVariations.length),
+            testedUrls: urlVariations,
+            foundWorkingUrl: foundWorkingUrl,
             folderPath: currentPath,
             httpStatus: uploadResponse.status,
             attempts: uploadAttempt - 1
