@@ -25,10 +25,10 @@ export interface WebDAVResponse {
  */
 export async function uploadFileToWebDAV(params: WebDAVUploadParams): Promise<WebDAVResponse> {
   try {
-    console.log('🔧 Starting WebDAV integration - calling uploadToPydio edge function');
+    console.log('🔧 Starting WebDAV integration - calling pydio-webdav edge function');
     console.log('📁 File params:', { filename: params.filename, contentLength: params.content.length });
     
-    const { data, error } = await supabase.functions.invoke('uploadToPydio', {
+    const { data, error } = await supabase.functions.invoke('pydio-webdav', {
       body: {
         operation: 'upload',
         filename: params.filename,
@@ -65,7 +65,7 @@ export async function uploadFileToWebDAV(params: WebDAVUploadParams): Promise<We
  */
 export async function downloadFileFromWebDAV(params: WebDAVDownloadParams): Promise<WebDAVResponse> {
   try {
-    const { data, error } = await supabase.functions.invoke('uploadToPydio', {
+    const { data, error } = await supabase.functions.invoke('pydio-webdav', {
       body: {
         operation: 'download',
         filePath: params.filePath,
