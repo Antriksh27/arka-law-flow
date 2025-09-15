@@ -29,14 +29,14 @@ export const DocumentList: React.FC<DocumentListProps> = ({
     setSelectedDocument(document);
     setShowFileViewer(true);
   };
-  const handleDownload = async (document: any) => {
+  const handleDownload = async (doc: any) => {
     try {
       // For WebDAV-synced documents, try to download from WebDAV first
-      if (document.webdav_synced && document.webdav_path) {
+      if (doc.webdav_synced && doc.webdav_path) {
         const { data: webdavResult, error: webdavError } = await supabase.functions.invoke('pydio-webdav', {
           body: {
             operation: 'download',
-            filePath: document.webdav_path
+            filePath: doc.webdav_path
           }
         });
         
@@ -51,30 +51,27 @@ export const DocumentList: React.FC<DocumentListProps> = ({
           const blob = new Blob([bytes]);
           
           const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
+          const a = window.document.createElement('a');
           a.href = url;
-          a.download = document.file_name;
-          document.body.appendChild(a);
+          a.download = doc.file_name;
+          window.document.body.appendChild(a);
           a.click();
-          document.body.removeChild(a);
+          window.document.body.removeChild(a);
           URL.revokeObjectURL(url);
           return;
         }
       }
       
       // Fallback to Supabase storage if WebDAV fails or not synced
-      const {
-        data,
-        error
-      } = await supabase.storage.from('documents').download(document.file_url);
+      const { data, error } = await supabase.storage.from('documents').download(doc.file_url);
       if (error) throw error;
       const url = URL.createObjectURL(data);
-      const a = document.createElement('a');
+      const a = window.document.createElement('a');
       a.href = url;
-      a.download = document.file_name;
-      document.body.appendChild(a);
+      a.download = doc.file_name;
+      window.document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
+      window.document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (error) {
       toast({

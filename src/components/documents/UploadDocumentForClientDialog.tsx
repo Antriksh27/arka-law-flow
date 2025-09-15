@@ -211,7 +211,7 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
         const category = data.document_category ? categoryLabels[data.document_category as keyof typeof categoryLabels] : 'Others';
         const docType = data.document_type || data.custom_document_type || 'Unspecified';
         
-        // Upload to WebDAV
+        // Upload to WebDAV and gracefully fallback to Supabase Storage on failure
         const { data: pydioResult, error: pydioError } = await supabase.functions.invoke('pydio-webdav', {
           body: {
             clientName,
@@ -223,17 +223,61 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
           }
         });
         
-        if (pydioError) {
-          throw new Error(`WebDAV upload failed: ${pydioError.message}`);
-        }
-        if (!pydioResult?.success) {
-          throw new Error(`WebDAV upload failed: ${pydioResult?.error || 'Unknown error'}`);
+        let webdavOk = !!pydioResult?.success && !pydioError;
+        let webdavPath: string | undefined = pydioResult?.path;
+        let webdavErrorMessage: string | undefined = undefined;
+
+        if (!webdavOk) {
+          webdavErrorMessage = pydioError?.message || pydioResult?.error || 'Unknown WebDAV error';
+          console.warn('⚠️ WebDAV upload failed, falling back to Supabase Storage:', webdavErrorMessage);
+
+          const storagePath = `uploads/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${file.name}`;
+          const { error: storageError } = await supabase.storage
+            .from('documents')
+            .upload(storagePath, file);
+
+          if (storageError) {
+            console.error('❌ Supabase storage upload failed as fallback:', storageError);
+            throw new Error(`Upload failed (WebDAV + fallback): ${webdavErrorMessage}`);
+          }
+
+          // Insert document record pointing to Supabase Storage (not WebDAV)
+          const fallbackDocumentData = {
+            file_name: file.name,
+            file_url: storagePath,
+            file_type: file.name.split('.').pop()?.toLowerCase() || null,
+            file_size: file.size,
+            client_id: clientId,
+            case_id: (data.case_id && data.case_id !== 'no-case') ? data.case_id : null,
+            uploaded_by: user.id,
+            is_evidence: data.is_evidence,
+            uploaded_at: new Date().toISOString(),
+            firm_id: teamMember.firm_id,
+            folder_name: (!data.case_id || data.case_id === 'no-case') ? 'General Documents' : null,
+            notes: data.notes || null,
+            confidential: data.confidential || false,
+            original_copy_retained: data.original_copy_retained || false,
+            certified_copy: data.certified_copy || false,
+            webdav_synced: false,
+            webdav_path: null,
+            webdav_error: webdavErrorMessage,
+            sync_attempted_at: new Date().toISOString(),
+          };
+
+          const { data: insertData, error: insertError } = await supabase
+            .from('documents')
+            .insert(fallbackDocumentData)
+            .select('id, file_name, file_url')
+            .single();
+          
+          if (insertError) throw insertError;
+          return insertData;
         }
 
-        // Insert document record
+        // Insert document record (WebDAV success)
         const documentData = {
           file_name: file.name,
-          file_url: pydioResult.path || `${clientName}/${caseName}/${category}/${docType}/${file.name}`,
+          file_url: webdavPath || `${clientName}/${caseName}/${category}/${docType}/${file.name}`,
           file_type: file.name.split('.').pop()?.toLowerCase() || null,
           file_size: file.size,
           client_id: clientId,
@@ -248,7 +292,7 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
           original_copy_retained: data.original_copy_retained || false,
           certified_copy: data.certified_copy || false,
           webdav_synced: true,
-          webdav_path: pydioResult.path,
+          webdav_path: webdavPath,
           synced_at: new Date().toISOString()
         };
 

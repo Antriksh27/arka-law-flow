@@ -256,41 +256,70 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
             console.log('WebDAV result:', pydioResult);
             console.log('WebDAV error:', pydioError);
             
-            if (pydioError) {
-              console.error('❌ WebDAV upload failed:', pydioError);
-              
-              // Try to get more details from the error
-              let errorMessage = pydioError.message || 'Unknown error';
-              let errorDetails = '';
-              
-              if (pydioError.context) {
-                errorDetails += ` Context: ${JSON.stringify(pydioError.context)}`;
+            let webdavOk = !!pydioResult?.success && !pydioError;
+            let webdavPath: string | undefined = pydioResult?.path;
+            let webdavErrorMessage: string | undefined = undefined;
+
+            // If WebDAV failed (e.g., Cloudflare 530), gracefully fall back to Supabase Storage
+            if (!webdavOk) {
+              webdavErrorMessage = pydioError?.message || pydioResult?.error || 'Unknown WebDAV error';
+              console.warn('⚠️ WebDAV upload failed, falling back to Supabase Storage:', webdavErrorMessage);
+
+              const storagePath = `uploads/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${file.name}`;
+              const { error: storageError } = await supabase.storage
+                .from('documents')
+                .upload(storagePath, file);
+
+              if (storageError) {
+                console.error('❌ Supabase storage upload failed as fallback:', storageError);
+                throw new Error(`Upload failed (WebDAV + fallback): ${webdavErrorMessage}`);
               }
-              
-              throw new Error(`WebDAV upload failed: ${errorMessage}${errorDetails}`);
-            } else if (!pydioResult?.success) {
-              console.error('❌ WebDAV upload failed:', pydioResult);
-              
-              let errorMessage = pydioResult?.error || 'Unknown error';
-              let errorDetails = '';
-              
-              if (pydioResult?.details) {
-                errorDetails += ` Details: ${pydioResult.details}`;
+
+              // Insert document record pointing to Supabase Storage (not WebDAV)
+              const fallbackDocumentData = {
+                file_name: file.name,
+                file_url: storagePath, // path relative to bucket for consistent downloads
+                file_type: file.name.split('.').pop()?.toLowerCase() || null,
+                file_size: file.size,
+                case_id: (data.case_id && data.case_id !== 'no-case') ? data.case_id : null,
+                client_id: data.client_id || null,
+                uploaded_by: user.id,
+                is_evidence: data.is_evidence,
+                uploaded_at: new Date().toISOString(),
+                firm_id: firmId,
+                folder_name: (!data.client_id && (!data.case_id || data.case_id === 'no-case')) ? 'General Documents' : null,
+                document_type_id: null,
+                notes: data.notes || null,
+                confidential: data.confidential || false,
+                original_copy_retained: data.original_copy_retained || false,
+                certified_copy: data.certified_copy || false,
+                webdav_synced: false,
+                webdav_path: null,
+                webdav_error: webdavErrorMessage,
+                sync_attempted_at: new Date().toISOString(),
+              };
+
+              const { data: insertData, error: insertError } = await supabase
+                .from('documents')
+                .insert(fallbackDocumentData)
+                .select('id, file_name, file_url')
+                .single();
+
+              if (insertError) {
+                console.error('Database insert error (fallback):', insertError);
+                throw insertError;
               }
-              
-              if (pydioResult?.uploadUrl) {
-                errorDetails += ` Upload URL: ${pydioResult.uploadUrl}`;
-              }
-              
-              throw new Error(`WebDAV upload failed: ${errorMessage}${errorDetails}`);
+
+              console.log('✅ Fallback upload (Supabase Storage) successful:', insertData);
+              return insertData;
             }
 
             console.log('✅ WebDAV upload successful:', pydioResult.message);
 
-            // Insert document record in database (without Supabase storage URL)
+            // Insert document record in database (WebDAV path)
             const documentData = {
               file_name: file.name,
-              file_url: pydioResult.path || `${clientName}/${caseName}/${category}/${docType}/${file.name}`, // Use WebDAV path
+              file_url: webdavPath || `${clientName}/${caseName}/${category}/${docType}/${file.name}`,
               file_type: file.name.split('.').pop()?.toLowerCase() || null,
               file_size: file.size,
               case_id: (data.case_id && data.case_id !== 'no-case') ? data.case_id : null,
@@ -306,7 +335,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
               original_copy_retained: data.original_copy_retained || false,
               certified_copy: data.certified_copy || false,
               webdav_synced: true, // Mark as synced to WebDAV
-              webdav_path: pydioResult.path,
+              webdav_path: webdavPath,
               synced_at: new Date().toISOString()
             };
 
