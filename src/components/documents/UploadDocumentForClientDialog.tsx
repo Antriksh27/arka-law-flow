@@ -140,9 +140,10 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
     'others': 'Others'
   };
 
-  // Fetch client details
+  // Fetch client details (only when dialog is open) without polluting main client cache
   const { data: client } = useQuery({
-    queryKey: ['client', clientId],
+    queryKey: ['client-basic', clientId],
+    enabled: open && !!clientId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('clients')
@@ -152,7 +153,6 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
       if (error) throw error;
       return data;
     },
-    enabled: !!clientId
   });
 
   // Fetch cases for the specific client
