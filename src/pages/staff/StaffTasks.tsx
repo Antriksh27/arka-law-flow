@@ -87,7 +87,7 @@ const StaffTasks = () => {
     priority: 'medium',
     due_date: '',
     assigned_to: '',
-    case_id: ''
+    case_id: 'none'
   });
 
   useEffect(() => {
@@ -226,7 +226,7 @@ const StaffTasks = () => {
           due_date: taskForm.due_date || null,
           created_by: user.id,
           assigned_to: taskForm.assigned_to || user.id,
-          case_id: taskForm.case_id || null
+          case_id: taskForm.case_id === 'none' ? null : taskForm.case_id || null
         });
 
       if (error) throw error;
@@ -316,7 +316,7 @@ const StaffTasks = () => {
       priority: 'medium',
       due_date: '',
       assigned_to: '',
-      case_id: ''
+      case_id: 'none'
     });
     setEditingTask(null);
   };
@@ -472,7 +472,7 @@ const StaffTasks = () => {
                     <SelectValue placeholder="Select a case" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No specific case</SelectItem>
+                    <SelectItem value="none">No specific case</SelectItem>
                     {cases.map((case_) => (
                       <SelectItem key={case_.id} value={case_.id}>
                         {case_.case_number} - {case_.case_title}

@@ -75,7 +75,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
     if (taskData) {
       setValue('title', taskData.title);
       setValue('description', taskData.description || '');
-      setValue('assigned_to', taskData.assigned_to || '');
+      setValue('assigned_to', taskData.assigned_to || 'unassigned');
       setValue('priority', taskData.priority);
       setValue('status', taskData.status);
       setValue('due_date', taskData.due_date || '');
@@ -146,7 +146,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
       const updateData = {
         title: data.title,
         description: data.description || null,
-        assigned_to: data.assigned_to || null,
+        assigned_to: data.assigned_to === 'unassigned' ? null : data.assigned_to || null,
         priority: data.priority,
         status: data.status,
         due_date: data.due_date ? new Date(data.due_date).toISOString().split('T')[0] : null,
@@ -327,7 +327,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
                 <SelectValue placeholder="Select team member..." />
               </SelectTrigger>
               <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                <SelectItem value="" className="hover:bg-gray-50">Unassigned</SelectItem>
+                <SelectItem value="unassigned" className="hover:bg-gray-50">Unassigned</SelectItem>
                 {teamMembers.map((member) => (
                   <SelectItem key={member.id} value={member.id} className="hover:bg-gray-50">
                     {member.full_name} ({member.role})

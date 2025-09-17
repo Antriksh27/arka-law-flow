@@ -73,7 +73,7 @@ const StaffDocuments = () => {
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadForm, setUploadForm] = useState({
-    case_id: '',
+    case_id: 'none',
     description: '',
     folder_name: '',
     is_evidence: false
@@ -215,7 +215,7 @@ const StaffDocuments = () => {
           file_type: selectedFile.type,
           file_size: selectedFile.size,
           file_url: publicUrl,
-          case_id: uploadForm.case_id || null,
+          case_id: uploadForm.case_id === 'none' ? null : uploadForm.case_id || null,
           description: uploadForm.description,
           folder_name: uploadForm.folder_name,
           is_evidence: uploadForm.is_evidence,
@@ -232,7 +232,7 @@ const StaffDocuments = () => {
       setShowUploadDialog(false);
       setSelectedFile(null);
       setUploadForm({
-        case_id: '',
+        case_id: 'none',
         description: '',
         folder_name: '',
         is_evidence: false
@@ -336,7 +336,7 @@ const StaffDocuments = () => {
                     <SelectValue placeholder="Select a case" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No specific case</SelectItem>
+                    <SelectItem value="none">No specific case</SelectItem>
                     {cases.map((case_) => (
                       <SelectItem key={case_.id} value={case_.id}>
                         {case_.case_number} - {case_.case_title}

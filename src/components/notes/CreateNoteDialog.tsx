@@ -82,7 +82,7 @@ export const CreateNoteDialog: React.FC<CreateNoteDialogProps> = ({
       const noteData: any = {
         title: data.title,
         content: data.content || null,
-        case_id: data.case_id || null,
+        case_id: data.case_id === 'none' ? null : data.case_id || null,
         visibility: data.visibility,
         color: data.color,
         tags: data.tags
@@ -220,12 +220,12 @@ export const CreateNoteDialog: React.FC<CreateNoteDialogProps> = ({
             <Label htmlFor="case_id" className="text-sm font-medium text-gray-700">
               Link to Case (Optional)
             </Label>
-            <Select onValueChange={(value) => setValue('case_id', value)} defaultValue={caseId || ''}>
+            <Select onValueChange={(value) => setValue('case_id', value)} defaultValue={caseId || 'none'}>
               <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                 <SelectValue placeholder="Select a case..." />
               </SelectTrigger>
               <SelectContent className="bg-white border border-gray-200 shadow-lg max-h-60">
-                <SelectItem value="">No case</SelectItem>
+                <SelectItem value="none">No case</SelectItem>
                 {cases.map((caseItem) => (
                   <SelectItem key={caseItem.id} value={caseItem.id}>
                     {caseItem.title}
