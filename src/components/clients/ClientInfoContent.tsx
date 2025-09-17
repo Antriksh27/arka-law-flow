@@ -28,38 +28,45 @@ export const ClientInfoContent: React.FC<ClientInfoContentProps> = ({
   } = useQuery({
     queryKey: ['client', clientId],
     queryFn: async () => {
-      console.log('Fetching client data for ID:', clientId);
+      console.log('🔍 Fetching client data for ID:', clientId);
       const {
         data: clientData,
         error: clientError
       } = await supabase.from('clients').select('*').eq('id', clientId).single();
       if (clientError) {
-        console.error('Error fetching client:', clientError);
+        console.error('❌ Error fetching client:', clientError);
         throw clientError;
       }
-      console.log('Client data fetched:', clientData);
+      console.log('✅ Client data fetched:', clientData);
       let assignedLawyer = null;
       if (clientData?.assigned_lawyer_id) {
-        console.log('Fetching assigned lawyer profile for ID:', clientData.assigned_lawyer_id);
+        console.log('👨‍💼 Fetching assigned lawyer profile for ID:', clientData.assigned_lawyer_id);
         const {
           data: lawyerData,
           error: lawyerError
         } = await supabase.from('profiles').select('id, full_name, profile_pic').eq('id', clientData.assigned_lawyer_id).maybeSingle();
         if (lawyerError) {
-          console.error('Error fetching lawyer profile:', lawyerError);
+          console.error('❌ Error fetching lawyer profile:', lawyerError);
         } else if (lawyerData) {
           assignedLawyer = lawyerData;
-          console.log('Assigned lawyer data fetched:', assignedLawyer);
+          console.log('✅ Assigned lawyer data fetched:', assignedLawyer);
         }
       }
       return {
         ...clientData,
         assigned_lawyer: assignedLawyer
       };
-    }
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    retry: 1,
+    refetchOnWindowFocus: false
   });
 
+  console.log('🔄 ClientInfoContent render - isLoading:', isLoading, 'client:', !!client, 'error:', !!error);
+
   if (isLoading) {
+    console.log('⏳ Showing loading state for client:', clientId);
     return <div className="min-h-[calc(100vh-64px)] bg-gray-50 flex items-center justify-center">
         <div className="flex items-center gap-3">
           <Loader2 className="w-6 h-6 animate-spin text-primary" />
@@ -69,7 +76,8 @@ export const ClientInfoContent: React.FC<ClientInfoContentProps> = ({
   }
 
   if (error || !client) {
-    console.error('Client loading error:', error);
+    console.error('❌ Client loading error:', error);
+    console.log('🚫 Showing error state - error:', error?.message, 'client:', !!client);
     return <div className="min-h-[calc(100vh-64px)] bg-gray-50 p-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center py-12">
@@ -85,6 +93,13 @@ export const ClientInfoContent: React.FC<ClientInfoContentProps> = ({
         </div>
       </div>;
   }
+
+  console.log('✅ Rendering client content:', { 
+    clientId, 
+    clientName: client.full_name, 
+    status: client.status,
+    hasReferredBy: !!client.referred_by_name 
+  });
 
   return <div className="min-h-[calc(100vh-64px)] bg-gray-50">
       <div className="max-w-7xl mx-auto">
