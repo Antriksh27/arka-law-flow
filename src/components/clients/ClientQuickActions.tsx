@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { MoreHorizontal, Plus, Calendar, FileText, StickyNote, Briefcase, Edit, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Plus, Calendar, FileText, StickyNote, Briefcase, Edit, Trash2, Users } from 'lucide-react';
 import { AssignToCaseDialog } from './AssignToCaseDialog';
 import { CreateAppointmentDialog } from '@/components/appointments/CreateAppointmentDialog';
 import { UploadDocumentForClientDialog } from '@/components/documents/UploadDocumentForClientDialog';
@@ -12,6 +12,7 @@ import { EditClientDialog } from './EditClientDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useDialog } from '@/hooks/use-dialog';
+import { ManageAssignedLawyersDialog } from './ManageAssignedLawyersDialog';
 
 interface ClientQuickActionsProps {
   clientId: string;
@@ -30,6 +31,7 @@ export const ClientQuickActions: React.FC<ClientQuickActionsProps> = ({
   const [showNoteDialog, setShowNoteDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showManageLawyersDialog, setShowManageLawyersDialog] = useState(false);
   const [clientData, setClientData] = useState<any>(null);
   const { openDialog } = useDialog();
 
@@ -115,6 +117,13 @@ export const ClientQuickActions: React.FC<ClientQuickActionsProps> = ({
               <StickyNote className="w-4 h-4 mr-3 text-gray-400" />
               <span>Add Note</span>
             </DropdownMenuItem>
+            <DropdownMenuItem 
+              className="hover:bg-gray-50 cursor-pointer"
+              onClick={() => setShowManageLawyersDialog(true)}
+            >
+              <Users className="w-4 h-4 mr-3 text-gray-400" />
+              <span>Assigned Lawyers</span>
+            </DropdownMenuItem>
             <DropdownMenuSeparator className="bg-gray-200" />
             <DropdownMenuItem 
               className="hover:bg-gray-50 cursor-pointer"
@@ -174,6 +183,13 @@ export const ClientQuickActions: React.FC<ClientQuickActionsProps> = ({
           }}
         />
       )}
+
+      <ManageAssignedLawyersDialog
+        open={showManageLawyersDialog}
+        onOpenChange={setShowManageLawyersDialog}
+        clientId={clientId}
+        clientName={clientName}
+      />
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
