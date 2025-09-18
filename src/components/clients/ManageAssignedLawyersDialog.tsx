@@ -49,15 +49,28 @@ export const ManageAssignedLawyersDialog: React.FC<ManageAssignedLawyersDialogPr
   const { data: lawyers = [] } = useQuery({
     queryKey: ['lawyers-for-assignment'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First get user IDs from team_members with the right roles
+      const { data: teamMembers, error: teamError } = await supabase
+        .from('team_members')
+        .select('user_id')
+        .in('role', ['lawyer', 'admin', 'junior']);
+      
+      if (teamError) throw teamError;
+      
+      if (!teamMembers || teamMembers.length === 0) return [];
+      
+      const userIds = teamMembers.map(member => member.user_id);
+      
+      // Then get profile details for those users
+      const { data: profiles, error: profileError } = await supabase
         .from('profiles')
         .select('id, full_name')
-        .in('role', ['lawyer', 'partner', 'associate', 'admin', 'junior']);
+        .in('id', userIds);
       
-      if (error) throw error;
+      if (profileError) throw profileError;
       
       // Sort to always show "chitrajeet upadhyaya" first
-      return data?.sort((a, b) => {
+      return profiles?.sort((a, b) => {
         const nameA = a.full_name?.toLowerCase() || '';
         const nameB = b.full_name?.toLowerCase() || '';
         
