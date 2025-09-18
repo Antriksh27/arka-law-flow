@@ -52,7 +52,7 @@ export const ManageAssignedLawyersDialog: React.FC<ManageAssignedLawyersDialogPr
       const { data, error } = await supabase
         .from('profiles')
         .select('id, full_name')
-        .in('role', ['lawyer', 'partner', 'associate', 'admin']);
+        .in('role', ['lawyer', 'partner', 'associate', 'admin', 'junior']);
       
       if (error) throw error;
       
