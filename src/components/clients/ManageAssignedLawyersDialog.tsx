@@ -51,30 +51,18 @@ export const ManageAssignedLawyersDialog: React.FC<ManageAssignedLawyersDialogPr
     queryFn: async () => {
       if (!firmId) return [];
 
-      // Get user IDs from team_members in the same firm with eligible roles
-      const { data: teamMembers, error: teamError } = await supabase
+      const { data, error } = await supabase
         .from('team_members')
-        .select('user_id')
+        .select('id, user_id, full_name, role')
         .eq('firm_id', firmId)
         .in('role', ['lawyer', 'admin', 'junior']);
       
-      if (teamError) throw teamError;
-      if (!teamMembers || teamMembers.length === 0) return [];
-      
-      const userIds = teamMembers.map(member => member.user_id);
-      
-      // Then get profile details for those users
-      const { data: profiles, error: profileError } = await supabase
-        .from('profiles')
-        .select('id, full_name')
-        .in('id', userIds);
-      
-      if (profileError) throw profileError;
+      if (error) throw error;
       
       // Sort to always show "chitrajeet upadhyaya" first
-      return profiles?.sort((a, b) => {
-        const nameA = a.full_name?.toLowerCase() || '';
-        const nameB = b.full_name?.toLowerCase() || '';
+      return data?.sort((a, b) => {
+        const nameA = (a.full_name || '').toLowerCase();
+        const nameB = (b.full_name || '').toLowerCase();
         
         if (nameA.includes('chitrajeet upadhyaya')) return -1;
         if (nameB.includes('chitrajeet upadhyaya')) return 1;
@@ -86,20 +74,21 @@ export const ManageAssignedLawyersDialog: React.FC<ManageAssignedLawyersDialogPr
 
   // Get assigned lawyer details
   const { data: assignedLawyer } = useQuery({
-    queryKey: ['assigned-lawyer-details', client?.assigned_lawyer_id],
+    queryKey: ['assigned-lawyer-details', client?.assigned_lawyer_id, firmId],
     queryFn: async () => {
-      if (!client?.assigned_lawyer_id) return null;
+      if (!client?.assigned_lawyer_id || !firmId) return null;
       
       const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name')
-        .eq('id', client.assigned_lawyer_id)
+        .from('team_members')
+        .select('user_id, full_name')
+        .eq('firm_id', firmId)
+        .eq('user_id', client.assigned_lawyer_id)
         .single();
       
       if (error) throw error;
       return data;
     },
-    enabled: open && !!client?.assigned_lawyer_id
+    enabled: open && !!client?.assigned_lawyer_id && !!firmId
   });
 
   // Assign lawyer mutation
@@ -176,8 +165,8 @@ export const ManageAssignedLawyersDialog: React.FC<ManageAssignedLawyersDialogPr
   };
 
   // Available lawyers (exclude already assigned lawyer)
-  const availableLawyers = lawyers.filter(lawyer => 
-    lawyer.id !== client?.assigned_lawyer_id
+  const availableLawyers = lawyers.filter((lawyer: any) => 
+    lawyer.user_id !== client?.assigned_lawyer_id
   );
 
   return (
@@ -237,9 +226,9 @@ export const ManageAssignedLawyersDialog: React.FC<ManageAssignedLawyersDialogPr
                     <SelectValue placeholder="Select a lawyer..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {availableLawyers.map((lawyer) => (
-                      <SelectItem key={lawyer.id} value={lawyer.id}>
-                        {lawyer.full_name}
+                    {availableLawyers.map((lawyer: any) => (
+                      <SelectItem key={lawyer.user_id} value={lawyer.user_id}>
+                        {lawyer.full_name || 'Unnamed'}
                       </SelectItem>
                     ))}
                   </SelectContent>
