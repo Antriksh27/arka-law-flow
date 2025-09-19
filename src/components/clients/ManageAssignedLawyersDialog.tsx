@@ -22,7 +22,7 @@ export const ManageAssignedLawyersDialog: React.FC<ManageAssignedLawyersDialogPr
   clientId,
   clientName
 }) => {
-  const { role } = useAuth();
+  const { role, firmId } = useAuth();
   const queryClient = useQueryClient();
   const [selectedLawyerId, setSelectedLawyerId] = useState<string>('');
 
@@ -47,16 +47,18 @@ export const ManageAssignedLawyersDialog: React.FC<ManageAssignedLawyersDialogPr
 
   // Fetch all lawyers
   const { data: lawyers = [] } = useQuery({
-    queryKey: ['lawyers-for-assignment'],
+    queryKey: ['lawyers-for-assignment', firmId],
     queryFn: async () => {
-      // First get user IDs from team_members with the right roles
+      if (!firmId) return [];
+
+      // Get user IDs from team_members in the same firm with eligible roles
       const { data: teamMembers, error: teamError } = await supabase
         .from('team_members')
         .select('user_id')
+        .eq('firm_id', firmId)
         .in('role', ['lawyer', 'admin', 'junior']);
       
       if (teamError) throw teamError;
-      
       if (!teamMembers || teamMembers.length === 0) return [];
       
       const userIds = teamMembers.map(member => member.user_id);
@@ -79,7 +81,7 @@ export const ManageAssignedLawyersDialog: React.FC<ManageAssignedLawyersDialogPr
         return nameA.localeCompare(nameB);
       }) || [];
     },
-    enabled: open
+    enabled: open && !!firmId
   });
 
   // Get assigned lawyer details
