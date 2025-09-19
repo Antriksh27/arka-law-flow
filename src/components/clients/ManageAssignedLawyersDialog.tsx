@@ -157,6 +157,7 @@ export const ManageAssignedLawyersDialog: React.FC<ManageAssignedLawyersDialogPr
       });
       return;
     }
+    console.log('Assign dialog: submitting assignment', { selectedLawyerId, clientId });
     assignLawyerMutation.mutate(selectedLawyerId);
   };
 
@@ -221,7 +222,10 @@ export const ManageAssignedLawyersDialog: React.FC<ManageAssignedLawyersDialogPr
                 {assignedLawyer ? 'Change Assignment' : 'Assign Lawyer'}
               </h4>
               <div className="flex gap-2">
-                <Select value={selectedLawyerId} onValueChange={setSelectedLawyerId}>
+                <Select value={selectedLawyerId} onValueChange={(v) => { 
+                  console.log('Assign dialog: selectedLawyerId ->', v);
+                  setSelectedLawyerId(v);
+                }}>
                   <SelectTrigger className="flex-1">
                     <SelectValue placeholder="Select a lawyer..." />
                   </SelectTrigger>
@@ -234,6 +238,7 @@ export const ManageAssignedLawyersDialog: React.FC<ManageAssignedLawyersDialogPr
                   </SelectContent>
                 </Select>
                 <Button
+                  type="button"
                   onClick={handleAssignLawyer}
                   disabled={!selectedLawyerId || assignLawyerMutation.isPending}
                   className="shrink-0"
