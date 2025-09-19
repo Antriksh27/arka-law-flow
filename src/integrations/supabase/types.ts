@@ -850,6 +850,36 @@ export type Database = {
           },
         ]
       }
+      client_lawyer_assignments: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          client_id: string
+          created_at: string
+          firm_id: string
+          id: string
+          lawyer_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          client_id: string
+          created_at?: string
+          firm_id: string
+          id?: string
+          lawyer_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          client_id?: string
+          created_at?: string
+          firm_id?: string
+          id?: string
+          lawyer_id?: string
+        }
+        Relationships: []
+      }
       clients: {
         Row: {
           aadhaar_no: string | null

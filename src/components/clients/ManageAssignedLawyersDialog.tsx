@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { UserPlus, UserMinus, Users } from 'lucide-react';
+import { UserPlus, UserMinus, Users, Trash2 } from 'lucide-react';
 
 interface ManageAssignedLawyersDialogProps {
   open: boolean;
@@ -22,99 +22,131 @@ export const ManageAssignedLawyersDialog: React.FC<ManageAssignedLawyersDialogPr
   clientId,
   clientName
 }) => {
-  const { role, firmId } = useAuth();
+  const { role, firmId, user } = useAuth();
   const queryClient = useQueryClient();
   const [selectedLawyerId, setSelectedLawyerId] = useState<string>('');
 
   // Check if user can edit assigned lawyers
   const canEdit = role === 'admin' || role === 'lawyer' || role === 'office_staff';
 
-  // Fetch current client data
-  const { data: client } = useQuery({
-    queryKey: ['client-assigned-lawyers', clientId],
+  // Fetch assigned lawyers for this client
+  const { data: assignedLawyers = [] } = useQuery({
+    queryKey: ['client-assigned-lawyers', clientId, firmId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('clients')
-        .select('assigned_lawyer_id')
-        .eq('id', clientId)
-        .single();
+      if (!firmId || !clientId) return [];
+
+      // First get the assignments
+      const { data: assignments, error: assignmentError } = await supabase
+        .from('client_lawyer_assignments')
+        .select('id, lawyer_id, assigned_at')
+        .eq('client_id', clientId)
+        .eq('firm_id', firmId);
       
-      if (error) throw error;
-      return data;
+      if (assignmentError) throw assignmentError;
+      if (!assignments || assignments.length === 0) return [];
+
+      // Then get the team member details for those lawyers
+      const lawyerIds = assignments.map(a => a.lawyer_id);
+      const { data: teamMembers, error: teamError } = await supabase
+        .from('team_members')
+        .select('user_id, full_name, role')
+        .eq('firm_id', firmId)
+        .in('user_id', lawyerIds);
+      
+      if (teamError) throw teamError;
+
+      // Combine the data
+      return assignments.map(assignment => {
+        const teamMember = teamMembers?.find(tm => tm.user_id === assignment.lawyer_id);
+        return {
+          assignmentId: assignment.id,
+          lawyerId: assignment.lawyer_id,
+          fullName: teamMember?.full_name || 'Unknown',
+          role: teamMember?.role || 'unknown',
+          assignedAt: assignment.assigned_at
+        };
+      });
     },
-    enabled: open
+    enabled: open && !!firmId && !!clientId
   });
 
-  // Fetch all lawyers
-  const { data: lawyers = [] } = useQuery({
-    queryKey: ['lawyers-for-assignment', firmId],
+  // Fetch all available lawyers (not already assigned)
+  const { data: availableLawyers = [] } = useQuery({
+    queryKey: ['available-lawyers-for-assignment', firmId, clientId],
     queryFn: async () => {
       if (!firmId) return [];
 
       const { data, error } = await supabase
         .from('team_members')
-        .select('id, user_id, full_name, role')
+        .select('user_id, full_name, role')
         .eq('firm_id', firmId)
         .in('role', ['lawyer', 'admin', 'junior']);
       
       if (error) throw error;
       
+      // Filter out already assigned lawyers
+      const assignedLawyerIds = assignedLawyers.map(al => al.lawyerId);
+      const available = data?.filter(lawyer => !assignedLawyerIds.includes(lawyer.user_id)) || [];
+      
       // Sort to always show "chitrajeet upadhyaya" first
-      return data?.sort((a, b) => {
+      return available.sort((a, b) => {
         const nameA = (a.full_name || '').toLowerCase();
         const nameB = (b.full_name || '').toLowerCase();
         
         if (nameA.includes('chitrajeet upadhyaya')) return -1;
         if (nameB.includes('chitrajeet upadhyaya')) return 1;
         return nameA.localeCompare(nameB);
-      }) || [];
+      });
     },
-    enabled: open && !!firmId
+    enabled: open && !!firmId,
+    // Re-run when assigned lawyers change
+    select: (data) => {
+      const assignedLawyerIds = assignedLawyers.map(al => al.lawyerId);
+      const available = data?.filter(lawyer => !assignedLawyerIds.includes(lawyer.user_id)) || [];
+      
+      return available.sort((a, b) => {
+        const nameA = (a.full_name || '').toLowerCase();
+        const nameB = (b.full_name || '').toLowerCase();
+        
+        if (nameA.includes('chitrajeet upadhyaya')) return -1;
+        if (nameB.includes('chitrajeet upadhyaya')) return 1;
+        return nameA.localeCompare(nameB);
+      });
+    }
   });
 
-  // Get assigned lawyer details
-  const { data: assignedLawyer } = useQuery({
-    queryKey: ['assigned-lawyer-details', client?.assigned_lawyer_id, firmId],
-    queryFn: async () => {
-      if (!client?.assigned_lawyer_id || !firmId) return null;
-      
-      const { data, error } = await supabase
-        .from('team_members')
-        .select('user_id, full_name')
-        .eq('firm_id', firmId)
-        .eq('user_id', client.assigned_lawyer_id)
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    enabled: open && !!client?.assigned_lawyer_id && !!firmId
-  });
 
-  // Assign lawyer mutation
-  const assignLawyerMutation = useMutation({
+  // Add lawyer mutation
+  const addLawyerMutation = useMutation({
     mutationFn: async (lawyerId: string) => {
+      if (!firmId) throw new Error('Firm ID is required');
+      
       const { error } = await supabase
-        .from('clients')
-        .update({ assigned_lawyer_id: lawyerId })
-        .eq('id', clientId);
+        .from('client_lawyer_assignments')
+        .insert({
+          client_id: clientId,
+          lawyer_id: lawyerId,
+          firm_id: firmId,
+          assigned_by: user?.id
+        });
       
       if (error) throw error;
     },
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "Lawyer assigned successfully"
+        description: "Lawyer added successfully"
       });
-      queryClient.invalidateQueries({ queryKey: ['client-assigned-lawyers', clientId] });
+      queryClient.invalidateQueries({ queryKey: ['client-assigned-lawyers', clientId, firmId] });
+      queryClient.invalidateQueries({ queryKey: ['available-lawyers-for-assignment', firmId, clientId] });
       queryClient.invalidateQueries({ queryKey: ['client', clientId] });
       setSelectedLawyerId('');
     },
     onError: (error) => {
-      console.error('Error assigning lawyer:', error);
+      console.error('Error adding lawyer:', error);
       toast({
         title: "Error",
-        description: "Failed to assign lawyer",
+        description: "Failed to add lawyer",
         variant: "destructive"
       });
     }
@@ -122,11 +154,11 @@ export const ManageAssignedLawyersDialog: React.FC<ManageAssignedLawyersDialogPr
 
   // Remove lawyer mutation
   const removeLawyerMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (assignmentId: string) => {
       const { error } = await supabase
-        .from('clients')
-        .update({ assigned_lawyer_id: null })
-        .eq('id', clientId);
+        .from('client_lawyer_assignments')
+        .delete()
+        .eq('id', assignmentId);
       
       if (error) throw error;
     },
@@ -135,7 +167,8 @@ export const ManageAssignedLawyersDialog: React.FC<ManageAssignedLawyersDialogPr
         title: "Success",
         description: "Lawyer removed successfully"
       });
-      queryClient.invalidateQueries({ queryKey: ['client-assigned-lawyers', clientId] });
+      queryClient.invalidateQueries({ queryKey: ['client-assigned-lawyers', clientId, firmId] });
+      queryClient.invalidateQueries({ queryKey: ['available-lawyers-for-assignment', firmId, clientId] });
       queryClient.invalidateQueries({ queryKey: ['client', clientId] });
     },
     onError: (error) => {
@@ -148,27 +181,22 @@ export const ManageAssignedLawyersDialog: React.FC<ManageAssignedLawyersDialogPr
     }
   });
 
-  const handleAssignLawyer = () => {
+  const handleAddLawyer = () => {
     if (!selectedLawyerId) {
       toast({
         title: "Error",
-        description: "Please select a lawyer to assign",
+        description: "Please select a lawyer to add",
         variant: "destructive"
       });
       return;
     }
-    console.log('Assign dialog: submitting assignment', { selectedLawyerId, clientId });
-    assignLawyerMutation.mutate(selectedLawyerId);
+    console.log('Assign dialog: adding lawyer', { selectedLawyerId, clientId });
+    addLawyerMutation.mutate(selectedLawyerId);
   };
 
-  const handleRemoveLawyer = () => {
-    removeLawyerMutation.mutate();
+  const handleRemoveLawyer = (assignmentId: string) => {
+    removeLawyerMutation.mutate(assignmentId);
   };
-
-  // Available lawyers (exclude already assigned lawyer)
-  const availableLawyers = lawyers.filter((lawyer: any) => 
-    lawyer.user_id !== client?.assigned_lawyer_id
-  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -184,42 +212,51 @@ export const ManageAssignedLawyersDialog: React.FC<ManageAssignedLawyersDialogPr
         </DialogHeader>
 
         <div className="space-y-6 pt-4">
-          {/* Current Assigned Lawyer */}
+          {/* Currently Assigned Lawyers */}
           <div className="space-y-3">
-            <h4 className="text-sm font-medium text-gray-900">Currently Assigned</h4>
-            {assignedLawyer ? (
-              <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="flex items-center gap-2">
-                  <Badge variant="default" className="bg-blue-100 text-blue-800">
-                    Assigned
-                  </Badge>
-                  <span className="font-medium">{assignedLawyer.full_name}</span>
-                </div>
-                {canEdit && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={handleRemoveLawyer}
-                    disabled={removeLawyerMutation.isPending}
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                  >
-                    <UserMinus className="w-4 h-4 mr-1" />
-                    Remove
-                  </Button>
-                )}
+            <h4 className="text-sm font-medium text-gray-900">
+              Assigned Lawyers ({assignedLawyers.length})
+            </h4>
+            {assignedLawyers.length > 0 ? (
+              <div className="space-y-2">
+                {assignedLawyers.map((assignment) => (
+                  <div key={assignment.assignmentId} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="default" className="bg-blue-100 text-blue-800">
+                        {assignment.role}
+                      </Badge>
+                      <span className="font-medium">{assignment.fullName}</span>
+                      <span className="text-xs text-gray-500">
+                        Added {new Date(assignment.assignedAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    {canEdit && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleRemoveLawyer(assignment.assignmentId)}
+                        disabled={removeLawyerMutation.isPending}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="w-4 h-4 mr-1" />
+                        Remove
+                      </Button>
+                    )}
+                  </div>
+                ))}
               </div>
             ) : (
               <div className="p-4 text-center text-gray-500 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
-                No lawyer currently assigned
+                No lawyers currently assigned
               </div>
             )}
           </div>
 
-          {/* Assign New Lawyer */}
+          {/* Add New Lawyer */}
           {canEdit && availableLawyers.length > 0 && (
             <div className="space-y-3">
               <h4 className="text-sm font-medium text-gray-900">
-                {assignedLawyer ? 'Change Assignment' : 'Assign Lawyer'}
+                Add Lawyer
               </h4>
               <div className="flex gap-2">
                 <Select value={selectedLawyerId} onValueChange={(v) => { 
@@ -227,24 +264,29 @@ export const ManageAssignedLawyersDialog: React.FC<ManageAssignedLawyersDialogPr
                   setSelectedLawyerId(v);
                 }}>
                   <SelectTrigger className="flex-1">
-                    <SelectValue placeholder="Select a lawyer..." />
+                    <SelectValue placeholder="Select a lawyer to add..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {availableLawyers.map((lawyer: any) => (
+                    {availableLawyers.map((lawyer) => (
                       <SelectItem key={lawyer.user_id} value={lawyer.user_id}>
-                        {lawyer.full_name || 'Unnamed'}
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-xs">
+                            {lawyer.role}
+                          </Badge>
+                          {lawyer.full_name || 'Unnamed'}
+                        </div>
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
                 <Button
                   type="button"
-                  onClick={handleAssignLawyer}
-                  disabled={!selectedLawyerId || assignLawyerMutation.isPending}
+                  onClick={handleAddLawyer}
+                  disabled={!selectedLawyerId || addLawyerMutation.isPending}
                   className="shrink-0"
                 >
                   <UserPlus className="w-4 h-4 mr-1" />
-                  {assignedLawyer ? 'Change' : 'Assign'}
+                  Add
                 </Button>
               </div>
             </div>
@@ -260,10 +302,19 @@ export const ManageAssignedLawyersDialog: React.FC<ManageAssignedLawyersDialogPr
           )}
 
           {/* No Available Lawyers */}
-          {canEdit && availableLawyers.length === 0 && assignedLawyer && (
+          {canEdit && availableLawyers.length === 0 && assignedLawyers.length > 0 && (
             <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <p className="text-sm text-blue-800">
-                All available lawyers are currently assigned or there are no other lawyers to assign.
+                All available lawyers in your firm are currently assigned to this client.
+              </p>
+            </div>
+          )}
+
+          {/* No Lawyers in Firm */}
+          {canEdit && availableLawyers.length === 0 && assignedLawyers.length === 0 && (
+            <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+              <p className="text-sm text-gray-800">
+                No lawyers available in your firm to assign to this client.
               </p>
             </div>
           )}
