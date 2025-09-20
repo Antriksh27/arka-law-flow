@@ -49,15 +49,9 @@ export const ClientHeader: React.FC<ClientHeaderProps> = ({
         </div>
 
         <div className="flex items-center gap-3">
-          <Button size="sm">
-            <Edit className="w-4 h-4 mr-2" />
-            Edit Info
-          </Button>
           
-          <Button variant="outline" size="sm">
-            <Link2 className="w-4 h-4 mr-2" />
-            Enable Portal
-          </Button>
+          
+          
           
           <ClientQuickActions clientId={client.id} clientName={client.full_name} onAction={onUpdate} />
         </div>
