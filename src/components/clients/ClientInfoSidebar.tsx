@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { EditClientDialog } from './EditClientDialog';
 import { EngagementLetterDialog } from './EngagementLetterDialog';
 import { AddCaseDialog } from '../cases/AddCaseDialog';
 import { Badge } from '@/components/ui/badge';
-import { User, Mail, Phone, MapPin, Building, UserCheck, Users, Edit, Plus, FileText } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Building, UserCheck, Users, Edit, Plus, FileText, UserCog } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ClientInfoSidebarProps {
   client: any;
@@ -16,9 +19,48 @@ export const ClientInfoSidebar: React.FC<ClientInfoSidebarProps> = ({
   client,
   onUpdate
 }) => {
+  const { firmId } = useAuth();
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showAddCaseDialog, setShowAddCaseDialog] = useState(false);
   const [showEngagementLetterDialog, setShowEngagementLetterDialog] = useState(false);
+
+  // Fetch assigned lawyers for this client
+  const { data: assignedLawyers = [] } = useQuery({
+    queryKey: ['client-assigned-lawyers', client.id, firmId],
+    queryFn: async () => {
+      if (!firmId || !client.id) return [];
+
+      const { data: assignments, error: assignmentError } = await supabase
+        .from('client_lawyer_assignments')
+        .select('id, lawyer_id, assigned_at')
+        .eq('client_id', client.id)
+        .eq('firm_id', firmId);
+      
+      if (assignmentError) throw assignmentError;
+      if (!assignments || assignments.length === 0) return [];
+
+      const lawyerIds = assignments.map(a => a.lawyer_id);
+      const { data: teamMembers, error: teamError } = await supabase
+        .from('team_members')
+        .select('user_id, full_name, role')
+        .eq('firm_id', firmId)
+        .in('user_id', lawyerIds);
+      
+      if (teamError) throw teamError;
+
+      return assignments.map(assignment => {
+        const teamMember = teamMembers?.find(tm => tm.user_id === assignment.lawyer_id);
+        return {
+          assignmentId: assignment.id,
+          lawyerId: assignment.lawyer_id,
+          fullName: teamMember?.full_name || 'Unknown',
+          role: teamMember?.role || 'unknown',
+          assignedAt: assignment.assigned_at
+        };
+      });
+    },
+    enabled: !!firmId && !!client.id
+  });
 
   return (
     <div className="space-y-6">
@@ -188,6 +230,33 @@ export const ClientInfoSidebar: React.FC<ClientInfoSidebarProps> = ({
                   <span className="text-gray-600">Reference Number: </span>
                   <span className="text-gray-900 font-mono">{client.case_ref}</span>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Assigned Lawyers */}
+          {assignedLawyers.length > 0 && (
+            <div className="space-y-4">
+              <h4 className="text-sm font-medium text-gray-900 border-b border-gray-200 pb-2">
+                Assigned Lawyers
+              </h4>
+              <div className="space-y-3">
+                {assignedLawyers.map((lawyer) => (
+                  <div key={lawyer.assignmentId} className="flex items-center gap-3 text-sm">
+                    <UserCog className="w-4 h-4 text-gray-400" />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-900 font-medium">{lawyer.fullName}</span>
+                        <Badge variant="outline" className="text-xs">
+                          {lawyer.role}
+                        </Badge>
+                      </div>
+                      <span className="text-gray-500 text-xs">
+                        Assigned {new Date(lawyer.assignedAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
