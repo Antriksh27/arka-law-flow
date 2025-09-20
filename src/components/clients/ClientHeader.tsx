@@ -1,16 +1,13 @@
-
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Edit, Link2, Briefcase } from 'lucide-react';
 import { ClientQuickActions } from './ClientQuickActions';
-
 interface ClientHeaderProps {
   client: any;
   onUpdate: () => void;
 }
-
 export const ClientHeader: React.FC<ClientHeaderProps> = ({
   client,
   onUpdate
@@ -29,9 +26,7 @@ export const ClientHeader: React.FC<ClientHeaderProps> = ({
         return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
-
-  return (
-    <div className="bg-white border-b border-gray-200 px-6 py-6">
+  return <div className="bg-white border-b border-gray-200 px-6 py-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Avatar className="w-16 h-16">
@@ -49,9 +44,7 @@ export const ClientHeader: React.FC<ClientHeaderProps> = ({
                 {client.status === 'active' ? 'Active Client' : client.status}
               </Badge>
             </div>
-            <div className="text-gray-600">
-              <div>{client.phone}</div>
-            </div>
+            
           </div>
         </div>
 
@@ -66,13 +59,8 @@ export const ClientHeader: React.FC<ClientHeaderProps> = ({
             Enable Portal
           </Button>
           
-          <ClientQuickActions 
-            clientId={client.id} 
-            clientName={client.full_name}
-            onAction={onUpdate} 
-          />
+          <ClientQuickActions clientId={client.id} clientName={client.full_name} onAction={onUpdate} />
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
