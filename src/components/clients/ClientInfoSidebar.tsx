@@ -175,8 +175,6 @@ export const ClientInfoSidebar: React.FC<ClientInfoSidebarProps> = ({
                 </div>}
             </div>}
 
-          {/* Case Reference */}
-          {client.case_ref}
 
           {/* Assigned Lawyers */}
           {assignedLawyers.length > 0 && <div className="space-y-4">
