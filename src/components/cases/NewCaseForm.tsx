@@ -8,8 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { FetchCaseDialog } from './FetchCaseDialog';
-
 interface NewCaseFormProps {
   onSuccess: () => void;
   onCancel: () => void;
@@ -43,6 +43,7 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showFetchDialog, setShowFetchDialog] = useState(false);
+  const { firmId } = useAuth();
 
   const {
     register,
@@ -75,25 +76,27 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
 
   // Fetch lawyers from the firm for assignment
   const { data: lawyers = [] } = useQuery({
-    queryKey: ['firm-lawyers'],
+    queryKey: ['firm-lawyers', firmId],
     queryFn: async () => {
+      if (!firmId) return [];
+
       const { data, error } = await supabase
-        .from('profiles')
-        .select(`
-          id, 
-          full_name, 
-          role,
-          law_firm_members!inner(
-            role,
-            law_firm_id
-          )
-        `)
-        .in('law_firm_members.role', ['admin', 'lawyer', 'partner', 'associate', 'junior']);
+        .from('team_members')
+        .select('user_id, full_name, role')
+        .eq('firm_id', firmId)
+        .in('role', ['admin', 'lawyer', 'junior']);
       
       if (error) throw error;
+
+      // Map to expected shape (id used in UI)
+      const mapped = (data || []).map(tm => ({
+        id: tm.user_id,
+        full_name: tm.full_name,
+        role: tm.role,
+      }));
       
       // Sort to always show "chitrajeet upadhyaya" first
-      return (data || []).sort((a, b) => {
+      return mapped.sort((a, b) => {
         const nameA = a.full_name?.toLowerCase() || '';
         const nameB = b.full_name?.toLowerCase() || '';
         
@@ -101,7 +104,8 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
         if (nameB.includes('chitrajeet upadhyaya')) return 1;
         return nameA.localeCompare(nameB);
       });
-    }
+    },
+    enabled: !!firmId
   });
 
   const createCaseMutation = useMutation({
