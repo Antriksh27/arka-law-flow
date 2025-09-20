@@ -69,7 +69,7 @@ export const SmartBookingCalendar: React.FC<SmartBookingCalendarProps> = ({
       const { data, error } = await supabase
         .from('profiles')
         .select('id, full_name, role')
-        .in('role', ['lawyer', 'admin', 'partner', 'associate']);
+        .in('role', ['lawyer', 'admin', 'partner', 'associate', 'junior']);
 
       if (error) throw error;
       return data.map(profile => ({

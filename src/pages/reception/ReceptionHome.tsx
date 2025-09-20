@@ -94,7 +94,7 @@ const ReceptionHome = () => {
     queryFn: async () => {
       const {
         data
-      } = await supabase.from('team_members').select('id, user_id, full_name, role').eq('firm_id', firmId).in('role', ['lawyer', 'admin', 'junior']);
+      } = await supabase.from('team_members').select('id, user_id, full_name, role').eq('firm_id', firmId).in('role', ['admin', 'lawyer', 'junior']);
       
       // Sort to always show "chitrajeet upadhyaya" first
       return data?.sort((a, b) => {

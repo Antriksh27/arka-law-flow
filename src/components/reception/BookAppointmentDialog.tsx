@@ -113,7 +113,7 @@ const BookAppointmentDialog = ({
       const {
         data,
         error
-      } = await supabase.from('team_members').select('id, user_id, full_name, role').eq('firm_id', firmId).in('role', ['lawyer', 'admin', 'junior']);
+      } = await supabase.from('team_members').select('id, user_id, full_name, role').eq('firm_id', firmId).in('role', ['admin', 'lawyer', 'junior']);
       if (error) throw error;
 
       // Sort to always show "chitrajeet upadhyaya" first

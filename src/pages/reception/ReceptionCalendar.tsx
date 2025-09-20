@@ -555,7 +555,7 @@ const ReceptionCalendar = () => {
         .from('team_members')
         .select('id, user_id, full_name, role')
         .eq('firm_id', firmId)
-        .in('role', ['lawyer', 'admin', 'junior']);
+        .in('role', ['admin', 'lawyer', 'junior']);
       
       const sortedData = data?.sort((a, b) => {
         const nameA = a.full_name?.toLowerCase() || '';

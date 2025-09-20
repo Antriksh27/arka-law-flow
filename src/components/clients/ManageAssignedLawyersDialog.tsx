@@ -80,7 +80,7 @@ export const ManageAssignedLawyersDialog: React.FC<ManageAssignedLawyersDialogPr
         .from('team_members')
         .select('user_id, full_name, role')
         .eq('firm_id', firmId)
-        .in('role', ['lawyer', 'admin', 'junior']);
+        .in('role', ['admin', 'lawyer', 'junior']);
       
       if (error) throw error;
       
