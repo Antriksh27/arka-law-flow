@@ -100,7 +100,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
       const { data, error } = await supabase
         .from('profiles')
         .select('id, full_name, role')
-        .in('role', ['admin', 'lawyer', 'paralegal', 'junior', 'associate', 'partner']);
+        .in('role', ['admin', 'lawyer', 'paralegal', 'junior', 'associate', 'partner', 'office_staff']);
       if (error) throw error;
       return (data || []).sort((a, b) => {
         const nameA = a.full_name?.toLowerCase() || '';
