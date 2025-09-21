@@ -73,8 +73,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
     queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, full_name, role')
-        .in('role', ['admin', 'lawyer', 'paralegal', 'junior', 'associate', 'partner', 'office_staff']);
+        .select('id, full_name, role');
       if (error) throw error;
       
       // Sort to always show "chitrajeet upadhyaya" first
