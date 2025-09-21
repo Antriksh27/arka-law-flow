@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { ClientSelector } from './ClientSelector';
 
 interface EditTaskDialogProps {
@@ -37,6 +38,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
 }) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { firmId } = useAuth();
   
   const {
     register,
@@ -95,20 +97,33 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
 
   // Fetch team members for assignment
   const { data: teamMembers = [] } = useQuery({
-    queryKey: ['team-members-for-tasks'],
+    queryKey: ['team-members-for-tasks', firmId],
     queryFn: async () => {
+      if (!firmId) return [];
+      
       const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, role');
+        .from('team_members')
+        .select('user_id, full_name, role')
+        .eq('firm_id', firmId);
+      
       if (error) throw error;
-      return (data || []).sort((a, b) => {
+      
+      // Map to expected shape and sort to always show "chitrajeet upadhyaya" first
+      const mapped = (data || []).map(tm => ({
+        id: tm.user_id,
+        full_name: tm.full_name,
+        role: tm.role,
+      }));
+      
+      return mapped.sort((a, b) => {
         const nameA = a.full_name?.toLowerCase() || '';
         const nameB = b.full_name?.toLowerCase() || '';
         if (nameA.includes('chitrajeet upadhyaya')) return -1;
         if (nameB.includes('chitrajeet upadhyaya')) return 1;
         return nameA.localeCompare(nameB);
       });
-    }
+    },
+    enabled: !!firmId
   });
 
   // Fetch cases for linking
