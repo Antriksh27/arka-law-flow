@@ -17,16 +17,34 @@ export const ClientTasks: React.FC<ClientTasksProps> = ({ clientId }) => {
   const { data: tasks = [], isLoading } = useQuery({
     queryKey: ['client-tasks', clientId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: simpleTasks, error: simpleError } = await supabase
         .from('tasks')
-        .select(`
-          *,
-          assigned_user:profiles!tasks_assigned_to_fkey(full_name)
-        `)
+        .select('*')
         .eq('client_id', clientId)
         .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data;
+      
+      if (simpleError) throw simpleError;
+      
+      // Get assigned user names separately
+      const tasksWithUsers = await Promise.all(
+        (simpleTasks || []).map(async (task) => {
+          if (task.assigned_to) {
+            const { data: teamMember } = await supabase
+              .from('team_members')
+              .select('full_name')
+              .eq('user_id', task.assigned_to)
+              .single();
+            
+            return {
+              ...task,
+              assigned_user: teamMember
+            };
+          }
+          return { ...task, assigned_user: null };
+        })
+      );
+      
+      return tasksWithUsers;
     },
   });
 
