@@ -47,7 +47,7 @@ export const ContactsTable = ({
 
   if (contacts.length === 0) {
     return (
-      <div className="text-center py-12 bg-white rounded-lg border">
+      <div className="text-center py-12 bg-white rounded-2xl shadow-sm border border-gray-200">
         <div className="mx-auto h-12 w-12 text-gray-400 mb-4">
           <Building className="h-12 w-12" />
         </div>
@@ -58,33 +58,33 @@ export const ContactsTable = ({
   }
 
   return (
-    <div className="bg-white rounded-lg border overflow-hidden">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Contact</TableHead>
-            <TableHead>Organization</TableHead>
-            <TableHead>Contact Info</TableHead>
-            <TableHead>Location</TableHead>
-            <TableHead>Purpose</TableHead>
-            <TableHead>Last Visit</TableHead>
-            <TableHead className="w-[100px]">Actions</TableHead>
+            <TableHead className="bg-slate-800 text-white">Contact</TableHead>
+            <TableHead className="bg-slate-800 text-white">Organization</TableHead>
+            <TableHead className="bg-slate-800 text-white">Contact Info</TableHead>
+            <TableHead className="bg-slate-800 text-white">Location</TableHead>
+            <TableHead className="bg-slate-800 text-white">Purpose</TableHead>
+            <TableHead className="bg-slate-800 text-white">Last Visit</TableHead>
+            <TableHead className="bg-slate-800 text-white w-[100px]">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {contacts.map((contact) => (
             <TableRow 
               key={contact.id} 
-              className="cursor-pointer hover:bg-muted/50"
+              className="cursor-pointer hover:bg-gray-50"
               onClick={() => onViewContact?.(contact)}
             >
               <TableCell>
                 <div className="flex items-center space-x-3">
-                  <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                    <span className="text-blue-600 font-medium text-sm">
-                      {contact.name?.charAt(0)?.toUpperCase()}
-                    </span>
-                  </div>
+              <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
+                <span className="text-slate-600 font-medium text-sm">
+                  {contact.name?.charAt(0)?.toUpperCase()}
+                </span>
+              </div>
                   <div>
                     <div className="font-medium text-gray-900">{contact.name}</div>
                     {contact.notes && (

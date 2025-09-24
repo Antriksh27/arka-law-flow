@@ -10,10 +10,9 @@ interface ContactsHeaderProps {
 
 export const ContactsHeader = ({ onAddContact, viewMode, onViewModeChange }: ContactsHeaderProps) => {
   return (
-    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="flex items-center justify-between">
       <div>
         <h1 className="text-2xl font-semibold text-gray-900">Contacts</h1>
-        <p className="text-gray-600 mt-1">Manage all your contacts and potential clients</p>
       </div>
       
       <div className="flex items-center gap-3">
@@ -36,9 +35,9 @@ export const ContactsHeader = ({ onAddContact, viewMode, onViewModeChange }: Con
           </Button>
         </div>
         
-        <Button onClick={onAddContact} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Add Contact
+        <Button onClick={onAddContact} className="bg-slate-800 hover:bg-slate-700">
+          <Plus className="h-4 w-4 mr-2" />
+          New Contact
         </Button>
       </div>
     </div>

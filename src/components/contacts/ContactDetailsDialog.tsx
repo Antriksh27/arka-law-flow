@@ -23,8 +23,8 @@ export const ContactDetailsDialog: React.FC<ContactDetailsDialogProps> = ({
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-              <span className="text-primary font-medium text-lg">
+            <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center">
+              <span className="text-slate-600 font-medium text-lg">
                 {contact.name?.charAt(0)?.toUpperCase()}
               </span>
             </div>
@@ -47,7 +47,7 @@ export const ContactDetailsDialog: React.FC<ContactDetailsDialogProps> = ({
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {contact.email && (
-                <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                   <Mail className="w-4 h-4 text-muted-foreground" />
                   <div>
                     <p className="text-sm font-medium">Email</p>
@@ -57,7 +57,7 @@ export const ContactDetailsDialog: React.FC<ContactDetailsDialogProps> = ({
               )}
               
               {contact.phone && (
-                <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                   <Phone className="w-4 h-4 text-muted-foreground" />
                   <div>
                     <p className="text-sm font-medium">Phone</p>
@@ -78,7 +78,7 @@ export const ContactDetailsDialog: React.FC<ContactDetailsDialogProps> = ({
                   Organization
                 </h3>
                 
-                <div className="p-3 bg-muted/50 rounded-lg">
+                <div className="p-3 bg-gray-50 rounded-lg">
                   <p className="font-medium">{contact.organization}</p>
                 </div>
               </div>
@@ -129,18 +129,18 @@ export const ContactDetailsDialog: React.FC<ContactDetailsDialogProps> = ({
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {contact.visit_purpose && (
-                <div className="p-3 bg-muted/50 rounded-lg">
-                  <p className="text-sm font-medium mb-1">Purpose of Visit</p>
-                  <Badge variant="outline">{contact.visit_purpose}</Badge>
-                </div>
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <p className="text-sm font-medium mb-1">Purpose of Visit</p>
+                <Badge variant="outline">{contact.visit_purpose}</Badge>
+              </div>
               )}
               
-              <div className="p-3 bg-muted/50 rounded-lg">
+              <div className="p-3 bg-gray-50 rounded-lg">
                 <p className="text-sm font-medium mb-1">Last Visit</p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-gray-600">
                   {formatDistanceToNow(new Date(contact.last_visited_at), { addSuffix: true })}
                 </p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-gray-500">
                   {format(new Date(contact.last_visited_at), 'PPP')}
                 </p>
               </div>
@@ -157,17 +157,17 @@ export const ContactDetailsDialog: React.FC<ContactDetailsDialogProps> = ({
                   Referral Information
                 </h3>
                 
-                <div className="p-3 bg-muted/50 rounded-lg space-y-2">
+                <div className="p-3 bg-gray-50 rounded-lg space-y-2">
                   {contact.referred_by_name && (
                     <div>
                       <p className="text-sm font-medium">Referred By</p>
-                      <p className="text-sm text-muted-foreground">{contact.referred_by_name}</p>
+                      <p className="text-sm text-gray-600">{contact.referred_by_name}</p>
                     </div>
                   )}
                   {contact.referred_by_phone && (
                     <div>
                       <p className="text-sm font-medium">Referrer Phone</p>
-                      <p className="text-sm text-muted-foreground">{contact.referred_by_phone}</p>
+                      <p className="text-sm text-gray-600">{contact.referred_by_phone}</p>
                     </div>
                   )}
                 </div>
@@ -185,7 +185,7 @@ export const ContactDetailsDialog: React.FC<ContactDetailsDialogProps> = ({
                   Notes
                 </h3>
                 
-                <div className="p-4 bg-muted/50 rounded-lg">
+                <div className="p-4 bg-gray-50 rounded-lg">
                   <p className="text-sm whitespace-pre-wrap">{contact.notes}</p>
                 </div>
               </div>
@@ -194,7 +194,7 @@ export const ContactDetailsDialog: React.FC<ContactDetailsDialogProps> = ({
 
           {/* Timestamps */}
           <Separator />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-muted-foreground">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-gray-500">
             <div>
               <p className="font-medium">Created</p>
               <p>{format(new Date(contact.created_at), 'PPP p')}</p>

@@ -86,69 +86,79 @@ export const ContactList = () => {
       />
 
       <Tabs defaultValue="all" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="all">All Contacts ({contacts.length})</TabsTrigger>
-          <TabsTrigger value="recent">Recent</TabsTrigger>
-          <TabsTrigger value="favorites">Favorites</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 bg-white rounded-2xl shadow-sm border border-gray-200">
+          <TabsTrigger value="all" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white">All Contacts ({contacts.length})</TabsTrigger>
+          <TabsTrigger value="recent" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white">Recent</TabsTrigger>
+          <TabsTrigger value="favorites" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white">Favorites</TabsTrigger>
         </TabsList>
         
         <TabsContent value="all" className="mt-6">
-          {viewMode === 'table' ? (
-            <ContactsTable
-              contacts={contacts}
-              isLoading={isLoading}
-              onEditContact={handleEditContact}
-              onConvertToClient={handleConvertToClient}
-              onDeleteContact={handleDeleteContact}
-              onViewContact={handleViewContact}
-            />
-          ) : (
-            <ContactsGrid
-              contacts={contacts}
-              isLoading={isLoading}
-              onEditContact={handleEditContact}
-              onConvertToClient={handleConvertToClient}
-              onDeleteContact={handleDeleteContact}
-              onViewContact={handleViewContact}
-            />
-          )}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200">
+            {viewMode === 'table' ? (
+              <ContactsTable
+                contacts={contacts}
+                isLoading={isLoading}
+                onEditContact={handleEditContact}
+                onConvertToClient={handleConvertToClient}
+                onDeleteContact={handleDeleteContact}
+                onViewContact={handleViewContact}
+              />
+            ) : (
+              <div className="p-6">
+                <ContactsGrid
+                  contacts={contacts}
+                  isLoading={isLoading}
+                  onEditContact={handleEditContact}
+                  onConvertToClient={handleConvertToClient}
+                  onDeleteContact={handleDeleteContact}
+                  onViewContact={handleViewContact}
+                />
+              </div>
+            )}
+          </div>
         </TabsContent>
         
         <TabsContent value="recent" className="mt-6">
-          {viewMode === 'table' ? (
-            <ContactsTable
-              contacts={contacts.filter(contact => {
-                const lastVisited = new Date(contact.last_visited_at);
-                const thirtyDaysAgo = new Date();
-                thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-                return lastVisited > thirtyDaysAgo;
-              })}
-              isLoading={isLoading}
-              onEditContact={handleEditContact}
-              onConvertToClient={handleConvertToClient}
-              onDeleteContact={handleDeleteContact}
-              onViewContact={handleViewContact}
-            />
-          ) : (
-            <ContactsGrid
-              contacts={contacts.filter(contact => {
-                const lastVisited = new Date(contact.last_visited_at);
-                const thirtyDaysAgo = new Date();
-                thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-                return lastVisited > thirtyDaysAgo;
-              })}
-              isLoading={isLoading}
-              onEditContact={handleEditContact}
-              onConvertToClient={handleConvertToClient}
-              onDeleteContact={handleDeleteContact}
-              onViewContact={handleViewContact}
-            />
-          )}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200">
+            {viewMode === 'table' ? (
+              <ContactsTable
+                contacts={contacts.filter(contact => {
+                  const lastVisited = new Date(contact.last_visited_at);
+                  const thirtyDaysAgo = new Date();
+                  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                  return lastVisited > thirtyDaysAgo;
+                })}
+                isLoading={isLoading}
+                onEditContact={handleEditContact}
+                onConvertToClient={handleConvertToClient}
+                onDeleteContact={handleDeleteContact}
+                onViewContact={handleViewContact}
+              />
+            ) : (
+              <div className="p-6">
+                <ContactsGrid
+                  contacts={contacts.filter(contact => {
+                    const lastVisited = new Date(contact.last_visited_at);
+                    const thirtyDaysAgo = new Date();
+                    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                    return lastVisited > thirtyDaysAgo;
+                  })}
+                  isLoading={isLoading}
+                  onEditContact={handleEditContact}
+                  onConvertToClient={handleConvertToClient}
+                  onDeleteContact={handleDeleteContact}
+                  onViewContact={handleViewContact}
+                />
+              </div>
+            )}
+          </div>
         </TabsContent>
         
         <TabsContent value="favorites" className="mt-6">
-          <div className="text-center py-8 text-muted-foreground">
-            Favorites feature coming soon
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12">
+            <div className="text-center text-muted-foreground">
+              Favorites feature coming soon
+            </div>
           </div>
         </TabsContent>
       </Tabs>

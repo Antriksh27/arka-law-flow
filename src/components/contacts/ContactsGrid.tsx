@@ -40,7 +40,7 @@ export const ContactsGrid = ({
 
   if (contacts.length === 0) {
     return (
-      <div className="text-center py-12 bg-white rounded-lg border">
+      <div className="text-center py-12 bg-white rounded-2xl shadow-sm border border-gray-200">
         <div className="mx-auto h-12 w-12 text-gray-400 mb-4">
           <Building className="h-12 w-12" />
         </div>
@@ -55,13 +55,13 @@ export const ContactsGrid = ({
       {contacts.map((contact) => (
         <Card 
           key={contact.id} 
-          className="hover:shadow-md transition-shadow cursor-pointer"
+          className="hover:shadow-md transition-shadow cursor-pointer bg-white rounded-2xl shadow-sm border border-gray-200"
           onClick={() => onViewContact?.(contact)}
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <div className="flex items-center space-x-3">
-              <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                <span className="text-blue-600 font-medium text-sm">
+              <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
+                <span className="text-slate-600 font-medium text-sm">
                   {contact.name?.charAt(0)?.toUpperCase()}
                 </span>
               </div>
