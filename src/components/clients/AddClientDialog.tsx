@@ -36,6 +36,11 @@ interface ClientFormData {
   source?: string;
   referred_by_name?: string;
   referred_by_phone?: string;
+  // Business Information
+  designation?: string;
+  company_address?: string;
+  company_phone?: string;
+  company_email?: string;
 }
 
 export const AddClientDialog: React.FC<AddClientDialogProps> = ({
@@ -265,7 +270,7 @@ export const AddClientDialog: React.FC<AddClientDialogProps> = ({
             </div>
 
             <div>
-              <Label htmlFor="organization">Organization</Label>
+              <Label htmlFor="organization">Company Name</Label>
               <Input 
                 id="organization" 
                 {...register('organization')} 
@@ -345,6 +350,55 @@ export const AddClientDialog: React.FC<AddClientDialogProps> = ({
               />
             </div>
           </div>
+
+          {/* Business Information Section */}
+          {watch('type') === 'Corporate' && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Business Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <Label htmlFor="designation">Designation</Label>
+                  <Input 
+                    id="designation" 
+                    {...register('designation')} 
+                    className="mt-2"
+                    placeholder="Your designation in the company"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="company_phone">Company Phone</Label>
+                  <Input 
+                    id="company_phone" 
+                    {...register('company_phone')} 
+                    className="mt-2"
+                    placeholder="Company phone number"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="company_email">Company Email</Label>
+                  <Input 
+                    id="company_email" 
+                    type="email"
+                    {...register('company_email')} 
+                    className="mt-2"
+                    placeholder="Company email address"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="company_address">Company Address</Label>
+                  <Input 
+                    id="company_address" 
+                    {...register('company_address')} 
+                    className="mt-2"
+                    placeholder="Company address"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>

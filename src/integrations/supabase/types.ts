@@ -889,8 +889,12 @@ export type Database = {
           case_ref: string | null
           city: string | null
           client_portal_enabled: boolean | null
+          company_address: string | null
+          company_email: string | null
+          company_phone: string | null
           created_at: string | null
           created_by: string | null
+          designation: string | null
           district: string | null
           email: string | null
           firm_id: string | null
@@ -916,8 +920,12 @@ export type Database = {
           case_ref?: string | null
           city?: string | null
           client_portal_enabled?: boolean | null
+          company_address?: string | null
+          company_email?: string | null
+          company_phone?: string | null
           created_at?: string | null
           created_by?: string | null
+          designation?: string | null
           district?: string | null
           email?: string | null
           firm_id?: string | null
@@ -943,8 +951,12 @@ export type Database = {
           case_ref?: string | null
           city?: string | null
           client_portal_enabled?: boolean | null
+          company_address?: string | null
+          company_email?: string | null
+          company_phone?: string | null
           created_at?: string | null
           created_by?: string | null
+          designation?: string | null
           district?: string | null
           email?: string | null
           firm_id?: string | null

@@ -70,7 +70,11 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
   ];
 
   const companyInfo = [
-    { label: 'Organization', value: client.organization, icon: Building2 }
+    { label: 'Company Name', value: client.organization, icon: Building2 },
+    { label: 'Designation', value: client.designation, icon: User },
+    { label: 'Company Email', value: client.company_email, icon: Mail },
+    { label: 'Company Phone', value: client.company_phone, icon: Phone },
+    { label: 'Company Address', value: client.company_address, icon: MapPin }
   ];
 
   const professionalInfo = [
@@ -145,10 +149,10 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
           icon={User}
         />
 
-        {/* Company Information */}
-        {client.organization && (
+        {/* Business Information */}
+        {(client.organization || client.designation || client.company_email || client.company_phone || client.company_address) && (
           <InfoSection 
-            title="Company Information" 
+            title="Business Information" 
             items={companyInfo}
             icon={Building2}
           />
