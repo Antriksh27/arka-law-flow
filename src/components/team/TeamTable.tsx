@@ -25,7 +25,6 @@ const roleColor: Record<string, string> = {
   admin: "bg-primary text-white",
   lawyer: "bg-blue-200 text-blue-900",
   paralegal: "bg-yellow-100 text-yellow-900",
-  junior: "bg-gray-100 text-gray-900",
   office_staff: "bg-indigo-100 text-indigo-900",
 };
 

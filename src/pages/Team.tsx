@@ -28,12 +28,11 @@ const roleLabels: Record<string, string> = {
   admin: "Admin",
   lawyer: "Lawyer",
   paralegal: "Paralegal",
-  junior: "Junior",
   office_staff: "Office Staff",
   receptionist: "Receptionist"
 };
 
-const roleOrder = ["lawyer", "paralegal", "junior"];
+const roleOrder = ["lawyer", "paralegal"];
 
 function TeamDirectory() {
   const {
@@ -68,14 +67,12 @@ function TeamDirectory() {
     let stats = {
       all: 0,
       lawyer: 0,
-      paralegal: 0,
-      junior: 0
+      paralegal: 0
     };
     data.forEach((m: any) => {
       stats.all++;
       if (m.role === "lawyer") stats.lawyer++;
       if (m.role === "paralegal") stats.paralegal++;
-      if (m.role === "junior") stats.junior++;
     });
     return stats;
   }, [data]);
@@ -144,7 +141,7 @@ function TeamDirectory() {
             <FilterBadge label="All" count={filters.all} selected={selectedFilter === "all"} onClick={() => setSelectedFilter("all")} />
             <FilterBadge label="Lawyers" count={filters.lawyer} selected={selectedFilter === "lawyer"} onClick={() => setSelectedFilter("lawyer")} />
             <FilterBadge label="Paralegals" count={filters.paralegal} selected={selectedFilter === "paralegal"} onClick={() => setSelectedFilter("paralegal")} />
-            <FilterBadge label="Juniors" count={filters.junior} selected={selectedFilter === "junior"} onClick={() => setSelectedFilter("junior")} />
+            
           </div>
         </div>
       </div>

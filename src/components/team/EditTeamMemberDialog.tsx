@@ -35,7 +35,7 @@ interface TeamMemberFormData {
   full_name: string;
   email: string;
   phone_number?: string;
-  role: 'lawyer' | 'paralegal' | 'junior' | 'office_staff' | 'receptionist';
+  role: 'lawyer' | 'paralegal' | 'office_staff' | 'receptionist';
   status: 'active' | 'suspended' | 'pending' | 'invited';
   notes?: string;
 }
@@ -51,7 +51,7 @@ const EditTeamMemberDialog = ({ open, onOpenChange, member }: EditTeamMemberDial
       full_name: member?.full_name || '',
       email: member?.email || '',
       phone_number: member?.phone_number || '',
-      role: member?.role || 'junior',
+      role: member?.role || 'lawyer',
       status: member?.status || 'active',
       notes: member?.notes || '',
     },
@@ -64,7 +64,7 @@ const EditTeamMemberDialog = ({ open, onOpenChange, member }: EditTeamMemberDial
         full_name: member.full_name || '',
         email: member.email || '',
         phone_number: member.phone_number || '',
-        role: member.role || 'junior',
+        role: member.role || 'lawyer',
         status: member.status || 'active',
         notes: member.notes || '',
       });
@@ -185,7 +185,7 @@ const EditTeamMemberDialog = ({ open, onOpenChange, member }: EditTeamMemberDial
                       <SelectContent>
                         <SelectItem value="lawyer">Lawyer</SelectItem>
                         <SelectItem value="paralegal">Paralegal</SelectItem>
-                        <SelectItem value="junior">Junior</SelectItem>
+                        
                         <SelectItem value="office_staff">Office Staff</SelectItem>
                         <SelectItem value="receptionist">Receptionist</SelectItem>
                       </SelectContent>

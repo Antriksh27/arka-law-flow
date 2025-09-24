@@ -19,7 +19,7 @@ interface TeamMemberFormData {
   full_name: string;
   email: string;
   phone?: string;
-  role: 'lawyer' | 'paralegal' | 'junior' | 'office_staff' | 'receptionist';
+  role: 'lawyer' | 'paralegal' | 'office_staff' | 'receptionist';
   password: string;
   notes?: string;
 }
@@ -42,7 +42,7 @@ const AddTeamMemberDialog = ({
       full_name: '',
       email: '',
       phone: '',
-      role: 'junior',
+      role: 'lawyer',
       password: '',
       notes: ''
     }
@@ -198,7 +198,7 @@ const AddTeamMemberDialog = ({
                       <SelectContent>
                         <SelectItem value="lawyer">Lawyer</SelectItem>
                         <SelectItem value="paralegal">Paralegal</SelectItem>
-                        <SelectItem value="junior">Junior</SelectItem>
+                        
                         <SelectItem value="office_staff">Office Staff</SelectItem>
                         <SelectItem value="receptionist">Receptionist</SelectItem>
                       </SelectContent>

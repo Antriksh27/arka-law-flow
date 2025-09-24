@@ -69,7 +69,7 @@ export function JoinHruLegal({ user }: JoinHruLegalProps) {
         const { error: insertError } = await supabase.from('team_members').insert({
           user_id: user.id,
           firm_id: firmId,
-          role: 'junior',
+          role: 'lawyer',
           status: 'active', // Auto-confirm by setting status to active
           full_name: user.user_metadata?.full_name || user.email,
           email: user.email,
