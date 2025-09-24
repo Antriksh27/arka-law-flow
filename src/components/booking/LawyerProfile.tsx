@@ -28,6 +28,7 @@ export const LawyerProfile: React.FC<LawyerProfileProps> = ({ lawyer }) => {
   const getRoleTitle = (role: string) => {
     switch (role) {
       case 'lawyer':
+      case 'junior':
         return 'Advocate';
       case 'partner':
         return 'Partner';

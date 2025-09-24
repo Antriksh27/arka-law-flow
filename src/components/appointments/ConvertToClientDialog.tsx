@@ -68,7 +68,7 @@ export const ConvertToClientDialog: React.FC<ConvertToClientDialogProps> = ({
       const { data } = await supabase
         .from('profiles')
         .select('id, full_name')
-        .eq('role', 'lawyer');
+        .in('role', ['lawyer', 'partner', 'associate', 'admin', 'junior']);
       
       if (data) {
         // Sort to always show "chitrajeet upadhyaya" first
@@ -244,7 +244,7 @@ export const ConvertToClientDialog: React.FC<ConvertToClientDialogProps> = ({
             </div>
 
             <div>
-              <Label htmlFor="assigned_lawyer_id">Assigned Lawyer</Label>
+              <Label htmlFor="assigned_lawyer_id">Assign Lawyer</Label>
               <Select onValueChange={(value) => setValue('assigned_lawyer_id', value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a lawyer..." />

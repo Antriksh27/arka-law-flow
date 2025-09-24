@@ -99,7 +99,7 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
           <div className="flex items-center gap-3">
             <Users className="w-4 h-4 text-gray-400" />
             <div>
-              <p className="text-sm text-gray-500">Assigned Lawyer</p>
+              <p className="text-sm text-gray-500">Lawyer</p>
               <div className="flex items-center gap-1 mt-1">
                 {caseData?.advocate_name ? <p className="font-medium text-gray-900">{caseData.advocate_name}</p> : <>
                     <Avatar className="w-6 h-6">

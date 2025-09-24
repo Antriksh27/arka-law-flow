@@ -414,7 +414,7 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
             <div className="flex items-center gap-3">
               <User className="h-5 w-5 text-gray-500" />
               <div>
-                <p className="text-sm font-medium text-gray-700">Assigned Lawyer</p>
+                <p className="text-sm font-medium text-gray-700">Lawyer</p>
                 <p className="text-sm text-gray-600">{appointment.lawyer_name}</p>
               </div>
             </div>

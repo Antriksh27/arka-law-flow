@@ -305,7 +305,7 @@ export const AddClientDialog: React.FC<AddClientDialogProps> = ({
             </div>
 
             <div>
-              <Label htmlFor="assigned_lawyer_id">Assigned Lawyer</Label>
+              <Label htmlFor="assigned_lawyer_id">Assign Lawyer</Label>
               <select 
                 id="assigned_lawyer_id" 
                 {...register('assigned_lawyer_id')} 

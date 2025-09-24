@@ -122,7 +122,7 @@ export const ClientQuickActions: React.FC<ClientQuickActionsProps> = ({
               onClick={() => setShowManageLawyersDialog(true)}
             >
               <Users className="w-4 h-4 mr-3 text-gray-400" />
-              <span>Assigned Lawyers</span>
+              <span>Lawyers</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator className="bg-gray-200" />
             <DropdownMenuItem 

@@ -79,7 +79,7 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
 
   const professionalInfo = [
     { label: 'Status', value: client.status },
-    { label: 'Assigned Lawyer', value: client.profiles?.full_name },
+    { label: 'Assign Lawyer', value: client.profiles?.full_name },
     { label: 'Case Reference', value: client.case_ref },
     { label: 'Appointment Date', value: client.appointment_date ? new Date(client.appointment_date).toLocaleDateString() : null },
     { label: 'Source', value: client.source },

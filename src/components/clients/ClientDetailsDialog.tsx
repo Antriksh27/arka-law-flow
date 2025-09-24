@@ -92,7 +92,7 @@ export const ClientDetailsDialog: React.FC<ClientDetailsDialogProps> = ({
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Assigned Lawyer</label>
+                  <label className="text-sm font-medium text-gray-500">Lawyer</label>
                   <p>{client.assigned_lawyer_name || 'Not assigned'}</p>
                 </div>
                 <div>

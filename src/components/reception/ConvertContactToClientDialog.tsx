@@ -534,7 +534,7 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
             </div>
 
             <div>
-              <Label>Assigned Lawyers</Label>
+              <Label>Lawyers</Label>
               <div className="space-y-2 max-h-48 overflow-y-auto border rounded-md p-3">
                 {lawyers.length === 0 ? <p className="text-sm text-muted-foreground">No lawyers found in your firm</p> : lawyers.map(lawyer => <div key={lawyer.id} className="flex items-center space-x-2">
                       <Checkbox id={`lawyer-${lawyer.id}`} checked={selectedLawyers.includes(lawyer.id)} onCheckedChange={checked => {

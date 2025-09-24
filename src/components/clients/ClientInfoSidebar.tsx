@@ -176,10 +176,10 @@ export const ClientInfoSidebar: React.FC<ClientInfoSidebarProps> = ({
             </div>}
 
 
-          {/* Assigned Lawyers */}
+          {/* Lawyers */}
           {assignedLawyers.length > 0 && <div className="space-y-4">
               <h4 className="text-sm font-medium text-gray-900 border-b border-gray-200 pb-2">
-                Assigned Lawyers
+                Lawyers
               </h4>
               <div className="space-y-3">
                 {assignedLawyers.map(lawyer => <div key={lawyer.assignmentId} className="flex items-center gap-3 text-sm">
@@ -187,9 +187,6 @@ export const ClientInfoSidebar: React.FC<ClientInfoSidebarProps> = ({
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <span className="text-gray-900 font-medium">{lawyer.fullName}</span>
-                        <Badge variant="outline" className="text-xs">
-                          {lawyer.role}
-                        </Badge>
                       </div>
                       <span className="text-gray-500 text-xs">
                         Assigned {new Date(lawyer.assignedAt).toLocaleDateString()}

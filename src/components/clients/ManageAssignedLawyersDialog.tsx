@@ -26,8 +26,8 @@ export const ManageAssignedLawyersDialog: React.FC<ManageAssignedLawyersDialogPr
   const queryClient = useQueryClient();
   const [selectedLawyerId, setSelectedLawyerId] = useState<string>('');
 
-  // Check if user can edit assigned lawyers
-  const canEdit = role === 'admin' || role === 'lawyer' || role === 'office_staff';
+  // Check if user can edit lawyers
+  const canEdit = role === 'admin' || role === 'lawyer' || role === 'junior' || role === 'office_staff';
 
   // Fetch assigned lawyers for this client
   const { data: assignedLawyers = [] } = useQuery({
@@ -204,7 +204,7 @@ export const ManageAssignedLawyersDialog: React.FC<ManageAssignedLawyersDialogPr
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Users className="w-5 h-5" />
-            Manage Assigned Lawyers
+            Manage Lawyers
           </DialogTitle>
           <p className="text-sm text-muted-foreground">
             Client: {clientName}
@@ -215,7 +215,7 @@ export const ManageAssignedLawyersDialog: React.FC<ManageAssignedLawyersDialogPr
           {/* Currently Assigned Lawyers */}
           <div className="space-y-3">
             <h4 className="text-sm font-medium text-gray-900">
-              Assigned Lawyers ({assignedLawyers.length})
+              Lawyers ({assignedLawyers.length})
             </h4>
             {assignedLawyers.length > 0 ? (
               <div className="space-y-2">
