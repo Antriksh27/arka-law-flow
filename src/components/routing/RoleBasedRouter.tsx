@@ -6,6 +6,7 @@ import ReceptionistLayout from '@/components/layout/ReceptionistLayout';
 
 // Main application pages
 import Index from '@/pages/Index';
+import Contacts from '@/pages/Contacts';
 import Cases from '@/pages/Cases';
 import CaseDetail from '@/pages/CaseDetail';
 import Clients from '@/pages/Clients';
@@ -102,6 +103,7 @@ const RoleBasedRouter = () => {
       <DashboardLayout>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/contacts" element={<Contacts />} />
           <Route path="/cases" element={<Cases />} />
           <Route path="/cases/:id" element={<CaseDetail />} />
           <Route path="/clients" element={<Clients />} />
@@ -129,6 +131,7 @@ const RoleBasedRouter = () => {
     <DashboardLayout>
       <Routes>
         <Route path="/" element={<Index />} />
+        <Route path="/contacts" element={<Contacts />} />
         <Route path="/cases" element={<Cases />} />
         <Route path="/cases/:id" element={<CaseDetail />} />
         <Route path="/clients" element={<Clients />} />
