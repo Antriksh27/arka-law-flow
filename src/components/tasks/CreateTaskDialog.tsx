@@ -145,6 +145,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
         case_id: data.link_type === 'case' ? data.case_id || null : null,
         client_id: data.link_type === 'client' ? data.client_id || null : null,
         created_by: user.data.user.id,
+        firm_id: firmId,
         tags: data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(Boolean) : []
       };
 
