@@ -253,12 +253,7 @@ export const ManageAssignedLawyersDialog: React.FC<ManageAssignedLawyersDialogPr
                   </SelectTrigger>
                   <SelectContent>
                     {availableLawyers.map(lawyer => <SelectItem key={lawyer.user_id} value={lawyer.user_id}>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-xs">
-                            {lawyer.role}
-                          </Badge>
-                          {lawyer.full_name || 'Unnamed'}
-                        </div>
+                        {lawyer.full_name || 'Unnamed'}
                       </SelectItem>)}
                   </SelectContent>
                 </Select>
