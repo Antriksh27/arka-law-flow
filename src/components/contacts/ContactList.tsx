@@ -10,6 +10,7 @@ import { AddContactDialog } from './AddContactDialog';
 import { EditContactDialog } from './EditContactDialog';
 import { ConvertToClientDialog } from './ConvertToClientDialog';
 import { DeleteContactDialog } from './DeleteContactDialog';
+import { ContactDetailsDialog } from './ContactDetailsDialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export const ContactList = () => {
@@ -19,6 +20,7 @@ export const ContactList = () => {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showConvertDialog, setShowConvertDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [selectedContact, setSelectedContact] = useState<any>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
 
@@ -65,6 +67,11 @@ export const ContactList = () => {
     setShowDeleteDialog(true);
   };
 
+  const handleViewContact = (contact: any) => {
+    setSelectedContact(contact);
+    setShowDetailsDialog(true);
+  };
+
   return (
     <div className="space-y-6">
       <ContactsHeader 
@@ -93,6 +100,7 @@ export const ContactList = () => {
               onEditContact={handleEditContact}
               onConvertToClient={handleConvertToClient}
               onDeleteContact={handleDeleteContact}
+              onViewContact={handleViewContact}
             />
           ) : (
             <ContactsGrid
@@ -101,6 +109,7 @@ export const ContactList = () => {
               onEditContact={handleEditContact}
               onConvertToClient={handleConvertToClient}
               onDeleteContact={handleDeleteContact}
+              onViewContact={handleViewContact}
             />
           )}
         </TabsContent>
@@ -118,6 +127,7 @@ export const ContactList = () => {
               onEditContact={handleEditContact}
               onConvertToClient={handleConvertToClient}
               onDeleteContact={handleDeleteContact}
+              onViewContact={handleViewContact}
             />
           ) : (
             <ContactsGrid
@@ -131,6 +141,7 @@ export const ContactList = () => {
               onEditContact={handleEditContact}
               onConvertToClient={handleConvertToClient}
               onDeleteContact={handleDeleteContact}
+              onViewContact={handleViewContact}
             />
           )}
         </TabsContent>
@@ -164,6 +175,12 @@ export const ContactList = () => {
           <DeleteContactDialog
             open={showDeleteDialog}
             onOpenChange={setShowDeleteDialog}
+            contact={selectedContact}
+          />
+
+          <ContactDetailsDialog
+            open={showDetailsDialog}
+            onOpenChange={setShowDetailsDialog}
             contact={selectedContact}
           />
         </>

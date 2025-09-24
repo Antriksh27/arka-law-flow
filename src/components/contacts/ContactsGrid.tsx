@@ -17,6 +17,7 @@ interface ContactsGridProps {
   onEditContact: (contact: any) => void;
   onConvertToClient: (contact: any) => void;
   onDeleteContact: (contact: any) => void;
+  onViewContact?: (contact: any) => void;
 }
 
 export const ContactsGrid = ({ 
@@ -24,7 +25,8 @@ export const ContactsGrid = ({
   isLoading, 
   onEditContact, 
   onConvertToClient, 
-  onDeleteContact 
+  onDeleteContact,
+  onViewContact 
 }: ContactsGridProps) => {
   if (isLoading) {
     return (
@@ -51,7 +53,11 @@ export const ContactsGrid = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       {contacts.map((contact) => (
-        <Card key={contact.id} className="hover:shadow-md transition-shadow">
+        <Card 
+          key={contact.id} 
+          className="hover:shadow-md transition-shadow cursor-pointer"
+          onClick={() => onViewContact?.(contact)}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <div className="flex items-center space-x-3">
               <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
@@ -69,7 +75,11 @@ export const ContactsGrid = ({
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
+                <Button 
+                  variant="ghost" 
+                  className="h-8 w-8 p-0"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>

@@ -24,6 +24,7 @@ interface ContactsTableProps {
   onEditContact: (contact: any) => void;
   onConvertToClient: (contact: any) => void;
   onDeleteContact: (contact: any) => void;
+  onViewContact?: (contact: any) => void;
 }
 
 export const ContactsTable = ({ 
@@ -31,7 +32,8 @@ export const ContactsTable = ({
   isLoading, 
   onEditContact, 
   onConvertToClient, 
-  onDeleteContact 
+  onDeleteContact,
+  onViewContact 
 }: ContactsTableProps) => {
   if (isLoading) {
     return (
@@ -71,7 +73,11 @@ export const ContactsTable = ({
         </TableHeader>
         <TableBody>
           {contacts.map((contact) => (
-            <TableRow key={contact.id}>
+            <TableRow 
+              key={contact.id} 
+              className="cursor-pointer hover:bg-muted/50"
+              onClick={() => onViewContact?.(contact)}
+            >
               <TableCell>
                 <div className="flex items-center space-x-3">
                   <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
@@ -144,7 +150,11 @@ export const ContactsTable = ({
               <TableCell>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-8 w-8 p-0">
+                    <Button 
+                      variant="ghost" 
+                      className="h-8 w-8 p-0"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
