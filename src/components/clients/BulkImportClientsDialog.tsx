@@ -6,7 +6,6 @@ import { Upload, Download, AlertCircle, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import * as XLSX from 'xlsx';
 
 interface BulkImportClientsDialogProps {
   open: boolean;
@@ -56,52 +55,63 @@ export const BulkImportClientsDialog = ({
     }
   };
 
-  const downloadSampleTemplate = () => {
-    const sampleData = [
-      {
-        full_name: 'John Doe',
-        email: 'john.doe@example.com',
-        phone: '+91 9876543210',
-        organization: 'ABC Corp',
-        address: '123 Main Street',
-        city: 'Mumbai',
-        state: 'Maharashtra',
-        district: 'Mumbai',
-        type: 'Individual',
-        status: 'active',
-        notes: 'Important client'
-      },
-      {
-        full_name: 'Jane Smith',
-        email: 'jane.smith@example.com',
-        phone: '+91 9876543211',
-        organization: 'XYZ Ltd',
-        address: '456 Oak Avenue',
-        city: 'Delhi',
-        state: 'Delhi',
-        district: 'Central Delhi',
-        type: 'Corporate',
-        status: 'new',
-        notes: 'Referred by John'
-      }
-    ];
+  const downloadSampleTemplate = async () => {
+    try {
+      const XLSX = await import('xlsx');
+      
+      const sampleData = [
+        {
+          full_name: 'John Doe',
+          email: 'john.doe@example.com',
+          phone: '+91 9876543210',
+          organization: 'ABC Corp',
+          address: '123 Main Street',
+          city: 'Mumbai',
+          state: 'Maharashtra',
+          district: 'Mumbai',
+          type: 'Individual',
+          status: 'active',
+          notes: 'Important client'
+        },
+        {
+          full_name: 'Jane Smith',
+          email: 'jane.smith@example.com',
+          phone: '+91 9876543211',
+          organization: 'XYZ Ltd',
+          address: '456 Oak Avenue',
+          city: 'Delhi',
+          state: 'Delhi',
+          district: 'Central Delhi',
+          type: 'Corporate',
+          status: 'new',
+          notes: 'Referred by John'
+        }
+      ];
 
-    const ws = XLSX.utils.json_to_sheet(sampleData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Clients');
-    
-    // Auto-size columns
-    const colWidths = Object.keys(sampleData[0]).map(key => ({
-      wch: Math.max(key.length, ...sampleData.map(row => String(row[key as keyof typeof row] || '').length)) + 2
-    }));
-    ws['!cols'] = colWidths;
+      const ws = XLSX.utils.json_to_sheet(sampleData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Clients');
+      
+      // Auto-size columns
+      const colWidths = Object.keys(sampleData[0]).map(key => ({
+        wch: Math.max(key.length, ...sampleData.map(row => String(row[key as keyof typeof row] || '').length)) + 2
+      }));
+      ws['!cols'] = colWidths;
 
-    XLSX.writeFile(wb, 'clients_import_template.xlsx');
-    
-    toast({
-      title: "Template downloaded",
-      description: "Sample Excel template has been downloaded",
-    });
+      XLSX.writeFile(wb, 'clients_import_template.xlsx');
+      
+      toast({
+        title: "Template downloaded",
+        description: "Sample Excel template has been downloaded",
+      });
+    } catch (error) {
+      console.error('Error downloading template:', error);
+      toast({
+        title: "Download failed",
+        description: "Failed to download template. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const processImport = async () => {
@@ -111,6 +121,8 @@ export const BulkImportClientsDialog = ({
     setResults(null);
 
     try {
+      const XLSX = await import('xlsx');
+      
       const data = await file.arrayBuffer();
       const workbook = XLSX.read(data, { type: 'array' });
       const sheetName = workbook.SheetNames[0];
