@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -38,34 +38,31 @@ export const AssignLawyerDialog: React.FC<AssignLawyerDialogProps> = ({
       if (teamError) throw teamError;
       if (!teamMembers || teamMembers.length === 0) return [];
 
-      // Then get their profiles
-      const userIds = teamMembers.map(tm => tm.user_id);
-      const {
-        data: profiles,
-        error: profileError
-      } = await supabase
-        .from('profiles')
-        .select('id, full_name, email')
-        .in('id', userIds);
-      
-      if (profileError) throw profileError;
+      // Fetch profiles using SECURITY DEFINER RPC to avoid RLS issues
+      const { data: roleProfiles, error: rpcError } = await supabase.rpc('get_all_lawyers_and_admin');
+      if (rpcError) {
+        console.warn('RPC get_all_lawyers_and_admin error:', rpcError);
+      }
+      const profileMap = new Map(
+        (roleProfiles || []).map((p: any) => [p.id, { full_name: p.full_name as string, role: p.role as string }])
+      );
 
       // Combine the data and sort - put Chitrajeet at the top
       return teamMembers
-        .map(tm => {
-          const profile = profiles?.find(p => p.id === tm.user_id);
+        .map((tm: any) => {
+          const prof = profileMap.get(tm.user_id);
+          const fullName = prof?.full_name || 'Unknown User';
           return {
             ...tm,
-            full_name: profile?.full_name || 'Unknown User',
-            email: profile?.email,
-            profiles: profile
+            full_name: fullName,
+            role: tm.role,
           };
         })
-        .sort((a, b) => {
-          // Put Chitrajeet at the top
-          if (a.full_name.includes('Chitrajeet')) return -1;
-          if (b.full_name.includes('Chitrajeet')) return 1;
-          return a.full_name.localeCompare(b.full_name);
+        .sort((a: any, b: any) => {
+          const aTop = a.full_name?.toLowerCase().includes('chitrajeet') ? -1 : 0;
+          const bTop = b.full_name?.toLowerCase().includes('chitrajeet') ? -1 : 0;
+          if (aTop !== bTop) return aTop - bTop; // ensure Chitrajeet first
+          return (a.full_name || '').localeCompare(b.full_name || '');
         });
     }
   });
@@ -101,6 +98,9 @@ export const AssignLawyerDialog: React.FC<AssignLawyerDialogProps> = ({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Assign Lawyers</DialogTitle>
+          <DialogDescription>
+            Select lawyers and juniors to assign to this case.
+          </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-3 max-h-96 overflow-y-auto">
