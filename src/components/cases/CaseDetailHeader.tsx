@@ -1,15 +1,36 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Edit, Calendar, FileText, Users, Clock, Plus, Ban, User, Building2, Gavel, Flag } from 'lucide-react';
 import { format } from 'date-fns';
+import { AssignLawyerDialog } from './AssignLawyerDialog';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 interface CaseDetailHeaderProps {
   case: any;
 }
 export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
   case: caseData
 }) => {
+  const [showAssignLawyer, setShowAssignLawyer] = useState(false);
+
+  // Fetch assigned lawyers info
+  const { data: assignedLawyers } = useQuery({
+    queryKey: ['case-lawyers', caseData?.id],
+    queryFn: async () => {
+      if (!caseData?.assigned_users || caseData.assigned_users.length === 0) return [];
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .in('id', caseData.assigned_users);
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!caseData?.assigned_users?.length
+  });
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'open':
@@ -117,17 +138,52 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
             <div>
               <p className="text-sm text-gray-500">Lawyer</p>
               <div className="flex items-center gap-1 mt-1">
-                {caseData?.advocate_name ? <p className="font-medium text-gray-900">{caseData.advocate_name}</p> : <>
-                    <Avatar className="w-6 h-6">
-                      <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">A</AvatarFallback>
-                    </Avatar>
-                    <Avatar className="w-6 h-6">
-                      <AvatarFallback className="bg-primary-100 text-primary-600 text-xs">B</AvatarFallback>
-                    </Avatar>
-                    <Button variant="ghost" size="sm" className="w-6 h-6 p-0 rounded-full border border-dashed border-gray-300">
+                {assignedLawyers && assignedLawyers.length > 0 ? (
+                  <div className="flex items-center gap-1">
+                    {assignedLawyers.slice(0, 3).map((lawyer, index) => (
+                      <Avatar key={lawyer.id} className="w-6 h-6">
+                        <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">
+                          {lawyer.full_name?.charAt(0) || 'L'}
+                        </AvatarFallback>
+                      </Avatar>
+                    ))}
+                    {assignedLawyers.length > 3 && (
+                      <span className="text-xs text-gray-500 ml-1">
+                        +{assignedLawyers.length - 3}
+                      </span>
+                    )}
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="w-6 h-6 p-0 rounded-full border border-dashed border-gray-300 ml-1"
+                      onClick={() => setShowAssignLawyer(true)}
+                    >
                       <Plus className="w-3 h-3" />
                     </Button>
-                  </>}
+                  </div>
+                ) : caseData?.advocate_name ? (
+                  <div className="flex items-center gap-1">
+                    <p className="font-medium text-gray-900">{caseData.advocate_name}</p>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="w-6 h-6 p-0 rounded-full border border-dashed border-gray-300 ml-1"
+                      onClick={() => setShowAssignLawyer(true)}
+                    >
+                      <Plus className="w-3 h-3" />
+                    </Button>
+                  </div>
+                ) : (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="px-3 py-1 text-sm border border-dashed border-gray-300 rounded-md hover:bg-gray-50"
+                    onClick={() => setShowAssignLawyer(true)}
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    Assign Lawyer
+                  </Button>
+                )}
               </div>
             </div>
           </div>
@@ -186,5 +242,12 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
           </div>
         </div>
       </div>
+
+      <AssignLawyerDialog
+        open={showAssignLawyer}
+        onClose={() => setShowAssignLawyer(false)}
+        caseId={caseData?.id}
+        currentLawyers={caseData?.assigned_users || []}
+      />
     </div>;
 };
