@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -30,40 +30,33 @@ export const AssignLawyerDialog: React.FC<AssignLawyerDialogProps> = ({
       const {
         data: teamMembers,
         error: teamError
-      } = await supabase
-        .from('team_members')
-        .select('id, user_id, role')
-        .in('role', ['lawyer', 'admin', 'junior']);
-      
+      } = await supabase.from('team_members').select('id, user_id, role').in('role', ['lawyer', 'admin', 'junior']);
       if (teamError) throw teamError;
       if (!teamMembers || teamMembers.length === 0) return [];
 
-      // Fetch profiles using SECURITY DEFINER RPC to avoid RLS issues
-      const { data: roleProfiles, error: rpcError } = await supabase.rpc('get_all_lawyers_and_admin');
-      if (rpcError) {
-        console.warn('RPC get_all_lawyers_and_admin error:', rpcError);
-      }
-      const profileMap = new Map(
-        (roleProfiles || []).map((p: any) => [p.id, { full_name: p.full_name as string, role: p.role as string }])
-      );
+      // Then get their profiles
+      const userIds = teamMembers.map(tm => tm.user_id);
+      const {
+        data: profiles,
+        error: profileError
+      } = await supabase.from('profiles').select('id, full_name, email').in('id', userIds);
+      if (profileError) throw profileError;
 
       // Combine the data and sort - put Chitrajeet at the top
-      return teamMembers
-        .map((tm: any) => {
-          const prof = profileMap.get(tm.user_id);
-          const fullName = prof?.full_name || 'Unknown User';
-          return {
-            ...tm,
-            full_name: fullName,
-            role: tm.role,
-          };
-        })
-        .sort((a: any, b: any) => {
-          const aTop = a.full_name?.toLowerCase().includes('chitrajeet') ? -1 : 0;
-          const bTop = b.full_name?.toLowerCase().includes('chitrajeet') ? -1 : 0;
-          if (aTop !== bTop) return aTop - bTop; // ensure Chitrajeet first
-          return (a.full_name || '').localeCompare(b.full_name || '');
-        });
+      return teamMembers.map(tm => {
+        const profile = profiles?.find(p => p.id === tm.user_id);
+        return {
+          ...tm,
+          full_name: profile?.full_name || 'Unknown User',
+          email: profile?.email,
+          profiles: profile
+        };
+      }).sort((a, b) => {
+        // Put Chitrajeet at the top
+        if (a.full_name.includes('Chitrajeet')) return -1;
+        if (b.full_name.includes('Chitrajeet')) return 1;
+        return a.full_name.localeCompare(b.full_name);
+      });
     }
   });
   const assignLawyersMutation = useMutation({
@@ -98,21 +91,10 @@ export const AssignLawyerDialog: React.FC<AssignLawyerDialogProps> = ({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Assign Lawyers</DialogTitle>
-          <DialogDescription>
-            Select lawyers and juniors to assign to this case.
-          </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-3 max-h-96 overflow-y-auto">
-          {isLoading ? (
-            <div className="text-center py-4">Loading lawyers...</div>
-          ) : (
-            lawyers?.map(lawyer => (
-              <div 
-                key={lawyer.user_id} 
-                className="flex items-center justify-between p-3 hover:bg-muted/50 rounded-lg cursor-pointer" 
-                onClick={() => toggleLawyer(lawyer.user_id)}
-              >
+          {isLoading ? <div className="text-center py-4">Loading lawyers...</div> : lawyers?.map(lawyer => <div key={lawyer.user_id} className="flex items-center justify-between p-3 hover:bg-muted/50 rounded-lg cursor-pointer" onClick={() => toggleLawyer(lawyer.user_id)}>
                 <div className="flex items-center gap-3">
                   <Avatar className="w-8 h-8">
                     <AvatarFallback className="bg-primary/10 text-primary text-sm">
@@ -123,17 +105,11 @@ export const AssignLawyerDialog: React.FC<AssignLawyerDialogProps> = ({
                     <p className="font-medium text-foreground">
                       {lawyer.full_name}
                     </p>
-                    <p className="text-sm text-muted-foreground capitalize">
-                      {lawyer.role}
-                    </p>
+                    
                   </div>
                 </div>
-                {selectedLawyers.includes(lawyer.user_id) && (
-                  <Check className="w-5 h-5 text-primary" />
-                )}
-              </div>
-            ))
-          )}
+                {selectedLawyers.includes(lawyer.user_id) && <Check className="w-5 h-5 text-primary" />}
+              </div>)}
         </div>
 
         <div className="flex gap-2 justify-end pt-4">
