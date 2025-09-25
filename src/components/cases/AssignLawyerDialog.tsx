@@ -30,7 +30,11 @@ export const AssignLawyerDialog: React.FC<AssignLawyerDialogProps> = ({
       const {
         data: teamMembers,
         error: teamError
-      } = await supabase.from('team_members').select('id, user_id, role').in('role', ['lawyer', 'admin', 'junior']);
+      } = await supabase
+        .from('team_members')
+        .select('id, user_id, role')
+        .in('role', ['lawyer', 'admin', 'junior']);
+      
       if (teamError) throw teamError;
       if (!teamMembers || teamMembers.length === 0) return [];
 
@@ -39,14 +43,30 @@ export const AssignLawyerDialog: React.FC<AssignLawyerDialogProps> = ({
       const {
         data: profiles,
         error: profileError
-      } = await supabase.from('profiles').select('id, full_name, email').in('id', userIds);
+      } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .in('id', userIds);
+      
       if (profileError) throw profileError;
 
-      // Combine the data
-      return teamMembers.map(tm => ({
-        ...tm,
-        profiles: profiles?.find(p => p.id === tm.user_id)
-      }));
+      // Combine the data and sort - put Chitrajeet at the top
+      return teamMembers
+        .map(tm => {
+          const profile = profiles?.find(p => p.id === tm.user_id);
+          return {
+            ...tm,
+            full_name: profile?.full_name || 'Unknown User',
+            email: profile?.email,
+            profiles: profile
+          };
+        })
+        .sort((a, b) => {
+          // Put Chitrajeet at the top
+          if (a.full_name.includes('Chitrajeet')) return -1;
+          if (b.full_name.includes('Chitrajeet')) return 1;
+          return a.full_name.localeCompare(b.full_name);
+        });
     }
   });
   const assignLawyersMutation = useMutation({
@@ -84,22 +104,36 @@ export const AssignLawyerDialog: React.FC<AssignLawyerDialogProps> = ({
         </DialogHeader>
         
         <div className="space-y-3 max-h-96 overflow-y-auto">
-          {isLoading ? <div className="text-center py-4">Loading lawyers...</div> : lawyers?.map(lawyer => <div key={lawyer.user_id} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg cursor-pointer" onClick={() => toggleLawyer(lawyer.user_id)}>
+          {isLoading ? (
+            <div className="text-center py-4">Loading lawyers...</div>
+          ) : (
+            lawyers?.map(lawyer => (
+              <div 
+                key={lawyer.user_id} 
+                className="flex items-center justify-between p-3 hover:bg-muted/50 rounded-lg cursor-pointer" 
+                onClick={() => toggleLawyer(lawyer.user_id)}
+              >
                 <div className="flex items-center gap-3">
                   <Avatar className="w-8 h-8">
-                    <AvatarFallback className="bg-blue-100 text-blue-600 text-sm">
-                      {lawyer.profiles?.full_name?.charAt(0) || 'L'}
+                    <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                      {lawyer.full_name?.charAt(0) || 'U'}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="font-medium text-gray-900">
-                      {lawyer.profiles?.full_name || 'Unknown'}
+                    <p className="font-medium text-foreground">
+                      {lawyer.full_name}
                     </p>
-                    
+                    <p className="text-sm text-muted-foreground capitalize">
+                      {lawyer.role}
+                    </p>
                   </div>
                 </div>
-                {selectedLawyers.includes(lawyer.user_id) && <Check className="w-5 h-5 text-blue-600" />}
-              </div>)}
+                {selectedLawyers.includes(lawyer.user_id) && (
+                  <Check className="w-5 h-5 text-primary" />
+                )}
+              </div>
+            ))
+          )}
         </div>
 
         <div className="flex gap-2 justify-end pt-4">
