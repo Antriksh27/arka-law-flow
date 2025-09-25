@@ -142,10 +142,11 @@ serve(async (req) => {
     throw new Error('Invalid action');
 
   } catch (error) {
-    console.error('Google Calendar auth error:', error.message);
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    console.error('Google Calendar auth error:', errorMessage);
     
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       { 
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }

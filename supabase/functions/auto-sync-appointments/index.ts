@@ -156,7 +156,8 @@ serve(async (req) => {
 
       } catch (error) {
         console.error(`Error processing appointment ${publicAppointment.id}:`, error)
-        errors.push(`Error processing appointment ${publicAppointment.id}: ${error.message}`)
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        errors.push(`Error processing appointment ${publicAppointment.id}: ${errorMessage}`)
       }
     }
 

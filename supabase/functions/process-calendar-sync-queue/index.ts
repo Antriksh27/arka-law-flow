@@ -70,13 +70,13 @@ serve(async (req) => {
       }
       groups[item.user_id].push(item);
       return groups;
-    }, {} as Record<string, any[]>);
+    }, {} as Record<string, QueueItem[]>);
 
     let processedCount = 0;
     let errorCount = 0;
 
     // Process each user's items
-    for (const [userId, items] of Object.entries(userGroups)) {
+    for (const [userId, items] of Object.entries(userGroups) as [string, QueueItem[]][]) {
       try {
         // Get Google Calendar settings for this user
         const { data: googleSettings, error: settingsError } = await supabaseClient
@@ -152,7 +152,8 @@ serve(async (req) => {
               await processQueueItem(validToken, item);
             } catch (error) {
               // If token expired, try to refresh and retry once
-              if (error.message.includes('Token expired') || error.message.includes('401')) {
+              const errorMessage = error instanceof Error ? error.message : String(error)
+              if (errorMessage.includes('Token expired') || errorMessage.includes('401')) {
                 console.log(`Token expired error for user ${userId}, attempting refresh and retry`);
                 const refreshedToken = await refreshAccessToken(supabaseClient, googleSettings);
                 
@@ -182,7 +183,8 @@ serve(async (req) => {
             
             // Check if it's a retryable error
             const retryCount = (item.retry_count || 0) + 1;
-            const isRetryable = error.message.includes('rate limit') || error.message.includes('timeout');
+            const errorMessage = error instanceof Error ? error.message : String(error)
+            const isRetryable = errorMessage.includes('rate limit') || errorMessage.includes('timeout');
             
             if (isRetryable && retryCount <= 3) {
               // Update retry count but don't mark as processed
@@ -190,7 +192,7 @@ serve(async (req) => {
                 .from('google_calendar_sync_queue')
                 .update({ 
                   retry_count: retryCount,
-                  error_message: `Retry ${retryCount}: ${error.message}`
+                  error_message: `Retry ${retryCount}: ${errorMessage}`
                 })
                 .eq('id', item.id);
               
@@ -202,7 +204,7 @@ serve(async (req) => {
                 .update({ 
                   processed: true, 
                   processed_at: new Date().toISOString(),
-                  error_message: error.message 
+                  error_message: errorMessage 
                 })
                 .eq('id', item.id);
             }
@@ -216,6 +218,7 @@ serve(async (req) => {
 
       } catch (error) {
         console.error(`Error processing items for user ${userId}:`, error);
+        const errorMessage = error instanceof Error ? error.message : String(error)
         
         // Mark all items for this user as processed with error
         for (const item of items) {
@@ -224,7 +227,7 @@ serve(async (req) => {
             .update({ 
               processed: true, 
               processed_at: new Date().toISOString(),
-              error_message: `User processing error: ${error.message}`
+              error_message: `User processing error: ${errorMessage}`
             })
             .eq('id', item.id);
         }
@@ -249,9 +252,10 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Google Calendar sync queue processing error:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error)
     
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }

@@ -83,7 +83,8 @@ async function handleStructuredUpload(params: StructuredUploadParams) {
           console.log(`⚠️ Folder creation response: ${mkcolResponse.status} ${mkcolResponse.statusText}`);
         }
       } catch (dirError) {
-        console.log(`⚠️ Error creating folder ${currentPath}: ${dirError.message}`);
+        const errorMessage = dirError instanceof Error ? dirError.message : String(dirError)
+        console.log(`⚠️ Error creating folder ${currentPath}: ${errorMessage}`);
         // Continue anyway, folder might already exist
       }
     }
@@ -136,12 +137,13 @@ async function handleStructuredUpload(params: StructuredUploadParams) {
     )
 
   } catch (error) {
-    console.error('❌ Structured upload failed:', error.message);
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    console.error('❌ Structured upload failed:', errorMessage);
     return new Response(
       JSON.stringify({
         success: false,
         message: 'Failed to upload file with structured format',
-        error: error.message
+        error: errorMessage
       }),
       {
         status: 500,
@@ -228,7 +230,8 @@ serve(async (req) => {
               break;
             }
           } catch (testError) {
-            console.log(`❌ Test ${i + 1} failed with error: ${testError.message}`);
+            const errorMessage = testError instanceof Error ? testError.message : String(testError)
+            console.log(`❌ Test ${i + 1} failed with error: ${errorMessage}`);
             // Continue to next variation
           }
         }
@@ -348,7 +351,7 @@ serve(async (req) => {
           uploadAttempt++;
         }
         
-        if (uploadResponse.ok || uploadResponse.status === 201 || uploadResponse.status === 204) {
+        if (uploadResponse && (uploadResponse.ok || uploadResponse.status === 201 || uploadResponse.status === 204)) {
           console.log('✅ File uploaded successfully to hierarchical structure');
           return new Response(JSON.stringify({
             success: true,
@@ -359,7 +362,7 @@ serve(async (req) => {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 200,
           });
-        } else {
+        } else if (uploadResponse) {
           const errorText = await uploadResponse.text();
           console.error('❌ Upload failed:', uploadResponse.status, uploadResponse.statusText, errorText);
           
@@ -403,6 +406,15 @@ serve(async (req) => {
           }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 400,
+          });
+        } else {
+          return new Response(JSON.stringify({
+            success: false,
+            error: 'Upload failed: No response received',
+            details: 'Failed to receive response from server'
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 500,
           });
         }
       } catch (error) {
@@ -548,10 +560,11 @@ serve(async (req) => {
             }
             
           } catch (error) {
-            console.log(`❌ Error testing ${testUrl}: ${error.message}`);
+            const errorMessage = error instanceof Error ? error.message : String(error)
+            console.log(`❌ Error testing ${testUrl}: ${errorMessage}`);
             testResults.push({
               path: testUrl,
-              error: error.message
+              error: errorMessage
             });
           }
         }
@@ -602,7 +615,8 @@ serve(async (req) => {
                 console.log(`⚠️ Directory creation response: ${mkcolResponse.status} ${mkcolResponse.statusText}`);
               }
             } catch (dirError) {
-              console.log(`⚠️ Error creating directory ${currentPath}: ${dirError.message}`);
+              const errorMessage = dirError instanceof Error ? dirError.message : String(dirError)
+              console.log(`⚠️ Error creating directory ${currentPath}: ${errorMessage}`);
               // Continue anyway, directory might already exist
             }
           }
@@ -653,12 +667,13 @@ serve(async (req) => {
         )
 
       } catch (error) {
-        console.error('❌ WebDAV upload failed:', error.message);
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        console.error('❌ WebDAV upload failed:', errorMessage);
         return new Response(
           JSON.stringify({
             success: false,
             message: 'Failed to upload file',
-            error: error.message
+            error: errorMessage
           }),
           {
             status: 500,
@@ -767,12 +782,13 @@ serve(async (req) => {
         )
 
       } catch (error) {
-        console.error(`❌ Download error: ${error.message}`);
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        console.error(`❌ Download error: ${errorMessage}`);
         return new Response(
           JSON.stringify({
             success: false,
             message: 'Failed to download file',
-            error: error.message
+            error: errorMessage
           }),
           {
             status: 500,
@@ -796,12 +812,13 @@ serve(async (req) => {
     }
 
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
     console.error('❌ General error:', error);
     return new Response(
       JSON.stringify({
         success: false,
         message: 'Internal server error',
-        error: error.message
+        error: errorMessage
       }),
       {
         status: 500,

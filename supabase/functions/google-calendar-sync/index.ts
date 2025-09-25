@@ -62,6 +62,12 @@ serve(async (req) => {
 
     // For auto_sync, we don't need auth header validation
     if (action === 'auto_sync') {
+      if (!user_id) {
+        throw new Error('user_id is required for auto_sync');
+      }
+      if (!operation) {
+        throw new Error('operation is required for auto_sync');
+      }
       console.log('Processing auto-sync request for user:', user_id)
       await processAutoSync(supabaseClient, user_id, appointment, operation);
       
@@ -178,7 +184,8 @@ serve(async (req) => {
           syncedCount++;
           console.log('Synced appointment:', appointment.id);
         } catch (error) {
-          console.error('Error syncing individual appointment:', appointment.id, error.message);
+          const errorMessage = error instanceof Error ? error.message : String(error)
+          console.error('Error syncing individual appointment:', appointment.id, errorMessage);
         }
       }
 
@@ -202,10 +209,11 @@ serve(async (req) => {
     throw new Error('Invalid action');
 
   } catch (error) {
-    console.error('Google Calendar sync error:', error.message);
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    console.error('Google Calendar sync error:', errorMessage);
     
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       { 
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -238,7 +246,8 @@ async function processAutoSync(supabaseClient: any, userId: string, appointment:
     await syncAppointmentToGoogle(googleSettings, appointment, operation);
     console.log('Auto sync completed for appointment:', appointment.id);
   } catch (error) {
-    console.error('Auto sync failed for appointment:', appointment.id, error.message);
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    console.error('Auto sync failed for appointment:', appointment.id, errorMessage);
   }
 }
 
@@ -281,12 +290,13 @@ async function processSyncQueue(supabaseClient: any, userId: string) {
       console.error('Error processing sync queue item:', item.id, error);
       
       // Mark as processed with error
+      const errorMessage = error instanceof Error ? error.message : String(error)
       await supabaseClient
         .from('google_calendar_sync_queue')
         .update({ 
           processed: true, 
           processed_at: new Date().toISOString(),
-          error_message: error.message 
+          error_message: errorMessage 
         })
         .eq('id', item.id);
     }
