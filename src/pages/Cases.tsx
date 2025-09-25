@@ -5,6 +5,7 @@ import { CasesFilters } from '../components/cases/CasesFilters';
 import { CasesGrid } from '../components/cases/CasesGrid';
 import { CasesTable } from '../components/cases/CasesTable';
 import { AddCaseDialog } from '../components/cases/AddCaseDialog';
+import { BulkImportCasesDialog } from '../components/cases/BulkImportCasesDialog';
 
 const Cases = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
@@ -13,6 +14,7 @@ const Cases = () => {
   const [typeFilter, setTypeFilter] = useState('all');
   const [assignedFilter, setAssignedFilter] = useState('all');
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showBulkImportDialog, setShowBulkImportDialog] = useState(false);
 
   useEffect(() => {
     console.log('Cases component mounted');
@@ -29,6 +31,7 @@ const Cases = () => {
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         onAddCase={() => setShowAddDialog(true)}
+        onBulkImport={() => setShowBulkImportDialog(true)}
       />
       
       <CasesFilters
@@ -70,6 +73,15 @@ const Cases = () => {
       <AddCaseDialog 
         open={showAddDialog}
         onClose={() => setShowAddDialog(false)}
+      />
+
+      <BulkImportCasesDialog
+        open={showBulkImportDialog}
+        onOpenChange={setShowBulkImportDialog}
+        onSuccess={() => {
+          // Refresh the cases list if needed
+          console.log('Cases imported successfully');
+        }}
       />
     </div>
   );

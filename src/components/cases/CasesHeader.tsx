@@ -1,15 +1,17 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, Grid3X3, List } from 'lucide-react';
+import { Plus, Grid3X3, List, Upload } from 'lucide-react';
 interface CasesHeaderProps {
   viewMode: 'grid' | 'table';
   onViewModeChange: (mode: 'grid' | 'table') => void;
   onAddCase: () => void;
+  onBulkImport: () => void;
 }
 export const CasesHeader: React.FC<CasesHeaderProps> = ({
   viewMode,
   onViewModeChange,
-  onAddCase
+  onAddCase,
+  onBulkImport
 }) => {
   return <div className="flex items-center justify-between">
       <div>
@@ -26,6 +28,15 @@ export const CasesHeader: React.FC<CasesHeaderProps> = ({
             <Grid3X3 className="w-4 h-4" />
           </Button>
         </div>
+
+        <Button 
+          onClick={onBulkImport}
+          variant="outline" 
+          className="border-slate-300 text-slate-700 hover:bg-slate-50"
+        >
+          <Upload className="w-4 h-4 mr-2" />
+          Bulk Import
+        </Button>
 
         <Button onClick={onAddCase} className="bg-slate-800 hover:bg-slate-700">
           <Plus className="w-4 h-4 mr-2" />
