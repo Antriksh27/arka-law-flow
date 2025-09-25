@@ -26,16 +26,33 @@ export const AssignLawyerDialog: React.FC<AssignLawyerDialogProps> = ({
   } = useQuery({
     queryKey: ['lawyers'],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_lawyers_and_juniors');
+      // Direct query to get lawyers, admins, and juniors
+      const { data, error } = await supabase
+        .from('team_members')
+        .select(`
+          user_id,
+          role,
+          profiles!inner(full_name, email)
+        `)
+        .in('role', ['lawyer', 'admin', 'junior']);
+      
       if (error) throw error;
       
-      return (data || []).map((row: any) => ({
+      // Transform and sort the data
+      const transformedData = (data || []).map((row: any) => ({
         id: row.user_id,
         user_id: row.user_id,
         role: row.role,
-        full_name: row.full_name || 'Unknown User',
-        email: row.email
+        full_name: row.profiles?.full_name || 'Unknown User',
+        email: row.profiles?.email
       }));
+      
+      // Sort with Chitrajeet first, then alphabetically
+      return transformedData.sort((a: any, b: any) => {
+        if (a.full_name?.includes('Chitrajeet')) return -1;
+        if (b.full_name?.includes('Chitrajeet')) return 1;
+        return (a.full_name || '').localeCompare(b.full_name || '');
+      });
     }
   });
   const assignLawyersMutation = useMutation({
@@ -81,12 +98,14 @@ export const AssignLawyerDialog: React.FC<AssignLawyerDialogProps> = ({
                       {lawyer.full_name?.charAt(0) || 'U'}
                     </AvatarFallback>
                   </Avatar>
-                  <div>
-                    <p className="font-medium text-foreground">
-                      {lawyer.full_name}
-                    </p>
-                    
-                  </div>
+                   <div>
+                     <p className="font-medium text-foreground">
+                       {lawyer.full_name}
+                     </p>
+                     <p className="text-sm text-muted-foreground capitalize">
+                       {lawyer.role}
+                     </p>
+                   </div>
                 </div>
                 {selectedLawyers.includes(lawyer.user_id) && <Check className="w-5 h-5 text-primary" />}
               </div>)}
