@@ -26,22 +26,16 @@ export const AssignLawyerDialog: React.FC<AssignLawyerDialogProps> = ({
   } = useQuery({
     queryKey: ['lawyers'],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_team_members_with_names', {
-        p_roles: ['lawyer', 'admin', 'junior']
-      });
+      const { data, error } = await supabase.rpc('get_lawyers_and_juniors');
       if (error) throw error;
-      const list = (data || []).map((row: any) => ({
+      
+      return (data || []).map((row: any) => ({
         id: row.user_id,
         user_id: row.user_id,
         role: row.role,
-        full_name: row.full_name,
+        full_name: row.full_name || 'Unknown User',
         email: row.email
       }));
-      return list.sort((a: any, b: any) => {
-        if (a.full_name?.includes('Chitrajeet')) return -1;
-        if (b.full_name?.includes('Chitrajeet')) return 1;
-        return (a.full_name || '').localeCompare(b.full_name || '');
-      });
     }
   });
   const assignLawyersMutation = useMutation({
