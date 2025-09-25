@@ -26,11 +26,11 @@ export const AssignLawyerDialog: React.FC<AssignLawyerDialogProps> = ({
   const { data: lawyers, isLoading } = useQuery({
     queryKey: ['lawyers'],
     queryFn: async () => {
-      // First get team members who are lawyers or admins
+      // First get team members who are lawyers, juniors, or admins
       const { data: teamMembers, error: teamError } = await supabase
         .from('team_members')
         .select('id, user_id, role')
-        .in('role', ['lawyer', 'admin']);
+        .in('role', ['lawyer', 'admin', 'junior']);
       
       if (teamError) throw teamError;
       if (!teamMembers || teamMembers.length === 0) return [];
