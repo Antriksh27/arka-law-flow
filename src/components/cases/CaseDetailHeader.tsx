@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Edit, Calendar, FileText, Users, Clock, Plus, Ban, User, Building2, Gavel, Flag } from 'lucide-react';
 import { format } from 'date-fns';
 import { AssignLawyerDialog } from './AssignLawyerDialog';
+import { EditCaseDialog } from './EditCaseDialog';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 interface CaseDetailHeaderProps {
@@ -14,6 +15,7 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
   case: caseData
 }) => {
   const [showAssignLawyer, setShowAssignLawyer] = useState(false);
+  const [showEditCase, setShowEditCase] = useState(false);
 
   // Fetch assigned lawyers info
   const { data: assignedLawyers } = useQuery({
@@ -96,10 +98,7 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
           <div className="flex gap-2 ml-4">
             <Button 
               size="sm"
-              onClick={() => {
-                // Navigate to edit mode or open edit dialog
-                window.location.hash = 'edit';
-              }}
+              onClick={() => setShowEditCase(true)}
             >
               <Edit className="w-4 h-4 mr-2" />
               Edit Case
@@ -248,6 +247,13 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
         onClose={() => setShowAssignLawyer(false)}
         caseId={caseData?.id}
         currentLawyers={caseData?.assigned_users || []}
+      />
+
+      <EditCaseDialog
+        open={showEditCase}
+        onClose={() => setShowEditCase(false)}
+        caseId={caseData?.id}
+        caseData={caseData}
       />
     </div>;
 };
