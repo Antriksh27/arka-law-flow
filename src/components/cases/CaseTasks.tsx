@@ -200,6 +200,10 @@ export const CaseTasks: React.FC<CaseTasksProps> = ({
           </Button>
         </div>}
 
-      <CreateTaskDialog open={showCreateDialog} onClose={() => setShowCreateDialog(false)} caseId={caseId} />
+      <CreateTaskDialog 
+        open={showCreateDialog} 
+        onClose={() => setShowCreateDialog(false)} 
+        caseId={caseId}
+      />
     </div>;
 };

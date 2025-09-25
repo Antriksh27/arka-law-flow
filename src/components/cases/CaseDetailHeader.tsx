@@ -73,11 +73,27 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
           </div>
           
           <div className="flex gap-2 ml-4">
-            <Button size="sm">
+            <Button 
+              size="sm"
+              onClick={() => {
+                // Navigate to edit mode or open edit dialog
+                window.location.hash = 'edit';
+              }}
+            >
               <Edit className="w-4 h-4 mr-2" />
               Edit Case
             </Button>
-            <Button variant="outline" size="sm" className="bg-red-700 hover:bg-red-600">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="bg-red-700 hover:bg-red-600 text-white"
+              onClick={() => {
+                if (confirm('Are you sure you want to close this case?')) {
+                  // Handle case closure
+                  console.log('Closing case...');
+                }
+              }}
+            >
               <Ban className="w-4 h-4 mr-2" />
               Close Case
             </Button>

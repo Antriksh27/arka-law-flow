@@ -435,12 +435,14 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
         </CardContent>
       </Card>
 
-      <EditCaseDialog
-        open={showEditDialog}
-        onClose={() => setShowEditDialog(false)}
-        caseId={caseId}
-        caseData={caseData}
-      />
+      {caseData && (
+        <EditCaseDialog
+          open={showEditDialog}
+          onClose={() => setShowEditDialog(false)}
+          caseId={caseId}
+          caseData={caseData}
+        />
+      )}
     </div>
   );
 };

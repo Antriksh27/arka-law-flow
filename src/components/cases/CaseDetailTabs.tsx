@@ -214,7 +214,10 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
         <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
           <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
           <div className="space-y-3">
-            <Button className="w-full justify-start">
+            <Button 
+              className="w-full justify-start"
+              onClick={() => onTabChange('tasks')}
+            >
               <Plus className="w-4 h-4 mr-2" />
               Add Task
             </Button>

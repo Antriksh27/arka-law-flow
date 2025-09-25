@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,7 @@ import { format, parseISO } from 'date-fns';
 import { Hearing } from '../hearings/types';
 import { getHearingStatusBadge } from '../hearings/utils';
 import { useDialog } from '@/hooks/use-dialog';
-import { CreateHearingDialog } from '../hearings/CreateHearingDialog';
+import { CreateHearingDialogWrapper } from './CreateHearingDialogWrapper';
 import { EditHearingDialog } from '../hearings/EditHearingDialog';
 interface CaseHearingsProps {
   caseId: string;
@@ -16,6 +16,7 @@ interface CaseHearingsProps {
 export const CaseHearings: React.FC<CaseHearingsProps> = ({
   caseId
 }) => {
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
   const {
     openDialog
   } = useDialog();
@@ -49,10 +50,10 @@ export const CaseHearings: React.FC<CaseHearingsProps> = ({
   return <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Hearings</h3>
-        <Button className="bg-slate-800 hover:bg-slate-700" onClick={() => {
-        const createDialog = <CreateHearingDialog />;
-        openDialog(createDialog);
-      }}>
+        <Button 
+          className="bg-slate-800 hover:bg-slate-700" 
+          onClick={() => setShowCreateDialog(true)}
+        >
           <Plus className="w-4 h-4 mr-2" />
           Add Hearing
         </Button>
@@ -109,13 +110,18 @@ export const CaseHearings: React.FC<CaseHearingsProps> = ({
         </div> : <div className="text-center py-12 text-gray-500">
           <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-300" />
           <p>No hearings scheduled yet</p>
-          <Button onClick={() => {
-        const createDialog = <CreateHearingDialog />;
-        openDialog(createDialog);
-      }} className="mt-4 bg-slate-900 hover:bg-slate-800">
+          <Button 
+            onClick={() => setShowCreateDialog(true)} 
+            className="mt-4 bg-slate-900 hover:bg-slate-800"
+          >
             <Plus className="w-4 h-4 mr-2" />
             Schedule First Hearing
           </Button>
         </div>}
+      <CreateHearingDialogWrapper 
+        open={showCreateDialog}
+        onClose={() => setShowCreateDialog(false)}
+        caseId={caseId}
+      />
     </div>;
 };
