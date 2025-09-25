@@ -244,11 +244,9 @@ export const ClientList = () => {
             <option value="created_at-asc">Oldest First</option>
             <option value="name-asc">Name A-Z</option>
             <option value="name-desc">Name Z-A</option>
-            <option value="status-asc">Status A-Z</option>
             <option value="status-desc">Status Z-A</option>
             <option value="active_cases-desc">Most Cases</option>
             <option value="active_cases-asc">Least Cases</option>
-            <option value="email-asc">Email A-Z</option>
             <option value="email-desc">Email Z-A</option>
           </select>
 
