@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Plus, Search, MoreHorizontal, Eye, Upload } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, Eye, Upload, ArrowUpDown } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,12 +27,16 @@ interface Client {
 }
 
 type StatusFilter = 'all' | 'active' | 'inactive' | 'lead' | 'prospect' | 'new';
+type SortField = 'name' | 'status' | 'created_at' | 'active_cases' | 'email';
+type SortDirection = 'asc' | 'desc';
 
 export const ClientList = () => {
   console.log('ClientList component rendering...');
   
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [sortField, setSortField] = useState<SortField>('created_at');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showBulkImportDialog, setShowBulkImportDialog] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
@@ -43,7 +47,7 @@ export const ClientList = () => {
   const { role } = useAuth();
 
   const {
-    data: clients = [],
+    data: rawClients = [],
     isLoading,
     error,
     refetch
@@ -95,6 +99,55 @@ export const ClientList = () => {
       }
     }
   });
+
+  // Sort clients based on current sort field and direction
+  const clients = useMemo(() => {
+    if (!rawClients.length) return [];
+    
+    const sorted = [...rawClients].sort((a, b) => {
+      let aValue: any, bValue: any;
+      
+      switch (sortField) {
+        case 'name':
+          aValue = a.full_name?.toLowerCase() || '';
+          bValue = b.full_name?.toLowerCase() || '';
+          break;
+        case 'status':
+          aValue = a.status || '';
+          bValue = b.status || '';
+          break;
+        case 'created_at':
+          aValue = new Date(a.created_at);
+          bValue = new Date(b.created_at);
+          break;
+        case 'active_cases':
+          aValue = a.active_case_count || 0;
+          bValue = b.active_case_count || 0;
+          break;
+        case 'email':
+          aValue = a.email?.toLowerCase() || '';
+          bValue = b.email?.toLowerCase() || '';
+          break;
+        default:
+          return 0;
+      }
+      
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+    
+    return sorted;
+  }, [rawClients, sortField, sortDirection]);
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
 
   const handleDeleteClient = async (clientId: string) => {
     try {
@@ -178,6 +231,27 @@ export const ClientList = () => {
             <option value="prospect">Prospect</option>
           </select>
 
+          <select 
+            value={`${sortField}-${sortDirection}`} 
+            onChange={e => {
+              const [field, direction] = e.target.value.split('-');
+              setSortField(field as SortField);
+              setSortDirection(direction as SortDirection);
+            }} 
+            className="w-48 px-3 py-2 border border-slate-900 rounded-md text-sm bg-white"
+          >
+            <option value="created_at-desc">Newest First</option>
+            <option value="created_at-asc">Oldest First</option>
+            <option value="name-asc">Name A-Z</option>
+            <option value="name-desc">Name Z-A</option>
+            <option value="status-asc">Status A-Z</option>
+            <option value="status-desc">Status Z-A</option>
+            <option value="active_cases-desc">Most Cases</option>
+            <option value="active_cases-asc">Least Cases</option>
+            <option value="email-asc">Email A-Z</option>
+            <option value="email-desc">Email Z-A</option>
+          </select>
+
           <Button 
             variant="outline" 
             onClick={() => setShowBulkImportDialog(true)}
@@ -210,10 +284,42 @@ export const ClientList = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="bg-slate-800 text-white">Client Name</TableHead>
-                <TableHead className="bg-slate-800 text-white">Contact</TableHead>
-                <TableHead className="bg-slate-800 text-white">Status</TableHead>
-                <TableHead className="bg-slate-800 text-white">Active Cases</TableHead>
+                <TableHead className="bg-slate-800 text-white">
+                  <button 
+                    onClick={() => handleSort('name')}
+                    className="flex items-center gap-1 hover:text-gray-200"
+                  >
+                    Client Name
+                    <ArrowUpDown className="w-3 h-3" />
+                  </button>
+                </TableHead>
+                <TableHead className="bg-slate-800 text-white">
+                  <button 
+                    onClick={() => handleSort('email')}
+                    className="flex items-center gap-1 hover:text-gray-200"
+                  >
+                    Contact
+                    <ArrowUpDown className="w-3 h-3" />
+                  </button>
+                </TableHead>
+                <TableHead className="bg-slate-800 text-white">
+                  <button 
+                    onClick={() => handleSort('status')}
+                    className="flex items-center gap-1 hover:text-gray-200"
+                  >
+                    Status
+                    <ArrowUpDown className="w-3 h-3" />
+                  </button>
+                </TableHead>
+                <TableHead className="bg-slate-800 text-white">
+                  <button 
+                    onClick={() => handleSort('active_cases')}
+                    className="flex items-center gap-1 hover:text-gray-200"
+                  >
+                    Active Cases
+                    <ArrowUpDown className="w-3 h-3" />
+                  </button>
+                </TableHead>
                 <TableHead className="bg-slate-800 text-white">Assigned Lawyer</TableHead>
                 <TableHead className="bg-slate-800 text-white">Actions</TableHead>
               </TableRow>
