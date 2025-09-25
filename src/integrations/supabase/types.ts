@@ -3344,6 +3344,15 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_team_members_with_names: {
+        Args: { p_roles: string[] }
+        Returns: {
+          email: string
+          full_name: string
+          role: string
+          user_id: string
+        }[]
+      }
       get_user_firm_id_from_team: {
         Args: Record<PropertyKey, never>
         Returns: string

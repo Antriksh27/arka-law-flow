@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -26,36 +26,21 @@ export const AssignLawyerDialog: React.FC<AssignLawyerDialogProps> = ({
   } = useQuery({
     queryKey: ['lawyers'],
     queryFn: async () => {
-      // First get team members who are lawyers, juniors, or admins
-      const {
-        data: teamMembers,
-        error: teamError
-      } = await supabase.from('team_members').select('id, user_id, role').in('role', ['lawyer', 'admin', 'junior']);
-      if (teamError) throw teamError;
-      if (!teamMembers || teamMembers.length === 0) return [];
-
-      // Then get their profiles
-      const userIds = teamMembers.map(tm => tm.user_id);
-      const {
-        data: profiles,
-        error: profileError
-      } = await supabase.from('profiles').select('id, full_name, email').in('id', userIds);
-      if (profileError) throw profileError;
-
-      // Combine the data and sort - put Chitrajeet at the top
-      return teamMembers.map(tm => {
-        const profile = profiles?.find(p => p.id === tm.user_id);
-        return {
-          ...tm,
-          full_name: profile?.full_name || 'Unknown User',
-          email: profile?.email,
-          profiles: profile
-        };
-      }).sort((a, b) => {
-        // Put Chitrajeet at the top
-        if (a.full_name.includes('Chitrajeet')) return -1;
-        if (b.full_name.includes('Chitrajeet')) return 1;
-        return a.full_name.localeCompare(b.full_name);
+      const { data, error } = await supabase.rpc('get_team_members_with_names', {
+        p_roles: ['lawyer', 'admin', 'junior']
+      });
+      if (error) throw error;
+      const list = (data || []).map((row: any) => ({
+        id: row.user_id,
+        user_id: row.user_id,
+        role: row.role,
+        full_name: row.full_name,
+        email: row.email
+      }));
+      return list.sort((a: any, b: any) => {
+        if (a.full_name?.includes('Chitrajeet')) return -1;
+        if (b.full_name?.includes('Chitrajeet')) return 1;
+        return (a.full_name || '').localeCompare(b.full_name || '');
       });
     }
   });
@@ -91,6 +76,7 @@ export const AssignLawyerDialog: React.FC<AssignLawyerDialogProps> = ({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Assign Lawyers</DialogTitle>
+          <DialogDescription>Select lawyers and juniors to assign to this case.</DialogDescription>
         </DialogHeader>
         
         <div className="space-y-3 max-h-96 overflow-y-auto">
