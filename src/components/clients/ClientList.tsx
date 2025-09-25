@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Plus, Search, MoreHorizontal, Eye } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, Eye, Upload } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AddClientDialog } from './AddClientDialog';
 import { EditClientDialog } from './EditClientDialog';
 import { ClientDetailsDialog } from './ClientDetailsDialog';
+import { BulkImportClientsDialog } from './BulkImportClientsDialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface Client {
@@ -33,6 +34,7 @@ export const ClientList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showBulkImportDialog, setShowBulkImportDialog] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [viewingClient, setViewingClient] = useState<Client | null>(null);
 
@@ -176,6 +178,15 @@ export const ClientList = () => {
             <option value="prospect">Prospect</option>
           </select>
 
+          <Button 
+            variant="outline" 
+            onClick={() => setShowBulkImportDialog(true)}
+            className="border-slate-900 text-slate-900 hover:bg-slate-50"
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            Bulk Import
+          </Button>
+
           <Button variant="outline" className="border-slate-900 bg-slate-900 text-white hover:bg-slate-800">
             <Search className="w-4 h-4 mr-2" />
             More Filters
@@ -304,6 +315,15 @@ export const ClientList = () => {
           onOpenChange={open => !open && setViewingClient(null)} 
         />
       )}
+
+      <BulkImportClientsDialog 
+        open={showBulkImportDialog} 
+        onOpenChange={setShowBulkImportDialog} 
+        onSuccess={() => {
+          refetch();
+          setShowBulkImportDialog(false);
+        }} 
+      />
     </div>
   );
 };
