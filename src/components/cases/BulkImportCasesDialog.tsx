@@ -228,6 +228,34 @@ export const BulkImportCasesDialog = ({
             }
           }
 
+          // Find Chitrajeet Upadhyaya as assigned lawyer
+          let assignedLawyerId = null;
+          const { data: lawyer } = await supabase
+            .from('team_members')
+            .select('user_id')
+            .eq('firm_id', teamMember.firm_id)
+            .in('role', ['lawyer', 'admin'])
+            .limit(1)
+            .single();
+          
+          if (lawyer) {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('id', lawyer.user_id)
+              .ilike('full_name', '%Chitrajeet Upadhyaya%')
+              .single();
+            
+            if (profile) {
+              assignedLawyerId = profile.id;
+            }
+          }
+
+          // If Chitrajeet not found, use any lawyer/admin from the firm
+          if (!assignedLawyerId && lawyer) {
+            assignedLawyerId = lawyer.user_id;
+          }
+
           const caseData = {
             case_title: caseTitle,
             title: caseTitle, // For compatibility
@@ -235,8 +263,8 @@ export const BulkImportCasesDialog = ({
             case_type: (cleanField(row.case_type || row['Case Type'] || row['case_type']) || 'civil').toLowerCase() as any,
             status: (cleanField(row.status || row['Status']) || 'open').toLowerCase() as any,
             priority: (cleanField(row.priority || row['Priority']) || 'medium').toLowerCase() as any,
-            court: cleanField(row.court || row['Court']),
-            court_name: cleanField(row.court_name || row['Court Name'] || row['court_name']),
+            court: cleanField(row.court || row['Court'] || row.court_name || row['Court Name'] || row['court_name']),
+            court_name: cleanField(row.court_name || row['Court Name'] || row['court_name'] || row.court || row['Court']),
             petitioner: cleanField(row.petitioner || row['Petitioner']),
             respondent: cleanField(row.respondent || row['Respondent']),
             filing_date: parseDate(row.filing_date || row['Filing Date'] || row['filing_date']),
@@ -244,6 +272,7 @@ export const BulkImportCasesDialog = ({
             description: cleanField(row.description || row['Description']),
             stage: cleanField(row.stage || row['Stage']),
             client_id: clientId,
+            assigned_to: assignedLawyerId,
             firm_id: teamMember.firm_id,
             created_by: user.id
           };
