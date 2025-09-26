@@ -50,17 +50,13 @@ export const CaseLegalkartIntegration: React.FC<CaseLegalkartIntegrationProps> =
 
   return (
     <div className="space-y-4">
-      {/* Display fetched Legalkart data if available */}
-      {caseData?.fetched_data && (
-        <LegalkartDataDisplay data={caseData.fetched_data} />
-      )}
-
+      {/* Show only integration controls, not the data display */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <ExternalLink className="h-5 w-5" />
-              Legalkart Integration
+              Legalkart Integration Controls
             </div>
             <div className="flex items-center gap-2">
               <Badge variant={autoFetchEnabled ? "default" : "outline"}>
@@ -77,11 +73,11 @@ export const CaseLegalkartIntegration: React.FC<CaseLegalkartIntegrationProps> =
             </div>
           </CardTitle>
           <CardDescription>
-            Fetch case details from Legalkart API using CNR number
+            Manage Legalkart API integration settings. Case data is displayed in the Details tab.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="space-y-6">
             {cnrNumber && (
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div>
@@ -124,7 +120,7 @@ export const CaseLegalkartIntegration: React.FC<CaseLegalkartIntegrationProps> =
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                 <p className="text-sm text-blue-800">
                   <strong>Auto-fetch is enabled.</strong> Case details will be automatically 
-                  fetched when the CNR number is updated.
+                  fetched when the CNR number is updated. Data is displayed in the Details tab.
                 </p>
               </div>
             )}

@@ -35,6 +35,8 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
     // Invalidate and refetch case data and Legalkart data
     queryClient.invalidateQueries({ queryKey: ['case-data', caseId] });
     queryClient.invalidateQueries({ queryKey: ['case-legalkart-data', caseId] });
+    queryClient.invalidateQueries({ queryKey: ['case-details-full', caseId] });
+    queryClient.invalidateQueries({ queryKey: ['case-detail', caseId] });
   };
 
   // Fetch latest 3 activities for the sidebar

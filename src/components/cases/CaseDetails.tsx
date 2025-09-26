@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ExternalLink, RefreshCw, AlertTriangle, Edit, Calendar, MapPin, Scale, FileText, Users, Gavel } from 'lucide-react';
 import { EditCaseDialog } from './EditCaseDialog';
+import { LegalkartDataDisplay } from './LegalkartDataDisplay';
 
 interface CaseDetailsProps {
   caseId: string;
@@ -15,7 +16,7 @@ interface CaseDetailsProps {
 export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
   const [showEditDialog, setShowEditDialog] = useState(false);
 
-  const { data: caseData, isLoading } = useQuery({
+  const { data: caseData, isLoading, refetch } = useQuery({
     queryKey: ['case-details-full', caseId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -61,6 +62,31 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
 
   return (
     <div className="space-y-6">
+      {/* Legalkart Data Notification */}
+      {caseData.fetched_data && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center gap-2">
+            <ExternalLink className="h-5 w-5 text-blue-600" />
+            <div>
+              <p className="text-blue-800 font-medium">
+                Legalkart Data Available
+              </p>
+              <p className="text-blue-700 text-sm">
+                This case includes data fetched from Legalkart API. 
+                {caseData.last_fetched_at && (
+                  <span> Last updated: {new Date(caseData.last_fetched_at).toLocaleString()}</span>
+                )}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Display Legalkart Data if available */}
+      {caseData.fetched_data && (
+        <LegalkartDataDisplay data={caseData.fetched_data} />
+      )}
+
       {/* Header Section */}
       <Card className="border-gray-200 bg-white">
         <CardHeader>
@@ -93,10 +119,20 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
                 <p className="text-gray-600 text-sm">{caseData.description}</p>
               )}
             </div>
-            <Button onClick={() => setShowEditDialog(true)} className="flex items-center gap-2">
-              <Edit className="w-4 h-4" />
-              Edit Case Info
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={() => setShowEditDialog(true)} className="flex items-center gap-2">
+                <Edit className="w-4 h-4" />
+                Edit Case Info
+              </Button>
+              <Button 
+                onClick={() => refetch()} 
+                variant="outline" 
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Refresh Data
+              </Button>
+            </div>
           </div>
         </CardHeader>
       </Card>
