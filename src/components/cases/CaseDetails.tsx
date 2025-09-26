@@ -83,8 +83,7 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({
   const legalkartCaseTitle = legalkartPetitionerName && legalkartRespondentName ? `${legalkartPetitionerName} Vs ${legalkartRespondentName}` : '';
   const displayTitle = legalkartCaseTitle || caseData.case_title || caseData.title;
   return <div className="max-w-7xl mx-auto p-6 space-y-6">
-      {/* Legalkart Data Notification */}
-      {caseData.fetched_data}
+      {/* Legalkart Data Integration - data is shown throughout the component */}
 
       {/* Header Section */}
       
