@@ -95,8 +95,44 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
     }
   };
 
-  // Use case_title first, then fall back to title
-  const caseTitle = caseData?.case_title || caseData?.title || 'Untitled Case';
+  // Extract Legalkart data if available for case title generation
+  const legalkartData = (caseData?.fetched_data as any)?.data || {};
+  const {
+    petitioner_and_advocate = '',
+    respondent_and_advocate = ''
+  } = legalkartData;
+
+  // Helper function to extract clean names from advocate strings
+  const extractName = (text: string) => {
+    if (!text) return '';
+    // Extract the first name before "Advocate-" or other patterns
+    const match = text.match(/^(\d+\)\s*)?([^A-Z]*?)(?:\s+Advocate|$)/);
+    return match ? match[2].trim() : text.split(' ')[0] || '';
+  };
+
+  // Generate case title in "Petitioner Vs Respondent" format
+  const generateCaseTitle = () => {
+    // First try to get names from Legalkart data
+    const legalkartPetitionerName = extractName(petitioner_and_advocate);
+    const legalkartRespondentName = extractName(respondent_and_advocate);
+    
+    if (legalkartPetitionerName && legalkartRespondentName) {
+      return `${legalkartPetitionerName} Vs ${legalkartRespondentName}`;
+    }
+    
+    // Fallback to manual case data
+    const petitioner = caseData?.petitioner;
+    const respondent = caseData?.respondent;
+    
+    if (petitioner && respondent) {
+      return `${petitioner} Vs ${respondent}`;
+    }
+    
+    // Final fallback to existing title
+    return caseData?.case_title || caseData?.title || 'Untitled Case';
+  };
+
+  const caseTitle = generateCaseTitle();
 
   // Use court_name first, then fall back to court
   const courtName = caseData?.court_name || caseData?.court || 'Not specified';
