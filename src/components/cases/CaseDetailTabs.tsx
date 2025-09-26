@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileText, Calendar, CheckSquare, StickyNote, MessageSquare, Activity, Filter, Search, Plus, BarChart3, FileSearch, Clock, Bot, ExternalLink } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { CaseDocuments } from './CaseDocuments';
@@ -29,6 +29,13 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
   onTabChange
 }) => {
   const [showCreateNoteModal, setShowCreateNoteModal] = useState(false);
+  const queryClient = useQueryClient();
+
+  const handleCaseDataUpdated = () => {
+    // Invalidate and refetch case data and Legalkart data
+    queryClient.invalidateQueries({ queryKey: ['case-data', caseId] });
+    queryClient.invalidateQueries({ queryKey: ['case-legalkart-data', caseId] });
+  };
 
   // Fetch latest 3 activities for the sidebar
   const {
@@ -226,6 +233,7 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
                   cnrNumber={caseData?.cnr_number}
                   autoFetchEnabled={caseData?.cnr_auto_fetch_enabled}
                   lastFetchedAt={caseData?.last_fetched_at}
+                  onCaseDataUpdated={handleCaseDataUpdated}
                 />
               </TabsContent>
 

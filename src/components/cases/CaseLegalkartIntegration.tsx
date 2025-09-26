@@ -4,7 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { LegalkartCaseSearch } from './LegalkartCaseSearch';
 import { AutoFetchCaseDialog } from './AutoFetchCaseDialog';
+import { LegalkartDataDisplay } from './LegalkartDataDisplay';
 import { Settings, Search, Clock, ExternalLink } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CaseLegalkartIntegrationProps {
   caseId: string;
@@ -24,6 +27,22 @@ export const CaseLegalkartIntegration: React.FC<CaseLegalkartIntegrationProps> =
   const [showSettings, setShowSettings] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
 
+  // Fetch case data to get the fetched_data field
+  const { data: caseData } = useQuery({
+    queryKey: ['case-legalkart-data', caseId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('cases')
+        .select('fetched_data')
+        .eq('id', caseId)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!caseId
+  });
+
   const handleCaseDataFetched = (data: any) => {
     console.log('Case data fetched:', data);
     onCaseDataUpdated?.();
@@ -31,6 +50,11 @@ export const CaseLegalkartIntegration: React.FC<CaseLegalkartIntegrationProps> =
 
   return (
     <div className="space-y-4">
+      {/* Display fetched Legalkart data if available */}
+      {caseData?.fetched_data && (
+        <LegalkartDataDisplay data={caseData.fetched_data} />
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
