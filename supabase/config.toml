@@ -36,3 +36,6 @@ verify_jwt = false
 
 [functions.pydio-webdav]
 verify_jwt = false
+
+[functions.legalkart-api]
+verify_jwt = true

@@ -16,6 +16,7 @@ import { CaseOverview } from './CaseOverview';
 import { CaseDetails } from './CaseDetails';
 import { CaseTimeline } from './CaseTimeline';
 import { CaseResearch } from './CaseResearch';
+import { CaseLegalkartIntegration } from './CaseLegalkartIntegration';
 import { CreateNoteMultiModal } from '../notes/CreateNoteMultiModal';
 interface CaseDetailTabsProps {
   caseId: string;
@@ -115,6 +116,10 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
     label: 'Research',
     icon: Bot
   }, {
+    value: 'legalkart',
+    label: 'Legalkart API',
+    icon: ExternalLink
+  }, {
     value: 'activity',
     label: 'Activity',
     icon: Activity
@@ -198,6 +203,15 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
 
               <TabsContent value="research" className="m-0">
                 <CaseResearch caseId={caseId} />
+              </TabsContent>
+
+              <TabsContent value="legalkart" className="m-0">
+                <CaseLegalkartIntegration 
+                  caseId={caseId}
+                  cnrNumber={caseData?.cnr_number}
+                  autoFetchEnabled={caseData?.cnr_auto_fetch_enabled}
+                  lastFetchedAt={caseData?.last_fetched_at}
+                />
               </TabsContent>
 
               <TabsContent value="activity" className="m-0">

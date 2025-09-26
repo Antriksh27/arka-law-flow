@@ -629,6 +629,7 @@ export type Database = {
           category: string | null
           client_id: string | null
           closing_date: string | null
+          cnr_auto_fetch_enabled: boolean | null
           cnr_number: string | null
           coram: string | null
           court: string | null
@@ -652,6 +653,7 @@ export type Database = {
           id: string
           is_auto_fetched: boolean | null
           judicial_branch: string | null
+          last_fetched_at: string | null
           next_hearing_date: string | null
           objection: string | null
           order_link: string | null
@@ -687,6 +689,7 @@ export type Database = {
           category?: string | null
           client_id?: string | null
           closing_date?: string | null
+          cnr_auto_fetch_enabled?: boolean | null
           cnr_number?: string | null
           coram?: string | null
           court?: string | null
@@ -710,6 +713,7 @@ export type Database = {
           id?: string
           is_auto_fetched?: boolean | null
           judicial_branch?: string | null
+          last_fetched_at?: string | null
           next_hearing_date?: string | null
           objection?: string | null
           order_link?: string | null
@@ -745,6 +749,7 @@ export type Database = {
           category?: string | null
           client_id?: string | null
           closing_date?: string | null
+          cnr_auto_fetch_enabled?: boolean | null
           cnr_number?: string | null
           coram?: string | null
           court?: string | null
@@ -768,6 +773,7 @@ export type Database = {
           id?: string
           is_auto_fetched?: boolean | null
           judicial_branch?: string | null
+          last_fetched_at?: string | null
           next_hearing_date?: string | null
           objection?: string | null
           order_link?: string | null
@@ -2094,6 +2100,80 @@ export type Database = {
           },
           {
             foreignKeyName: "law_firms_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      legalkart_case_searches: {
+        Row: {
+          case_id: string | null
+          cnr_number: string
+          created_at: string
+          created_by: string
+          error_message: string | null
+          firm_id: string
+          id: string
+          request_data: Json | null
+          response_data: Json | null
+          search_type: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          case_id?: string | null
+          cnr_number: string
+          created_at?: string
+          created_by: string
+          error_message?: string | null
+          firm_id: string
+          id?: string
+          request_data?: Json | null
+          response_data?: Json | null
+          search_type: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          case_id?: string | null
+          cnr_number?: string
+          created_at?: string
+          created_by?: string
+          error_message?: string | null
+          firm_id?: string
+          id?: string
+          request_data?: Json | null
+          response_data?: Json | null
+          search_type?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "legalkart_case_searches_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "case_details"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "legalkart_case_searches_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "legalkart_case_searches_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "firm_statistics"
+            referencedColumns: ["admin_id"]
+          },
+          {
+            foreignKeyName: "legalkart_case_searches_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
