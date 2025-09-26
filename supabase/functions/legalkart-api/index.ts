@@ -27,7 +27,7 @@ serve(async (req) => {
   try {
     // Get environment variables
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const legalkartUserId = Deno.env.get('LEGALKART_USER_ID');
     const legalkartHashKey = Deno.env.get('LEGALKART_HASH_KEY');
 
@@ -39,18 +39,15 @@ serve(async (req) => {
       );
     }
 
-    // Create Supabase client
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      auth: { persistSession: false },
-      global: {
-        headers: {
-          Authorization: req.headers.get('Authorization')!,
-        },
-      },
+    // Create Supabase client (service role) and verify user from Authorization header
+    const authHeader = req.headers.get('Authorization') || '';
+    const jwt = authHeader.replace('Bearer ', '');
+    const supabase = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false }
     });
 
-    // Get current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    // Get current user from JWT
+    const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
     if (userError || !user) {
       console.error('Authentication error:', userError);
       return new Response(
