@@ -87,18 +87,18 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({
 
   const displayTitle = legalkartCaseTitle || caseData.case_title || caseData.title;
 
-  return <div className="space-y-6">
+  return <div className="max-w-7xl mx-auto p-6 space-y-6">
       {/* Legalkart Data Notification */}
       {caseData.fetched_data && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="bg-info-50 border border-border rounded-xl p-4">
           <div className="flex items-center gap-2">
-            <ExternalLink className="h-5 w-5 text-blue-600" />
+            <ExternalLink className="h-5 w-5 text-info-800" />
             <div>
-              <p className="text-blue-800 font-medium">
-                Enhanced with Legalkart Data
+              <p className="text-info-800 font-medium">
+                Enhanced with E-Courts Data
               </p>
-              <p className="text-blue-700 text-sm">
-                This case includes comprehensive data from e-Courts. 
+              <p className="text-muted text-sm">
+                This case includes comprehensive data from e-Courts system. 
                 {caseData.last_fetched_at && <span> Last updated: {new Date(caseData.last_fetched_at).toLocaleString()}</span>}
               </p>
             </div>
@@ -107,40 +107,50 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({
       )}
 
       {/* Header Section */}
-      <Card className="border-gray-200 bg-white">
-        <CardHeader>
+      <Card className="card">
+        <CardHeader className="pb-4">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <CardTitle className="flex items-center gap-3 text-xl font-semibold text-gray-900 mb-2">
-                <Scale className="w-6 h-6 text-blue-600" />
-                {displayTitle}
+              <CardTitle className="flex items-center gap-3 mb-3">
+                <Scale className="w-6 h-6 text-primary" />
+                <span className="text-2xl font-semibold text-foreground">{displayTitle}</span>
                 {caseData.fetched_data && (
-                  <Badge variant="outline" className="ml-2 text-xs">
+                  <Badge variant="outline" className="ml-2 text-xs border-border text-muted">
                     E-Courts Data
                   </Badge>
                 )}
               </CardTitle>
-              <div className="flex items-center gap-3 mb-3">
+              <div className="flex items-center gap-3 mb-4">
                 <Badge className={getStatusColor(caseData.status)}>
                   {caseData.status?.replace('_', ' ').toUpperCase()}
                 </Badge>
-                {caseData.stage && <Badge variant="outline" className="text-gray-700 border-gray-300">
+                {caseData.stage && (
+                  <Badge variant="outline" className="text-foreground border-border">
                     {caseData.stage}
-                  </Badge>}
-                {caseData.priority && <Badge variant="outline" className={caseData.priority === 'high' ? 'text-red-700 border-red-300' : caseData.priority === 'medium' ? 'text-yellow-700 border-yellow-300' : 'text-green-700 border-green-300'}>
+                  </Badge>
+                )}
+                {caseData.priority && (
+                  <Badge variant="outline" className={
+                    caseData.priority === 'high' ? 'text-destructive border-destructive/20' : 
+                    caseData.priority === 'medium' ? 'text-warning-800 border-warning/20' : 
+                    'text-success-800 border-success/20'
+                  }>
                     {caseData.priority} priority
-                  </Badge>}
+                  </Badge>
+                )}
               </div>
-              {caseData.description && <p className="text-gray-600 text-sm">{caseData.description}</p>}
+              {caseData.description && (
+                <p className="text-muted text-sm leading-relaxed">{caseData.description}</p>
+              )}
             </div>
-            <div className="flex gap-2">
-              <Button onClick={() => setShowEditDialog(true)} className="flex items-center gap-2">
+            <div className="flex gap-3">
+              <Button onClick={() => setShowEditDialog(true)} className="btn-primary flex items-center gap-2">
                 <Edit className="w-4 h-4" />
-                Edit Case Info
+                Edit Case
               </Button>
-              <Button onClick={() => refetch()} variant="outline" className="flex items-center gap-2">
+              <Button onClick={() => refetch()} variant="outline" className="btn-secondary flex items-center gap-2">
                 <RefreshCw className="w-4 h-4" />
-                Refresh Data
+                Refresh
               </Button>
             </div>
           </div>
@@ -148,10 +158,10 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({
       </Card>
 
       {/* Parties Section */}
-      <Card className="border-gray-200 bg-white">
+      <Card className="card">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-            <Users className="w-5 h-5 text-blue-600" />
+          <CardTitle className="text-xl font-medium text-foreground flex items-center gap-2">
+            <Users className="w-5 h-5 text-primary" />
             Parties Involved
           </CardTitle>
         </CardHeader>
@@ -159,37 +169,41 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <p className="text-sm font-medium text-gray-500 mb-1">Petitioner</p>
-                <p className="font-medium text-gray-900">{caseData.petitioner || legalkartPetitionerName || 'Not specified'}</p>
+                <p className="text-sm font-medium text-muted mb-2">Petitioner</p>
+                <p className="font-medium text-foreground">{caseData.petitioner || legalkartPetitionerName || 'Not specified'}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-500 mb-1">Respondent</p>
-                <p className="font-medium text-gray-900">{caseData.respondent || legalkartRespondentName || 'Not specified'}</p>
+                <p className="text-sm font-medium text-muted mb-2">Respondent</p>
+                <p className="font-medium text-foreground">{caseData.respondent || legalkartRespondentName || 'Not specified'}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-500 mb-1">Petitioner's Advocate</p>
-                <p className="font-medium text-gray-900">{caseData.petitioner_advocate || 'Not specified'}</p>
+                <p className="text-sm font-medium text-muted mb-2">Petitioner's Advocate</p>
+                <p className="font-medium text-foreground">{caseData.petitioner_advocate || 'Not specified'}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-500 mb-1">Respondent's Advocate</p>
-                <p className="font-medium text-gray-900">{caseData.respondent_advocate || 'Not specified'}</p>
+                <p className="text-sm font-medium text-muted mb-2">Respondent's Advocate</p>
+                <p className="font-medium text-foreground">{caseData.respondent_advocate || 'Not specified'}</p>
               </div>
             </div>
             
-            {/* Enhanced Legalkart Party Details */}
+            {/* Enhanced E-Courts Party Details */}
             {(petitioner_and_advocate || respondent_and_advocate) && (
-              <div className="border-t pt-4 space-y-4">
-                <p className="text-sm font-medium text-gray-500 mb-3">Detailed Party Information (E-Courts)</p>
+              <div className="border-t border-border pt-6 space-y-4">
+                <p className="text-sm font-medium text-muted mb-3">Detailed Party Information (E-Courts)</p>
                 {petitioner_and_advocate && (
                   <div>
-                    <p className="text-xs font-medium text-gray-400 mb-1">Petitioner & Advocate Details</p>
-                    <p className="text-sm text-gray-700 bg-gray-50 rounded-lg p-3">{petitioner_and_advocate}</p>
+                    <p className="text-xs font-medium text-muted mb-2">Petitioner & Advocate Details</p>
+                    <div className="bg-soft rounded-xl p-4">
+                      <p className="text-sm text-foreground leading-relaxed">{petitioner_and_advocate}</p>
+                    </div>
                   </div>
                 )}
                 {respondent_and_advocate && (
                   <div>
-                    <p className="text-xs font-medium text-gray-400 mb-1">Respondent & Advocate Details</p>
-                    <p className="text-sm text-gray-700 bg-gray-50 rounded-lg p-3">{respondent_and_advocate}</p>
+                    <p className="text-xs font-medium text-muted mb-2">Respondent & Advocate Details</p>
+                    <div className="bg-soft rounded-xl p-4">
+                      <p className="text-sm text-foreground leading-relaxed">{respondent_and_advocate}</p>
+                    </div>
                   </div>
                 )}
               </div>
@@ -199,43 +213,43 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({
       </Card>
 
       {/* Court Information */}
-      <Card className="border-gray-200 bg-white">
+      <Card className="card">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-            <Gavel className="w-5 h-5 text-blue-600" />
+          <CardTitle className="text-xl font-medium text-foreground flex items-center gap-2">
+            <Gavel className="w-5 h-5 text-primary" />
             Court Information
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <p className="text-sm font-medium text-gray-500 mb-1">Court Name</p>
-              <p className="font-medium text-gray-900">{caseData.court_name || caseData.court || 'Not specified'}</p>
+              <p className="text-sm font-medium text-muted mb-2">Court Name</p>
+              <p className="font-medium text-foreground">{caseData.court_name || caseData.court || 'Not specified'}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-500 mb-1">Court Complex</p>
-              <p className="font-medium text-gray-900">{caseData.court_complex || 'Not specified'}</p>
+              <p className="text-sm font-medium text-muted mb-2">Court Complex</p>
+              <p className="font-medium text-foreground">{caseData.court_complex || 'Not specified'}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-500 mb-1">Bench Type</p>
-              <p className="font-medium text-gray-900">{caseData.bench_type || case_status.bench_type || 'Not specified'}</p>
+              <p className="text-sm font-medium text-muted mb-2">Bench Type</p>
+              <p className="font-medium text-foreground">{caseData.bench_type || case_status.bench_type || 'Not specified'}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-500 mb-1">Judicial Branch</p>
-              <p className="font-medium text-gray-900">{caseData.judicial_branch || case_status.judicial_branch || 'Not specified'}</p>
+              <p className="text-sm font-medium text-muted mb-2">Judicial Branch</p>
+              <p className="font-medium text-foreground">{caseData.judicial_branch || case_status.judicial_branch || 'Not specified'}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-500 mb-1">Coram</p>
-              <p className="font-medium text-gray-900">{caseData.coram || case_status.coram || 'Not specified'}</p>
+              <p className="text-sm font-medium text-muted mb-2">Coram</p>
+              <p className="font-medium text-foreground">{caseData.coram || case_status.coram || 'Not specified'}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-500 mb-1">Stage of Case</p>
-              <p className="font-medium text-gray-900">{caseData.stage || case_status.stage_of_case || 'Not specified'}</p>
+              <p className="text-sm font-medium text-muted mb-2">Stage of Case</p>
+              <p className="font-medium text-foreground">{caseData.stage || case_status.stage_of_case || 'Not specified'}</p>
             </div>
             {case_status['before_me_/_part_heard'] && (
               <div className="md:col-span-2">
-                <p className="text-sm font-medium text-gray-500 mb-1">Before Me / Part Heard</p>
-                <p className="font-medium text-gray-900">{case_status['before_me_/_part_heard']}</p>
+                <p className="text-sm font-medium text-muted mb-2">Before Me / Part Heard</p>
+                <p className="font-medium text-foreground">{case_status['before_me_/_part_heard']}</p>
               </div>
             )}
           </div>
@@ -243,39 +257,39 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({
       </Card>
 
       {/* Important Dates */}
-      <Card className="border-gray-200 bg-white">
+      <Card className="card">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-            <Calendar className="w-5 h-5 text-blue-600" />
+          <CardTitle className="text-xl font-medium text-foreground flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-primary" />
             Important Dates
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div>
-              <p className="text-sm font-medium text-gray-500 mb-1">Filing Date</p>
-              <p className="font-medium text-gray-900">
+              <p className="text-sm font-medium text-muted mb-2">Filing Date</p>
+              <p className="font-medium text-foreground">
                 {caseData.filing_date ? new Date(caseData.filing_date).toLocaleDateString() : 
                  case_info.filing_date || 'Not set'}
               </p>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-500 mb-1">Registration Date</p>
-              <p className="font-medium text-gray-900">
+              <p className="text-sm font-medium text-muted mb-2">Registration Date</p>
+              <p className="font-medium text-foreground">
                 {caseData.registration_date ? new Date(caseData.registration_date).toLocaleDateString() : 
                  case_info.registration_date || 'Not set'}
               </p>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-500 mb-1">First Hearing Date</p>
-              <p className="font-medium text-gray-900">
+              <p className="text-sm font-medium text-muted mb-2">First Hearing Date</p>
+              <p className="font-medium text-foreground">
                 {caseData.first_hearing_date ? new Date(caseData.first_hearing_date).toLocaleDateString() : 'Not set'}
               </p>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-500 mb-1">Next Hearing Date</p>
-              <p className="font-medium text-gray-900 flex items-center gap-1">
-                {case_status.next_hearing_date && <Calendar className="h-4 w-4 text-blue-600" />}
+              <p className="text-sm font-medium text-muted mb-2">Next Hearing Date</p>
+              <p className="font-medium text-foreground flex items-center gap-2">
+                {case_status.next_hearing_date && <Calendar className="h-4 w-4 text-primary" />}
                 {caseData.next_hearing_date ? new Date(caseData.next_hearing_date).toLocaleDateString() : 
                  case_status.next_hearing_date || 'Not set'}
               </p>
@@ -286,38 +300,38 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({
 
       {/* Location & Legal Reference */}
       <div className="grid gap-6 md:grid-cols-2">
-        <Card className="border-gray-200 bg-white">
+        <Card className="card">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-              <MapPin className="w-5 h-5 text-blue-600" />
+            <CardTitle className="text-xl font-medium text-foreground flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-primary" />
               Location Information
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div>
-                <p className="text-sm font-medium text-gray-500 mb-1">Advocate Name</p>
-                <p className="font-medium text-gray-900">{caseData.advocate_name || 'Not specified'}</p>
+                <p className="text-sm font-medium text-muted mb-2">Advocate Name</p>
+                <p className="font-medium text-foreground">{caseData.advocate_name || 'Not specified'}</p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm font-medium text-gray-500 mb-1">State</p>
-                  <p className="font-medium text-gray-900">{caseData.state || case_status.state || 'Not specified'}</p>
+                  <p className="text-sm font-medium text-muted mb-2">State</p>
+                  <p className="font-medium text-foreground">{caseData.state || case_status.state || 'Not specified'}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-500 mb-1">District</p>
-                  <p className="font-medium text-gray-900">{caseData.district || case_status.district || 'Not specified'}</p>
+                  <p className="text-sm font-medium text-muted mb-2">District</p>
+                  <p className="font-medium text-foreground">{caseData.district || case_status.district || 'Not specified'}</p>
                 </div>
               </div>
               {(caseData.state_1 || caseData.district_1) && (
-                <div className="grid grid-cols-2 gap-4 pt-2 border-t">
+                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
                   <div>
-                    <p className="text-sm font-medium text-gray-500 mb-1">State (Secondary)</p>
-                    <p className="font-medium text-gray-900">{caseData.state_1}</p>
+                    <p className="text-sm font-medium text-muted mb-2">State (Secondary)</p>
+                    <p className="font-medium text-foreground">{caseData.state_1}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-500 mb-1">District (Secondary)</p>
-                    <p className="font-medium text-gray-900">{caseData.district_1}</p>
+                    <p className="text-sm font-medium text-muted mb-2">District (Secondary)</p>
+                    <p className="font-medium text-foreground">{caseData.district_1}</p>
                   </div>
                 </div>
               )}
@@ -325,10 +339,10 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({
           </CardContent>
         </Card>
 
-        <Card className="border-gray-200 bg-white">
+        <Card className="card">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-              <Building className="w-5 h-5 text-blue-600" />
+            <CardTitle className="text-xl font-medium text-foreground flex items-center gap-2">
+              <Building className="w-5 h-5 text-primary" />
               Category & Legal Reference
             </CardTitle>
           </CardHeader>
@@ -336,40 +350,40 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({
             <div className="space-y-4">
               <div className="grid grid-cols-1 gap-4">
                 <div>
-                  <p className="text-sm font-medium text-gray-500 mb-1">Category</p>
-                  <p className="font-medium text-gray-900">{caseData.category || category_info.category || 'Not specified'}</p>
+                  <p className="text-sm font-medium text-muted mb-2">Category</p>
+                  <p className="font-medium text-foreground">{caseData.category || category_info.category || 'Not specified'}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-500 mb-1">Sub Category</p>
-                  <p className="font-medium text-gray-900">{caseData.sub_category || category_info.sub_category || 'Not specified'}</p>
+                  <p className="text-sm font-medium text-muted mb-2">Sub Category</p>
+                  <p className="font-medium text-foreground">{caseData.sub_category || category_info.sub_category || 'Not specified'}</p>
                 </div>
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-500 mb-2">Acts</p>
+                <p className="text-sm font-medium text-muted mb-3">Acts</p>
                 {caseData.acts && caseData.acts.length > 0 ? (
-                  <div className="flex flex-wrap gap-1">
+                  <div className="flex flex-wrap gap-2">
                     {caseData.acts.map((act: string, index: number) => (
-                      <Badge key={index} variant="outline" className="text-xs">
+                      <Badge key={index} variant="outline" className="text-xs border-border text-foreground">
                         {act}
                       </Badge>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-gray-600 text-sm">No acts specified</p>
+                  <p className="text-muted text-sm">No acts specified</p>
                 )}
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-500 mb-2">Sections</p>
+                <p className="text-sm font-medium text-muted mb-3">Sections</p>
                 {caseData.sections && caseData.sections.length > 0 ? (
-                  <div className="flex flex-wrap gap-1">
+                  <div className="flex flex-wrap gap-2">
                     {caseData.sections.map((section: string, index: number) => (
-                      <Badge key={index} variant="outline" className="text-xs">
+                      <Badge key={index} variant="outline" className="text-xs border-border text-foreground">
                         {section}
                       </Badge>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-gray-600 text-sm">No sections specified</p>
+                  <p className="text-muted text-sm">No sections specified</p>
                 )}
               </div>
             </div>
@@ -378,30 +392,30 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({
       </div>
 
       {/* Case Numbers & References */}
-      <Card className="border-gray-200 bg-white">
+      <Card className="card">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-            <FileText className="w-5 h-5 text-blue-600" />
+          <CardTitle className="text-xl font-medium text-foreground flex items-center gap-2">
+            <FileText className="w-5 h-5 text-primary" />
             Case Numbers & References
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-              <p className="text-sm font-medium text-gray-500 mb-1">Filing Number</p>
-              <p className="font-medium text-gray-900 font-mono text-sm">
+              <p className="text-sm font-medium text-muted mb-2">Filing Number</p>
+              <p className="font-medium text-foreground font-mono text-sm">
                 {caseData.filing_number || case_info.filing_number || 'Not assigned'}
               </p>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-500 mb-1">Registration Number</p>
-              <p className="font-medium text-gray-900 font-mono text-sm">
+              <p className="text-sm font-medium text-muted mb-2">Registration Number</p>
+              <p className="font-medium text-foreground font-mono text-sm">
                 {caseData.registration_number || case_info.registration_number || 'Not assigned'}
               </p>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-500 mb-1">CNR Number</p>
-              <p className="font-medium text-gray-900 font-mono text-sm">
+              <p className="text-sm font-medium text-muted mb-2">CNR Number</p>
+              <p className="font-medium text-foreground font-mono text-sm">
                 {caseData.cnr_number || case_info.cnr_number || 'Not assigned'}
               </p>
             </div>
@@ -409,14 +423,14 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({
               <>
                 {caseData.case_number && (
                   <div>
-                    <p className="text-sm font-medium text-gray-500 mb-1">Case Number</p>
-                    <p className="font-medium text-gray-900 font-mono text-sm">{caseData.case_number}</p>
+                    <p className="text-sm font-medium text-muted mb-2">Case Number</p>
+                    <p className="font-medium text-foreground font-mono text-sm">{caseData.case_number}</p>
                   </div>
                 )}
                 {caseData.docket_number && (
                   <div>
-                    <p className="text-sm font-medium text-gray-500 mb-1">Docket Number</p>
-                    <p className="font-medium text-gray-900 font-mono text-sm">{caseData.docket_number}</p>
+                    <p className="text-sm font-medium text-muted mb-2">Docket Number</p>
+                    <p className="font-medium text-foreground font-mono text-sm">{caseData.docket_number}</p>
                   </div>
                 )}
               </>
@@ -426,49 +440,66 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({
       </Card>
 
       {/* Documentation & Notes */}
-      <Card className="border-gray-200 bg-white">
+      <Card className="card">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-            <FileText className="w-5 h-5 text-blue-600" />
+          <CardTitle className="text-xl font-medium text-foreground flex items-center gap-2">
+            <FileText className="w-5 h-5 text-primary" />
             Documentation & Notes
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
-            {caseData.hearing_notes && <div>
-                <p className="text-sm font-medium text-gray-500 mb-2">Hearing Notes</p>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-gray-700 text-sm whitespace-pre-wrap">{caseData.hearing_notes}</p>
+            {caseData.hearing_notes && (
+              <div>
+                <p className="text-sm font-medium text-muted mb-3">Hearing Notes</p>
+                <div className="bg-soft rounded-xl p-4">
+                  <p className="text-foreground text-sm leading-relaxed whitespace-pre-wrap">{caseData.hearing_notes}</p>
                 </div>
-              </div>}
+              </div>
+            )}
             
-            {caseData.objection && <div>
-                <p className="text-sm font-medium text-gray-500 mb-2">Objection</p>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-gray-700 text-sm whitespace-pre-wrap">{caseData.objection}</p>
+            {caseData.objection && (
+              <div>
+                <p className="text-sm font-medium text-muted mb-3">Objection</p>
+                <div className="bg-soft rounded-xl p-4">
+                  <p className="text-foreground text-sm leading-relaxed whitespace-pre-wrap">{caseData.objection}</p>
                 </div>
-              </div>}
+              </div>
+            )}
 
-            {caseData.orders && caseData.orders.length > 0 && <div>
-                <p className="text-sm font-medium text-gray-500 mb-2">Orders</p>
-                <div className="space-y-2">
-                  {caseData.orders.map((order: string, index: number) => <div key={index} className="bg-gray-50 rounded-lg p-3">
-                      <p className="text-gray-700 text-sm">{order}</p>
-                    </div>)}
+            {caseData.orders && caseData.orders.length > 0 && (
+              <div>
+                <p className="text-sm font-medium text-muted mb-3">Orders</p>
+                <div className="space-y-3">
+                  {caseData.orders.map((order: string, index: number) => (
+                    <div key={index} className="bg-soft rounded-xl p-4">
+                      <p className="text-foreground text-sm leading-relaxed">{order}</p>
+                    </div>
+                  ))}
                 </div>
-              </div>}
+              </div>
+            )}
 
-            {caseData.document_links && caseData.document_links.length > 0 && <div>
-                <p className="text-sm font-medium text-gray-500 mb-2">Document Links</p>
-                <div className="space-y-2">
-                  {caseData.document_links.map((link: string, index: number) => <div key={index} className="flex items-center gap-2">
-                      <ExternalLink className="w-4 h-4 text-blue-600" />
-                      <a href={link} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 text-sm underline">
+            {caseData.document_links && caseData.document_links.length > 0 && (
+              <div>
+                <p className="text-sm font-medium text-muted mb-3">Document Links</p>
+                <div className="space-y-3">
+                  {caseData.document_links.map((link: string, index: number) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <ExternalLink className="w-4 h-4 text-primary" />
+                      <a 
+                        href={link} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="text-primary hover:text-primary-hover text-sm underline"
+                      >
                         Document {index + 1}
                       </a>
-                    </div>)}
+                    </div>
+                  ))}
                 </div>
-              </div>}
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -478,11 +509,11 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({
         <>
           {/* Documents Table */}
           {documents && documents.length > 0 && (
-            <Card className="border-gray-200 bg-white">
+            <Card className="card">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-blue-600" />
-                  Documents Filed
+                <CardTitle className="text-xl font-medium text-foreground flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-primary" />
+                  Documents Filed (E-Courts)
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -490,23 +521,23 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Sr No</TableHead>
-                        <TableHead>Advocate</TableHead>
-                        <TableHead>Filed By</TableHead>
-                        <TableHead>Document No</TableHead>
-                        <TableHead>Document Filed</TableHead>
-                        <TableHead>Date of Receiving</TableHead>
+                        <TableHead className="table-header">Sr No</TableHead>
+                        <TableHead className="table-header">Advocate</TableHead>
+                        <TableHead className="table-header">Filed By</TableHead>
+                        <TableHead className="table-header">Document No</TableHead>
+                        <TableHead className="table-header">Document Filed</TableHead>
+                        <TableHead className="table-header">Date of Receiving</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {documents.map((doc: any, index: number) => (
                         <TableRow key={index}>
-                          <TableCell>{doc.sr_no || index + 1}</TableCell>
-                          <TableCell>{doc.advocate || '-'}</TableCell>
-                          <TableCell>{doc.filed_by || '-'}</TableCell>
-                          <TableCell>{doc.document_no || '-'}</TableCell>
-                          <TableCell>{doc.document_filed || '-'}</TableCell>
-                          <TableCell>{doc.date_of_receiving || '-'}</TableCell>
+                          <TableCell className="text-foreground">{doc.sr_no || index + 1}</TableCell>
+                          <TableCell className="text-foreground">{doc.advocate || '-'}</TableCell>
+                          <TableCell className="text-foreground">{doc.filed_by || '-'}</TableCell>
+                          <TableCell className="text-foreground">{doc.document_no || '-'}</TableCell>
+                          <TableCell className="text-foreground">{doc.document_filed || '-'}</TableCell>
+                          <TableCell className="text-foreground">{doc.date_of_receiving || '-'}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -518,11 +549,11 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({
 
           {/* Objections Table */}
           {objections && objections.length > 0 && (
-            <Card className="border-gray-200 bg-white">
+            <Card className="card">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <AlertTriangle className="h-5 w-5 text-amber-600" />
-                  Objections
+                <CardTitle className="text-xl font-medium text-foreground flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-warning" />
+                  Objections (E-Courts)
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -530,21 +561,21 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Sr No</TableHead>
-                        <TableHead>Objection</TableHead>
-                        <TableHead>Receipt Date</TableHead>
-                        <TableHead>Scrutiny Date</TableHead>
-                        <TableHead>Objection Compliance Date</TableHead>
+                        <TableHead className="table-header">Sr No</TableHead>
+                        <TableHead className="table-header">Objection</TableHead>
+                        <TableHead className="table-header">Receipt Date</TableHead>
+                        <TableHead className="table-header">Scrutiny Date</TableHead>
+                        <TableHead className="table-header">Objection Compliance Date</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {objections.map((obj: any, index: number) => (
                         <TableRow key={index}>
-                          <TableCell>{obj.sr_no || index + 1}</TableCell>
-                          <TableCell>{obj.objection || '-'}</TableCell>
-                          <TableCell>{obj.receipt_date || '-'}</TableCell>
-                          <TableCell>{obj.scrutiny_date || '-'}</TableCell>
-                          <TableCell>{obj.objection_compliance_date || '-'}</TableCell>
+                          <TableCell className="text-foreground">{obj.sr_no || index + 1}</TableCell>
+                          <TableCell className="text-foreground">{obj.objection || '-'}</TableCell>
+                          <TableCell className="text-foreground">{obj.receipt_date || '-'}</TableCell>
+                          <TableCell className="text-foreground">{obj.scrutiny_date || '-'}</TableCell>
+                          <TableCell className="text-foreground">{obj.objection_compliance_date || '-'}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -556,11 +587,11 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({
 
           {/* Order Details Table */}
           {order_details && order_details.length > 0 && (
-            <Card className="border-gray-200 bg-white">
+            <Card className="card">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Gavel className="h-5 w-5 text-purple-600" />
-                  Order Details
+                <CardTitle className="text-xl font-medium text-foreground flex items-center gap-2">
+                  <Gavel className="h-5 w-5 text-primary" />
+                  Order Details (E-Courts)
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -568,21 +599,21 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Judge</TableHead>
-                        <TableHead>Hearing Date</TableHead>
-                        <TableHead>Order Number</TableHead>
-                        <TableHead>Bench</TableHead>
-                        <TableHead>Order Details</TableHead>
+                        <TableHead className="table-header">Judge</TableHead>
+                        <TableHead className="table-header">Hearing Date</TableHead>
+                        <TableHead className="table-header">Order Number</TableHead>
+                        <TableHead className="table-header">Bench</TableHead>
+                        <TableHead className="table-header">Order Details</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {order_details.map((order: any, index: number) => (
                         <TableRow key={index}>
-                          <TableCell>{order.judge || '-'}</TableCell>
-                          <TableCell>{order.hearing_date || '-'}</TableCell>
-                          <TableCell>{order.cause_list_type || '-'}</TableCell>
-                          <TableCell>{order.business_on_date || '-'}</TableCell>
-                          <TableCell>{order.purpose_of_hearing || '-'}</TableCell>
+                          <TableCell className="text-foreground">{order.judge || '-'}</TableCell>
+                          <TableCell className="text-foreground">{order.hearing_date || '-'}</TableCell>
+                          <TableCell className="text-foreground">{order.cause_list_type || '-'}</TableCell>
+                          <TableCell className="text-foreground">{order.business_on_date || '-'}</TableCell>
+                          <TableCell className="text-foreground">{order.purpose_of_hearing || '-'}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -594,11 +625,11 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({
 
           {/* History of Case Hearing Table */}
           {history_of_case_hearing && history_of_case_hearing.length > 0 && (
-            <Card className="border-gray-200 bg-white">
+            <Card className="card">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-green-600" />
-                  History of Case Hearing
+                <CardTitle className="text-xl font-medium text-foreground flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-success" />
+                  History of Case Hearing (E-Courts)
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -606,21 +637,21 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Judge</TableHead>
-                        <TableHead>Hearing Date</TableHead>
-                        <TableHead>Cause List Type</TableHead>
-                        <TableHead>Business on Date</TableHead>
-                        <TableHead>Purpose of Hearing</TableHead>
+                        <TableHead className="table-header">Judge</TableHead>
+                        <TableHead className="table-header">Hearing Date</TableHead>
+                        <TableHead className="table-header">Cause List Type</TableHead>
+                        <TableHead className="table-header">Business on Date</TableHead>
+                        <TableHead className="table-header">Purpose of Hearing</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {history_of_case_hearing.map((hearing: any, index: number) => (
                         <TableRow key={index}>
-                          <TableCell>{hearing.judge || '-'}</TableCell>
-                          <TableCell>{hearing.hearing_date || '-'}</TableCell>
-                          <TableCell>{hearing.cause_list_type || '-'}</TableCell>
-                          <TableCell>{hearing.business_on_date || '-'}</TableCell>
-                          <TableCell>{hearing.purpose_of_hearing || '-'}</TableCell>
+                          <TableCell className="text-foreground">{hearing.judge || '-'}</TableCell>
+                          <TableCell className="text-foreground">{hearing.hearing_date || '-'}</TableCell>
+                          <TableCell className="text-foreground">{hearing.cause_list_type || '-'}</TableCell>
+                          <TableCell className="text-foreground">{hearing.business_on_date || '-'}</TableCell>
+                          <TableCell className="text-foreground">{hearing.purpose_of_hearing || '-'}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -632,11 +663,11 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({
 
           {/* IA Details Table */}
           {ia_details && ia_details.length > 0 && (
-            <Card className="border-gray-200 bg-white">
+            <Card className="card">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Scale className="h-5 w-5 text-indigo-600" />
-                  IA Details
+                <CardTitle className="text-xl font-medium text-foreground flex items-center gap-2">
+                  <Scale className="h-5 w-5 text-primary" />
+                  IA Details (E-Courts)
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -644,22 +675,25 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>IA Number</TableHead>
-                        <TableHead>Party</TableHead>
-                        <TableHead>Date of Filing</TableHead>
-                        <TableHead>Next Date</TableHead>
-                        <TableHead>IA Status</TableHead>
+                        <TableHead className="table-header">IA Number</TableHead>
+                        <TableHead className="table-header">Party</TableHead>
+                        <TableHead className="table-header">Date of Filing</TableHead>
+                        <TableHead className="table-header">Next Date</TableHead>
+                        <TableHead className="table-header">IA Status</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {ia_details.map((ia: any, index: number) => (
                         <TableRow key={index}>
-                          <TableCell>{ia.ia_number || '-'}</TableCell>
-                          <TableCell>{ia.party || '-'}</TableCell>
-                          <TableCell>{ia.date_of__filing || '-'}</TableCell>
-                          <TableCell>{ia.next_date || '-'}</TableCell>
+                          <TableCell className="text-foreground">{ia.ia_number || '-'}</TableCell>
+                          <TableCell className="text-foreground">{ia.party || '-'}</TableCell>
+                          <TableCell className="text-foreground">{ia.date_of__filing || '-'}</TableCell>
+                          <TableCell className="text-foreground">{ia.next_date || '-'}</TableCell>
                           <TableCell>
-                            <Badge variant={ia.ia_status === 'Pending' ? 'outline' : 'default'}>
+                            <Badge 
+                              variant={ia.ia_status === 'Pending' ? 'outline' : 'default'}
+                              className="border-border text-foreground"
+                            >
                               {ia.ia_status || '-'}
                             </Badge>
                           </TableCell>
