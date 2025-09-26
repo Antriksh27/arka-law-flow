@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Calendar, CheckSquare, StickyNote, MessageSquare, Activity, Filter, Search, Plus, BarChart3, FileSearch, Clock, Bot } from 'lucide-react';
+import { FileText, Calendar, CheckSquare, StickyNote, MessageSquare, Activity, Filter, Search, Plus, BarChart3, FileSearch, Clock, Bot, ExternalLink } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
@@ -47,6 +47,21 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
       }).limit(3);
       if (error) throw error;
       return data || [];
+    }
+  });
+
+  // Fetch case data for Legalkart integration
+  const {
+    data: caseData
+  } = useQuery({
+    queryKey: ['case-data', caseId],
+    queryFn: async () => {
+      const {
+        data,
+        error
+      } = await supabase.from('cases').select('cnr_number, cnr_auto_fetch_enabled, last_fetched_at').eq('id', caseId).single();
+      if (error) throw error;
+      return data;
     }
   });
   const getActivityTypeLabel = (type: string) => {
