@@ -623,48 +623,74 @@ export type Database = {
           assigned_to: string | null
           assigned_users: string[] | null
           bench_type: string | null
+          business_type: string | null
+          case_classification: string | null
           case_number: string | null
+          case_sub_type: string | null
+          case_summary: string | null
           case_title: string
           case_type: Database["public"]["Enums"]["case_type_enum"] | null
           category: string | null
+          cause_list_type: string | null
           client_id: string | null
           closing_date: string | null
           cnr_auto_fetch_enabled: boolean | null
           cnr_number: string | null
+          complaint_date: string | null
+          connected_cases: string[] | null
           coram: string | null
           court: string | null
           court_complex: string | null
           court_name: string | null
+          court_type: string | null
           created_at: string
           created_by: string | null
+          decision_date: string | null
           description: string | null
+          disposal_date: string | null
           district: string | null
           district_1: string | null
           docket_number: string | null
+          document_history: Json | null
           document_links: string[] | null
           fetch_message: string | null
           fetch_status: string | null
           fetched_data: Json | null
           filing_date: string | null
           filing_number: string | null
+          filing_party: string | null
+          final_orders: string[] | null
+          fir_number: string | null
           firm_id: string | null
           first_hearing_date: string | null
+          hearing_history: Json | null
           hearing_notes: string | null
+          ia_numbers: string[] | null
           id: string
+          interim_orders: string[] | null
           is_auto_fetched: boolean | null
           judicial_branch: string | null
           last_fetched_at: string | null
+          listed_date: string | null
+          listing_reason: string | null
+          matter_type: string | null
           next_hearing_date: string | null
           objection: string | null
+          objection_status: string | null
           order_link: string | null
           orders: string[] | null
+          party_details: Json | null
           petitioner: string | null
           petitioner_advocate: string | null
+          police_district: string | null
+          police_station: string | null
           priority: Database["public"]["Enums"]["case_priority_enum"] | null
+          purpose_of_hearing: string | null
           registration_date: string | null
           registration_number: string | null
           respondent: string | null
           respondent_advocate: string | null
+          scrutiny_date: string | null
           sections: string[] | null
           stage: string | null
           state: string | null
@@ -674,7 +700,10 @@ export type Database = {
           tags: string[] | null
           team_name: string | null
           title: string
+          under_act: string | null
+          under_section: string | null
           updated_at: string
+          urgent_listing: boolean | null
           vs: string | null
         }
         Insert: {
@@ -683,48 +712,74 @@ export type Database = {
           assigned_to?: string | null
           assigned_users?: string[] | null
           bench_type?: string | null
+          business_type?: string | null
+          case_classification?: string | null
           case_number?: string | null
+          case_sub_type?: string | null
+          case_summary?: string | null
           case_title: string
           case_type?: Database["public"]["Enums"]["case_type_enum"] | null
           category?: string | null
+          cause_list_type?: string | null
           client_id?: string | null
           closing_date?: string | null
           cnr_auto_fetch_enabled?: boolean | null
           cnr_number?: string | null
+          complaint_date?: string | null
+          connected_cases?: string[] | null
           coram?: string | null
           court?: string | null
           court_complex?: string | null
           court_name?: string | null
+          court_type?: string | null
           created_at?: string
           created_by?: string | null
+          decision_date?: string | null
           description?: string | null
+          disposal_date?: string | null
           district?: string | null
           district_1?: string | null
           docket_number?: string | null
+          document_history?: Json | null
           document_links?: string[] | null
           fetch_message?: string | null
           fetch_status?: string | null
           fetched_data?: Json | null
           filing_date?: string | null
           filing_number?: string | null
+          filing_party?: string | null
+          final_orders?: string[] | null
+          fir_number?: string | null
           firm_id?: string | null
           first_hearing_date?: string | null
+          hearing_history?: Json | null
           hearing_notes?: string | null
+          ia_numbers?: string[] | null
           id?: string
+          interim_orders?: string[] | null
           is_auto_fetched?: boolean | null
           judicial_branch?: string | null
           last_fetched_at?: string | null
+          listed_date?: string | null
+          listing_reason?: string | null
+          matter_type?: string | null
           next_hearing_date?: string | null
           objection?: string | null
+          objection_status?: string | null
           order_link?: string | null
           orders?: string[] | null
+          party_details?: Json | null
           petitioner?: string | null
           petitioner_advocate?: string | null
+          police_district?: string | null
+          police_station?: string | null
           priority?: Database["public"]["Enums"]["case_priority_enum"] | null
+          purpose_of_hearing?: string | null
           registration_date?: string | null
           registration_number?: string | null
           respondent?: string | null
           respondent_advocate?: string | null
+          scrutiny_date?: string | null
           sections?: string[] | null
           stage?: string | null
           state?: string | null
@@ -734,7 +789,10 @@ export type Database = {
           tags?: string[] | null
           team_name?: string | null
           title: string
+          under_act?: string | null
+          under_section?: string | null
           updated_at?: string
+          urgent_listing?: boolean | null
           vs?: string | null
         }
         Update: {
@@ -743,48 +801,74 @@ export type Database = {
           assigned_to?: string | null
           assigned_users?: string[] | null
           bench_type?: string | null
+          business_type?: string | null
+          case_classification?: string | null
           case_number?: string | null
+          case_sub_type?: string | null
+          case_summary?: string | null
           case_title?: string
           case_type?: Database["public"]["Enums"]["case_type_enum"] | null
           category?: string | null
+          cause_list_type?: string | null
           client_id?: string | null
           closing_date?: string | null
           cnr_auto_fetch_enabled?: boolean | null
           cnr_number?: string | null
+          complaint_date?: string | null
+          connected_cases?: string[] | null
           coram?: string | null
           court?: string | null
           court_complex?: string | null
           court_name?: string | null
+          court_type?: string | null
           created_at?: string
           created_by?: string | null
+          decision_date?: string | null
           description?: string | null
+          disposal_date?: string | null
           district?: string | null
           district_1?: string | null
           docket_number?: string | null
+          document_history?: Json | null
           document_links?: string[] | null
           fetch_message?: string | null
           fetch_status?: string | null
           fetched_data?: Json | null
           filing_date?: string | null
           filing_number?: string | null
+          filing_party?: string | null
+          final_orders?: string[] | null
+          fir_number?: string | null
           firm_id?: string | null
           first_hearing_date?: string | null
+          hearing_history?: Json | null
           hearing_notes?: string | null
+          ia_numbers?: string[] | null
           id?: string
+          interim_orders?: string[] | null
           is_auto_fetched?: boolean | null
           judicial_branch?: string | null
           last_fetched_at?: string | null
+          listed_date?: string | null
+          listing_reason?: string | null
+          matter_type?: string | null
           next_hearing_date?: string | null
           objection?: string | null
+          objection_status?: string | null
           order_link?: string | null
           orders?: string[] | null
+          party_details?: Json | null
           petitioner?: string | null
           petitioner_advocate?: string | null
+          police_district?: string | null
+          police_station?: string | null
           priority?: Database["public"]["Enums"]["case_priority_enum"] | null
+          purpose_of_hearing?: string | null
           registration_date?: string | null
           registration_number?: string | null
           respondent?: string | null
           respondent_advocate?: string | null
+          scrutiny_date?: string | null
           sections?: string[] | null
           stage?: string | null
           state?: string | null
@@ -794,7 +878,10 @@ export type Database = {
           tags?: string[] | null
           team_name?: string | null
           title?: string
+          under_act?: string | null
+          under_section?: string | null
           updated_at?: string
+          urgent_listing?: boolean | null
           vs?: string | null
         }
         Relationships: [
