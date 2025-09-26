@@ -452,6 +452,21 @@ function mapLegalkartDataToCRM(data: any, searchType: string = 'unknown'): any {
         const [day, month, year] = cleanDate.split('-');
         return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
       }
+      // Handle formats like "19th December 2025"
+      if (cleanDate.includes('th ') || cleanDate.includes('st ') || cleanDate.includes('nd ') || cleanDate.includes('rd ')) {
+        const monthMap: { [key: string]: string } = {
+          'january': '01', 'february': '02', 'march': '03', 'april': '04',
+          'may': '05', 'june': '06', 'july': '07', 'august': '08',
+          'september': '09', 'october': '10', 'november': '11', 'december': '12'
+        };
+        const parts = cleanDate.toLowerCase().replace(/(\d+)(th|st|nd|rd)/, '$1').split(' ');
+        if (parts.length === 3) {
+          const day = parts[0].padStart(2, '0');
+          const month = monthMap[parts[1]];
+          const year = parts[2];
+          if (month) return `${year}-${month}-${day}`;
+        }
+      }
       return new Date(cleanDate).toISOString().split('T')[0];
     } catch {
       return null;
@@ -469,70 +484,99 @@ function mapLegalkartDataToCRM(data: any, searchType: string = 'unknown'): any {
     return str.toString().split(',').map(s => s.trim()).filter(Boolean);
   };
 
+  // Parse party information from Legalkart format
+  const parsePartyInfo = (partyStr: string): { name: string; advocate: string } => {
+    if (!partyStr) return { name: '', advocate: '' };
+    
+    // Handle format like "1) KOMALKANT FAKIRCHAND SHARMA Advocate- MR C B UPADHYAYA(3508)"
+    const parts = partyStr.split('Advocate-');
+    const name = parts[0]?.replace(/^\d+\)\s*/, '').trim() || '';
+    const advocate = parts[1]?.trim() || '';
+    
+    return { name, advocate };
+  };
+
+  // Extract data from nested Legalkart response structure
+  const caseInfo = data.data?.case_info || {};
+  const caseStatus = data.data?.case_status || {};
+  const categoryInfo = data.data?.category_info || {};
+  const hearingHistory = data.data?.history_of_case_hearing || [];
+  const orderDetails = data.data?.order_details || [];
+  const documents = data.data?.documents || [];
+  const objections = data.data?.objections || [];
+  const iaDetails = data.data?.ia_details || [];
+
   // BASIC CASE INFORMATION (15 fields)
-  mappedData.cnr_number = cleanText(data.cnr_number || data.cnr || data.CNR);
-  mappedData.case_number = cleanText(data.case_number || data.filing_number || data.case_no);
-  mappedData.filing_number = cleanText(data.filing_number || data.filing_no);
-  mappedData.registration_number = cleanText(data.registration_number || data.reg_no);
+  mappedData.cnr_number = cleanText(caseInfo.cnr_number || data.cnr_number || data.cnr || data.CNR);
+  mappedData.case_number = cleanText(caseInfo.filing_number || data.case_number || data.filing_number || data.case_no);
+  mappedData.filing_number = cleanText(caseInfo.filing_number || data.filing_number || data.filing_no);
+  mappedData.registration_number = cleanText(caseInfo.registration_number || data.registration_number || data.reg_no);
   mappedData.docket_number = cleanText(data.docket_number || data.docket_no);
   
   // Case title derivation - intelligent construction
-  if (!mappedData.case_title) {
-    mappedData.case_title = cleanText(
-      data.case_title || 
-      data.title || 
-      data.matter_title ||
-      (data.petitioner && data.respondent ? `${data.petitioner} vs ${data.respondent}` : null) ||
-      `Case ${mappedData.case_number || mappedData.cnr_number || 'Unknown'}`
-    );
-  }
+  mappedData.case_title = cleanText(
+    data.case_title || 
+    data.title || 
+    data.matter_title ||
+    (data.petitioner && data.respondent ? `${data.petitioner} vs ${data.respondent}` : null) ||
+    `Case ${mappedData.case_number || mappedData.cnr_number || 'Unknown'}`
+  );
 
   mappedData.description = cleanText(data.description || data.case_summary || data.nature_of_case);
   mappedData.case_summary = cleanText(data.case_summary || data.summary);
 
   // COURT AND STATUS INFORMATION (12 fields)
-  mappedData.court = cleanText(data.court || data.court_name);
-  mappedData.court_name = cleanText(data.court_name || data.court);
+  mappedData.court = cleanText(caseStatus.court || data.court || data.court_name);
+  mappedData.court_name = cleanText(caseStatus.court || data.court_name || data.court);
   mappedData.court_type = cleanText(data.court_type || searchType.replace('_', ' '));
-  mappedData.district = cleanText(data.district || data.district_name);
-  mappedData.state = cleanText(data.state || data.state_name);
-  mappedData.judicial_branch = cleanText(data.judicial_branch);
-  mappedData.bench_type = cleanText(data.bench_type);
+  mappedData.district = cleanText(caseStatus.district || data.district || data.district_name);
+  mappedData.state = cleanText(caseStatus.state || data.state || data.state_name);
+  mappedData.judicial_branch = cleanText(caseStatus.judicial_branch || data.judicial_branch);
+  mappedData.bench_type = cleanText(caseStatus.bench_type || data.bench_type);
   mappedData.court_complex = cleanText(data.court_complex);
-  mappedData.coram = cleanText(data.coram || data.judge_name);
-  mappedData.stage = cleanText(data.stage || data.case_stage);
+  mappedData.coram = cleanText(caseStatus.coram || data.coram || data.judge_name);
+  mappedData.stage = cleanText(caseStatus.stage_of_case || data.stage || data.case_stage);
 
   // Status mapping with intelligence
-  if (data.status || data.case_status) {
-    const statusStr = (data.status || data.case_status).toString().toLowerCase();
+  if (data.status || data.case_status || caseStatus.stage_of_case) {
+    const statusStr = (data.status || data.case_status || caseStatus.stage_of_case || '').toString().toLowerCase();
     const statusMapping: { [key: string]: string } = {
       'pending': 'open', 'active': 'open', 'ongoing': 'open', 'listed': 'open',
+      'notice returnable': 'open', 'adjourned': 'open', 'admission': 'open',
       'disposed': 'closed', 'dismissed': 'closed', 'withdrawn': 'closed', 
       'decided': 'closed', 'completed': 'closed', 'settled': 'closed'
     };
-    mappedData.status = statusMapping[statusStr] || 'open';
+    
+    for (const [key, value] of Object.entries(statusMapping)) {
+      if (statusStr.includes(key)) {
+        mappedData.status = value;
+        break;
+      }
+    }
+    if (!mappedData.status) mappedData.status = 'open';
   }
 
-  // PARTY INFORMATION (8 fields) - Enhanced parsing
-  if (data.petitioner || data.parties?.petitioner) {
-    mappedData.petitioner = cleanText(data.petitioner || data.parties?.petitioner);
+  // PARTY INFORMATION (8 fields) - Enhanced parsing from Legalkart format
+  const petitionerInfo = parsePartyInfo(data.data?.petitioner_and_advocate || '');
+  const respondentInfo = parsePartyInfo(data.data?.respondent_and_advocate || '');
+
+  if (petitionerInfo.name) {
+    mappedData.petitioner = cleanText(petitionerInfo.name);
+    mappedData.petitioner_advocate = cleanText(petitionerInfo.advocate);
   }
-  if (data.respondent || data.parties?.respondent) {
-    mappedData.respondent = cleanText(data.respondent || data.parties?.respondent);
+
+  if (respondentInfo.name) {
+    mappedData.respondent = cleanText(respondentInfo.name);
+    mappedData.respondent_advocate = cleanText(respondentInfo.advocate);
   }
-  if (data.petitioner_advocate || data.parties?.petitioner_advocate) {
-    mappedData.petitioner_advocate = cleanText(data.petitioner_advocate || data.parties?.petitioner_advocate);
-  }
-  if (data.respondent_advocate || data.parties?.respondent_advocate) {
-    mappedData.respondent_advocate = cleanText(data.respondent_advocate || data.parties?.respondent_advocate);
-  }
-  
-  // Handle string-based parties like "A vs B"
-  if (data.parties && typeof data.parties === 'string') {
-    const parties = data.parties.split(' vs ');
-    if (parties.length >= 2) {
-      mappedData.petitioner = cleanText(parties[0]);
-      mappedData.respondent = cleanText(parties[1]);
+
+  // Handle multiple respondents (format: "1) STATE OF GUJARAT ... 2) CENTRAL BUREAU ...")
+  if (data.data?.respondent_and_advocate?.includes('2)')) {
+    const respondents = data.data.respondent_and_advocate.split(/\d+\)/).filter(Boolean);
+    if (respondents.length > 1) {
+      const firstRespondent = parsePartyInfo(respondents[0]);
+      mappedData.respondent = cleanText(firstRespondent.name);
+      mappedData.respondent_advocate = cleanText(firstRespondent.advocate);
     }
   }
   
@@ -543,110 +587,134 @@ function mapLegalkartDataToCRM(data: any, searchType: string = 'unknown'): any {
   
   // Primary advocate selection
   mappedData.advocate_name = cleanText(
+    mappedData.petitioner_advocate || 
     data.advocate_name || 
-    data.petitioner_advocate || 
-    data.parties?.petitioner_advocate ||
     data.counsel_name
   );
 
   // Store detailed party information
-  if (data.parties || mappedData.petitioner || mappedData.respondent) {
+  if (petitionerInfo.name || respondentInfo.name) {
     mappedData.party_details = {
       petitioner: mappedData.petitioner,
       respondent: mappedData.respondent,
       petitioner_advocate: mappedData.petitioner_advocate,
       respondent_advocate: mappedData.respondent_advocate,
-      other_parties: data.parties?.others || [],
-      advocate_details: data.advocate_details || {}
+      raw_petitioner_string: data.data?.petitioner_and_advocate,
+      raw_respondent_string: data.data?.respondent_and_advocate
     };
   }
 
   // DATE INFORMATION (8 fields) - Comprehensive date parsing
-  mappedData.filing_date = parseDate(data.filing_date || data.date_of_filing);
-  mappedData.registration_date = parseDate(data.registration_date || data.date_of_registration);
+  mappedData.filing_date = parseDate(caseInfo.filing_date || data.filing_date || data.date_of_filing);
+  mappedData.registration_date = parseDate(caseInfo.registration_date || data.registration_date || data.date_of_registration);
   mappedData.first_hearing_date = parseDate(data.first_hearing_date || data.first_listing_date);
-  mappedData.next_hearing_date = parseDate(data.next_hearing_date || data.next_date);
+  mappedData.next_hearing_date = parseDate(caseStatus.next_hearing_date || data.next_hearing_date || data.next_date);
   mappedData.listed_date = parseDate(data.listed_date || data.listing_date);
   mappedData.disposal_date = parseDate(data.disposal_date || data.date_of_disposal);
   mappedData.decision_date = parseDate(data.decision_date || data.judgment_date);
-  mappedData.scrutiny_date = parseDate(data.scrutiny_date);
-  mappedData.complaint_date = parseDate(data.complaint_date || data.fir_date);
+  mappedData.scrutiny_date = parseDate(objections[0]?.scrutiny_date || data.scrutiny_date);
 
   // CATEGORY AND CLASSIFICATION (6 fields)
-  mappedData.category = cleanText(data.category || data.case_category);
-  mappedData.sub_category = cleanText(data.sub_category || data.case_sub_category);
+  mappedData.category = cleanText(categoryInfo.category || data.category || data.case_category);
+  mappedData.sub_category = cleanText(categoryInfo.sub_category || data.sub_category || data.case_sub_category);
   mappedData.case_classification = cleanText(data.case_classification || data.classification);
   mappedData.case_sub_type = cleanText(data.case_sub_type || data.sub_type);
   mappedData.business_type = cleanText(data.business_type);
   mappedData.matter_type = cleanText(data.matter_type || data.nature_of_case);
 
-  // Case type intelligent mapping
-  if (data.case_type || data.type) {
-    const typeMapping: { [key: string]: string } = {
-      'civil': 'civil', 'criminal': 'criminal', 'commercial': 'commercial',
-      'family': 'family', 'labour': 'labour', 'constitutional': 'constitutional',
-      'tax': 'tax', 'corporate': 'corporate'
-    };
-    const typeStr = (data.case_type || data.type).toString().toLowerCase();
-    mappedData.case_type = typeMapping[typeStr] || 'civil';
+  // Case type intelligent mapping from category
+  if (categoryInfo.category || data.case_type) {
+    const categoryStr = (categoryInfo.category || data.case_type || '').toString().toLowerCase();
+    if (categoryStr.includes('criminal')) mappedData.case_type = 'criminal';
+    else if (categoryStr.includes('civil')) mappedData.case_type = 'civil';
+    else if (categoryStr.includes('commercial')) mappedData.case_type = 'commercial';
+    else if (categoryStr.includes('family')) mappedData.case_type = 'family';
+    else mappedData.case_type = 'civil';
   }
 
-  // LEGAL FRAMEWORK (5 fields)
-  mappedData.acts = extractArrayFromString(data.acts || data.under_acts);
-  mappedData.sections = extractArrayFromString(data.sections || data.under_sections);
+  // LEGAL FRAMEWORK (5 fields) - Extract from category info
+  const extractedActs: string[] = [];
+  const extractedSections: string[] = [];
+  
+  if (categoryInfo.category?.includes('BHARATIYA NAGARIK SURAKSHA SANHITA')) {
+    extractedActs.push('Bharatiya Nagarik Suraksha Sanhita, 2023');
+  }
+  
+  mappedData.acts = extractedActs.length > 0 ? extractedActs : extractArrayFromString(data.acts || data.under_acts);
+  mappedData.sections = extractedSections.length > 0 ? extractedSections : extractArrayFromString(data.sections || data.under_sections);
   mappedData.under_act = cleanText(data.under_act || data.act);
   mappedData.under_section = cleanText(data.under_section || data.section);
 
   // ORDERS AND PROCEEDINGS (4 fields)
-  mappedData.orders = extractArrayFromString(data.orders || data.court_orders);
+  const extractedOrders = orderDetails
+    .filter((order: any) => order.purpose_of_hearing && order.purpose_of_hearing !== 'Order Details')
+    .map((order: any) => `${order.hearing_date}: ${order.purpose_of_hearing}`);
+  
+  mappedData.orders = extractedOrders.length > 0 ? extractedOrders : extractArrayFromString(data.orders || data.court_orders);
   mappedData.interim_orders = extractArrayFromString(data.interim_orders);
   mappedData.final_orders = extractArrayFromString(data.final_orders);
   
-  // CRIMINAL CASE SPECIFIC (4 fields)
-  mappedData.police_station = cleanText(data.police_station || data.ps);
-  mappedData.fir_number = cleanText(data.fir_number || data.fir_no);
-  mappedData.police_district = cleanText(data.police_district);
-
   // HEARING AND LISTING (6 fields)
-  mappedData.cause_list_type = cleanText(data.cause_list_type || data.list_type);
-  mappedData.purpose_of_hearing = cleanText(data.purpose_of_hearing || data.hearing_purpose);
-  mappedData.listing_reason = cleanText(data.listing_reason);
-  mappedData.urgent_listing = Boolean(data.urgent_listing || data.is_urgent);
+  if (hearingHistory.length > 0) {
+    const latestHearing = hearingHistory[0];
+    mappedData.cause_list_type = cleanText(latestHearing.cause_list_type);
+    mappedData.purpose_of_hearing = cleanText(latestHearing.purpose_of_hearing);
+    mappedData.listing_reason = cleanText(data.listing_reason);
+    mappedData.urgent_listing = Boolean(data.urgent_listing || data.is_urgent);
+  }
+
   mappedData.hearing_notes = cleanText(data.hearing_notes || data.notes);
 
-  // Store hearing history if available
-  if (data.hearing_history || data.hearings) {
-    mappedData.hearing_history = data.hearing_history || data.hearings;
+  // Store complete hearing history
+  if (hearingHistory.length > 0) {
+    mappedData.hearing_history = hearingHistory;
   }
 
   // DOCUMENT AND PROCESS (4 fields)
-  mappedData.document_links = extractArrayFromString(data.document_links || data.documents);
-  mappedData.objection = cleanText(data.objection || data.objection_details);
-  mappedData.objection_status = cleanText(data.objection_status);
-  mappedData.ia_numbers = extractArrayFromString(data.ia_numbers || data.ia_applications);
+  const documentLinks = documents
+    .filter((doc: any) => doc.document_filed)
+    .map((doc: any) => `${doc.document_filed} (Filed: ${doc.date_of_receiving})`);
+  
+  mappedData.document_links = documentLinks.length > 0 ? documentLinks : extractArrayFromString(data.document_links || data.documents);
+  
+  // Process objections
+  const objectionTexts = objections
+    .filter((obj: any) => obj.objection && obj.objection.trim())
+    .map((obj: any) => obj.objection);
+  
+  if (objectionTexts.length > 0) {
+    mappedData.objection = objectionTexts.join('; ');
+    mappedData.objection_status = objections[0]?.objection_compliance_date ? 'Complied' : 'Pending';
+  }
 
-  if (data.document_history || data.document_details) {
-    mappedData.document_history = data.document_history || data.document_details;
+  // IA applications
+  const iaNumbers = iaDetails
+    .filter((ia: any) => ia.ia_number && !ia.ia_number.includes('Classification'))
+    .map((ia: any) => ia.ia_number);
+  
+  mappedData.ia_numbers = iaNumbers.length > 0 ? iaNumbers : extractArrayFromString(data.ia_numbers || data.ia_applications);
+
+  if (documents.length > 0) {
+    mappedData.document_history = documents;
   }
 
   // CASE CONNECTIONS (2 fields)
   mappedData.connected_cases = extractArrayFromString(data.connected_cases || data.related_cases);
-  mappedData.filing_party = cleanText(data.filing_party);
+  mappedData.filing_party = cleanText(mappedData.petitioner || data.filing_party);
 
   // Priority assessment based on case urgency, type, and stage
-  if (!mappedData.priority) {
-    if (mappedData.urgent_listing || (mappedData.case_type === 'criminal' && mappedData.stage?.includes('bail'))) {
-      mappedData.priority = 'high';
-    } else if (mappedData.case_type === 'commercial' || mappedData.interim_orders?.length > 0) {
-      mappedData.priority = 'medium';
-    } else {
-      mappedData.priority = 'low';
-    }
+  if (mappedData.case_type === 'criminal' || mappedData.urgent_listing) {
+    mappedData.priority = 'high';
+  } else if (mappedData.interim_orders?.length > 0 || mappedData.orders?.length > 0) {
+    mappedData.priority = 'medium';
+  } else {
+    mappedData.priority = 'low';
   }
 
   // Log mapping statistics
   const mappedFields = Object.keys(mappedData).filter(key => 
-    mappedData[key] !== null && mappedData[key] !== undefined && mappedData[key] !== ''
+    mappedData[key] !== null && mappedData[key] !== undefined && mappedData[key] !== '' && 
+    !(Array.isArray(mappedData[key]) && mappedData[key].length === 0)
   );
   console.log(`Successfully mapped ${mappedFields.length} fields for ${searchType}:`, mappedFields);
 
