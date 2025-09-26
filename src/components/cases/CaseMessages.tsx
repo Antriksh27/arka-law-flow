@@ -21,15 +21,15 @@ export const CaseMessages: React.FC<CaseMessagesProps> = ({
   return (
     <div className="border border-gray-200 rounded-lg h-[600px] flex flex-col bg-white">
       <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Case Discussion</h3>
+        <h3 className="text-xl font-semibold">Case Discussion</h3>
         <Button asChild variant="outline">
           <Link to="/messages">
             Open in Messages
           </Link>
         </Button>
       </div>
-      <div className="flex-grow overflow-y-auto p-6 space-y-6 bg-gray-50">
-        <div className="text-center text-gray-500 p-8">
+      <div className="flex-grow overflow-y-auto p-6 space-y-6 bg-soft">
+        <div className="text-center text-muted p-8">
             <p>Case messaging is being upgraded.</p>
             <p>Please use the main Messages page for now.</p>
         </div>

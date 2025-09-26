@@ -40,7 +40,7 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({
   }
   if (!caseData) {
     return <div className="text-center py-12">
-        <p className="text-gray-500">Case details not found</p>
+        <p className="text-muted">Case details not found</p>
       </div>;
   }
   const getStatusColor = (status: string) => {

@@ -251,7 +251,7 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
       <div className="lg:col-span-1 space-y-6">
         {/* Quick Actions */}
         <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
-          <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
+          <h3 className="text-xl font-semibold mb-4">Quick Actions</h3>
           <div className="space-y-3">
             <Button 
               className="w-full justify-start"
@@ -269,7 +269,7 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
 
         {/* Recent Activity */}
         <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
-          <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
+          <h3 className="text-xl font-semibold mb-4">Recent Activity</h3>
           <div className="space-y-4">
             {recentActivities && recentActivities.length > 0 ? recentActivities.map(activity => <div key={activity.id} className="flex items-start gap-3">
                   <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
@@ -277,12 +277,12 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-medium">{getActivityTypeLabel(activity.activity_type)}</p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted">
                       {format(new Date(activity.created_at), 'MMM d, h:mm a')}
                     </p>
                   </div>
-                </div>) : <div className="text-center py-4">
-                <p className="text-sm text-gray-500">No recent activity</p>
+              </div>) : <div className="text-center py-4">
+                <p className="text-sm text-muted">No recent activity</p>
               </div>}
           </div>
         </div>

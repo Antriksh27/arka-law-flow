@@ -49,9 +49,8 @@ export const CaseHearings: React.FC<CaseHearingsProps> = ({
   }
   return <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Hearings</h3>
+        <h3 className="text-xl font-semibold">Hearings</h3>
         <Button 
-          className="bg-slate-800 hover:bg-slate-700" 
           onClick={() => setShowCreateDialog(true)}
         >
           <Plus className="w-4 h-4 mr-2" />
@@ -67,10 +66,10 @@ export const CaseHearings: React.FC<CaseHearingsProps> = ({
                     <Calendar className="w-6 h-6 text-blue-600" />
                   </div>
                   <div>
-                    <h4 className="font-medium text-gray-900">
+                    <h4 className="font-medium">
                       {formatHearingType(hearing.hearing_type)}
                     </h4>
-                    <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
+                    <div className="flex items-center gap-4 text-sm text-muted mt-1">
                       <div className="flex items-center gap-1">
                         <Calendar className="w-4 h-4" />
                         {format(parseISO(hearing.hearing_date), 'MMM d, yyyy')}
@@ -89,13 +88,13 @@ export const CaseHearings: React.FC<CaseHearingsProps> = ({
                 {getHearingStatusBadge(hearing.status)}
               </div>
               
-              {hearing.notes && <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-                  <p className="text-sm text-gray-700">{hearing.notes}</p>
+              {hearing.notes && <div className="mt-3 p-3 bg-soft rounded-lg">
+                  <p className="text-sm">{hearing.notes}</p>
                 </div>}
               
               {hearing.outcome && <div className="mt-3">
-                  <p className="text-sm font-medium text-gray-900">Outcome:</p>
-                  <p className="text-sm text-gray-700">{hearing.outcome}</p>
+                  <p className="text-sm font-medium">Outcome:</p>
+                  <p className="text-sm">{hearing.outcome}</p>
                 </div>}
 
               <div className="mt-4 pt-3 border-t border-gray-100 flex justify-end">
@@ -107,12 +106,12 @@ export const CaseHearings: React.FC<CaseHearingsProps> = ({
                 </Button>
               </div>
             </div>)}
-        </div> : <div className="text-center py-12 text-gray-500">
-          <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+        </div> : <div className="text-center py-12 text-muted">
+          <Calendar className="w-12 h-12 mx-auto mb-4 text-muted" />
           <p>No hearings scheduled yet</p>
           <Button 
             onClick={() => setShowCreateDialog(true)} 
-            className="mt-4 bg-slate-900 hover:bg-slate-800"
+            className="mt-4"
           >
             <Plus className="w-4 h-4 mr-2" />
             Schedule First Hearing

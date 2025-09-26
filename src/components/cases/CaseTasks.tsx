@@ -129,8 +129,8 @@ export const CaseTasks: React.FC<CaseTasksProps> = ({
   }
   return <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="text-xl font-semibold text-gray-900">Tasks</h3>
-        <Button onClick={() => setShowCreateDialog(true)} className="bg-slate-800 hover:bg-slate-700">
+        <h3 className="text-xl font-semibold">Tasks</h3>
+        <Button onClick={() => setShowCreateDialog(true)}>
           <Plus className="w-4 h-4 mr-2" />
           Add Task
         </Button>
@@ -191,10 +191,10 @@ export const CaseTasks: React.FC<CaseTasksProps> = ({
                   </div>}
               </CardContent>
             </Card>)}
-        </div> : <div className="text-center py-12 text-gray-500">
-          <CheckSquare className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+        </div> : <div className="text-center py-12 text-muted">
+          <CheckSquare className="w-12 h-12 mx-auto mb-4 text-muted" />
           <p>No tasks created yet</p>
-          <Button onClick={() => setShowCreateDialog(true)} className="mt-4 bg-slate-800 hover:bg-slate-700">
+          <Button onClick={() => setShowCreateDialog(true)} className="mt-4">
             <Plus className="w-4 h-4 mr-2" />
             Create First Task
           </Button>

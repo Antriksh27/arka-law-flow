@@ -131,13 +131,13 @@ export const CaseDocuments: React.FC<CaseDocumentsProps> = ({
   if (isLoading) {
     return <div className="text-center py-8">
         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-gray-500">Loading documents...</p>
+        <p className="text-muted">Loading documents...</p>
       </div>;
   }
   return <>
       <div className="space-y-4">
         <div className="flex justify-between items-center">
-          <h3 className="text-lg font-semibold">Documents</h3>
+          <h3 className="text-xl font-semibold">Documents</h3>
           <Button onClick={() => setShowUploadDialog(true)}>
             <Upload className="w-4 h-4 mr-2" />
             Upload Document
@@ -148,13 +148,13 @@ export const CaseDocuments: React.FC<CaseDocumentsProps> = ({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="bg-slate-800">Document Name</TableHead>
-                  <TableHead className="bg-slate-800">Type</TableHead>
-                  <TableHead className="bg-slate-800">Uploaded By</TableHead>
-                  <TableHead className="bg-slate-800">Upload Date</TableHead>
-                  <TableHead className="bg-slate-800">Size</TableHead>
-                  <TableHead className="bg-slate-800">Important</TableHead>
-                  <TableHead className="bg-slate-800">Actions</TableHead>
+                  <TableHead className="table-header">Document Name</TableHead>
+                  <TableHead className="table-header">Type</TableHead>
+                  <TableHead className="table-header">Uploaded By</TableHead>
+                  <TableHead className="table-header">Upload Date</TableHead>
+                  <TableHead className="table-header">Size</TableHead>
+                  <TableHead className="table-header">Important</TableHead>
+                  <TableHead className="table-header">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -198,8 +198,8 @@ export const CaseDocuments: React.FC<CaseDocumentsProps> = ({
             })}
               </TableBody>
             </Table>
-          </div> : <div className="text-center py-12 text-gray-500">
-            <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+          </div> : <div className="text-center py-12 text-muted">
+            <FileText className="w-12 h-12 mx-auto mb-4 text-muted" />
             <p>No documents uploaded yet</p>
             <Button className="mt-4" onClick={() => setShowUploadDialog(true)}>
               <Upload className="w-4 h-4 mr-2" />

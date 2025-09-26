@@ -42,10 +42,9 @@ export const CaseNotes: React.FC<CaseNotesProps> = ({ caseId }) => {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="text-xl font-semibold text-gray-900">Notes</h3>
+        <h3 className="text-xl font-semibold">Notes</h3>
         <Button 
           onClick={() => setShowCreateDialog(true)}
-          className="bg-slate-800 hover:bg-slate-700 text-white"
         >
           <Plus className="w-4 h-4 mr-2" />
           Add Note
@@ -70,12 +69,12 @@ export const CaseNotes: React.FC<CaseNotesProps> = ({ caseId }) => {
           ))}
         </div>
       ) : (
-        <div className="text-center py-12 text-gray-500">
-          <StickyNote className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+        <div className="text-center py-12 text-muted">
+          <StickyNote className="w-12 h-12 mx-auto mb-4 text-muted" />
           <p>No notes created yet</p>
           <Button 
-            className="mt-4 bg-slate-800 hover:bg-slate-700 text-white"
-            onClick={() => setShowCreateDialog(true)}
+            onClick={() => setShowCreateDialog(true)} 
+            className="mt-4"
           >
             <Plus className="w-4 h-4 mr-2" />
             Create First Note

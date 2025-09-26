@@ -76,7 +76,7 @@ export const CaseOverview: React.FC<CaseOverviewProps> = ({ caseId }) => {
   if (!caseData) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500">Case data not found</p>
+        <p className="text-muted">Case data not found</p>
       </div>
     );
   }
@@ -134,14 +134,14 @@ export const CaseOverview: React.FC<CaseOverviewProps> = ({ caseId }) => {
       {/* AI Case Summary */}
       <Card className="border-blue-200 bg-blue-50">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-blue-800">
+          <CardTitle className="flex items-center gap-2">
             <Brain className="w-5 h-5" />
             AI Case Summary
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <p className="text-blue-700">
+            <div className="space-y-4">
+            <p className="text-foreground">
               This is an AI-generated summary of the case based on available information. 
               The case "{caseData.title}" is currently in {caseData.status} status and was filed on{' '}
               {caseData.filing_date ? new Date(caseData.filing_date).toLocaleDateString() : 'Unknown date'}.
@@ -150,7 +150,7 @@ export const CaseOverview: React.FC<CaseOverviewProps> = ({ caseId }) => {
               <Badge className={getStatusColor(caseData.status)}>
                 {caseData.status || 'Unknown'}
               </Badge>
-              <span className="text-sm text-blue-600">
+              <span className="text-sm text-muted">
                 Last updated: {caseData.updated_at ? new Date(caseData.updated_at).toLocaleDateString() : 'Unknown'}
               </span>
             </div>
@@ -167,8 +167,8 @@ export const CaseOverview: React.FC<CaseOverviewProps> = ({ caseId }) => {
                 <CheckCircle className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-500">Case Status</p>
-                <p className="text-lg font-semibold text-gray-900">{caseData.status || 'Unknown'}</p>
+                <p className="text-sm text-muted">Case Status</p>
+                <p className="text-lg font-semibold">{caseData.status || 'Unknown'}</p>
               </div>
             </div>
           </CardContent>
@@ -181,8 +181,8 @@ export const CaseOverview: React.FC<CaseOverviewProps> = ({ caseId }) => {
                 <Calendar className="w-5 h-5 text-green-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-500">Days Since Filing</p>
-                <p className="text-lg font-semibold text-gray-900">
+                <p className="text-sm text-muted">Days Since Filing</p>
+                <p className="text-lg font-semibold">
                   {calculateDaysSinceFiling()}
                 </p>
               </div>
@@ -197,8 +197,8 @@ export const CaseOverview: React.FC<CaseOverviewProps> = ({ caseId }) => {
                 <TrendingUp className="w-5 h-5 text-yellow-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-500">Priority</p>
-                <p className="text-lg font-semibold text-gray-900">{caseData.priority || 'Medium'}</p>
+                <p className="text-sm text-muted">Priority</p>
+                <p className="text-lg font-semibold">{caseData.priority || 'Medium'}</p>
               </div>
             </div>
           </CardContent>
@@ -214,29 +214,29 @@ export const CaseOverview: React.FC<CaseOverviewProps> = ({ caseId }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div>
-                <p className="text-sm text-gray-500">Case Title</p>
+                <p className="text-sm text-muted">Case Title</p>
                 <p className="font-medium">{caseData.title}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Client</p>
+                <p className="text-sm text-muted">Client</p>
                 <p className="font-medium">{caseData.client?.full_name || 'Not assigned'}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Case Type</p>
+                <p className="text-sm text-muted">Case Type</p>
                 <p className="font-medium">{caseData.case_type || 'Not specified'}</p>
               </div>
             </div>
             <div className="space-y-4">
               <div>
-                <p className="text-sm text-gray-500">Description</p>
+                <p className="text-sm text-muted">Description</p>
                 <p className="font-medium">{caseData.description || 'No description available'}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Created By</p>
+                <p className="text-sm text-muted">Created By</p>
                 <p className="font-medium">{caseData.creator?.full_name || 'Unknown'}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Created Date</p>
+                <p className="text-sm text-muted">Created Date</p>
                 <p className="font-medium">
                   {caseData.created_at ? new Date(caseData.created_at).toLocaleDateString() : 'Unknown'}
                 </p>
@@ -262,7 +262,7 @@ export const CaseOverview: React.FC<CaseOverviewProps> = ({ caseId }) => {
               </div>
               <div className="flex-1">
                 <p className="text-sm font-medium">Case created</p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted">
                   {caseData.created_at ? new Date(caseData.created_at).toLocaleDateString() : 'Unknown date'}
                 </p>
               </div>
@@ -273,7 +273,7 @@ export const CaseOverview: React.FC<CaseOverviewProps> = ({ caseId }) => {
               </div>
               <div className="flex-1">
                 <p className="text-sm font-medium">Client assigned</p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted">
                   {caseData.client?.full_name ? `${caseData.client.full_name} assigned to case` : 'No client assigned'}
                 </p>
               </div>

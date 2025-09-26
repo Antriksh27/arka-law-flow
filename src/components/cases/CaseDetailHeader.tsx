@@ -147,7 +147,7 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
         <div className="flex items-start justify-between mb-6">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-3">
-              <h1 className="text-2xl font-semibold text-gray-900">
+              <h1 className="text-2xl font-semibold">
                 {caseTitle}
               </h1>
               <Badge className={`${getStatusColor(caseData?.status)} rounded-full`}>
@@ -187,19 +187,19 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
         {/* Details Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           <div className="flex items-center gap-3">
-            <User className="w-4 h-4 text-gray-400" />
+            <User className="w-4 h-4 text-muted" />
             <div>
-              <p className="text-sm text-gray-500">Client</p>
-              <p className="font-medium text-gray-900">
+              <p className="text-sm text-muted">Client</p>
+              <p className="font-medium">
                 {caseData?.clients?.full_name || 'No client assigned'}
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <Users className="w-4 h-4 text-gray-400" />
+            <Users className="w-4 h-4 text-muted" />
             <div>
-              <p className="text-sm text-gray-500">Lawyer</p>
+              <p className="text-sm text-muted">Lawyer</p>
               <div className="flex items-center gap-1 mt-1">
                 {assignedLawyers && assignedLawyers.length > 0 ? (
                   <div className="flex items-center gap-1">
@@ -252,9 +252,9 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
           </div>
 
           <div className="flex items-center gap-3">
-            <Flag className="w-4 h-4 text-gray-400" />
+            <Flag className="w-4 h-4 text-muted" />
             <div>
-              <p className="text-sm text-gray-500">Priority</p>
+              <p className="text-sm text-muted">Priority</p>
               {caseData?.priority ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -348,10 +348,10 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
           </div>
 
           <div className="flex items-center gap-3">
-            <Clock className="w-4 h-4 text-gray-400" />
+            <Clock className="w-4 h-4 text-muted" />
             <div>
-              <p className="text-sm text-gray-500">Next Hearing</p>
-              <p className="font-medium text-gray-900">
+              <p className="text-sm text-muted">Next Hearing</p>
+              <p className="font-medium">
                 {formatDate(caseData?.next_hearing_date)}
               </p>
             </div>
@@ -361,30 +361,30 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
         {/* Additional Details Row */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mt-6 pt-6 border-t border-gray-100">
           <div className="flex items-center gap-3">
-            <Calendar className="w-4 h-4 text-gray-400" />
+            <Calendar className="w-4 h-4 text-muted" />
             <div>
-              <p className="text-sm text-gray-500">Filed Date</p>
-              <p className="font-medium text-gray-900">
+              <p className="text-sm text-muted">Filed Date</p>
+              <p className="font-medium">
                 {formatDate(caseData?.filing_date)}
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <Building2 className="w-4 h-4 text-gray-400" />
+            <Building2 className="w-4 h-4 text-muted" />
             <div>
-              <p className="text-sm text-gray-500">Court</p>
-              <p className="font-medium text-gray-900">
+              <p className="text-sm text-muted">Court</p>
+              <p className="font-medium">
                 {courtName}
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <Gavel className="w-4 h-4 text-gray-400" />
+            <Gavel className="w-4 h-4 text-muted" />
             <div>
-              <p className="text-sm text-gray-500">Case Number</p>
-              <p className="font-medium text-gray-900">
+              <p className="text-sm text-muted">Case Number</p>
+              <p className="font-medium">
                 {caseData?.case_number || caseData?.filing_number || caseData?.registration_number || caseData?.cnr_number || 'Not assigned'}
               </p>
             </div>
