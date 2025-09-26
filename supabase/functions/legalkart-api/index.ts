@@ -31,6 +31,12 @@ serve(async (req) => {
     const legalkartUserId = Deno.env.get('LEGALKART_USER_ID');
     const legalkartHashKey = Deno.env.get('LEGALKART_HASH_KEY');
 
+    console.log('Environment check:');
+    console.log('- SUPABASE_URL:', supabaseUrl ? 'SET' : 'NOT SET');
+    console.log('- SUPABASE_SERVICE_ROLE_KEY:', serviceRoleKey ? 'SET' : 'NOT SET');
+    console.log('- LEGALKART_USER_ID:', legalkartUserId ? 'SET' : 'NOT SET');
+    console.log('- LEGALKART_HASH_KEY:', legalkartHashKey ? 'SET' : 'NOT SET');
+
     if (!legalkartUserId || !legalkartHashKey) {
       console.error('Legalkart credentials not configured');
       return new Response(
@@ -270,35 +276,49 @@ serve(async (req) => {
 async function authenticateWithLegalkart(userId: string, hashKey: string): Promise<LegalkartAuthResponse> {
   try {
     console.log('Authenticating with Legalkart API...');
+    console.log('User ID provided:', userId ? 'YES' : 'NO');
+    console.log('Hash key provided:', hashKey ? 'YES' : 'NO');
+    
+    const requestBody = {
+      user_id: userId,
+      hash_key: hashKey,
+    };
+    
+    console.log('Request body:', JSON.stringify(requestBody, null, 2));
     
     const response = await fetch('https://apiservices.legalkart.com/api/v1/application-service/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
       },
-      body: JSON.stringify({
-        user_id: userId,
-        hash_key: hashKey,
-      }),
+      body: JSON.stringify(requestBody),
     });
 
+    console.log('Response status:', response.status);
+    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
     if (!response.ok) {
+      const errorText = await response.text();
       console.error('Authentication request failed:', response.status, response.statusText);
+      console.error('Error response body:', errorText);
       return { 
         success: false, 
-        error: `Authentication failed: ${response.status} ${response.statusText}` 
+        error: `Authentication failed: ${response.status} ${response.statusText} - ${errorText}` 
       };
     }
 
     const data = await response.json();
-    console.log('Authentication response received');
+    console.log('Authentication response received:', JSON.stringify(data, null, 2));
 
     if (data.token) {
+      console.log('Token received successfully');
       return { success: true, token: data.token };
     } else {
+      console.log('No token in response. Full response:', data);
       return { 
         success: false, 
-        error: data.message || 'No token received from authentication' 
+        error: data.message || data.error || 'No token received from authentication' 
       };
     }
   } catch (error) {
