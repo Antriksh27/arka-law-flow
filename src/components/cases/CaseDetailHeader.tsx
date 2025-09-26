@@ -217,12 +217,14 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
               {caseData?.priority ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="flex items-center gap-1 hover:opacity-80 transition-opacity">
-                      <Badge className={`${getPriorityColor(caseData.priority)} rounded-full text-xs`}>
-                        {caseData.priority} Priority
-                      </Badge>
-                      <ChevronDown className="w-3 h-3 text-gray-500" />
-                    </button>
+                    <Button variant="ghost" className="h-auto p-0 hover:bg-transparent">
+                      <div className="flex items-center gap-1">
+                        <Badge className={`${getPriorityColor(caseData.priority)} rounded-full text-xs`}>
+                          {caseData.priority.charAt(0).toUpperCase() + caseData.priority.slice(1)} Priority
+                        </Badge>
+                        <ChevronDown className="w-3 h-3 text-gray-500" />
+                      </div>
+                    </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start">
                     <DropdownMenuItem 
@@ -260,10 +262,12 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
               ) : (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="flex items-center gap-1 font-medium text-gray-900 hover:opacity-80 transition-opacity">
-                      Not set
-                      <ChevronDown className="w-3 h-3 text-gray-500" />
-                    </button>
+                    <Button variant="ghost" className="h-auto p-0 hover:bg-transparent">
+                      <div className="flex items-center gap-1 font-medium text-gray-900">
+                        Not set
+                        <ChevronDown className="w-3 h-3 text-gray-500" />
+                      </div>
+                    </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start">
                     <DropdownMenuItem 
