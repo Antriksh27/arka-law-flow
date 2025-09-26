@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +14,7 @@ interface ClientCasesProps {
 
 export const ClientCases: React.FC<ClientCasesProps> = ({ clientId }) => {
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const navigate = useNavigate();
   const { data: cases = [], isLoading } = useQuery({
     queryKey: ['client-cases', clientId],
     queryFn: async () => {
@@ -97,7 +99,11 @@ export const ClientCases: React.FC<ClientCasesProps> = ({ clientId }) => {
                       </span>
                     </div>
                   </div>
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => navigate(`/cases/${case_item.id}`)}
+                  >
                     <Eye className="w-4 h-4 mr-1" />
                     View
                   </Button>
