@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Edit, Calendar, FileText, Users, Clock, Plus, Ban, User, Building2, Gavel, Flag } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Edit, Calendar, FileText, Users, Clock, Plus, Ban, User, Building2, Gavel, Flag, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { AssignLawyerDialog } from './AssignLawyerDialog';
 import { EditCaseDialog } from './EditCaseDialog';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 interface CaseDetailHeaderProps {
   case: any;
 }
@@ -16,6 +18,7 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
 }) => {
   const [showAssignLawyer, setShowAssignLawyer] = useState(false);
   const [showEditCase, setShowEditCase] = useState(false);
+  const queryClient = useQueryClient();
 
   // Fetch assigned lawyers info
   const { data: assignedLawyers } = useQuery({
@@ -32,6 +35,26 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
       return data || [];
     },
     enabled: !!caseData?.assigned_users?.length
+  });
+
+  // Mutation to update case priority
+  const updatePriorityMutation = useMutation({
+    mutationFn: async (newPriority: 'low' | 'medium' | 'high') => {
+      const { error } = await supabase
+        .from('cases')
+        .update({ priority: newPriority })
+        .eq('id', caseData?.id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['case', caseData?.id] });
+      toast.success('Priority updated successfully');
+    },
+    onError: (error) => {
+      toast.error('Failed to update priority');
+      console.error('Error updating priority:', error);
+    }
   });
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -191,9 +214,91 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
             <Flag className="w-4 h-4 text-gray-400" />
             <div>
               <p className="text-sm text-gray-500">Priority</p>
-              {caseData?.priority ? <Badge className={`${getPriorityColor(caseData.priority)} rounded-full text-xs mt-1`}>
-                  {caseData.priority} Priority
-                </Badge> : <p className="font-medium text-gray-900">Not set</p>}
+              {caseData?.priority ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex items-center gap-1 hover:opacity-80 transition-opacity">
+                      <Badge className={`${getPriorityColor(caseData.priority)} rounded-full text-xs`}>
+                        {caseData.priority} Priority
+                      </Badge>
+                      <ChevronDown className="w-3 h-3 text-gray-500" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    <DropdownMenuItem 
+                      onClick={() => updatePriorityMutation.mutate('high')}
+                      className="cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Badge className="bg-red-100 text-red-700 border-red-200 rounded-full text-xs">
+                          High Priority
+                        </Badge>
+                      </div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => updatePriorityMutation.mutate('medium')}
+                      className="cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Badge className="bg-yellow-100 text-yellow-700 border-yellow-200 rounded-full text-xs">
+                          Medium Priority
+                        </Badge>
+                      </div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => updatePriorityMutation.mutate('low')}
+                      className="cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Badge className="bg-green-100 text-green-700 border-green-200 rounded-full text-xs">
+                          Low Priority
+                        </Badge>
+                      </div>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex items-center gap-1 font-medium text-gray-900 hover:opacity-80 transition-opacity">
+                      Not set
+                      <ChevronDown className="w-3 h-3 text-gray-500" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    <DropdownMenuItem 
+                      onClick={() => updatePriorityMutation.mutate('high')}
+                      className="cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Badge className="bg-red-100 text-red-700 border-red-200 rounded-full text-xs">
+                          High Priority
+                        </Badge>
+                      </div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => updatePriorityMutation.mutate('medium')}
+                      className="cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Badge className="bg-yellow-100 text-yellow-700 border-yellow-200 rounded-full text-xs">
+                          Medium Priority
+                        </Badge>
+                      </div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => updatePriorityMutation.mutate('low')}
+                      className="cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Badge className="bg-green-100 text-green-700 border-green-200 rounded-full text-xs">
+                          Low Priority
+                        </Badge>
+                      </div>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
             </div>
           </div>
 
