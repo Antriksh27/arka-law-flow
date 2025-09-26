@@ -105,9 +105,14 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
   // Helper function to extract clean names from advocate strings
   const extractName = (text: string) => {
     if (!text) return '';
-    // Extract the first name before "Advocate-" or other patterns
-    const match = text.match(/^(\d+\)\s*)?([^A-Z]*?)(?:\s+Advocate|$)/);
-    return match ? match[2].trim() : text.split(' ')[0] || '';
+    
+    // Remove leading numbers and parentheses like "1) "
+    let cleaned = text.replace(/^\d+\)\s*/, '');
+    
+    // Extract everything before "Advocate" or similar patterns
+    const beforeAdvocate = cleaned.split(/\s+Advocate/)[0];
+    
+    return beforeAdvocate.trim();
   };
 
   // Generate case title in "Petitioner Vs Respondent" format
