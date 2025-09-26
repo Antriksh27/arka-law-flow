@@ -207,7 +207,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                   id="vs"
                   value={formData.vs}
                   onChange={(e) => setFormData({ ...formData, vs: e.target.value })}
-                  placeholder="e.g., Petitioner vs Respondent"
+                  placeholder="e.g., Petitioner Vs Respondent"
                 />
               </div>
             </div>
