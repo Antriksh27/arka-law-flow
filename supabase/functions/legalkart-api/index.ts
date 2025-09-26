@@ -74,7 +74,8 @@ serve(async (req) => {
       );
     }
 
-    const { action } = await req.json();
+    const requestBody = await req.json();
+    const { action } = requestBody;
 
     if (action === 'authenticate') {
       // Authenticate with Legalkart API
@@ -86,7 +87,7 @@ serve(async (req) => {
     }
 
     if (action === 'search') {
-      const { cnr, searchType, caseId }: LegalkartCaseSearchRequest = await req.json();
+      const { cnr, searchType, caseId }: LegalkartCaseSearchRequest = requestBody;
       
       if (!cnr || !searchType) {
         return new Response(
@@ -188,7 +189,7 @@ serve(async (req) => {
     }
 
     if (action === 'batch_search') {
-      const { cnrs }: { cnrs: string[] } = await req.json();
+      const { cnrs }: { cnrs: string[] } = requestBody;
       
       if (!cnrs || !Array.isArray(cnrs) || cnrs.length === 0) {
         return new Response(
