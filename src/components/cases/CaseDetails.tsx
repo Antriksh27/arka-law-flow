@@ -75,8 +75,17 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({
   // Generate case title from Legalkart data if available
   const extractName = (text: string) => {
     if (!text) return '';
-    const match = text.match(/^(\d+\)\s*)?([^A-Z]*?)(?:\s+Advocate|$)/);
-    return match ? match[2].trim() : text.split(' ')[0] || '';
+    
+    // Remove leading numbers and parentheses like "1) "
+    let cleaned = text.replace(/^\d+\)\s*/, '');
+    
+    // Remove advocate information and everything after it
+    cleaned = cleaned.replace(/\s+Advocate.*$/i, '');
+    
+    // Extract name before any additional details in parentheses or dashes
+    const beforeDetails = cleaned.split(/[-–(]/)[0];
+    
+    return beforeDetails.trim();
   };
   const legalkartPetitionerName = extractName(petitioner_and_advocate);
   const legalkartRespondentName = extractName(respondent_and_advocate);
@@ -118,7 +127,25 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({
             </div>
             
             {/* Enhanced E-Courts Party Details */}
-            {petitioner_and_advocate || respondent_and_advocate}
+            {(petitioner_and_advocate || respondent_and_advocate) && (
+              <div className="mt-4 pt-4 border-t border-border">
+                <p className="text-sm font-medium text-muted mb-2">E-Courts Data</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  {legalkartPetitionerName && (
+                    <div>
+                      <span className="font-medium">Petitioner: </span>
+                      <span className="text-foreground">{legalkartPetitionerName}</span>
+                    </div>
+                  )}
+                  {legalkartRespondentName && (
+                    <div>
+                      <span className="font-medium">Respondent: </span>
+                      <span className="text-foreground">{legalkartRespondentName}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
