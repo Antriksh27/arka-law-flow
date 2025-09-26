@@ -355,20 +355,34 @@ async function performCaseSearch(token: string, cnr: string, searchType: string)
 
     console.log(`Performing ${searchType} search for CNR: ${cnr}`);
 
+    console.log(`Request details:`, {
+      endpoint,
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token.substring(0, 20)}...`,
+      },
+      body
+    });
+
     const response = await fetch(endpoint, {
       method,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': token,
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json',
       },
       body,
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
       console.error(`Search request failed: ${response.status} ${response.statusText}`);
+      console.error('Error response body:', errorText);
+      console.error('Response headers:', Object.fromEntries(response.headers.entries()));
       return { 
         success: false, 
-        error: `Search failed: ${response.status} ${response.statusText}`,
+        error: `Search failed: ${response.status} ${response.statusText} - ${errorText}`,
         data: null 
       };
     }
