@@ -26,15 +26,8 @@ export const AssignLawyerDialog: React.FC<AssignLawyerDialogProps> = ({
   } = useQuery({
     queryKey: ['lawyers'],
     queryFn: async () => {
-      // Direct query to get lawyers, admins, and juniors
-      const { data, error } = await supabase
-        .from('team_members')
-        .select(`
-          user_id,
-          role,
-          profiles!inner(full_name, email)
-        `)
-        .in('role', ['lawyer', 'admin', 'junior']);
+      // Use RPC to fetch lawyers and juniors with proper join and firm scoping
+      const { data, error } = await supabase.rpc('get_lawyers_and_juniors');
       
       if (error) throw error;
       
@@ -43,8 +36,8 @@ export const AssignLawyerDialog: React.FC<AssignLawyerDialogProps> = ({
         id: row.user_id,
         user_id: row.user_id,
         role: row.role,
-        full_name: row.profiles?.full_name || 'Unknown User',
-        email: row.profiles?.email
+        full_name: row.full_name || 'Unknown User',
+        email: row.email
       }));
       
       // Sort with Chitrajeet first, then alphabetically
