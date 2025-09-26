@@ -118,21 +118,7 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({
             </div>
             
             {/* Enhanced E-Courts Party Details */}
-            {(petitioner_and_advocate || respondent_and_advocate) && <div className="border-t border-border pt-6 space-y-4">
-                <p className="text-sm font-medium text-muted mb-3">Detailed Party Information (E-Courts)</p>
-                {petitioner_and_advocate && <div>
-                    <p className="text-xs font-medium text-muted mb-2">Petitioner & Advocate Details</p>
-                    <div className="bg-soft rounded-xl p-4">
-                      <p className="text-sm text-foreground leading-relaxed">{petitioner_and_advocate}</p>
-                    </div>
-                  </div>}
-                {respondent_and_advocate && <div>
-                    <p className="text-xs font-medium text-muted mb-2">Respondent & Advocate Details</p>
-                    <div className="bg-soft rounded-xl p-4">
-                      <p className="text-sm text-foreground leading-relaxed">{respondent_and_advocate}</p>
-                    </div>
-                  </div>}
-              </div>}
+            {petitioner_and_advocate || respondent_and_advocate}
           </div>
         </CardContent>
       </Card>
