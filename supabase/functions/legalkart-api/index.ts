@@ -311,9 +311,9 @@ async function authenticateWithLegalkart(userId: string, hashKey: string): Promi
     const data = await response.json();
     console.log('Authentication response received:', JSON.stringify(data, null, 2));
 
-    if (data.token) {
+    if (data.jwt) {
       console.log('Token received successfully');
-      return { success: true, token: data.token };
+      return { success: true, token: data.jwt };
     } else {
       console.log('No token in response. Full response:', data);
       return { 
