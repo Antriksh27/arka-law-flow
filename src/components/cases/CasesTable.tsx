@@ -66,7 +66,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
       }
 
       if (searchQuery) {
-        query = query.or(`case_title.ilike.%${searchQuery}%`);
+        query = query.or(`case_title.ilike.%${searchQuery}%,title.ilike.%${searchQuery}%,petitioner.ilike.%${searchQuery}%,respondent.ilike.%${searchQuery}%,vs.ilike.%${searchQuery}%,case_number.ilike.%${searchQuery}%,cnr_number.ilike.%${searchQuery}%,filing_number.ilike.%${searchQuery}%`);
       }
       if (statusFilter !== 'all') {
         query = query.eq('status', statusFilter as any);

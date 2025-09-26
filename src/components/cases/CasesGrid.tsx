@@ -54,7 +54,7 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
       }
 
       if (searchQuery) {
-        query = query.or(`title.ilike.%${searchQuery}%,client_name.ilike.%${searchQuery}%`);
+        query = query.or(`title.ilike.%${searchQuery}%,case_title.ilike.%${searchQuery}%,client_name.ilike.%${searchQuery}%,petitioner.ilike.%${searchQuery}%,respondent.ilike.%${searchQuery}%,vs.ilike.%${searchQuery}%,case_number.ilike.%${searchQuery}%,cnr_number.ilike.%${searchQuery}%,filing_number.ilike.%${searchQuery}%`);
       }
 
       if (statusFilter !== 'all') {
