@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { LegalkartCaseSearch } from './LegalkartCaseSearch';
 import { AutoFetchCaseDialog } from './AutoFetchCaseDialog';
-import { LegalkartDataDisplay } from './LegalkartDataDisplay';
 import { Settings, Search, Clock, ExternalLink } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
