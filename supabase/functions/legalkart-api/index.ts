@@ -360,7 +360,7 @@ async function performCaseSearch(token: string, cnr: string, searchType: string)
       method,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token.substring(0, 20)}...`,
+        'Authorization': `${token.substring(0, 20)}...`, // Updated log to match actual header
       },
       body
     });
@@ -369,7 +369,7 @@ async function performCaseSearch(token: string, cnr: string, searchType: string)
       method,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
+        'Authorization': token, // Remove Bearer prefix - likely causing the decryption issue
         'Accept': 'application/json',
       },
       body,
@@ -409,6 +409,7 @@ async function getGujaratDisplayBoard(token: string) {
       method: 'GET',
       headers: {
         'Authorization': token,
+        'Accept': 'application/json',
       },
     });
 
