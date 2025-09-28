@@ -154,6 +154,7 @@ serve(async (req) => {
       if (searchResult.success && caseId && searchResult.data) {
         const mappedData = mapLegalkartDataToCRM(searchResult.data, searchType);
         
+        // Update main cases table
         const { error: caseUpdateError } = await supabase
           .from('cases')
           .update({
@@ -165,6 +166,30 @@ serve(async (req) => {
 
         if (caseUpdateError) {
           console.error('Error updating case with fetched data:', caseUpdateError);
+        }
+
+        // Insert/update data in legalkart_cases table and related tables
+        try {
+          console.log('Calling upsert_legalkart_case_data function...');
+          
+          const { error: upsertError } = await supabase.rpc('upsert_legalkart_case_data', {
+            p_cnr_number: cnr,
+            p_firm_id: teamMember.firm_id,
+            p_case_id: caseId,
+            p_case_data: searchResult.data.data || searchResult.data,
+            p_documents: searchResult.data.data?.documents || [],
+            p_objections: searchResult.data.data?.objections || [],
+            p_orders: searchResult.data.data?.order_details || [],
+            p_history: searchResult.data.data?.history_of_case_hearing || []
+          });
+
+          if (upsertError) {
+            console.error('Error upserting Legalkart case data:', upsertError);
+          } else {
+            console.log('Successfully upserted Legalkart case data');
+          }
+        } catch (upsertErr) {
+          console.error('Failed to call upsert function:', upsertErr);
         }
       }
 
