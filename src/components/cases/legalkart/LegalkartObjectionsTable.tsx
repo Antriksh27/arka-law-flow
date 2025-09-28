@@ -8,30 +8,36 @@ interface LegalkartObjectionsTableProps {
   caseId: string;
 }
 
+interface ObjectionData {
+  id: string;
+  sr_no: string;
+  objection: string;
+  receipt_date: string;
+  scrutiny_date: string;
+  objection_compliance_date: string;
+}
+
+const fetchObjections = async (caseId: string): Promise<ObjectionData[]> => {
+  try {
+    const caseQuery = (supabase as any).from('legalkart_cases').select('id').eq('case_id', caseId).single();
+    const caseResult = await caseQuery;
+    
+    if (!caseResult.data) return [];
+    
+    const objectionsQuery = (supabase as any).from('legalkart_case_objections').select('*').eq('case_id', caseResult.data.id);
+    const objectionsResult = await objectionsQuery;
+    
+    if (objectionsResult.error) throw objectionsResult.error;
+    return objectionsResult.data || [];
+  } catch (error) {
+    return [];
+  }
+};
+
 export const LegalkartObjectionsTable: React.FC<LegalkartObjectionsTableProps> = ({ caseId }) => {
-  const { data: objections, isLoading } = useQuery({
+  const { data: objections, isLoading } = useQuery<ObjectionData[]>({
     queryKey: ['legalkart-objections', caseId],
-    queryFn: async (): Promise<any[]> => {
-      try {
-        const { data: legalkartCase } = await supabase
-          .from('legalkart_cases')
-          .select('id')
-          .eq('case_id', caseId)
-          .single();
-        
-        if (!legalkartCase) return [];
-        
-        const { data, error } = await supabase
-          .from('legalkart_case_objections')
-          .select('*')
-          .eq('case_id', legalkartCase.id) as any;
-        
-        if (error) throw error;
-        return data || [];
-      } catch (error) {
-        return [];
-      }
-    },
+    queryFn: () => fetchObjections(caseId),
     enabled: !!caseId
   });
 

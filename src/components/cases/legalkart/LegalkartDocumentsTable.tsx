@@ -8,32 +8,41 @@ interface LegalkartDocumentsTableProps {
   caseId: string;
 }
 
+interface DocumentData {
+  id: string;
+  sr_no: string;
+  advocate: string;
+  filed_by: string;
+  document_no: string;
+  document_filed: string;
+  date_of_receiving: string;
+}
+
+// Helper function to avoid TypeScript inference issues
+const fetchDocuments = async (caseId: string): Promise<DocumentData[]> => {
+  try {
+    // Step 1: Get legalkart case ID
+    const caseQuery = (supabase as any).from('legalkart_cases').select('id').eq('case_id', caseId).single();
+    const caseResult = await caseQuery;
+    
+    if (!caseResult.data) return [];
+    
+    // Step 2: Get documents
+    const docsQuery = (supabase as any).from('legalkart_case_documents').select('*').eq('case_id', caseResult.data.id);
+    const docsResult = await docsQuery;
+    
+    if (docsResult.error) throw docsResult.error;
+    return docsResult.data || [];
+  } catch (error) {
+    console.error('Error fetching documents:', error);
+    return [];
+  }
+};
+
 export const LegalkartDocumentsTable: React.FC<LegalkartDocumentsTableProps> = ({ caseId }) => {
-  const { data: documents, isLoading } = useQuery({
+  const { data: documents, isLoading } = useQuery<DocumentData[]>({
     queryKey: ['legalkart-documents', caseId],
-    queryFn: async (): Promise<any[]> => {
-      try {
-        // First get the legalkart case ID
-        const { data: legalkartCase } = await supabase
-          .from('legalkart_cases')
-          .select('id')
-          .eq('case_id', caseId)
-          .single();
-        
-        if (!legalkartCase) return [];
-        
-        const { data, error } = await supabase
-          .from('legalkart_case_documents')
-          .select('*')
-          .eq('case_id', legalkartCase.id) as any;
-        
-        if (error) throw error;
-        return data || [];
-      } catch (error) {
-        console.error('Error fetching documents:', error);
-        return [];
-      }
-    },
+    queryFn: () => fetchDocuments(caseId),
     enabled: !!caseId
   });
 

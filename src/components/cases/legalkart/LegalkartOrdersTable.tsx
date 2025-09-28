@@ -8,30 +8,36 @@ interface LegalkartOrdersTableProps {
   caseId: string;
 }
 
+interface OrderData {
+  id: string;
+  judge: string;
+  hearing_date: string;
+  order_number: string;
+  bench: string;
+  order_details: string;
+}
+
+const fetchOrders = async (caseId: string): Promise<OrderData[]> => {
+  try {
+    const caseQuery = (supabase as any).from('legalkart_cases').select('id').eq('case_id', caseId).single();
+    const caseResult = await caseQuery;
+    
+    if (!caseResult.data) return [];
+    
+    const ordersQuery = (supabase as any).from('legalkart_case_orders').select('*').eq('case_id', caseResult.data.id);
+    const ordersResult = await ordersQuery;
+    
+    if (ordersResult.error) throw ordersResult.error;
+    return ordersResult.data || [];
+  } catch (error) {
+    return [];
+  }
+};
+
 export const LegalkartOrdersTable: React.FC<LegalkartOrdersTableProps> = ({ caseId }) => {
-  const { data: orders, isLoading } = useQuery({
+  const { data: orders, isLoading } = useQuery<OrderData[]>({
     queryKey: ['legalkart-orders', caseId],
-    queryFn: async (): Promise<any[]> => {
-      try {
-        const { data: legalkartCase } = await supabase
-          .from('legalkart_cases')
-          .select('id')
-          .eq('case_id', caseId)
-          .single();
-        
-        if (!legalkartCase) return [];
-        
-        const { data, error } = await supabase
-          .from('legalkart_case_orders')
-          .select('*')
-          .eq('case_id', legalkartCase.id) as any;
-        
-        if (error) throw error;
-        return data || [];
-      } catch (error) {
-        return [];
-      }
-    },
+    queryFn: () => fetchOrders(caseId),
     enabled: !!caseId
   });
 

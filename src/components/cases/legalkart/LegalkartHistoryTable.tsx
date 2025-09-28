@@ -8,30 +8,36 @@ interface LegalkartHistoryTableProps {
   caseId: string;
 }
 
+interface HistoryData {
+  id: string;
+  judge: string;
+  hearing_date: string;
+  cause_list_type: string;
+  business_on_date: string;
+  purpose_of_hearing: string;
+}
+
+const fetchHistory = async (caseId: string): Promise<HistoryData[]> => {
+  try {
+    const caseQuery = (supabase as any).from('legalkart_cases').select('id').eq('case_id', caseId).single();
+    const caseResult = await caseQuery;
+    
+    if (!caseResult.data) return [];
+    
+    const historyQuery = (supabase as any).from('legalkart_case_history').select('*').eq('case_id', caseResult.data.id);
+    const historyResult = await historyQuery;
+    
+    if (historyResult.error) throw historyResult.error;
+    return historyResult.data || [];
+  } catch (error) {
+    return [];
+  }
+};
+
 export const LegalkartHistoryTable: React.FC<LegalkartHistoryTableProps> = ({ caseId }) => {
-  const { data: history, isLoading } = useQuery({
+  const { data: history, isLoading } = useQuery<HistoryData[]>({
     queryKey: ['legalkart-history', caseId],
-    queryFn: async (): Promise<any[]> => {
-      try {
-        const { data: legalkartCase } = await supabase
-          .from('legalkart_cases')
-          .select('id')
-          .eq('case_id', caseId)
-          .single();
-        
-        if (!legalkartCase) return [];
-        
-        const { data, error } = await supabase
-          .from('legalkart_case_history')
-          .select('*')
-          .eq('case_id', legalkartCase.id) as any;
-        
-        if (error) throw error;
-        return data || [];
-      } catch (error) {
-        return [];
-      }
-    },
+    queryFn: () => fetchHistory(caseId),
     enabled: !!caseId
   });
 
