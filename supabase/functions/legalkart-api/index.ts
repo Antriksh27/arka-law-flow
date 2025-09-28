@@ -172,18 +172,74 @@ serve(async (req) => {
         try {
           console.log('Calling upsert_legalkart_case_data function...');
 
-          // Sanitize Legalkart payload to avoid header rows and invalid dates
+          // Sanitize and normalize dates to ISO (yyyy-mm-dd) to prevent Postgres datestyle errors
           const rawData: any = (searchResult as any).data?.data || (searchResult as any).data;
-          const isValidDmy = (s: unknown) => typeof s === 'string' && /^(\d{2}[-\/]\d{2}[-\/]\d{4})$/.test(s);
+
+          // Helpers to normalize common date formats from Legalkart
+          const monthIndex: Record<string, string> = {
+            january: '01', february: '02', march: '03', april: '04', may: '05', june: '06',
+            july: '07', august: '08', september: '09', october: '10', november: '11', december: '12'
+          };
+          const stripOrdinals = (s: string) => s.replace(/\b(\d{1,2})(st|nd|rd|th)\b/gi, '$1');
+          const cleanup = (s: string) => s.replace(/\(.*?\)/g, '').replace(/,/g, ' ').replace(/\s+/g, ' ').trim();
+          const normalizeDate = (val: unknown): string | null => {
+            if (typeof val !== 'string') return null;
+            let s = cleanup(val);
+            // dd-mm-yyyy or dd/mm/yyyy
+            const m = s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
+            if (m) {
+              const dd = m[1].padStart(2, '0');
+              const mm = m[2].padStart(2, '0');
+              const yyyy = m[3];
+              return `${yyyy}-${mm}-${dd}`;
+            }
+            s = stripOrdinals(s);
+            const m2 = s.match(/^(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})$/);
+            if (m2) {
+              const dd = m2[1].padStart(2, '0');
+              const mon = monthIndex[m2[2].toLowerCase()];
+              const yyyy = m2[3];
+              if (mon) return `${yyyy}-${mon}-${dd}`;
+            }
+            return null;
+          };
+          const normalizeDatesDeep = (input: any): any => {
+            if (Array.isArray(input)) return input.map(normalizeDatesDeep);
+            if (input && typeof input === 'object') {
+              const out: any = {};
+              for (const [k, v] of Object.entries(input)) {
+                if (typeof v === 'string' && /date/i.test(k)) {
+                  const iso = normalizeDate(v);
+                  out[k] = iso ?? v; // keep original if unknown format
+                } else {
+                  out[k] = normalizeDatesDeep(v);
+                }
+              }
+              return out;
+            }
+            return input;
+          };
 
           const documents = Array.isArray(rawData?.documents) ? rawData.documents : [];
           const objections = Array.isArray(rawData?.objections) ? rawData.objections : [];
 
           const rawOrders = Array.isArray(rawData?.order_details) ? rawData.order_details : [];
-          const sanitizedOrders = rawOrders.filter((o: any) => isValidDmy(o?.hearing_date));
+          const sanitizedOrders = rawOrders
+            .filter((o: any) => o && typeof o === 'object' && o.hearing_date && !/Order Date/i.test(String(o.hearing_date)))
+            .map((o: any) => ({ ...o, hearing_date: normalizeDate(o.hearing_date) }))
+            .filter((o: any) => !!o.hearing_date);
 
           const rawHistory = Array.isArray(rawData?.history_of_case_hearing) ? rawData.history_of_case_hearing : [];
-          const sanitizedHistory = rawHistory.filter((h: any) => isValidDmy(h?.hearing_date));
+          const sanitizedHistory = rawHistory
+            .filter((h: any) => h && typeof h === 'object' && (h.hearing_date || h.business_on_date))
+            .map((h: any) => ({
+              ...h,
+              hearing_date: normalizeDate(h.hearing_date),
+              business_on_date: normalizeDate(h.business_on_date),
+            }))
+            .filter((h: any) => !!h.hearing_date || !!h.business_on_date);
+
+          const caseDataSanitized = normalizeDatesDeep(rawData);
 
           console.log('Sanitized counts -> docs:', documents.length, 'objs:', objections.length, 'orders:', sanitizedOrders.length, 'history:', sanitizedHistory.length);
           
@@ -191,7 +247,7 @@ serve(async (req) => {
             p_cnr_number: cnr,
             p_firm_id: teamMember.firm_id,
             p_case_id: caseId,
-            p_case_data: rawData,
+            p_case_data: caseDataSanitized,
             p_documents: documents,
             p_objections: objections,
             p_orders: sanitizedOrders,
