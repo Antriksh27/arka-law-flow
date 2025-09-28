@@ -2194,6 +2194,173 @@ export type Database = {
           },
         ]
       }
+      legalkart_case_documents: {
+        Row: {
+          advocate: string | null
+          created_at: string
+          date_of_receiving: string | null
+          document_filed: string | null
+          document_no: string | null
+          filed_by: string | null
+          id: string
+          legalkart_case_id: string
+          sr_no: string | null
+        }
+        Insert: {
+          advocate?: string | null
+          created_at?: string
+          date_of_receiving?: string | null
+          document_filed?: string | null
+          document_no?: string | null
+          filed_by?: string | null
+          id?: string
+          legalkart_case_id: string
+          sr_no?: string | null
+        }
+        Update: {
+          advocate?: string | null
+          created_at?: string
+          date_of_receiving?: string | null
+          document_filed?: string | null
+          document_no?: string | null
+          filed_by?: string | null
+          id?: string
+          legalkart_case_id?: string
+          sr_no?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "legalkart_case_documents_legalkart_case_id_fkey"
+            columns: ["legalkart_case_id"]
+            isOneToOne: false
+            referencedRelation: "legalkart_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      legalkart_case_history: {
+        Row: {
+          business_on_date: string | null
+          cause_list_type: string | null
+          created_at: string
+          hearing_date: string | null
+          id: string
+          judge: string | null
+          legalkart_case_id: string
+          purpose_of_hearing: string | null
+        }
+        Insert: {
+          business_on_date?: string | null
+          cause_list_type?: string | null
+          created_at?: string
+          hearing_date?: string | null
+          id?: string
+          judge?: string | null
+          legalkart_case_id: string
+          purpose_of_hearing?: string | null
+        }
+        Update: {
+          business_on_date?: string | null
+          cause_list_type?: string | null
+          created_at?: string
+          hearing_date?: string | null
+          id?: string
+          judge?: string | null
+          legalkart_case_id?: string
+          purpose_of_hearing?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "legalkart_case_history_legalkart_case_id_fkey"
+            columns: ["legalkart_case_id"]
+            isOneToOne: false
+            referencedRelation: "legalkart_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      legalkart_case_objections: {
+        Row: {
+          created_at: string
+          id: string
+          legalkart_case_id: string
+          objection: string | null
+          objection_compliance_date: string | null
+          receipt_date: string | null
+          scrutiny_date: string | null
+          sr_no: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          legalkart_case_id: string
+          objection?: string | null
+          objection_compliance_date?: string | null
+          receipt_date?: string | null
+          scrutiny_date?: string | null
+          sr_no?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          legalkart_case_id?: string
+          objection?: string | null
+          objection_compliance_date?: string | null
+          receipt_date?: string | null
+          scrutiny_date?: string | null
+          sr_no?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "legalkart_case_objections_legalkart_case_id_fkey"
+            columns: ["legalkart_case_id"]
+            isOneToOne: false
+            referencedRelation: "legalkart_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      legalkart_case_orders: {
+        Row: {
+          bench: string | null
+          created_at: string
+          hearing_date: string | null
+          id: string
+          judge: string | null
+          legalkart_case_id: string
+          order_details: string | null
+          order_number: string | null
+        }
+        Insert: {
+          bench?: string | null
+          created_at?: string
+          hearing_date?: string | null
+          id?: string
+          judge?: string | null
+          legalkart_case_id: string
+          order_details?: string | null
+          order_number?: string | null
+        }
+        Update: {
+          bench?: string | null
+          created_at?: string
+          hearing_date?: string | null
+          id?: string
+          judge?: string | null
+          legalkart_case_id?: string
+          order_details?: string | null
+          order_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "legalkart_case_orders_legalkart_case_id_fkey"
+            columns: ["legalkart_case_id"]
+            isOneToOne: false
+            referencedRelation: "legalkart_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       legalkart_case_searches: {
         Row: {
           case_id: string | null
@@ -2267,6 +2434,84 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      legalkart_cases: {
+        Row: {
+          before_me_part_heard: string | null
+          bench_type: string | null
+          case_id: string | null
+          category: string | null
+          cnr_number: string
+          coram: string | null
+          created_at: string
+          district: string | null
+          filing_date: string | null
+          filing_number: string | null
+          firm_id: string | null
+          id: string
+          judicial_branch: string | null
+          next_hearing_date: string | null
+          petitioner_and_advocate: string | null
+          raw_api_response: Json | null
+          registration_date: string | null
+          registration_number: string | null
+          respondent_and_advocate: string | null
+          stage_of_case: string | null
+          state: string | null
+          sub_category: string | null
+          updated_at: string
+        }
+        Insert: {
+          before_me_part_heard?: string | null
+          bench_type?: string | null
+          case_id?: string | null
+          category?: string | null
+          cnr_number: string
+          coram?: string | null
+          created_at?: string
+          district?: string | null
+          filing_date?: string | null
+          filing_number?: string | null
+          firm_id?: string | null
+          id?: string
+          judicial_branch?: string | null
+          next_hearing_date?: string | null
+          petitioner_and_advocate?: string | null
+          raw_api_response?: Json | null
+          registration_date?: string | null
+          registration_number?: string | null
+          respondent_and_advocate?: string | null
+          stage_of_case?: string | null
+          state?: string | null
+          sub_category?: string | null
+          updated_at?: string
+        }
+        Update: {
+          before_me_part_heard?: string | null
+          bench_type?: string | null
+          case_id?: string | null
+          category?: string | null
+          cnr_number?: string
+          coram?: string | null
+          created_at?: string
+          district?: string | null
+          filing_date?: string | null
+          filing_number?: string | null
+          firm_id?: string | null
+          id?: string
+          judicial_branch?: string | null
+          next_hearing_date?: string | null
+          petitioner_and_advocate?: string | null
+          raw_api_response?: Json | null
+          registration_date?: string | null
+          registration_number?: string | null
+          respondent_and_advocate?: string | null
+          stage_of_case?: string | null
+          state?: string | null
+          sub_category?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       message_threads: {
         Row: {
@@ -3687,6 +3932,19 @@ export type Database = {
           website?: string
         }
         Returns: undefined
+      }
+      upsert_legalkart_case_data: {
+        Args: {
+          p_case_data?: Json
+          p_case_id?: string
+          p_cnr_number: string
+          p_documents?: Json
+          p_firm_id: string
+          p_history?: Json
+          p_objections?: Json
+          p_orders?: Json
+        }
+        Returns: string
       }
       user_has_case_access: {
         Args: { case_id: string; user_id: string }
