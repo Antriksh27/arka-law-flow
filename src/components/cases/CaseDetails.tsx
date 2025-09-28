@@ -40,7 +40,7 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('cases')
-        .select('cnr_number, case_title')
+        .select('cnr_number, case_title, fetched_data')
         .eq('id', caseId)
         .single();
       if (error) throw error;
@@ -73,20 +73,34 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
     );
   }
 
-  if (!legalkartCase) {
-    return (
-      <div className="text-center py-12">
-        <AlertTriangle className="mx-auto h-12 w-12 text-muted mb-4" />
-        <h3 className="text-lg font-medium text-foreground mb-2">No Legalkart Data Available</h3>
-        <p className="text-muted mb-4">
-          This case doesn't have any Legalkart API data yet.
-        </p>
-        <p className="text-sm text-muted">
-          CNR Number: {caseData?.cnr_number || 'Not set'}
-        </p>
-      </div>
-    );
-  }
+  // Build a safe view model from legalkart_cases or fallback to raw fetched_data on cases
+  const fd: any = (caseData as any)?.fetched_data || null;
+  const formatDate = (val: any): string => {
+    if (!val) return 'Not available';
+    if (typeof val === 'string') {
+      const d = new Date(val);
+      return isNaN(d.getTime()) ? val : d.toLocaleDateString();
+    }
+    return String(val);
+  };
+  const cnrNumber = legalkartCase?.cnr_number || caseData?.cnr_number || fd?.case_info?.cnr_number || 'Not available';
+  const filingNumber = legalkartCase?.filing_number || fd?.case_info?.filing_number || '';
+  const registrationNumber = legalkartCase?.registration_number || fd?.case_info?.registration_number || '';
+  const filingDate = legalkartCase?.filing_date || fd?.case_info?.filing_date || '';
+  const registrationDate = legalkartCase?.registration_date || fd?.case_info?.registration_date || '';
+  const nextHearingDate = legalkartCase?.next_hearing_date || fd?.case_status?.next_hearing_date || '';
+  const state = legalkartCase?.state || fd?.case_status?.state || '';
+  const district = legalkartCase?.district || fd?.case_status?.district || '';
+  const benchType = legalkartCase?.bench_type || fd?.case_status?.bench_type || '';
+  const judicialBranch = legalkartCase?.judicial_branch || fd?.case_status?.judicial_branch || '';
+  const coram = legalkartCase?.coram || fd?.case_status?.coram || '';
+  const stageOfCase = (legalkartCase as any)?.stage_of_case || (legalkartCase as any)?.stage || fd?.case_status?.stage_of_case || '';
+  const category = (legalkartCase as any)?.category || fd?.category_info?.category || '';
+  const subCategory = (legalkartCase as any)?.sub_category || fd?.category_info?.sub_category || '';
+  const beforeMe = (legalkartCase as any)?.before_me_part_heard || fd?.case_status?.not_before_me || '';
+  const petitionerAdv = (legalkartCase as any)?.petitioner_and_advocate || fd?.petitioner_and_advocate || '';
+  const respondentAdv = (legalkartCase as any)?.respondent_and_advocate || fd?.respondent_and_advocate || '';
+
 
   return (
     <div className="space-y-6">
@@ -118,15 +132,15 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
             <div className="space-y-4">
               <div>
                 <p className="text-sm font-medium text-muted mb-1">CNR Number</p>
-                <p className="font-mono text-sm bg-muted px-2 py-1 rounded">{legalkartCase.cnr_number}</p>
+                <p className="font-mono text-sm bg-muted px-2 py-1 rounded">{cnrNumber}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted mb-1">Filing Number</p>
-                <p className="text-foreground">{legalkartCase.filing_number || 'Not available'}</p>
+                <p className="text-foreground">{filingNumber || 'Not available'}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted mb-1">Registration Number</p>
-                <p className="text-foreground">{legalkartCase.registration_number || 'Not available'}</p>
+                <p className="text-foreground">{registrationNumber || 'Not available'}</p>
               </div>
             </div>
 
@@ -136,21 +150,21 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
                 <p className="text-sm font-medium text-muted mb-1">Filing Date</p>
                 <p className="text-foreground flex items-center gap-1">
                   <Calendar className="w-4 h-4 text-primary" />
-                  {legalkartCase.filing_date ? new Date(legalkartCase.filing_date).toLocaleDateString() : 'Not available'}
+                  {formatDate(filingDate)}
                 </p>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted mb-1">Registration Date</p>
                 <p className="text-foreground flex items-center gap-1">
                   <Calendar className="w-4 h-4 text-primary" />
-                  {legalkartCase.registration_date ? new Date(legalkartCase.registration_date).toLocaleDateString() : 'Not available'}
+                  {formatDate(registrationDate)}
                 </p>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted mb-1">Next Hearing Date</p>
                 <p className="text-foreground flex items-center gap-1">
                   <Calendar className="w-4 h-4 text-primary" />
-                  {legalkartCase.next_hearing_date ? new Date(legalkartCase.next_hearing_date).toLocaleDateString() : 'Not scheduled'}
+                  {nextHearingDate ? formatDate(nextHearingDate) : 'Not scheduled'}
                 </p>
               </div>
             </div>
@@ -161,16 +175,16 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
                 <p className="text-sm font-medium text-muted mb-1">State</p>
                 <p className="text-foreground flex items-center gap-1">
                   <MapPin className="w-4 h-4 text-primary" />
-                  {legalkartCase.state || 'Not available'}
+                  {state || 'Not available'}
                 </p>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted mb-1">District</p>
-                <p className="text-foreground">{legalkartCase.district || 'Not available'}</p>
+                <p className="text-foreground">{district || 'Not available'}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted mb-1">Bench Type</p>
-                <p className="text-foreground">{legalkartCase.bench_type || 'Not available'}</p>
+                <p className="text-foreground">{benchType || 'Not available'}</p>
               </div>
             </div>
 
@@ -180,31 +194,31 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
                 <p className="text-sm font-medium text-muted mb-1">Coram</p>
                 <p className="text-foreground flex items-center gap-1">
                   <Gavel className="w-4 h-4 text-primary" />
-                  {legalkartCase.coram || 'Not available'}
+                  {coram || 'Not available'}
                 </p>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted mb-1">Stage of Case</p>
-                <Badge variant="outline">{legalkartCase.stage_of_case || 'Not available'}</Badge>
+                <Badge variant="outline">{stageOfCase || 'Not available'}</Badge>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted mb-1">Judicial Branch</p>
-                <p className="text-foreground">{legalkartCase.judicial_branch || 'Not available'}</p>
+                <p className="text-foreground">{judicialBranch || 'Not available'}</p>
               </div>
             </div>
 
             <div className="space-y-4">
               <div>
                 <p className="text-sm font-medium text-muted mb-1">Category</p>
-                <Badge variant="outline">{legalkartCase.category || 'Not available'}</Badge>
+                <Badge variant="outline">{category || 'Not available'}</Badge>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted mb-1">Sub Category</p>
-                <p className="text-foreground">{legalkartCase.sub_category || 'Not available'}</p>
+                <p className="text-foreground">{subCategory || 'Not available'}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted mb-1">Before Me / Part Heard</p>
-                <p className="text-foreground text-sm">{legalkartCase.before_me_part_heard || 'Not available'}</p>
+                <p className="text-foreground text-sm">{beforeMe || 'Not available'}</p>
               </div>
             </div>
           </div>
@@ -219,13 +233,13 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
               <div>
                 <p className="text-sm font-medium text-muted mb-2">Petitioner & Advocate</p>
                 <div className="bg-muted p-3 rounded text-sm">
-                  {legalkartCase.petitioner_and_advocate || 'Not available'}
+                  {petitionerAdv || 'Not available'}
                 </div>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted mb-2">Respondent & Advocate</p>
                 <div className="bg-muted p-3 rounded text-sm">
-                  {legalkartCase.respondent_and_advocate || 'Not available'}
+                  {respondentAdv || 'Not available'}
                 </div>
               </div>
             </div>
