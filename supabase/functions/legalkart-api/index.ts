@@ -171,16 +171,31 @@ serve(async (req) => {
         // Insert/update data in legalkart_cases table and related tables
         try {
           console.log('Calling upsert_legalkart_case_data function...');
+
+          // Sanitize Legalkart payload to avoid header rows and invalid dates
+          const rawData: any = (searchResult as any).data?.data || (searchResult as any).data;
+          const isValidDmy = (s: unknown) => typeof s === 'string' && /^(\d{2}[-\/]\d{2}[-\/]\d{4})$/.test(s);
+
+          const documents = Array.isArray(rawData?.documents) ? rawData.documents : [];
+          const objections = Array.isArray(rawData?.objections) ? rawData.objections : [];
+
+          const rawOrders = Array.isArray(rawData?.order_details) ? rawData.order_details : [];
+          const sanitizedOrders = rawOrders.filter((o: any) => isValidDmy(o?.hearing_date));
+
+          const rawHistory = Array.isArray(rawData?.history_of_case_hearing) ? rawData.history_of_case_hearing : [];
+          const sanitizedHistory = rawHistory.filter((h: any) => isValidDmy(h?.hearing_date));
+
+          console.log('Sanitized counts -> docs:', documents.length, 'objs:', objections.length, 'orders:', sanitizedOrders.length, 'history:', sanitizedHistory.length);
           
           const { error: upsertError } = await supabase.rpc('upsert_legalkart_case_data', {
             p_cnr_number: cnr,
             p_firm_id: teamMember.firm_id,
             p_case_id: caseId,
-            p_case_data: searchResult.data.data || searchResult.data,
-            p_documents: searchResult.data.data?.documents || [],
-            p_objections: searchResult.data.data?.objections || [],
-            p_orders: searchResult.data.data?.order_details || [],
-            p_history: searchResult.data.data?.history_of_case_hearing || []
+            p_case_data: rawData,
+            p_documents: documents,
+            p_objections: objections,
+            p_orders: sanitizedOrders,
+            p_history: sanitizedHistory,
           });
 
           if (upsertError) {
