@@ -58,7 +58,28 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('cases')
-        .select('cnr_number, case_title, fetched_data')
+        .select(`
+          cnr_number,
+          case_title,
+          filing_number,
+          registration_number,
+          filing_date,
+          registration_date,
+          next_hearing_date,
+          state,
+          district,
+          bench_type,
+          judicial_branch,
+          coram,
+          stage,
+          category,
+          sub_category,
+          fetched_data,
+          petitioner,
+          petitioner_advocate,
+          respondent,
+          respondent_advocate
+        `)
         .eq('id', caseId)
         .single();
       if (error) throw error;
@@ -102,23 +123,30 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
     return String(val);
   };
   const cnrNumber = legalkartCase?.cnr_number || caseData?.cnr_number || fd?.case_info?.cnr_number || 'Not available';
-  const filingNumber = legalkartCase?.filing_number || fd?.case_info?.filing_number || '';
-  const registrationNumber = legalkartCase?.registration_number || fd?.case_info?.registration_number || '';
-  const filingDate = legalkartCase?.filing_date || fd?.case_info?.filing_date || '';
-  const registrationDate = legalkartCase?.registration_date || fd?.case_info?.registration_date || '';
-  const nextHearingDate = legalkartCase?.next_hearing_date || fd?.case_status?.next_hearing_date || '';
-  const state = legalkartCase?.state || fd?.case_status?.state || '';
-  const district = legalkartCase?.district || fd?.case_status?.district || '';
-  const benchType = legalkartCase?.bench_type || fd?.case_status?.bench_type || '';
-  const judicialBranch = legalkartCase?.judicial_branch || fd?.case_status?.judicial_branch || '';
-  const coram = legalkartCase?.coram || fd?.case_status?.coram || '';
-  const stageOfCase = (legalkartCase as any)?.stage_of_case || (legalkartCase as any)?.stage || fd?.case_status?.stage_of_case || '';
-  const category = (legalkartCase as any)?.category || fd?.category_info?.category || '';
-  const subCategory = (legalkartCase as any)?.sub_category || fd?.category_info?.sub_category || '';
+  const filingNumber = legalkartCase?.filing_number || (caseData as any)?.filing_number || fd?.case_info?.filing_number || '';
+  const registrationNumber = legalkartCase?.registration_number || (caseData as any)?.registration_number || fd?.case_info?.registration_number || '';
+  const filingDate = legalkartCase?.filing_date || (caseData as any)?.filing_date || fd?.case_info?.filing_date || '';
+  const registrationDate = legalkartCase?.registration_date || (caseData as any)?.registration_date || fd?.case_info?.registration_date || '';
+  const nextHearingDate = legalkartCase?.next_hearing_date || (caseData as any)?.next_hearing_date || fd?.case_status?.next_hearing_date || '';
+  const state = legalkartCase?.state || (caseData as any)?.state || fd?.case_status?.state || '';
+  const district = legalkartCase?.district || (caseData as any)?.district || fd?.case_status?.district || '';
+  const benchType = legalkartCase?.bench_type || (caseData as any)?.bench_type || fd?.case_status?.bench_type || '';
+  const judicialBranch = legalkartCase?.judicial_branch || (caseData as any)?.judicial_branch || fd?.case_status?.judicial_branch || '';
+  const coram = legalkartCase?.coram || (caseData as any)?.coram || fd?.case_status?.coram || '';
+  const stageOfCase = (legalkartCase as any)?.stage_of_case || (legalkartCase as any)?.stage || (caseData as any)?.stage || fd?.case_status?.stage_of_case || '';
+  const category = (legalkartCase as any)?.category || (caseData as any)?.category || fd?.category_info?.category || '';
+  const subCategory = (legalkartCase as any)?.sub_category || (caseData as any)?.sub_category || fd?.category_info?.sub_category || '';
   const beforeMe = (legalkartCase as any)?.before_me_part_heard || fd?.case_status?.not_before_me || '';
-  const petitionerAdv = (legalkartCase as any)?.petitioner_and_advocate || fd?.petitioner_and_advocate || '';
-  const respondentAdv = (legalkartCase as any)?.respondent_and_advocate || fd?.respondent_and_advocate || '';
-
+  const petitionerAdv = (legalkartCase as any)?.petitioner_and_advocate 
+    || fd?.petitioner_and_advocate 
+    || [ (caseData as any)?.petitioner, (caseData as any)?.petitioner_advocate ? `Advocate- ${(caseData as any)?.petitioner_advocate}` : '' ]
+        .filter(Boolean)
+        .join(' ').trim();
+  const respondentAdv = (legalkartCase as any)?.respondent_and_advocate 
+    || fd?.respondent_and_advocate 
+    || [ (caseData as any)?.respondent, (caseData as any)?.respondent_advocate ? `Advocate- ${(caseData as any)?.respondent_advocate}` : '' ]
+        .filter(Boolean)
+        .join(' ').trim();
 
   return (
     <div className="space-y-6">
