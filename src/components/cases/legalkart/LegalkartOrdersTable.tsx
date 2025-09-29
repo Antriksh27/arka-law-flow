@@ -19,17 +19,19 @@ interface OrderData {
 
 const fetchOrders = async (caseId: string): Promise<OrderData[]> => {
   try {
-    const caseQuery = (supabase as any).from('legalkart_cases').select('id').eq('case_id', caseId).single();
-    const caseResult = await caseQuery;
-    
-    if (!caseResult.data) return [];
-    
-    const ordersQuery = (supabase as any).from('legalkart_case_orders').select('*').eq('case_id', caseResult.data.id);
-    const ordersResult = await ordersQuery;
-    
-    if (ordersResult.error) throw ordersResult.error;
-    return ordersResult.data || [];
+    const { fetchLegalkartCaseId } = await import('./utils');
+    const lkCaseId = await fetchLegalkartCaseId(caseId);
+    if (!lkCaseId) return [];
+
+    const { data, error } = await (supabase as any)
+      .from('legalkart_case_orders')
+      .select('*')
+      .eq('legalkart_case_id', lkCaseId);
+
+    if (error) throw error;
+    return data || [];
   } catch (error) {
+    console.error('Error fetching orders:', error);
     return [];
   }
 };

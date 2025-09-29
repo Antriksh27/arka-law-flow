@@ -19,17 +19,19 @@ interface HistoryData {
 
 const fetchHistory = async (caseId: string): Promise<HistoryData[]> => {
   try {
-    const caseQuery = (supabase as any).from('legalkart_cases').select('id').eq('case_id', caseId).single();
-    const caseResult = await caseQuery;
-    
-    if (!caseResult.data) return [];
-    
-    const historyQuery = (supabase as any).from('legalkart_case_history').select('*').eq('case_id', caseResult.data.id);
-    const historyResult = await historyQuery;
-    
-    if (historyResult.error) throw historyResult.error;
-    return historyResult.data || [];
+    const { fetchLegalkartCaseId } = await import('./utils');
+    const lkCaseId = await fetchLegalkartCaseId(caseId);
+    if (!lkCaseId) return [];
+
+    const { data, error } = await (supabase as any)
+      .from('legalkart_case_history')
+      .select('*')
+      .eq('legalkart_case_id', lkCaseId);
+
+    if (error) throw error;
+    return data || [];
   } catch (error) {
+    console.error('Error fetching history:', error);
     return [];
   }
 };

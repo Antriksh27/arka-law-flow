@@ -23,13 +23,31 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
   const { data: legalkartCase, isLoading, refetch } = useQuery({
     queryKey: ['legalkart-case', caseId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Try by direct case link first
+      const { data: byCase } = await supabase
         .from('legalkart_cases')
         .select('*')
         .eq('case_id', caseId)
         .maybeSingle();
-      if (error) throw error;
-      return data;
+      if (byCase) return byCase;
+
+      // Fallback by CNR number if present on the case
+      const { data: cnrRow } = await supabase
+        .from('cases')
+        .select('cnr_number')
+        .eq('id', caseId)
+        .maybeSingle();
+
+      const cnr = (cnrRow as any)?.cnr_number;
+      if (!cnr) return null;
+
+      const { data: byCnr } = await supabase
+        .from('legalkart_cases')
+        .select('*')
+        .eq('cnr_number', cnr)
+        .maybeSingle();
+
+      return byCnr ?? null;
     },
     enabled: !!caseId
   });
