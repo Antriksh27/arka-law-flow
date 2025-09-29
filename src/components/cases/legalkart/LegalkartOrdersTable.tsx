@@ -58,15 +58,15 @@ export const LegalkartOrdersTable: React.FC<LegalkartOrdersTableProps> = ({ case
   if (!orders || orders.length === 0) {
     return (
       <div className="text-center py-8">
-        <Gavel className="mx-auto h-8 w-8 text-muted mb-2" />
-        <p className="text-muted">No orders found for this case</p>
+        <Gavel className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
+        <p className="text-muted-foreground">No orders found for this case</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 text-sm text-muted">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <AlertCircle className="w-4 h-4" />
         <span>{orders.length} order(s) found</span>
       </div>

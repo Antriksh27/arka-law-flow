@@ -58,15 +58,15 @@ export const LegalkartObjectionsTable: React.FC<LegalkartObjectionsTableProps> =
   if (!objections || objections.length === 0) {
     return (
       <div className="text-center py-8">
-        <AlertTriangle className="mx-auto h-8 w-8 text-muted mb-2" />
-        <p className="text-muted">No objections found for this case</p>
+        <AlertTriangle className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
+        <p className="text-muted-foreground">No objections found for this case</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 text-sm text-muted">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <AlertCircle className="w-4 h-4" />
         <span>{objections.length} objection(s) found</span>
       </div>

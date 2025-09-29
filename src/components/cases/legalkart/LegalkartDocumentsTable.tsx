@@ -60,15 +60,15 @@ export const LegalkartDocumentsTable: React.FC<LegalkartDocumentsTableProps> = (
   if (!documents || documents.length === 0) {
     return (
       <div className="text-center py-8">
-        <FileText className="mx-auto h-8 w-8 text-muted mb-2" />
-        <p className="text-muted">No documents found for this case</p>
+        <FileText className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
+        <p className="text-muted-foreground">No documents found for this case</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 text-sm text-muted">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <AlertCircle className="w-4 h-4" />
         <span>{documents.length} document(s) found</span>
       </div>

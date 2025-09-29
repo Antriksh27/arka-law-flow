@@ -165,7 +165,7 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
       </div>
 
       {/* Case Summary Card */}
-      <Card>
+      <Card className="rounded-2xl shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Scale className="w-5 h-5 text-primary" />
@@ -177,15 +177,15 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
             {/* Basic Information */}
             <div className="space-y-4">
               <div>
-                <p className="text-sm font-medium text-muted mb-1">CNR Number</p>
+                <p className="text-sm font-medium text-muted-foreground mb-1">CNR Number</p>
                 <p className="font-mono text-sm bg-muted px-2 py-1 rounded">{cnrNumber}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-muted mb-1">Filing Number</p>
+                <p className="text-sm font-medium text-muted-foreground mb-1">Filing Number</p>
                 <p className="text-foreground">{filingNumber || 'Not available'}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-muted mb-1">Registration Number</p>
+                <p className="text-sm font-medium text-muted-foreground mb-1">Registration Number</p>
                 <p className="text-foreground">{registrationNumber || 'Not available'}</p>
               </div>
             </div>
@@ -193,21 +193,21 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
             {/* Dates */}
             <div className="space-y-4">
               <div>
-                <p className="text-sm font-medium text-muted mb-1">Filing Date</p>
+                <p className="text-sm font-medium text-muted-foreground mb-1">Filing Date</p>
                 <p className="text-foreground flex items-center gap-1">
                   <Calendar className="w-4 h-4 text-primary" />
                   {formatDate(filingDate)}
                 </p>
               </div>
               <div>
-                <p className="text-sm font-medium text-muted mb-1">Registration Date</p>
+                <p className="text-sm font-medium text-muted-foreground mb-1">Registration Date</p>
                 <p className="text-foreground flex items-center gap-1">
                   <Calendar className="w-4 h-4 text-primary" />
                   {formatDate(registrationDate)}
                 </p>
               </div>
               <div>
-                <p className="text-sm font-medium text-muted mb-1">Next Hearing Date</p>
+                <p className="text-sm font-medium text-muted-foreground mb-1">Next Hearing Date</p>
                 <p className="text-foreground flex items-center gap-1">
                   <Calendar className="w-4 h-4 text-primary" />
                   {nextHearingDate ? formatDate(nextHearingDate) : 'Not scheduled'}
@@ -218,18 +218,18 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
             {/* Court Information */}
             <div className="space-y-4">
               <div>
-                <p className="text-sm font-medium text-muted mb-1">State</p>
+                <p className="text-sm font-medium text-muted-foreground mb-1">State</p>
                 <p className="text-foreground flex items-center gap-1">
                   <MapPin className="w-4 h-4 text-primary" />
                   {state || 'Not available'}
                 </p>
               </div>
               <div>
-                <p className="text-sm font-medium text-muted mb-1">District</p>
+                <p className="text-sm font-medium text-muted-foreground mb-1">District</p>
                 <p className="text-foreground">{district || 'Not available'}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-muted mb-1">Bench Type</p>
+                <p className="text-sm font-medium text-muted-foreground mb-1">Bench Type</p>
                 <p className="text-foreground">{benchType || 'Not available'}</p>
               </div>
             </div>
@@ -237,33 +237,33 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
             {/* Additional Information */}
             <div className="space-y-4">
               <div>
-                <p className="text-sm font-medium text-muted mb-1">Coram</p>
+                <p className="text-sm font-medium text-muted-foreground mb-1">Coram</p>
                 <p className="text-foreground flex items-center gap-1">
                   <Gavel className="w-4 h-4 text-primary" />
                   {coram || 'Not available'}
                 </p>
               </div>
               <div>
-                <p className="text-sm font-medium text-muted mb-1">Stage of Case</p>
+                <p className="text-sm font-medium text-muted-foreground mb-1">Stage of Case</p>
                 <Badge variant="outline">{stageOfCase || 'Not available'}</Badge>
               </div>
               <div>
-                <p className="text-sm font-medium text-muted mb-1">Judicial Branch</p>
+                <p className="text-sm font-medium text-muted-foreground mb-1">Judicial Branch</p>
                 <p className="text-foreground">{judicialBranch || 'Not available'}</p>
               </div>
             </div>
 
             <div className="space-y-4">
               <div>
-                <p className="text-sm font-medium text-muted mb-1">Category</p>
+                <p className="text-sm font-medium text-muted-foreground mb-1">Category</p>
                 <Badge variant="outline">{category || 'Not available'}</Badge>
               </div>
               <div>
-                <p className="text-sm font-medium text-muted mb-1">Sub Category</p>
+                <p className="text-sm font-medium text-muted-foreground mb-1">Sub Category</p>
                 <p className="text-foreground">{subCategory || 'Not available'}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-muted mb-1">Before Me / Part Heard</p>
+                <p className="text-sm font-medium text-muted-foreground mb-1">Before Me / Part Heard</p>
                 <p className="text-foreground text-sm">{beforeMe || 'Not available'}</p>
               </div>
             </div>
@@ -277,13 +277,13 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <p className="text-sm font-medium text-muted mb-2">Petitioner & Advocate</p>
+                <p className="text-sm font-medium text-muted-foreground mb-2">Petitioner & Advocate</p>
                 <div className="bg-muted p-3 rounded text-sm">
                   {petitionerAdv || 'Not available'}
                 </div>
               </div>
               <div>
-                <p className="text-sm font-medium text-muted mb-2">Respondent & Advocate</p>
+                <p className="text-sm font-medium text-muted-foreground mb-2">Respondent & Advocate</p>
                 <div className="bg-muted p-3 rounded text-sm">
                   {respondentAdv || 'Not available'}
                 </div>
@@ -294,7 +294,7 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
       </Card>
 
       {/* Related Data Tabs */}
-      <Card>
+      <Card className="rounded-2xl shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="w-5 h-5 text-primary" />
