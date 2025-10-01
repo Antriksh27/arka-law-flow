@@ -184,7 +184,9 @@ serve(async (req) => {
           const cleanup = (s: string) => s.replace(/\(.*?\)/g, '').replace(/,/g, ' ').replace(/\s+/g, ' ').trim();
           const normalizeDate = (val: unknown): string | null => {
             if (typeof val !== 'string') return null;
+            if (!val || val.trim() === '') return null;
             let s = cleanup(val);
+            
             // dd-mm-yyyy or dd/mm/yyyy
             const m = s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
             if (m) {
@@ -193,6 +195,8 @@ serve(async (req) => {
               const yyyy = m[3];
               return `${yyyy}-${mm}-${dd}`;
             }
+            
+            // dd Month yyyy (with or without ordinals)
             s = stripOrdinals(s);
             const m2 = s.match(/^(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})$/);
             if (m2) {
@@ -201,16 +205,27 @@ serve(async (req) => {
               const yyyy = m2[3];
               if (mon) return `${yyyy}-${mon}-${dd}`;
             }
+            
+            // If already in ISO format (yyyy-mm-dd), return as-is
+            if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+            
             return null;
           };
+          
           const normalizeDatesDeep = (input: any): any => {
             if (Array.isArray(input)) return input.map(normalizeDatesDeep);
             if (input && typeof input === 'object') {
               const out: any = {};
               for (const [k, v] of Object.entries(input)) {
-                if (typeof v === 'string' && /date/i.test(k)) {
+                // Check if value looks like a date string (not just key name)
+                if (typeof v === 'string') {
                   const iso = normalizeDate(v);
-                  out[k] = iso ?? v; // keep original if unknown format
+                  // Use normalized date if it's a date field or if normalized successfully
+                  if (iso && (/date/i.test(k) || iso !== v)) {
+                    out[k] = iso;
+                  } else {
+                    out[k] = v;
+                  }
                 } else {
                   out[k] = normalizeDatesDeep(v);
                 }
