@@ -217,12 +217,10 @@ serve(async (req) => {
             if (input && typeof input === 'object') {
               const out: any = {};
               for (const [k, v] of Object.entries(input)) {
-                // Check if value looks like a date string (not just key name)
                 if (typeof v === 'string') {
-                  const iso = normalizeDate(v);
-                  // Use normalized date if it's a date field or if normalized successfully
-                  if (iso && (/date/i.test(k) || iso !== v)) {
-                    out[k] = iso;
+                  if (/date/i.test(k)) {
+                    const iso = normalizeDate(v);
+                    out[k] = iso; // force null for empty/invalid date strings
                   } else {
                     out[k] = v;
                   }
