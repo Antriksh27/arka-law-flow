@@ -492,7 +492,7 @@ async function performCaseSearch(token: string, cnr: string, searchType: string)
       method,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
+        'Authorization': token,
         'Accept': 'application/json',
       },
       body,
