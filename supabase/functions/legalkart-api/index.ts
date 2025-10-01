@@ -240,31 +240,43 @@ serve(async (req) => {
 
           const rawOrders = Array.isArray(rawData?.order_details) ? rawData.order_details : [];
           const sanitizedOrders = rawOrders
-            .filter((o: any) => o && typeof o === 'object' && o.hearing_date && !/Order Date/i.test(String(o.hearing_date)))
-            .map((o: any) => ({ ...o, hearing_date: normalizeDate(o.hearing_date) }))
-            .filter((o: any) => !!o.hearing_date);
+            .filter((o: any) => o && typeof o === 'object')
+            .map((o: any) => normalizeDatesDeep({
+              ...o,
+              hearing_date: normalizeDate(o.hearing_date) ?? o.hearing_date,
+              order_date: normalizeDate((o as any).order_date) ?? (o as any).order_date,
+            }))
+            .filter((o: any) => !o.hearing_date || /^\d{4}-\d{2}-\d{2}$/.test(String(o.hearing_date)));
 
           const rawHistory = Array.isArray(rawData?.history_of_case_hearing) ? rawData.history_of_case_hearing : [];
           const sanitizedHistory = rawHistory
-            .filter((h: any) => h && typeof h === 'object' && (h.hearing_date || h.business_on_date))
-            .map((h: any) => ({
+            .filter((h: any) => h && typeof h === 'object')
+            .map((h: any) => normalizeDatesDeep({
               ...h,
-              hearing_date: normalizeDate(h.hearing_date),
-              business_on_date: normalizeDate(h.business_on_date),
-            }))
-            .filter((h: any) => !!h.hearing_date || !!h.business_on_date);
+              hearing_date: normalizeDate(h.hearing_date) ?? h.hearing_date,
+              business_on_date: normalizeDate(h.business_on_date) ?? h.business_on_date,
+            }));
+
+          // Also sanitize documents and objections (date_of_receiving, scrutiny_date, compliance_date, etc.)
+          const sanitizedDocuments = documents
+            .filter((d: any) => d && typeof d === 'object')
+            .map((d: any) => normalizeDatesDeep(d));
+
+          const sanitizedObjections = objections
+            .filter((o: any) => o && typeof o === 'object')
+            .map((o: any) => normalizeDatesDeep(o));
 
           const caseDataSanitized = normalizeDatesDeep(rawData);
 
-          console.log('Sanitized counts -> docs:', documents.length, 'objs:', objections.length, 'orders:', sanitizedOrders.length, 'history:', sanitizedHistory.length);
+          console.log('Sanitized counts -> docs:', sanitizedDocuments.length, 'objs:', sanitizedObjections.length, 'orders:', sanitizedOrders.length, 'history:', sanitizedHistory.length);
           
           const { error: upsertError } = await supabase.rpc('upsert_legalkart_case_data', {
             p_cnr_number: cnr,
             p_firm_id: teamMember.firm_id,
             p_case_id: caseId,
             p_case_data: caseDataSanitized,
-            p_documents: documents,
-            p_objections: objections,
+            p_documents: sanitizedDocuments,
+            p_objections: sanitizedObjections,
             p_orders: sanitizedOrders,
             p_history: sanitizedHistory,
           });
@@ -480,7 +492,7 @@ async function performCaseSearch(token: string, cnr: string, searchType: string)
       method,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': token, // Remove Bearer prefix - likely causing the decryption issue
+        'Authorization': `Bearer ${token}`,
         'Accept': 'application/json',
       },
       body,
