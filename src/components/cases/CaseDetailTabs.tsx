@@ -18,6 +18,7 @@ import { CaseTimeline } from './CaseTimeline';
 import { CaseResearch } from './CaseResearch';
 import { CaseLegalkartIntegration } from './CaseLegalkartIntegration';
 import { CreateNoteMultiModal } from '../notes/CreateNoteMultiModal';
+import { LegalkartApiDocuments } from './legalkart/LegalkartApiDocuments';
 interface CaseDetailTabsProps {
   caseId: string;
   activeTab: string;
@@ -210,6 +211,10 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
                     </div>
                   </div>
                   <CaseDocuments caseId={caseId} />
+                  {/* Legalkart API-sourced documents (opens via iframe) */}
+                  <div className="mt-8">
+                    <LegalkartApiDocuments caseId={caseId} />
+                  </div>
                 </div>
               </TabsContent>
 
