@@ -37,8 +37,11 @@ export const LegalkartApiDocuments: React.FC<LegalkartApiDocumentsProps> = ({ ca
         || (caseRow?.court_type?.includes('high') && 'high_court')
         || 'district_court';
 
+      // Normalize CNR: remove hyphens and spaces
+      const normalizedCnr = caseRow?.cnr_number?.replace(/[-\s]/g, '') || '';
+
       const { data, error } = await supabase.functions.invoke('legalkart-api', {
-        body: { action: 'search', cnr: caseRow?.cnr_number, searchType, caseId },
+        body: { action: 'search', cnr: normalizedCnr, searchType, caseId },
       });
       if (error) throw error;
       return data as any;
