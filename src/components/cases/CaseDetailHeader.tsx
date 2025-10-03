@@ -89,7 +89,7 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'Not scheduled';
     try {
-      return format(new Date(dateString), 'MMM d, yyyy');
+      return format(new Date(dateString), 'dd/MM/yyyy');
     } catch (error) {
       return 'Invalid date';
     }
@@ -102,17 +102,20 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
     respondent_and_advocate = ''
   } = legalkartData;
 
-  // Helper function to extract clean names from advocate strings
+  // Helper function to extract clean names from advocate strings (remove advocate names)
   const extractName = (text: string) => {
     if (!text) return '';
     
     // Remove leading numbers and parentheses like "1) "
     let cleaned = text.replace(/^\d+\)\s*/, '');
     
-    // Extract everything before "Advocate" or similar patterns
-    const beforeAdvocate = cleaned.split(/\s+Advocate/)[0];
+    // Extract everything before "Advocate" keyword and remove advocate details
+    const beforeAdvocate = cleaned.split(/\s+Advocate/i)[0];
     
-    return beforeAdvocate.trim();
+    // Remove anything after common patterns like "Advocate-", "Adv.", etc.
+    const withoutAdvocate = beforeAdvocate.replace(/\s*(?:Advocate|Adv\.?).*$/i, '');
+    
+    return withoutAdvocate.trim();
   };
 
   // Generate case title in "Petitioner Vs Respondent" format
@@ -385,7 +388,7 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
             <div>
               <p className="text-sm text-muted">Case Number</p>
               <p className="font-medium">
-                {caseData?.case_number || caseData?.filing_number || caseData?.registration_number || caseData?.cnr_number || 'Not assigned'}
+                {caseData?.registration_number || caseData?.case_number || caseData?.filing_number || caseData?.cnr_number || 'Not assigned'}
               </p>
             </div>
           </div>

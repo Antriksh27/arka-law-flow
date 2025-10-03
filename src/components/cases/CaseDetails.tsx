@@ -118,7 +118,11 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
     if (!val) return 'Not available';
     if (typeof val === 'string') {
       const d = new Date(val);
-      return isNaN(d.getTime()) ? val : d.toLocaleDateString();
+      if (isNaN(d.getTime())) return val;
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      return `${day}/${month}/${year}`;
     }
     return String(val);
   };
