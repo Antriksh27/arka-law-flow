@@ -36,6 +36,20 @@ const fetchObjections = async (caseId: string): Promise<ObjectionData[]> => {
   }
 };
 
+const formatDate = (dateString: string | null): string => {
+  if (!dateString) return '-';
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '-';
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  } catch {
+    return '-';
+  }
+};
+
 export const LegalkartObjectionsTable: React.FC<LegalkartObjectionsTableProps> = ({ caseId }) => {
   const { data: objections, isLoading } = useQuery<ObjectionData[]>({
     queryKey: ['legalkart-objections', caseId],
@@ -91,24 +105,9 @@ export const LegalkartObjectionsTable: React.FC<LegalkartObjectionsTableProps> =
                     {objection.objection || '-'}
                   </div>
                 </TableCell>
-                <TableCell>
-                  {objection.receipt_date 
-                    ? new Date(objection.receipt_date).toLocaleDateString()
-                    : '-'
-                  }
-                </TableCell>
-                <TableCell>
-                  {objection.scrutiny_date 
-                    ? new Date(objection.scrutiny_date).toLocaleDateString()
-                    : '-'
-                  }
-                </TableCell>
-                <TableCell>
-                  {objection.objection_compliance_date 
-                    ? new Date(objection.objection_compliance_date).toLocaleDateString()
-                    : '-'
-                  }
-                </TableCell>
+                <TableCell>{formatDate(objection.receipt_date)}</TableCell>
+                <TableCell>{formatDate(objection.scrutiny_date)}</TableCell>
+                <TableCell>{formatDate(objection.objection_compliance_date)}</TableCell>
               </TableRow>
             ))}
           </TableBody>

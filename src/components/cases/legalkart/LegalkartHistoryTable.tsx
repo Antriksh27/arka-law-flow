@@ -36,6 +36,20 @@ const fetchHistory = async (caseId: string): Promise<HistoryData[]> => {
   }
 };
 
+const formatDate = (dateString: string | null): string => {
+  if (!dateString) return '-';
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '-';
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  } catch {
+    return '-';
+  }
+};
+
 export const LegalkartHistoryTable: React.FC<LegalkartHistoryTableProps> = ({ caseId }) => {
   const { data: history, isLoading } = useQuery<HistoryData[]>({
     queryKey: ['legalkart-history', caseId],
@@ -86,19 +100,9 @@ export const LegalkartHistoryTable: React.FC<LegalkartHistoryTableProps> = ({ ca
             {history.map((hearing) => (
               <TableRow key={hearing.id}>
                 <TableCell className="font-medium">{hearing.judge || '-'}</TableCell>
-                <TableCell>
-                  {hearing.hearing_date 
-                    ? new Date(hearing.hearing_date).toLocaleDateString()
-                    : '-'
-                  }
-                </TableCell>
+                <TableCell>{formatDate(hearing.hearing_date)}</TableCell>
                 <TableCell>{hearing.cause_list_type || '-'}</TableCell>
-                <TableCell>
-                  {hearing.business_on_date 
-                    ? new Date(hearing.business_on_date).toLocaleDateString()
-                    : '-'
-                  }
-                </TableCell>
+                <TableCell>{formatDate(hearing.business_on_date)}</TableCell>
                 <TableCell className="max-w-md">
                   <div className="text-sm leading-relaxed">
                     {hearing.purpose_of_hearing || '-'}

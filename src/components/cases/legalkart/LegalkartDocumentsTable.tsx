@@ -38,6 +38,20 @@ const fetchDocuments = async (caseId: string): Promise<DocumentData[]> => {
   }
 };
 
+const formatDate = (dateString: string | null): string => {
+  if (!dateString) return '-';
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '-';
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  } catch {
+    return '-';
+  }
+};
+
 export const LegalkartDocumentsTable: React.FC<LegalkartDocumentsTableProps> = ({ caseId }) => {
   const { data: documents, isLoading } = useQuery<DocumentData[]>({
     queryKey: ['legalkart-documents', caseId],
@@ -93,12 +107,7 @@ export const LegalkartDocumentsTable: React.FC<LegalkartDocumentsTableProps> = (
                 <TableCell>{doc.filed_by || '-'}</TableCell>
                 <TableCell className="font-mono text-sm">{doc.document_no || '-'}</TableCell>
                 <TableCell>{doc.document_filed || '-'}</TableCell>
-                <TableCell>
-                  {doc.date_of_receiving 
-                    ? new Date(doc.date_of_receiving).toLocaleDateString()
-                    : '-'
-                  }
-                </TableCell>
+                <TableCell>{formatDate(doc.date_of_receiving)}</TableCell>
               </TableRow>
             ))}
           </TableBody>

@@ -36,6 +36,20 @@ const fetchOrders = async (caseId: string): Promise<OrderData[]> => {
   }
 };
 
+const formatDate = (dateString: string | null): string => {
+  if (!dateString) return '-';
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '-';
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  } catch {
+    return '-';
+  }
+};
+
 export const LegalkartOrdersTable: React.FC<LegalkartOrdersTableProps> = ({ caseId }) => {
   const { data: orders, isLoading } = useQuery<OrderData[]>({
     queryKey: ['legalkart-orders', caseId],
@@ -86,12 +100,7 @@ export const LegalkartOrdersTable: React.FC<LegalkartOrdersTableProps> = ({ case
             {orders.map((order) => (
               <TableRow key={order.id}>
                 <TableCell className="font-medium">{order.judge || '-'}</TableCell>
-                <TableCell>
-                  {order.hearing_date 
-                    ? new Date(order.hearing_date).toLocaleDateString()
-                    : '-'
-                  }
-                </TableCell>
+                <TableCell>{formatDate(order.hearing_date)}</TableCell>
                 <TableCell className="font-mono text-sm">{order.order_number || '-'}</TableCell>
                 <TableCell>{order.bench || '-'}</TableCell>
                 <TableCell className="max-w-md">
