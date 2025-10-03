@@ -130,27 +130,45 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
     }
     return String(val);
   };
-  const cnrNumber = legalkartCase?.cnr_number || caseData?.cnr_number || fd?.case_info?.cnr_number || 'Not available';
-  const filingNumber = legalkartCase?.filing_number || (caseData as any)?.filing_number || fd?.case_info?.filing_number || '';
-  const registrationNumber = legalkartCase?.registration_number || (caseData as any)?.registration_number || fd?.case_info?.registration_number || '';
-  const filingDate = legalkartCase?.filing_date || (caseData as any)?.filing_date || fd?.case_info?.filing_date || '';
-  const registrationDate = legalkartCase?.registration_date || (caseData as any)?.registration_date || fd?.case_info?.registration_date || '';
-  const nextHearingDate = legalkartCase?.next_hearing_date || (caseData as any)?.next_hearing_date || fd?.case_status?.next_hearing_date || '';
-  const state = legalkartCase?.state || (caseData as any)?.state || fd?.case_status?.state || '';
-  const district = legalkartCase?.district || (caseData as any)?.district || fd?.case_status?.district || '';
-  const benchType = legalkartCase?.bench_type || (caseData as any)?.bench_type || fd?.case_status?.bench_type || '';
-  const judicialBranch = legalkartCase?.judicial_branch || (caseData as any)?.judicial_branch || fd?.case_status?.judicial_branch || '';
-  const coram = legalkartCase?.coram || (caseData as any)?.coram || fd?.case_status?.coram || '';
-  const stageOfCase = (legalkartCase as any)?.stage_of_case || (legalkartCase as any)?.stage || (caseData as any)?.stage || fd?.case_status?.stage_of_case || '';
-  const category = (legalkartCase as any)?.category || (caseData as any)?.category || fd?.category_info?.category || '';
-  const subCategory = (legalkartCase as any)?.sub_category || (caseData as any)?.sub_category || fd?.category_info?.sub_category || '';
-  const beforeMe = (legalkartCase as any)?.before_me_part_heard || fd?.case_status?.not_before_me || '';
+  
+  // Extract data from various sources
+  const apiData = fd?.data || fd || {};
+  
+  const cnrNumber = legalkartCase?.cnr_number || caseData?.cnr_number || apiData?.cnr_number || fd?.case_info?.cnr_number || 'Not available';
+  const filingNumber = legalkartCase?.filing_number || (caseData as any)?.filing_number || apiData?.filing_number || fd?.case_info?.filing_number || '';
+  const registrationNumber = legalkartCase?.registration_number || (caseData as any)?.registration_number || apiData?.registration_number || fd?.case_info?.registration_number || '';
+  const filingDate = legalkartCase?.filing_date || (caseData as any)?.filing_date || apiData?.filing_date || fd?.case_info?.filing_date || '';
+  const registrationDate = legalkartCase?.registration_date || (caseData as any)?.registration_date || apiData?.registration_date || fd?.case_info?.registration_date || '';
+  const nextHearingDate = legalkartCase?.next_hearing_date || (caseData as any)?.next_hearing_date || apiData?.next_hearing_date || fd?.case_status?.next_hearing_date || '';
+  const state = legalkartCase?.state || (caseData as any)?.state || apiData?.state || fd?.case_status?.state || '';
+  const district = legalkartCase?.district || (caseData as any)?.district || apiData?.district || fd?.case_status?.district || '';
+  const benchType = legalkartCase?.bench_type || (caseData as any)?.bench_type || apiData?.bench_type || apiData?.bench_category || fd?.case_status?.bench_type || '';
+  const judicialBranch = legalkartCase?.judicial_branch || (caseData as any)?.judicial_branch || apiData?.judicial_branch || fd?.case_status?.judicial_branch || '';
+  const coram = legalkartCase?.coram || (caseData as any)?.coram || apiData?.coram || apiData?.judges || fd?.case_status?.coram || '';
+  const stageOfCase = (legalkartCase as any)?.stage_of_case || (legalkartCase as any)?.stage || (caseData as any)?.stage || apiData?.stage || fd?.case_status?.stage_of_case || '';
+  const category = (legalkartCase as any)?.category || (caseData as any)?.category || apiData?.category || fd?.category_info?.category || '';
+  const subCategory = (legalkartCase as any)?.sub_category || (caseData as any)?.sub_category || apiData?.sub_category || fd?.category_info?.sub_category || '';
+  const beforeMe = (legalkartCase as any)?.before_me_part_heard || apiData?.before_me || fd?.case_status?.not_before_me || '';
+  
+  // Additional fields from Legalkart
+  const purposeOfListing = apiData?.purpose_of_listing || apiData?.purpose_of_hearing || apiData?.listing_reason || '';
+  const caseDescription = apiData?.case_desc || apiData?.case_description || apiData?.matter_type || '';
+  const stampNumber = apiData?.stamp_number || apiData?.ia_number || '';
+  const listingDate = apiData?.listing_date || apiData?.listed_date || '';
+  const presentedOn = apiData?.presented_on || apiData?.presentation_date || '';
+  const caseStatus = apiData?.case_status || apiData?.status || '';
+  const caseType = apiData?.case_type || (caseData as any)?.case_type || '';
+  const classificationDesc = apiData?.classification_description || apiData?.classification || '';
+  const actDescription = apiData?.act_description || apiData?.acts || (apiData?.acts && Array.isArray(apiData.acts) ? apiData.acts.join(', ') : '');
+  
   const petitionerAdv = (legalkartCase as any)?.petitioner_and_advocate 
+    || apiData?.petitioner_and_advocate
     || fd?.petitioner_and_advocate 
     || [ (caseData as any)?.petitioner, (caseData as any)?.petitioner_advocate ? `Advocate- ${(caseData as any)?.petitioner_advocate}` : '' ]
         .filter(Boolean)
         .join(' ').trim();
   const respondentAdv = (legalkartCase as any)?.respondent_and_advocate 
+    || apiData?.respondent_and_advocate
     || fd?.respondent_and_advocate 
     || [ (caseData as any)?.respondent, (caseData as any)?.respondent_advocate ? `Advocate- ${(caseData as any)?.respondent_advocate}` : '' ]
         .filter(Boolean)
@@ -230,6 +248,27 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
               label="Registration Number" 
               value={registrationNumber}
             />
+            {stampNumber && (
+              <InfoCard 
+                icon={Hash} 
+                label="Stamp Number" 
+                value={stampNumber}
+              />
+            )}
+            {caseType && (
+              <InfoCard 
+                icon={FileText} 
+                label="Case Type" 
+                value={caseType}
+              />
+            )}
+            {caseDescription && (
+              <InfoCard 
+                icon={FileText} 
+                label="Case Description" 
+                value={caseDescription}
+              />
+            )}
           </div>
         </CardContent>
       </Card>
@@ -287,6 +326,20 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
               label="Registration Date" 
               value={formatDate(registrationDate)}
             />
+            {presentedOn && (
+              <InfoCard 
+                icon={Calendar} 
+                label="Presented On" 
+                value={formatDate(presentedOn)}
+              />
+            )}
+            {listingDate && (
+              <InfoCard 
+                icon={Calendar} 
+                label="Listing Date" 
+                value={formatDate(listingDate)}
+              />
+            )}
             <InfoCard 
               icon={Clock} 
               label="Next Hearing Date" 
@@ -306,10 +359,18 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {caseStatus && (
+              <InfoCard 
+                icon={CheckCircle} 
+                label="Case Status" 
+                value={caseStatus}
+                variant="success"
+              />
+            )}
             <InfoCard 
               icon={Gavel} 
-              label="Coram" 
+              label="Coram / Judges" 
               value={coram}
             />
             <InfoCard 
@@ -328,7 +389,43 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
               label="Sub Category" 
               value={subCategory}
             />
+            {purposeOfListing && (
+              <InfoCard 
+                icon={FileText} 
+                label="Purpose of Listing" 
+                value={purposeOfListing}
+              />
+            )}
           </div>
+          
+          {/* Classification & Act Details */}
+          {(classificationDesc || actDescription) && (
+            <div className="mt-6 space-y-3">
+              {classificationDesc && (
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                  <div className="flex items-start gap-2">
+                    <BookOpen className="w-5 h-5 text-blue-700 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-blue-900">Classification</p>
+                      <p className="text-sm text-blue-800 mt-1">{classificationDesc}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {actDescription && (
+                <div className="p-4 bg-purple-50 border border-purple-200 rounded-xl">
+                  <div className="flex items-start gap-2">
+                    <Scale className="w-5 h-5 text-purple-700 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-purple-900">Act(s)</p>
+                      <p className="text-sm text-purple-800 mt-1">{actDescription}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          
           {beforeMe && (
             <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
               <div className="flex items-start gap-2">
