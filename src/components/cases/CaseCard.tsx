@@ -39,13 +39,23 @@ export const CaseCard: React.FC<CaseCardProps> = ({ case: caseItem }) => {
     }
   };
 
+  // Generate proper case title display
+  const getDisplayTitle = () => {
+    if (caseItem.petitioner && caseItem.respondent) {
+      const cleanPetitioner = caseItem.petitioner.replace(/\s*Advocate[:\s].*/gi, '').trim();
+      const cleanRespondent = caseItem.respondent.replace(/\s*Advocate[:\s].*/gi, '').trim();
+      return `${cleanPetitioner} Vs ${cleanRespondent}`;
+    }
+    return caseItem.title || caseItem.case_title;
+  };
+
   return (
     <div className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow p-6">
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
           <Link to={`/cases/${caseItem.id}`}>
             <h3 className="font-semibold text-gray-900 hover:text-blue-600 cursor-pointer mb-2">
-              {caseItem.title}
+              {getDisplayTitle()}
             </h3>
           </Link>
           <p className="text-gray-600 text-sm line-clamp-2 mb-3">

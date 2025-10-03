@@ -85,12 +85,24 @@ export const CasesTable: React.FC<CasesTableProps> = ({
       console.log('Cases query result:', { data, error });
       
       // Transform the data to match the expected structure
-      const transformedData = data?.map((caseItem: any) => ({
-        ...caseItem,
-        title: caseItem.case_title,
-        client_name: caseItem.clients?.full_name,
-        created_by_name: caseItem.profiles?.full_name
-      })) || [];
+      const transformedData = data?.map((caseItem: any) => {
+        // Generate proper case title: "Petitioner Vs Respondent"
+        let displayTitle = caseItem.case_title;
+        
+        if (caseItem.petitioner && caseItem.respondent) {
+          // Remove advocate names from petitioner and respondent
+          const cleanPetitioner = caseItem.petitioner.replace(/\s*Advocate[:\s].*/gi, '').trim();
+          const cleanRespondent = caseItem.respondent.replace(/\s*Advocate[:\s].*/gi, '').trim();
+          displayTitle = `${cleanPetitioner} Vs ${cleanRespondent}`;
+        }
+        
+        return {
+          ...caseItem,
+          title: displayTitle,
+          client_name: caseItem.clients?.full_name,
+          created_by_name: caseItem.profiles?.full_name
+        };
+      }) || [];
       
       console.log('Transformed cases:', transformedData);
       
