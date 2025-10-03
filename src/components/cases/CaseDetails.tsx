@@ -4,7 +4,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, MapPin, Scale, FileText, Users, Gavel, Building, AlertTriangle, RefreshCw } from 'lucide-react';
+import { 
+  Calendar, MapPin, Scale, FileText, Users, Gavel, Building, 
+  RefreshCw, Hash, Clock, Briefcase, User, BookOpen, Flag,
+  CheckCircle, AlertCircle, Archive
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { LegalkartDocumentsTable } from './legalkart/LegalkartDocumentsTable';
@@ -152,183 +156,295 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
         .filter(Boolean)
         .join(' ').trim();
 
+  // Info card component for consistent styling
+  const InfoCard = ({ icon: Icon, label, value, variant = 'default' }: any) => (
+    <div className="flex items-start gap-3 p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
+      <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+        variant === 'primary' ? 'bg-primary/10 text-primary' :
+        variant === 'success' ? 'bg-green-100 text-green-700' :
+        variant === 'warning' ? 'bg-yellow-100 text-yellow-700' :
+        'bg-gray-100 text-gray-700'
+      }`}>
+        <Icon className="w-5 h-5" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-medium text-muted uppercase tracking-wide mb-1">{label}</p>
+        <p className="text-sm font-semibold text-foreground break-words">{value || 'Not available'}</p>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       {/* Header with refresh button */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold text-foreground">Case Details from Legalkart</h2>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+            <Scale className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold text-foreground">Legalkart Case Details</h2>
+            <p className="text-sm text-muted">Comprehensive case information from court records</p>
+          </div>
+        </div>
         <Button 
           variant="outline" 
           size="sm" 
           onClick={handleRefresh}
           disabled={refreshing}
+          className="border-gray-300"
         >
           <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-          Refresh
+          Refresh Data
         </Button>
       </div>
 
-      {/* Case Summary Card */}
-      <Card className="rounded-2xl shadow-sm">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Scale className="w-5 h-5 text-primary" />
-            Case Summary
+      {/* Case Numbers & Identification */}
+      <Card className="rounded-2xl shadow-sm border-gray-200">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg font-semibold flex items-center gap-2">
+              <Hash className="w-5 h-5 text-primary" />
+              Case Identification
+            </CardTitle>
+            <Badge variant="outline" className="text-xs bg-primary/5 border-primary/20 text-primary">
+              Official Record
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <InfoCard 
+              icon={Hash} 
+              label="CNR Number" 
+              value={cnrNumber}
+              variant="primary"
+            />
+            <InfoCard 
+              icon={FileText} 
+              label="Filing Number" 
+              value={filingNumber}
+            />
+            <InfoCard 
+              icon={Archive} 
+              label="Registration Number" 
+              value={registrationNumber}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Court & Location Details */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="rounded-2xl shadow-sm border-gray-200">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg font-semibold flex items-center gap-2">
+              <Building className="w-5 h-5 text-primary" />
+              Court Information
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <InfoCard 
+              icon={MapPin} 
+              label="State" 
+              value={state}
+              variant="success"
+            />
+            <InfoCard 
+              icon={MapPin} 
+              label="District" 
+              value={district}
+            />
+            <InfoCard 
+              icon={Building} 
+              label="Bench Type" 
+              value={benchType}
+            />
+            <InfoCard 
+              icon={Briefcase} 
+              label="Judicial Branch" 
+              value={judicialBranch}
+            />
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-2xl shadow-sm border-gray-200">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg font-semibold flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-primary" />
+              Important Dates
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <InfoCard 
+              icon={Calendar} 
+              label="Filing Date" 
+              value={formatDate(filingDate)}
+              variant="primary"
+            />
+            <InfoCard 
+              icon={Calendar} 
+              label="Registration Date" 
+              value={formatDate(registrationDate)}
+            />
+            <InfoCard 
+              icon={Clock} 
+              label="Next Hearing Date" 
+              value={nextHearingDate ? formatDate(nextHearingDate) : 'Not scheduled'}
+              variant={nextHearingDate ? 'warning' : 'default'}
+            />
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Case Status & Classification */}
+      <Card className="rounded-2xl shadow-sm border-gray-200">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg font-semibold flex items-center gap-2">
+            <Flag className="w-5 h-5 text-primary" />
+            Case Status & Classification
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Basic Information */}
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-1">CNR Number</p>
-                <p className="font-mono text-sm bg-muted px-2 py-1 rounded">{cnrNumber}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-1">Filing Number</p>
-                <p className="text-foreground">{filingNumber || 'Not available'}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-1">Registration Number</p>
-                <p className="text-foreground">{registrationNumber || 'Not available'}</p>
-              </div>
-            </div>
-
-            {/* Dates */}
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-1">Filing Date</p>
-                <p className="text-foreground flex items-center gap-1">
-                  <Calendar className="w-4 h-4 text-primary" />
-                  {formatDate(filingDate)}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-1">Registration Date</p>
-                <p className="text-foreground flex items-center gap-1">
-                  <Calendar className="w-4 h-4 text-primary" />
-                  {formatDate(registrationDate)}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-1">Next Hearing Date</p>
-                <p className="text-foreground flex items-center gap-1">
-                  <Calendar className="w-4 h-4 text-primary" />
-                  {nextHearingDate ? formatDate(nextHearingDate) : 'Not scheduled'}
-                </p>
-              </div>
-            </div>
-
-            {/* Court Information */}
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-1">State</p>
-                <p className="text-foreground flex items-center gap-1">
-                  <MapPin className="w-4 h-4 text-primary" />
-                  {state || 'Not available'}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-1">District</p>
-                <p className="text-foreground">{district || 'Not available'}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-1">Bench Type</p>
-                <p className="text-foreground">{benchType || 'Not available'}</p>
-              </div>
-            </div>
-
-            {/* Additional Information */}
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-1">Coram</p>
-                <p className="text-foreground flex items-center gap-1">
-                  <Gavel className="w-4 h-4 text-primary" />
-                  {coram || 'Not available'}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-1">Stage of Case</p>
-                <Badge variant="outline">{stageOfCase || 'Not available'}</Badge>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-1">Judicial Branch</p>
-                <p className="text-foreground">{judicialBranch || 'Not available'}</p>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-1">Category</p>
-                <Badge variant="outline">{category || 'Not available'}</Badge>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-1">Sub Category</p>
-                <p className="text-foreground">{subCategory || 'Not available'}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-1">Before Me / Part Heard</p>
-                <p className="text-foreground text-sm">{beforeMe || 'Not available'}</p>
-              </div>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <InfoCard 
+              icon={Gavel} 
+              label="Coram" 
+              value={coram}
+            />
+            <InfoCard 
+              icon={CheckCircle} 
+              label="Stage of Case" 
+              value={stageOfCase}
+              variant="success"
+            />
+            <InfoCard 
+              icon={BookOpen} 
+              label="Category" 
+              value={category}
+            />
+            <InfoCard 
+              icon={FileText} 
+              label="Sub Category" 
+              value={subCategory}
+            />
           </div>
-
-          {/* Parties Section */}
-          <div className="mt-8 pt-6 border-t">
-            <h4 className="text-lg font-medium text-foreground mb-4 flex items-center gap-2">
-              <Users className="w-5 h-5 text-primary" />
-              Parties Involved
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-2">Petitioner & Advocate</p>
-                <div className="bg-muted p-3 rounded text-sm">
-                  {petitionerAdv || 'Not available'}
+          {beforeMe && (
+            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="w-5 h-5 text-yellow-700 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-yellow-900">Before Me / Part Heard</p>
+                  <p className="text-sm text-yellow-800 mt-1">{beforeMe}</p>
                 </div>
               </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-2">Respondent & Advocate</p>
-                <div className="bg-muted p-3 rounded text-sm">
-                  {respondentAdv || 'Not available'}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Parties Involved */}
+      <Card className="rounded-2xl shadow-sm border-gray-200">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg font-semibold flex items-center gap-2">
+            <Users className="w-5 h-5 text-primary" />
+            Parties Involved
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                  <User className="w-4 h-4 text-blue-700" />
                 </div>
+                <h4 className="font-semibold text-foreground">Petitioner</h4>
+              </div>
+              <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl">
+                <p className="text-sm text-foreground whitespace-pre-wrap">
+                  {petitionerAdv || 'Not available'}
+                </p>
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
+                  <User className="w-4 h-4 text-red-700" />
+                </div>
+                <h4 className="font-semibold text-foreground">Respondent</h4>
+              </div>
+              <div className="bg-red-50 border border-red-100 p-4 rounded-xl">
+                <p className="text-sm text-foreground whitespace-pre-wrap">
+                  {respondentAdv || 'Not available'}
+                </p>
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Related Data Tabs */}
-      <Card className="rounded-2xl shadow-sm">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+      {/* Related Information Tabs */}
+      <Card className="rounded-2xl shadow-sm border-gray-200">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg font-semibold flex items-center gap-2">
             <FileText className="w-5 h-5 text-primary" />
-            Related Case Information
+            Case Documents & Records
           </CardTitle>
+          <p className="text-sm text-muted mt-1">
+            View documents, objections, orders, and case history
+          </p>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="documents" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="documents">Documents</TabsTrigger>
-              <TabsTrigger value="objections">Objections</TabsTrigger>
-              <TabsTrigger value="orders">Orders</TabsTrigger>
-              <TabsTrigger value="history">History</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-4 h-auto p-1 bg-gray-100">
+              <TabsTrigger 
+                value="documents" 
+                className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-lg py-2.5"
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                Documents
+              </TabsTrigger>
+              <TabsTrigger 
+                value="objections"
+                className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-lg py-2.5"
+              >
+                <AlertCircle className="w-4 h-4 mr-2" />
+                Objections
+              </TabsTrigger>
+              <TabsTrigger 
+                value="orders"
+                className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-lg py-2.5"
+              >
+                <Gavel className="w-4 h-4 mr-2" />
+                Orders
+              </TabsTrigger>
+              <TabsTrigger 
+                value="history"
+                className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-lg py-2.5"
+              >
+                <Clock className="w-4 h-4 mr-2" />
+                History
+              </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="documents" className="mt-6">
-              <LegalkartDocumentsTable caseId={caseId} />
-            </TabsContent>
+            <div className="mt-6">
+              <TabsContent value="documents" className="mt-0">
+                <LegalkartDocumentsTable caseId={caseId} />
+              </TabsContent>
 
-            <TabsContent value="objections" className="mt-6">
-              <LegalkartObjectionsTable caseId={caseId} />
-            </TabsContent>
+              <TabsContent value="objections" className="mt-0">
+                <LegalkartObjectionsTable caseId={caseId} />
+              </TabsContent>
 
-            <TabsContent value="orders" className="mt-6">
-              <LegalkartOrdersTable caseId={caseId} />
-            </TabsContent>
+              <TabsContent value="orders" className="mt-0">
+                <LegalkartOrdersTable caseId={caseId} />
+              </TabsContent>
 
-            <TabsContent value="history" className="mt-6">
-              <LegalkartHistoryTable caseId={caseId} />
-            </TabsContent>
+              <TabsContent value="history" className="mt-0">
+                <LegalkartHistoryTable caseId={caseId} />
+              </TabsContent>
+            </div>
           </Tabs>
         </CardContent>
       </Card>
