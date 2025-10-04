@@ -131,8 +131,11 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
     return String(val);
   };
   
-  // Extract data from various sources
+  // Extract data from various sources - prioritize fetched_data structure
   const apiData = fd?.data || fd || {};
+  const caseDetails = apiData?.case_details || {};
+  const caseHistoryData = apiData?.case_history || [];
+  const lastHearing = caseHistoryData.length > 0 ? caseHistoryData[caseHistoryData.length - 1] : null;
   
   // Helper to safely convert any value to string
   const toSafeString = (val: any): string => {
@@ -143,25 +146,31 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
     return String(val);
   };
   
-  // Prioritize API fetched data over local database
-  const cnrNumber = apiData?.cnr_number || fd?.case_info?.cnr_number || legalkartCase?.cnr_number || caseData?.cnr_number || 'Not available';
-  const filingNumber = toSafeString(apiData?.filing_number || fd?.case_info?.filing_number || legalkartCase?.filing_number || (caseData as any)?.filing_number);
-  const registrationNumber = toSafeString(apiData?.registration_number || fd?.case_info?.registration_number || legalkartCase?.registration_number || (caseData as any)?.registration_number);
-  const filingDate = toSafeString(apiData?.filing_date || fd?.case_info?.filing_date || legalkartCase?.filing_date || (caseData as any)?.filing_date);
-  const registrationDate = toSafeString(apiData?.registration_date || fd?.case_info?.registration_date || legalkartCase?.registration_date || (caseData as any)?.registration_date);
-  const nextHearingDate = toSafeString(apiData?.next_hearing_date || fd?.case_status?.next_hearing_date || legalkartCase?.next_hearing_date || (caseData as any)?.next_hearing_date);
-  const state = toSafeString(apiData?.state || fd?.case_status?.state || legalkartCase?.state || (caseData as any)?.state);
-  const district = toSafeString(apiData?.district || fd?.case_status?.district || legalkartCase?.district || (caseData as any)?.district);
-  const benchType = toSafeString(apiData?.bench_type || apiData?.bench_category || fd?.case_status?.bench_type || legalkartCase?.bench_type || (caseData as any)?.bench_type);
-  const judicialBranch = toSafeString(apiData?.judicial_branch || fd?.case_status?.judicial_branch || legalkartCase?.judicial_branch || (caseData as any)?.judicial_branch);
-  const coram = toSafeString(apiData?.coram || apiData?.judges || fd?.case_status?.coram || legalkartCase?.coram || (caseData as any)?.coram);
-  const stageOfCase = toSafeString(apiData?.stage || fd?.case_status?.stage_of_case || (legalkartCase as any)?.stage_of_case || (legalkartCase as any)?.stage || (caseData as any)?.stage);
-  const category = toSafeString(apiData?.category || fd?.category_info?.category || (legalkartCase as any)?.category || (caseData as any)?.category);
-  const subCategory = toSafeString(apiData?.sub_category || fd?.category_info?.sub_category || (legalkartCase as any)?.sub_category || (caseData as any)?.sub_category);
-  const beforeMe = toSafeString(apiData?.before_me || fd?.case_status?.not_before_me || (legalkartCase as any)?.before_me_part_heard);
+  // Prioritize API fetched data over local database - extract from case_details
+  const cnrNumber = caseDetails?.cnr_number || apiData?.cnr_number || legalkartCase?.cnr_number || caseData?.cnr_number || 'Not available';
+  const filingNumber = toSafeString(caseDetails?.filing_number || apiData?.filing_number || legalkartCase?.filing_number || (caseData as any)?.filing_number);
+  const registrationNumber = toSafeString(caseDetails?.registration_number || apiData?.registration_number || legalkartCase?.registration_number || (caseData as any)?.registration_number);
+  const filingDate = toSafeString(caseDetails?.filing_date || apiData?.filing_date || legalkartCase?.filing_date || (caseData as any)?.filing_date);
+  const registrationDate = toSafeString(caseDetails?.registration_date || apiData?.registration_date || legalkartCase?.registration_date || (caseData as any)?.registration_date);
+  
+  // Get next hearing date from last hearing in case_history
+  const nextHearingDate = toSafeString(lastHearing?.hearing_date || apiData?.next_hearing_date || legalkartCase?.next_hearing_date || (caseData as any)?.next_hearing_date);
+  
+  const state = toSafeString(apiData?.state || legalkartCase?.state || (caseData as any)?.state);
+  const district = toSafeString(apiData?.district || legalkartCase?.district || (caseData as any)?.district);
+  const benchType = toSafeString(apiData?.bench_type || apiData?.bench_category || legalkartCase?.bench_type || (caseData as any)?.bench_type);
+  const judicialBranch = toSafeString(apiData?.judicial_branch || legalkartCase?.judicial_branch || (caseData as any)?.judicial_branch);
+  
+  // Get coram/judge from last hearing
+  const coram = toSafeString(lastHearing?.judge || apiData?.coram || apiData?.judges || legalkartCase?.coram || (caseData as any)?.coram);
+  
+  const stageOfCase = toSafeString(apiData?.stage || (legalkartCase as any)?.stage_of_case || (legalkartCase as any)?.stage || (caseData as any)?.stage);
+  const category = toSafeString(caseDetails?.case_type || apiData?.category || (legalkartCase as any)?.category || (caseData as any)?.category);
+  const subCategory = toSafeString(apiData?.sub_category || (legalkartCase as any)?.sub_category || (caseData as any)?.sub_category);
+  const beforeMe = toSafeString(apiData?.before_me || (legalkartCase as any)?.before_me_part_heard);
   
   // Additional fields from Legalkart
-  const purposeOfListing = toSafeString(apiData?.purpose_of_listing || apiData?.purpose_of_hearing || apiData?.listing_reason);
+  const purposeOfListing = toSafeString(lastHearing?.purpose_of_hearing || apiData?.purpose_of_listing || apiData?.purpose_of_hearing || apiData?.listing_reason);
   const caseDescription = toSafeString(apiData?.case_desc || apiData?.case_description || apiData?.matter_type);
   const stampNumber = toSafeString(apiData?.stamp_number || apiData?.ia_number);
   const listingDate = toSafeString(apiData?.listing_date || apiData?.listed_date);
@@ -178,9 +187,12 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
   }
   caseStatus = String(caseStatus).trim();
   
-  const caseType = toSafeString(apiData?.case_type || (caseData as any)?.case_type);
+  const caseType = toSafeString(caseDetails?.case_type || apiData?.case_type || (caseData as any)?.case_type);
   const classificationDesc = toSafeString(apiData?.classification_description || apiData?.classification);
   const actDescription = toSafeString(apiData?.act_description || apiData?.acts || (apiData?.acts && Array.isArray(apiData.acts) ? apiData.acts.join(', ') : ''));
+  
+  // Get court name from case_details
+  const courtName = toSafeString(caseDetails?.court_name || apiData?.court_name || (caseData as any)?.court_name);
   
   // Disposal-related fields
   const disposalDate = toSafeString(apiData?.disposal_date || apiData?.decision_date || (caseData as any)?.disposal_date || (caseData as any)?.decision_date);
@@ -331,6 +343,13 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
               label="Judicial Branch" 
               value={judicialBranch}
             />
+            {courtName && (
+              <InfoCard 
+                icon={Building} 
+                label="Court Name" 
+                value={courtName}
+              />
+            )}
           </CardContent>
         </Card>
 
