@@ -165,7 +165,19 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
   const stampNumber = toSafeString(apiData?.stamp_number || apiData?.ia_number);
   const listingDate = toSafeString(apiData?.listing_date || apiData?.listed_date);
   const presentedOn = toSafeString(apiData?.presented_on || apiData?.presentation_date);
-  const caseStatus = toSafeString(apiData?.case_status || apiData?.status);
+  
+  // Extract only the status value, cleaning any additional metadata
+  const rawStatus = apiData?.case_status || apiData?.status || '';
+  let caseStatus = toSafeString(rawStatus);
+  // If status is an object with a text property, extract it
+  if (typeof rawStatus === 'object' && rawStatus !== null && 'text' in rawStatus) {
+    caseStatus = String(rawStatus.text);
+  }
+  // Capitalize first letter if needed
+  if (caseStatus) {
+    caseStatus = caseStatus.charAt(0).toUpperCase() + caseStatus.slice(1);
+  }
+  
   const caseType = toSafeString(apiData?.case_type || (caseData as any)?.case_type);
   const classificationDesc = toSafeString(apiData?.classification_description || apiData?.classification);
   const actDescription = toSafeString(apiData?.act_description || apiData?.acts || (apiData?.acts && Array.isArray(apiData.acts) ? apiData.acts.join(', ') : ''));
