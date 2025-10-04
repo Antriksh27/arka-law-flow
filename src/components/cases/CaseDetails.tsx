@@ -134,32 +134,41 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
   // Extract data from various sources
   const apiData = fd?.data || fd || {};
   
+  // Helper to safely convert any value to string
+  const toSafeString = (val: any): string => {
+    if (!val) return '';
+    if (typeof val === 'string') return val;
+    if (Array.isArray(val)) return val.join(', ');
+    if (typeof val === 'object') return JSON.stringify(val);
+    return String(val);
+  };
+  
   const cnrNumber = legalkartCase?.cnr_number || caseData?.cnr_number || apiData?.cnr_number || fd?.case_info?.cnr_number || 'Not available';
-  const filingNumber = legalkartCase?.filing_number || (caseData as any)?.filing_number || apiData?.filing_number || fd?.case_info?.filing_number || '';
-  const registrationNumber = legalkartCase?.registration_number || (caseData as any)?.registration_number || apiData?.registration_number || fd?.case_info?.registration_number || '';
-  const filingDate = legalkartCase?.filing_date || (caseData as any)?.filing_date || apiData?.filing_date || fd?.case_info?.filing_date || '';
-  const registrationDate = legalkartCase?.registration_date || (caseData as any)?.registration_date || apiData?.registration_date || fd?.case_info?.registration_date || '';
-  const nextHearingDate = legalkartCase?.next_hearing_date || (caseData as any)?.next_hearing_date || apiData?.next_hearing_date || fd?.case_status?.next_hearing_date || '';
-  const state = legalkartCase?.state || (caseData as any)?.state || apiData?.state || fd?.case_status?.state || '';
-  const district = legalkartCase?.district || (caseData as any)?.district || apiData?.district || fd?.case_status?.district || '';
-  const benchType = legalkartCase?.bench_type || (caseData as any)?.bench_type || apiData?.bench_type || apiData?.bench_category || fd?.case_status?.bench_type || '';
-  const judicialBranch = legalkartCase?.judicial_branch || (caseData as any)?.judicial_branch || apiData?.judicial_branch || fd?.case_status?.judicial_branch || '';
-  const coram = legalkartCase?.coram || (caseData as any)?.coram || apiData?.coram || apiData?.judges || fd?.case_status?.coram || '';
-  const stageOfCase = (legalkartCase as any)?.stage_of_case || (legalkartCase as any)?.stage || (caseData as any)?.stage || apiData?.stage || fd?.case_status?.stage_of_case || '';
-  const category = (legalkartCase as any)?.category || (caseData as any)?.category || apiData?.category || fd?.category_info?.category || '';
-  const subCategory = (legalkartCase as any)?.sub_category || (caseData as any)?.sub_category || apiData?.sub_category || fd?.category_info?.sub_category || '';
-  const beforeMe = (legalkartCase as any)?.before_me_part_heard || apiData?.before_me || fd?.case_status?.not_before_me || '';
+  const filingNumber = toSafeString(legalkartCase?.filing_number || (caseData as any)?.filing_number || apiData?.filing_number || fd?.case_info?.filing_number);
+  const registrationNumber = toSafeString(legalkartCase?.registration_number || (caseData as any)?.registration_number || apiData?.registration_number || fd?.case_info?.registration_number);
+  const filingDate = toSafeString(legalkartCase?.filing_date || (caseData as any)?.filing_date || apiData?.filing_date || fd?.case_info?.filing_date);
+  const registrationDate = toSafeString(legalkartCase?.registration_date || (caseData as any)?.registration_date || apiData?.registration_date || fd?.case_info?.registration_date);
+  const nextHearingDate = toSafeString(legalkartCase?.next_hearing_date || (caseData as any)?.next_hearing_date || apiData?.next_hearing_date || fd?.case_status?.next_hearing_date);
+  const state = toSafeString(legalkartCase?.state || (caseData as any)?.state || apiData?.state || fd?.case_status?.state);
+  const district = toSafeString(legalkartCase?.district || (caseData as any)?.district || apiData?.district || fd?.case_status?.district);
+  const benchType = toSafeString(legalkartCase?.bench_type || (caseData as any)?.bench_type || apiData?.bench_type || apiData?.bench_category || fd?.case_status?.bench_type);
+  const judicialBranch = toSafeString(legalkartCase?.judicial_branch || (caseData as any)?.judicial_branch || apiData?.judicial_branch || fd?.case_status?.judicial_branch);
+  const coram = toSafeString(legalkartCase?.coram || (caseData as any)?.coram || apiData?.coram || apiData?.judges || fd?.case_status?.coram);
+  const stageOfCase = toSafeString((legalkartCase as any)?.stage_of_case || (legalkartCase as any)?.stage || (caseData as any)?.stage || apiData?.stage || fd?.case_status?.stage_of_case);
+  const category = toSafeString((legalkartCase as any)?.category || (caseData as any)?.category || apiData?.category || fd?.category_info?.category);
+  const subCategory = toSafeString((legalkartCase as any)?.sub_category || (caseData as any)?.sub_category || apiData?.sub_category || fd?.category_info?.sub_category);
+  const beforeMe = toSafeString((legalkartCase as any)?.before_me_part_heard || apiData?.before_me || fd?.case_status?.not_before_me);
   
   // Additional fields from Legalkart
-  const purposeOfListing = apiData?.purpose_of_listing || apiData?.purpose_of_hearing || apiData?.listing_reason || '';
-  const caseDescription = apiData?.case_desc || apiData?.case_description || apiData?.matter_type || '';
-  const stampNumber = apiData?.stamp_number || apiData?.ia_number || '';
-  const listingDate = apiData?.listing_date || apiData?.listed_date || '';
-  const presentedOn = apiData?.presented_on || apiData?.presentation_date || '';
-  const caseStatus = apiData?.case_status || apiData?.status || '';
-  const caseType = apiData?.case_type || (caseData as any)?.case_type || '';
-  const classificationDesc = apiData?.classification_description || apiData?.classification || '';
-  const actDescription = apiData?.act_description || apiData?.acts || (apiData?.acts && Array.isArray(apiData.acts) ? apiData.acts.join(', ') : '');
+  const purposeOfListing = toSafeString(apiData?.purpose_of_listing || apiData?.purpose_of_hearing || apiData?.listing_reason);
+  const caseDescription = toSafeString(apiData?.case_desc || apiData?.case_description || apiData?.matter_type);
+  const stampNumber = toSafeString(apiData?.stamp_number || apiData?.ia_number);
+  const listingDate = toSafeString(apiData?.listing_date || apiData?.listed_date);
+  const presentedOn = toSafeString(apiData?.presented_on || apiData?.presentation_date);
+  const caseStatus = toSafeString(apiData?.case_status || apiData?.status);
+  const caseType = toSafeString(apiData?.case_type || (caseData as any)?.case_type);
+  const classificationDesc = toSafeString(apiData?.classification_description || apiData?.classification);
+  const actDescription = toSafeString(apiData?.act_description || apiData?.acts || (apiData?.acts && Array.isArray(apiData.acts) ? apiData.acts.join(', ') : ''));
   
   const petitionerAdv = (legalkartCase as any)?.petitioner_and_advocate 
     || apiData?.petitioner_and_advocate
