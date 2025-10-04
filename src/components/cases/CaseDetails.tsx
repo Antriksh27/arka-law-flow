@@ -166,17 +166,16 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
   const listingDate = toSafeString(apiData?.listing_date || apiData?.listed_date);
   const presentedOn = toSafeString(apiData?.presented_on || apiData?.presentation_date);
   
-  // Extract only the status value, cleaning any additional metadata
-  const rawStatus = apiData?.case_status || apiData?.status || '';
-  let caseStatus = toSafeString(rawStatus);
-  // If status is an object with a text property, extract it
-  if (typeof rawStatus === 'object' && rawStatus !== null && 'text' in rawStatus) {
-    caseStatus = String(rawStatus.text);
+  // Extract case status - handle nested object structure
+  const statusObj = apiData?.case_status || apiData?.status || fd?.case_status;
+  let caseStatus = '';
+  if (typeof statusObj === 'object' && statusObj !== null) {
+    // Extract from nested object (e.g., case_status.case_status)
+    caseStatus = statusObj.case_status || statusObj.status || statusObj.text || '';
+  } else if (typeof statusObj === 'string') {
+    caseStatus = statusObj;
   }
-  // Capitalize first letter if needed
-  if (caseStatus) {
-    caseStatus = caseStatus.charAt(0).toUpperCase() + caseStatus.slice(1);
-  }
+  caseStatus = String(caseStatus).trim();
   
   const caseType = toSafeString(apiData?.case_type || (caseData as any)?.case_type);
   const classificationDesc = toSafeString(apiData?.classification_description || apiData?.classification);
