@@ -170,6 +170,11 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
   const classificationDesc = toSafeString(apiData?.classification_description || apiData?.classification);
   const actDescription = toSafeString(apiData?.act_description || apiData?.acts || (apiData?.acts && Array.isArray(apiData.acts) ? apiData.acts.join(', ') : ''));
   
+  // Disposal-related fields
+  const disposalDate = toSafeString(apiData?.disposal_date || apiData?.decision_date || (caseData as any)?.disposal_date || (caseData as any)?.decision_date);
+  const natureOfDisposal = toSafeString(apiData?.nature_of_disposal || apiData?.disposal_nature || fd?.case_status?.nature_of_disposal);
+  const isDisposed = caseStatus.toLowerCase().includes('dispos');
+  
   const petitionerAdv = (legalkartCase as any)?.petitioner_and_advocate 
     || apiData?.petitioner_and_advocate
     || fd?.petitioner_and_advocate 
@@ -403,6 +408,22 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
                 icon={FileText} 
                 label="Purpose of Listing" 
                 value={purposeOfListing}
+              />
+            )}
+            {isDisposed && disposalDate && (
+              <InfoCard 
+                icon={Calendar} 
+                label="Disposal Date" 
+                value={formatDate(disposalDate)}
+                variant="success"
+              />
+            )}
+            {isDisposed && natureOfDisposal && (
+              <InfoCard 
+                icon={CheckCircle} 
+                label="Nature of Disposal" 
+                value={natureOfDisposal}
+                variant="success"
               />
             )}
           </div>
