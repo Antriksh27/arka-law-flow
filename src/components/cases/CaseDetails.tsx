@@ -23,67 +23,13 @@ interface CaseDetailsProps {
 export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
   const [refreshing, setRefreshing] = useState(false);
 
-  // Query for Legalkart case data
-  const { data: legalkartCase, isLoading, refetch } = useQuery({
-    queryKey: ['legalkart-case', caseId],
-    queryFn: async () => {
-      // Try by direct case link first
-      const { data: byCase } = await supabase
-        .from('legalkart_cases')
-        .select('*')
-        .eq('case_id', caseId)
-        .maybeSingle();
-      if (byCase) return byCase;
-
-      // Fallback by CNR number if present on the case
-      const { data: cnrRow } = await supabase
-        .from('cases')
-        .select('cnr_number')
-        .eq('id', caseId)
-        .maybeSingle();
-
-      const cnr = (cnrRow as any)?.cnr_number;
-      if (!cnr) return null;
-
-      const { data: byCnr } = await supabase
-        .from('legalkart_cases')
-        .select('*')
-        .eq('cnr_number', cnr)
-        .maybeSingle();
-
-      return byCnr ?? null;
-    },
-    enabled: !!caseId
-  });
-
-  // Get original case data for CNR number
-  const { data: caseData } = useQuery({
-    queryKey: ['case-basic', caseId],
+  // Query case data - Legalkart data is already mapped to cases table columns
+  const { data: caseData, isLoading, refetch } = useQuery({
+    queryKey: ['case-details', caseId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('cases')
-        .select(`
-          cnr_number,
-          case_title,
-          filing_number,
-          registration_number,
-          filing_date,
-          registration_date,
-          next_hearing_date,
-          state,
-          district,
-          bench_type,
-          judicial_branch,
-          coram,
-          stage,
-          category,
-          sub_category,
-          fetched_data,
-          petitioner,
-          petitioner_advocate,
-          respondent,
-          respondent_advocate
-        `)
+        .select('*')
         .eq('id', caseId)
         .single();
       if (error) throw error;
@@ -106,507 +52,448 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
-          <div className="h-64 bg-gray-200 rounded mb-6"></div>
-          <div className="h-40 bg-gray-200 rounded"></div>
-        </div>
-      </div>
+      <Card>
+        <CardContent className="p-6">
+          <p>Loading case details...</p>
+        </CardContent>
+      </Card>
     );
   }
 
-  // Build a safe view model from legalkart_cases or fallback to raw fetched_data on cases
-  const fd: any = (caseData as any)?.fetched_data || null;
-  const formatDate = (val: any): string => {
-    if (!val) return 'Not available';
-    if (typeof val === 'string') {
-      const d = new Date(val);
-      if (isNaN(d.getTime())) return val;
-      const day = String(d.getDate()).padStart(2, '0');
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const year = d.getFullYear();
-      return `${day}/${month}/${year}`;
-    }
-    return String(val);
-  };
-  
-  // Extract data from various sources - prioritize fetched_data structure
-  const apiData = fd?.data || fd || {};
-  const caseDetails = apiData?.case_details || {};
-  const caseHistoryData = apiData?.case_history || [];
-  const lastHearing = caseHistoryData.length > 0 ? caseHistoryData[caseHistoryData.length - 1] : null;
-  
-  // Helper to safely convert any value to string
-  const toSafeString = (val: any): string => {
-    if (!val) return '';
-    if (typeof val === 'string') return val;
-    if (Array.isArray(val)) return val.join(', ');
-    if (typeof val === 'object') return JSON.stringify(val);
-    return String(val);
-  };
-  
-  // Prioritize API fetched data over local database - extract from case_details
-  const cnrNumber = caseDetails?.cnr_number || apiData?.cnr_number || legalkartCase?.cnr_number || caseData?.cnr_number || 'Not available';
-  const filingNumber = toSafeString(caseDetails?.filing_number || apiData?.filing_number || legalkartCase?.filing_number || (caseData as any)?.filing_number);
-  const registrationNumber = toSafeString(caseDetails?.registration_number || apiData?.registration_number || legalkartCase?.registration_number || (caseData as any)?.registration_number);
-  const filingDate = toSafeString(caseDetails?.filing_date || apiData?.filing_date || legalkartCase?.filing_date || (caseData as any)?.filing_date);
-  const registrationDate = toSafeString(caseDetails?.registration_date || apiData?.registration_date || legalkartCase?.registration_date || (caseData as any)?.registration_date);
-  
-  // Get next hearing date from last hearing in case_history
-  const nextHearingDate = toSafeString(lastHearing?.hearing_date || apiData?.next_hearing_date || legalkartCase?.next_hearing_date || (caseData as any)?.next_hearing_date);
-  
-  const state = toSafeString(apiData?.state || legalkartCase?.state || (caseData as any)?.state);
-  const district = toSafeString(apiData?.district || legalkartCase?.district || (caseData as any)?.district);
-  const benchType = toSafeString(apiData?.bench_type || apiData?.bench_category || legalkartCase?.bench_type || (caseData as any)?.bench_type);
-  const judicialBranch = toSafeString(apiData?.judicial_branch || legalkartCase?.judicial_branch || (caseData as any)?.judicial_branch);
-  
-  // Get coram/judge from last hearing
-  const coram = toSafeString(lastHearing?.judge || apiData?.coram || apiData?.judges || legalkartCase?.coram || (caseData as any)?.coram);
-  
-  const stageOfCase = toSafeString(apiData?.stage || (legalkartCase as any)?.stage_of_case || (legalkartCase as any)?.stage || (caseData as any)?.stage);
-  const category = toSafeString(caseDetails?.case_type || apiData?.category || (legalkartCase as any)?.category || (caseData as any)?.category);
-  const subCategory = toSafeString(apiData?.sub_category || (legalkartCase as any)?.sub_category || (caseData as any)?.sub_category);
-  const beforeMe = toSafeString(apiData?.before_me || (legalkartCase as any)?.before_me_part_heard);
-  
-  // Additional fields from Legalkart
-  const purposeOfListing = toSafeString(lastHearing?.purpose_of_hearing || apiData?.purpose_of_listing || apiData?.purpose_of_hearing || apiData?.listing_reason);
-  const caseDescription = toSafeString(apiData?.case_desc || apiData?.case_description || apiData?.matter_type);
-  const stampNumber = toSafeString(apiData?.stamp_number || apiData?.ia_number);
-  const listingDate = toSafeString(apiData?.listing_date || apiData?.listed_date);
-  const presentedOn = toSafeString(apiData?.presented_on || apiData?.presentation_date);
-  
-  // Extract case status - handle nested object structure
-  const statusObj = apiData?.case_status || apiData?.status || fd?.case_status;
-  let caseStatus = '';
-  if (typeof statusObj === 'object' && statusObj !== null) {
-    // Extract from nested object (e.g., case_status.case_status)
-    caseStatus = statusObj.case_status || statusObj.status || statusObj.text || '';
-  } else if (typeof statusObj === 'string') {
-    caseStatus = statusObj;
+  if (!caseData) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <p>No case data available.</p>
+        </CardContent>
+      </Card>
+    );
   }
-  caseStatus = String(caseStatus).trim();
-  
-  const caseType = toSafeString(caseDetails?.case_type || apiData?.case_type || (caseData as any)?.case_type);
-  const classificationDesc = toSafeString(apiData?.classification_description || apiData?.classification);
-  const actDescription = toSafeString(apiData?.act_description || apiData?.acts || (apiData?.acts && Array.isArray(apiData.acts) ? apiData.acts.join(', ') : ''));
-  
-  // Get court name from case_details
-  const courtName = toSafeString(caseDetails?.court_name || apiData?.court_name || (caseData as any)?.court_name);
-  
-  // Disposal-related fields
-  const disposalDate = toSafeString(apiData?.disposal_date || apiData?.decision_date || (caseData as any)?.disposal_date || (caseData as any)?.decision_date);
-  const natureOfDisposal = toSafeString(apiData?.nature_of_disposal || apiData?.disposal_nature || fd?.case_status?.nature_of_disposal);
-  const isDisposed = caseStatus.toLowerCase().includes('dispos');
-  
-  // Prioritize API data for petitioner and respondent
-  const petitionerAdv = apiData?.petitioner_and_advocate
-    || fd?.petitioner_and_advocate 
-    || (legalkartCase as any)?.petitioner_and_advocate 
-    || [ (caseData as any)?.petitioner, (caseData as any)?.petitioner_advocate ? `Advocate- ${(caseData as any)?.petitioner_advocate}` : '' ]
-        .filter(Boolean)
-        .join(' ').trim();
-  const respondentAdv = apiData?.respondent_and_advocate
-    || fd?.respondent_and_advocate 
-    || (legalkartCase as any)?.respondent_and_advocate 
-    || [ (caseData as any)?.respondent, (caseData as any)?.respondent_advocate ? `Advocate- ${(caseData as any)?.respondent_advocate}` : '' ]
-        .filter(Boolean)
-        .join(' ').trim();
 
-  // Info card component for consistent styling
-  const InfoCard = ({ icon: Icon, label, value, variant = 'default' }: any) => (
-    <div className="flex items-start gap-3 p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
-      <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
-        variant === 'primary' ? 'bg-primary/10 text-primary' :
-        variant === 'success' ? 'bg-green-100 text-green-700' :
-        variant === 'warning' ? 'bg-yellow-100 text-yellow-700' :
-        'bg-gray-100 text-gray-700'
-      }`}>
-        <Icon className="w-5 h-5" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-xs font-medium text-muted uppercase tracking-wide mb-1">{label}</p>
-        <p className="text-sm font-semibold text-foreground break-words">{value || 'Not available'}</p>
-      </div>
-    </div>
-  );
+  // All fields are now directly in the cases table
+  const {
+    cnr_number,
+    case_title,
+    filing_number,
+    registration_number,
+    filing_date,
+    registration_date,
+    next_hearing_date,
+    state,
+    district,
+    bench_type,
+    judicial_branch,
+    coram,
+    stage,
+    category,
+    sub_category,
+    court_name,
+    court,
+    petitioner,
+    petitioner_advocate,
+    respondent,
+    respondent_advocate,
+    status,
+    case_type,
+    priority,
+    description,
+    acts,
+    sections,
+    orders,
+    purpose_of_hearing,
+    last_fetched_at,
+    fetched_data,
+  } = caseData;
+
+  // Extract nested data for the tabs (documents, objections, etc.)
+  const apiData = (fetched_data as any)?.data || {};
+  const documents = apiData?.documents || [];
+  const objections = apiData?.objections || [];
+  const orderDetails = apiData?.order_details || [];
+  const historyData = apiData?.history_of_case_hearing || [];
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6">
       {/* Header with refresh button */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-            <Scale className="w-5 h-5 text-primary" />
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold text-foreground">Legalkart Case Details</h2>
-            <p className="text-sm text-muted">Comprehensive case information from court records</p>
-          </div>
-        </div>
+        <h2 className="text-2xl font-semibold">Case Details</h2>
         <Button 
           variant="outline" 
           size="sm" 
           onClick={handleRefresh}
           disabled={refreshing}
-          className="border-gray-300"
         >
           <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-          Refresh Data
+          Refresh
         </Button>
       </div>
 
-      {/* Case Numbers & Identification */}
-      <Card className="rounded-2xl shadow-sm border-gray-200">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg font-semibold flex items-center gap-2">
-              <Hash className="w-5 h-5 text-primary" />
-              Case Identification
-            </CardTitle>
-            <Badge variant="outline" className="text-xs bg-primary/5 border-primary/20 text-primary">
-              Official Record
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <InfoCard 
-              icon={Hash} 
-              label="CNR Number" 
-              value={cnrNumber}
-              variant="primary"
-            />
-            <InfoCard 
-              icon={FileText} 
-              label="Filing Number" 
-              value={filingNumber}
-            />
-            <InfoCard 
-              icon={Archive} 
-              label="Registration Number" 
-              value={registrationNumber}
-            />
-            {stampNumber && (
-              <InfoCard 
-                icon={Hash} 
-                label="Stamp Number" 
-                value={stampNumber}
-              />
-            )}
-            {caseType && (
-              <InfoCard 
-                icon={FileText} 
-                label="Case Type" 
-                value={caseType}
-              />
-            )}
-            {caseDescription && (
-              <InfoCard 
-                icon={FileText} 
-                label="Case Description" 
-                value={caseDescription}
-              />
-            )}
-          </div>
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="overview" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="parties">Parties</TabsTrigger>
+          <TabsTrigger value="documents">Documents</TabsTrigger>
+          <TabsTrigger value="objections">Objections</TabsTrigger>
+          <TabsTrigger value="orders">Orders</TabsTrigger>
+          <TabsTrigger value="history">History</TabsTrigger>
+        </TabsList>
 
-      {/* Court & Location Details */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="rounded-2xl shadow-sm border-gray-200">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg font-semibold flex items-center gap-2">
-              <Building className="w-5 h-5 text-primary" />
-              Court Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <InfoCard 
-              icon={MapPin} 
-              label="State" 
-              value={state}
-              variant="success"
-            />
-            <InfoCard 
-              icon={MapPin} 
-              label="District" 
-              value={district}
-            />
-            <InfoCard 
-              icon={Building} 
-              label="Bench Type" 
-              value={benchType}
-            />
-            <InfoCard 
-              icon={Briefcase} 
-              label="Judicial Branch" 
-              value={judicialBranch}
-            />
-            {courtName && (
-              <InfoCard 
-                icon={Building} 
-                label="Court Name" 
-                value={courtName}
-              />
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-2xl shadow-sm border-gray-200">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg font-semibold flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-primary" />
-              Important Dates
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <InfoCard 
-              icon={Calendar} 
-              label="Filing Date" 
-              value={formatDate(filingDate)}
-              variant="primary"
-            />
-            <InfoCard 
-              icon={Calendar} 
-              label="Registration Date" 
-              value={formatDate(registrationDate)}
-            />
-            {presentedOn && (
-              <InfoCard 
-                icon={Calendar} 
-                label="Presented On" 
-                value={formatDate(presentedOn)}
-              />
-            )}
-            {listingDate && (
-              <InfoCard 
-                icon={Calendar} 
-                label="Listing Date" 
-                value={formatDate(listingDate)}
-              />
-            )}
-            <InfoCard 
-              icon={Clock} 
-              label="Next Hearing Date" 
-              value={nextHearingDate ? formatDate(nextHearingDate) : 'Not scheduled'}
-              variant={nextHearingDate ? 'warning' : 'default'}
-            />
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Case Status & Classification */}
-      <Card className="rounded-2xl shadow-sm border-gray-200">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg font-semibold flex items-center gap-2">
-            <Flag className="w-5 h-5 text-primary" />
-            Case Status & Classification
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {caseStatus && (
-              <InfoCard 
-                icon={CheckCircle} 
-                label="Case Status" 
-                value={caseStatus}
-                variant="success"
-              />
-            )}
-            <InfoCard 
-              icon={Gavel} 
-              label="Coram / Judges" 
-              value={coram}
-            />
-            <InfoCard 
-              icon={CheckCircle} 
-              label="Stage of Case" 
-              value={stageOfCase}
-              variant="success"
-            />
-            <InfoCard 
-              icon={BookOpen} 
-              label="Category" 
-              value={category}
-            />
-            <InfoCard 
-              icon={FileText} 
-              label="Sub Category" 
-              value={subCategory}
-            />
-            {purposeOfListing && (
-              <InfoCard 
-                icon={FileText} 
-                label="Purpose of Listing" 
-                value={purposeOfListing}
-              />
-            )}
-            {isDisposed && disposalDate && (
-              <InfoCard 
-                icon={Calendar} 
-                label="Disposal Date" 
-                value={formatDate(disposalDate)}
-                variant="success"
-              />
-            )}
-            {isDisposed && natureOfDisposal && (
-              <InfoCard 
-                icon={CheckCircle} 
-                label="Nature of Disposal" 
-                value={natureOfDisposal}
-                variant="success"
-              />
-            )}
-          </div>
-          
-          {/* Classification & Act Details */}
-          {(classificationDesc || actDescription) && (
-            <div className="mt-6 space-y-3">
-              {classificationDesc && (
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                  <div className="flex items-start gap-2">
-                    <BookOpen className="w-5 h-5 text-blue-700 flex-shrink-0 mt-0.5" />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-blue-900">Classification</p>
-                      <p className="text-sm text-blue-800 mt-1">{classificationDesc}</p>
+        <TabsContent value="overview" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="w-5 h-5" />
+                Basic Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {cnr_number && (
+                  <div className="flex items-start gap-3">
+                    <Hash className="w-5 h-5 text-primary mt-1" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">CNR Number</p>
+                      <p className="font-medium">{cnr_number}</p>
                     </div>
                   </div>
-                </div>
-              )}
-              {actDescription && (
-                <div className="p-4 bg-purple-50 border border-purple-200 rounded-xl">
-                  <div className="flex items-start gap-2">
-                    <Scale className="w-5 h-5 text-purple-700 flex-shrink-0 mt-0.5" />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-purple-900">Act(s)</p>
-                      <p className="text-sm text-purple-800 mt-1">{actDescription}</p>
+                )}
+
+                {filing_number && (
+                  <div className="flex items-start gap-3">
+                    <FileText className="w-5 h-5 text-primary mt-1" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Filing Number</p>
+                      <p className="font-medium">{filing_number}</p>
                     </div>
                   </div>
-                </div>
-              )}
-            </div>
-          )}
-          
-          {beforeMe && (
-            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
-              <div className="flex items-start gap-2">
-                <AlertCircle className="w-5 h-5 text-yellow-700 flex-shrink-0 mt-0.5" />
+                )}
+
+                {registration_number && (
+                  <div className="flex items-start gap-3">
+                    <FileText className="w-5 h-5 text-primary mt-1" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Registration Number</p>
+                      <p className="font-medium">{registration_number}</p>
+                    </div>
+                  </div>
+                )}
+
+                {status && (
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="w-5 h-5 text-primary mt-1" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Status</p>
+                      <Badge variant={status === 'closed' ? 'outline' : 'default'}>
+                        {status}
+                      </Badge>
+                    </div>
+                  </div>
+                )}
+
+                {filing_date && (
+                  <div className="flex items-start gap-3">
+                    <Calendar className="w-5 h-5 text-primary mt-1" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Filing Date</p>
+                      <p className="font-medium">{filing_date}</p>
+                    </div>
+                  </div>
+                )}
+
+                {registration_date && (
+                  <div className="flex items-start gap-3">
+                    <Calendar className="w-5 h-5 text-primary mt-1" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Registration Date</p>
+                      <p className="font-medium">{registration_date}</p>
+                    </div>
+                  </div>
+                )}
+
+                {next_hearing_date && (
+                  <div className="flex items-start gap-3">
+                    <Clock className="w-5 h-5 text-primary mt-1" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Next Hearing</p>
+                      <p className="font-medium">{next_hearing_date}</p>
+                    </div>
+                  </div>
+                )}
+
+                {(court_name || court) && (
+                  <div className="flex items-start gap-3">
+                    <Building className="w-5 h-5 text-primary mt-1" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Court</p>
+                      <p className="font-medium">{court_name || court}</p>
+                    </div>
+                  </div>
+                )}
+
+                {state && (
+                  <div className="flex items-start gap-3">
+                    <MapPin className="w-5 h-5 text-primary mt-1" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">State</p>
+                      <p className="font-medium">{state}</p>
+                    </div>
+                  </div>
+                )}
+
+                {district && (
+                  <div className="flex items-start gap-3">
+                    <MapPin className="w-5 h-5 text-primary mt-1" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">District</p>
+                      <p className="font-medium">{district}</p>
+                    </div>
+                  </div>
+                )}
+
+                {bench_type && (
+                  <div className="flex items-start gap-3">
+                    <Gavel className="w-5 h-5 text-primary mt-1" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Bench Type</p>
+                      <p className="font-medium">{bench_type}</p>
+                    </div>
+                  </div>
+                )}
+
+                {judicial_branch && (
+                  <div className="flex items-start gap-3">
+                    <Building className="w-5 h-5 text-primary mt-1" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Judicial Branch</p>
+                      <p className="font-medium">{judicial_branch}</p>
+                    </div>
+                  </div>
+                )}
+
+                {coram && (
+                  <div className="flex items-start gap-3">
+                    <User className="w-5 h-5 text-primary mt-1" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Judge/Coram</p>
+                      <p className="font-medium">{coram}</p>
+                    </div>
+                  </div>
+                )}
+
+                {stage && (
+                  <div className="flex items-start gap-3">
+                    <Flag className="w-5 h-5 text-primary mt-1" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Stage</p>
+                      <p className="font-medium">{stage}</p>
+                    </div>
+                  </div>
+                )}
+
+                {category && (
+                  <div className="flex items-start gap-3">
+                    <BookOpen className="w-5 h-5 text-primary mt-1" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Category</p>
+                      <p className="font-medium">{category}</p>
+                    </div>
+                  </div>
+                )}
+
+                {sub_category && (
+                  <div className="flex items-start gap-3">
+                    <BookOpen className="w-5 h-5 text-primary mt-1" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Sub Category</p>
+                      <p className="font-medium">{sub_category}</p>
+                    </div>
+                  </div>
+                )}
+
+                {purpose_of_hearing && (
+                  <div className="flex items-start gap-3">
+                    <Briefcase className="w-5 h-5 text-primary mt-1" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Purpose of Hearing</p>
+                      <p className="font-medium">{purpose_of_hearing}</p>
+                    </div>
+                  </div>
+                )}
+
+                {case_type && (
+                  <div className="flex items-start gap-3">
+                    <Scale className="w-5 h-5 text-primary mt-1" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Case Type</p>
+                      <Badge>{case_type}</Badge>
+                    </div>
+                  </div>
+                )}
+
+                {priority && (
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-primary mt-1" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Priority</p>
+                      <Badge variant={priority === 'high' ? 'error' : priority === 'medium' ? 'warning' : 'default'}>
+                        {priority}
+                      </Badge>
+                    </div>
+                  </div>
+                )}
+
+                {description && (
+                  <div className="flex items-start gap-3 md:col-span-2">
+                    <FileText className="w-5 h-5 text-primary mt-1" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Description</p>
+                      <p className="font-medium">{description}</p>
+                    </div>
+                  </div>
+                )}
+
+                {acts && acts.length > 0 && (
+                  <div className="flex items-start gap-3 md:col-span-2">
+                    <Scale className="w-5 h-5 text-primary mt-1" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Acts</p>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {acts.map((act, idx) => (
+                          <Badge key={idx} variant="outline">{act}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {sections && sections.length > 0 && (
+                  <div className="flex items-start gap-3 md:col-span-2">
+                    <BookOpen className="w-5 h-5 text-primary mt-1" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Sections</p>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {sections.map((section, idx) => (
+                          <Badge key={idx} variant="outline">{section}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {last_fetched_at && (
+                  <div className="flex items-start gap-3 md:col-span-2">
+                    <Clock className="w-5 h-5 text-primary mt-1" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Last Fetched</p>
+                      <p className="font-medium text-sm">{new Date(last_fetched_at).toLocaleString()}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="parties" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                Party Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {petitioner && (
                 <div>
-                  <p className="text-sm font-medium text-yellow-900">Before Me / Part Heard</p>
-                  <p className="text-sm text-yellow-800 mt-1">{beforeMe}</p>
+                  <h4 className="font-semibold mb-2 flex items-center gap-2">
+                    <User className="w-4 h-4" />
+                    Petitioner
+                  </h4>
+                  <p className="text-sm mb-1">{petitioner}</p>
+                  {petitioner_advocate && (
+                    <p className="text-sm text-muted-foreground">
+                      Advocate: {petitioner_advocate}
+                    </p>
+                  )}
                 </div>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              )}
 
-      {/* Parties Involved */}
-      <Card className="rounded-2xl shadow-sm border-gray-200">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg font-semibold flex items-center gap-2">
-            <Users className="w-5 h-5 text-primary" />
-            Parties Involved
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                  <User className="w-4 h-4 text-blue-700" />
+              {respondent && (
+                <div>
+                  <h4 className="font-semibold mb-2 flex items-center gap-2">
+                    <User className="w-4 h-4" />
+                    Respondent
+                  </h4>
+                  <p className="text-sm mb-1">{respondent}</p>
+                  {respondent_advocate && (
+                    <p className="text-sm text-muted-foreground">
+                      Advocate: {respondent_advocate}
+                    </p>
+                  )}
                 </div>
-                <h4 className="font-semibold text-foreground">Petitioner</h4>
-              </div>
-              <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl">
-                <p className="text-sm text-foreground whitespace-pre-wrap">
-                  {petitionerAdv || 'Not available'}
-                </p>
-              </div>
-            </div>
-            
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
-                  <User className="w-4 h-4 text-red-700" />
+              )}
+
+              {orders && orders.length > 0 && (
+                <div>
+                  <h4 className="font-semibold mb-2 flex items-center gap-2">
+                    <Gavel className="w-4 h-4" />
+                    Orders
+                  </h4>
+                  <ul className="list-disc list-inside space-y-1">
+                    {orders.map((order, idx) => (
+                      <li key={idx} className="text-sm">{order}</li>
+                    ))}
+                  </ul>
                 </div>
-                <h4 className="font-semibold text-foreground">Respondent</h4>
-              </div>
-              <div className="bg-red-50 border border-red-100 p-4 rounded-xl">
-                <p className="text-sm text-foreground whitespace-pre-wrap">
-                  {respondentAdv || 'Not available'}
-                </p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-      {/* Related Information Tabs */}
-      <Card className="rounded-2xl shadow-sm border-gray-200">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg font-semibold flex items-center gap-2">
-            <FileText className="w-5 h-5 text-primary" />
-            Case Documents & Records
-          </CardTitle>
-          <p className="text-sm text-muted mt-1">
-            View documents, objections, orders, and case history
-          </p>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="documents" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 h-auto p-1 bg-gray-100">
-              <TabsTrigger 
-                value="documents" 
-                className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-lg py-2.5"
-              >
-                <FileText className="w-4 h-4 mr-2" />
-                Documents
-              </TabsTrigger>
-              <TabsTrigger 
-                value="objections"
-                className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-lg py-2.5"
-              >
-                <AlertCircle className="w-4 h-4 mr-2" />
-                Objections
-              </TabsTrigger>
-              <TabsTrigger 
-                value="orders"
-                className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-lg py-2.5"
-              >
-                <Gavel className="w-4 h-4 mr-2" />
-                Orders
-              </TabsTrigger>
-              <TabsTrigger 
-                value="history"
-                className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-lg py-2.5"
-              >
-                <Clock className="w-4 h-4 mr-2" />
-                History
-              </TabsTrigger>
-            </TabsList>
+        <TabsContent value="documents">
+          <Card>
+            <CardHeader>
+              <CardTitle>Documents</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <LegalkartDocumentsTable caseId={caseId} />
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-            <div className="mt-6">
-              <TabsContent value="documents" className="mt-0">
-                <LegalkartDocumentsTable caseId={caseId} />
-              </TabsContent>
+        <TabsContent value="objections">
+          <Card>
+            <CardHeader>
+              <CardTitle>Objections</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <LegalkartObjectionsTable caseId={caseId} />
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-              <TabsContent value="objections" className="mt-0">
-                <LegalkartObjectionsTable caseId={caseId} />
-              </TabsContent>
+        <TabsContent value="orders">
+          <Card>
+            <CardHeader>
+              <CardTitle>Order Details</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <LegalkartOrdersTable caseId={caseId} />
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-              <TabsContent value="orders" className="mt-0">
-                <LegalkartOrdersTable caseId={caseId} />
-              </TabsContent>
-
-              <TabsContent value="history" className="mt-0">
-                <LegalkartHistoryTable caseId={caseId} />
-              </TabsContent>
-            </div>
-          </Tabs>
-        </CardContent>
-      </Card>
+        <TabsContent value="history">
+          <Card>
+            <CardHeader>
+              <CardTitle>Case History</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <LegalkartHistoryTable caseId={caseId} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
