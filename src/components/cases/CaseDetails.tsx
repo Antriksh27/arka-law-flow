@@ -114,9 +114,12 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
 
   return (
     <div className="space-y-6">
-      {/* Header with refresh button */}
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold">Case Details</h2>
+        <div>
+          <h2 className="text-2xl font-semibold text-foreground">{case_title}</h2>
+          {cnr_number && <p className="text-sm text-muted-foreground mt-1">CNR: {cnr_number}</p>}
+        </div>
         <Button 
           variant="outline" 
           size="sm" 
@@ -128,8 +131,59 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
         </Button>
       </div>
 
+      {/* Status Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="bg-card rounded-2xl shadow-sm">
+          <CardContent className="p-5">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-primary/10 rounded-xl">
+                <CheckCircle className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Status</p>
+                <Badge variant={status === 'closed' ? 'outline' : 'default'} className="mt-1">
+                  {status || 'Active'}
+                </Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card rounded-2xl shadow-sm">
+          <CardContent className="p-5">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-primary/10 rounded-xl">
+                <Calendar className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Next Hearing</p>
+                <p className="font-semibold text-base mt-1">
+                  {next_hearing_date ? new Date(next_hearing_date).toLocaleDateString() : 'Not scheduled'}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card rounded-2xl shadow-sm">
+          <CardContent className="p-5">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-primary/10 rounded-xl">
+                <Building className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Court</p>
+                <p className="font-semibold text-base mt-1 line-clamp-2">
+                  {court_name || court || 'N/A'}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
+        <TabsList className="bg-muted/50">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="parties">Parties</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
@@ -139,321 +193,308 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
-          <Card>
+          {/* Case Numbers */}
+          <Card className="rounded-2xl shadow-sm">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="w-5 h-5" />
-                Basic Information
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <Hash className="w-5 h-5 text-primary" />
+                Case Numbers & Registration
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {cnr_number && (
-                  <div className="flex items-start gap-3">
-                    <Hash className="w-5 h-5 text-primary mt-1" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">CNR Number</p>
-                      <p className="font-medium">{cnr_number}</p>
-                    </div>
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">CNR Number</p>
+                    <p className="font-semibold">{cnr_number}</p>
                   </div>
                 )}
-
                 {filing_number && (
-                  <div className="flex items-start gap-3">
-                    <FileText className="w-5 h-5 text-primary mt-1" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Filing Number</p>
-                      <p className="font-medium">{filing_number}</p>
-                    </div>
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">Filing Number</p>
+                    <p className="font-semibold">{filing_number}</p>
                   </div>
                 )}
-
                 {registration_number && (
-                  <div className="flex items-start gap-3">
-                    <FileText className="w-5 h-5 text-primary mt-1" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Registration Number</p>
-                      <p className="font-medium">{registration_number}</p>
-                    </div>
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">Registration Number</p>
+                    <p className="font-semibold">{registration_number}</p>
                   </div>
                 )}
-
-                {status && (
-                  <div className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-primary mt-1" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Status</p>
-                      <Badge variant={status === 'closed' ? 'outline' : 'default'}>
-                        {status}
-                      </Badge>
-                    </div>
-                  </div>
-                )}
-
-                {filing_date && (
-                  <div className="flex items-start gap-3">
-                    <Calendar className="w-5 h-5 text-primary mt-1" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Filing Date</p>
-                      <p className="font-medium">{filing_date}</p>
-                    </div>
-                  </div>
-                )}
-
-                {registration_date && (
-                  <div className="flex items-start gap-3">
-                    <Calendar className="w-5 h-5 text-primary mt-1" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Registration Date</p>
-                      <p className="font-medium">{registration_date}</p>
-                    </div>
-                  </div>
-                )}
-
-                {next_hearing_date && (
-                  <div className="flex items-start gap-3">
-                    <Clock className="w-5 h-5 text-primary mt-1" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Next Hearing</p>
-                      <p className="font-medium">{next_hearing_date}</p>
-                    </div>
-                  </div>
-                )}
-
-                {(court_name || court) && (
-                  <div className="flex items-start gap-3">
-                    <Building className="w-5 h-5 text-primary mt-1" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Court</p>
-                      <p className="font-medium">{court_name || court}</p>
-                    </div>
-                  </div>
-                )}
-
-                {state && (
-                  <div className="flex items-start gap-3">
-                    <MapPin className="w-5 h-5 text-primary mt-1" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">State</p>
-                      <p className="font-medium">{state}</p>
-                    </div>
-                  </div>
-                )}
-
-                {district && (
-                  <div className="flex items-start gap-3">
-                    <MapPin className="w-5 h-5 text-primary mt-1" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">District</p>
-                      <p className="font-medium">{district}</p>
-                    </div>
-                  </div>
-                )}
-
-                {bench_type && (
-                  <div className="flex items-start gap-3">
-                    <Gavel className="w-5 h-5 text-primary mt-1" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Bench Type</p>
-                      <p className="font-medium">{bench_type}</p>
-                    </div>
-                  </div>
-                )}
-
-                {judicial_branch && (
-                  <div className="flex items-start gap-3">
-                    <Building className="w-5 h-5 text-primary mt-1" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Judicial Branch</p>
-                      <p className="font-medium">{judicial_branch}</p>
-                    </div>
-                  </div>
-                )}
-
-                {coram && (
-                  <div className="flex items-start gap-3">
-                    <User className="w-5 h-5 text-primary mt-1" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Judge/Coram</p>
-                      <p className="font-medium">{coram}</p>
-                    </div>
-                  </div>
-                )}
-
-                {stage && (
-                  <div className="flex items-start gap-3">
-                    <Flag className="w-5 h-5 text-primary mt-1" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Stage</p>
-                      <p className="font-medium">{stage}</p>
-                    </div>
-                  </div>
-                )}
-
-                {category && (
-                  <div className="flex items-start gap-3">
-                    <BookOpen className="w-5 h-5 text-primary mt-1" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Category</p>
-                      <p className="font-medium">{category}</p>
-                    </div>
-                  </div>
-                )}
-
-                {sub_category && (
-                  <div className="flex items-start gap-3">
-                    <BookOpen className="w-5 h-5 text-primary mt-1" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Sub Category</p>
-                      <p className="font-medium">{sub_category}</p>
-                    </div>
-                  </div>
-                )}
-
-                {purpose_of_hearing && (
-                  <div className="flex items-start gap-3">
-                    <Briefcase className="w-5 h-5 text-primary mt-1" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Purpose of Hearing</p>
-                      <p className="font-medium">{purpose_of_hearing}</p>
-                    </div>
-                  </div>
-                )}
-
                 {case_type && (
-                  <div className="flex items-start gap-3">
-                    <Scale className="w-5 h-5 text-primary mt-1" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Case Type</p>
-                      <Badge>{case_type}</Badge>
-                    </div>
-                  </div>
-                )}
-
-                {priority && (
-                  <div className="flex items-start gap-3">
-                    <AlertCircle className="w-5 h-5 text-primary mt-1" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Priority</p>
-                      <Badge variant={priority === 'high' ? 'error' : priority === 'medium' ? 'warning' : 'default'}>
-                        {priority}
-                      </Badge>
-                    </div>
-                  </div>
-                )}
-
-                {description && (
-                  <div className="flex items-start gap-3 md:col-span-2">
-                    <FileText className="w-5 h-5 text-primary mt-1" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Description</p>
-                      <p className="font-medium">{description}</p>
-                    </div>
-                  </div>
-                )}
-
-                {acts && acts.length > 0 && (
-                  <div className="flex items-start gap-3 md:col-span-2">
-                    <Scale className="w-5 h-5 text-primary mt-1" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Acts</p>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {acts.map((act, idx) => (
-                          <Badge key={idx} variant="outline">{act}</Badge>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {sections && sections.length > 0 && (
-                  <div className="flex items-start gap-3 md:col-span-2">
-                    <BookOpen className="w-5 h-5 text-primary mt-1" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Sections</p>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {sections.map((section, idx) => (
-                          <Badge key={idx} variant="outline">{section}</Badge>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {last_fetched_at && (
-                  <div className="flex items-start gap-3 md:col-span-2">
-                    <Clock className="w-5 h-5 text-primary mt-1" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Last Fetched</p>
-                      <p className="font-medium text-sm">{new Date(last_fetched_at).toLocaleString()}</p>
-                    </div>
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">Case Type</p>
+                    <Badge variant="outline">{case_type}</Badge>
                   </div>
                 )}
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
 
-        <TabsContent value="parties" className="space-y-4">
-          <Card>
+          {/* Important Dates */}
+          <Card className="rounded-2xl shadow-sm">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="w-5 h-5" />
-                Party Information
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <Calendar className="w-5 h-5 text-primary" />
+                Important Dates
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              {petitioner && (
-                <div>
-                  <h4 className="font-semibold mb-2 flex items-center gap-2">
-                    <User className="w-4 h-4" />
-                    Petitioner
-                  </h4>
-                  <p className="text-sm mb-1">{petitioner}</p>
-                  {petitioner_advocate && (
-                    <p className="text-sm text-muted-foreground">
-                      Advocate: {petitioner_advocate}
-                    </p>
-                  )}
-                </div>
-              )}
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {filing_date && (
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">Filing Date</p>
+                    <p className="font-semibold">{new Date(filing_date).toLocaleDateString()}</p>
+                  </div>
+                )}
+                {registration_date && (
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">Registration Date</p>
+                    <p className="font-semibold">{new Date(registration_date).toLocaleDateString()}</p>
+                  </div>
+                )}
+                {next_hearing_date && (
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">Next Hearing</p>
+                    <p className="font-semibold text-primary">{new Date(next_hearing_date).toLocaleDateString()}</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
 
-              {respondent && (
-                <div>
-                  <h4 className="font-semibold mb-2 flex items-center gap-2">
-                    <User className="w-4 h-4" />
-                    Respondent
-                  </h4>
-                  <p className="text-sm mb-1">{respondent}</p>
-                  {respondent_advocate && (
-                    <p className="text-sm text-muted-foreground">
-                      Advocate: {respondent_advocate}
-                    </p>
-                  )}
-                </div>
-              )}
+          {/* Court Information */}
+          <Card className="rounded-2xl shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <Building className="w-5 h-5 text-primary" />
+                Court Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {(court_name || court) && (
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">Court Name</p>
+                    <p className="font-semibold">{court_name || court}</p>
+                  </div>
+                )}
+                {state && (
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">State</p>
+                    <p className="font-semibold">{state}</p>
+                  </div>
+                )}
+                {district && (
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">District</p>
+                    <p className="font-semibold">{district}</p>
+                  </div>
+                )}
+                {bench_type && (
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">Bench Type</p>
+                    <p className="font-semibold">{bench_type}</p>
+                  </div>
+                )}
+                {judicial_branch && (
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">Judicial Branch</p>
+                    <p className="font-semibold">{judicial_branch}</p>
+                  </div>
+                )}
+                {coram && (
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">Judge/Coram</p>
+                    <p className="font-semibold">{coram}</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
 
-              {orders && orders.length > 0 && (
-                <div>
-                  <h4 className="font-semibold mb-2 flex items-center gap-2">
-                    <Gavel className="w-4 h-4" />
-                    Orders
-                  </h4>
-                  <ul className="list-disc list-inside space-y-1">
-                    {orders.map((order, idx) => (
-                      <li key={idx} className="text-sm">{order}</li>
-                    ))}
-                  </ul>
+          {/* Case Classification */}
+          <Card className="rounded-2xl shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <BookOpen className="w-5 h-5 text-primary" />
+                Case Classification
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {stage && (
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">Stage</p>
+                    <Badge variant="outline">{stage}</Badge>
+                  </div>
+                )}
+                {category && (
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">Category</p>
+                    <Badge variant="outline">{category}</Badge>
+                  </div>
+                )}
+                {sub_category && (
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">Sub Category</p>
+                    <Badge variant="outline">{sub_category}</Badge>
+                  </div>
+                )}
+                {purpose_of_hearing && (
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">Purpose of Hearing</p>
+                    <p className="font-semibold">{purpose_of_hearing}</p>
+                  </div>
+                )}
+                {priority && (
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">Priority</p>
+                    <Badge variant={priority === 'high' ? 'error' : 'outline'}>
+                      {priority}
+                    </Badge>
+                  </div>
+                )}
+              </div>
+
+              {description && (
+                <div className="space-y-1 mt-6 pt-6 border-t">
+                  <p className="text-sm text-muted-foreground">Description</p>
+                  <p className="text-sm leading-relaxed">{description}</p>
                 </div>
               )}
             </CardContent>
           </Card>
+
+          {/* Legal Provisions */}
+          {((acts && acts.length > 0) || (sections && sections.length > 0)) && (
+            <Card className="rounded-2xl shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  <Scale className="w-5 h-5 text-primary" />
+                  Legal Provisions
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {acts && acts.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground font-medium">Acts</p>
+                    <div className="flex flex-wrap gap-2">
+                      {acts.map((act, idx) => (
+                        <Badge key={idx} variant="outline" className="bg-primary/5">
+                          {act}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {sections && sections.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground font-medium">Sections</p>
+                    <div className="flex flex-wrap gap-2">
+                      {sections.map((section, idx) => (
+                        <Badge key={idx} variant="outline" className="bg-primary/5">
+                          {section}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Last Fetched Info */}
+          {last_fetched_at && (
+            <Card className="rounded-2xl shadow-sm bg-muted/30">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Clock className="w-4 h-4" />
+                  <span>Last updated from Legalkart: {new Date(last_fetched_at).toLocaleString()}</span>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="parties" className="space-y-4">
+          {/* Petitioner */}
+          {petitioner && (
+            <Card className="rounded-2xl shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  <User className="w-5 h-5 text-primary" />
+                  Petitioner
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Name</p>
+                  <p className="font-semibold text-base">{petitioner}</p>
+                </div>
+                {petitioner_advocate && (
+                  <div className="space-y-1 pt-4 border-t">
+                    <p className="text-sm text-muted-foreground">Legal Representative</p>
+                    <p className="font-semibold text-base">{petitioner_advocate}</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Respondent */}
+          {respondent && (
+            <Card className="rounded-2xl shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  <User className="w-5 h-5 text-primary" />
+                  Respondent
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Name</p>
+                  <p className="font-semibold text-base">{respondent}</p>
+                </div>
+                {respondent_advocate && (
+                  <div className="space-y-1 pt-4 border-t">
+                    <p className="text-sm text-muted-foreground">Legal Representative</p>
+                    <p className="font-semibold text-base">{respondent_advocate}</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Orders */}
+          {orders && orders.length > 0 && (
+            <Card className="rounded-2xl shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  <Gavel className="w-5 h-5 text-primary" />
+                  Orders
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {orders.map((order, idx) => (
+                    <div key={idx} className="p-4 bg-muted/30 rounded-xl">
+                      <p className="text-sm leading-relaxed">{order}</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="documents">
-          <Card>
+          <Card className="rounded-2xl shadow-sm">
             <CardHeader>
-              <CardTitle>Documents</CardTitle>
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <FileText className="w-5 h-5 text-primary" />
+                Documents
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <LegalkartDocumentsTable caseId={caseId} />
@@ -462,9 +503,12 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
         </TabsContent>
 
         <TabsContent value="objections">
-          <Card>
+          <Card className="rounded-2xl shadow-sm">
             <CardHeader>
-              <CardTitle>Objections</CardTitle>
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <AlertCircle className="w-5 h-5 text-primary" />
+                Objections
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <LegalkartObjectionsTable caseId={caseId} />
@@ -473,9 +517,12 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
         </TabsContent>
 
         <TabsContent value="orders">
-          <Card>
+          <Card className="rounded-2xl shadow-sm">
             <CardHeader>
-              <CardTitle>Order Details</CardTitle>
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <Gavel className="w-5 h-5 text-primary" />
+                Order Details
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <LegalkartOrdersTable caseId={caseId} />
@@ -484,9 +531,12 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
         </TabsContent>
 
         <TabsContent value="history">
-          <Card>
+          <Card className="rounded-2xl shadow-sm">
             <CardHeader>
-              <CardTitle>Case History</CardTitle>
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <Clock className="w-5 h-5 text-primary" />
+                Case History
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <LegalkartHistoryTable caseId={caseId} />
