@@ -112,6 +112,14 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
   const orderDetails = apiData?.order_details || [];
   const historyData = apiData?.history_of_case_hearing || [];
 
+  // Parse petitioner data to separate party name from any embedded text
+  const petitionerName = petitioner?.split('Vs')[0]?.trim() || petitioner;
+  const petitionerAdvocate = petitioner_advocate;
+
+  // Parse respondent data to separate party name from any embedded text
+  const respondentName = respondent?.split('Vs')[0]?.trim() || respondent;
+  const respondentAdvocate = respondent_advocate;
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Hero Header */}
@@ -544,12 +552,12 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
                 <CardContent className="space-y-4">
                   <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-xl">
                     <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium mb-2">Party Name</p>
-                    <p className="font-semibold text-base">{petitioner}</p>
+                    <p className="font-semibold text-base">{petitionerName}</p>
                   </div>
-                  {petitioner_advocate && (
+                  {petitionerAdvocate && (
                     <div className="p-4 bg-muted/30 rounded-xl">
                       <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium mb-2">Legal Representative</p>
-                      <p className="font-semibold text-base">{petitioner_advocate}</p>
+                      <p className="font-semibold text-base">{petitionerAdvocate}</p>
                     </div>
                   )}
                 </CardContent>
@@ -570,12 +578,12 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
                 <CardContent className="space-y-4">
                   <div className="p-4 bg-red-50 dark:bg-red-950/20 rounded-xl">
                     <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium mb-2">Party Name</p>
-                    <p className="font-semibold text-base">{respondent}</p>
+                    <p className="font-semibold text-base">{respondentName}</p>
                   </div>
-                  {respondent_advocate && (
+                  {respondentAdvocate && (
                     <div className="p-4 bg-muted/30 rounded-xl">
                       <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium mb-2">Legal Representative</p>
-                      <p className="font-semibold text-base">{respondent_advocate}</p>
+                      <p className="font-semibold text-base">{respondentAdvocate}</p>
                     </div>
                   )}
                 </CardContent>
