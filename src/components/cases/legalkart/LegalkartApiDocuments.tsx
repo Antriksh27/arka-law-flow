@@ -1,9 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { FileText, ExternalLink, Loader2 } from 'lucide-react';
+import { FileText, ExternalLink, Loader2, Download } from 'lucide-react';
 import IframeViewer from '@/components/documents/IframeViewer';
 
 interface LegalkartApiDocumentsProps {
@@ -13,6 +13,7 @@ interface LegalkartApiDocumentsProps {
 export const LegalkartApiDocuments: React.FC<LegalkartApiDocumentsProps> = ({ caseId }) => {
   const [viewerUrl, setViewerUrl] = useState<string | null>(null);
   const [viewerOpen, setViewerOpen] = useState(false);
+  const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
 
   // 1) Get CNR for this case
   const { data: caseRow } = useQuery({
@@ -60,9 +61,44 @@ export const LegalkartApiDocuments: React.FC<LegalkartApiDocumentsProps> = ({ ca
     })).filter((d: any) => !!d.url);
   }, [lkResult]);
 
+  // Handle pdf_base64 if present in the response
+  useEffect(() => {
+    const raw = (lkResult as any)?.data ?? lkResult;
+    const pdfBase64 = raw?.data?.pdf_base64 ?? raw?.pdf_base64;
+    
+    if (pdfBase64) {
+      try {
+        // Convert base64 to blob
+        const byteCharacters = atob(pdfBase64);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        setPdfBlobUrl(url);
+      } catch (error) {
+        console.error('Error converting PDF base64:', error);
+      }
+    }
+
+    return () => {
+      if (pdfBlobUrl) {
+        URL.revokeObjectURL(pdfBlobUrl);
+      }
+    };
+  }, [lkResult]);
+
   const openViewer = (url: string) => {
     setViewerUrl(url);
     setViewerOpen(true);
+  };
+
+  const handleDownloadPdf = () => {
+    if (pdfBlobUrl) {
+      window.open(pdfBlobUrl, '_blank');
+    }
   };
 
   if (!caseRow?.cnr_number) {
@@ -84,6 +120,31 @@ export const LegalkartApiDocuments: React.FC<LegalkartApiDocumentsProps> = ({ ca
 
       {isError && (
         <div className="text-sm text-destructive">Failed to fetch from Legalkart API.</div>
+      )}
+
+      {/* PDF Preview if pdf_base64 is available */}
+      {pdfBlobUrl && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border">
+            <div className="flex items-center gap-3">
+              <FileText className="w-5 h-5 text-primary" />
+              <div>
+                <p className="font-medium">Case Document PDF</p>
+                <p className="text-sm text-muted-foreground">Preview or download the fetched PDF</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button size="sm" onClick={() => openViewer(pdfBlobUrl)}>
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Preview
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleDownloadPdf}>
+                <Download className="w-4 h-4 mr-2" />
+                Download
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
 
       {isLoading ? (
