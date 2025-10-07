@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { FileText, AlertCircle } from 'lucide-react';
+import { FileText, AlertCircle, Eye, Download } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import IframeViewer from '@/components/documents/IframeViewer';
 
 interface LegalkartDocumentsTableProps {
   caseId: string;
@@ -16,6 +18,8 @@ interface DocumentData {
   document_no: string;
   document_filed: string;
   date_of_receiving: string;
+  pdf_base64?: string;
+  document_link?: string;
 }
 
 // Helper function to avoid TypeScript inference issues
@@ -53,11 +57,53 @@ const formatDate = (dateString: string | null): string => {
 };
 
 export const LegalkartDocumentsTable: React.FC<LegalkartDocumentsTableProps> = ({ caseId }) => {
+  const [viewerUrl, setViewerUrl] = useState<string | null>(null);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerTitle, setViewerTitle] = useState('');
+
   const { data: documents, isLoading } = useQuery<DocumentData[]>({
     queryKey: ['legalkart-documents', caseId],
     queryFn: () => fetchDocuments(caseId),
     enabled: !!caseId
   });
+
+  const convertBase64ToBlobUrl = (base64: string): string => {
+    try {
+      const byteCharacters = atob(base64);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: 'application/pdf' });
+      return URL.createObjectURL(blob);
+    } catch (error) {
+      console.error('Error converting base64:', error);
+      return '';
+    }
+  };
+
+  const handleView = (doc: DocumentData) => {
+    if (doc.pdf_base64) {
+      const blobUrl = convertBase64ToBlobUrl(doc.pdf_base64);
+      setViewerUrl(blobUrl);
+      setViewerTitle(doc.document_filed || 'Document');
+      setViewerOpen(true);
+    } else if (doc.document_link) {
+      setViewerUrl(doc.document_link);
+      setViewerTitle(doc.document_filed || 'Document');
+      setViewerOpen(true);
+    }
+  };
+
+  const handleDownload = (doc: DocumentData) => {
+    if (doc.pdf_base64) {
+      const blobUrl = convertBase64ToBlobUrl(doc.pdf_base64);
+      window.open(blobUrl, '_blank');
+    } else if (doc.document_link) {
+      window.open(doc.document_link, '_blank');
+    }
+  };
 
   if (isLoading) {
     return (
@@ -97,6 +143,7 @@ export const LegalkartDocumentsTable: React.FC<LegalkartDocumentsTableProps> = (
               <TableHead>Document No</TableHead>
               <TableHead>Document Filed</TableHead>
               <TableHead>Date of Receiving</TableHead>
+              <TableHead className="w-32">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -108,11 +155,40 @@ export const LegalkartDocumentsTable: React.FC<LegalkartDocumentsTableProps> = (
                 <TableCell className="font-mono text-sm">{doc.document_no || '-'}</TableCell>
                 <TableCell>{doc.document_filed || '-'}</TableCell>
                 <TableCell>{formatDate(doc.date_of_receiving)}</TableCell>
+                <TableCell>
+                  {(doc.pdf_base64 || doc.document_link) && (
+                    <div className="flex gap-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleView(doc)}
+                      >
+                        <Eye className="w-3 h-3 mr-1" />
+                        View
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleDownload(doc)}
+                      >
+                        <Download className="w-3 h-3 mr-1" />
+                        Download
+                      </Button>
+                    </div>
+                  )}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </div>
+
+      <IframeViewer
+        open={viewerOpen}
+        onClose={() => setViewerOpen(false)}
+        title={viewerTitle}
+        url={viewerUrl}
+      />
     </div>
   );
 };

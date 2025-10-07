@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Gavel, AlertCircle } from 'lucide-react';
+import { Gavel, AlertCircle, Eye, Download } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import IframeViewer from '@/components/documents/IframeViewer';
 
 interface LegalkartOrdersTableProps {
   caseId: string;
@@ -15,6 +17,8 @@ interface OrderData {
   order_number: string;
   bench: string;
   order_details: string;
+  pdf_base64?: string;
+  order_link?: string;
 }
 
 const fetchOrders = async (caseId: string): Promise<OrderData[]> => {
@@ -51,11 +55,53 @@ const formatDate = (dateString: string | null): string => {
 };
 
 export const LegalkartOrdersTable: React.FC<LegalkartOrdersTableProps> = ({ caseId }) => {
+  const [viewerUrl, setViewerUrl] = useState<string | null>(null);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerTitle, setViewerTitle] = useState('');
+
   const { data: orders, isLoading } = useQuery<OrderData[]>({
     queryKey: ['legalkart-orders', caseId],
     queryFn: () => fetchOrders(caseId),
     enabled: !!caseId
   });
+
+  const convertBase64ToBlobUrl = (base64: string): string => {
+    try {
+      const byteCharacters = atob(base64);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: 'application/pdf' });
+      return URL.createObjectURL(blob);
+    } catch (error) {
+      console.error('Error converting base64:', error);
+      return '';
+    }
+  };
+
+  const handleView = (order: OrderData) => {
+    if (order.pdf_base64) {
+      const blobUrl = convertBase64ToBlobUrl(order.pdf_base64);
+      setViewerUrl(blobUrl);
+      setViewerTitle(order.order_number || 'Order');
+      setViewerOpen(true);
+    } else if (order.order_link) {
+      setViewerUrl(order.order_link);
+      setViewerTitle(order.order_number || 'Order');
+      setViewerOpen(true);
+    }
+  };
+
+  const handleDownload = (order: OrderData) => {
+    if (order.pdf_base64) {
+      const blobUrl = convertBase64ToBlobUrl(order.pdf_base64);
+      window.open(blobUrl, '_blank');
+    } else if (order.order_link) {
+      window.open(order.order_link, '_blank');
+    }
+  };
 
   if (isLoading) {
     return (
@@ -94,6 +140,7 @@ export const LegalkartOrdersTable: React.FC<LegalkartOrdersTableProps> = ({ case
               <TableHead>Order Number</TableHead>
               <TableHead>Bench</TableHead>
               <TableHead>Order Details</TableHead>
+              <TableHead className="w-32">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -108,11 +155,40 @@ export const LegalkartOrdersTable: React.FC<LegalkartOrdersTableProps> = ({ case
                     {order.order_details || '-'}
                   </div>
                 </TableCell>
+                <TableCell>
+                  {(order.pdf_base64 || order.order_link) && (
+                    <div className="flex gap-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleView(order)}
+                      >
+                        <Eye className="w-3 h-3 mr-1" />
+                        View
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleDownload(order)}
+                      >
+                        <Download className="w-3 h-3 mr-1" />
+                        Download
+                      </Button>
+                    </div>
+                  )}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </div>
+
+      <IframeViewer
+        open={viewerOpen}
+        onClose={() => setViewerOpen(false)}
+        title={viewerTitle}
+        url={viewerUrl}
+      />
     </div>
   );
 };
