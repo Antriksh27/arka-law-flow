@@ -9,6 +9,9 @@ import { DocumentsTab } from './tabs/DocumentsTab';
 import { HearingsTimelineTab } from './tabs/HearingsTimelineTab';
 import { TasksNotesTab } from './tabs/TasksNotesTab';
 import { CaseActivity } from '../CaseActivity';
+import { EditCaseDialog } from '../EditCaseDialog';
+import { FetchCaseDialog } from '../FetchCaseDialog';
+import { toast } from 'sonner';
 
 interface CaseDetailLayoutProps {
   caseId: string;
@@ -17,11 +20,22 @@ interface CaseDetailLayoutProps {
 
 export const CaseDetailLayout: React.FC<CaseDetailLayoutProps> = ({ caseId, caseData }) => {
   const [activeTab, setActiveTab] = useState('overview');
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showFetchDialog, setShowFetchDialog] = useState(false);
+
+  const handleFetchSuccess = (data: any) => {
+    toast.success('Case details fetched successfully');
+    setShowFetchDialog(false);
+  };
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
       {/* Header */}
-      <CaseHeader caseData={caseData} />
+      <CaseHeader 
+        caseData={caseData}
+        onEdit={() => setShowEditDialog(true)}
+        onFetchUpdates={() => setShowFetchDialog(true)}
+      />
 
       {/* Main Content with Sidebar */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -86,6 +100,20 @@ export const CaseDetailLayout: React.FC<CaseDetailLayoutProps> = ({ caseId, case
           <CaseSidebar caseId={caseId} />
         </div>
       </div>
+
+      {/* Dialogs */}
+      <EditCaseDialog
+        open={showEditDialog}
+        onClose={() => setShowEditDialog(false)}
+        caseId={caseId}
+        caseData={caseData}
+      />
+      
+      <FetchCaseDialog
+        open={showFetchDialog}
+        onClose={() => setShowFetchDialog(false)}
+        onSuccess={handleFetchSuccess}
+      />
     </div>
   );
 };
