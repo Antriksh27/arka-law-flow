@@ -294,8 +294,9 @@ serve(async (req) => {
           console.log('- Documents with PDF:', docsWithPdf, '/', sanitizedDocuments.length);
           console.log('- Orders with PDF:', ordersWithPdf, '/', sanitizedOrders.length);
           
+          // Try RPC upsert first
           const { error: upsertError } = await supabase.rpc('upsert_legalkart_case_data', {
-            p_cnr_number: normalizedCnr, // Use normalized CNR
+            p_cnr_number: normalizedCnr,
             p_firm_id: teamMember.firm_id,
             p_case_id: caseId,
             p_case_data: caseDataSanitized,
@@ -304,6 +305,101 @@ serve(async (req) => {
             p_orders: sanitizedOrders,
             p_history: sanitizedHistory,
           });
+
+          if (upsertError) {
+            console.error('upsert_legalkart_case_data failed, falling back to direct upsert:', upsertError);
+
+            // 1) Ensure legalkart_cases exists
+            let legalkartCaseId: string | null = null;
+            const { data: existingCase } = await supabase
+              .from('legalkart_cases')
+              .select('id')
+              .eq('cnr_number', normalizedCnr)
+              .maybeSingle();
+
+            if (existingCase?.id) {
+              legalkartCaseId = existingCase.id as string;
+              await supabase
+                .from('legalkart_cases')
+                .update({ case_id: caseId ?? null, firm_id: teamMember.firm_id, updated_at: new Date().toISOString() })
+                .eq('id', legalkartCaseId);
+            } else {
+              const { data: insertedCase, error: insertCaseErr } = await supabase
+                .from('legalkart_cases')
+                .insert({ cnr_number: normalizedCnr, case_id: caseId ?? null, firm_id: teamMember.firm_id })
+                .select('id')
+                .single();
+              if (insertCaseErr) throw insertCaseErr;
+              legalkartCaseId = insertedCase.id as string;
+            }
+
+            if (!legalkartCaseId) throw new Error('Could not resolve legalkart_case_id');
+
+            // 2) Replace child records (documents, objections, orders, history)
+            await supabase.from('legalkart_case_documents').delete().eq('legalkart_case_id', legalkartCaseId);
+            await supabase.from('legalkart_case_objections').delete().eq('legalkart_case_id', legalkartCaseId);
+            await supabase.from('legalkart_case_orders').delete().eq('legalkart_case_id', legalkartCaseId);
+            await supabase.from('legalkart_case_history').delete().eq('legalkart_case_id', legalkartCaseId);
+
+            // Documents
+            if (sanitizedDocuments.length) {
+              const docRows = sanitizedDocuments.map((d: any) => ({
+                legalkart_case_id: legalkartCaseId!,
+                sr_no: d.sr_no ?? null,
+                advocate: d.advocate ?? null,
+                filed_by: d.filed_by ?? null,
+                document_no: d.document_no ?? null,
+                document_filed: d.document_filed ?? null,
+                date_of_receiving: d.date_of_receiving ?? null,
+                pdf_base64: d.pdf_base64 ?? null,
+                document_link: d.document_link ?? null,
+              }));
+              await supabase.from('legalkart_case_documents').insert(docRows);
+            }
+
+            // Objections
+            if (sanitizedObjections.length) {
+              const objRows = sanitizedObjections.map((o: any) => ({
+                legalkart_case_id: legalkartCaseId!,
+                sr_no: o.sr_no ?? null,
+                objection: o.objection ?? null,
+                receipt_date: o.receipt_date ?? null,
+                scrutiny_date: o.scrutiny_date ?? null,
+                objection_compliance_date: o.objection_compliance_date ?? null,
+              }));
+              await supabase.from('legalkart_case_objections').insert(objRows);
+            }
+
+            // Orders
+            if (sanitizedOrders.length) {
+              const orderRows = sanitizedOrders.map((o: any) => ({
+                legalkart_case_id: legalkartCaseId!,
+                judge: o.judge ?? null,
+                hearing_date: o.hearing_date ?? null,
+                order_number: o.order_number ?? null,
+                bench: o.bench ?? null,
+                order_details: o.order_details ?? null,
+                pdf_base64: o.pdf_base64 ?? null,
+                order_link: o.order_link ?? null,
+              }));
+              await supabase.from('legalkart_case_orders').insert(orderRows);
+            }
+
+            // History
+            if (sanitizedHistory.length) {
+              const histRows = sanitizedHistory.map((h: any) => ({
+                legalkart_case_id: legalkartCaseId!,
+                judge: h.judge ?? null,
+                hearing_date: h.hearing_date ?? null,
+                cause_list_type: h.cause_list_type ?? null,
+                business_on_date: h.business_on_date ?? null,
+                purpose_of_hearing: h.purpose_of_hearing ?? null,
+              }));
+              await supabase.from('legalkart_case_history').insert(histRows);
+            }
+
+            console.log('Direct upsert completed successfully');
+          }
 
           if (upsertError) {
             console.error('Error upserting Legalkart case data:', upsertError);
