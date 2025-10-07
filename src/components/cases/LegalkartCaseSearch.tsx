@@ -238,12 +238,12 @@ export const LegalkartCaseSearch: React.FC<LegalkartCaseSearchProps> = ({
       return;
     }
 
-    // Validate CNR format
-    const cnrPattern = /^[A-Z]{2,4}[A-Z0-9]{2,4}\d{2}-\d{5,7}-\d{4}$/i;
+    // Validate CNR format (without hyphens)
+    const cnrPattern = /^[A-Z]{2,4}[A-Z0-9\d]{8,}$/i;
     if (!cnrPattern.test(cnr.trim())) {
       toast({
         title: "Invalid CNR Format",
-        description: "CNR should be in format like: GJHC24-056110-2017 or SCSL1234567-2023",
+        description: "CNR should be in format like: GJHC240629522024 (without hyphens)",
         variant: "destructive",
       });
       return;
@@ -331,7 +331,7 @@ export const LegalkartCaseSearch: React.FC<LegalkartCaseSearchProps> = ({
                     id="cnr"
                     value={cnr}
                     onChange={(e) => setCnr(e.target.value)}
-                    placeholder="Enter CNR number"
+                    placeholder="e.g., GJHC240629522024"
                   />
                 </div>
                 
