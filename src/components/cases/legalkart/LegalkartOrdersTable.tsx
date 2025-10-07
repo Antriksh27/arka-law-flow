@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Gavel, AlertCircle, Eye, Download, FileX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import IframeViewer from '@/components/documents/IframeViewer';
+import { PDFViewerEnhanced } from '@/components/documents/PDFViewerEnhanced';
 
 interface LegalkartOrdersTableProps {
   caseId: string;
@@ -209,7 +209,7 @@ export const LegalkartOrdersTable: React.FC<LegalkartOrdersTableProps> = ({ case
         </Table>
       </div>
 
-      <IframeViewer
+      <PDFViewerEnhanced
         open={viewerOpen}
         onClose={() => setViewerOpen(false)}
         title={viewerTitle}

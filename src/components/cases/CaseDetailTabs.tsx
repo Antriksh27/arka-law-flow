@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Calendar, CheckSquare, StickyNote, MessageSquare, Activity, Filter, Search, Plus, BarChart3, FileSearch, Clock, Bot, ExternalLink } from 'lucide-react';
+import { FileText, Calendar, CheckSquare, StickyNote, MessageSquare, Activity, Filter, Search, Plus, BarChart3, FileSearch, Clock, Bot, ExternalLink, Scale, Users, Gavel, History, AlertTriangle, Info } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -19,6 +19,13 @@ import { CaseResearch } from './CaseResearch';
 import { CaseLegalkartIntegration } from './CaseLegalkartIntegration';
 import { CreateNoteMultiModal } from '../notes/CreateNoteMultiModal';
 import { LegalkartApiDocuments } from './legalkart/LegalkartApiDocuments';
+import { LegalkartCaseInfo } from './legalkart/LegalkartCaseInfo';
+import { LegalkartParties } from './legalkart/LegalkartParties';
+import { LegalkartDocumentsTable } from './legalkart/LegalkartDocumentsTable';
+import { LegalkartOrdersTable } from './legalkart/LegalkartOrdersTable';
+import { LegalkartHistoryTable } from './legalkart/LegalkartHistoryTable';
+import { LegalkartObjectionsTable } from './legalkart/LegalkartObjectionsTable';
+
 interface CaseDetailTabsProps {
   caseId: string;
   activeTab: string;
@@ -102,7 +109,7 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
     return labels[type] || 'Activity';
   };
 
-  // Organize tabs into two rows
+  // Organize tabs into three rows
   const primaryTabs = [{
     value: 'overview',
     label: 'Overview',
@@ -124,7 +131,34 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
     label: 'Documents',
     icon: FileText
   }];
+
   const secondaryTabs = [{
+    value: 'legalkart-info',
+    label: 'Case Info',
+    icon: Info
+  }, {
+    value: 'legalkart-parties',
+    label: 'Parties',
+    icon: Users
+  }, {
+    value: 'legalkart-documents',
+    label: 'API Docs',
+    icon: FileText
+  }, {
+    value: 'legalkart-orders',
+    label: 'Orders',
+    icon: Gavel
+  }, {
+    value: 'legalkart-history',
+    label: 'History',
+    icon: History
+  }, {
+    value: 'legalkart-objections',
+    label: 'Objections',
+    icon: AlertTriangle
+  }];
+
+  const tertiaryTabs = [{
     value: 'tasks',
     label: 'Tasks',
     icon: CheckSquare
@@ -142,37 +176,49 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
     icon: Bot
   }, {
     value: 'legalkart',
-    label: 'Legalkart API',
+    label: 'API',
     icon: ExternalLink
   }, {
     value: 'activity',
     label: 'Activity',
     icon: Activity
   }];
+
   return <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
       {/* Main Content */}
       <div className="lg:col-span-3">
         <div className="bg-white border border-gray-200 rounded-2xl shadow-sm">
           <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
-            {/* Two-layer tab navigation */}
+            {/* Three-layer tab navigation */}
             <div className="border-b border-gray-200">
-              {/* Primary tabs row */}
+              {/* Primary tabs row - Main Case Data */}
               <div className="flex border-b border-gray-100">
                 {primaryTabs.map(tab => {
                 const IconComponent = tab.icon;
-                return <button key={tab.value} onClick={() => onTabChange(tab.value)} className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors flex-1 justify-center border-b-2 ${activeTab === tab.value ? 'border-primary text-primary bg-blue-50' : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'}`}>
+                return <button key={tab.value} onClick={() => onTabChange(tab.value)} className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors flex-1 justify-center border-b-2 ${activeTab === tab.value ? 'border-primary text-primary bg-blue-50' : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'}`}>
                       <IconComponent className="w-4 h-4" />
                       {tab.label}
                     </button>;
               })}
               </div>
               
-              {/* Secondary tabs row */}
-              <div className="flex">
+              {/* Secondary tabs row - Legalkart API Data */}
+              <div className="flex border-b border-gray-100">
                 {secondaryTabs.map(tab => {
                 const IconComponent = tab.icon;
-                return <button key={tab.value} onClick={() => onTabChange(tab.value)} className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors flex-1 justify-center border-b-2 ${activeTab === tab.value ? 'border-primary text-primary bg-blue-50' : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'}`}>
-                      <IconComponent className="w-4 h-4" />
+                return <button key={tab.value} onClick={() => onTabChange(tab.value)} className={`flex items-center gap-2 px-3 py-2 text-xs font-medium transition-colors flex-1 justify-center border-b-2 ${activeTab === tab.value ? 'border-primary text-primary bg-blue-50' : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'}`}>
+                      <IconComponent className="w-3 h-3" />
+                      {tab.label}
+                    </button>;
+              })}
+              </div>
+
+              {/* Tertiary tabs row - Additional */}
+              <div className="flex">
+                {tertiaryTabs.map(tab => {
+                const IconComponent = tab.icon;
+                return <button key={tab.value} onClick={() => onTabChange(tab.value)} className={`flex items-center gap-2 px-3 py-2 text-xs font-medium transition-colors flex-1 justify-center border-b-2 ${activeTab === tab.value ? 'border-primary text-primary bg-blue-50' : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'}`}>
+                      <IconComponent className="w-3 h-3" />
                       {tab.label}
                     </button>;
               })}
@@ -216,6 +262,30 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
                     <LegalkartApiDocuments caseId={caseId} />
                   </div>
                 </div>
+              </TabsContent>
+
+              <TabsContent value="legalkart-info" className="m-0">
+                <LegalkartCaseInfo caseId={caseId} />
+              </TabsContent>
+
+              <TabsContent value="legalkart-parties" className="m-0">
+                <LegalkartParties caseId={caseId} />
+              </TabsContent>
+
+              <TabsContent value="legalkart-documents" className="m-0">
+                <LegalkartDocumentsTable caseId={caseId} />
+              </TabsContent>
+
+              <TabsContent value="legalkart-orders" className="m-0">
+                <LegalkartOrdersTable caseId={caseId} />
+              </TabsContent>
+
+              <TabsContent value="legalkart-history" className="m-0">
+                <LegalkartHistoryTable caseId={caseId} />
+              </TabsContent>
+
+              <TabsContent value="legalkart-objections" className="m-0">
+                <LegalkartObjectionsTable caseId={caseId} />
               </TabsContent>
 
               <TabsContent value="tasks" className="m-0">
