@@ -2200,10 +2200,12 @@ export type Database = {
           created_at: string
           date_of_receiving: string | null
           document_filed: string | null
+          document_link: string | null
           document_no: string | null
           filed_by: string | null
           id: string
           legalkart_case_id: string
+          pdf_base64: string | null
           sr_no: string | null
         }
         Insert: {
@@ -2211,10 +2213,12 @@ export type Database = {
           created_at?: string
           date_of_receiving?: string | null
           document_filed?: string | null
+          document_link?: string | null
           document_no?: string | null
           filed_by?: string | null
           id?: string
           legalkart_case_id: string
+          pdf_base64?: string | null
           sr_no?: string | null
         }
         Update: {
@@ -2222,10 +2226,12 @@ export type Database = {
           created_at?: string
           date_of_receiving?: string | null
           document_filed?: string | null
+          document_link?: string | null
           document_no?: string | null
           filed_by?: string | null
           id?: string
           legalkart_case_id?: string
+          pdf_base64?: string | null
           sr_no?: string | null
         }
         Relationships: [
@@ -2329,7 +2335,9 @@ export type Database = {
           judge: string | null
           legalkart_case_id: string
           order_details: string | null
+          order_link: string | null
           order_number: string | null
+          pdf_base64: string | null
         }
         Insert: {
           bench?: string | null
@@ -2339,7 +2347,9 @@ export type Database = {
           judge?: string | null
           legalkart_case_id: string
           order_details?: string | null
+          order_link?: string | null
           order_number?: string | null
+          pdf_base64?: string | null
         }
         Update: {
           bench?: string | null
@@ -2349,7 +2359,9 @@ export type Database = {
           judge?: string | null
           legalkart_case_id?: string
           order_details?: string | null
+          order_link?: string | null
           order_number?: string | null
+          pdf_base64?: string | null
         }
         Relationships: [
           {
