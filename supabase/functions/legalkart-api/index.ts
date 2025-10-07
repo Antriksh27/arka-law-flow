@@ -100,6 +100,10 @@ serve(async (req) => {
       }
 
       console.log(`Starting Legalkart search for CNR: ${cnr}, Type: ${searchType}`);
+      
+      // Normalize CNR: remove hyphens and spaces before searching
+      const normalizedCnr = cnr.replace(/[-\s]/g, '');
+      console.log('Normalized CNR for API:', normalizedCnr);
 
       // First authenticate
       const authResult = await authenticateWithLegalkart(legalkartUserId, legalkartHashKey);
@@ -117,7 +121,7 @@ serve(async (req) => {
         .insert({
           firm_id: teamMember.firm_id,
           case_id: caseId || null,
-          cnr_number: cnr,
+          cnr_number: normalizedCnr, // Store normalized CNR
           search_type: searchType,
           request_data: { cnr, searchType },
           created_by: user.id,
@@ -133,8 +137,8 @@ serve(async (req) => {
         );
       }
 
-      // Perform the search
-      const searchResult = await performCaseSearch(authResult.token, cnr, searchType);
+      // Perform the search using normalized CNR
+      const searchResult = await performCaseSearch(authResult.token, normalizedCnr, searchType);
 
       // Update search record with results
       const { error: updateError } = await supabase
@@ -291,7 +295,7 @@ serve(async (req) => {
           console.log('- Orders with PDF:', ordersWithPdf, '/', sanitizedOrders.length);
           
           const { error: upsertError } = await supabase.rpc('upsert_legalkart_case_data', {
-            p_cnr_number: cnr,
+            p_cnr_number: normalizedCnr, // Use normalized CNR
             p_firm_id: teamMember.firm_id,
             p_case_id: caseId,
             p_case_data: caseDataSanitized,
