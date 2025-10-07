@@ -75,6 +75,12 @@ export const LegalkartDocumentsTable: React.FC<LegalkartDocumentsTableProps> = (
       if (base64.startsWith('77u/')) {
         cleanBase64 = base64.substring(4);
       }
+      if (cleanBase64.startsWith('data:')) {
+        const commaIndex = cleanBase64.indexOf(',');
+        if (commaIndex !== -1) {
+          cleanBase64 = cleanBase64.substring(commaIndex + 1);
+        }
+      }
       
       const byteCharacters = atob(cleanBase64);
       const byteNumbers = new Array(byteCharacters.length);
@@ -90,6 +96,17 @@ export const LegalkartDocumentsTable: React.FC<LegalkartDocumentsTableProps> = (
     }
   };
 
+  const canEmbedLink = (url: string) => {
+    try {
+      const u = new URL(url);
+      const sameOrigin = u.origin === window.location.origin;
+      const supabaseHost = u.hostname.endsWith('.supabase.co') || u.hostname.includes('supabase.co');
+      return sameOrigin || supabaseHost;
+    } catch {
+      return false;
+    }
+  };
+
   const handleView = (doc: DocumentData) => {
     if (doc.pdf_base64) {
       const blobUrl = convertBase64ToBlobUrl(doc.pdf_base64);
@@ -97,9 +114,13 @@ export const LegalkartDocumentsTable: React.FC<LegalkartDocumentsTableProps> = (
       setViewerTitle(doc.document_filed || 'Document');
       setViewerOpen(true);
     } else if (doc.document_link) {
-      setViewerUrl(doc.document_link);
-      setViewerTitle(doc.document_filed || 'Document');
-      setViewerOpen(true);
+      if (canEmbedLink(doc.document_link)) {
+        setViewerUrl(doc.document_link);
+        setViewerTitle(doc.document_filed || 'Document');
+        setViewerOpen(true);
+      } else {
+        window.open(doc.document_link, '_blank', 'noopener');
+      }
     }
   };
 

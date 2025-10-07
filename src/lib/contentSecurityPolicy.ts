@@ -36,9 +36,9 @@ export const CSP_DIRECTIVES = {
     "https://www.googleapis.com"
   ],
   'object-src': ["'none'"],
-  'frame-src': ["'none'"],
+  'frame-src': ["'self'", 'blob:', 'data:', 'https:'],
+  'child-src': ["'self'", 'blob:', 'data:', 'https:'],
   'base-uri': ["'self'"],
-  'form-action': ["'self'"],
   'frame-ancestors': ["'none'"]
 };
 

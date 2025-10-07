@@ -73,7 +73,12 @@ export const LegalkartOrdersTable: React.FC<LegalkartOrdersTableProps> = ({ case
       if (base64.startsWith('77u/')) {
         cleanBase64 = base64.substring(4);
       }
-      
+      if (cleanBase64.startsWith('data:')) {
+        const commaIndex = cleanBase64.indexOf(',');
+        if (commaIndex !== -1) {
+          cleanBase64 = cleanBase64.substring(commaIndex + 1);
+        }
+      }
       const byteCharacters = atob(cleanBase64);
       const byteNumbers = new Array(byteCharacters.length);
       for (let i = 0; i < byteCharacters.length; i++) {
@@ -88,6 +93,16 @@ export const LegalkartOrdersTable: React.FC<LegalkartOrdersTableProps> = ({ case
     }
   };
 
+  const canEmbedLink = (url: string) => {
+    try {
+      const u = new URL(url);
+      const sameOrigin = u.origin === window.location.origin;
+      const supabaseHost = u.hostname.endsWith('.supabase.co') || u.hostname.includes('supabase.co');
+      return sameOrigin || supabaseHost;
+    } catch {
+      return false;
+    }
+  };
   const handleView = (order: OrderData) => {
     if (order.pdf_base64) {
       const blobUrl = convertBase64ToBlobUrl(order.pdf_base64);
@@ -95,9 +110,13 @@ export const LegalkartOrdersTable: React.FC<LegalkartOrdersTableProps> = ({ case
       setViewerTitle(order.order_number || 'Order');
       setViewerOpen(true);
     } else if (order.order_link) {
-      setViewerUrl(order.order_link);
-      setViewerTitle(order.order_number || 'Order');
-      setViewerOpen(true);
+      if (canEmbedLink(order.order_link)) {
+        setViewerUrl(order.order_link);
+        setViewerTitle(order.order_number || 'Order');
+        setViewerOpen(true);
+      } else {
+        window.open(order.order_link, '_blank', 'noopener');
+      }
     }
   };
 
