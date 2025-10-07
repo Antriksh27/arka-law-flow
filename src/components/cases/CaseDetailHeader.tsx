@@ -3,10 +3,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Edit, Calendar, FileText, Users, Clock, Plus, Ban, User, Building2, Gavel, Flag, ChevronDown } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Edit, Calendar, FileText, Users, Clock, Plus, Ban, User, Building2, Gavel, Flag, ChevronDown, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 import { AssignLawyerDialog } from './AssignLawyerDialog';
 import { EditCaseDialog } from './EditCaseDialog';
+import { LegalkartCaseSearch } from './LegalkartCaseSearch';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -18,6 +20,7 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
 }) => {
   const [showAssignLawyer, setShowAssignLawyer] = useState(false);
   const [showEditCase, setShowEditCase] = useState(false);
+  const [showFetchDialog, setShowFetchDialog] = useState(false);
   const queryClient = useQueryClient();
 
   // Fetch assigned lawyers info
@@ -163,6 +166,16 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
           </div>
           
           <div className="flex gap-2 ml-4">
+            {caseData?.cnr_number && (
+              <Button 
+                variant="outline"
+                size="sm"
+                onClick={() => setShowFetchDialog(true)}
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Fetch Case Details
+              </Button>
+            )}
             <Button 
               size="sm"
               onClick={() => setShowEditCase(true)}
@@ -408,5 +421,23 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
         caseId={caseData?.id}
         caseData={caseData}
       />
+
+      <Dialog open={showFetchDialog} onOpenChange={setShowFetchDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Fetch Case Details from Legalkart</DialogTitle>
+          </DialogHeader>
+          <LegalkartCaseSearch 
+            caseId={caseData?.id}
+            initialCnr={caseData?.cnr_number || ''}
+            onCaseDataFetched={() => {
+              toast.success('Case data updated successfully');
+              queryClient.invalidateQueries({ queryKey: ['case', caseData?.id] });
+              queryClient.invalidateQueries({ queryKey: ['case-details', caseData?.id] });
+              setShowFetchDialog(false);
+            }}
+          />
+        </DialogContent>
+      </Dialog>
     </div>;
 };

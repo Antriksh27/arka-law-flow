@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2, Search, FileText, AlertCircle, CheckCircle } from 'lucide-react';
+import { Loader2, Search, FileText, AlertCircle, CheckCircle, Sparkles } from 'lucide-react';
 
 interface LegalkartCaseSearchProps {
   caseId?: string;
@@ -32,6 +32,24 @@ const SEARCH_TYPES = [
   { value: 'district_cause_list', label: 'District Court Cause List' },
 ];
 
+// Auto-detect court type from CNR pattern
+const detectCourtTypeFromCNR = (cnr: string): string | null => {
+  if (!cnr || cnr.length < 4) return null;
+  
+  const prefix = cnr.substring(0, 4).toUpperCase();
+  
+  // High Court patterns
+  if (prefix.match(/^[A-Z]{2}HC/)) return 'high_court';
+  
+  // Supreme Court patterns
+  if (prefix.match(/^SCSL|^SC[A-Z]{2}/)) return 'supreme_court';
+  
+  // District Court patterns (usually 4 letters followed by numbers)
+  if (prefix.match(/^[A-Z]{4}/) && !prefix.match(/HC|SC/)) return 'district_court';
+  
+  return null;
+};
+
 export const LegalkartCaseSearch: React.FC<LegalkartCaseSearchProps> = ({
   caseId,
   initialCnr = '',
@@ -42,6 +60,18 @@ export const LegalkartCaseSearch: React.FC<LegalkartCaseSearchProps> = ({
   const [searchType, setSearchType] = useState<string>('high_court');
   const [batchCnrs, setBatchCnrs] = useState('');
   const [searchResults, setSearchResults] = useState<Record<string, SearchResult>>({});
+  const [autoDetected, setAutoDetected] = useState(false);
+
+  // Auto-detect court type when CNR changes
+  useEffect(() => {
+    const detected = detectCourtTypeFromCNR(cnr);
+    if (detected && detected !== searchType) {
+      setSearchType(detected);
+      setAutoDetected(true);
+    } else if (!detected) {
+      setAutoDetected(false);
+    }
+  }, [cnr]);
 
   // Fetch previous searches for this case
   const { data: previousSearches, refetch: refetchSearches } = useQuery({
@@ -208,6 +238,17 @@ export const LegalkartCaseSearch: React.FC<LegalkartCaseSearchProps> = ({
       return;
     }
 
+    // Validate CNR format
+    const cnrPattern = /^[A-Z]{2,4}[A-Z0-9]{2,4}\d{2}-\d{5,7}-\d{4}$/i;
+    if (!cnrPattern.test(cnr.trim())) {
+      toast({
+        title: "Invalid CNR Format",
+        description: "CNR should be in format like: GJHC24-056110-2017 or SCSL1234567-2023",
+        variant: "destructive",
+      });
+      return;
+    }
+
     searchCaseMutation.mutate({ cnr: cnr.trim(), searchType });
   };
 
@@ -295,8 +336,16 @@ export const LegalkartCaseSearch: React.FC<LegalkartCaseSearchProps> = ({
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="search-type">Search Type</Label>
-                  <Select value={searchType} onValueChange={setSearchType}>
+                  <Label htmlFor="search-type" className="flex items-center gap-2">
+                    Search Type
+                    {autoDetected && (
+                      <Badge variant="outline" className="text-xs gap-1">
+                        <Sparkles className="w-3 h-3" />
+                        Auto-detected
+                      </Badge>
+                    )}
+                  </Label>
+                  <Select value={searchType} onValueChange={(val) => { setSearchType(val); setAutoDetected(false); }}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select search type" />
                     </SelectTrigger>

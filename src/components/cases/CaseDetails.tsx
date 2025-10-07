@@ -536,59 +536,114 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
           )}
         </TabsContent>
 
-        <TabsContent value="parties" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Petitioner */}
-            {petitioner && (
-              <Card className="rounded-2xl border-t-4 border-t-blue-500">
-                <CardHeader className="pb-4">
-                  <CardTitle className="flex items-center gap-2.5 text-lg">
-                    <div className="p-2 bg-blue-500/10 rounded-lg">
-                      <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    Petitioner
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-xl">
-                    <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium mb-2">Party Name</p>
-                    <p className="font-semibold text-base">{petitionerName}</p>
-                  </div>
-                  {petitionerAdvocate && (
-                    <div className="p-4 bg-muted/30 rounded-xl">
-                      <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium mb-2">Legal Representative</p>
-                      <p className="font-semibold text-base">{petitionerAdvocate}</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
+        <TabsContent value="parties" className="space-y-6 mt-6">
+          {/* Petitioners Table */}
+          <div className="space-y-3">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Users className="w-5 h-5 text-blue-600" />
+              Petitioners
+            </h3>
+            <div className="border rounded-lg">
+              <table className="w-full">
+                <thead className="bg-muted/50">
+                  <tr>
+                    <th className="text-left py-3 px-4 font-medium">Name</th>
+                    <th className="text-left py-3 px-4 font-medium">Advocate Name</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(() => {
+                    // Extract from fetched_data or fallback to manual data
+                    const legalkartData = (caseData?.fetched_data as any)?.data || {};
+                    const petitionerString = legalkartData.petitioner_and_advocate || caseData?.petitioner || '';
+                    
+                    // Split by comma for multiple parties
+                    const parties = petitionerString.split(',').map(p => p.trim()).filter(p => p);
+                    
+                    if (parties.length === 0) {
+                      return (
+                        <tr>
+                          <td colSpan={2} className="text-center py-8 text-muted-foreground">
+                            No petitioner information available
+                          </td>
+                        </tr>
+                      );
+                    }
+                    
+                    return parties.map((party, index) => {
+                      // Remove leading numbers like "1) "
+                      let cleaned = party.replace(/^\d+\)\s*/, '');
+                      
+                      // Split by "Advocate" keyword
+                      const parts = cleaned.split(/\s+Advocate\s+/i);
+                      const name = parts[0]?.trim() || '-';
+                      const advocate = parts[1]?.trim() || '-';
+                      
+                      return (
+                        <tr key={index} className="border-t">
+                          <td className="py-3 px-4 font-medium">{name}</td>
+                          <td className="py-3 px-4">{advocate}</td>
+                        </tr>
+                      );
+                    });
+                  })()}
+                </tbody>
+              </table>
+            </div>
+          </div>
 
-            {/* Respondent */}
-            {respondent && (
-              <Card className="rounded-2xl border-t-4 border-t-red-500">
-                <CardHeader className="pb-4">
-                  <CardTitle className="flex items-center gap-2.5 text-lg">
-                    <div className="p-2 bg-red-500/10 rounded-lg">
-                      <Users className="w-4 h-4 text-red-600 dark:text-red-400" />
-                    </div>
-                    Respondent
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="p-4 bg-red-50 dark:bg-red-950/20 rounded-xl">
-                    <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium mb-2">Party Name</p>
-                    <p className="font-semibold text-base">{respondentName}</p>
-                  </div>
-                  {respondentAdvocate && (
-                    <div className="p-4 bg-muted/30 rounded-xl">
-                      <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium mb-2">Legal Representative</p>
-                      <p className="font-semibold text-base">{respondentAdvocate}</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
+          {/* Respondents Table */}
+          <div className="space-y-3">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Users className="w-5 h-5 text-red-600" />
+              Respondents
+            </h3>
+            <div className="border rounded-lg">
+              <table className="w-full">
+                <thead className="bg-muted/50">
+                  <tr>
+                    <th className="text-left py-3 px-4 font-medium">Name</th>
+                    <th className="text-left py-3 px-4 font-medium">Advocate Name</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(() => {
+                    const legalkartData = (caseData?.fetched_data as any)?.data || {};
+                    const respondentString = legalkartData.respondent_and_advocate || caseData?.respondent || '';
+                    
+                    // Split by comma for multiple parties
+                    const parties = respondentString.split(',').map(p => p.trim()).filter(p => p);
+                    
+                    if (parties.length === 0) {
+                      return (
+                        <tr>
+                          <td colSpan={2} className="text-center py-8 text-muted-foreground">
+                            No respondent information available
+                          </td>
+                        </tr>
+                      );
+                    }
+                    
+                    return parties.map((party, index) => {
+                      // Remove leading numbers like "1) "
+                      let cleaned = party.replace(/^\d+\)\s*/, '');
+                      
+                      // Split by "Advocate" keyword
+                      const parts = cleaned.split(/\s+Advocate\s+/i);
+                      const name = parts[0]?.trim() || '-';
+                      const advocate = parts[1]?.trim() || '-';
+                      
+                      return (
+                        <tr key={index} className="border-t">
+                          <td className="py-3 px-4 font-medium">{name}</td>
+                          <td className="py-3 px-4">{advocate}</td>
+                        </tr>
+                      );
+                    });
+                  })()}
+                </tbody>
+              </table>
+            </div>
           </div>
         </TabsContent>
 

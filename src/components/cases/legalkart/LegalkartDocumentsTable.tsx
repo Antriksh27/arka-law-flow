@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { FileText, AlertCircle, Eye, Download } from 'lucide-react';
+import { FileText, AlertCircle, Eye, Download, FileX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import IframeViewer from '@/components/documents/IframeViewer';
 
 interface LegalkartDocumentsTableProps {
@@ -156,7 +157,7 @@ export const LegalkartDocumentsTable: React.FC<LegalkartDocumentsTableProps> = (
                 <TableCell>{doc.document_filed || '-'}</TableCell>
                 <TableCell>{formatDate(doc.date_of_receiving)}</TableCell>
                 <TableCell>
-                  {(doc.pdf_base64 || doc.document_link) && (
+                  {(doc.pdf_base64 || doc.document_link) ? (
                     <div className="flex gap-2">
                       <Button 
                         size="sm" 
@@ -175,6 +176,11 @@ export const LegalkartDocumentsTable: React.FC<LegalkartDocumentsTableProps> = (
                         Download
                       </Button>
                     </div>
+                  ) : (
+                    <Badge variant="outline" className="text-xs gap-1">
+                      <FileX className="w-3 h-3" />
+                      No PDF Available
+                    </Badge>
                   )}
                 </TableCell>
               </TableRow>

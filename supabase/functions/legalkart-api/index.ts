@@ -239,11 +239,19 @@ serve(async (req) => {
           const rawOrders = Array.isArray(rawData?.order_details) ? rawData.order_details : [];
           const sanitizedOrders = rawOrders
             .filter((o: any) => o && typeof o === 'object')
-            .map((o: any) => normalizeDatesDeep({
-              ...o,
-              hearing_date: normalizeDate(o.hearing_date) ?? o.hearing_date,
-              order_date: normalizeDate((o as any).order_date) ?? (o as any).order_date,
-            }))
+            .map((o: any) => {
+              const normalized = normalizeDatesDeep({
+                ...o,
+                hearing_date: normalizeDate(o.hearing_date) ?? o.hearing_date,
+                order_date: normalizeDate((o as any).order_date) ?? (o as any).order_date,
+              });
+              // Explicitly extract PDF fields with multiple fallback patterns
+              return {
+                ...normalized,
+                pdf_base64: o.pdf_base64 || o.pdfBase64 || o.base64Pdf || o.base64 || null,
+                order_link: o.order_link || o.orderLink || o.link || o.url || o.pdf_url || null,
+              };
+            })
             .filter((o: any) => !o.hearing_date || /^\d{4}-\d{2}-\d{2}$/.test(String(o.hearing_date)));
 
           const rawHistory = Array.isArray(rawData?.history_of_case_hearing) ? rawData.history_of_case_hearing : [];
@@ -255,10 +263,18 @@ serve(async (req) => {
               business_on_date: normalizeDate(h.business_on_date) ?? h.business_on_date,
             }));
 
-          // Also sanitize documents and objections (date_of_receiving, scrutiny_date, compliance_date, etc.)
+          // Sanitize documents with explicit PDF field extraction
           const sanitizedDocuments = documents
             .filter((d: any) => d && typeof d === 'object')
-            .map((d: any) => normalizeDatesDeep(d));
+            .map((d: any) => {
+              const normalized = normalizeDatesDeep(d);
+              // Explicitly extract PDF fields with multiple fallback patterns
+              return {
+                ...normalized,
+                pdf_base64: d.pdf_base64 || d.pdfBase64 || d.base64Pdf || d.base64 || null,
+                document_link: d.document_link || d.documentLink || d.link || d.url || d.pdf_url || null,
+              };
+            });
 
           const sanitizedObjections = objections
             .filter((o: any) => o && typeof o === 'object')
@@ -266,7 +282,13 @@ serve(async (req) => {
 
           const caseDataSanitized = normalizeDatesDeep(rawData);
 
+          // Log PDF data verification
+          const docsWithPdf = sanitizedDocuments.filter(d => d.pdf_base64 || d.document_link).length;
+          const ordersWithPdf = sanitizedOrders.filter(o => o.pdf_base64 || o.order_link).length;
           console.log('Sanitized counts -> docs:', sanitizedDocuments.length, 'objs:', sanitizedObjections.length, 'orders:', sanitizedOrders.length, 'history:', sanitizedHistory.length);
+          console.log('PDF data check:');
+          console.log('- Documents with PDF:', docsWithPdf, '/', sanitizedDocuments.length);
+          console.log('- Orders with PDF:', ordersWithPdf, '/', sanitizedOrders.length);
           
           const { error: upsertError } = await supabase.rpc('upsert_legalkart_case_data', {
             p_cnr_number: cnr,
