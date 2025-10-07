@@ -70,7 +70,13 @@ export const LegalkartDocumentsTable: React.FC<LegalkartDocumentsTableProps> = (
 
   const convertBase64ToBlobUrl = (base64: string): string => {
     try {
-      const byteCharacters = atob(base64);
+      // Strip UTF-8 BOM prefix if present (77u/ in base64)
+      let cleanBase64 = base64;
+      if (base64.startsWith('77u/')) {
+        cleanBase64 = base64.substring(4);
+      }
+      
+      const byteCharacters = atob(cleanBase64);
       const byteNumbers = new Array(byteCharacters.length);
       for (let i = 0; i < byteCharacters.length; i++) {
         byteNumbers[i] = byteCharacters.charCodeAt(i);
@@ -157,7 +163,7 @@ export const LegalkartDocumentsTable: React.FC<LegalkartDocumentsTableProps> = (
                 <TableCell>{doc.document_filed || '-'}</TableCell>
                 <TableCell>{formatDate(doc.date_of_receiving)}</TableCell>
                 <TableCell>
-                  {(doc.pdf_base64 || doc.document_link) ? (
+                  {(doc.pdf_base64 || doc.document_link) && (
                     <div className="flex gap-2">
                       <Button 
                         size="sm" 
@@ -176,11 +182,6 @@ export const LegalkartDocumentsTable: React.FC<LegalkartDocumentsTableProps> = (
                         Download
                       </Button>
                     </div>
-                  ) : (
-                    <Badge variant="outline" className="text-xs gap-1">
-                      <FileX className="w-3 h-3" />
-                      No PDF Available
-                    </Badge>
                   )}
                 </TableCell>
               </TableRow>

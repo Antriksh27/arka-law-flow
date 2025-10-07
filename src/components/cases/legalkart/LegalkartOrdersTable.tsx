@@ -68,7 +68,13 @@ export const LegalkartOrdersTable: React.FC<LegalkartOrdersTableProps> = ({ case
 
   const convertBase64ToBlobUrl = (base64: string): string => {
     try {
-      const byteCharacters = atob(base64);
+      // Strip UTF-8 BOM prefix if present (77u/ in base64)
+      let cleanBase64 = base64;
+      if (base64.startsWith('77u/')) {
+        cleanBase64 = base64.substring(4);
+      }
+      
+      const byteCharacters = atob(cleanBase64);
       const byteNumbers = new Array(byteCharacters.length);
       for (let i = 0; i < byteCharacters.length; i++) {
         byteNumbers[i] = byteCharacters.charCodeAt(i);
@@ -157,7 +163,7 @@ export const LegalkartOrdersTable: React.FC<LegalkartOrdersTableProps> = ({ case
                   </div>
                 </TableCell>
                 <TableCell>
-                  {(order.pdf_base64 || order.order_link) ? (
+                  {(order.pdf_base64 || order.order_link) && (
                     <div className="flex gap-2">
                       <Button 
                         size="sm" 
@@ -176,11 +182,6 @@ export const LegalkartOrdersTable: React.FC<LegalkartOrdersTableProps> = ({ case
                         Download
                       </Button>
                     </div>
-                  ) : (
-                    <Badge variant="outline" className="text-xs gap-1">
-                      <FileX className="w-3 h-3" />
-                      No PDF Available
-                    </Badge>
                   )}
                 </TableCell>
               </TableRow>
