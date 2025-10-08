@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Calendar, CheckSquare, Activity, Info, FolderOpen } from 'lucide-react';
+import { FileText, CheckSquare, Activity, Info, FolderOpen, StickyNote } from 'lucide-react';
 import { CaseHeader } from './CaseHeader';
 import { CaseSidebar } from './CaseSidebar';
 import { OverviewTab } from './tabs/OverviewTab';
 import { DetailsTab } from './tabs/DetailsTab';
 import { DocumentsTab } from './tabs/DocumentsTab';
-import { HearingsTimelineTab } from './tabs/HearingsTimelineTab';
-import { TasksNotesTab } from './tabs/TasksNotesTab';
+import { TasksTab } from './tabs/TasksTab';
+import { NotesTab } from './tabs/NotesTab';
 import { CaseActivity } from '../CaseActivity';
 import { EditCaseDialog } from '../EditCaseDialog';
 import { FetchCaseDialog } from '../FetchCaseDialog';
@@ -42,7 +42,7 @@ export const CaseDetailLayout: React.FC<CaseDetailLayoutProps> = ({ caseId, case
         {/* Main Content Area */}
         <div className="lg:col-span-3">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="bg-gray-100 w-full justify-start">
+            <TabsList className="bg-muted w-full justify-start">
               <TabsTrigger value="overview">
                 <Info className="w-4 h-4 mr-2" />
                 Overview
@@ -55,13 +55,13 @@ export const CaseDetailLayout: React.FC<CaseDetailLayoutProps> = ({ caseId, case
                 <FolderOpen className="w-4 h-4 mr-2" />
                 Documents
               </TabsTrigger>
-              <TabsTrigger value="hearings">
-                <Calendar className="w-4 h-4 mr-2" />
-                Hearings & Timeline
-              </TabsTrigger>
               <TabsTrigger value="tasks">
                 <CheckSquare className="w-4 h-4 mr-2" />
-                Tasks & Notes
+                Tasks
+              </TabsTrigger>
+              <TabsTrigger value="notes">
+                <StickyNote className="w-4 h-4 mr-2" />
+                Notes
               </TabsTrigger>
               <TabsTrigger value="activity">
                 <Activity className="w-4 h-4 mr-2" />
@@ -81,12 +81,12 @@ export const CaseDetailLayout: React.FC<CaseDetailLayoutProps> = ({ caseId, case
               <DocumentsTab caseId={caseId} />
             </TabsContent>
 
-            <TabsContent value="hearings">
-              <HearingsTimelineTab caseId={caseId} />
+            <TabsContent value="tasks">
+              <TasksTab caseId={caseId} />
             </TabsContent>
 
-            <TabsContent value="tasks">
-              <TasksNotesTab caseId={caseId} />
+            <TabsContent value="notes">
+              <NotesTab caseId={caseId} />
             </TabsContent>
 
             <TabsContent value="activity">

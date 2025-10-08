@@ -5,6 +5,10 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { LegalkartCaseInfo } from '../../legalkart/LegalkartCaseInfo';
 import { LegalkartParties } from '../../legalkart/LegalkartParties';
+import { LegalkartDocumentsTable } from '../../legalkart/LegalkartDocumentsTable';
+import { LegalkartOrdersTable } from '../../legalkart/LegalkartOrdersTable';
+import { LegalkartObjectionsTable } from '../../legalkart/LegalkartObjectionsTable';
+import { LegalkartHistoryTable } from '../../legalkart/LegalkartHistoryTable';
 
 interface DetailsTabProps {
   caseData: any;
@@ -16,11 +20,15 @@ export const DetailsTab: React.FC<DetailsTabProps> = ({ caseData, caseId }) => {
 
   return (
     <Tabs value={activeSubTab} onValueChange={setActiveSubTab} className="space-y-6">
-      <TabsList className="bg-gray-100">
+      <TabsList className="bg-muted">
         <TabsTrigger value="basic">Basic Info</TabsTrigger>
         <TabsTrigger value="parties">Parties & Advocates</TabsTrigger>
         <TabsTrigger value="court">Court Details</TabsTrigger>
-        <TabsTrigger value="api">API Data</TabsTrigger>
+        <TabsTrigger value="api-docs">API Documents</TabsTrigger>
+        <TabsTrigger value="orders">Orders</TabsTrigger>
+        <TabsTrigger value="objections">Objections</TabsTrigger>
+        <TabsTrigger value="history">Hearing History</TabsTrigger>
+        <TabsTrigger value="config">API Configuration</TabsTrigger>
       </TabsList>
 
       <TabsContent value="basic" className="space-y-6">
@@ -251,7 +259,63 @@ export const DetailsTab: React.FC<DetailsTabProps> = ({ caseData, caseId }) => {
         </Card>
       </TabsContent>
 
-      <TabsContent value="api" className="space-y-6">
+      <TabsContent value="api-docs" className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>API-Fetched Documents</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Documents automatically fetched from court APIs
+            </p>
+          </CardHeader>
+          <CardContent>
+            <LegalkartDocumentsTable caseId={caseId} />
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="orders" className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Court Orders</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Orders issued by the court
+            </p>
+          </CardHeader>
+          <CardContent>
+            <LegalkartOrdersTable caseId={caseId} />
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="objections" className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Objections</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Case objections and their status
+            </p>
+          </CardHeader>
+          <CardContent>
+            <LegalkartObjectionsTable caseId={caseId} />
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="history" className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Hearing History</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Complete history of all hearings from court APIs
+            </p>
+          </CardHeader>
+          <CardContent>
+            <LegalkartHistoryTable caseId={caseId} />
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="config" className="space-y-6">
         <LegalkartCaseInfo caseId={caseId} />
         
         <Card>

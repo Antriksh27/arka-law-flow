@@ -1,36 +1,36 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Upload } from 'lucide-react';
-import { CaseDocuments } from '../../CaseDocuments';
+import { Plus } from 'lucide-react';
+import { CaseTasks } from '../../CaseTasks';
 
-interface DocumentsTabProps {
+interface TasksTabProps {
   caseId: string;
-  onUploadDocument?: () => void;
+  onCreateTask?: () => void;
 }
 
-export const DocumentsTab: React.FC<DocumentsTabProps> = ({ caseId, onUploadDocument }) => {
+export const TasksTab: React.FC<TasksTabProps> = ({ caseId, onCreateTask }) => {
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Manual Documents</CardTitle>
+              <CardTitle>Case Tasks</CardTitle>
               <p className="text-sm text-muted-foreground">
-                Documents uploaded manually by your team
+                Manage tasks and action items for this case
               </p>
             </div>
-            {onUploadDocument && (
-              <Button onClick={onUploadDocument}>
-                <Upload className="w-4 h-4 mr-2" />
-                Upload Document
+            {onCreateTask && (
+              <Button onClick={onCreateTask}>
+                <Plus className="w-4 h-4 mr-2" />
+                Create Task
               </Button>
             )}
           </div>
         </CardHeader>
         <CardContent>
-          <CaseDocuments caseId={caseId} />
+          <CaseTasks caseId={caseId} />
         </CardContent>
       </Card>
     </div>
