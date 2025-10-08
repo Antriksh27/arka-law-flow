@@ -41,7 +41,9 @@ export const ObjectionsTable = ({ objections }: ObjectionsTableProps) => {
               <TableCell className="text-[#111827]">
                 {objection.compliance_date 
                   ? format(new Date(objection.compliance_date), 'dd-MM-yyyy')
-                  : 'N/A'}
+                  : (objection.objection_compliance_date 
+                      ? format(new Date(objection.objection_compliance_date), 'dd-MM-yyyy')
+                      : 'N/A')}
               </TableCell>
               <TableCell className="text-[#111827]">
                 {objection.receipt_date 

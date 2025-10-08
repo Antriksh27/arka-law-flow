@@ -344,7 +344,6 @@ serve(async (req) => {
               const docRows = sanitizedDocuments.map((d: any) => ({
                 legalkart_case_id: legalkartCaseId!,
                 firm_id: teamMember.firm_id,
-                case_id: caseId ?? null,
                 sr_no: d.sr_no ?? null,
                 advocate: d.advocate ?? null,
                 filed_by: d.filed_by ?? null,
@@ -364,12 +363,11 @@ serve(async (req) => {
               const objRows = sanitizedObjections.map((o: any) => ({
                 legalkart_case_id: legalkartCaseId!,
                 firm_id: teamMember.firm_id,
-                case_id: caseId ?? null,
                 sr_no: o.sr_no ?? null,
                 objection: o.objection ?? null,
                 receipt_date: o.receipt_date ?? null,
                 scrutiny_date: o.scrutiny_date ?? null,
-                objection_compliance_date: o.objection_compliance_date ?? null,
+                objection_compliance_date: o.objection_compliance_date ?? o.compliance_date ?? null,
               }));
               const { error: objError } = await supabase.from('legalkart_case_objections').insert(objRows);
               if (objError) console.error('Error inserting objections:', objError);
@@ -381,9 +379,9 @@ serve(async (req) => {
               const orderRows = sanitizedOrders.map((o: any) => ({
                 legalkart_case_id: legalkartCaseId!,
                 firm_id: teamMember.firm_id,
-                case_id: caseId ?? null,
                 judge: o.judge ?? null,
                 hearing_date: o.hearing_date ?? null,
+                order_date: o.order_date ?? null,
                 order_number: o.order_number ?? null,
                 bench: o.bench ?? null,
                 order_details: o.order_details ?? null,
@@ -400,7 +398,6 @@ serve(async (req) => {
               const histRows = sanitizedHistory.map((h: any) => ({
                 legalkart_case_id: legalkartCaseId!,
                 firm_id: teamMember.firm_id,
-                case_id: caseId ?? null,
                 judge: h.judge ?? null,
                 hearing_date: h.hearing_date ?? null,
                 cause_list_type: h.cause_list_type ?? null,

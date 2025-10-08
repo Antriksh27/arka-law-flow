@@ -121,7 +121,7 @@ export default function CaseDetailEnhanced() {
       const {
         data,
         error
-      } = await supabase.from('legalkart_case_documents').select('*').eq('legalkart_case_id', legalkartCase?.id).order('filed_date', {
+      } = await supabase.from('legalkart_case_documents').select('*').eq('legalkart_case_id', legalkartCase?.id).order('date_of_receiving', {
         ascending: false
       });
       if (error) throw error;
@@ -139,7 +139,7 @@ export default function CaseDetailEnhanced() {
       const {
         data,
         error
-      } = await supabase.from('legalkart_case_orders').select('*').eq('legalkart_case_id', legalkartCase?.id).order('order_date', {
+      } = await supabase.from('legalkart_case_orders').select('*').eq('legalkart_case_id', legalkartCase?.id).order('hearing_date', {
         ascending: false
       });
       if (error) throw error;
@@ -175,7 +175,7 @@ export default function CaseDetailEnhanced() {
       const {
         data,
         error
-      } = await supabase.from('legalkart_case_objections').select('*').eq('legalkart_case_id', legalkartCase?.id).order('objection_date', {
+      } = await supabase.from('legalkart_case_objections').select('*').eq('legalkart_case_id', legalkartCase?.id).order('scrutiny_date', {
         ascending: false
       });
       if (error) throw error;
@@ -334,7 +334,7 @@ export default function CaseDetailEnhanced() {
             </TabsContent>
 
             <TabsContent value="documents" className="m-0">
-              <DocumentsTab caseId={id!} />
+              <DocumentsTable documents={documents} />
             </TabsContent>
 
             <TabsContent value="orders" className="m-0">
