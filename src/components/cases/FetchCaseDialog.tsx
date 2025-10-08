@@ -154,6 +154,39 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
 
       if (!teamMember) throw new Error('User is not part of any firm');
 
+      // Map status to valid enum values (open, closed, in_court, on_hold)
+      const mapStatus = (status: string | undefined): 'open' | 'closed' | 'in_court' | 'on_hold' => {
+        if (!status) return 'open';
+        const normalized = status.toLowerCase();
+        if (normalized.includes('close') || normalized.includes('disposed') || normalized.includes('decided')) {
+          return 'closed';
+        }
+        if (normalized.includes('court') || normalized.includes('hearing') || normalized.includes('trial')) {
+          return 'in_court';
+        }
+        if (normalized.includes('pending') || normalized.includes('await') || normalized.includes('hold')) {
+          return 'on_hold';
+        }
+        return 'open';
+      };
+
+      // Map case_type to valid enum values
+      const mapCaseType = (type: string | undefined): 'civil' | 'criminal' | 'family' | 'corporate' | 'constitutional' | 'immigration' | 'intellectual_property' | 'labor' | 'real_estate' | 'tax' | 'other' => {
+        if (!type) return 'civil';
+        const normalized = type.toLowerCase();
+        if (normalized.includes('criminal')) return 'criminal';
+        if (normalized.includes('family')) return 'family';
+        if (normalized.includes('commercial') || normalized.includes('corporate')) return 'corporate';
+        if (normalized.includes('constitutional')) return 'constitutional';
+        if (normalized.includes('immigration')) return 'immigration';
+        if (normalized.includes('intellectual') || normalized.includes('ip')) return 'intellectual_property';
+        if (normalized.includes('labor') || normalized.includes('labour')) return 'labor';
+        if (normalized.includes('real estate') || normalized.includes('property')) return 'real_estate';
+        if (normalized.includes('tax')) return 'tax';
+        if (normalized.includes('other')) return 'other';
+        return 'civil';
+      };
+
       // Prepare case data for insertion
       const insertData = {
         // Basic info
@@ -179,10 +212,10 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
         first_hearing_date: caseData.first_hearing_date,
         next_hearing_date: caseData.next_hearing_date,
         
-        // Status and type
-        status: caseData.status?.toLowerCase() || 'open',
+        // Status and type - mapped to valid enum values
+        status: mapStatus(caseData.status),
         stage: caseData.stage,
-        case_type: caseData.case_type?.toLowerCase() || 'civil',
+        case_type: mapCaseType(caseData.case_type),
         
         // Parties
         petitioner: caseData.petitioner,
@@ -208,7 +241,7 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
 
       const { data, error } = await supabase
         .from('cases')
-        .insert(insertData)
+        .insert([insertData])
         .select()
         .single();
 
