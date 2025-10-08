@@ -8,7 +8,7 @@ import ReceptionistLayout from '@/components/layout/ReceptionistLayout';
 import Index from '@/pages/Index';
 import Contacts from '@/pages/Contacts';
 import Cases from '@/pages/Cases';
-import CaseDetail from '@/pages/CaseDetail';
+import CaseDetailEnhanced from '@/pages/CaseDetailEnhanced';
 import Clients from '@/pages/Clients';
 import ClientInfo from '@/pages/ClientInfo';
 import Appointments from '@/pages/Appointments';
@@ -84,7 +84,7 @@ const RoleBasedRouter = () => {
           <Route path="/" element={<StaffDashboard />} />
           <Route path="/staff/dashboard" element={<StaffDashboard />} />
           <Route path="/staff/cases" element={<Cases />} />
-          <Route path="/staff/cases/:id" element={<CaseDetail />} />
+          <Route path="/staff/cases/:id" element={<CaseDetailEnhanced />} />
           <Route path="/ecourts" element={<ECourts />} />
           <Route path="/staff/clients" element={<Clients />} />
           <Route path="/staff/clients/:id" element={<ClientInfo />} />
@@ -107,7 +107,7 @@ const RoleBasedRouter = () => {
         <Route path="/" element={<Index />} />
         <Route path="/contacts" element={<Contacts />} />
         <Route path="/cases" element={<Cases />} />
-        <Route path="/cases/:id" element={<CaseDetail />} />
+        <Route path="/cases/:id" element={<CaseDetailEnhanced />} />
         <Route path="/ecourts" element={<ECourts />} />
         <Route path="/clients" element={<Clients />} />
         <Route path="/clients/:id" element={<ClientInfo />} />
@@ -136,7 +136,7 @@ const RoleBasedRouter = () => {
         <Route path="/" element={<Index />} />
         <Route path="/contacts" element={<Contacts />} />
         <Route path="/cases" element={<Cases />} />
-        <Route path="/cases/:id" element={<CaseDetail />} />
+        <Route path="/cases/:id" element={<CaseDetailEnhanced />} />
         <Route path="/ecourts" element={<ECourts />} />
         <Route path="/clients" element={<Clients />} />
         <Route path="/clients/:id" element={<ClientInfo />} />
