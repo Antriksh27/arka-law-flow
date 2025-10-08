@@ -1,12 +1,14 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { CaseDetailLayout } from '@/components/cases/detail/CaseDetailLayout';
-import { Skeleton } from '@/components/ui/skeleton';
+import { CaseDetailHeader } from '../components/cases/CaseDetailHeader';
+import { CaseDetailTabs } from '../components/cases/CaseDetailTabs';
 
 const CaseDetail = () => {
   const { id } = useParams<{ id: string }>();
+  const [activeTab, setActiveTab] = useState('overview');
 
   const { data: caseData, isLoading } = useQuery({
     queryKey: ['case-detail', id],
@@ -52,8 +54,8 @@ const CaseDetail = () => {
       
       return {
         ...caseResult,
-        client: clientData,
-        creator: creatorData
+        clients: clientData,
+        profiles: creatorData
       };
     },
     enabled: !!id
@@ -77,7 +79,17 @@ const CaseDetail = () => {
     );
   }
 
-  return <CaseDetailLayout caseId={id!} caseData={caseData} />;
+  return (
+    <div className="max-w-7xl mx-auto p-6">
+      <CaseDetailHeader case={caseData} />
+      <CaseDetailTabs 
+        caseId={id!} 
+        activeTab={activeTab} 
+        onTabChange={setActiveTab} 
+      />
+    </div>
+  );
 };
 
 export default CaseDetail;
+
