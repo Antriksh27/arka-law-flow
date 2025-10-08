@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { parseECourtsData, type ParsedCaseData } from "./dataParser.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -286,6 +287,15 @@ serve(async (req) => {
 
           const caseDataSanitized = normalizeDatesDeep(rawData);
 
+          // 🤖 AI Data Parser: Parse parties and IA details
+          console.log('🤖 Parsing case data with AI Parser...');
+          const parsedData = parseECourtsData(searchResult.data);
+          console.log('✅ Parsed data:', {
+            petitioners: parsedData.petitioners.length,
+            respondents: parsedData.respondents.length,
+            iaDetails: parsedData.iaDetails.length
+          });
+
           // Log PDF data verification
           const docsWithPdf = sanitizedDocuments.filter(d => d.pdf_base64 || d.document_link).length;
           const ordersWithPdf = sanitizedOrders.filter(o => o.pdf_base64 || o.order_link).length;
@@ -398,7 +408,52 @@ serve(async (req) => {
               await supabase.from('legalkart_case_history').insert(histRows);
             }
 
-            console.log('Direct upsert completed successfully');
+            // 🤖 AI Parser: Insert Petitioners
+            await supabase.from('petitioners').delete().eq('legalkart_case_id', legalkartCaseId);
+            if (parsedData.petitioners.length) {
+              const petitionerRows = parsedData.petitioners.map(p => ({
+                legalkart_case_id: legalkartCaseId!,
+                case_id: caseId ?? null,
+                petitioner_name: p.name,
+                advocate_name: p.advocate,
+              }));
+              const { error: petError } = await supabase.from('petitioners').insert(petitionerRows);
+              if (petError) console.error('Error inserting petitioners:', petError);
+              else console.log(`✅ Inserted ${parsedData.petitioners.length} petitioners`);
+            }
+
+            // 🤖 AI Parser: Insert Respondents
+            await supabase.from('respondents').delete().eq('legalkart_case_id', legalkartCaseId);
+            if (parsedData.respondents.length) {
+              const respondentRows = parsedData.respondents.map(r => ({
+                legalkart_case_id: legalkartCaseId!,
+                case_id: caseId ?? null,
+                respondent_name: r.name,
+                advocate_name: r.advocate,
+              }));
+              const { error: respError } = await supabase.from('respondents').insert(respondentRows);
+              if (respError) console.error('Error inserting respondents:', respError);
+              else console.log(`✅ Inserted ${parsedData.respondents.length} respondents`);
+            }
+
+            // 🤖 AI Parser: Insert IA Details
+            await supabase.from('ia_details').delete().eq('legalkart_case_id', legalkartCaseId);
+            if (parsedData.iaDetails.length) {
+              const iaRows = parsedData.iaDetails.map(ia => ({
+                legalkart_case_id: legalkartCaseId!,
+                case_id: caseId ?? null,
+                ia_number: ia.iaNumber,
+                party: ia.party,
+                date_of_filing: ia.dateOfFiling,
+                next_date: ia.nextDate,
+                ia_status: ia.iaStatus,
+              }));
+              const { error: iaError } = await supabase.from('ia_details').insert(iaRows);
+              if (iaError) console.error('Error inserting IA details:', iaError);
+              else console.log(`✅ Inserted ${parsedData.iaDetails.length} IA details`);
+            }
+
+            console.log('Direct upsert completed successfully with AI-parsed data');
           }
 
           if (upsertError) {

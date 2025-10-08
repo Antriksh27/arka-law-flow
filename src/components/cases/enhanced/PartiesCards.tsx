@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users } from 'lucide-react';
+import { formatPartyName, formatAdvocateName } from '@/lib/caseDataFormatter';
 
 interface PartiesCardsProps {
   petitioners: any[];
@@ -22,11 +23,11 @@ export const PartiesCards = ({ petitioners, respondents }: PartiesCardsProps) =>
               {petitioners.map((petitioner, idx) => (
                 <div key={petitioner.id} className="border-b border-[#E5E7EB] pb-3 last:border-0">
                   <div className="text-base font-medium text-[#111827]">
-                    {idx + 1}. {petitioner.petitioner_name}
+                    {idx + 1}. {formatPartyName(petitioner.petitioner_name)}
                   </div>
                   {petitioner.advocate_name && (
                     <div className="text-sm text-[#6B7280] mt-1 ml-4">
-                      Advocate: {petitioner.advocate_name}
+                      Advocate: {formatAdvocateName(petitioner.advocate_name)}
                     </div>
                   )}
                 </div>
@@ -51,11 +52,11 @@ export const PartiesCards = ({ petitioners, respondents }: PartiesCardsProps) =>
               {respondents.map((respondent, idx) => (
                 <div key={respondent.id} className="border-b border-[#E5E7EB] pb-3 last:border-0">
                   <div className="text-base font-medium text-[#111827]">
-                    {idx + 1}. {respondent.respondent_name}
+                    {idx + 1}. {formatPartyName(respondent.respondent_name)}
                   </div>
                   {respondent.advocate_name && (
                     <div className="text-sm text-[#6B7280] mt-1 ml-4">
-                      Advocate: {respondent.advocate_name}
+                      Advocate: {formatAdvocateName(respondent.advocate_name)}
                     </div>
                   )}
                 </div>

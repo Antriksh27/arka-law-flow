@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FolderOpen, FileText } from 'lucide-react';
-import { format } from 'date-fns';
+import { formatDateDisplay } from '@/lib/caseDataFormatter';
 
 interface CategoryIACardsProps {
   caseData: any;
@@ -55,7 +55,7 @@ export const CategoryIACards = ({ caseData, iaDetails }: CategoryIACardsProps) =
                   </div>
                   {ia.date_of_filing && (
                     <div className="text-xs text-[#6B7280]">
-                      Filed: {format(new Date(ia.date_of_filing), 'dd-MM-yyyy')}
+                      Filed: {formatDateDisplay(ia.date_of_filing)}
                     </div>
                   )}
                 </div>

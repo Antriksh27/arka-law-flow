@@ -1,6 +1,6 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
+import { formatDateLong } from '@/lib/caseDataFormatter';
 
 interface CaseHeaderCardProps {
   caseData: any;
@@ -54,7 +54,7 @@ export const CaseHeaderCard = ({ caseData }: CaseHeaderCardProps) => {
             <div className="text-sm text-[#6B7280] mb-1">Next Hearing Date</div>
             <div className="text-base font-medium text-[#1E3A8A]">
               {caseData.next_hearing_date 
-                ? format(new Date(caseData.next_hearing_date), 'dd-MM-yyyy')
+                ? formatDateLong(caseData.next_hearing_date)
                 : 'Not scheduled'}
             </div>
           </div>
