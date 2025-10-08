@@ -18,9 +18,12 @@ import { HearingsTable } from '@/components/cases/enhanced/HearingsTable';
 import { ObjectionsTable } from '@/components/cases/enhanced/ObjectionsTable';
 import { CreateNoteMultiModal } from '@/components/notes/CreateNoteMultiModal';
 import { CreateTaskDialog } from '@/components/tasks/CreateTaskDialog';
-
 export default function CaseDetailEnhanced() {
-  const { id } = useParams<{ id: string }>();
+  const {
+    id
+  } = useParams<{
+    id: string;
+  }>();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('details');
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
@@ -28,135 +31,157 @@ export default function CaseDetailEnhanced() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   // Fetch case data
-  const { data: caseData, isLoading: caseLoading } = useQuery({
+  const {
+    data: caseData,
+    isLoading: caseLoading
+  } = useQuery({
     queryKey: ['case', id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('cases')
-        .select('*')
-        .eq('id', id)
-        .single();
+      const {
+        data,
+        error
+      } = await supabase.from('cases').select('*').eq('id', id).single();
       if (error) throw error;
       return data;
     },
-    enabled: !!id,
+    enabled: !!id
   });
 
   // Fetch legalkart case data
-  const { data: legalkartCase, isLoading: legalkartLoading } = useQuery({
+  const {
+    data: legalkartCase,
+    isLoading: legalkartLoading
+  } = useQuery({
     queryKey: ['legalkart-case', id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('legalkart_cases')
-        .select('*')
-        .eq('case_id', id)
-        .maybeSingle();
+      const {
+        data,
+        error
+      } = await supabase.from('legalkart_cases').select('*').eq('case_id', id).maybeSingle();
       if (error) throw error;
       return data;
     },
-    enabled: !!id,
+    enabled: !!id
   });
 
   // Fetch petitioners
-  const { data: petitioners = [] } = useQuery({
+  const {
+    data: petitioners = []
+  } = useQuery({
     queryKey: ['petitioners', id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('petitioners')
-        .select('*')
-        .eq('case_id', id);
+      const {
+        data,
+        error
+      } = await supabase.from('petitioners').select('*').eq('case_id', id);
       if (error) throw error;
       return data;
     },
-    enabled: !!id,
+    enabled: !!id
   });
 
   // Fetch respondents
-  const { data: respondents = [] } = useQuery({
+  const {
+    data: respondents = []
+  } = useQuery({
     queryKey: ['respondents', id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('respondents')
-        .select('*')
-        .eq('case_id', id);
+      const {
+        data,
+        error
+      } = await supabase.from('respondents').select('*').eq('case_id', id);
       if (error) throw error;
       return data;
     },
-    enabled: !!id,
+    enabled: !!id
   });
 
   // Fetch IA details
-  const { data: iaDetails = [] } = useQuery({
+  const {
+    data: iaDetails = []
+  } = useQuery({
     queryKey: ['ia-details', id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('ia_details')
-        .select('*')
-        .eq('case_id', id);
+      const {
+        data,
+        error
+      } = await supabase.from('ia_details').select('*').eq('case_id', id);
       if (error) throw error;
       return data;
     },
-    enabled: !!id,
+    enabled: !!id
   });
 
   // Fetch documents
-  const { data: documents = [] } = useQuery({
+  const {
+    data: documents = []
+  } = useQuery({
     queryKey: ['legalkart-documents', legalkartCase?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('legalkart_case_documents')
-        .select('*')
-        .eq('legalkart_case_id', legalkartCase?.id)
-        .order('filed_date', { ascending: false });
+      const {
+        data,
+        error
+      } = await supabase.from('legalkart_case_documents').select('*').eq('legalkart_case_id', legalkartCase?.id).order('filed_date', {
+        ascending: false
+      });
       if (error) throw error;
       return data;
     },
-    enabled: !!legalkartCase?.id,
+    enabled: !!legalkartCase?.id
   });
 
   // Fetch orders
-  const { data: orders = [] } = useQuery({
+  const {
+    data: orders = []
+  } = useQuery({
     queryKey: ['legalkart-orders', legalkartCase?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('legalkart_case_orders')
-        .select('*')
-        .eq('legalkart_case_id', legalkartCase?.id)
-        .order('order_date', { ascending: false });
+      const {
+        data,
+        error
+      } = await supabase.from('legalkart_case_orders').select('*').eq('legalkart_case_id', legalkartCase?.id).order('order_date', {
+        ascending: false
+      });
       if (error) throw error;
       return data;
     },
-    enabled: !!legalkartCase?.id,
+    enabled: !!legalkartCase?.id
   });
 
   // Fetch hearings
-  const { data: hearings = [] } = useQuery({
+  const {
+    data: hearings = []
+  } = useQuery({
     queryKey: ['legalkart-hearings', legalkartCase?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('legalkart_case_history')
-        .select('*')
-        .eq('legalkart_case_id', legalkartCase?.id)
-        .order('hearing_date', { ascending: false });
+      const {
+        data,
+        error
+      } = await supabase.from('legalkart_case_history').select('*').eq('legalkart_case_id', legalkartCase?.id).order('hearing_date', {
+        ascending: false
+      });
       if (error) throw error;
       return data;
     },
-    enabled: !!legalkartCase?.id,
+    enabled: !!legalkartCase?.id
   });
 
   // Fetch objections
-  const { data: objections = [] } = useQuery({
+  const {
+    data: objections = []
+  } = useQuery({
     queryKey: ['legalkart-objections', legalkartCase?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('legalkart_case_objections')
-        .select('*')
-        .eq('legalkart_case_id', legalkartCase?.id)
-        .order('objection_date', { ascending: false });
+      const {
+        data,
+        error
+      } = await supabase.from('legalkart_case_objections').select('*').eq('legalkart_case_id', legalkartCase?.id).order('objection_date', {
+        ascending: false
+      });
       if (error) throw error;
       return data;
     },
-    enabled: !!legalkartCase?.id,
+    enabled: !!legalkartCase?.id
   });
 
   // Refresh mutation
@@ -165,67 +190,91 @@ export default function CaseDetailEnhanced() {
       if (!caseData?.cnr_number || !caseData?.firm_id) {
         throw new Error('CNR number or firm ID not found');
       }
-
-      const { data, error } = await supabase.functions.invoke('legalkart-api', {
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('legalkart-api', {
         body: {
           action: 'search',
           searchType: 'high_court',
           cnr: caseData.cnr_number,
-          caseId: id,
-        },
+          caseId: id
+        }
       });
-
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['case', id] });
-      queryClient.invalidateQueries({ queryKey: ['legalkart-case', id] });
-      queryClient.invalidateQueries({ queryKey: ['petitioners', id] });
-      queryClient.invalidateQueries({ queryKey: ['respondents', id] });
-      queryClient.invalidateQueries({ queryKey: ['ia-details', id] });
-      queryClient.invalidateQueries({ queryKey: ['legalkart-documents'] });
-      queryClient.invalidateQueries({ queryKey: ['legalkart-orders'] });
-      queryClient.invalidateQueries({ queryKey: ['legalkart-hearings'] });
-      queryClient.invalidateQueries({ queryKey: ['legalkart-objections'] });
+      queryClient.invalidateQueries({
+        queryKey: ['case', id]
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['legalkart-case', id]
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['petitioners', id]
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['respondents', id]
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['ia-details', id]
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['legalkart-documents']
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['legalkart-orders']
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['legalkart-hearings']
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['legalkart-objections']
+      });
       toast.success('Case data refreshed successfully');
     },
     onError: (error: any) => {
       toast.error(error.message || 'Failed to refresh case data');
-    },
+    }
   });
-
-  const tabs = [
-    { value: 'details', label: 'Details', icon: FileText },
-    { value: 'documents', label: 'Documents', icon: File },
-    { value: 'orders', label: 'Orders', icon: Scale },
-    { value: 'hearings', label: 'Hearings', icon: Calendar },
-    { value: 'objections', label: 'Objections', icon: XCircle },
-  ];
-
+  const tabs = [{
+    value: 'details',
+    label: 'Details',
+    icon: FileText
+  }, {
+    value: 'documents',
+    label: 'Documents',
+    icon: File
+  }, {
+    value: 'orders',
+    label: 'Orders',
+    icon: Scale
+  }, {
+    value: 'hearings',
+    label: 'Hearings',
+    icon: Calendar
+  }, {
+    value: 'objections',
+    label: 'Objections',
+    icon: XCircle
+  }];
   if (caseLoading || legalkartLoading) {
-    return (
-    <div className="min-h-screen bg-gray-50">
+    return <div className="min-h-screen bg-gray-50">
       <div className="space-y-4">
         <Skeleton className="h-32 w-full" />
         <Skeleton className="h-96 w-full" />
       </div>
-    </div>
-    );
+    </div>;
   }
-
   if (!caseData) {
-    return (
-      <div className="min-h-screen bg-gray-50">
+    return <div className="min-h-screen bg-gray-50">
         <div className="text-center py-12">
           <p className="text-gray-500">Case not found</p>
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="min-h-screen bg-gray-50">
+  return <div className="min-h-screen bg-gray-50">
       {/* Single unified container */}
       <div className="bg-white border border-gray-200 rounded-2xl shadow-sm m-8">
         {/* Tabs with integrated header */}
@@ -235,7 +284,7 @@ export default function CaseDetailEnhanced() {
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1">
                 <h1 className="text-2xl font-semibold text-gray-900 mb-2">
-                  {caseData.title || `${caseData.petitioner || 'Case'} vs ${caseData.respondent || 'Unknown'}`}
+                  {caseData.case_title}
                 </h1>
                 <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                   <div>
@@ -250,69 +299,31 @@ export default function CaseDetailEnhanced() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsEditDialogOpen(true)}
-                >
+                <Button variant="outline" size="sm" onClick={() => setIsEditDialogOpen(true)}>
                   <Pencil className="w-4 h-4 mr-2" />
                   Edit
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsNoteModalOpen(true)}
-                >
-                  <StickyNote className="w-4 h-4 mr-2" />
-                  Add Note
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsTaskModalOpen(true)}
-                >
-                  <CheckSquare className="w-4 h-4 mr-2" />
-                  Add Task
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => refreshMutation.mutate()}
-                  disabled={refreshMutation.isPending}
-                >
-                  <RefreshCw className={`w-4 h-4 mr-2 ${refreshMutation.isPending ? 'animate-spin' : ''}`} />
-                  Refresh
-                </Button>
+                
+                
+                
               </div>
             </div>
           </div>
           <TabsList className="w-full bg-white border-b border-gray-200 h-auto p-0">
             <div className="flex flex-wrap sm:flex-nowrap overflow-x-auto">
-              {tabs.map((tab) => {
-                const IconComponent = tab.icon;
-                return (
-                  <TabsTrigger
-                    key={tab.value}
-                    value={tab.value}
-                    className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 border-b-2 border-transparent data-[state=active]:border-blue-700 data-[state=active]:text-blue-800 data-[state=active]:bg-blue-50 bg-transparent rounded-none whitespace-nowrap transition-colors"
-                  >
+              {tabs.map(tab => {
+              const IconComponent = tab.icon;
+              return <TabsTrigger key={tab.value} value={tab.value} className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 border-b-2 border-transparent data-[state=active]:border-blue-700 data-[state=active]:text-blue-800 data-[state=active]:bg-blue-50 bg-transparent rounded-none whitespace-nowrap transition-colors">
                     <IconComponent className="w-4 h-4" />
                     {tab.label}
-                  </TabsTrigger>
-                );
-              })}
+                  </TabsTrigger>;
+            })}
             </div>
           </TabsList>
 
           <div className="p-6">
             <TabsContent value="details" className="m-0">
-              <DetailsTab
-                caseData={caseData}
-                legalkartData={legalkartCase}
-                petitioners={petitioners}
-                respondents={respondents}
-                iaDetails={iaDetails}
-              />
+              <DetailsTab caseData={caseData} legalkartData={legalkartCase} petitioners={petitioners} respondents={respondents} iaDetails={iaDetails} />
             </TabsContent>
 
             <TabsContent value="documents" className="m-0">
@@ -336,30 +347,10 @@ export default function CaseDetailEnhanced() {
       </div>
 
       {/* Modals */}
-      {isNoteModalOpen && (
-        <CreateNoteMultiModal
-          open={isNoteModalOpen}
-          onClose={() => setIsNoteModalOpen(false)}
-          caseId={id}
-        />
-      )}
+      {isNoteModalOpen && <CreateNoteMultiModal open={isNoteModalOpen} onClose={() => setIsNoteModalOpen(false)} caseId={id} />}
 
-      {isTaskModalOpen && (
-        <CreateTaskDialog
-          open={isTaskModalOpen}
-          onClose={() => setIsTaskModalOpen(false)}
-          caseId={id}
-        />
-      )}
+      {isTaskModalOpen && <CreateTaskDialog open={isTaskModalOpen} onClose={() => setIsTaskModalOpen(false)} caseId={id} />}
 
-      {isEditDialogOpen && caseData && (
-        <EditCaseDialog
-          open={isEditDialogOpen}
-          onClose={() => setIsEditDialogOpen(false)}
-          caseId={id!}
-          caseData={caseData}
-        />
-      )}
-    </div>
-  );
+      {isEditDialogOpen && caseData && <EditCaseDialog open={isEditDialogOpen} onClose={() => setIsEditDialogOpen(false)} caseId={id!} caseData={caseData} />}
+    </div>;
 }
