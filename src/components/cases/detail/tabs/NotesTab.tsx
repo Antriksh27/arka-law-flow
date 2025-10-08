@@ -1,36 +1,36 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Upload } from 'lucide-react';
-import { CaseDocuments } from '../../CaseDocuments';
+import { Plus } from 'lucide-react';
+import { CaseNotes } from '../../CaseNotes';
 
-interface DocumentsTabProps {
+interface NotesTabProps {
   caseId: string;
-  onUploadDocument?: () => void;
+  onAddNote?: () => void;
 }
 
-export const DocumentsTab: React.FC<DocumentsTabProps> = ({ caseId, onUploadDocument }) => {
+export const NotesTab: React.FC<NotesTabProps> = ({ caseId, onAddNote }) => {
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Manual Documents</CardTitle>
+              <CardTitle>Case Notes</CardTitle>
               <p className="text-sm text-muted-foreground">
-                Documents uploaded manually by your team
+                Keep notes and annotations for this case
               </p>
             </div>
-            {onUploadDocument && (
-              <Button onClick={onUploadDocument}>
-                <Upload className="w-4 h-4 mr-2" />
-                Upload Document
+            {onAddNote && (
+              <Button onClick={onAddNote}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Note
               </Button>
             )}
           </div>
         </CardHeader>
         <CardContent>
-          <CaseDocuments caseId={caseId} />
+          <CaseNotes caseId={caseId} />
         </CardContent>
       </Card>
     </div>

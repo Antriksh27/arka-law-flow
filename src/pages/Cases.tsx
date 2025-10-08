@@ -1,9 +1,10 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { CasesHeader } from '../components/cases/CasesHeader';
 import { CasesFilters } from '../components/cases/CasesFilters';
 import { CasesGrid } from '../components/cases/CasesGrid';
 import { CasesTable } from '../components/cases/CasesTable';
+import { CasesMetrics } from '../components/cases/dashboard/CasesMetrics';
 import { AddCaseDialog } from '../components/cases/AddCaseDialog';
 import { BulkImportCasesDialog } from '../components/cases/BulkImportCasesDialog';
 
@@ -16,42 +17,26 @@ const Cases = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showBulkImportDialog, setShowBulkImportDialog] = useState(false);
 
-  useEffect(() => {
-    console.log('Cases component mounted');
-    console.log('Filters state:', { statusFilter, typeFilter, assignedFilter });
-  }, []);
-
-  useEffect(() => {
-    console.log('Filter values changed:', { statusFilter, typeFilter, assignedFilter });
-  }, [statusFilter, typeFilter, assignedFilter]);
-
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
-      <CasesHeader 
+      <CasesHeader
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         onAddCase={() => setShowAddDialog(true)}
         onBulkImport={() => setShowBulkImportDialog(true)}
       />
+
+      <CasesMetrics />
       
       <CasesFilters
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         statusFilter={statusFilter}
-        onStatusChange={(value) => {
-          console.log('Status filter changing to:', value);
-          setStatusFilter(value);
-        }}
+        onStatusChange={setStatusFilter}
         typeFilter={typeFilter}
-        onTypeChange={(value) => {
-          console.log('Type filter changing to:', value);
-          setTypeFilter(value);
-        }}
+        onTypeChange={setTypeFilter}
         assignedFilter={assignedFilter}
-        onAssignedChange={(value) => {
-          console.log('Assigned filter changing to:', value);
-          setAssignedFilter(value);
-        }}
+        onAssignedChange={setAssignedFilter}
       />
 
       {viewMode === 'grid' ? (
@@ -78,10 +63,6 @@ const Cases = () => {
       <BulkImportCasesDialog
         open={showBulkImportDialog}
         onOpenChange={setShowBulkImportDialog}
-        onSuccess={() => {
-          // Refresh the cases list if needed
-          console.log('Cases imported successfully');
-        }}
       />
     </div>
   );
