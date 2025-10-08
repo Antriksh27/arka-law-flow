@@ -5,9 +5,11 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Separator } from '@/components/ui/separator';
 import { FileText, Eye, Calendar, Building2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+import { LegalkartCaseSearch } from '@/components/cases/LegalkartCaseSearch';
 
 const ECourts = () => {
   const [selectedCase, setSelectedCase] = useState<any>(null);
@@ -67,14 +69,32 @@ const ECourts = () => {
     );
   }
 
+  const handleCaseDataFetched = (data: any) => {
+    // Optionally refetch the cases list when new data is fetched
+    // This will update the table below with newly fetched cases
+  };
+
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-6">
+    <div className="max-w-7xl mx-auto p-6 space-y-8">
       {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold">eCourts Integration</h1>
+        <p className="text-muted-foreground mt-1">
+          Search and manage cases from eCourts/Legalkart API
+        </p>
+      </div>
+
+      {/* Legalkart Case Search */}
+      <LegalkartCaseSearch onCaseDataFetched={handleCaseDataFetched} />
+
+      <Separator className="my-8" />
+
+      {/* Fetched Cases Section Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">eCourts Fetched Cases</h1>
+          <h2 className="text-2xl font-semibold">Previously Fetched Cases</h2>
           <p className="text-muted-foreground mt-1">
-            View all cases fetched from eCourts/Legalkart API
+            All cases that have been fetched and stored from eCourts API
           </p>
         </div>
         <Badge variant="outline" className="text-lg px-4 py-2">
