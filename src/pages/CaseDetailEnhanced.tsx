@@ -227,9 +227,10 @@ export default function CaseDetailEnhanced() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
+      {/* Single unified container */}
+      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm">
+        {/* Header inside the card */}
+        <div className="p-6 border-b border-gray-200">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <h1 className="text-2xl font-semibold text-gray-900 mb-2">
@@ -278,63 +279,61 @@ export default function CaseDetailEnhanced() {
         </div>
 
         {/* Tabs */}
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="w-full bg-white border-b border-gray-200 rounded-t-2xl h-auto p-0">
-              <div className="flex flex-wrap sm:flex-nowrap overflow-x-auto">
-                {tabs.map((tab) => {
-                  const IconComponent = tab.icon;
-                  return (
-                    <TabsTrigger
-                      key={tab.value}
-                      value={tab.value}
-                      className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 border-b-2 border-transparent data-[state=active]:border-blue-700 data-[state=active]:text-blue-800 data-[state=active]:bg-blue-50 bg-transparent rounded-none whitespace-nowrap transition-colors"
-                    >
-                      <IconComponent className="w-4 h-4" />
-                      {tab.label}
-                    </TabsTrigger>
-                  );
-                })}
-              </div>
-            </TabsList>
-
-            <div className="p-6">
-              <TabsContent value="details" className="m-0">
-                <DetailsTab
-                  caseData={caseData}
-                  legalkartData={legalkartCase}
-                  petitioners={petitioners}
-                  respondents={respondents}
-                  iaDetails={iaDetails}
-                />
-              </TabsContent>
-
-              <TabsContent value="documents" className="m-0">
-                <DocumentsTab caseId={id!} />
-              </TabsContent>
-
-              <TabsContent value="orders" className="m-0">
-                <OrdersTable orders={orders} />
-              </TabsContent>
-
-              <TabsContent value="hearings" className="m-0">
-                <HearingsTable hearings={hearings} />
-              </TabsContent>
-
-              <TabsContent value="objections" className="m-0">
-                <ObjectionsTable objections={objections} />
-              </TabsContent>
-
-              <TabsContent value="notes" className="m-0">
-                <NotesTab caseId={id!} />
-              </TabsContent>
-
-              <TabsContent value="tasks" className="m-0">
-                <TasksTab caseId={id!} />
-              </TabsContent>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="w-full bg-white border-b border-gray-200 h-auto p-0">
+            <div className="flex flex-wrap sm:flex-nowrap overflow-x-auto">
+              {tabs.map((tab) => {
+                const IconComponent = tab.icon;
+                return (
+                  <TabsTrigger
+                    key={tab.value}
+                    value={tab.value}
+                    className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 border-b-2 border-transparent data-[state=active]:border-blue-700 data-[state=active]:text-blue-800 data-[state=active]:bg-blue-50 bg-transparent rounded-none whitespace-nowrap transition-colors"
+                  >
+                    <IconComponent className="w-4 h-4" />
+                    {tab.label}
+                  </TabsTrigger>
+                );
+              })}
             </div>
-          </Tabs>
-        </div>
+          </TabsList>
+
+          <div className="p-6">
+            <TabsContent value="details" className="m-0">
+              <DetailsTab
+                caseData={caseData}
+                legalkartData={legalkartCase}
+                petitioners={petitioners}
+                respondents={respondents}
+                iaDetails={iaDetails}
+              />
+            </TabsContent>
+
+            <TabsContent value="documents" className="m-0">
+              <DocumentsTab caseId={id!} />
+            </TabsContent>
+
+            <TabsContent value="orders" className="m-0">
+              <OrdersTable orders={orders} />
+            </TabsContent>
+
+            <TabsContent value="hearings" className="m-0">
+              <HearingsTable hearings={hearings} />
+            </TabsContent>
+
+            <TabsContent value="objections" className="m-0">
+              <ObjectionsTable objections={objections} />
+            </TabsContent>
+
+            <TabsContent value="notes" className="m-0">
+              <NotesTab caseId={id!} />
+            </TabsContent>
+
+            <TabsContent value="tasks" className="m-0">
+              <TasksTab caseId={id!} />
+            </TabsContent>
+          </div>
+        </Tabs>
       </div>
 
       {/* Modals */}
