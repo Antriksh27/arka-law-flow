@@ -235,7 +235,7 @@ export default function CaseDetailEnhanced() {
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1">
                 <h1 className="text-2xl font-semibold text-gray-900 mb-2">
-                  {caseData.case_title}
+                  {caseData.case_title || caseData.title}
                 </h1>
                 <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                   <div>
