@@ -286,15 +286,22 @@ export default function CaseDetailEnhanced() {
                 <h1 className="text-2xl font-semibold text-gray-900 mb-2">
                   {caseData.title || caseData.case_title || `${caseData.petitioner || 'Petitioner'} vs ${caseData.respondent || 'Respondent'}`}
                 </h1>
-                <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                  <div>
-                    <span className="font-medium">CNR:</span> {caseData.cnr_number || 'N/A'}
+                <div className="space-y-2">
+                  <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                    <div>
+                      <span className="font-medium">CNR:</span> {caseData.cnr_number || 'N/A'}
+                    </div>
+                    <div>
+                      <span className="font-medium">Registration No:</span> {caseData.registration_number || 'N/A'}
+                    </div>
+                    <div>
+                      <span className="font-medium">Filing No:</span> {legalkartCase?.filing_number || caseData.filing_number || 'N/A'}
+                    </div>
                   </div>
-                  <div>
-                    <span className="font-medium">Filing No:</span> {legalkartCase?.filing_number || caseData.filing_number || 'N/A'}
-                  </div>
-                  <div>
-                    <span className="font-medium">Next Hearing:</span> {caseData.next_hearing_date ? new Date(caseData.next_hearing_date).toLocaleDateString() : 'N/A'}
+                  <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                    <div>
+                      <span className="font-medium">Next Hearing:</span> {caseData.next_hearing_date ? new Date(caseData.next_hearing_date).toLocaleDateString() : 'N/A'}
+                    </div>
                   </div>
                 </div>
               </div>
