@@ -26,7 +26,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
   caseData
 }) => {
   const [formData, setFormData] = useState({
-    case_title: caseData?.case_title || '',
+    case_number: caseData?.case_number || '',
     status: caseData?.status || 'open',
     stage: caseData?.stage || '',
     court_name: caseData?.court_name || '',
@@ -78,8 +78,6 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
         registration_date: data.registration_date?.trim() || null,
         first_hearing_date: data.first_hearing_date?.trim() || null,
         next_hearing_date: data.next_hearing_date?.trim() || null,
-        // Also update the title field for backward compatibility
-        title: data.case_title,
         acts,
         sections,
         orders,
@@ -168,11 +166,11 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
             <h3 className="text-lg font-semibold">Basic Case Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="case_title">Case Title *</Label>
+                <Label htmlFor="case_number">Case Number *</Label>
                 <Input
-                  id="case_title"
-                  value={formData.case_title}
-                  onChange={(e) => setFormData({ ...formData, case_title: e.target.value })}
+                  id="case_number"
+                  value={formData.case_number}
+                  onChange={(e) => setFormData({ ...formData, case_number: e.target.value })}
                   required
                 />
               </div>
