@@ -5,8 +5,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, FileText, File, Scale, Calendar, XCircle, StickyNote, CheckSquare } from 'lucide-react';
+import { RefreshCw, FileText, File, Scale, Calendar, XCircle, StickyNote, CheckSquare, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
+import { EditCaseDialog } from '@/components/cases/EditCaseDialog';
 import { DetailsTab } from '@/components/cases/detail/tabs/DetailsTab';
 import { DocumentsTab } from '@/components/cases/detail/tabs/DocumentsTab';
 import { NotesTab } from '@/components/cases/detail/tabs/NotesTab';
@@ -24,6 +25,7 @@ export default function CaseDetailEnhanced() {
   const [activeTab, setActiveTab] = useState('details');
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   // Fetch case data
   const { data: caseData, isLoading: caseLoading } = useQuery({
@@ -251,6 +253,14 @@ export default function CaseDetailEnhanced() {
                 <Button
                   variant="outline"
                   size="sm"
+                  onClick={() => setIsEditDialogOpen(true)}
+                >
+                  <Pencil className="w-4 h-4 mr-2" />
+                  Edit
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => setIsNoteModalOpen(true)}
                 >
                   <StickyNote className="w-4 h-4 mr-2" />
@@ -339,6 +349,15 @@ export default function CaseDetailEnhanced() {
           open={isTaskModalOpen}
           onClose={() => setIsTaskModalOpen(false)}
           caseId={id}
+        />
+      )}
+
+      {isEditDialogOpen && caseData && (
+        <EditCaseDialog
+          open={isEditDialogOpen}
+          onClose={() => setIsEditDialogOpen(false)}
+          caseId={id!}
+          caseData={caseData}
         />
       )}
     </div>
