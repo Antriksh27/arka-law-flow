@@ -154,6 +154,9 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
 
       if (!teamMember) throw new Error('User is not part of any firm');
 
+      const firmId = teamMember.firm_id;
+      const rawData = caseData.raw?.data || {};
+
       // Map status to valid enum values (open, closed, in_court, on_hold)
       const mapStatus = (status: string | undefined): 'open' | 'closed' | 'in_court' | 'on_hold' => {
         if (!status) return 'open';
@@ -231,7 +234,7 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
         under_section: caseData.under_section,
         
         // Metadata
-        firm_id: teamMember.firm_id,
+        firm_id: firmId,
         created_by: user.id,
         fetched_data: caseData.raw,
         is_auto_fetched: true,
@@ -239,14 +242,126 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
         fetch_status: 'success',
       };
 
-      const { data, error } = await supabase
+      // Insert the case
+      const { data: insertedCase, error: caseError } = await supabase
         .from('cases')
         .insert([insertData])
         .select()
         .single();
 
-      if (error) throw error;
-      return data;
+      if (caseError) throw caseError;
+      const caseId = insertedCase.id;
+
+      // Parse and insert hearing history
+      const hearingHistory = rawData.history || [];
+      if (Array.isArray(hearingHistory) && hearingHistory.length > 0) {
+        const hearingsToInsert = hearingHistory
+          .filter((h: any) => h.hearing_date || h.date)
+          .map((hearing: any) => ({
+            case_id: caseId,
+            firm_id: firmId,
+            hearing_date: hearing.hearing_date || hearing.date,
+            court_name: caseData.court_name || caseData.court,
+            judge_name: hearing.judge_name || hearing.coram || caseData.coram,
+            hearing_type: hearing.purpose_of_hearing || hearing.business || 'General Hearing',
+            status: hearing.status || 'completed',
+            outcome: hearing.outcome || hearing.business,
+            notes: hearing.purpose || hearing.listing_reason,
+            created_by: user.id,
+            assigned_to: user.id,
+          }));
+
+        if (hearingsToInsert.length > 0) {
+          const { error: hearingsError } = await supabase
+            .from('hearings')
+            .insert(hearingsToInsert);
+          
+          if (hearingsError) {
+            console.error('Failed to insert hearings:', hearingsError);
+          }
+        }
+      }
+
+      // Parse and store legalkart case data
+      const { error: legalkartError } = await supabase
+        .from('legalkart_cases')
+        .upsert({
+          cnr_number: caseData.cnr_number,
+          firm_id: firmId,
+          case_id: caseId,
+          case_data: rawData.case_info || {},
+          documents: rawData.documents || [],
+          objections: rawData.objections || [],
+          orders: rawData.orders || [],
+          history: rawData.history || [],
+          last_updated: new Date().toISOString(),
+        }, {
+          onConflict: 'cnr_number,firm_id'
+        });
+
+      if (legalkartError) {
+        console.error('Failed to insert legalkart data:', legalkartError);
+      }
+
+      // Parse and insert document links as case activities
+      const documents = rawData.documents || [];
+      if (Array.isArray(documents) && documents.length > 0) {
+        const documentActivities = documents
+          .filter((doc: any) => doc.document_name || doc.name)
+          .map((doc: any) => ({
+            case_id: caseId,
+            activity_type: 'document_reference',
+            description: `Document: ${doc.document_name || doc.name}`,
+            created_by: user.id,
+            metadata: {
+              document_url: doc.document_url || doc.url || doc.link,
+              document_name: doc.document_name || doc.name,
+              document_date: doc.document_date || doc.date,
+              document_type: doc.document_type || doc.type,
+            }
+          }));
+
+        if (documentActivities.length > 0) {
+          const { error: activitiesError } = await supabase
+            .from('case_activities')
+            .insert(documentActivities);
+
+          if (activitiesError) {
+            console.error('Failed to insert document activities:', activitiesError);
+          }
+        }
+      }
+
+      // Parse and insert orders as case activities
+      const orders = rawData.orders || [];
+      if (Array.isArray(orders) && orders.length > 0) {
+        const orderActivities = orders
+          .filter((order: any) => order.order_date || order.date)
+          .map((order: any) => ({
+            case_id: caseId,
+            activity_type: 'order_received',
+            description: `Order: ${order.order_description || order.description || 'Court Order'}`,
+            created_by: user.id,
+            metadata: {
+              order_date: order.order_date || order.date,
+              order_description: order.order_description || order.description,
+              order_type: order.order_type || order.type,
+              order_url: order.order_url || order.url || order.link,
+            }
+          }));
+
+        if (orderActivities.length > 0) {
+          const { error: orderError } = await supabase
+            .from('case_activities')
+            .insert(orderActivities);
+
+          if (orderError) {
+            console.error('Failed to insert order activities:', orderError);
+          }
+        }
+      }
+
+      return insertedCase;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cases'] });
