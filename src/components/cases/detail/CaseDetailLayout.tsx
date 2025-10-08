@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileText, CheckSquare, Activity, Info, FolderOpen, StickyNote } from 'lucide-react';
 import { CaseHeader } from './CaseHeader';
-import { CaseSidebar } from './CaseSidebar';
 import { OverviewTab } from './tabs/OverviewTab';
 import { DetailsTab } from './tabs/DetailsTab';
 import { DocumentsTab } from './tabs/DocumentsTab';
@@ -37,68 +36,60 @@ export const CaseDetailLayout: React.FC<CaseDetailLayoutProps> = ({ caseId, case
         onFetchUpdates={() => setShowFetchDialog(true)}
       />
 
-      {/* Main Content with Sidebar */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Main Content Area */}
-        <div className="lg:col-span-3">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="bg-muted w-full justify-start">
-              <TabsTrigger value="overview">
-                <Info className="w-4 h-4 mr-2" />
-                Overview
-              </TabsTrigger>
-              <TabsTrigger value="details">
-                <FileText className="w-4 h-4 mr-2" />
-                Details
-              </TabsTrigger>
-              <TabsTrigger value="documents">
-                <FolderOpen className="w-4 h-4 mr-2" />
-                Documents
-              </TabsTrigger>
-              <TabsTrigger value="tasks">
-                <CheckSquare className="w-4 h-4 mr-2" />
-                Tasks
-              </TabsTrigger>
-              <TabsTrigger value="notes">
-                <StickyNote className="w-4 h-4 mr-2" />
-                Notes
-              </TabsTrigger>
-              <TabsTrigger value="activity">
-                <Activity className="w-4 h-4 mr-2" />
-                Activity
-              </TabsTrigger>
-            </TabsList>
+      {/* Main Content */}
+      <div className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="bg-muted w-full justify-start">
+            <TabsTrigger value="overview">
+              <Info className="w-4 h-4 mr-2" />
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="details">
+              <FileText className="w-4 h-4 mr-2" />
+              Details
+            </TabsTrigger>
+            <TabsTrigger value="documents">
+              <FolderOpen className="w-4 h-4 mr-2" />
+              Documents
+            </TabsTrigger>
+            <TabsTrigger value="tasks">
+              <CheckSquare className="w-4 h-4 mr-2" />
+              Tasks
+            </TabsTrigger>
+            <TabsTrigger value="notes">
+              <StickyNote className="w-4 h-4 mr-2" />
+              Notes
+            </TabsTrigger>
+            <TabsTrigger value="activity">
+              <Activity className="w-4 h-4 mr-2" />
+              Activity
+            </TabsTrigger>
+          </TabsList>
 
-            <TabsContent value="overview">
-              <OverviewTab caseData={caseData} />
-            </TabsContent>
+          <TabsContent value="overview">
+            <OverviewTab caseData={caseData} />
+          </TabsContent>
 
-            <TabsContent value="details">
-              <DetailsTab caseData={caseData} caseId={caseId} />
-            </TabsContent>
+          <TabsContent value="details">
+            <DetailsTab caseData={caseData} caseId={caseId} />
+          </TabsContent>
 
-            <TabsContent value="documents">
-              <DocumentsTab caseId={caseId} />
-            </TabsContent>
+          <TabsContent value="documents">
+            <DocumentsTab caseId={caseId} />
+          </TabsContent>
 
-            <TabsContent value="tasks">
-              <TasksTab caseId={caseId} />
-            </TabsContent>
+          <TabsContent value="tasks">
+            <TasksTab caseId={caseId} />
+          </TabsContent>
 
-            <TabsContent value="notes">
-              <NotesTab caseId={caseId} />
-            </TabsContent>
+          <TabsContent value="notes">
+            <NotesTab caseId={caseId} />
+          </TabsContent>
 
-            <TabsContent value="activity">
-              <CaseActivity caseId={caseId} />
-            </TabsContent>
-          </Tabs>
-        </div>
-
-        {/* Sidebar */}
-        <div className="lg:col-span-1">
-          <CaseSidebar caseId={caseId} />
-        </div>
+          <TabsContent value="activity">
+            <CaseActivity caseId={caseId} />
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Dialogs */}
