@@ -117,9 +117,9 @@ export const DetailsTab: React.FC<DetailsTabProps> = ({
                     <div className="space-y-4">
                       {petitioners.map((petitioner, index) => (
                         <div key={index} className="border-l-2 border-blue-500 pl-3">
-                          <p className="text-sm font-medium text-gray-900">
-                            {index + 1}. {parseName(petitioner.name)}
-                          </p>
+                           <p className="text-sm font-medium text-gray-900">
+                             {index + 1}. {parseName(petitioner.petitioner_name || petitioner.name)}
+                           </p>
                           {petitioner.advocate_name && (
                             <p className="text-xs text-gray-500 mt-1">
                               Advocate: {parseAdvocates(petitioner.advocate_name)}
@@ -142,9 +142,9 @@ export const DetailsTab: React.FC<DetailsTabProps> = ({
                     <div className="space-y-4">
                       {respondents.map((respondent, index) => (
                         <div key={index} className="border-l-2 border-red-500 pl-3">
-                          <p className="text-sm font-medium text-gray-900">
-                            {index + 1}. {parseName(respondent.name)}
-                          </p>
+                           <p className="text-sm font-medium text-gray-900">
+                             {index + 1}. {parseName(respondent.respondent_name || respondent.name)}
+                           </p>
                           {respondent.advocate_name && (
                             <p className="text-xs text-gray-500 mt-1">
                               Advocate: {parseAdvocates(respondent.advocate_name)}

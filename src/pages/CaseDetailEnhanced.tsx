@@ -199,8 +199,6 @@ export default function CaseDetailEnhanced() {
     { value: 'orders', label: 'Orders', icon: Scale },
     { value: 'hearings', label: 'Hearings', icon: Calendar },
     { value: 'objections', label: 'Objections', icon: XCircle },
-    { value: 'notes', label: 'Notes', icon: StickyNote },
-    { value: 'tasks', label: 'Tasks', icon: CheckSquare },
   ];
 
   if (caseLoading || legalkartLoading) {
@@ -323,13 +321,6 @@ export default function CaseDetailEnhanced() {
               <ObjectionsTable objections={objections} />
             </TabsContent>
 
-            <TabsContent value="notes" className="m-0">
-              <NotesTab caseId={id!} />
-            </TabsContent>
-
-            <TabsContent value="tasks" className="m-0">
-              <TasksTab caseId={id!} />
-            </TabsContent>
           </div>
         </Tabs>
       </div>

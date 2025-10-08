@@ -279,7 +279,7 @@ const CaseDetail = () => {
             <TabsTrigger value="orders">⚖️ Orders</TabsTrigger>
             <TabsTrigger value="hearings">📅 Hearings</TabsTrigger>
             <TabsTrigger value="objections">🚫 Objections</TabsTrigger>
-            <TabsTrigger value="notes">🗒️ Notes</TabsTrigger>
+            
           </TabsList>
 
           <div className="bg-white rounded-2xl shadow-sm border border-[#E5E7EB] p-6">
@@ -317,9 +317,6 @@ const CaseDetail = () => {
               <ObjectionsTable objections={objections} />
             </TabsContent>
 
-            <TabsContent value="notes" className="mt-0">
-              <CaseNotes caseId={id!} />
-            </TabsContent>
           </div>
         </Tabs>
 
