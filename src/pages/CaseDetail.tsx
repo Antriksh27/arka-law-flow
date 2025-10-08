@@ -1,21 +1,20 @@
-
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { CaseDetailHeader } from '../components/cases/CaseDetailHeader';
-import { CaseDetailTabs } from '../components/cases/CaseDetailTabs';
+import { CaseDetailHeader } from '../components/cases/detail/CaseDetailHeader';
+import { CaseDetailTabs } from '../components/cases/detail/CaseDetailTabs';
 
 const CaseDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('details');
 
+  // Fetch case data
   const { data: caseData, isLoading } = useQuery({
     queryKey: ['case-detail', id],
     queryFn: async () => {
       if (!id) throw new Error('Case ID is required');
       
-      // First get the case data
       const { data: caseResult, error: caseError } = await supabase
         .from('cases')
         .select('*')
@@ -24,32 +23,28 @@ const CaseDetail = () => {
       
       if (caseError) throw caseError;
       
-      // Then get client data separately if client_id exists
+      // Get client data
       let clientData = null;
       if (caseResult.client_id) {
-        const { data: client, error: clientError } = await supabase
+        const { data: client } = await supabase
           .from('clients')
           .select('full_name')
           .eq('id', caseResult.client_id)
-          .single();
+          .maybeSingle();
         
-        if (!clientError && client) {
-          clientData = client;
-        }
+        clientData = client;
       }
       
-      // Get creator profile separately if created_by exists
+      // Get creator profile
       let creatorData = null;
       if (caseResult.created_by) {
-        const { data: creator, error: creatorError } = await supabase
+        const { data: creator } = await supabase
           .from('profiles')
           .select('full_name')
           .eq('id', caseResult.created_by)
-          .single();
+          .maybeSingle();
         
-        if (!creatorError && creator) {
-          creatorData = creator;
-        }
+        creatorData = creator;
       }
       
       return {
@@ -61,35 +56,62 @@ const CaseDetail = () => {
     enabled: !!id
   });
 
+  // Fetch Legalkart case data
+  const { data: legalkartData } = useQuery({
+    queryKey: ['legalkart-case', id],
+    queryFn: async () => {
+      if (!id) return null;
+      
+      const { data } = await supabase
+        .from('legalkart_cases')
+        .select('*')
+        .eq('case_id', id)
+        .maybeSingle();
+      
+      return data;
+    },
+    enabled: !!id
+  });
+
   if (isLoading) {
     return (
-      <div className="animate-pulse p-6">
-        <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
-        <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
-        <div className="h-64 bg-gray-200 rounded"></div>
+      <div className="min-h-screen bg-background p-6">
+        <div className="max-w-[1400px] mx-auto space-y-4 animate-pulse">
+          <div className="h-16 bg-muted rounded-lg"></div>
+          <div className="h-12 bg-muted rounded-lg"></div>
+          <div className="h-96 bg-muted rounded-lg"></div>
+        </div>
       </div>
     );
   }
 
   if (!caseData) {
     return (
-      <div className="text-center py-12">
-        <p className="text-gray-500">Case not found</p>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-lg text-muted-foreground">Case not found</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      <CaseDetailHeader case={caseData} />
-      <CaseDetailTabs 
-        caseId={id!} 
-        activeTab={activeTab} 
-        onTabChange={setActiveTab} 
-      />
+    <div className="min-h-screen bg-background">
+      <div className="max-w-[1400px] mx-auto p-6 space-y-6">
+        <CaseDetailHeader 
+          caseData={caseData} 
+          legalkartData={legalkartData}
+        />
+        <CaseDetailTabs 
+          caseId={id!} 
+          caseData={caseData}
+          legalkartData={legalkartData}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
+      </div>
     </div>
   );
 };
 
 export default CaseDetail;
-
