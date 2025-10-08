@@ -317,14 +317,52 @@ serve(async (req) => {
 
             if (existingCase?.id) {
               legalkartCaseId = existingCase.id as string;
+              const updatePayload: any = {
+                case_id: caseId ?? null,
+                firm_id: teamMember.firm_id,
+                filing_number: caseDataSanitized?.case_info?.filing_number ?? null,
+                filing_date: caseDataSanitized?.case_info?.filing_date ?? null,
+                registration_number: caseDataSanitized?.case_info?.registration_number ?? null,
+                registration_date: caseDataSanitized?.case_info?.registration_date ?? null,
+                stage_of_case: caseDataSanitized?.case_status?.stage_of_case ?? null,
+                next_hearing_date: caseDataSanitized?.case_status?.next_hearing_date ?? null,
+                coram: caseDataSanitized?.case_status?.coram ?? null,
+                bench_type: caseDataSanitized?.case_status?.bench_type ?? null,
+                judicial_branch: caseDataSanitized?.case_status?.judicial_branch ?? null,
+                state: caseDataSanitized?.case_status?.state ?? null,
+                district: caseDataSanitized?.case_status?.district ?? null,
+                petitioner_and_advocate: rawData?.petitioner_and_advocate ?? null,
+                respondent_and_advocate: rawData?.respondent_and_advocate ?? null,
+                raw_api_response: rawData ?? null,
+                updated_at: new Date().toISOString()
+              };
               await supabase
                 .from('legalkart_cases')
-                .update({ case_id: caseId ?? null, firm_id: teamMember.firm_id, updated_at: new Date().toISOString() })
+                .update(updatePayload)
                 .eq('id', legalkartCaseId);
             } else {
+              const insertPayload: any = {
+                cnr_number: normalizedCnr,
+                case_id: caseId ?? null,
+                firm_id: teamMember.firm_id,
+                filing_number: caseDataSanitized?.case_info?.filing_number ?? null,
+                filing_date: caseDataSanitized?.case_info?.filing_date ?? null,
+                registration_number: caseDataSanitized?.case_info?.registration_number ?? null,
+                registration_date: caseDataSanitized?.case_info?.registration_date ?? null,
+                stage_of_case: caseDataSanitized?.case_status?.stage_of_case ?? null,
+                next_hearing_date: caseDataSanitized?.case_status?.next_hearing_date ?? null,
+                coram: caseDataSanitized?.case_status?.coram ?? null,
+                bench_type: caseDataSanitized?.case_status?.bench_type ?? null,
+                judicial_branch: caseDataSanitized?.case_status?.judicial_branch ?? null,
+                state: caseDataSanitized?.case_status?.state ?? null,
+                district: caseDataSanitized?.case_status?.district ?? null,
+                petitioner_and_advocate: rawData?.petitioner_and_advocate ?? null,
+                respondent_and_advocate: rawData?.respondent_and_advocate ?? null,
+                raw_api_response: rawData ?? null
+              };
               const { data: insertedCase, error: insertCaseErr } = await supabase
                 .from('legalkart_cases')
-                .insert({ cnr_number: normalizedCnr, case_id: caseId ?? null, firm_id: teamMember.firm_id })
+                .insert(insertPayload)
                 .select('id')
                 .single();
               if (insertCaseErr) throw insertCaseErr;
