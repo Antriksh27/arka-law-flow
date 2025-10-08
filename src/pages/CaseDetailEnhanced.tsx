@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, FileText, File, Scale, Calendar, XCircle, StickyNote, CheckSquare, Pencil } from 'lucide-react';
-import { toast } from 'sonner';
+
 import { EditCaseDialog } from '@/components/cases/EditCaseDialog';
 import { DetailsTab } from '@/components/cases/detail/tabs/DetailsTab';
 import { DocumentsTab } from '@/components/cases/detail/tabs/DocumentsTab';
@@ -18,13 +18,14 @@ import { HearingsTable } from '@/components/cases/enhanced/HearingsTable';
 import { ObjectionsTable } from '@/components/cases/enhanced/ObjectionsTable';
 import { CreateNoteMultiModal } from '@/components/notes/CreateNoteMultiModal';
 import { CreateTaskDialog } from '@/components/tasks/CreateTaskDialog';
+import { useLegalkartCaseDetails } from '@/hooks/useLegalkartCaseDetails';
 export default function CaseDetailEnhanced() {
   const {
     id
   } = useParams<{
     id: string;
   }>();
-  const queryClient = useQueryClient();
+  
   const [activeTab, setActiveTab] = useState('details');
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -47,197 +48,22 @@ export default function CaseDetailEnhanced() {
     enabled: !!id
   });
 
-  // Fetch legalkart case data
+  // Unified LegalKart/eCourt data via hook
   const {
-    data: legalkartCase,
-    isLoading: legalkartLoading
-  } = useQuery({
-    queryKey: ['legalkart-case', id],
-    queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from('legalkart_cases').select('*').eq('case_id', id).maybeSingle();
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!id
-  });
+    legalkartCase,
+    petitioners = [],
+    respondents = [],
+    iaDetails = [],
+    documents = [],
+    orders = [],
+    objections = [],
+    hearings = [],
+    isLoading: legalkartLoading,
+    refreshCaseData,
+    isRefreshing,
+  } = useLegalkartCaseDetails(id!);
 
-  // Fetch petitioners
-  const {
-    data: petitioners = []
-  } = useQuery({
-    queryKey: ['petitioners', id],
-    queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from('petitioners').select('*').eq('case_id', id);
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!id
-  });
-
-  // Fetch respondents
-  const {
-    data: respondents = []
-  } = useQuery({
-    queryKey: ['respondents', id],
-    queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from('respondents').select('*').eq('case_id', id);
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!id
-  });
-
-  // Fetch IA details
-  const {
-    data: iaDetails = []
-  } = useQuery({
-    queryKey: ['ia-details', id],
-    queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from('ia_details').select('*').eq('case_id', id);
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!id
-  });
-
-  // Fetch documents
-  const {
-    data: documents = []
-  } = useQuery({
-    queryKey: ['legalkart-documents', legalkartCase?.id],
-    queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from('legalkart_case_documents').select('*').eq('legalkart_case_id', legalkartCase?.id).order('date_of_receiving', {
-        ascending: false
-      });
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!legalkartCase?.id
-  });
-
-  // Fetch orders
-  const {
-    data: orders = []
-  } = useQuery({
-    queryKey: ['legalkart-orders', legalkartCase?.id],
-    queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from('legalkart_case_orders').select('*').eq('legalkart_case_id', legalkartCase?.id).order('hearing_date', {
-        ascending: false
-      });
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!legalkartCase?.id
-  });
-
-  // Fetch hearings
-  const {
-    data: hearings = []
-  } = useQuery({
-    queryKey: ['legalkart-hearings', legalkartCase?.id],
-    queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from('legalkart_case_history').select('*').eq('legalkart_case_id', legalkartCase?.id).order('hearing_date', {
-        ascending: false
-      });
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!legalkartCase?.id
-  });
-
-  // Fetch objections
-  const {
-    data: objections = []
-  } = useQuery({
-    queryKey: ['legalkart-objections', legalkartCase?.id],
-    queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from('legalkart_case_objections').select('*').eq('legalkart_case_id', legalkartCase?.id).order('scrutiny_date', {
-        ascending: false
-      });
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!legalkartCase?.id
-  });
-
-  // Refresh mutation
-  const refreshMutation = useMutation({
-    mutationFn: async () => {
-      if (!caseData?.cnr_number || !caseData?.firm_id) {
-        throw new Error('CNR number or firm ID not found');
-      }
-      const {
-        data,
-        error
-      } = await supabase.functions.invoke('legalkart-api', {
-        body: {
-          action: 'search',
-          searchType: 'high_court',
-          cnr: caseData.cnr_number,
-          caseId: id
-        }
-      });
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['case', id]
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['legalkart-case', id]
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['petitioners', id]
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['respondents', id]
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['ia-details', id]
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['legalkart-documents']
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['legalkart-orders']
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['legalkart-hearings']
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['legalkart-objections']
-      });
-      toast.success('Case data refreshed successfully');
-    },
-    onError: (error: any) => {
-      toast.error(error.message || 'Failed to refresh case data');
-    }
-  });
+  // Refresh handled by useLegalkartCaseDetails.refreshCaseData
   const tabs = [{
     value: 'details',
     label: 'Details',
