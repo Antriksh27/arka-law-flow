@@ -28,8 +28,44 @@ async function upsertCaseRelationalData(
 ) {
   console.log('📦 Upserting relational data for case:', caseId);
   
-  // Parse with AI parser
-  const parsedData = parseECourtsData(rawData);
+  // Handle nested shape: some providers return { data: {...}, success: true }
+  const rd = rawData?.data ?? rawData ?? {};
+
+  // Date normalization helpers
+  const monthIndex: Record<string, string> = {
+    january: '01', february: '02', march: '03', april: '04', may: '05', june: '06',
+    july: '07', august: '08', september: '09', october: '10', november: '11', december: '12'
+  };
+  const stripOrdinals = (s: string) => s.replace(/\b(\d{1,2})(st|nd|rd|th)\b/gi, '$1');
+  const cleanup = (s: string) => s.replace(/\(.*?\)/g, '').replace(/,/g, ' ').replace(/\s+/g, ' ').trim();
+  const normalizeDate = (val: unknown): string | null => {
+    if (typeof val !== 'string') return null;
+    if (!val || val.trim() === '') return null;
+    let s = cleanup(val);
+    // dd-mm-yyyy or dd/mm/yyyy
+    const m = s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
+    if (m) {
+      const dd = m[1].padStart(2, '0');
+      const mm = m[2].padStart(2, '0');
+      const yyyy = m[3];
+      return `${yyyy}-${mm}-${dd}`;
+    }
+    // dd Month yyyy (with or without ordinals)
+    s = stripOrdinals(s);
+    const m2 = s.match(/^(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})$/);
+    if (m2) {
+      const dd = m2[1].padStart(2, '0');
+      const mon = monthIndex[m2[2].toLowerCase()];
+      const yyyy = m2[3];
+      if (mon) return `${yyyy}-${mon}-${dd}`;
+    }
+    // Already ISO
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+    return null;
+  };
+
+  // Parse with AI parser (handles petitioner/respondent strings)
+  const parsedData = parseECourtsData(rd);
   
   // Delete existing data
   await Promise.all([
@@ -73,8 +109,8 @@ async function upsertCaseRelationalData(
         case_id: caseId,
         ia_number: ia.iaNumber,
         party: ia.party,
-        date_of_filing: ia.dateOfFiling,
-        next_date: ia.nextDate,
+        date_of_filing: normalizeDate(ia.dateOfFiling),
+        next_date: normalizeDate(ia.nextDate),
         ia_status: ia.status,
       }))
     );
@@ -82,72 +118,72 @@ async function upsertCaseRelationalData(
   }
 
   // Insert documents
-  const documents = Array.isArray(rawData?.documents) ? rawData.documents : [];
+  const documents = Array.isArray(rd?.documents) ? rd.documents : [];
   if (documents.length > 0) {
     const { error } = await supabase.from('case_documents').insert(
       documents.map((d: any) => ({
         case_id: caseId,
-        sr_no: d.sr_no,
-        document_filed: d.document_filed,
-        filed_by: d.filed_by,
-        advocate: d.advocate,
-        document_no: d.document_no,
-        date_of_receiving: d.date_of_receiving,
-        document_type: d.document_type,
-        document_url: d.document_link || d.document_url,
-        pdf_base64: d.pdf_base64,
+        sr_no: d.sr_no ?? null,
+        document_filed: d.document_filed ?? null,
+        filed_by: d.filed_by ?? null,
+        advocate: d.advocate ?? null,
+        document_no: d.document_no ?? null,
+        date_of_receiving: normalizeDate(d.date_of_receiving),
+        document_type: d.document_type ?? null,
+        document_url: d.document_link || d.document_url || null,
+        pdf_base64: d.pdf_base64 ?? null,
       }))
     );
     if (error) console.error('Error inserting documents:', error);
   }
 
   // Insert orders
-  const orders = Array.isArray(rawData?.order_details) ? rawData.order_details : [];
+  const orders = Array.isArray(rd?.order_details) ? rd.order_details : [];
   if (orders.length > 0) {
     const { error } = await supabase.from('case_orders').insert(
       orders.map((o: any) => ({
         case_id: caseId,
-        judge: o.judge || o.judge_name,
-        hearing_date: o.hearing_date,
-        order_date: o.order_date,
-        order_number: o.order_number,
-        bench: o.bench,
-        order_details: o.order_details,
-        summary: o.summary || o.order_summary,
-        order_link: o.order_link || o.pdf_url,
-        pdf_base64: o.pdf_base64,
+        judge: o.judge || o.judge_name || null,
+        hearing_date: normalizeDate(o.hearing_date),
+        order_date: normalizeDate(o.order_date),
+        order_number: o.order_number ?? null,
+        bench: o.bench ?? null,
+        order_details: o.order_details ?? null,
+        summary: o.summary || o.order_summary || null,
+        order_link: o.order_link || o.pdf_url || null,
+        pdf_base64: o.pdf_base64 ?? null,
       }))
     );
     if (error) console.error('Error inserting orders:', error);
   }
 
   // Insert hearings
-  const hearings = Array.isArray(rawData?.history_of_case_hearing) ? rawData.history_of_case_hearing : [];
+  const hearings = Array.isArray(rd?.history_of_case_hearing) ? rd.history_of_case_hearing : [];
   if (hearings.length > 0) {
     const { error } = await supabase.from('case_hearings').insert(
       hearings.map((h: any) => ({
         case_id: caseId,
-        hearing_date: h.hearing_date,
-        judge: h.judge || h.judge_name,
-        cause_list_type: h.cause_list_type,
-        business_on_date: h.business_on_date,
-        purpose_of_hearing: h.purpose_of_hearing,
+        hearing_date: normalizeDate(h.hearing_date),
+        judge: h.judge || h.judge_name || null,
+        cause_list_type: h.cause_list_type ?? null,
+        business_on_date: normalizeDate(h.business_on_date),
+        purpose_of_hearing: h.purpose_of_hearing ?? null,
       }))
     );
     if (error) console.error('Error inserting hearings:', error);
   }
 
   // Insert objections
-  const objections = Array.isArray(rawData?.objections) ? rawData.objections : [];
+  const objections = Array.isArray(rd?.objections) ? rd.objections : [];
   if (objections.length > 0) {
     const { error } = await supabase.from('case_objections').insert(
       objections.map((o: any) => ({
         case_id: caseId,
-        sr_no: o.sr_no,
-        objection: o.objection,
-        receipt_date: o.receipt_date,
-        scrutiny_date: o.scrutiny_date,
-        compliance_date: o.objection_compliance_date || o.compliance_date,
+        sr_no: o.sr_no ?? null,
+        objection: o.objection ?? null,
+        receipt_date: normalizeDate(o.receipt_date),
+        scrutiny_date: normalizeDate(o.scrutiny_date),
+        compliance_date: normalizeDate(o.objection_compliance_date ?? o.compliance_date),
       }))
     );
     if (error) console.error('Error inserting objections:', error);
