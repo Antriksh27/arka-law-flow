@@ -32,9 +32,16 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
 
   const parsePartyInfo = (partyStr: string | undefined) => {
     if (!partyStr) return { name: '', advocate: '' };
-    const parts = partyStr.split('Advocate-');
-    const name = parts[0]?.replace(/^\d+\)\s*/, '').trim() || '';
+    
+    // Split by "Advocate-" or "Advocate -"
+    const parts = partyStr.split(/Advocate\s*-\s*/i);
+    
+    // Keep all party names with their numbers intact
+    const name = parts[0]?.trim() || '';
+    
+    // Get the full advocate information
     const advocate = parts[1]?.trim() || '';
+    
     return { name, advocate };
   };
 
