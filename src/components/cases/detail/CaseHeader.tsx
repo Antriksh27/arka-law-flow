@@ -45,7 +45,7 @@ export const CaseHeader: React.FC<CaseHeaderProps> = ({
       <div className="flex items-start justify-between">
         <div className="flex-1 space-y-2">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-semibold text-gray-900">{caseData.title}</h1>
+            <h1 className="text-2xl font-semibold text-gray-900">{caseData.vs || caseData.title}</h1>
             <Badge className={`${getStatusColor(caseData.status)} rounded-full`}>
               {caseData.status?.replace('_', ' ')}
             </Badge>
