@@ -39,26 +39,26 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
     const rawNames = parts[0]?.trim() || '';
     const rawAdvocate = parts[1]?.trim() || '';
     
-    // Check if there are multiple parties (contains "2)" or more numbers)
-    const hasMultipleParties = /\d+\)/.test(rawNames) && rawNames.includes('2)');
+    // Check if there are multiple parties (contains "2)" indicating at least 2 parties)
+    const hasMultipleParties = rawNames.includes('2)');
     
-    // For name: keep numbers only if multiple parties, otherwise remove them
+    // For name: keep numbers if multiple parties, otherwise remove the leading number
     let name = rawNames;
-    if (!hasMultipleParties) {
-      // Remove leading numbers like "1)" for single party
+    if (!hasMultipleParties && /^\d+\)\s*/.test(rawNames)) {
+      // Single party: remove the leading "1)" 
       name = rawNames.replace(/^\d+\)\s*/, '').trim();
     }
+    // If multiple parties, keep all numbers and formatting as-is
     
-    // For advocate: detect based on brackets with codes or "NOTICE SERVED"
+    // For advocate: extract advocate names with codes or NOTICE SERVED
     let advocate = '';
     if (rawAdvocate) {
-      // Look for text with brackets containing numbers (like "MR C B UPADHYAYA(3508)")
-      // or text with "NOTICE SERVED"
-      const advocateMatch = rawAdvocate.match(/[A-Z\s\.]+(?:\(\d+\)|NOTICE SERVED\(\d+\))/gi);
-      if (advocateMatch) {
-        advocate = advocateMatch.join(', ');
+      // Match patterns like "MR C B UPADHYAYA(3508)" or "NOTICE SERVED(4)"
+      const advocateMatches = rawAdvocate.match(/(?:[A-Z][A-Z\s\.]+(?:\([^)]+\)))/g);
+      if (advocateMatches) {
+        advocate = advocateMatches.join(', ');
       } else {
-        advocate = rawAdvocate;
+        advocate = rawAdvocate.trim();
       }
     }
     
