@@ -33,14 +33,34 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
   const parsePartyInfo = (partyStr: string | undefined) => {
     if (!partyStr) return { name: '', advocate: '' };
     
-    // Split by "Advocate-" or "Advocate -"
+    // Split by "Advocate-" or "Advocate -" (case insensitive)
     const parts = partyStr.split(/Advocate\s*-\s*/i);
     
-    // Keep all party names with their numbers intact
-    const name = parts[0]?.trim() || '';
+    const rawNames = parts[0]?.trim() || '';
+    const rawAdvocate = parts[1]?.trim() || '';
     
-    // Get the full advocate information
-    const advocate = parts[1]?.trim() || '';
+    // Check if there are multiple parties (contains "2)" or more numbers)
+    const hasMultipleParties = /\d+\)/.test(rawNames) && rawNames.includes('2)');
+    
+    // For name: keep numbers only if multiple parties, otherwise remove them
+    let name = rawNames;
+    if (!hasMultipleParties) {
+      // Remove leading numbers like "1)" for single party
+      name = rawNames.replace(/^\d+\)\s*/, '').trim();
+    }
+    
+    // For advocate: detect based on brackets with codes or "NOTICE SERVED"
+    let advocate = '';
+    if (rawAdvocate) {
+      // Look for text with brackets containing numbers (like "MR C B UPADHYAYA(3508)")
+      // or text with "NOTICE SERVED"
+      const advocateMatch = rawAdvocate.match(/[A-Z\s\.]+(?:\(\d+\)|NOTICE SERVED\(\d+\))/gi);
+      if (advocateMatch) {
+        advocate = advocateMatch.join(', ');
+      } else {
+        advocate = rawAdvocate;
+      }
+    }
     
     return { name, advocate };
   };
@@ -61,15 +81,19 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
         const petitionerInfo = parsePartyInfo(rawData.data?.petitioner_and_advocate);
         const respondentInfo = parsePartyInfo(rawData.data?.respondent_and_advocate);
         
+        // Create case title without numbers
+        const petitionerName = petitionerInfo.name.replace(/^\d+\)\s*/g, '').trim();
+        const respondentName = respondentInfo.name.replace(/^\d+\)\s*/g, '').trim();
+        const caseTitle = petitionerName && respondentName 
+          ? `${petitionerName} vs ${respondentName}` 
+          : rawData.case_title || rawData.title || caseInfo.filing_number || 'Case Details';
+        
         // Map to a flatter structure for display
         const parsedData = {
           raw: rawData, // Keep raw for later use
-          case_title: rawData.case_title || rawData.title || 
-                     (petitionerInfo.name && respondentInfo.name 
-                       ? `${petitionerInfo.name} vs ${respondentInfo.name}` 
-                       : caseInfo.filing_number || 'Case Details'),
-          case_number: caseInfo.filing_number || rawData.case_number || rawData.filing_number,
-          cnr_number: caseInfo.cnr_number || rawData.cnr_number || rawData.cnr || rawData.CNR,
+          case_title: caseTitle,
+          case_number: caseInfo.registration_number || rawData.registration_number || caseInfo.filing_number || rawData.case_number,
+          cnr_number: (caseInfo.cnr_number || rawData.cnr_number || rawData.cnr || rawData.CNR || '').replace(/[-\s]/g, ''),
           filing_number: caseInfo.filing_number || rawData.filing_number,
           registration_number: caseInfo.registration_number || rawData.registration_number,
           court: caseStatus.court || rawData.court || rawData.court_name,
