@@ -22,17 +22,7 @@ const ECourts = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('legalkart_cases')
-        .select(`
-          *,
-          cases (
-            id,
-            case_title,
-            case_number,
-            court_name,
-            status,
-            created_at
-          )
-        `)
+        .select('*')
         .order('updated_at', { ascending: false });
       
       if (error) throw error;
@@ -112,30 +102,37 @@ const ECourts = () => {
                   {/* Case Title & Number */}
                   <div>
                     <h3 className="text-xl font-semibold mb-1">
-                      {item.cases?.case_title || 'Untitled Case'}
+                      {item.case_details?.petitioner && item.case_details?.respondent 
+                        ? `${item.case_details.petitioner} vs ${item.case_details.respondent}`
+                        : item.case_type || 'Case Details'}
                     </h3>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <FileText className="h-4 w-4" />
-                        {item.cnr_number}
+                        CNR: {item.cnr_number}
                       </span>
-                      {item.cases?.case_number && (
-                        <span>Case No: {item.cases.case_number}</span>
+                      {item.case_number && (
+                        <span>Case No: {item.case_number}</span>
                       )}
                     </div>
                   </div>
 
-                  {/* Court & Status */}
-                  <div className="flex items-center gap-4 text-sm">
-                    {item.cases?.court_name && (
+                  {/* Court & Details */}
+                  <div className="flex items-center gap-4 text-sm flex-wrap">
+                    {item.court_name && (
                       <span className="flex items-center gap-1">
                         <Building2 className="h-4 w-4" />
-                        {item.cases.court_name}
+                        {item.court_name}
                       </span>
                     )}
-                    {item.cases?.status && (
+                    {item.case_type && (
+                      <Badge variant="outline" className="capitalize">
+                        {item.case_type}
+                      </Badge>
+                    )}
+                    {item.case_status && (
                       <Badge className="capitalize">
-                        {item.cases.status.replace('_', ' ')}
+                        {item.case_status}
                       </Badge>
                     )}
                   </div>
@@ -160,7 +157,7 @@ const ECourts = () => {
                     onClick={() => handleViewJson(item)}
                   >
                     <Eye className="h-4 w-4 mr-2" />
-                    View JSON
+                    View Details
                   </Button>
                   {item.case_id && (
                     <Button
