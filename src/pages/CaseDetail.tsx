@@ -107,69 +107,69 @@ const CaseDetail = () => {
     enabled: !!id
   });
 
-  // Fetch documents from legalkart
+  // Fetch documents from case_documents
   const { data: documents = [] } = useQuery({
-    queryKey: ['legalkart-documents', id],
+    queryKey: ['case-documents', id],
     queryFn: async () => {
-      if (!legalkartCase?.id) return [];
+      if (!id) return [];
       const { data, error } = await supabase
-        .from('legalkart_case_documents')
+        .from('case_documents')
         .select('*')
-        .eq('legalkart_case_id', legalkartCase.id);
+        .eq('case_id', id);
       
       if (error) throw error;
       return data || [];
     },
-    enabled: !!legalkartCase?.id
+    enabled: !!id
   });
 
-  // Fetch orders from legalkart
+  // Fetch orders from case_orders
   const { data: orders = [] } = useQuery({
-    queryKey: ['legalkart-orders', id],
+    queryKey: ['case-orders', id],
     queryFn: async () => {
-      if (!legalkartCase?.id) return [];
+      if (!id) return [];
       const { data, error } = await supabase
-        .from('legalkart_case_orders')
+        .from('case_orders')
         .select('*')
-        .eq('legalkart_case_id', legalkartCase.id);
+        .eq('case_id', id);
       
       if (error) throw error;
       return data || [];
     },
-    enabled: !!legalkartCase?.id
+    enabled: !!id
   });
 
-  // Fetch objections from legalkart
+  // Fetch objections from case_objections
   const { data: objections = [] } = useQuery({
-    queryKey: ['legalkart-objections', id],
+    queryKey: ['case-objections', id],
     queryFn: async () => {
-      if (!legalkartCase?.id) return [];
+      if (!id) return [];
       const { data, error } = await supabase
-        .from('legalkart_case_objections')
+        .from('case_objections')
         .select('*')
-        .eq('legalkart_case_id', legalkartCase.id);
+        .eq('case_id', id);
       
       if (error) throw error;
       return data || [];
     },
-    enabled: !!legalkartCase?.id
+    enabled: !!id
   });
 
-  // Fetch hearings from legalkart
+  // Fetch hearings from case_hearings
   const { data: hearings = [] } = useQuery({
-    queryKey: ['legalkart-hearings', id],
+    queryKey: ['case-hearings', id],
     queryFn: async () => {
-      if (!legalkartCase?.id) return [];
+      if (!id) return [];
       const { data, error } = await supabase
-        .from('legalkart_case_history')
+        .from('case_hearings')
         .select('*')
-        .eq('legalkart_case_id', legalkartCase.id)
+        .eq('case_id', id)
         .order('hearing_date', { ascending: false });
       
       if (error) throw error;
       return data || [];
     },
-    enabled: !!legalkartCase?.id
+    enabled: !!id
   });
 
   // Refresh case data mutation

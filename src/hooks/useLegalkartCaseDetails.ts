@@ -106,96 +106,91 @@ export const useLegalkartCaseDetails = (caseId: string) => {
   });
 
   const { data: documents } = useQuery({
-    queryKey: ['legalkart-documents', caseId, effectiveLegalkartCaseId],
+    queryKey: ['case-documents', caseId],
     queryFn: async () => {
-      if (!effectiveLegalkartCaseId) {
-        console.log('No effective Legalkart case ID for documents');
-        return [];
-      }
-      console.log('Fetching documents for legalkart_case_id:', effectiveLegalkartCaseId);
+      if (!caseId) return [];
+      
+      console.log('Fetching documents for case_id:', caseId);
       const { data, error } = await supabase
-        .from('legalkart_case_documents')
+        .from('case_documents')
         .select('*')
-        .eq('legalkart_case_id', effectiveLegalkartCaseId);
+        .eq('case_id', caseId)
+        .order('created_at', { ascending: false });
       
       if (error) {
         console.error('Error fetching documents:', error);
-        throw error;
+        return [];
       }
       console.log('Documents found:', data?.length || 0);
       return data;
     },
-    enabled: !!effectiveLegalkartCaseId
+    enabled: !!caseId
   });
 
   const { data: orders } = useQuery({
-    queryKey: ['legalkart-orders', caseId, effectiveLegalkartCaseId],
+    queryKey: ['case-orders', caseId],
     queryFn: async () => {
-      if (!effectiveLegalkartCaseId) {
-        console.log('No effective Legalkart case ID for orders');
-        return [];
-      }
-      console.log('Fetching orders for legalkart_case_id:', effectiveLegalkartCaseId);
+      if (!caseId) return [];
+      
+      console.log('Fetching orders for case_id:', caseId);
       const { data, error } = await supabase
-        .from('legalkart_case_orders')
+        .from('case_orders')
         .select('*')
-        .eq('legalkart_case_id', effectiveLegalkartCaseId);
+        .eq('case_id', caseId)
+        .order('hearing_date', { ascending: false });
       
       if (error) {
         console.error('Error fetching orders:', error);
-        throw error;
+        return [];
       }
       console.log('Orders found:', data?.length || 0);
       return data;
     },
-    enabled: !!effectiveLegalkartCaseId
+    enabled: !!caseId
   });
 
   const { data: objections } = useQuery({
-    queryKey: ['legalkart-objections', caseId, effectiveLegalkartCaseId],
+    queryKey: ['case-objections', caseId],
     queryFn: async () => {
-      if (!effectiveLegalkartCaseId) {
-        console.log('No effective Legalkart case ID for objections');
-        return [];
-      }
-      console.log('Fetching objections for legalkart_case_id:', effectiveLegalkartCaseId);
+      if (!caseId) return [];
+      
+      console.log('Fetching objections for case_id:', caseId);
       const { data, error } = await supabase
-        .from('legalkart_case_objections')
+        .from('case_objections')
         .select('*')
-        .eq('legalkart_case_id', effectiveLegalkartCaseId);
+        .eq('case_id', caseId)
+        .order('created_at', { ascending: false });
       
       if (error) {
         console.error('Error fetching objections:', error);
-        throw error;
+        return [];
       }
       console.log('Objections found:', data?.length || 0);
       return data;
     },
-    enabled: !!effectiveLegalkartCaseId
+    enabled: !!caseId
   });
 
   const { data: hearings } = useQuery({
-    queryKey: ['legalkart-hearings', caseId, effectiveLegalkartCaseId],
+    queryKey: ['case-hearings', caseId],
     queryFn: async () => {
-      if (!effectiveLegalkartCaseId) {
-        console.log('No effective Legalkart case ID for hearings');
-        return [];
-      }
-      console.log('Fetching hearings for legalkart_case_id:', effectiveLegalkartCaseId);
+      if (!caseId) return [];
+      
+      console.log('Fetching hearings for case_id:', caseId);
       const { data, error } = await supabase
-        .from('legalkart_case_history')
+        .from('case_hearings')
         .select('*')
-        .eq('legalkart_case_id', effectiveLegalkartCaseId)
+        .eq('case_id', caseId)
         .order('hearing_date', { ascending: false });
       
       if (error) {
         console.error('Error fetching hearings:', error);
-        throw error;
+        return [];
       }
       console.log('Hearings found:', data?.length || 0);
       return data;
     },
-    enabled: !!effectiveLegalkartCaseId
+    enabled: !!caseId
   });
 
   const refreshCaseData = useMutation({
@@ -243,10 +238,10 @@ export const useLegalkartCaseDetails = (caseId: string) => {
       queryClient.invalidateQueries({ queryKey: ['petitioners', caseId] });
       queryClient.invalidateQueries({ queryKey: ['respondents', caseId] });
       queryClient.invalidateQueries({ queryKey: ['ia-details', caseId] });
-      queryClient.invalidateQueries({ queryKey: ['legalkart-documents', caseId] });
-      queryClient.invalidateQueries({ queryKey: ['legalkart-orders', caseId] });
-      queryClient.invalidateQueries({ queryKey: ['legalkart-objections', caseId] });
-      queryClient.invalidateQueries({ queryKey: ['legalkart-hearings', caseId] });
+      queryClient.invalidateQueries({ queryKey: ['case-documents', caseId] });
+      queryClient.invalidateQueries({ queryKey: ['case-orders', caseId] });
+      queryClient.invalidateQueries({ queryKey: ['case-objections', caseId] });
+      queryClient.invalidateQueries({ queryKey: ['case-hearings', caseId] });
       toast({ title: "Case data refreshed successfully" });
     },
     onError: (error: any) => {

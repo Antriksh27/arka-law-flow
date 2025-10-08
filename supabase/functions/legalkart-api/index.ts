@@ -377,68 +377,75 @@ serve(async (req) => {
             await supabase.from('legalkart_case_orders').delete().eq('legalkart_case_id', legalkartCaseId);
             await supabase.from('legalkart_case_history').delete().eq('legalkart_case_id', legalkartCaseId);
 
-            // Documents
-            if (sanitizedDocuments.length) {
+            // Documents - insert into case_documents (linked to cases.id)
+            if (caseId && sanitizedDocuments.length) {
+              await supabase.from('case_documents').delete().eq('case_id', caseId);
               const docRows = sanitizedDocuments.map((d: any) => ({
-                legalkart_case_id: legalkartCaseId!,
+                case_id: caseId,
                 sr_no: d.sr_no ?? null,
                 advocate: d.advocate ?? null,
                 filed_by: d.filed_by ?? null,
                 document_no: d.document_no ?? null,
                 document_filed: d.document_filed ?? null,
                 date_of_receiving: d.date_of_receiving ?? null,
+                document_type: d.document_type ?? null,
                 pdf_base64: d.pdf_base64 ?? null,
-                document_link: d.document_link ?? null,
+                document_url: d.document_link ?? null,
               }));
-              const { error: docError } = await supabase.from('legalkart_case_documents').insert(docRows);
+              const { error: docError } = await supabase.from('case_documents').insert(docRows);
               if (docError) console.error('Error inserting documents:', docError);
               else console.log(`✅ Inserted ${sanitizedDocuments.length} documents`);
             }
 
-            // Objections
-            if (sanitizedObjections.length) {
+            // Objections - insert into case_objections (linked to cases.id)
+            if (caseId && sanitizedObjections.length) {
+              await supabase.from('case_objections').delete().eq('case_id', caseId);
               const objRows = sanitizedObjections.map((o: any) => ({
-                legalkart_case_id: legalkartCaseId!,
+                case_id: caseId,
                 sr_no: o.sr_no ?? null,
                 objection: o.objection ?? null,
                 receipt_date: o.receipt_date ?? null,
                 scrutiny_date: o.scrutiny_date ?? null,
+                compliance_date: o.objection_compliance_date ?? o.compliance_date ?? null,
                 objection_compliance_date: o.objection_compliance_date ?? o.compliance_date ?? null,
               }));
-              const { error: objError } = await supabase.from('legalkart_case_objections').insert(objRows);
+              const { error: objError } = await supabase.from('case_objections').insert(objRows);
               if (objError) console.error('Error inserting objections:', objError);
               else console.log(`✅ Inserted ${sanitizedObjections.length} objections`);
             }
 
-            // Orders
-            if (sanitizedOrders.length) {
+            // Orders - insert into case_orders (linked to cases.id)
+            if (caseId && sanitizedOrders.length) {
+              await supabase.from('case_orders').delete().eq('case_id', caseId);
               const orderRows = sanitizedOrders.map((o: any) => ({
-                legalkart_case_id: legalkartCaseId!,
+                case_id: caseId,
                 judge: o.judge ?? null,
                 hearing_date: o.hearing_date ?? null,
+                order_date: o.order_date ?? null,
                 order_number: o.order_number ?? null,
                 bench: o.bench ?? null,
                 order_details: o.order_details ?? null,
+                summary: o.order_details ?? null,
                 pdf_base64: o.pdf_base64 ?? null,
                 order_link: o.order_link ?? null,
               }));
-              const { error: orderError } = await supabase.from('legalkart_case_orders').insert(orderRows);
+              const { error: orderError } = await supabase.from('case_orders').insert(orderRows);
               if (orderError) console.error('Error inserting orders:', orderError);
               else console.log(`✅ Inserted ${sanitizedOrders.length} orders`);
             }
 
-            // History
-            if (sanitizedHistory.length) {
+            // History - insert into case_hearings (linked to cases.id)
+            if (caseId && sanitizedHistory.length) {
+              await supabase.from('case_hearings').delete().eq('case_id', caseId);
               const histRows = sanitizedHistory.map((h: any) => ({
-                legalkart_case_id: legalkartCaseId!,
-                firm_id: teamMember.firm_id,
+                case_id: caseId,
                 judge: h.judge ?? null,
                 hearing_date: h.hearing_date ?? null,
                 cause_list_type: h.cause_list_type ?? null,
                 business_on_date: h.business_on_date ?? null,
                 purpose_of_hearing: h.purpose_of_hearing ?? null,
               }));
-              const { error: histError } = await supabase.from('legalkart_case_history').insert(histRows);
+              const { error: histError } = await supabase.from('case_hearings').insert(histRows);
               if (histError) console.error('Error inserting hearing history:', histError);
               else console.log(`✅ Inserted ${sanitizedHistory.length} hearing history records`);
             }
