@@ -304,25 +304,10 @@ serve(async (req) => {
           console.log('- Documents with PDF:', docsWithPdf, '/', sanitizedDocuments.length);
           console.log('- Orders with PDF:', ordersWithPdf, '/', sanitizedOrders.length);
           
-          // Try RPC upsert first
-          const { error: upsertError } = await supabase.rpc('upsert_legalkart_case_data', {
-            p_cnr_number: normalizedCnr,
-            p_firm_id: teamMember.firm_id,
-            p_case_id: caseId,
-            p_case_data: caseDataSanitized,
-            p_documents: sanitizedDocuments,
-            p_objections: sanitizedObjections,
-            p_orders: sanitizedOrders,
-            p_history: sanitizedHistory,
-            p_petitioners: parsedData.petitioners,
-            p_respondents: parsedData.respondents,
-            p_ia_details: parsedData.iaDetails,
-          });
+          // Use direct upsert for reliability (skip RPC to avoid data mapping issues)
+          console.log('Using direct upsert method for Legalkart data...');
 
-          if (upsertError) {
-            console.error('upsert_legalkart_case_data failed, falling back to direct upsert:', upsertError);
-
-            // 1) Ensure legalkart_cases exists
+          // 1) Ensure legalkart_cases exists
             let legalkartCaseId: string | null = null;
             const { data: existingCase } = await supabase
               .from('legalkart_cases')
@@ -358,6 +343,8 @@ serve(async (req) => {
             if (sanitizedDocuments.length) {
               const docRows = sanitizedDocuments.map((d: any) => ({
                 legalkart_case_id: legalkartCaseId!,
+                firm_id: teamMember.firm_id,
+                case_id: caseId ?? null,
                 sr_no: d.sr_no ?? null,
                 advocate: d.advocate ?? null,
                 filed_by: d.filed_by ?? null,
@@ -367,26 +354,34 @@ serve(async (req) => {
                 pdf_base64: d.pdf_base64 ?? null,
                 document_link: d.document_link ?? null,
               }));
-              await supabase.from('legalkart_case_documents').insert(docRows);
+              const { error: docError } = await supabase.from('legalkart_case_documents').insert(docRows);
+              if (docError) console.error('Error inserting documents:', docError);
+              else console.log(`✅ Inserted ${sanitizedDocuments.length} documents`);
             }
 
             // Objections
             if (sanitizedObjections.length) {
               const objRows = sanitizedObjections.map((o: any) => ({
                 legalkart_case_id: legalkartCaseId!,
+                firm_id: teamMember.firm_id,
+                case_id: caseId ?? null,
                 sr_no: o.sr_no ?? null,
                 objection: o.objection ?? null,
                 receipt_date: o.receipt_date ?? null,
                 scrutiny_date: o.scrutiny_date ?? null,
                 objection_compliance_date: o.objection_compliance_date ?? null,
               }));
-              await supabase.from('legalkart_case_objections').insert(objRows);
+              const { error: objError } = await supabase.from('legalkart_case_objections').insert(objRows);
+              if (objError) console.error('Error inserting objections:', objError);
+              else console.log(`✅ Inserted ${sanitizedObjections.length} objections`);
             }
 
             // Orders
             if (sanitizedOrders.length) {
               const orderRows = sanitizedOrders.map((o: any) => ({
                 legalkart_case_id: legalkartCaseId!,
+                firm_id: teamMember.firm_id,
+                case_id: caseId ?? null,
                 judge: o.judge ?? null,
                 hearing_date: o.hearing_date ?? null,
                 order_number: o.order_number ?? null,
@@ -395,20 +390,26 @@ serve(async (req) => {
                 pdf_base64: o.pdf_base64 ?? null,
                 order_link: o.order_link ?? null,
               }));
-              await supabase.from('legalkart_case_orders').insert(orderRows);
+              const { error: orderError } = await supabase.from('legalkart_case_orders').insert(orderRows);
+              if (orderError) console.error('Error inserting orders:', orderError);
+              else console.log(`✅ Inserted ${sanitizedOrders.length} orders`);
             }
 
             // History
             if (sanitizedHistory.length) {
               const histRows = sanitizedHistory.map((h: any) => ({
                 legalkart_case_id: legalkartCaseId!,
+                firm_id: teamMember.firm_id,
+                case_id: caseId ?? null,
                 judge: h.judge ?? null,
                 hearing_date: h.hearing_date ?? null,
                 cause_list_type: h.cause_list_type ?? null,
                 business_on_date: h.business_on_date ?? null,
                 purpose_of_hearing: h.purpose_of_hearing ?? null,
               }));
-              await supabase.from('legalkart_case_history').insert(histRows);
+              const { error: histError } = await supabase.from('legalkart_case_history').insert(histRows);
+              if (histError) console.error('Error inserting hearing history:', histError);
+              else console.log(`✅ Inserted ${sanitizedHistory.length} hearing history records`);
             }
 
             // 🤖 AI Parser: Insert Petitioners
@@ -457,15 +458,8 @@ serve(async (req) => {
             }
 
             console.log('Direct upsert completed successfully with AI-parsed data');
-          }
-
-          if (upsertError) {
-            console.error('Error upserting Legalkart case data:', upsertError);
-          } else {
-            console.log('Successfully upserted Legalkart case data');
-          }
         } catch (upsertErr) {
-          console.error('Failed to call upsert function:', upsertErr);
+          console.error('Failed to upsert Legalkart data:', upsertErr);
         }
       }
 

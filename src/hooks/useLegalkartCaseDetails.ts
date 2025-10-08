@@ -2,11 +2,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { fetchLegalkartCaseId } from '@/components/cases/legalkart/utils';
-import { useEffect, useRef } from 'react';
 
 export const useLegalkartCaseDetails = (caseId: string) => {
   const queryClient = useQueryClient();
-  const hasRefreshedRef = useRef(false);
 
   // Initially try to get from legalkart_cases by case_id
   const { data: legalkartCase, isLoading: isLoadingCase } = useQuery({
@@ -40,15 +38,6 @@ export const useLegalkartCaseDetails = (caseId: string) => {
     },
     enabled: !!caseId && !legalkartCase?.id,
   });
-
-  // Auto-refresh once if no legalkart data found
-  useEffect(() => {
-    if (!hasRefreshedRef.current && caseId && !legalkartCase && !fallbackLegalkartCaseId) {
-      console.log('No Legalkart data found, triggering refresh...');
-      hasRefreshedRef.current = true;
-      refreshCaseData.mutate();
-    }
-  }, [caseId, legalkartCase, fallbackLegalkartCaseId]);
 
   const effectiveLegalkartCaseId = legalkartCase?.id ?? fallbackLegalkartCaseId ?? null;
   console.log('Effective Legalkart case ID:', effectiveLegalkartCaseId);
