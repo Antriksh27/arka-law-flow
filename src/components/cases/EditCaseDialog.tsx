@@ -26,7 +26,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
   caseData
 }) => {
   const [formData, setFormData] = useState({
-    case_number: caseData?.case_number || '',
+    registration_number: caseData?.registration_number || '',
     status: caseData?.status || 'open',
     stage: caseData?.stage || '',
     court_name: caseData?.court_name || '',
@@ -42,8 +42,8 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
     district: caseData?.district || '',
     state_1: caseData?.state_1 || '',
     district_1: caseData?.district_1 || '',
+    case_number: caseData?.case_number || '',
     filing_number: caseData?.filing_number || '',
-    registration_number: caseData?.registration_number || '',
     cnr_number: caseData?.cnr_number || '',
     filing_date: caseData?.filing_date || '',
     registration_date: caseData?.registration_date || '',
@@ -166,11 +166,11 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
             <h3 className="text-lg font-semibold">Basic Case Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="case_number">Case Number *</Label>
+                <Label htmlFor="registration_number">Registration Number *</Label>
                 <Input
-                  id="case_number"
-                  value={formData.case_number}
-                  onChange={(e) => setFormData({ ...formData, case_number: e.target.value })}
+                  id="registration_number"
+                  value={formData.registration_number}
+                  onChange={(e) => setFormData({ ...formData, registration_number: e.target.value })}
                   required
                 />
               </div>
