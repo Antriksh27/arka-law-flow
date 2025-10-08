@@ -67,7 +67,7 @@ export const CaseDetailLayout: React.FC<CaseDetailLayoutProps> = ({ caseId, case
           </TabsList>
 
           <TabsContent value="overview">
-            <OverviewTab caseData={caseData} />
+            <OverviewTab caseData={caseData} caseId={caseId} />
           </TabsContent>
 
           <TabsContent value="details">
