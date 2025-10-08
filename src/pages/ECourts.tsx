@@ -18,15 +18,23 @@ const ECourts = () => {
   const navigate = useNavigate();
   const { firmId } = useAuth();
 
-  // Fetch all legalkart cases for current firm
+  // Fetch all legalkart case searches for current firm
   const { data: legalkartCases, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ['legalkart-cases', firmId],
+    queryKey: ['legalkart-case-searches', firmId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('legalkart_cases')
-        .select('*')
+        .from('legalkart_case_searches')
+        .select(`
+          *,
+          cases (
+            id,
+            case_title,
+            case_number,
+            court_name
+          )
+        `)
         .eq('firm_id', firmId as string)
-        .order('updated_at', { ascending: false });
+        .order('created_at', { ascending: false });
       
       if (error) throw error;
       return data || [];
@@ -103,74 +111,77 @@ const ECourts = () => {
             <Card key={item.id} className="p-6 hover:shadow-md transition-shadow">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 space-y-3">
-                  {/* Case Title & Number */}
+                  {/* Case Title & CNR */}
                   <div>
                     <h3 className="text-xl font-semibold mb-1">
-                      {item.petitioner_and_advocate || item.respondent_and_advocate
-                        ? `${item.petitioner_and_advocate ?? ''}${item.respondent_and_advocate ? ` vs ${item.respondent_and_advocate}` : ''}`
-                        : 'Legalkart Case'}
+                      {item.cases?.case_title || 'Case Search'}
                     </h3>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <FileText className="h-4 w-4" />
                         CNR: {item.cnr_number}
                       </span>
-                      {item.registration_number && (
-                        <span>Reg No: {item.registration_number}</span>
-                      )}
-                      {item.filing_number && (
-                        <span>Filing No: {item.filing_number}</span>
+                      {item.cases?.case_number && (
+                        <span>Case No: {item.cases.case_number}</span>
                       )}
                     </div>
                   </div>
 
-                  {/* Court & Details */}
+                  {/* Search Details */}
                   <div className="flex items-center gap-4 text-sm flex-wrap">
-                    {(item.state || item.district || item.judicial_branch) && (
+                    <Badge variant="outline" className="capitalize">
+                      {item.search_type?.replace('_', ' ')}
+                    </Badge>
+                    <Badge 
+                      variant={item.status === 'success' ? 'default' : 'error'}
+                      className="capitalize"
+                    >
+                      {item.status}
+                    </Badge>
+                    {item.cases?.court_name && (
                       <span className="flex items-center gap-1">
                         <Building2 className="h-4 w-4" />
-                        {[item.state, item.district].filter(Boolean).join(', ')}
-                        {item.judicial_branch ? ` • ${item.judicial_branch}` : ''}
-                      </span>
-                    )}
-                    {item.stage_of_case && (
-                      <Badge className="capitalize">{item.stage_of_case}</Badge>
-                    )}
-                    {item.bench_type && (
-                      <Badge variant="outline" className="capitalize">
-                        {item.bench_type}
-                      </Badge>
-                    )}
-                    {item.sub_category && (
-                      <Badge variant="outline" className="capitalize">
-                        {item.sub_category}
-                      </Badge>
-                    )}
-                    {item.next_hearing_date && (
-                      <span className="text-xs">
-                        Next hearing: {formatDate(item.next_hearing_date)}
+                        {item.cases.court_name}
                       </span>
                     )}
                   </div>
+
+                  {/* Error Message */}
+                  {item.error_message && (
+                    <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
+                      {item.error_message}
+                    </div>
+                  )}
 
                   {/* Metadata */}
                   <div className="flex items-center gap-4 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
-                      Fetched: {formatDate(item.created_at)}
+                      Searched: {formatDate(item.created_at)}
                     </span>
-                    <span>Last Updated: {formatDate(item.updated_at)}</span>
+                    {item.updated_at !== item.created_at && (
+                      <span>Updated: {formatDate(item.updated_at)}</span>
+                    )}
                   </div>
                 </div>
 
                 {/* Actions */}
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={() => handleViewJson(item)}>
-                    <Eye className="h-4 w-4 mr-2" />
-                    View Details
-                  </Button>
+                  {item.response_data && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleViewJson(item)}
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      View Response
+                    </Button>
+                  )}
                   {item.case_id && (
-                    <Button size="sm" onClick={() => handleViewCase(item.case_id)}>
+                    <Button 
+                      size="sm" 
+                      onClick={() => handleViewCase(item.case_id)}
+                    >
                       View Case
                     </Button>
                   )}
@@ -197,16 +208,18 @@ const ECourts = () => {
       <Dialog open={showJsonDialog} onOpenChange={setShowJsonDialog}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
           <DialogHeader>
-            <DialogTitle>Fetched Case Data - JSON Output</DialogTitle>
+            <DialogTitle>Search Response Data</DialogTitle>
             {selectedCase?.cnr_number && (
-              <p className="text-sm text-muted-foreground">
-                CNR: {selectedCase.cnr_number}
-              </p>
+              <div className="text-sm text-muted-foreground space-y-1">
+                <p>CNR: {selectedCase.cnr_number}</p>
+                <p>Search Type: {selectedCase.search_type?.replace('_', ' ')}</p>
+                <p>Status: {selectedCase.status}</p>
+              </div>
             )}
           </DialogHeader>
           <div className="flex-1 overflow-auto bg-muted/50 rounded-lg p-4">
             <pre className="text-xs whitespace-pre-wrap">
-              {JSON.stringify(selectedCase, null, 2)}
+              {JSON.stringify(selectedCase?.response_data || selectedCase, null, 2)}
             </pre>
           </div>
           <div className="flex justify-end pt-4">
