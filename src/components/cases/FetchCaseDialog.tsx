@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { useLegalkartIntegration } from '@/hooks/useLegalkartIntegration';
 import { Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface FetchCaseDialogProps {
   open: boolean;
@@ -135,12 +137,106 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
     }
   };
 
-  const handleAddCase = () => {
-    if (fetchedData) {
-      onSuccess(fetchedData);
+  const queryClient = useQueryClient();
+
+  const addCaseMutation = useMutation({
+    mutationFn: async (caseData: any) => {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      // Get user's firm_id
+      const { data: teamMember } = await supabase
+        .from('team_members')
+        .select('firm_id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!teamMember) throw new Error('User is not part of any firm');
+
+      // Prepare case data for insertion
+      const insertData = {
+        // Basic info
+        case_title: caseData.case_title,
+        title: caseData.case_title,
+        case_number: caseData.case_number,
+        cnr_number: caseData.cnr_number,
+        filing_number: caseData.filing_number,
+        registration_number: caseData.registration_number,
+        
+        // Court info
+        court: caseData.court,
+        court_name: caseData.court_name,
+        court_complex: caseData.court_complex,
+        district: caseData.district,
+        state: caseData.state,
+        bench_type: caseData.bench_type,
+        coram: caseData.coram,
+        
+        // Dates
+        filing_date: caseData.filing_date,
+        registration_date: caseData.registration_date,
+        first_hearing_date: caseData.first_hearing_date,
+        next_hearing_date: caseData.next_hearing_date,
+        
+        // Status and type
+        status: caseData.status?.toLowerCase() || 'open',
+        stage: caseData.stage,
+        case_type: caseData.case_type?.toLowerCase() || 'civil',
+        
+        // Parties
+        petitioner: caseData.petitioner,
+        petitioner_advocate: caseData.petitioner_advocate,
+        respondent: caseData.respondent,
+        respondent_advocate: caseData.respondent_advocate,
+        vs: caseData.petitioner && caseData.respondent 
+          ? `${caseData.petitioner} vs ${caseData.respondent}` 
+          : null,
+        
+        // Acts and sections
+        under_act: caseData.under_act,
+        under_section: caseData.under_section,
+        
+        // Metadata
+        firm_id: teamMember.firm_id,
+        created_by: user.id,
+        fetched_data: caseData.raw,
+        is_auto_fetched: true,
+        last_fetched_at: new Date().toISOString(),
+        fetch_status: 'success',
+      };
+
+      const { data, error } = await supabase
+        .from('cases')
+        .insert(insertData)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cases'] });
+      toast({
+        title: "Case Added Successfully",
+        description: "The case has been added to your database.",
+      });
       setFetchedData(null);
       reset();
       onClose();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to Add Case",
+        description: error.message || "Could not add case to database. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleAddCase = () => {
+    if (fetchedData) {
+      addCaseMutation.mutate(fetchedData);
     }
   };
 
@@ -352,11 +448,18 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
             </div>
 
             <div className="flex justify-end gap-3 pt-4">
-              <Button type="button" variant="outline" onClick={handleCancel}>
+              <Button type="button" variant="outline" onClick={handleCancel} disabled={addCaseMutation.isPending}>
                 Cancel
               </Button>
-              <Button type="button" onClick={handleAddCase}>
-                Add Case
+              <Button type="button" onClick={handleAddCase} disabled={addCaseMutation.isPending}>
+                {addCaseMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Adding Case...
+                  </>
+                ) : (
+                  'Add Case'
+                )}
               </Button>
             </div>
           </div>
