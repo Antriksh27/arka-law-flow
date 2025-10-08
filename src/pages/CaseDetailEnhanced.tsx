@@ -166,9 +166,9 @@ export default function CaseDetailEnhanced() {
 
       const { data, error } = await supabase.functions.invoke('legalkart-api', {
         body: {
+          action: 'search',
           searchType: 'high_court',
-          cnrNumber: caseData.cnr_number,
-          firmId: caseData.firm_id,
+          cnr: caseData.cnr_number,
           caseId: id,
         },
       });
