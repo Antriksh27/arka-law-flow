@@ -106,6 +106,20 @@ const CaseDetail = () => {
     enabled: !!id
   });
 
+  // Fetch legalkart case data
+  const { data: legalkartData } = useQuery({
+    queryKey: ['legalkart-case', id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('legalkart_cases')
+        .select('*')
+        .eq('case_id', id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!id
+  });
+
   const refreshMutation = useMutation({
     mutationFn: async () => {
       // Placeholder for refresh logic - would call Legalkart API
@@ -217,6 +231,7 @@ const CaseDetail = () => {
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList>
                 <TabsTrigger value="overview">Case Details</TabsTrigger>
+                <TabsTrigger value="ecourts">eCourts</TabsTrigger>
                 <TabsTrigger value="documents">Documents</TabsTrigger>
                 <TabsTrigger value="hearings">Hearings</TabsTrigger>
                 <TabsTrigger value="orders">Orders</TabsTrigger>
@@ -318,6 +333,40 @@ const CaseDetail = () => {
                       )}
                     </div>
                   </div>
+                </Card>
+              </TabsContent>
+
+              {/* eCourts Tab */}
+              <TabsContent value="ecourts">
+                <Card className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-semibold">Fetched Case Data from eCourts</h3>
+                    {legalkartData?.updated_at && (
+                      <span className="text-sm text-muted-foreground">
+                        Last Updated: {formatDate(legalkartData.updated_at)}
+                      </span>
+                    )}
+                  </div>
+                  
+                  {legalkartData ? (
+                    <div className="space-y-6">
+                      {/* Raw Full Data */}
+                      <div>
+                        <h4 className="font-semibold mb-3 text-lg">Complete Fetched Data</h4>
+                        <div className="bg-muted/50 rounded-lg p-4 overflow-x-auto">
+                          <pre className="text-xs whitespace-pre-wrap">
+                            {JSON.stringify(legalkartData, null, 2)}
+                          </pre>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                      <p className="text-muted-foreground">No eCourts data available for this case</p>
+                      <p className="text-sm text-muted-foreground mt-2">Fetch case data using the CNR number to populate this section</p>
+                    </div>
+                  )}
                 </Card>
               </TabsContent>
 
