@@ -22,67 +22,69 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
   onTabChange
 }) => {
   return (
-    <div className="bg-card border border-border rounded-xl overflow-hidden">
-      <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
-        <TabsList className="w-full justify-start h-auto p-0 bg-transparent border-b rounded-none">
-          <TabsTrigger 
-            value="details" 
-            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3"
+    <div className="bg-white rounded-lg shadow-sm">
+      <div className="border-b border-[#E5E7EB]">
+        <nav className="-mb-px flex space-x-6 px-6">
+          <button
+            onClick={() => onTabChange('details')}
+            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'details'
+                ? 'border-[#1173d4] text-[#1173d4]'
+                : 'border-transparent text-[#6B7280] hover:text-[#1F2937] hover:border-gray-300'
+            }`}
           >
-            Details
-          </TabsTrigger>
-          <TabsTrigger 
-            value="contact" 
-            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3"
+            Case Details
+          </button>
+          <button
+            onClick={() => onTabChange('contact')}
+            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'contact'
+                ? 'border-[#1173d4] text-[#1173d4]'
+                : 'border-transparent text-[#6B7280] hover:text-[#1F2937] hover:border-gray-300'
+            }`}
           >
             Contact
-          </TabsTrigger>
-          <TabsTrigger 
-            value="notes" 
-            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3"
-          >
-            Notes
-          </TabsTrigger>
-          <TabsTrigger 
-            value="tasks" 
-            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3"
-          >
-            Tasks
-          </TabsTrigger>
-          <TabsTrigger 
-            value="documents" 
-            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3"
+          </button>
+          <button
+            onClick={() => onTabChange('documents')}
+            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'documents'
+                ? 'border-[#1173d4] text-[#1173d4]'
+                : 'border-transparent text-[#6B7280] hover:text-[#1F2937] hover:border-gray-300'
+            }`}
           >
             Documents
-          </TabsTrigger>
-        </TabsList>
+          </button>
+          <button
+            onClick={() => onTabChange('notes')}
+            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'notes'
+                ? 'border-[#1173d4] text-[#1173d4]'
+                : 'border-transparent text-[#6B7280] hover:text-[#1F2937] hover:border-gray-300'
+            }`}
+          >
+            Notes
+          </button>
+          <button
+            onClick={() => onTabChange('tasks')}
+            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'tasks'
+                ? 'border-[#1173d4] text-[#1173d4]'
+                : 'border-transparent text-[#6B7280] hover:text-[#1F2937] hover:border-gray-300'
+            }`}
+          >
+            Tasks
+          </button>
+        </nav>
+      </div>
 
-        <div className="p-6">
-          <TabsContent value="details" className="mt-0">
-            <DetailsTab 
-              caseData={caseData} 
-              legalkartData={legalkartData}
-              caseId={caseId}
-            />
-          </TabsContent>
-
-          <TabsContent value="contact" className="mt-0">
-            <ContactTab caseData={caseData} />
-          </TabsContent>
-
-          <TabsContent value="notes" className="mt-0">
-            <NotesTab caseId={caseId} />
-          </TabsContent>
-
-          <TabsContent value="tasks" className="mt-0">
-            <TasksTab caseId={caseId} />
-          </TabsContent>
-
-          <TabsContent value="documents" className="mt-0">
-            <DocumentsTab caseId={caseId} />
-          </TabsContent>
-        </div>
-      </Tabs>
+      <div className="p-6">
+        {activeTab === 'details' && <DetailsTab caseData={caseData} legalkartData={legalkartData} caseId={caseId} />}
+        {activeTab === 'contact' && <ContactTab caseData={caseData} />}
+        {activeTab === 'notes' && <NotesTab caseId={caseId} />}
+        {activeTab === 'tasks' && <TasksTab caseId={caseId} />}
+        {activeTab === 'documents' && <DocumentsTab caseId={caseId} />}
+      </div>
     </div>
   );
 };

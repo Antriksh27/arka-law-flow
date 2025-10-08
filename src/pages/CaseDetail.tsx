@@ -96,20 +96,64 @@ const CaseDetail = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-[1400px] mx-auto p-6 space-y-6">
-        <CaseDetailHeader 
-          caseData={caseData} 
-          legalkartData={legalkartData}
-        />
-        <CaseDetailTabs 
-          caseId={id!} 
-          caseData={caseData}
-          legalkartData={legalkartData}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-        />
-      </div>
+    <div className="min-h-screen bg-[#f6f7f8]">
+      <main className="flex-1 p-4 sm:p-6 lg:p-8">
+        <div className="grid grid-cols-12 gap-8">
+          {/* Sidebar */}
+          <aside className="col-span-12 lg:col-span-3">
+            <div className="bg-white rounded-lg p-6 space-y-4 shadow-sm">
+              <h2 className="text-lg font-bold text-[#1F2937]">Case Summary</h2>
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-[#6B7280]">Case Title:</span>
+                  <span className="font-semibold text-right">{caseData.vs || caseData.case_title || caseData.title}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#6B7280]">Case Number:</span>
+                  <span className="font-semibold text-right">{caseData.case_number || '-'}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[#6B7280]">Status:</span>
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    caseData.status === 'open' ? 'bg-green-100 text-green-800' : 
+                    caseData.status === 'closed' ? 'bg-gray-100 text-gray-800' : 
+                    'bg-blue-100 text-blue-800'
+                  }`}>
+                    {caseData.status || 'Open'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#6B7280]">Court Name:</span>
+                  <span className="font-semibold text-right">{caseData.court || caseData.court_name || '-'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#6B7280]">Last Updated:</span>
+                  <span className="font-semibold">{caseData.updated_at ? new Date(caseData.updated_at).toLocaleDateString() : '-'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#6B7280]">Next Hearing:</span>
+                  <span className="font-semibold">{caseData.next_hearing_date ? new Date(caseData.next_hearing_date).toLocaleDateString() : '-'}</span>
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          {/* Main Content */}
+          <div className="col-span-12 lg:col-span-9 space-y-6">
+            <CaseDetailHeader 
+              caseData={caseData} 
+              legalkartData={legalkartData}
+            />
+            <CaseDetailTabs 
+              caseId={id!} 
+              caseData={caseData}
+              legalkartData={legalkartData}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+            />
+          </div>
+        </div>
+      </main>
     </div>
   );
 };

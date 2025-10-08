@@ -55,31 +55,28 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
 
   return (
     <>
-      <div className="bg-card border border-border rounded-xl p-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-semibold text-foreground">
-            {caseTitle}
-          </h1>
-          
-          <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              onClick={handleDelete}
-              disabled={deleteCase.isPending}
-            >
-              <Trash2 className="w-4 h-4 mr-2" />
-              Delete
-            </Button>
-            
-            <Button variant="outline">
-              <FileText className="w-4 h-4 mr-2" />
-              Invoice
-            </Button>
-            
+      <div className="bg-white rounded-lg p-6 shadow-sm">
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-[#1F2937]">
+              {caseTitle}
+            </h1>
+            <p className="text-[#6B7280] mt-1">
+              Status: <span className={`${
+                caseData.status === 'open' ? 'text-green-600' : 
+                caseData.status === 'closed' ? 'text-gray-600' : 
+                'text-blue-600'
+              }`}>{caseData.status || 'Open'}</span> | 
+              Next Hearing: <span className="font-semibold text-[#1F2937]">
+                {caseData.next_hearing_date ? new Date(caseData.next_hearing_date).toLocaleDateString() : 'Not scheduled'}
+              </span>
+            </p>
+          </div>
+          <div className="flex gap-2 flex-wrap">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline">
-                  Action
+                <Button variant="outline" size="sm">
+                  Actions
                   <ChevronDown className="w-4 h-4 ml-2" />
                 </Button>
               </DropdownMenuTrigger>
@@ -87,18 +84,16 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
                 <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
                   Edit Case
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  Generate Report
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  Export Details
+                <DropdownMenuItem>Generate Report</DropdownMenuItem>
+                <DropdownMenuItem>Invoice</DropdownMenuItem>
+                <DropdownMenuItem 
+                  className="text-red-600"
+                  onClick={handleDelete}
+                >
+                  Delete Case
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            
-            <Button onClick={() => setShowEditDialog(true)}>
-              Update
-            </Button>
           </div>
         </div>
       </div>
