@@ -1,14 +1,14 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Scale } from 'lucide-react';
-import { parsePartyString } from './partyParser';
+import { parsePartyString } from '@/lib/partyParser';
 
-interface ParsedPartiesDisplayProps {
+interface PartiesSectionProps {
   petitionerString: string | null;
   respondentString: string | null;
 }
 
-export const ParsedPartiesDisplay: React.FC<ParsedPartiesDisplayProps> = ({
+export const PartiesSection: React.FC<PartiesSectionProps> = ({
   petitionerString,
   respondentString
 }) => {
@@ -16,7 +16,7 @@ export const ParsedPartiesDisplay: React.FC<ParsedPartiesDisplayProps> = ({
   const respondents = parsePartyString(respondentString);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
       {/* Petitioners Card */}
       <Card className="bg-white rounded-2xl shadow-sm border border-[#E5E7EB]">
         <CardHeader className="border-b border-[#E5E7EB]">

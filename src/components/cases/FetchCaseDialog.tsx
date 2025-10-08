@@ -6,142 +6,154 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-
 interface FetchCaseDialogProps {
   open: boolean;
   onClose: () => void;
   onSuccess: (data: any) => void;
 }
-
 interface FetchFormData {
-  courtType: string;
-  cnrNumber: string;
+  cnr_number?: string;
+  case_number?: string;
+  filing_number?: string;
+  court_code?: string;
+  year?: string;
+  case_type?: string;
 }
-
 export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
   open,
   onClose,
   onSuccess
 }) => {
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  
-  const { register, handleSubmit, setValue, formState: { errors } } = useForm<FetchFormData>();
-
+  const [fetchMethod, setFetchMethod] = useState<'cnr' | 'case_number'>('cnr');
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    reset,
+    formState: {
+      errors
+    }
+  } = useForm<FetchFormData>();
   const handleFetch = async (data: FetchFormData) => {
     setIsLoading(true);
     try {
-      // Map court type to API values
-      const courtTypeMap: Record<string, string> = {
-        'district_court': 'district_court',
-        'high_court': 'high_court',
-        'supreme_court': 'supreme_court'
-      };
-
-      // Call LegalKart API with courtType and cnrNumber
-      // const response = await fetch('/api/legalkart', {
-      //   method: 'POST',
-      //   body: JSON.stringify({
-      //     courtType: courtTypeMap[data.courtType],
-      //     cnrNumber: data.cnrNumber
-      //   })
-      // });
-
-      // Mock response for now
+      // Simulate API call to eCourts
+      // In a real implementation, this would call the eCourts API
       await new Promise(resolve => setTimeout(resolve, 2000));
 
+      // Mock response data
       const mockData = {
-        title: `Case ${data.cnrNumber}`,
-        cnr_number: data.cnrNumber,
-        court_type: data.courtType,
+        title: `Case ${data.cnr_number || data.case_number}`,
+        case_number: data.case_number || "CS/123/2024",
+        court: "District Court, Delhi",
+        cnr_number: data.cnr_number || "DLCT010012342024",
+        filing_number: data.filing_number || "FIL/2024/123",
+        petitioner: "John Doe",
+        respondent: "Jane Smith",
+        advocate_name: "Adv. Rajesh Kumar",
+        district: "Delhi",
+        filing_date: "2024-01-15",
+        case_type: data.case_type || "civil",
         status: "open"
       };
-
       onSuccess(mockData);
-      toast({
-        title: "Success",
-        description: "Case details fetched successfully from LegalKart API"
-      });
+      reset();
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to fetch case details from LegalKart API",
+        description: "Failed to fetch case details from eCourts",
         variant: "destructive"
       });
     } finally {
       setIsLoading(false);
     }
   };
-
-  return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md bg-white rounded-2xl">
+  const handleClose = () => {
+    reset();
+    onClose();
+  };
+  return <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="max-w-md bg-white border border-gray-200">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold text-[#1F2937]">
-            Fetch Case from LegalKart API
-          </DialogTitle>
+          <DialogTitle className="text-gray-900">Fetch Case Details from eCourts</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(handleFetch)} className="space-y-6 pt-4">
-          <div className="space-y-2">
-            <Label htmlFor="courtType" className="text-sm font-medium text-[#111827]">
-              Court Type *
-            </Label>
-            <Select 
-              onValueChange={(value) => setValue('courtType', value)}
-              required
-            >
-              <SelectTrigger className="bg-white border-[#E5E7EB] rounded-lg">
-                <SelectValue placeholder="Select court type..." />
+        <form onSubmit={handleSubmit(handleFetch)} className="space-y-4">
+          <div>
+            <Label htmlFor="fetchMethod" className="text-gray-700">Fetch Method</Label>
+            <Select value={fetchMethod} onValueChange={(value: 'cnr' | 'case_number') => setFetchMethod(value)}>
+              <SelectTrigger className="mt-2 bg-white border-gray-300">
+                <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-white border border-[#E5E7EB] rounded-lg">
-                <SelectItem value="district_court">District Court</SelectItem>
-                <SelectItem value="high_court">High Court</SelectItem>
-                <SelectItem value="supreme_court">Supreme Court</SelectItem>
+              <SelectContent className="bg-white border border-gray-200">
+                <SelectItem value="cnr">By CNR Number</SelectItem>
+                <SelectItem value="case_number">By Case Number</SelectItem>
               </SelectContent>
             </Select>
-            {errors.courtType && (
-              <p className="text-sm text-red-600">{errors.courtType.message}</p>
-            )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="cnrNumber" className="text-sm font-medium text-[#111827]">
-              CNR Number *
-            </Label>
-            <Input
-              id="cnrNumber"
-              {...register('cnrNumber', { 
-                required: 'CNR Number is required',
-                minLength: { value: 5, message: 'CNR Number must be at least 5 characters' }
-              })}
-              className="bg-white border-[#E5E7EB] rounded-lg"
-              placeholder="Enter CNR number..."
-            />
-            {errors.cnrNumber && (
-              <p className="text-sm text-red-600">{errors.cnrNumber.message}</p>
-            )}
+          {fetchMethod === 'cnr' ? <div>
+              <Label htmlFor="cnr_number" className="text-gray-700">CNR Number *</Label>
+              <Input id="cnr_number" {...register('cnr_number', {
+            required: fetchMethod === 'cnr' ? 'CNR Number is required' : false
+          })} className="mt-2 bg-white border-gray-300" placeholder="Enter CNR number..." />
+              {errors.cnr_number && <p className="text-sm text-red-600 mt-1">{errors.cnr_number.message}</p>}
+            </div> : <>
+              <div>
+                <Label htmlFor="case_number" className="text-gray-700">Case Number *</Label>
+                <Input id="case_number" {...register('case_number', {
+              required: fetchMethod === 'case_number' ? 'Case Number is required' : false
+            })} className="mt-2 bg-white border-gray-300" placeholder="Enter case number..." />
+                {errors.case_number && <p className="text-sm text-red-600 mt-1">{errors.case_number.message}</p>}
+              </div>
+
+              <div>
+                <Label htmlFor="court_code" className="text-gray-700">Court Code *</Label>
+                <Input id="court_code" {...register('court_code', {
+              required: fetchMethod === 'case_number' ? 'Court Code is required' : false
+            })} className="mt-2 bg-white border-gray-300" placeholder="Enter court code..." />
+                {errors.court_code && <p className="text-sm text-red-600 mt-1">{errors.court_code.message}</p>}
+              </div>
+
+              <div>
+                <Label htmlFor="year" className="text-gray-700">Year *</Label>
+                <Input id="year" {...register('year', {
+              required: fetchMethod === 'case_number' ? 'Year is required' : false
+            })} className="mt-2 bg-white border-gray-300" placeholder="Enter year..." />
+                {errors.year && <p className="text-sm text-red-600 mt-1">{errors.year.message}</p>}
+              </div>
+            </>}
+
+          <div>
+            <Label htmlFor="case_type" className="text-gray-700">Case Type</Label>
+            <Select onValueChange={value => setValue('case_type', value)}>
+              <SelectTrigger className="mt-2 bg-white border-gray-300">
+                <SelectValue placeholder="Select case type..." />
+              </SelectTrigger>
+              <SelectContent className="bg-white border border-gray-200">
+                <SelectItem value="civil">Civil</SelectItem>
+                <SelectItem value="criminal">Criminal</SelectItem>
+                <SelectItem value="family">Family</SelectItem>
+                <SelectItem value="commercial">Commercial</SelectItem>
+                <SelectItem value="constitutional">Constitutional</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={onClose}
-              className="rounded-lg border-[#E5E7EB]"
-            >
+            <Button type="button" variant="outline" onClick={handleClose} className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50">
               Cancel
             </Button>
-            <Button 
-              type="submit" 
-              disabled={isLoading}
-              className="bg-[#1E3A8A] hover:bg-[#1E3A8A]/90 text-white rounded-lg"
-            >
-              {isLoading ? 'Fetching...' : 'Fetch Case Details'}
+            <Button type="submit" disabled={isLoading} className="text-white bg-slate-800 hover:bg-slate-700">
+              {isLoading ? 'Fetching...' : 'Fetch Details'}
             </Button>
           </div>
         </form>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 };
