@@ -13,6 +13,9 @@ const navigation = [{
   name: 'Cases',
   href: '/cases'
 }, {
+  name: 'eCourts',
+  href: '/ecourts'
+}, {
   name: 'Clients',
   href: '/clients'
 }, {
