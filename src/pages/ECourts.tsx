@@ -178,12 +178,22 @@ const ECourts = () => {
                     </Button>
                   )}
                   {item.case_id && (
-                    <Button 
-                      size="sm" 
-                      onClick={() => handleViewCase(item.case_id)}
-                    >
-                      View Case
-                    </Button>
+                    <>
+                      <Button 
+                        size="sm" 
+                        onClick={() => navigate(`/cases/${item.case_id}/legalkart-details`)}
+                      >
+                        <FileText className="h-4 w-4 mr-2" />
+                        View Details
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        size="sm" 
+                        onClick={() => handleViewCase(item.case_id)}
+                      >
+                        View Case
+                      </Button>
+                    </>
                   )}
                 </div>
               </div>

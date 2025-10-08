@@ -1644,6 +1644,57 @@ export type Database = {
           },
         ]
       }
+      ia_details: {
+        Row: {
+          case_id: string | null
+          created_at: string | null
+          date_of_filing: string | null
+          ia_number: string | null
+          ia_status: string | null
+          id: string
+          legalkart_case_id: string | null
+          next_date: string | null
+          party: string | null
+        }
+        Insert: {
+          case_id?: string | null
+          created_at?: string | null
+          date_of_filing?: string | null
+          ia_number?: string | null
+          ia_status?: string | null
+          id?: string
+          legalkart_case_id?: string | null
+          next_date?: string | null
+          party?: string | null
+        }
+        Update: {
+          case_id?: string | null
+          created_at?: string | null
+          date_of_filing?: string | null
+          ia_number?: string | null
+          ia_status?: string | null
+          id?: string
+          legalkart_case_id?: string | null
+          next_date?: string | null
+          party?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ia_details_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ia_details_legalkart_case_id_fkey"
+            columns: ["legalkart_case_id"]
+            isOneToOne: false
+            referencedRelation: "legalkart_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       instruction_replies: {
         Row: {
           created_at: string
@@ -2831,6 +2882,54 @@ export type Database = {
           },
         ]
       }
+      petitioners: {
+        Row: {
+          advocate_enrollment_no: string | null
+          advocate_name: string | null
+          case_id: string | null
+          created_at: string | null
+          id: string
+          legalkart_case_id: string | null
+          party_type: string | null
+          petitioner_name: string
+        }
+        Insert: {
+          advocate_enrollment_no?: string | null
+          advocate_name?: string | null
+          case_id?: string | null
+          created_at?: string | null
+          id?: string
+          legalkart_case_id?: string | null
+          party_type?: string | null
+          petitioner_name: string
+        }
+        Update: {
+          advocate_enrollment_no?: string | null
+          advocate_name?: string | null
+          case_id?: string | null
+          created_at?: string | null
+          id?: string
+          legalkart_case_id?: string | null
+          party_type?: string | null
+          petitioner_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "petitioners_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "petitioners_legalkart_case_id_fkey"
+            columns: ["legalkart_case_id"]
+            isOneToOne: false
+            referencedRelation: "legalkart_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           aadhaar_no: string | null
@@ -2980,6 +3079,54 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      respondents: {
+        Row: {
+          advocate_enrollment_no: string | null
+          advocate_name: string | null
+          case_id: string | null
+          created_at: string | null
+          id: string
+          legalkart_case_id: string | null
+          party_type: string | null
+          respondent_name: string
+        }
+        Insert: {
+          advocate_enrollment_no?: string | null
+          advocate_name?: string | null
+          case_id?: string | null
+          created_at?: string | null
+          id?: string
+          legalkart_case_id?: string | null
+          party_type?: string | null
+          respondent_name: string
+        }
+        Update: {
+          advocate_enrollment_no?: string | null
+          advocate_name?: string | null
+          case_id?: string | null
+          created_at?: string | null
+          id?: string
+          legalkart_case_id?: string | null
+          party_type?: string | null
+          respondent_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "respondents_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "respondents_legalkart_case_id_fkey"
+            columns: ["legalkart_case_id"]
+            isOneToOne: false
+            referencedRelation: "legalkart_cases"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       states: {
         Row: {

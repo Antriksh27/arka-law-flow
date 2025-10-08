@@ -10,6 +10,7 @@ import { BookingPage } from './pages/BookingPage';
 import { LawyerSelection } from './pages/LawyerSelection';
 import { Toaster } from './components/ui/toaster';
 import { BookRedirect } from './pages/BookRedirect';
+import CaseDetailEnhanced from './pages/CaseDetailEnhanced';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -38,6 +39,13 @@ function App() {
                 
                 {/* Auth route */}
                 <Route path="/auth" element={<Auth />} />
+                
+                {/* Enhanced case details route */}
+                <Route path="/cases/:id/legalkart-details" element={
+                  <ProtectedRoute>
+                    <CaseDetailEnhanced />
+                  </ProtectedRoute>
+                } />
                 
                 {/* All other routes require authentication */}
                 <Route path="/*" element={
