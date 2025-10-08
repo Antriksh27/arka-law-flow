@@ -41,7 +41,7 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
         setFetchedData(result.data);
         toast({
           title: "Case Details Fetched",
-          description: "Successfully retrieved case details from Legalkart.",
+          description: "Successfully retrieved case details from eCourts.",
         });
       } else {
         throw new Error(result?.error || 'Failed to fetch case details');
@@ -74,7 +74,7 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
     <Dialog open={open} onOpenChange={handleCancel}>
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Fetch Case Details from Legalkart</DialogTitle>
+          <DialogTitle>Fetch Case Details from eCourts</DialogTitle>
         </DialogHeader>
         
         {!fetchedData ? (
