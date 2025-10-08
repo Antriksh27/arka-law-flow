@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { fetchLegalkartCaseId } from '@/components/cases/legalkart/utils';
 
 export const useLegalkartCaseDetails = (caseId: string) => {
   const queryClient = useQueryClient();
@@ -20,107 +21,121 @@ export const useLegalkartCaseDetails = (caseId: string) => {
     enabled: !!caseId
   });
 
+  const { data: fallbackLegalkartCaseId } = useQuery({
+    queryKey: ['legalkart-case-id-by-cnr', caseId],
+    queryFn: async () => fetchLegalkartCaseId(caseId),
+    enabled: !!caseId && !legalkartCase?.id,
+  });
+
+  const effectiveLegalkartCaseId = legalkartCase?.id ?? fallbackLegalkartCaseId ?? null;
+
   const { data: petitioners } = useQuery({
-    queryKey: ['petitioners', caseId],
+    queryKey: ['petitioners', caseId, effectiveLegalkartCaseId],
     queryFn: async () => {
+      const filterColumn = effectiveLegalkartCaseId ? 'legalkart_case_id' : 'case_id';
+      const filterValue = effectiveLegalkartCaseId ?? caseId;
       const { data, error } = await supabase
         .from('petitioners')
         .select('*')
-        .eq('case_id', caseId);
+        .eq(filterColumn, filterValue);
       
       if (error) throw error;
       return data;
     },
-    enabled: !!caseId
+    enabled: !!caseId || !!effectiveLegalkartCaseId
   });
 
   const { data: respondents } = useQuery({
-    queryKey: ['respondents', caseId],
+    queryKey: ['respondents', caseId, effectiveLegalkartCaseId],
     queryFn: async () => {
+      const filterColumn = effectiveLegalkartCaseId ? 'legalkart_case_id' : 'case_id';
+      const filterValue = effectiveLegalkartCaseId ?? caseId;
       const { data, error } = await supabase
         .from('respondents')
         .select('*')
-        .eq('case_id', caseId);
+        .eq(filterColumn, filterValue);
       
       if (error) throw error;
       return data;
     },
-    enabled: !!caseId
+    enabled: !!caseId || !!effectiveLegalkartCaseId
   });
 
   const { data: iaDetails } = useQuery({
-    queryKey: ['ia-details', caseId],
+    queryKey: ['ia-details', caseId, effectiveLegalkartCaseId],
     queryFn: async () => {
+      const filterColumn = effectiveLegalkartCaseId ? 'legalkart_case_id' : 'case_id';
+      const filterValue = effectiveLegalkartCaseId ?? caseId;
       const { data, error } = await supabase
         .from('ia_details')
         .select('*')
-        .eq('case_id', caseId);
+        .eq(filterColumn, filterValue);
       
       if (error) throw error;
       return data;
     },
-    enabled: !!caseId
+    enabled: !!caseId || !!effectiveLegalkartCaseId
   });
 
   const { data: documents } = useQuery({
-    queryKey: ['legalkart-documents', caseId],
+    queryKey: ['legalkart-documents', caseId, effectiveLegalkartCaseId],
     queryFn: async () => {
-      if (!legalkartCase?.id) return [];
+      if (!effectiveLegalkartCaseId) return [];
       const { data, error } = await supabase
         .from('legalkart_case_documents')
         .select('*')
-        .eq('legalkart_case_id', legalkartCase.id);
+        .eq('legalkart_case_id', effectiveLegalkartCaseId);
       
       if (error) throw error;
       return data;
     },
-    enabled: !!legalkartCase?.id
+    enabled: !!effectiveLegalkartCaseId
   });
 
   const { data: orders } = useQuery({
-    queryKey: ['legalkart-orders', caseId],
+    queryKey: ['legalkart-orders', caseId, effectiveLegalkartCaseId],
     queryFn: async () => {
-      if (!legalkartCase?.id) return [];
+      if (!effectiveLegalkartCaseId) return [];
       const { data, error } = await supabase
         .from('legalkart_case_orders')
         .select('*')
-        .eq('legalkart_case_id', legalkartCase.id);
+        .eq('legalkart_case_id', effectiveLegalkartCaseId);
       
       if (error) throw error;
       return data;
     },
-    enabled: !!legalkartCase?.id
+    enabled: !!effectiveLegalkartCaseId
   });
 
   const { data: objections } = useQuery({
-    queryKey: ['legalkart-objections', caseId],
+    queryKey: ['legalkart-objections', caseId, effectiveLegalkartCaseId],
     queryFn: async () => {
-      if (!legalkartCase?.id) return [];
+      if (!effectiveLegalkartCaseId) return [];
       const { data, error } = await supabase
         .from('legalkart_case_objections')
         .select('*')
-        .eq('legalkart_case_id', legalkartCase.id);
+        .eq('legalkart_case_id', effectiveLegalkartCaseId);
       
       if (error) throw error;
       return data;
     },
-    enabled: !!legalkartCase?.id
+    enabled: !!effectiveLegalkartCaseId
   });
 
   const { data: hearings } = useQuery({
-    queryKey: ['legalkart-hearings', caseId],
+    queryKey: ['legalkart-hearings', caseId, effectiveLegalkartCaseId],
     queryFn: async () => {
-      if (!legalkartCase?.id) return [];
+      if (!effectiveLegalkartCaseId) return [];
       const { data, error } = await supabase
         .from('legalkart_case_history')
         .select('*')
-        .eq('legalkart_case_id', legalkartCase.id)
+        .eq('legalkart_case_id', effectiveLegalkartCaseId)
         .order('hearing_date', { ascending: false });
       
       if (error) throw error;
       return data;
     },
-    enabled: !!legalkartCase?.id
+    enabled: !!effectiveLegalkartCaseId
   });
 
   const refreshCaseData = useMutation({
