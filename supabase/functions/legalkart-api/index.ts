@@ -19,6 +19,143 @@ interface LegalkartCaseSearchRequest {
   caseId?: string;
 }
 
+// Helper function to upsert case relational data
+async function upsertCaseRelationalData(
+  supabase: any,
+  caseId: string,
+  firmId: string,
+  rawData: any
+) {
+  console.log('📦 Upserting relational data for case:', caseId);
+  
+  // Parse with AI parser
+  const parsedData = parseECourtsData(rawData);
+  
+  // Delete existing data
+  await Promise.all([
+    supabase.from('petitioners').delete().eq('case_id', caseId),
+    supabase.from('respondents').delete().eq('case_id', caseId),
+    supabase.from('ia_details').delete().eq('case_id', caseId),
+    supabase.from('case_documents').delete().eq('case_id', caseId),
+    supabase.from('case_orders').delete().eq('case_id', caseId),
+    supabase.from('case_hearings').delete().eq('case_id', caseId),
+    supabase.from('case_objections').delete().eq('case_id', caseId),
+  ]);
+
+  // Insert petitioners
+  if (parsedData.petitioners.length > 0) {
+    const { error } = await supabase.from('petitioners').insert(
+      parsedData.petitioners.map(p => ({
+        case_id: caseId,
+        petitioner_name: p.name,
+        advocate_name: p.advocate,
+      }))
+    );
+    if (error) console.error('Error inserting petitioners:', error);
+  }
+
+  // Insert respondents
+  if (parsedData.respondents.length > 0) {
+    const { error } = await supabase.from('respondents').insert(
+      parsedData.respondents.map(r => ({
+        case_id: caseId,
+        respondent_name: r.name,
+        advocate_name: r.advocate,
+      }))
+    );
+    if (error) console.error('Error inserting respondents:', error);
+  }
+
+  // Insert IA details
+  if (parsedData.iaDetails.length > 0) {
+    const { error } = await supabase.from('ia_details').insert(
+      parsedData.iaDetails.map(ia => ({
+        case_id: caseId,
+        ia_number: ia.iaNumber,
+        party: ia.party,
+        date_of_filing: ia.dateOfFiling,
+        next_date: ia.nextDate,
+        ia_status: ia.status,
+      }))
+    );
+    if (error) console.error('Error inserting IA details:', error);
+  }
+
+  // Insert documents
+  const documents = Array.isArray(rawData?.documents) ? rawData.documents : [];
+  if (documents.length > 0) {
+    const { error } = await supabase.from('case_documents').insert(
+      documents.map((d: any) => ({
+        case_id: caseId,
+        sr_no: d.sr_no,
+        document_filed: d.document_filed,
+        filed_by: d.filed_by,
+        advocate: d.advocate,
+        document_no: d.document_no,
+        date_of_receiving: d.date_of_receiving,
+        document_type: d.document_type,
+        document_url: d.document_link || d.document_url,
+        pdf_base64: d.pdf_base64,
+      }))
+    );
+    if (error) console.error('Error inserting documents:', error);
+  }
+
+  // Insert orders
+  const orders = Array.isArray(rawData?.order_details) ? rawData.order_details : [];
+  if (orders.length > 0) {
+    const { error } = await supabase.from('case_orders').insert(
+      orders.map((o: any) => ({
+        case_id: caseId,
+        judge: o.judge || o.judge_name,
+        hearing_date: o.hearing_date,
+        order_date: o.order_date,
+        order_number: o.order_number,
+        bench: o.bench,
+        order_details: o.order_details,
+        summary: o.summary || o.order_summary,
+        order_link: o.order_link || o.pdf_url,
+        pdf_base64: o.pdf_base64,
+      }))
+    );
+    if (error) console.error('Error inserting orders:', error);
+  }
+
+  // Insert hearings
+  const hearings = Array.isArray(rawData?.history_of_case_hearing) ? rawData.history_of_case_hearing : [];
+  if (hearings.length > 0) {
+    const { error } = await supabase.from('case_hearings').insert(
+      hearings.map((h: any) => ({
+        case_id: caseId,
+        hearing_date: h.hearing_date,
+        judge: h.judge || h.judge_name,
+        cause_list_type: h.cause_list_type,
+        business_on_date: h.business_on_date,
+        purpose_of_hearing: h.purpose_of_hearing,
+      }))
+    );
+    if (error) console.error('Error inserting hearings:', error);
+  }
+
+  // Insert objections
+  const objections = Array.isArray(rawData?.objections) ? rawData.objections : [];
+  if (objections.length > 0) {
+    const { error } = await supabase.from('case_objections').insert(
+      objections.map((o: any) => ({
+        case_id: caseId,
+        sr_no: o.sr_no,
+        objection: o.objection,
+        receipt_date: o.receipt_date,
+        scrutiny_date: o.scrutiny_date,
+        compliance_date: o.objection_compliance_date || o.compliance_date,
+      }))
+    );
+    if (error) console.error('Error inserting objections:', error);
+  }
+
+  console.log('✅ Relational data upserted successfully');
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -88,6 +225,34 @@ serve(async (req) => {
       return new Response(JSON.stringify(authResult), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
+    }
+
+    if (action === 'upsert_from_json') {
+      const { caseId, rawData } = requestBody;
+      
+      if (!caseId || !rawData) {
+        return new Response(
+          JSON.stringify({ error: 'Case ID and raw data are required' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      console.log('📥 Upserting case data from JSON for case:', caseId);
+
+      try {
+        await upsertCaseRelationalData(supabase, caseId, teamMember.firm_id, rawData);
+        
+        return new Response(
+          JSON.stringify({ success: true, message: 'Case data upserted successfully' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (error) {
+        console.error('Error upserting case data:', error);
+        return new Response(
+          JSON.stringify({ error: 'Failed to upsert case data: ' + error.message }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     if (action === 'search') {
@@ -173,331 +338,30 @@ serve(async (req) => {
           console.error('Error updating case with fetched data:', caseUpdateError);
         }
 
-        // Insert/update data in legalkart_cases table and related tables
+        // Upsert relational data using helper function
         try {
-          console.log('Calling upsert_legalkart_case_data function...');
-
-          // Sanitize and normalize dates to ISO (yyyy-mm-dd) to prevent Postgres datestyle errors
-          const rawData: any = (searchResult as any).data?.data || (searchResult as any).data;
-
-          // Helpers to normalize common date formats from Legalkart
-          const monthIndex: Record<string, string> = {
-            january: '01', february: '02', march: '03', april: '04', may: '05', june: '06',
-            july: '07', august: '08', september: '09', october: '10', november: '11', december: '12'
-          };
-          const stripOrdinals = (s: string) => s.replace(/\b(\d{1,2})(st|nd|rd|th)\b/gi, '$1');
-          const cleanup = (s: string) => s.replace(/\(.*?\)/g, '').replace(/,/g, ' ').replace(/\s+/g, ' ').trim();
-          const normalizeDate = (val: unknown): string | null => {
-            if (typeof val !== 'string') return null;
-            if (!val || val.trim() === '') return null;
-            let s = cleanup(val);
-            
-            // dd-mm-yyyy or dd/mm/yyyy
-            const m = s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
-            if (m) {
-              const dd = m[1].padStart(2, '0');
-              const mm = m[2].padStart(2, '0');
-              const yyyy = m[3];
-              return `${yyyy}-${mm}-${dd}`;
-            }
-            
-            // dd Month yyyy (with or without ordinals)
-            s = stripOrdinals(s);
-            const m2 = s.match(/^(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})$/);
-            if (m2) {
-              const dd = m2[1].padStart(2, '0');
-              const mon = monthIndex[m2[2].toLowerCase()];
-              const yyyy = m2[3];
-              if (mon) return `${yyyy}-${mon}-${dd}`;
-            }
-            
-            // If already in ISO format (yyyy-mm-dd), return as-is
-            if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-            
-            return null;
-          };
-          
-          const normalizeDatesDeep = (input: any): any => {
-            if (Array.isArray(input)) return input.map(normalizeDatesDeep);
-            if (input && typeof input === 'object') {
-              const out: any = {};
-              for (const [k, v] of Object.entries(input)) {
-                if (typeof v === 'string') {
-                  if (/date/i.test(k)) {
-                    const iso = normalizeDate(v);
-                    out[k] = iso; // force null for empty/invalid date strings
-                  } else {
-                    out[k] = v;
-                  }
-                } else {
-                  out[k] = normalizeDatesDeep(v);
-                }
-              }
-              return out;
-            }
-            return input;
-          };
-
-          const documents = Array.isArray(rawData?.documents) ? rawData.documents : [];
-          const objections = Array.isArray(rawData?.objections) ? rawData.objections : [];
-
-          const rawOrders = Array.isArray(rawData?.order_details) ? rawData.order_details : [];
-          const sanitizedOrders = rawOrders
-            .filter((o: any) => o && typeof o === 'object')
-            .map((o: any) => {
-              const normalized = normalizeDatesDeep({
-                ...o,
-                hearing_date: normalizeDate(o.hearing_date) ?? o.hearing_date,
-                order_date: normalizeDate((o as any).order_date) ?? (o as any).order_date,
-              });
-              // Explicitly extract PDF fields with multiple fallback patterns
-              return {
-                ...normalized,
-                pdf_base64: o.pdf_base64 || o.pdfBase64 || o.base64Pdf || o.base64 || null,
-                order_link: o.order_link || o.orderLink || o.link || o.url || o.pdf_url || null,
-              };
-            })
-            .filter((o: any) => !o.hearing_date || /^\d{4}-\d{2}-\d{2}$/.test(String(o.hearing_date)));
-
-          const rawHistory = Array.isArray(rawData?.history_of_case_hearing) ? rawData.history_of_case_hearing : [];
-          const sanitizedHistory = rawHistory
-            .filter((h: any) => h && typeof h === 'object')
-            .map((h: any) => normalizeDatesDeep({
-              ...h,
-              hearing_date: normalizeDate(h.hearing_date) ?? h.hearing_date,
-              business_on_date: normalizeDate(h.business_on_date) ?? h.business_on_date,
-            }));
-
-          // Sanitize documents with explicit PDF field extraction
-          const sanitizedDocuments = documents
-            .filter((d: any) => d && typeof d === 'object')
-            .map((d: any) => {
-              const normalized = normalizeDatesDeep(d);
-              // Explicitly extract PDF fields with multiple fallback patterns
-              return {
-                ...normalized,
-                pdf_base64: d.pdf_base64 || d.pdfBase64 || d.base64Pdf || d.base64 || null,
-                document_link: d.document_link || d.documentLink || d.link || d.url || d.pdf_url || null,
-              };
-            });
-
-          const sanitizedObjections = objections
-            .filter((o: any) => o && typeof o === 'object')
-            .map((o: any) => normalizeDatesDeep(o));
-
-          const caseDataSanitized = normalizeDatesDeep(rawData);
-
-          // 🤖 AI Data Parser: Parse parties and IA details
-          console.log('🤖 Parsing case data with AI Parser...');
-          const parsedData = parseECourtsData(searchResult.data);
-          console.log('✅ Parsed data:', {
-            petitioners: parsedData.petitioners.length,
-            respondents: parsedData.respondents.length,
-            iaDetails: parsedData.iaDetails.length
-          });
-
-          // Log PDF data verification
-          const docsWithPdf = sanitizedDocuments.filter(d => d.pdf_base64 || d.document_link).length;
-          const ordersWithPdf = sanitizedOrders.filter(o => o.pdf_base64 || o.order_link).length;
-          console.log('Sanitized counts -> docs:', sanitizedDocuments.length, 'objs:', sanitizedObjections.length, 'orders:', sanitizedOrders.length, 'history:', sanitizedHistory.length);
-          console.log('PDF data check:');
-          console.log('- Documents with PDF:', docsWithPdf, '/', sanitizedDocuments.length);
-          console.log('- Orders with PDF:', ordersWithPdf, '/', sanitizedOrders.length);
-          
-          // Use direct upsert for reliability (skip RPC to avoid data mapping issues)
-          console.log('Using direct upsert method for Legalkart data...');
-
-          // 1) Ensure legalkart_cases exists
-            let legalkartCaseId: string | null = null;
-            const { data: existingCase } = await supabase
-              .from('legalkart_cases')
-              .select('id')
-              .eq('cnr_number', normalizedCnr)
-              .maybeSingle();
-
-            if (existingCase?.id) {
-              legalkartCaseId = existingCase.id as string;
-              const updatePayload: any = {
-                case_id: caseId ?? null,
-                firm_id: teamMember.firm_id,
-                filing_number: caseDataSanitized?.case_info?.filing_number ?? null,
-                filing_date: caseDataSanitized?.case_info?.filing_date ?? null,
-                registration_number: caseDataSanitized?.case_info?.registration_number ?? null,
-                registration_date: caseDataSanitized?.case_info?.registration_date ?? null,
-                stage_of_case: caseDataSanitized?.case_status?.stage_of_case ?? null,
-                next_hearing_date: caseDataSanitized?.case_status?.next_hearing_date ?? null,
-                coram: caseDataSanitized?.case_status?.coram ?? null,
-                bench_type: caseDataSanitized?.case_status?.bench_type ?? null,
-                judicial_branch: caseDataSanitized?.case_status?.judicial_branch ?? null,
-                state: caseDataSanitized?.case_status?.state ?? null,
-                district: caseDataSanitized?.case_status?.district ?? null,
-                petitioner_and_advocate: rawData?.petitioner_and_advocate ?? null,
-                respondent_and_advocate: rawData?.respondent_and_advocate ?? null,
-                raw_api_response: rawData ?? null,
-                updated_at: new Date().toISOString()
-              };
-              await supabase
-                .from('legalkart_cases')
-                .update(updatePayload)
-                .eq('id', legalkartCaseId);
-            } else {
-              const insertPayload: any = {
-                cnr_number: normalizedCnr,
-                case_id: caseId ?? null,
-                firm_id: teamMember.firm_id,
-                filing_number: caseDataSanitized?.case_info?.filing_number ?? null,
-                filing_date: caseDataSanitized?.case_info?.filing_date ?? null,
-                registration_number: caseDataSanitized?.case_info?.registration_number ?? null,
-                registration_date: caseDataSanitized?.case_info?.registration_date ?? null,
-                stage_of_case: caseDataSanitized?.case_status?.stage_of_case ?? null,
-                next_hearing_date: caseDataSanitized?.case_status?.next_hearing_date ?? null,
-                coram: caseDataSanitized?.case_status?.coram ?? null,
-                bench_type: caseDataSanitized?.case_status?.bench_type ?? null,
-                judicial_branch: caseDataSanitized?.case_status?.judicial_branch ?? null,
-                state: caseDataSanitized?.case_status?.state ?? null,
-                district: caseDataSanitized?.case_status?.district ?? null,
-                petitioner_and_advocate: rawData?.petitioner_and_advocate ?? null,
-                respondent_and_advocate: rawData?.respondent_and_advocate ?? null,
-                raw_api_response: rawData ?? null
-              };
-              const { data: insertedCase, error: insertCaseErr } = await supabase
-                .from('legalkart_cases')
-                .insert(insertPayload)
-                .select('id')
-                .single();
-              if (insertCaseErr) throw insertCaseErr;
-              legalkartCaseId = insertedCase.id as string;
-            }
-
-            if (!legalkartCaseId) throw new Error('Could not resolve legalkart_case_id');
-
-            // 2) Replace child records (documents, objections, orders, history)
-            await supabase.from('legalkart_case_documents').delete().eq('legalkart_case_id', legalkartCaseId);
-            await supabase.from('legalkart_case_objections').delete().eq('legalkart_case_id', legalkartCaseId);
-            await supabase.from('legalkart_case_orders').delete().eq('legalkart_case_id', legalkartCaseId);
-            await supabase.from('legalkart_case_history').delete().eq('legalkart_case_id', legalkartCaseId);
-
-            // Documents - insert into case_documents (linked to cases.id)
-            if (caseId && sanitizedDocuments.length) {
-              await supabase.from('case_documents').delete().eq('case_id', caseId);
-              const docRows = sanitizedDocuments.map((d: any) => ({
-                case_id: caseId,
-                sr_no: d.sr_no ?? null,
-                advocate: d.advocate ?? null,
-                filed_by: d.filed_by ?? null,
-                document_no: d.document_no ?? null,
-                document_filed: d.document_filed ?? null,
-                date_of_receiving: d.date_of_receiving ?? null,
-                document_type: d.document_type ?? null,
-                pdf_base64: d.pdf_base64 ?? null,
-                document_url: d.document_link ?? null,
-              }));
-              const { error: docError } = await supabase.from('case_documents').insert(docRows);
-              if (docError) console.error('Error inserting documents:', docError);
-              else console.log(`✅ Inserted ${sanitizedDocuments.length} documents`);
-            }
-
-            // Objections - insert into case_objections (linked to cases.id)
-            if (caseId && sanitizedObjections.length) {
-              await supabase.from('case_objections').delete().eq('case_id', caseId);
-              const objRows = sanitizedObjections.map((o: any) => ({
-                case_id: caseId,
-                sr_no: o.sr_no ?? null,
-                objection: o.objection ?? null,
-                receipt_date: o.receipt_date ?? null,
-                scrutiny_date: o.scrutiny_date ?? null,
-                compliance_date: o.objection_compliance_date ?? o.compliance_date ?? null,
-                objection_compliance_date: o.objection_compliance_date ?? o.compliance_date ?? null,
-              }));
-              const { error: objError } = await supabase.from('case_objections').insert(objRows);
-              if (objError) console.error('Error inserting objections:', objError);
-              else console.log(`✅ Inserted ${sanitizedObjections.length} objections`);
-            }
-
-            // Orders - insert into case_orders (linked to cases.id)
-            if (caseId && sanitizedOrders.length) {
-              await supabase.from('case_orders').delete().eq('case_id', caseId);
-              const orderRows = sanitizedOrders.map((o: any) => ({
-                case_id: caseId,
-                judge: o.judge ?? null,
-                hearing_date: o.hearing_date ?? null,
-                order_date: o.order_date ?? null,
-                order_number: o.order_number ?? null,
-                bench: o.bench ?? null,
-                order_details: o.order_details ?? null,
-                summary: o.order_details ?? null,
-                pdf_base64: o.pdf_base64 ?? null,
-                order_link: o.order_link ?? null,
-              }));
-              const { error: orderError } = await supabase.from('case_orders').insert(orderRows);
-              if (orderError) console.error('Error inserting orders:', orderError);
-              else console.log(`✅ Inserted ${sanitizedOrders.length} orders`);
-            }
-
-            // History - insert into case_hearings (linked to cases.id)
-            if (caseId && sanitizedHistory.length) {
-              await supabase.from('case_hearings').delete().eq('case_id', caseId);
-              const histRows = sanitizedHistory.map((h: any) => ({
-                case_id: caseId,
-                judge: h.judge ?? null,
-                hearing_date: h.hearing_date ?? null,
-                cause_list_type: h.cause_list_type ?? null,
-                business_on_date: h.business_on_date ?? null,
-                purpose_of_hearing: h.purpose_of_hearing ?? null,
-              }));
-              const { error: histError } = await supabase.from('case_hearings').insert(histRows);
-              if (histError) console.error('Error inserting hearing history:', histError);
-              else console.log(`✅ Inserted ${sanitizedHistory.length} hearing history records`);
-            }
-
-            // 🤖 AI Parser: Insert Petitioners
-            await supabase.from('petitioners').delete().eq('legalkart_case_id', legalkartCaseId);
-            if (parsedData.petitioners.length) {
-              const petitionerRows = parsedData.petitioners.map(p => ({
-                legalkart_case_id: legalkartCaseId!,
-                case_id: caseId ?? null,
-                petitioner_name: p.name,
-                advocate_name: p.advocate,
-              }));
-              const { error: petError } = await supabase.from('petitioners').insert(petitionerRows);
-              if (petError) console.error('Error inserting petitioners:', petError);
-              else console.log(`✅ Inserted ${parsedData.petitioners.length} petitioners`);
-            }
-
-            // 🤖 AI Parser: Insert Respondents
-            await supabase.from('respondents').delete().eq('legalkart_case_id', legalkartCaseId);
-            if (parsedData.respondents.length) {
-              const respondentRows = parsedData.respondents.map(r => ({
-                legalkart_case_id: legalkartCaseId!,
-                case_id: caseId ?? null,
-                respondent_name: r.name,
-                advocate_name: r.advocate,
-              }));
-              const { error: respError } = await supabase.from('respondents').insert(respondentRows);
-              if (respError) console.error('Error inserting respondents:', respError);
-              else console.log(`✅ Inserted ${parsedData.respondents.length} respondents`);
-            }
-
-            // 🤖 AI Parser: Insert IA Details
-            await supabase.from('ia_details').delete().eq('legalkart_case_id', legalkartCaseId);
-            if (parsedData.iaDetails.length) {
-              const iaRows = parsedData.iaDetails.map(ia => ({
-                legalkart_case_id: legalkartCaseId!,
-                case_id: caseId ?? null,
-                ia_number: ia.iaNumber,
-                party: ia.party,
-                date_of_filing: ia.dateOfFiling,
-                next_date: ia.nextDate,
-                ia_status: ia.iaStatus,
-              }));
-              const { error: iaError } = await supabase.from('ia_details').insert(iaRows);
-              if (iaError) console.error('Error inserting IA details:', iaError);
-              else console.log(`✅ Inserted ${parsedData.iaDetails.length} IA details`);
-            }
-
-            console.log('Direct upsert completed successfully with AI-parsed data');
+          await upsertCaseRelationalData(supabase, caseId, teamMember.firm_id, searchResult.data);
         } catch (upsertErr) {
-          console.error('Failed to upsert Legalkart data:', upsertErr);
+          console.error('Failed to upsert case relational data:', upsertErr);
+        }
+      } else if (!searchResult.success && caseId) {
+        // Search failed - try using existing fetched_data if available
+        console.log('⚠️ External search failed, checking for existing fetched_data...');
+        const { data: existingCase } = await supabase
+          .from('cases')
+          .select('fetched_data')
+          .eq('id', caseId)
+          .single();
+
+        if (existingCase?.fetched_data) {
+          console.log('✅ Found existing fetched_data, upserting relational data...');
+          try {
+            await upsertCaseRelationalData(supabase, caseId, teamMember.firm_id, existingCase.fetched_data);
+          } catch (upsertErr) {
+            console.error('Failed to upsert from existing fetched_data:', upsertErr);
+          }
+        } else {
+          console.log('❌ No existing fetched_data found');
         }
       }
 

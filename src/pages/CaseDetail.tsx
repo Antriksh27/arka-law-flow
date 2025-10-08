@@ -175,8 +175,41 @@ const CaseDetail = () => {
   // Refresh case data mutation
   const refreshMutation = useMutation({
     mutationFn: async () => {
-      if (!caseData?.cnr_number) {
-        throw new Error('CNR number not found');
+      console.log('Refreshing case data...');
+      
+      // First, try to upsert from existing fetched_data
+      const { data: caseInfo } = await supabase
+        .from('cases')
+        .select('fetched_data, cnr_number, firm_id')
+        .eq('id', id!)
+        .single();
+
+      if (caseInfo?.fetched_data) {
+        console.log('📥 Upserting from existing fetched_data...');
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.access_token) {
+          try {
+            await supabase.functions.invoke('legalkart-api', {
+              body: {
+                action: 'upsert_from_json',
+                caseId: id,
+                rawData: caseInfo.fetched_data
+              },
+              headers: {
+                Authorization: `Bearer ${session.access_token}`
+              }
+            });
+            console.log('✅ Successfully upserted from existing data');
+          } catch (error) {
+            console.error('Error upserting from existing data:', error);
+          }
+        }
+      }
+
+      // Then proceed with external search if CNR is available
+      if (!caseInfo?.cnr_number) {
+        throw new Error('No CNR number found for this case');
       }
 
       const { data: authUser } = await supabase.auth.getUser();
@@ -193,7 +226,7 @@ const CaseDetail = () => {
       const { data, error } = await supabase.functions.invoke('legalkart-api', {
         body: {
           action: 'search',
-          cnr: caseData.cnr_number,
+          cnr: caseInfo.cnr_number,
           searchType: 'high_court',
           caseId: id,
           firmId: teamMember.firm_id
@@ -209,10 +242,10 @@ const CaseDetail = () => {
       queryClient.invalidateQueries({ queryKey: ['petitioners', id] });
       queryClient.invalidateQueries({ queryKey: ['respondents', id] });
       queryClient.invalidateQueries({ queryKey: ['ia-details', id] });
-      queryClient.invalidateQueries({ queryKey: ['legalkart-documents', id] });
-      queryClient.invalidateQueries({ queryKey: ['legalkart-orders', id] });
-      queryClient.invalidateQueries({ queryKey: ['legalkart-objections', id] });
-      queryClient.invalidateQueries({ queryKey: ['legalkart-hearings', id] });
+      queryClient.invalidateQueries({ queryKey: ['case-documents', id] });
+      queryClient.invalidateQueries({ queryKey: ['case-orders', id] });
+      queryClient.invalidateQueries({ queryKey: ['case-objections', id] });
+      queryClient.invalidateQueries({ queryKey: ['case-hearings', id] });
       toast({ title: "Case data refreshed successfully" });
     },
     onError: (error: any) => {
