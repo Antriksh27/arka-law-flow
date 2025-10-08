@@ -79,7 +79,7 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
       </div>
 
       <div className="p-6">
-        {activeTab === 'details' && <DetailsTab caseData={caseData} legalkartData={legalkartData} caseId={caseId} />}
+        {activeTab === 'details' && <DetailsTab caseData={caseData} legalkartData={legalkartData} petitioners={[]} respondents={[]} iaDetails={[]} />}
         {activeTab === 'contact' && <ContactTab caseData={caseData} />}
         {activeTab === 'notes' && <NotesTab caseId={caseId} />}
         {activeTab === 'tasks' && <TasksTab caseId={caseId} />}

@@ -3851,16 +3851,30 @@ export type Database = {
         Returns: undefined
       }
       upsert_legalkart_case_data: {
-        Args: {
-          p_case_data?: Json
-          p_case_id?: string
-          p_cnr_number: string
-          p_documents?: Json
-          p_firm_id: string
-          p_history?: Json
-          p_objections?: Json
-          p_orders?: Json
-        }
+        Args:
+          | {
+              p_case_data?: Json
+              p_case_id?: string
+              p_cnr_number: string
+              p_documents?: Json
+              p_firm_id: string
+              p_history?: Json
+              p_ia_details?: Json
+              p_objections?: Json
+              p_orders?: Json
+              p_petitioners?: Json
+              p_respondents?: Json
+            }
+          | {
+              p_case_data?: Json
+              p_case_id?: string
+              p_cnr_number: string
+              p_documents?: Json
+              p_firm_id: string
+              p_history?: Json
+              p_objections?: Json
+              p_orders?: Json
+            }
         Returns: string
       }
       user_has_case_access: {

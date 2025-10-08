@@ -314,6 +314,9 @@ serve(async (req) => {
             p_objections: sanitizedObjections,
             p_orders: sanitizedOrders,
             p_history: sanitizedHistory,
+            p_petitioners: parsedData.petitioners,
+            p_respondents: parsedData.respondents,
+            p_ia_details: parsedData.iaDetails,
           });
 
           if (upsertError) {
