@@ -112,10 +112,13 @@ export const LegalkartCaseSearch: React.FC<LegalkartCaseSearchProps> = ({
         [key]: data,
       }));
 
+      // Log API Response for debugging
+      console.log('📦 Legalkart API Response:', JSON.stringify(data, null, 2));
+
       if (data.success) {
         toast({
           title: "Search Successful",
-          description: `Case data retrieved for ${variables.searchType}`,
+          description: `Case data retrieved and stored successfully`,
         });
         
         if (onCaseDataFetched && data.data) {

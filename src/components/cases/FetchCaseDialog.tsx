@@ -282,25 +282,22 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
         }
       }
 
-      // Parse and store legalkart case data
-      const { error: legalkartError } = await supabase
-        .from('legalkart_cases')
-        .upsert({
-          cnr_number: caseData.cnr_number,
-          firm_id: firmId,
-          case_id: caseId,
-          case_data: rawData.case_info || {},
-          documents: rawData.documents || [],
-          objections: rawData.objections || [],
-          orders: rawData.orders || [],
-          history: rawData.history || [],
-          last_updated: new Date().toISOString(),
-        }, {
-          onConflict: 'cnr_number,firm_id'
-        });
+      // Show API Response JSON
+      console.log('📦 API Response JSON:', JSON.stringify(rawData, null, 2));
+      
+      // Parse and store all case data using edge function
+      const { data: upsertResult, error: upsertError } = await supabase.functions.invoke('legalkart-api', {
+        body: {
+          action: 'upsert_from_json',
+          caseId: caseId,
+          rawData: rawData
+        }
+      });
 
-      if (legalkartError) {
-        console.error('Failed to insert legalkart data:', legalkartError);
+      if (upsertError) {
+        console.error('Failed to upsert case data:', upsertError);
+      } else {
+        console.log('✅ Case data upserted successfully:', upsertResult);
       }
 
       // Parse and insert document links as case activities
