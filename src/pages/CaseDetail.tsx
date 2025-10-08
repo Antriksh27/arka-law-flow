@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -171,6 +171,33 @@ const CaseDetail = () => {
     },
     enabled: !!id
   });
+
+  // Auto-upsert relational data on first load if fetched_data exists but child tables are empty
+  const [autoUpsertDone, setAutoUpsertDone] = useState(false);
+  useEffect(() => {
+    if (!id || autoUpsertDone) return;
+    const totals = (petitioners?.length || 0)
+      + (respondents?.length || 0)
+      + (iaDetails?.length || 0)
+      + (documents?.length || 0)
+      + (orders?.length || 0)
+      + (objections?.length || 0)
+      + (hearings?.length || 0);
+    if (totals === 0 && caseData?.fetched_data) {
+      supabase.functions.invoke('legalkart-api', {
+        body: { action: 'upsert_from_json', caseId: id, rawData: caseData.fetched_data }
+      }).then(() => {
+        setAutoUpsertDone(true);
+        queryClient.invalidateQueries({ queryKey: ['petitioners', id] });
+        queryClient.invalidateQueries({ queryKey: ['respondents', id] });
+        queryClient.invalidateQueries({ queryKey: ['ia-details', id] });
+        queryClient.invalidateQueries({ queryKey: ['case-documents', id] });
+        queryClient.invalidateQueries({ queryKey: ['case-orders', id] });
+        queryClient.invalidateQueries({ queryKey: ['case-objections', id] });
+        queryClient.invalidateQueries({ queryKey: ['case-hearings', id] });
+      }).catch((e) => console.error('Auto upsert failed:', e));
+    }
+  }, [id, autoUpsertDone, caseData?.fetched_data, petitioners, respondents, iaDetails, documents, orders, objections, hearings]);
 
   // Refresh case data mutation
   const refreshMutation = useMutation({

@@ -356,8 +356,27 @@ serve(async (req) => {
         console.error('Error updating search record:', updateError);
       }
 
-      // Update case with fetched data if successful and case_id provided
-      if (searchResult.success && caseId && searchResult.data) {
+      // Resolve caseId if not provided by finding a case with the same CNR in user's firm
+      let effectiveCaseId = caseId || null;
+      if (!effectiveCaseId) {
+        const { data: foundCase } = await supabase
+          .from('cases')
+          .select('id')
+          .eq('firm_id', teamMember.firm_id)
+          .eq('cnr_number', normalizedCnr)
+          .maybeSingle();
+        if (foundCase?.id) {
+          effectiveCaseId = foundCase.id;
+          // Link the search record to the found case
+          await supabase
+            .from('legalkart_case_searches')
+            .update({ case_id: effectiveCaseId })
+            .eq('id', searchRecord.id);
+        }
+      }
+
+      // Update case with fetched data if successful and a case_id is available
+      if (searchResult.success && effectiveCaseId && searchResult.data) {
         const mappedData = mapLegalkartDataToCRM(searchResult.data, searchType);
         
         // Update main cases table
@@ -368,7 +387,7 @@ serve(async (req) => {
             last_fetched_at: new Date().toISOString(),
             fetched_data: searchResult.data,
           })
-          .eq('id', caseId);
+          .eq('id', effectiveCaseId);
 
         if (caseUpdateError) {
           console.error('Error updating case with fetched data:', caseUpdateError);
@@ -376,23 +395,23 @@ serve(async (req) => {
 
         // Upsert relational data using helper function
         try {
-          await upsertCaseRelationalData(supabase, caseId, teamMember.firm_id, searchResult.data);
+          await upsertCaseRelationalData(supabase, effectiveCaseId, teamMember.firm_id, searchResult.data);
         } catch (upsertErr) {
           console.error('Failed to upsert case relational data:', upsertErr);
         }
-      } else if (!searchResult.success && caseId) {
+      } else if (!searchResult.success && effectiveCaseId) {
         // Search failed - try using existing fetched_data if available
         console.log('⚠️ External search failed, checking for existing fetched_data...');
         const { data: existingCase } = await supabase
           .from('cases')
           .select('fetched_data')
-          .eq('id', caseId)
+          .eq('id', effectiveCaseId)
           .single();
 
         if (existingCase?.fetched_data) {
           console.log('✅ Found existing fetched_data, upserting relational data...');
           try {
-            await upsertCaseRelationalData(supabase, caseId, teamMember.firm_id, existingCase.fetched_data);
+            await upsertCaseRelationalData(supabase, effectiveCaseId, teamMember.firm_id, existingCase.fetched_data);
           } catch (upsertErr) {
             console.error('Failed to upsert from existing fetched_data:', upsertErr);
           }
