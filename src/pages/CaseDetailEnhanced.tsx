@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -206,80 +205,79 @@ export default function CaseDetailEnhanced() {
 
   if (caseLoading || legalkartLoading) {
     return (
-      <DashboardLayout>
-        <div className="space-y-4">
-          <Skeleton className="h-32 w-full" />
-          <Skeleton className="h-96 w-full" />
-        </div>
-      </DashboardLayout>
+    <div className="min-h-screen bg-gray-50">
+      <div className="space-y-4">
+        <Skeleton className="h-32 w-full" />
+        <Skeleton className="h-96 w-full" />
+      </div>
+    </div>
     );
   }
 
   if (!caseData) {
     return (
-      <DashboardLayout>
+      <div className="min-h-screen bg-gray-50">
         <div className="text-center py-12">
           <p className="text-gray-500">Case not found</p>
         </div>
-      </DashboardLayout>
+      </div>
     );
   }
 
   return (
-    <DashboardLayout>
+    <div className="min-h-screen bg-gray-50">
       {/* Single unified container */}
-      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm">
-        {/* Header inside the card */}
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <h1 className="text-2xl font-semibold text-gray-900 mb-2">
-                {caseData.case_title}
-              </h1>
-              <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                <div>
-                  <span className="font-medium">CNR:</span> {caseData.cnr_number || 'N/A'}
-                </div>
-                <div>
-                  <span className="font-medium">Filing No:</span> {legalkartCase?.filing_number || caseData.filing_number || 'N/A'}
-                </div>
-                <div>
-                  <span className="font-medium">Next Hearing:</span> {caseData.next_hearing_date ? new Date(caseData.next_hearing_date).toLocaleDateString() : 'N/A'}
+      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm m-8">
+        {/* Tabs with integrated header */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          {/* Header section integrated with tabs */}
+          <div className="p-6 pb-0">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex-1">
+                <h1 className="text-2xl font-semibold text-gray-900 mb-2">
+                  {caseData.case_title}
+                </h1>
+                <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                  <div>
+                    <span className="font-medium">CNR:</span> {caseData.cnr_number || 'N/A'}
+                  </div>
+                  <div>
+                    <span className="font-medium">Filing No:</span> {legalkartCase?.filing_number || caseData.filing_number || 'N/A'}
+                  </div>
+                  <div>
+                    <span className="font-medium">Next Hearing:</span> {caseData.next_hearing_date ? new Date(caseData.next_hearing_date).toLocaleDateString() : 'N/A'}
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsNoteModalOpen(true)}
-              >
-                <StickyNote className="w-4 h-4 mr-2" />
-                Add Note
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsTaskModalOpen(true)}
-              >
-                <CheckSquare className="w-4 h-4 mr-2" />
-                Add Task
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => refreshMutation.mutate()}
-                disabled={refreshMutation.isPending}
-              >
-                <RefreshCw className={`w-4 h-4 mr-2 ${refreshMutation.isPending ? 'animate-spin' : ''}`} />
-                Refresh
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsNoteModalOpen(true)}
+                >
+                  <StickyNote className="w-4 h-4 mr-2" />
+                  Add Note
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsTaskModalOpen(true)}
+                >
+                  <CheckSquare className="w-4 h-4 mr-2" />
+                  Add Task
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => refreshMutation.mutate()}
+                  disabled={refreshMutation.isPending}
+                >
+                  <RefreshCw className={`w-4 h-4 mr-2 ${refreshMutation.isPending ? 'animate-spin' : ''}`} />
+                  Refresh
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-
-        {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="w-full bg-white border-b border-gray-200 h-auto p-0">
             <div className="flex flex-wrap sm:flex-nowrap overflow-x-auto">
               {tabs.map((tab) => {
@@ -352,6 +350,6 @@ export default function CaseDetailEnhanced() {
           caseId={id}
         />
       )}
-    </DashboardLayout>
+    </div>
   );
 }
