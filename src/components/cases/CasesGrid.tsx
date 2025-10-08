@@ -43,7 +43,7 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
                               userProfile?.role === 'junior';
 
       let query = supabase
-        .from('case_details')
+        .from('cases')
         .select('*')
         .order('created_at', { ascending: false });
 

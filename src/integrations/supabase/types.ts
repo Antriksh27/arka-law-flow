@@ -119,13 +119,6 @@ export type Database = {
             foreignKeyName: "appointments_case_id_fkey"
             columns: ["case_id"]
             isOneToOne: false
-            referencedRelation: "case_details"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "appointments_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
             referencedRelation: "cases"
             referencedColumns: ["id"]
           },
@@ -357,13 +350,6 @@ export type Database = {
             foreignKeyName: "case_activities_case_id_fkey"
             columns: ["case_id"]
             isOneToOne: false
-            referencedRelation: "case_details"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "case_activities_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
             referencedRelation: "cases"
             referencedColumns: ["id"]
           },
@@ -417,13 +403,6 @@ export type Database = {
             foreignKeyName: "case_assignments_case_id_fkey"
             columns: ["case_id"]
             isOneToOne: false
-            referencedRelation: "case_details"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "case_assignments_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
             referencedRelation: "cases"
             referencedColumns: ["id"]
           },
@@ -471,13 +450,6 @@ export type Database = {
           subject?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "case_emails_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "case_details"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "case_emails_case_id_fkey"
             columns: ["case_id"]
@@ -537,13 +509,6 @@ export type Database = {
             foreignKeyName: "case_files_case_id_fkey"
             columns: ["case_id"]
             isOneToOne: false
-            referencedRelation: "case_details"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "case_files_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
             referencedRelation: "cases"
             referencedColumns: ["id"]
           },
@@ -586,13 +551,6 @@ export type Database = {
           id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "case_notes_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "case_details"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "case_notes_case_id_fkey"
             columns: ["case_id"]
@@ -1224,13 +1182,6 @@ export type Database = {
             foreignKeyName: "court_hearings_case_id_fkey"
             columns: ["case_id"]
             isOneToOne: false
-            referencedRelation: "case_details"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "court_hearings_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
             referencedRelation: "cases"
             referencedColumns: ["id"]
           },
@@ -1383,13 +1334,6 @@ export type Database = {
           webdav_synced?: boolean | null
         }
         Relationships: [
-          {
-            foreignKeyName: "documents_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "case_details"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "documents_case_id_fkey"
             columns: ["case_id"]
@@ -1691,13 +1635,6 @@ export type Database = {
           status?: Database["public"]["Enums"]["hearing_status"]
         }
         Relationships: [
-          {
-            foreignKeyName: "hearings_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "case_details"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "hearings_case_id_fkey"
             columns: ["case_id"]
@@ -2046,13 +1983,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "invoices_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "case_details"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "invoices_case_id_fkey"
             columns: ["case_id"]
@@ -2421,13 +2351,6 @@ export type Database = {
             foreignKeyName: "legalkart_case_searches_case_id_fkey"
             columns: ["case_id"]
             isOneToOne: false
-            referencedRelation: "case_details"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "legalkart_case_searches_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
             referencedRelation: "cases"
             referencedColumns: ["id"]
           },
@@ -2578,13 +2501,6 @@ export type Database = {
             foreignKeyName: "message_threads_related_case_id_fkey"
             columns: ["related_case_id"]
             isOneToOne: false
-            referencedRelation: "case_details"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "message_threads_related_case_id_fkey"
-            columns: ["related_case_id"]
-            isOneToOne: false
             referencedRelation: "cases"
             referencedColumns: ["id"]
           },
@@ -2680,13 +2596,6 @@ export type Database = {
             foreignKeyName: "notes_case_id_fkey"
             columns: ["case_id"]
             isOneToOne: false
-            referencedRelation: "case_details"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "notes_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
             referencedRelation: "cases"
             referencedColumns: ["id"]
           },
@@ -2760,13 +2669,6 @@ export type Database = {
             columns: ["appointment_id"]
             isOneToOne: false
             referencedRelation: "appointments"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "notes_v2_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "case_details"
             referencedColumns: ["id"]
           },
           {
@@ -2892,13 +2794,6 @@ export type Database = {
           transaction_id?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "payments_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "case_details"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "payments_case_id_fkey"
             columns: ["case_id"]
@@ -3175,13 +3070,6 @@ export type Database = {
             foreignKeyName: "tasks_case_id_fkey"
             columns: ["case_id"]
             isOneToOne: false
-            referencedRelation: "case_details"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tasks_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
             referencedRelation: "cases"
             referencedColumns: ["id"]
           },
@@ -3383,13 +3271,6 @@ export type Database = {
             foreignKeyName: "appointments_case_id_fkey"
             columns: ["case_id"]
             isOneToOne: false
-            referencedRelation: "case_details"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "appointments_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
             referencedRelation: "cases"
             referencedColumns: ["id"]
           },
@@ -3416,129 +3297,6 @@ export type Database = {
           },
           {
             foreignKeyName: "appointments_firm_id_fkey"
-            columns: ["firm_id"]
-            isOneToOne: false
-            referencedRelation: "law_firms"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      case_details: {
-        Row: {
-          acts: string[] | null
-          advocate_name: string | null
-          assigned_to: string | null
-          assigned_users: string[] | null
-          bench_type: string | null
-          case_number: string | null
-          case_title: string | null
-          case_type: Database["public"]["Enums"]["case_type_enum"] | null
-          category: string | null
-          client_id: string | null
-          client_name: string | null
-          closing_date: string | null
-          cnr_number: string | null
-          coram: string | null
-          court: string | null
-          court_complex: string | null
-          court_name: string | null
-          created_at: string | null
-          created_by: string | null
-          created_by_name: string | null
-          description: string | null
-          district: string | null
-          district_1: string | null
-          docket_number: string | null
-          document_count: number | null
-          document_links: string[] | null
-          fetch_message: string | null
-          fetch_status: string | null
-          fetched_data: Json | null
-          filing_date: string | null
-          filing_number: string | null
-          firm_id: string | null
-          first_hearing_date: string | null
-          hearing_count: number | null
-          hearing_notes: string | null
-          id: string | null
-          is_auto_fetched: boolean | null
-          judicial_branch: string | null
-          next_hearing_date: string | null
-          objection: string | null
-          order_link: string | null
-          orders: string[] | null
-          petitioner: string | null
-          petitioner_advocate: string | null
-          priority: Database["public"]["Enums"]["case_priority_enum"] | null
-          registration_date: string | null
-          registration_number: string | null
-          respondent: string | null
-          respondent_advocate: string | null
-          sections: string[] | null
-          stage: string | null
-          state: string | null
-          state_1: string | null
-          status: Database["public"]["Enums"]["case_status_enum"] | null
-          sub_category: string | null
-          tags: string[] | null
-          task_count: number | null
-          team_name: string | null
-          title: string | null
-          updated_at: string | null
-          vs: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "cases_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "firm_statistics"
-            referencedColumns: ["admin_id"]
-          },
-          {
-            foreignKeyName: "cases_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "cases_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "client_stats"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "cases_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "cases_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "firm_statistics"
-            referencedColumns: ["admin_id"]
-          },
-          {
-            foreignKeyName: "cases_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "cases_firm_id_fkey"
-            columns: ["firm_id"]
-            isOneToOne: false
-            referencedRelation: "firm_statistics"
-            referencedColumns: ["firm_id"]
-          },
-          {
-            foreignKeyName: "cases_firm_id_fkey"
             columns: ["firm_id"]
             isOneToOne: false
             referencedRelation: "law_firms"
