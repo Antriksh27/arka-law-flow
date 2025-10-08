@@ -343,7 +343,6 @@ serve(async (req) => {
             if (sanitizedDocuments.length) {
               const docRows = sanitizedDocuments.map((d: any) => ({
                 legalkart_case_id: legalkartCaseId!,
-                firm_id: teamMember.firm_id,
                 sr_no: d.sr_no ?? null,
                 advocate: d.advocate ?? null,
                 filed_by: d.filed_by ?? null,
@@ -362,7 +361,6 @@ serve(async (req) => {
             if (sanitizedObjections.length) {
               const objRows = sanitizedObjections.map((o: any) => ({
                 legalkart_case_id: legalkartCaseId!,
-                firm_id: teamMember.firm_id,
                 sr_no: o.sr_no ?? null,
                 objection: o.objection ?? null,
                 receipt_date: o.receipt_date ?? null,
@@ -378,10 +376,8 @@ serve(async (req) => {
             if (sanitizedOrders.length) {
               const orderRows = sanitizedOrders.map((o: any) => ({
                 legalkart_case_id: legalkartCaseId!,
-                firm_id: teamMember.firm_id,
                 judge: o.judge ?? null,
                 hearing_date: o.hearing_date ?? null,
-                order_date: o.order_date ?? null,
                 order_number: o.order_number ?? null,
                 bench: o.bench ?? null,
                 order_details: o.order_details ?? null,
