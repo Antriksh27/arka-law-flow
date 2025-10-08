@@ -21,6 +21,7 @@ import Team from '@/pages/Team';
 import Messages from '@/pages/Messages';
 import Instructions from '@/pages/Instructions';
 import Availability from '@/pages/Availability';
+import ECourts from '@/pages/ECourts';
 import NotFound from '@/pages/NotFound';
 
 // Reception pages
@@ -84,6 +85,7 @@ const RoleBasedRouter = () => {
           <Route path="/staff/dashboard" element={<StaffDashboard />} />
           <Route path="/staff/cases" element={<Cases />} />
           <Route path="/staff/cases/:id" element={<CaseDetail />} />
+          <Route path="/ecourts" element={<ECourts />} />
           <Route path="/staff/clients" element={<Clients />} />
           <Route path="/staff/clients/:id" element={<ClientInfo />} />
           <Route path="/staff/hearings" element={<Hearings />} />
@@ -101,27 +103,28 @@ const RoleBasedRouter = () => {
   if (role === 'junior') {
     return (
       <DashboardLayout>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/contacts" element={<Contacts />} />
-          <Route path="/cases" element={<Cases />} />
-          <Route path="/cases/:id" element={<CaseDetail />} />
-          <Route path="/clients" element={<Clients />} />
-          <Route path="/clients/:id" element={<ClientInfo />} />
-          <Route path="/appointments" element={<Appointments />} />
-          <Route path="/tasks" element={<Tasks />} />
-          <Route path="/hearings" element={<Hearings />} />
-          <Route path="/documents" element={<Documents />} />
-          <Route path="/notes" element={<Notes />} />
-          <Route path="/messages" element={<Messages />} />
-          <Route path="/instructions" element={<Instructions />} />
-          <Route path="/availability" element={<Availability />} />
-          {/* Redirect invoices to dashboard for juniors */}
-          <Route path="/invoices" element={<Index />} />
-          <Route path="/team" element={<Index />} />
-          <Route path="/reception/*" element={<Index />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/contacts" element={<Contacts />} />
+        <Route path="/cases" element={<Cases />} />
+        <Route path="/cases/:id" element={<CaseDetail />} />
+        <Route path="/ecourts" element={<ECourts />} />
+        <Route path="/clients" element={<Clients />} />
+        <Route path="/clients/:id" element={<ClientInfo />} />
+        <Route path="/appointments" element={<Appointments />} />
+        <Route path="/tasks" element={<Tasks />} />
+        <Route path="/hearings" element={<Hearings />} />
+        <Route path="/documents" element={<Documents />} />
+        <Route path="/notes" element={<Notes />} />
+        <Route path="/messages" element={<Messages />} />
+        <Route path="/instructions" element={<Instructions />} />
+        <Route path="/availability" element={<Availability />} />
+        {/* Redirect invoices to dashboard for juniors */}
+        <Route path="/invoices" element={<Index />} />
+        <Route path="/team" element={<Index />} />
+        <Route path="/reception/*" element={<Index />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
       </DashboardLayout>
     );
   }
@@ -134,6 +137,7 @@ const RoleBasedRouter = () => {
         <Route path="/contacts" element={<Contacts />} />
         <Route path="/cases" element={<Cases />} />
         <Route path="/cases/:id" element={<CaseDetail />} />
+        <Route path="/ecourts" element={<ECourts />} />
         <Route path="/clients" element={<Clients />} />
         <Route path="/clients/:id" element={<ClientInfo />} />
         <Route path="/appointments" element={<Appointments />} />

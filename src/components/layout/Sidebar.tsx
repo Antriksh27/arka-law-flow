@@ -10,6 +10,7 @@ import {
   MessageSquare,
   ClipboardList,
   Clock,
+  FileCode,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -19,6 +20,7 @@ const getNavigationForRole = (role: string | null) => {
   const baseNavigation = [
     { name: 'Dashboard', href: '/', icon: Inbox },
     { name: 'Cases', href: '/cases', icon: Folder },
+    { name: 'eCourts', href: '/ecourts', icon: FileCode },
     { name: 'Clients', href: '/clients', icon: Users },
     { name: 'Appointments', href: '/appointments', icon: Calendar },
     { name: 'Availability', href: '/availability', icon: Clock },
