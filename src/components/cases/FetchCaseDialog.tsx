@@ -30,6 +30,14 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
   const { register, handleSubmit, formState: { errors }, reset } = useForm<FetchFormData>();
   const { searchCase } = useLegalkartIntegration();
 
+  const parsePartyInfo = (partyStr: string | undefined) => {
+    if (!partyStr) return { name: '', advocate: '' };
+    const parts = partyStr.split('Advocate-');
+    const name = parts[0]?.replace(/^\d+\)\s*/, '').trim() || '';
+    const advocate = parts[1]?.trim() || '';
+    return { name, advocate };
+  };
+
   const handleFetch = async (data: FetchFormData) => {
     try {
       const result = await searchCase.mutateAsync({
@@ -38,7 +46,48 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
       });
 
       if (result?.success && result?.data) {
-        setFetchedData(result.data);
+        // Parse the nested Legalkart response structure
+        const rawData = result.data;
+        const caseInfo = rawData.data?.case_info || {};
+        const caseStatus = rawData.data?.case_status || {};
+        
+        const petitionerInfo = parsePartyInfo(rawData.data?.petitioner_and_advocate);
+        const respondentInfo = parsePartyInfo(rawData.data?.respondent_and_advocate);
+        
+        // Map to a flatter structure for display
+        const parsedData = {
+          raw: rawData, // Keep raw for later use
+          case_title: rawData.case_title || rawData.title || 
+                     (petitionerInfo.name && respondentInfo.name 
+                       ? `${petitionerInfo.name} vs ${respondentInfo.name}` 
+                       : caseInfo.filing_number || 'Case Details'),
+          case_number: caseInfo.filing_number || rawData.case_number || rawData.filing_number,
+          cnr_number: caseInfo.cnr_number || rawData.cnr_number || rawData.cnr || rawData.CNR,
+          filing_number: caseInfo.filing_number || rawData.filing_number,
+          registration_number: caseInfo.registration_number || rawData.registration_number,
+          court: caseStatus.court || rawData.court || rawData.court_name,
+          court_name: caseStatus.court || rawData.court_name || rawData.court,
+          district: caseStatus.district || rawData.district,
+          state: caseStatus.state || rawData.state,
+          filing_date: caseInfo.date_of_filing || rawData.filing_date,
+          registration_date: caseInfo.date_of_registration || rawData.registration_date,
+          first_hearing_date: caseInfo.date_of_first_hearing || rawData.first_hearing_date,
+          next_hearing_date: caseInfo.date_next_hearing || rawData.next_hearing_date,
+          status: caseStatus.stage_of_case || rawData.status || 'Open',
+          stage: caseStatus.stage_of_case || rawData.stage,
+          case_type: rawData.case_type || rawData.matter_type || caseInfo.case_type,
+          petitioner: petitionerInfo.name,
+          petitioner_advocate: petitionerInfo.advocate,
+          respondent: respondentInfo.name,
+          respondent_advocate: respondentInfo.advocate,
+          bench_type: caseStatus.bench_type || rawData.bench_type,
+          court_complex: rawData.court_complex,
+          coram: caseStatus.coram || rawData.coram,
+          under_act: rawData.under_act || caseInfo.under_act,
+          under_section: rawData.under_section || caseInfo.under_section,
+        };
+
+        setFetchedData(parsedData);
         toast({
           title: "Case Details Fetched",
           description: "Successfully retrieved case details from eCourts.",
@@ -128,40 +177,102 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div className="space-y-1">
                   <p className="text-[#6B7280]">Case Title</p>
-                  <p className="font-medium text-[#111827]">{fetchedData.case_title || fetchedData.vs || '-'}</p>
+                  <p className="font-medium text-[#111827]">{fetchedData.case_title || '-'}</p>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-[#6B7280]">Case Number</p>
-                  <p className="font-medium text-[#111827]">{fetchedData.case_number || '-'}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-[#6B7280]">CNR Number</p>
-                  <p className="font-medium text-[#111827]">{fetchedData.cnr_number || '-'}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-[#6B7280]">Court Name</p>
-                  <p className="font-medium text-[#111827]">{fetchedData.court || fetchedData.court_name || '-'}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-[#6B7280]">Filing Date</p>
-                  <p className="font-medium text-[#111827]">{fetchedData.filing_date || '-'}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-[#6B7280]">Registration Date</p>
-                  <p className="font-medium text-[#111827]">{fetchedData.registration_date || '-'}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-[#6B7280]">Status</p>
-                  <p className="font-medium text-[#111827]">{fetchedData.status || 'Open'}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-[#6B7280]">Case Type</p>
-                  <p className="font-medium text-[#111827]">{fetchedData.case_type || fetchedData.matter_type || '-'}</p>
-                </div>
+                {fetchedData.case_number && (
+                  <div className="space-y-1">
+                    <p className="text-[#6B7280]">Case Number</p>
+                    <p className="font-medium text-[#111827]">{fetchedData.case_number}</p>
+                  </div>
+                )}
+                {fetchedData.cnr_number && (
+                  <div className="space-y-1">
+                    <p className="text-[#6B7280]">CNR Number</p>
+                    <p className="font-medium text-[#111827]">{fetchedData.cnr_number}</p>
+                  </div>
+                )}
+                {fetchedData.filing_number && (
+                  <div className="space-y-1">
+                    <p className="text-[#6B7280]">Filing Number</p>
+                    <p className="font-medium text-[#111827]">{fetchedData.filing_number}</p>
+                  </div>
+                )}
+                {fetchedData.registration_number && (
+                  <div className="space-y-1">
+                    <p className="text-[#6B7280]">Registration Number</p>
+                    <p className="font-medium text-[#111827]">{fetchedData.registration_number}</p>
+                  </div>
+                )}
+                {fetchedData.court && (
+                  <div className="space-y-1">
+                    <p className="text-[#6B7280]">Court Name</p>
+                    <p className="font-medium text-[#111827]">{fetchedData.court}</p>
+                  </div>
+                )}
+                {fetchedData.district && (
+                  <div className="space-y-1">
+                    <p className="text-[#6B7280]">District</p>
+                    <p className="font-medium text-[#111827]">{fetchedData.district}</p>
+                  </div>
+                )}
+                {fetchedData.state && (
+                  <div className="space-y-1">
+                    <p className="text-[#6B7280]">State</p>
+                    <p className="font-medium text-[#111827]">{fetchedData.state}</p>
+                  </div>
+                )}
+                {fetchedData.filing_date && (
+                  <div className="space-y-1">
+                    <p className="text-[#6B7280]">Filing Date</p>
+                    <p className="font-medium text-[#111827]">{fetchedData.filing_date}</p>
+                  </div>
+                )}
+                {fetchedData.registration_date && (
+                  <div className="space-y-1">
+                    <p className="text-[#6B7280]">Registration Date</p>
+                    <p className="font-medium text-[#111827]">{fetchedData.registration_date}</p>
+                  </div>
+                )}
+                {fetchedData.first_hearing_date && (
+                  <div className="space-y-1">
+                    <p className="text-[#6B7280]">First Hearing Date</p>
+                    <p className="font-medium text-[#111827]">{fetchedData.first_hearing_date}</p>
+                  </div>
+                )}
+                {fetchedData.next_hearing_date && (
+                  <div className="space-y-1">
+                    <p className="text-[#6B7280]">Next Hearing Date</p>
+                    <p className="font-medium text-[#111827]">{fetchedData.next_hearing_date}</p>
+                  </div>
+                )}
+                {fetchedData.status && (
+                  <div className="space-y-1">
+                    <p className="text-[#6B7280]">Status</p>
+                    <p className="font-medium text-[#111827]">{fetchedData.status}</p>
+                  </div>
+                )}
+                {fetchedData.stage && (
+                  <div className="space-y-1">
+                    <p className="text-[#6B7280]">Stage</p>
+                    <p className="font-medium text-[#111827]">{fetchedData.stage}</p>
+                  </div>
+                )}
+                {fetchedData.case_type && (
+                  <div className="space-y-1">
+                    <p className="text-[#6B7280]">Case Type</p>
+                    <p className="font-medium text-[#111827]">{fetchedData.case_type}</p>
+                  </div>
+                )}
                 {fetchedData.petitioner && (
                   <div className="space-y-1">
                     <p className="text-[#6B7280]">Petitioner</p>
                     <p className="font-medium text-[#111827]">{fetchedData.petitioner}</p>
+                  </div>
+                )}
+                {fetchedData.petitioner_advocate && (
+                  <div className="space-y-1">
+                    <p className="text-[#6B7280]">Petitioner Advocate</p>
+                    <p className="font-medium text-[#111827]">{fetchedData.petitioner_advocate}</p>
                   </div>
                 )}
                 {fetchedData.respondent && (
@@ -170,16 +281,40 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
                     <p className="font-medium text-[#111827]">{fetchedData.respondent}</p>
                   </div>
                 )}
-                {fetchedData.next_hearing_date && (
+                {fetchedData.respondent_advocate && (
                   <div className="space-y-1">
-                    <p className="text-[#6B7280]">Next Hearing</p>
-                    <p className="font-medium text-[#111827]">{fetchedData.next_hearing_date}</p>
+                    <p className="text-[#6B7280]">Respondent Advocate</p>
+                    <p className="font-medium text-[#111827]">{fetchedData.respondent_advocate}</p>
                   </div>
                 )}
-                {fetchedData.stage && (
+                {fetchedData.bench_type && (
                   <div className="space-y-1">
-                    <p className="text-[#6B7280]">Stage</p>
-                    <p className="font-medium text-[#111827]">{fetchedData.stage}</p>
+                    <p className="text-[#6B7280]">Bench Type</p>
+                    <p className="font-medium text-[#111827]">{fetchedData.bench_type}</p>
+                  </div>
+                )}
+                {fetchedData.court_complex && (
+                  <div className="space-y-1">
+                    <p className="text-[#6B7280]">Court Complex</p>
+                    <p className="font-medium text-[#111827]">{fetchedData.court_complex}</p>
+                  </div>
+                )}
+                {fetchedData.coram && (
+                  <div className="space-y-1">
+                    <p className="text-[#6B7280]">Coram (Judge)</p>
+                    <p className="font-medium text-[#111827]">{fetchedData.coram}</p>
+                  </div>
+                )}
+                {fetchedData.under_act && (
+                  <div className="space-y-1 col-span-1 md:col-span-2">
+                    <p className="text-[#6B7280]">Under Act</p>
+                    <p className="font-medium text-[#111827]">{fetchedData.under_act}</p>
+                  </div>
+                )}
+                {fetchedData.under_section && (
+                  <div className="space-y-1 col-span-1 md:col-span-2">
+                    <p className="text-[#6B7280]">Under Section</p>
+                    <p className="font-medium text-[#111827]">{fetchedData.under_section}</p>
                   </div>
                 )}
               </div>
