@@ -14,9 +14,9 @@ export const CaseHeaderCard = ({ caseData }: CaseHeaderCardProps) => {
       <CardContent className="p-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
-            <div className="text-sm text-[#6B7280] mb-1">Filing Number</div>
+            <div className="text-sm text-[#6B7280] mb-1">Case Name</div>
             <div className="text-base font-medium text-[#111827]">
-              {caseData.filing_number || 'N/A'}
+              {caseData.case_title || caseData.title || 'N/A'}
             </div>
           </div>
           
