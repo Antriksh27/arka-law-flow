@@ -199,6 +199,54 @@ async function upsertCaseRelationalData(
     else console.log(`✅ Successfully inserted ${orders.length} orders`);
   } else {
     console.log('⚠️ No orders found. Checked paths: rd.order_details, rd.data.order_details, rd.orders, rd.data.orders, rd.orderList, rd.data.orderList');
+    // Fallback: derive pseudo-orders from hearings/document signals
+    const hearingCandidates = Array.isArray(rd?.history_of_case_hearing) 
+      ? rd.history_of_case_hearing 
+      : Array.isArray(rd?.data?.history_of_case_hearing)
+      ? rd.data.history_of_case_hearing
+      : [];
+
+    const orderLikePurposes = /order|orders|judgment|disposed|final/i;
+    const derivedFromHearings = hearingCandidates
+      .filter((h: any) => (h.purpose_of_hearing || h.purpose) && orderLikePurposes.test(String(h.purpose_of_hearing || h.purpose)))
+      .map((h: any) => ({
+        case_id: caseId,
+        judge: h.judge || h.judge_name || null,
+        hearing_date: normalizeDate(h.hearing_date || h.date),
+        order_date: normalizeDate(h.hearing_date || h.date),
+        order_number: null,
+        bench: h.bench ?? null,
+        order_details: h.purpose_of_hearing || h.purpose || null,
+        summary: 'Derived from hearing history',
+        order_link: null,
+        pdf_base64: null,
+      }));
+
+    // Also derive from documents that look like orders/judgments
+    const docs = Array.isArray(rd?.documents) ? rd.documents : Array.isArray(rd?.data?.documents) ? rd.data.documents : [];
+    const derivedFromDocuments = docs
+      .filter((d: any) => /order|judgment/i.test(String(d.document_filed || d.document_type || '')))
+      .map((d: any) => ({
+        case_id: caseId,
+        judge: null,
+        hearing_date: normalizeDate(d.date_of_receiving),
+        order_date: normalizeDate(d.date_of_receiving),
+        order_number: d.document_no || null,
+        bench: null,
+        order_details: d.document_filed || d.document_type || 'Order Document',
+        summary: 'Derived from documents',
+        order_link: d.document_link || d.document_url || null,
+        pdf_base64: d.pdf_base64 || null,
+      }));
+
+    const derivedOrders = [...derivedFromHearings, ...derivedFromDocuments];
+    if (derivedOrders.length > 0) {
+      const { error } = await supabase.from('case_orders').insert(derivedOrders);
+      if (error) console.error('❌ Error inserting derived orders:', error);
+      else console.log(`✅ Inserted ${derivedOrders.length} derived orders`);
+    } else {
+      console.log('ℹ️ No derived orders could be created');
+    }
   }
 
   // Insert hearings - Check multiple possible paths
