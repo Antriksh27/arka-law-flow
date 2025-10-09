@@ -15,7 +15,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         <NavHeader />
       </div>
       <main className="flex-1">
-        <div className="p-8">
+        <div>
           {children}
         </div>
       </main>
