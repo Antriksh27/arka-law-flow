@@ -137,40 +137,65 @@ async function upsertCaseRelationalData(
     if (error) console.error('Error inserting documents:', error);
   }
 
-  // Insert orders
-  const orders = Array.isArray(rd?.order_details) ? rd.order_details : [];
+  // Insert orders - Check multiple possible paths
+  const orders = Array.isArray(rd?.order_details) 
+    ? rd.order_details 
+    : Array.isArray(rd?.data?.order_details)
+    ? rd.data.order_details
+    : Array.isArray(rd?.orders)
+    ? rd.orders
+    : [];
+  
+  console.log(`📋 Found ${orders.length} orders to insert from raw data`);
+  if (orders.length > 0) {
+    console.log('First order structure:', JSON.stringify(orders[0], null, 2));
+  }
+  
   if (orders.length > 0) {
     const { error } = await supabase.from('case_orders').insert(
       orders.map((o: any) => ({
         case_id: caseId,
         judge: o.judge || o.judge_name || null,
         hearing_date: normalizeDate(o.hearing_date),
-        order_date: normalizeDate(o.order_date),
-        order_number: o.order_number ?? null,
+        order_date: normalizeDate(o.order_date || o.date),
+        order_number: o.order_number || o.order_no || null,
         bench: o.bench ?? null,
-        order_details: o.order_details ?? null,
+        order_details: o.order_details || o.details || null,
         summary: o.summary || o.order_summary || null,
-        order_link: o.order_link || o.pdf_url || null,
+        order_link: o.order_link || o.pdf_url || o.pdf_link || null,
         pdf_base64: o.pdf_base64 ?? null,
       }))
     );
-    if (error) console.error('Error inserting orders:', error);
+    if (error) console.error('❌ Error inserting orders:', error);
+    else console.log(`✅ Successfully inserted ${orders.length} orders`);
+  } else {
+    console.log('⚠️ No orders found in raw data. Checked paths: rd.order_details, rd.data.order_details, rd.orders');
   }
 
-  // Insert hearings
-  const hearings = Array.isArray(rd?.history_of_case_hearing) ? rd.history_of_case_hearing : [];
+  // Insert hearings - Check multiple possible paths
+  const hearings = Array.isArray(rd?.history_of_case_hearing) 
+    ? rd.history_of_case_hearing 
+    : Array.isArray(rd?.data?.history_of_case_hearing)
+    ? rd.data.history_of_case_hearing
+    : Array.isArray(rd?.hearings)
+    ? rd.hearings
+    : [];
+  
+  console.log(`📅 Found ${hearings.length} hearings to insert`);
+  
   if (hearings.length > 0) {
     const { error } = await supabase.from('case_hearings').insert(
       hearings.map((h: any) => ({
         case_id: caseId,
-        hearing_date: normalizeDate(h.hearing_date),
+        hearing_date: normalizeDate(h.hearing_date || h.date),
         judge: h.judge || h.judge_name || null,
         cause_list_type: h.cause_list_type ?? null,
         business_on_date: normalizeDate(h.business_on_date),
-        purpose_of_hearing: h.purpose_of_hearing ?? null,
+        purpose_of_hearing: h.purpose_of_hearing || h.purpose || null,
       }))
     );
-    if (error) console.error('Error inserting hearings:', error);
+    if (error) console.error('❌ Error inserting hearings:', error);
+    else console.log(`✅ Successfully inserted ${hearings.length} hearings`);
   }
 
   // Insert objections
