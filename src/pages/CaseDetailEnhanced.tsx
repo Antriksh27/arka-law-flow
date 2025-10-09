@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -48,6 +48,24 @@ export default function CaseDetailEnhanced() {
       return data;
     },
     enabled: !!id
+  });
+
+  // Fetch client data if case has a client
+  const {
+    data: clientData,
+    isLoading: clientLoading
+  } = useQuery({
+    queryKey: ['client', caseData?.client_id],
+    queryFn: async () => {
+      if (!caseData?.client_id) return null;
+      const {
+        data,
+        error
+      } = await supabase.from('clients').select('id, full_name').eq('id', caseData.client_id).single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!caseData?.client_id
   });
 
   // Unified LegalKart/eCourt data via hook
@@ -114,6 +132,17 @@ export default function CaseDetailEnhanced() {
                     <div>
                       <span className="font-medium">Next Hearing:</span> {caseData.next_hearing_date ? format(new Date(caseData.next_hearing_date), 'dd/MM/yyyy') : 'N/A'}
                     </div>
+                    {clientData && (
+                      <div>
+                        <span className="font-medium">Client:</span>{' '}
+                        <Link 
+                          to={`/clients/${clientData.id}`}
+                          className="text-blue-700 hover:text-blue-800 hover:underline"
+                        >
+                          {clientData.full_name}
+                        </Link>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

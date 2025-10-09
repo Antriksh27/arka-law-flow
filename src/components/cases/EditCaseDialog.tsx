@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { X } from 'lucide-react';
 import { toast } from 'sonner';
+import { ClientSelector } from '@/components/appointments/ClientSelector';
 
 interface EditCaseDialogProps {
   open: boolean;
@@ -26,6 +27,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
   caseData
 }) => {
   const [formData, setFormData] = useState({
+    client_id: caseData?.client_id || '',
     registration_number: caseData?.registration_number || '',
     status: caseData?.status || 'open',
     stage: caseData?.stage || '',
@@ -165,6 +167,14 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Basic Case Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="client_id">Client</Label>
+                <ClientSelector
+                  value={formData.client_id}
+                  onValueChange={(value) => setFormData({ ...formData, client_id: value })}
+                  placeholder="Select or add client..."
+                />
+              </div>
               <div>
                 <Label htmlFor="registration_number">Registration Number *</Label>
                 <Input
