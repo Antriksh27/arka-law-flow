@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, ExternalLink, Trash2 } from 'lucide-react';
+import { Plus, ExternalLink, Trash2, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 
 interface RelatedMattersTabProps {
   caseId: string;
@@ -15,6 +16,7 @@ interface RelatedMattersTabProps {
 export const RelatedMattersTab: React.FC<RelatedMattersTabProps> = ({ caseId }) => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedCaseId, setSelectedCaseId] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const queryClient = useQueryClient();
 
@@ -104,6 +106,18 @@ export const RelatedMattersTab: React.FC<RelatedMattersTabProps> = ({ caseId }) 
     addRelationMutation.mutate(selectedCaseId);
   };
 
+  // Filter cases based on search query
+  const filteredCases = useMemo(() => {
+    if (!availableCases) return [];
+    if (!searchQuery.trim()) return availableCases;
+    
+    const query = searchQuery.toLowerCase();
+    return availableCases.filter(c => 
+      c.case_title.toLowerCase().includes(query) ||
+      (c.case_number && c.case_number.toLowerCase().includes(query))
+    );
+  }, [availableCases, searchQuery]);
+
   if (isLoading) {
     return <div className="p-6">Loading related matters...</div>;
   }
@@ -125,25 +139,63 @@ export const RelatedMattersTab: React.FC<RelatedMattersTabProps> = ({ caseId }) 
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label>Select Case</Label>
-                <select
-                  className="w-full border rounded-md p-2 mt-1"
-                  value={selectedCaseId}
-                  onChange={(e) => setSelectedCaseId(e.target.value)}
-                >
-                  <option value="">Select a case...</option>
-                  {availableCases?.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.case_title} {c.case_number ? `(${c.case_number})` : ''}
-                    </option>
-                  ))}
-                </select>
+                <Label>Search Case</Label>
+                <div className="relative mt-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Input
+                    placeholder="Type to search cases..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
               </div>
+              
+              {searchQuery && (
+                <div className="max-h-64 overflow-y-auto border rounded-md">
+                  {filteredCases.length > 0 ? (
+                    <div className="divide-y">
+                      {filteredCases.map((c) => (
+                        <button
+                          key={c.id}
+                          onClick={() => {
+                            setSelectedCaseId(c.id);
+                            setSearchQuery(c.case_title);
+                          }}
+                          className={`w-full text-left p-3 hover:bg-gray-50 transition-colors ${
+                            selectedCaseId === c.id ? 'bg-blue-50' : ''
+                          }`}
+                        >
+                          <p className="font-medium text-sm">{c.case_title}</p>
+                          {c.case_number && (
+                            <p className="text-xs text-gray-500 mt-1">Case #: {c.case_number}</p>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-4 text-center text-sm text-gray-500">
+                      No cases found matching "{searchQuery}"
+                    </div>
+                  )}
+                </div>
+              )}
+              
               <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setIsAddDialogOpen(false);
+                    setSearchQuery('');
+                    setSelectedCaseId('');
+                  }}
+                >
                   Cancel
                 </Button>
-                <Button onClick={handleAddRelation} disabled={!selectedCaseId || addRelationMutation.isPending}>
+                <Button 
+                  onClick={handleAddRelation} 
+                  disabled={!selectedCaseId || addRelationMutation.isPending}
+                >
                   {addRelationMutation.isPending ? 'Linking...' : 'Link Case'}
                 </Button>
               </div>
