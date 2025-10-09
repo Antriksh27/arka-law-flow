@@ -59,7 +59,7 @@ export const DocumentsTab: React.FC<DocumentsTabProps> = ({ caseId }) => {
                 <div>
                   <p className="font-medium">{doc.file_name}</p>
                   <p className="text-sm text-muted-foreground">
-                    {formatFileSize(doc.file_size)} • {format(new Date(doc.uploaded_at), 'dd/MM/yyyy')}
+                    {formatFileSize(doc.file_size)} • {doc.uploaded_at ? format(new Date(doc.uploaded_at), 'dd/MM/yyyy') : 'N/A'}
                   </p>
                 </div>
               </div>
