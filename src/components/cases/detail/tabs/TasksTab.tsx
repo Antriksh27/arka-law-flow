@@ -24,7 +24,7 @@ export const TasksTab: React.FC<TasksTabProps> = ({ caseId }) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('tasks')
-        .select('*, profiles(full_name)')
+        .select('*, profiles!tasks_created_by_fkey(full_name)')
         .eq('case_id', caseId)
         .order('created_at', { ascending: false });
       
