@@ -20,10 +20,31 @@ export const RelatedMattersTab: React.FC<RelatedMattersTabProps> = ({ caseId }) 
 
   const queryClient = useQueryClient();
 
+  // Helper function to extract name without advocate
+  const extractName = (text: string) => {
+    if (!text) return '';
+    // Remove advocate names (after "Advocate:", "Adv:", etc.)
+    const patterns = [
+      /Advocate[s]?:\s*.+$/i,
+      /Adv\.?\s*:\s*.+$/i,
+      /\(Advocate[s]?:?\s*.+\)$/i,
+      /\(Adv\.?\s*:?\s*.+\)$/i
+    ];
+    
+    let cleaned = text;
+    for (const pattern of patterns) {
+      cleaned = cleaned.replace(pattern, '');
+    }
+    
+    return cleaned.trim();
+  };
+
   // Helper function to get display title
   const getDisplayTitle = (caseData: any) => {
     if (caseData.petitioner && caseData.respondent) {
-      return `${caseData.petitioner} Vs ${caseData.respondent}`;
+      const petitioner = extractName(caseData.petitioner);
+      const respondent = extractName(caseData.respondent);
+      return `${petitioner} Vs ${respondent}`;
     }
     if (caseData.vs) {
       return caseData.vs;
