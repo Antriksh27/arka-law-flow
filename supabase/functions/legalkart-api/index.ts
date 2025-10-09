@@ -33,34 +33,57 @@ async function upsertCaseRelationalData(
 
   // Date normalization helpers
   const monthIndex: Record<string, string> = {
-    january: '01', february: '02', march: '03', april: '04', may: '05', june: '06',
-    july: '07', august: '08', september: '09', october: '10', november: '11', december: '12'
+    january: '01', jan: '01',
+    february: '02', feb: '02',
+    march: '03', mar: '03',
+    april: '04', apr: '04',
+    may: '05',
+    june: '06', jun: '06',
+    july: '07', jul: '07',
+    august: '08', aug: '08',
+    september: '09', sep: '09', sept: '09',
+    october: '10', oct: '10',
+    november: '11', nov: '11',
+    december: '12', dec: '12',
   };
   const stripOrdinals = (s: string) => s.replace(/\b(\d{1,2})(st|nd|rd|th)\b/gi, '$1');
   const cleanup = (s: string) => s.replace(/\(.*?\)/g, '').replace(/,/g, ' ').replace(/\s+/g, ' ').trim();
+  const nullTokens = new Set(['', '-', '--', '—', 'n/a', 'na', 'nil', 'null', 'undefined', '#', '— —']);
   const normalizeDate = (val: unknown): string | null => {
-    if (typeof val !== 'string') return null;
-    if (!val || val.trim() === '') return null;
-    let s = cleanup(val);
-    // dd-mm-yyyy or dd/mm/yyyy
-    const m = s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
+    if (val == null) return null;
+    let s = typeof val === 'string' ? val : val instanceof Date ? val.toISOString() : String(val);
+    s = cleanup(s).trim();
+    if (nullTokens.has(s.toLowerCase())) return null;
+
+    // ISO with time
+    if (/^\d{4}-\d{2}-\d{2}T/.test(s)) return s.slice(0, 10);
+    // Already ISO date
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+
+    // dd-mm-yyyy or dd/mm/yyyy or dd.mm.yyyy
+    const m = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})$/);
     if (m) {
       const dd = m[1].padStart(2, '0');
       const mm = m[2].padStart(2, '0');
       const yyyy = m[3];
       return `${yyyy}-${mm}-${dd}`;
     }
-    // dd Month yyyy (with or without ordinals)
+
+    // dd Month yyyy (with optional dot and ordinals)
     s = stripOrdinals(s);
-    const m2 = s.match(/^(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})$/);
+    const m2 = s.match(/^(\d{1,2})\s+([A-Za-z\.]+)\s+(\d{4})$/);
     if (m2) {
       const dd = m2[1].padStart(2, '0');
-      const mon = monthIndex[m2[2].toLowerCase()];
+      const monKey = m2[2].toLowerCase().replace(/\.$/, '');
+      const mon = monthIndex[monKey];
       const yyyy = m2[3];
       if (mon) return `${yyyy}-${mon}-${dd}`;
     }
-    // Already ISO
-    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+
+    // Fallback: Date.parse
+    const d = new Date(s);
+    if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10);
+
     return null;
   };
 
@@ -144,6 +167,12 @@ async function upsertCaseRelationalData(
     ? rd.data.order_details
     : Array.isArray(rd?.orders)
     ? rd.orders
+    : Array.isArray(rd?.data?.orders)
+    ? rd.data.orders
+    : Array.isArray(rd?.orderList)
+    ? rd.orderList
+    : Array.isArray(rd?.data?.orderList)
+    ? rd.data.orderList
     : [];
   
   console.log(`📋 Found ${orders.length} orders to insert from raw data`);
@@ -169,7 +198,7 @@ async function upsertCaseRelationalData(
     if (error) console.error('❌ Error inserting orders:', error);
     else console.log(`✅ Successfully inserted ${orders.length} orders`);
   } else {
-    console.log('⚠️ No orders found in raw data. Checked paths: rd.order_details, rd.data.order_details, rd.orders');
+    console.log('⚠️ No orders found. Checked paths: rd.order_details, rd.data.order_details, rd.orders, rd.data.orders, rd.orderList, rd.data.orderList');
   }
 
   // Insert hearings - Check multiple possible paths
@@ -179,6 +208,8 @@ async function upsertCaseRelationalData(
     ? rd.data.history_of_case_hearing
     : Array.isArray(rd?.hearings)
     ? rd.hearings
+    : Array.isArray(rd?.data?.hearings)
+    ? rd.data.hearings
     : [];
   
   console.log(`📅 Found ${hearings.length} hearings to insert`);
@@ -299,16 +330,87 @@ serve(async (req) => {
       console.log('📥 Upserting case data from JSON for case:', caseId);
 
       try {
+        // 1) Map and update case-level fields (dates, parties, status, etc.)
+        const mapped = mapLegalkartDataToCRM(rawData, 'local_json') || {};
+        const allowedKeys = [
+          'case_title','filing_date','registration_date','first_hearing_date','next_hearing_date',
+          'listed_date','decision_date','disposal_date','scrutiny_date',
+          'petitioner','respondent','petitioner_advocate','respondent_advocate',
+          'court','court_name','court_type','district','state','judicial_branch','bench_type',
+          'coram','stage','category','sub_category','case_classification','case_type','status','priority',
+          'orders','interim_orders','final_orders','document_links','hearing_history','document_history',
+          'party_details','ia_numbers','objection','objection_status','under_act','under_section','acts','sections',
+          'vs','advocate_name','cause_list_type','purpose_of_hearing','hearing_notes'
+        ];
+        const updatePayload: Record<string, any> = {
+          is_auto_fetched: true,
+          fetch_status: 'success',
+          fetch_message: `Local JSON upsert on ${new Date().toISOString()}`,
+          last_fetched_at: new Date().toISOString(),
+          fetched_data: rawData,
+        };
+        for (const key of allowedKeys) {
+          const v = mapped[key];
+          if (v !== undefined && v !== null && !(Array.isArray(v) && v.length === 0)) {
+            updatePayload[key] = v;
+          }
+        }
+
+        const { error: caseUpdateErr } = await supabase
+          .from('cases')
+          .update(updatePayload)
+          .eq('id', caseId);
+
+        if (caseUpdateErr) {
+          console.error('❌ Failed to update case fields:', caseUpdateErr);
+        } else {
+          const updatedKeys = Object.keys(updatePayload).filter(k => !['fetched_data','fetch_message'].includes(k));
+          console.log(`✅ Updated case with ${updatedKeys.length} fields:`, updatedKeys);
+        }
+
+        // 2) Upsert child/relational tables
         await upsertCaseRelationalData(supabase, caseId, teamMember.firm_id, rawData);
-        
+
+        // Prepare simple counts for debugging
+        const rd = rawData?.data ?? rawData ?? {};
+        const ordersArr = Array.isArray(rd?.order_details) ? rd.order_details
+          : Array.isArray(rd?.data?.order_details) ? rd.data.order_details
+          : Array.isArray(rd?.orders) ? rd.orders
+          : Array.isArray(rd?.data?.orders) ? rd.data.orders
+          : Array.isArray(rd?.orderList) ? rd.orderList
+          : Array.isArray(rd?.data?.orderList) ? rd.data.orderList
+          : [];
+        const hearingsArr = Array.isArray(rd?.history_of_case_hearing) ? rd.history_of_case_hearing
+          : Array.isArray(rd?.data?.history_of_case_hearing) ? rd.data.history_of_case_hearing
+          : Array.isArray(rd?.hearings) ? rd.hearings
+          : Array.isArray(rd?.data?.hearings) ? rd.data.hearings
+          : [];
+
         return new Response(
-          JSON.stringify({ success: true, message: 'Case data upserted successfully' }),
+          JSON.stringify({
+            success: true,
+            message: 'Case data upserted successfully',
+            counts: {
+              orders: ordersArr.length,
+              hearings: hearingsArr.length,
+            },
+            updated_dates: {
+              filing_date: updatePayload.filing_date || null,
+              registration_date: updatePayload.registration_date || null,
+              first_hearing_date: updatePayload.first_hearing_date || null,
+              next_hearing_date: updatePayload.next_hearing_date || null,
+              listed_date: updatePayload.listed_date || null,
+              decision_date: updatePayload.decision_date || null,
+              disposal_date: updatePayload.disposal_date || null,
+              scrutiny_date: updatePayload.scrutiny_date || null,
+            }
+          }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       } catch (error) {
         console.error('Error upserting case data:', error);
         return new Response(
-          JSON.stringify({ error: 'Failed to upsert case data: ' + error.message }),
+          JSON.stringify({ error: 'Failed to upsert case data: ' + (error as Error).message }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
