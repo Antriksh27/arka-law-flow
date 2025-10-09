@@ -1,26 +1,39 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, ChevronUp, FileText, Users, AlertCircle } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ChevronDown, ChevronUp, FileText, Users, AlertCircle, File, Scale, Calendar, XCircle, CheckSquare } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { formatDateDisplay, formatAdvocateName, formatPartyName } from '@/lib/caseDataFormatter';
+import { DocumentsTable } from '@/components/cases/enhanced/DocumentsTable';
+import { OrdersTable } from '@/components/cases/enhanced/OrdersTable';
+import { HearingsTable } from '@/components/cases/enhanced/HearingsTable';
+import { ObjectionsTable } from '@/components/cases/enhanced/ObjectionsTable';
+import { IADetailsTable } from '@/components/cases/enhanced/IADetailsTable';
 interface DetailsTabProps {
   caseData: any;
   legalkartData: any;
   petitioners: any[];
   respondents: any[];
   iaDetails: any[];
+  documents: any[];
+  orders: any[];
+  hearings: any[];
+  objections: any[];
 }
 export const DetailsTab: React.FC<DetailsTabProps> = ({
   caseData,
   legalkartData,
   petitioners,
   respondents,
-  iaDetails
+  iaDetails,
+  documents,
+  orders,
+  hearings,
+  objections
 }) => {
   const [caseInfoOpen, setCaseInfoOpen] = useState(true);
-  const [partiesOpen, setPartiesOpen] = useState(true);
-  const [iaOpen, setIaOpen] = useState(false);
+  const [nestedTab, setNestedTab] = useState('parties');
   const formatDate = (date: string | null) => {
     if (!date) return 'N/A';
     return formatDateDisplay(date);
@@ -34,9 +47,16 @@ export const DetailsTab: React.FC<DetailsTabProps> = ({
     return formatAdvocateName(text);
   };
 
-  // Filter out invalid IA details
-  const validIaDetails = iaDetails.filter(ia => ia.ia_number || ia.party || ia.date_of_filing);
-  return <div className="space-y-4">
+  const nestedTabs = [
+    { value: 'parties', label: 'Parties & Advocates', icon: Users },
+    { value: 'documents', label: 'Documents', icon: File },
+    { value: 'orders', label: 'Orders', icon: Scale },
+    { value: 'hearings', label: 'Hearings', icon: Calendar },
+    { value: 'objections', label: 'Objections', icon: XCircle },
+    { value: 'ia-details', label: 'IA Details', icon: CheckSquare },
+  ];
+
+  return <div className="space-y-6">
       {/* Case Information Card */}
       <Collapsible open={caseInfoOpen} onOpenChange={setCaseInfoOpen}>
         <Card>
@@ -109,65 +129,87 @@ export const DetailsTab: React.FC<DetailsTabProps> = ({
         </Card>
       </Collapsible>
 
-      {/* Parties & Advocates Card */}
-      <Collapsible open={partiesOpen} onOpenChange={setPartiesOpen}>
-        <Card>
-          <CollapsibleTrigger asChild>
-            <CardHeader className="cursor-pointer hover:bg-gray-50 transition-colors">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Users className="w-5 h-5 text-blue-600" />
-                  <CardTitle>Parties & Advocates</CardTitle>
-                </div>
-                {partiesOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+      {/* Nested Tabs Section */}
+      <Card>
+        <CardContent className="p-0">
+          <Tabs value={nestedTab} onValueChange={setNestedTab} className="w-full">
+            <TabsList className="w-full bg-gray-50 border-b border-gray-200 h-auto p-0 rounded-none">
+              <div className="flex flex-wrap sm:flex-nowrap overflow-x-auto">
+                {nestedTabs.map(tab => {
+                  const IconComponent = tab.icon;
+                  return <TabsTrigger 
+                    key={tab.value} 
+                    value={tab.value} 
+                    className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 border-b-2 border-transparent data-[state=active]:border-blue-700 data-[state=active]:text-blue-800 data-[state=active]:bg-blue-50 bg-transparent rounded-none whitespace-nowrap transition-colors"
+                  >
+                    <IconComponent className="w-4 h-4" />
+                    {tab.label}
+                  </TabsTrigger>;
+                })}
               </div>
-            </CardHeader>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Petitioners */}
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
-                    Petitioners
-                  </h4>
-                  {petitioners && petitioners.length > 0 ? <div className="space-y-4">
-                      {petitioners.map((petitioner, index) => <div key={index} className="border-l-2 border-blue-500 pl-3">
-                           <p className="text-sm font-medium text-gray-900">
-                             {index + 1}. {parseName(petitioner.petitioner_name || petitioner.name)}
-                           </p>
-                          {petitioner.advocate_name && <p className="text-xs text-gray-500 mt-1">
-                              Advocate: {parseAdvocates(petitioner.advocate_name)}
-                            </p>}
-                        </div>)}
-                    </div> : <p className="text-sm text-gray-400 italic">No petitioners listed</p>}
-                </div>
+            </TabsList>
 
-                {/* Respondents */}
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
-                    Respondents
-                  </h4>
-                  {respondents && respondents.length > 0 ? <div className="space-y-4">
-                      {respondents.map((respondent, index) => <div key={index} className="border-l-2 border-red-500 pl-3">
-                           <p className="text-sm font-medium text-gray-900">
-                             {index + 1}. {parseName(respondent.respondent_name || respondent.name)}
-                           </p>
-                          {respondent.advocate_name && <p className="text-xs text-gray-500 mt-1">
-                              Advocate: {parseAdvocates(respondent.advocate_name)}
-                            </p>}
-                        </div>)}
-                    </div> : <p className="text-sm text-gray-400 italic">No respondents listed</p>}
-                </div>
-              </div>
-            </CardContent>
-          </CollapsibleContent>
-        </Card>
-      </Collapsible>
+            <div className="p-6">
+              <TabsContent value="parties" className="m-0">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {/* Petitioners */}
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
+                      Petitioners
+                    </h4>
+                    {petitioners && petitioners.length > 0 ? <div className="space-y-4">
+                        {petitioners.map((petitioner, index) => <div key={index} className="border-l-2 border-blue-500 pl-3">
+                             <p className="text-sm font-medium text-gray-900">
+                               {index + 1}. {parseName(petitioner.petitioner_name || petitioner.name)}
+                             </p>
+                            {petitioner.advocate_name && <p className="text-xs text-gray-500 mt-1">
+                                Advocate: {parseAdvocates(petitioner.advocate_name)}
+                              </p>}
+                          </div>)}
+                      </div> : <p className="text-sm text-gray-400 italic">No petitioners listed</p>}
+                  </div>
 
-      {/* IA Details Card */}
-      {validIaDetails.length > 0 && <Collapsible open={iaOpen} onOpenChange={setIaOpen}>
-          
-        </Collapsible>}
+                  {/* Respondents */}
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
+                      Respondents
+                    </h4>
+                    {respondents && respondents.length > 0 ? <div className="space-y-4">
+                        {respondents.map((respondent, index) => <div key={index} className="border-l-2 border-red-500 pl-3">
+                             <p className="text-sm font-medium text-gray-900">
+                               {index + 1}. {parseName(respondent.respondent_name || respondent.name)}
+                             </p>
+                            {respondent.advocate_name && <p className="text-xs text-gray-500 mt-1">
+                                Advocate: {parseAdvocates(respondent.advocate_name)}
+                              </p>}
+                          </div>)}
+                      </div> : <p className="text-sm text-gray-400 italic">No respondents listed</p>}
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="documents" className="m-0">
+                <DocumentsTable documents={documents} />
+              </TabsContent>
+
+              <TabsContent value="orders" className="m-0">
+                <OrdersTable orders={orders} />
+              </TabsContent>
+
+              <TabsContent value="hearings" className="m-0">
+                <HearingsTable hearings={hearings} />
+              </TabsContent>
+
+              <TabsContent value="objections" className="m-0">
+                <ObjectionsTable objections={objections} />
+              </TabsContent>
+
+              <TabsContent value="ia-details" className="m-0">
+                <IADetailsTable iaDetails={iaDetails} />
+              </TabsContent>
+            </div>
+          </Tabs>
+        </CardContent>
+      </Card>
     </div>;
 };

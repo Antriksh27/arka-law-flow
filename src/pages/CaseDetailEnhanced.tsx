@@ -70,26 +70,6 @@ export default function CaseDetailEnhanced() {
     value: 'details',
     label: 'Details',
     icon: FileText
-  }, {
-    value: 'documents',
-    label: 'Documents',
-    icon: File
-  }, {
-    value: 'orders',
-    label: 'Orders',
-    icon: Scale
-  }, {
-    value: 'hearings',
-    label: 'Hearings',
-    icon: Calendar
-  }, {
-    value: 'objections',
-    label: 'Objections',
-    icon: XCircle
-  }, {
-    value: 'ia-details',
-    label: 'IA Details',
-    icon: CheckSquare
   }];
   if (caseLoading || legalkartLoading) {
     return <div className="min-h-screen bg-gray-50">
@@ -162,29 +142,18 @@ export default function CaseDetailEnhanced() {
 
           <div className="p-6">
             <TabsContent value="details" className="m-0">
-              <DetailsTab caseData={caseData} legalkartData={legalkartCase} petitioners={petitioners} respondents={respondents} iaDetails={iaDetails} />
+              <DetailsTab 
+                caseData={caseData} 
+                legalkartData={legalkartCase} 
+                petitioners={petitioners} 
+                respondents={respondents} 
+                iaDetails={iaDetails}
+                documents={documents}
+                orders={orders}
+                hearings={hearings}
+                objections={objections}
+              />
             </TabsContent>
-
-            <TabsContent value="documents" className="m-0">
-              <DocumentsTable documents={documents} />
-            </TabsContent>
-
-            <TabsContent value="orders" className="m-0">
-              <OrdersTable orders={orders} />
-            </TabsContent>
-
-            <TabsContent value="hearings" className="m-0">
-              <HearingsTable hearings={hearings} />
-            </TabsContent>
-
-            <TabsContent value="objections" className="m-0">
-              <ObjectionsTable objections={objections} />
-            </TabsContent>
-
-            <TabsContent value="ia-details" className="m-0">
-              <IADetailsTable iaDetails={iaDetails} />
-            </TabsContent>
-
           </div>
         </Tabs>
       </div>
