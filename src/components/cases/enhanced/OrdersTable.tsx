@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
-import { FileText, Eye } from 'lucide-react';
+import { FileText, Eye, Download } from 'lucide-react';
 import { PDFViewerModal } from '@/components/ui/pdf-viewer-modal';
 
 interface OrdersTableProps {
@@ -49,18 +49,35 @@ export const OrdersTable = ({ orders }: OrdersTableProps) => {
                 </TableCell>
                 <TableCell>
                   {order.pdf_base64 ? (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setSelectedPdf({
-                        data: order.pdf_base64,
-                        name: `Order_${order.order_number || idx + 1}.pdf`
-                      })}
-                      className="flex items-center gap-2"
-                    >
-                      <Eye className="h-4 w-4" />
-                      View PDF
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setSelectedPdf({
+                          data: order.pdf_base64,
+                          name: `Order_${order.order_number || idx + 1}.pdf`
+                        })}
+                        className="flex items-center gap-2"
+                      >
+                        <Eye className="h-4 w-4" />
+                        View
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          const linkSource = `data:application/pdf;base64,${order.pdf_base64}`;
+                          const downloadLink = document.createElement('a');
+                          downloadLink.href = linkSource;
+                          downloadLink.download = `Order_${order.order_number || idx + 1}.pdf`;
+                          downloadLink.click();
+                        }}
+                        className="flex items-center gap-2"
+                      >
+                        <Download className="h-4 w-4" />
+                        Download
+                      </Button>
+                    </div>
                   ) : (
                     <span className="text-sm text-[#6B7280]">No PDF</span>
                   )}

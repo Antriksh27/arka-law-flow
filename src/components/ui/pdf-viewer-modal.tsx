@@ -35,20 +35,20 @@ export const PDFViewerModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl h-[90vh] p-0">
-        <DialogHeader className="p-6 pb-0">
+      <DialogContent className="max-w-[100vw] w-[100vw] h-[100vh] p-0 m-0">
+        <DialogHeader className="p-4 pb-0 border-b bg-background">
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-xl font-semibold">{fileName}</DialogTitle>
+            <DialogTitle className="text-lg font-semibold">{fileName}</DialogTitle>
             <Button variant="ghost" size="icon" onClick={onClose}>
               <X className="h-5 w-5" />
             </Button>
           </div>
         </DialogHeader>
-        <div className="flex-1 p-6 pt-4">
+        <div className="flex-1 h-[calc(100vh-60px)]">
           {pdfUrl ? (
             <iframe
               src={pdfUrl}
-              className="w-full h-full rounded-xl border border-[#E5E7EB]"
+              className="w-full h-full"
               title={fileName}
             />
           ) : (
