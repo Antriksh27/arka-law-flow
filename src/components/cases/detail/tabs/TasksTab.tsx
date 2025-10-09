@@ -91,31 +91,6 @@ export const TasksTab: React.FC<TasksTabProps> = ({ caseId }) => {
 
   return (
     <div className="space-y-6">
-      {/* Create Task Form */}
-      <form onSubmit={handleSubmit} className="space-y-4 p-4 bg-muted/30 rounded-lg">
-        <h3 className="text-lg font-semibold">Add New Task</h3>
-        <Input
-          placeholder="Task title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-        <Textarea
-          placeholder="Task description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          rows={3}
-        />
-        <Input
-          type="date"
-          value={dueDate}
-          onChange={(e) => setDueDate(e.target.value)}
-        />
-        <Button type="submit" disabled={createTask.isPending}>
-          <Plus className="w-4 h-4 mr-2" />
-          Add Task
-        </Button>
-      </form>
-
       {/* Tasks List */}
       <div className="space-y-3">
         {isLoading ? (
@@ -156,10 +131,35 @@ export const TasksTab: React.FC<TasksTabProps> = ({ caseId }) => {
           ))
         ) : (
           <div className="text-center py-8">
-            <p className="text-muted-foreground">No tasks yet. Add your first task above.</p>
+            <p className="text-muted-foreground">No tasks yet. Add your first task below.</p>
           </div>
         )}
       </div>
+
+      {/* Create Task Form */}
+      <form onSubmit={handleSubmit} className="space-y-4 p-4 bg-muted/30 rounded-lg">
+        <h3 className="text-lg font-semibold">Add New Task</h3>
+        <Input
+          placeholder="Task title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+        <Textarea
+          placeholder="Task description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          rows={3}
+        />
+        <Input
+          type="date"
+          value={dueDate}
+          onChange={(e) => setDueDate(e.target.value)}
+        />
+        <Button type="submit" disabled={createTask.isPending}>
+          <Plus className="w-4 h-4 mr-2" />
+          Add Task
+        </Button>
+      </form>
     </div>
   );
 };
