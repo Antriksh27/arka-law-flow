@@ -19,19 +19,23 @@ export const TasksTab: React.FC<TasksTabProps> = ({ caseId }) => {
   const [dueDate, setDueDate] = useState('');
   const queryClient = useQueryClient();
 
-  const { data: tasks, isLoading } = useQuery({
+  const { data: tasks, isLoading, error } = useQuery({
     queryKey: ['case-tasks', caseId],
     queryFn: async () => {
+      console.log('Fetching tasks for case:', caseId);
       const { data, error } = await supabase
         .from('tasks')
         .select('*, profiles(full_name)')
         .eq('case_id', caseId)
         .order('created_at', { ascending: false });
       
+      console.log('Tasks query result:', { data, error });
       if (error) throw error;
       return data;
     }
   });
+
+  console.log('Tasks state:', { tasks, isLoading, error });
 
   const createTask = useMutation({
     mutationFn: async () => {
