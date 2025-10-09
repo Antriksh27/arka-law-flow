@@ -44,7 +44,7 @@ export const OrdersTable = ({ orders }: OrdersTableProps) => {
                 </TableCell>
                 <TableCell className="text-[#111827]">
                   {order.hearing_date 
-                    ? format(new Date(order.hearing_date), 'dd-MM-yyyy')
+                    ? format(new Date(order.hearing_date), 'dd/MM/yyyy')
                     : 'N/A'}
                 </TableCell>
                 <TableCell>

@@ -39,12 +39,12 @@ export const IADetailsTable = ({ iaDetails }: IADetailsTableProps) => {
               </TableCell>
               <TableCell className="text-[#111827]">
                 {ia.date_of_filing 
-                  ? format(new Date(ia.date_of_filing), 'dd-MM-yyyy')
+                  ? format(new Date(ia.date_of_filing), 'dd/MM/yyyy')
                   : 'N/A'}
               </TableCell>
               <TableCell className="text-[#111827]">
                 {ia.next_date 
-                  ? format(new Date(ia.next_date), 'dd-MM-yyyy')
+                  ? format(new Date(ia.next_date), 'dd/MM/yyyy')
                   : 'N/A'}
               </TableCell>
               <TableCell className="text-[#111827]">

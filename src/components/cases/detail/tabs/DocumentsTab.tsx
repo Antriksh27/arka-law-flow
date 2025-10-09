@@ -59,7 +59,7 @@ export const DocumentsTab: React.FC<DocumentsTabProps> = ({ caseId }) => {
                 <div>
                   <p className="font-medium">{doc.file_name}</p>
                   <p className="text-sm text-muted-foreground">
-                    {formatFileSize(doc.file_size)} • {format(new Date(doc.uploaded_at), 'PPP')}
+                    {formatFileSize(doc.file_size)} • {format(new Date(doc.uploaded_at), 'dd/MM/yyyy')}
                   </p>
                 </div>
               </div>
@@ -84,7 +84,7 @@ export const DocumentsTab: React.FC<DocumentsTabProps> = ({ caseId }) => {
                 <div>
                   <p className="font-medium">{doc.document_filed || 'Court Document'}</p>
                   <p className="text-sm text-muted-foreground">
-                    Filed: {doc.document_filed_date ? format(new Date(doc.document_filed_date), 'PPP') : 'Date not available'}
+                    Filed: {doc.document_filed_date ? format(new Date(doc.document_filed_date), 'dd/MM/yyyy') : 'Date not available'}
                   </p>
                 </div>
               </div>

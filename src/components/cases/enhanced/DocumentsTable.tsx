@@ -37,7 +37,7 @@ export const DocumentsTable = ({ documents }: DocumentsTableProps) => {
                 </TableCell>
                 <TableCell className="text-[#111827]">
                   {doc.date_of_receiving 
-                    ? format(new Date(doc.date_of_receiving), 'dd-MM-yyyy')
+                    ? format(new Date(doc.date_of_receiving), 'dd/MM/yyyy')
                     : 'N/A'}
                 </TableCell>
                 <TableCell className="text-[#111827]">

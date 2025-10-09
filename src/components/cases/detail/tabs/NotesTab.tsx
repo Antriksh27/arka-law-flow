@@ -125,7 +125,7 @@ export const NotesTab: React.FC<NotesTabProps> = ({ caseId }) => {
               </div>
               <p className="text-sm text-muted-foreground mb-2">{note.content}</p>
               <div className="text-xs text-muted-foreground">
-                {note.profiles?.full_name} • {format(new Date(note.created_at), 'PPp')}
+                {note.profiles?.full_name} • {format(new Date(note.created_at), 'dd/MM/yyyy HH:mm')}
               </div>
             </div>
           ))

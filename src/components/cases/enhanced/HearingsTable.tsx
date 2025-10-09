@@ -33,7 +33,7 @@ export const HearingsTable = ({ hearings }: HearingsTableProps) => {
             <TableRow key={hearing.id}>
               <TableCell className="font-medium text-[#111827]">
                 {hearing.hearing_date 
-                  ? format(new Date(hearing.hearing_date), 'dd-MM-yyyy')
+                  ? format(new Date(hearing.hearing_date), 'dd/MM/yyyy')
                   : 'N/A'}
               </TableCell>
               <TableCell className="text-[#111827]">

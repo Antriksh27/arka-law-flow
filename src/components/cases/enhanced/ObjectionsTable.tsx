@@ -32,7 +32,7 @@ export const ObjectionsTable = ({ objections }: ObjectionsTableProps) => {
             <TableRow key={objection.id}>
               <TableCell className="font-medium text-[#111827]">
                 {objection.scrutiny_date 
-                  ? format(new Date(objection.scrutiny_date), 'dd-MM-yyyy')
+                  ? format(new Date(objection.scrutiny_date), 'dd/MM/yyyy')
                   : 'N/A'}
               </TableCell>
               <TableCell className="text-[#111827] max-w-md">
@@ -40,14 +40,14 @@ export const ObjectionsTable = ({ objections }: ObjectionsTableProps) => {
               </TableCell>
               <TableCell className="text-[#111827]">
                 {objection.compliance_date 
-                  ? format(new Date(objection.compliance_date), 'dd-MM-yyyy')
+                  ? format(new Date(objection.compliance_date), 'dd/MM/yyyy')
                   : (objection.objection_compliance_date 
-                      ? format(new Date(objection.objection_compliance_date), 'dd-MM-yyyy')
+                      ? format(new Date(objection.objection_compliance_date), 'dd/MM/yyyy')
                       : 'N/A')}
               </TableCell>
               <TableCell className="text-[#111827]">
                 {objection.receipt_date 
-                  ? format(new Date(objection.receipt_date), 'dd-MM-yyyy')
+                  ? format(new Date(objection.receipt_date), 'dd/MM/yyyy')
                   : 'N/A'}
               </TableCell>
             </TableRow>

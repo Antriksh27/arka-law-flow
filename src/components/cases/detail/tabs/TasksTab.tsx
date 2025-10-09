@@ -148,8 +148,8 @@ export const TasksTab: React.FC<TasksTabProps> = ({ caseId }) => {
                   <p className="text-sm text-muted-foreground mb-2">{task.description}</p>
                 )}
                 <div className="text-xs text-muted-foreground">
-                  {task.due_date && `Due: ${format(new Date(task.due_date), 'PPP')} • `}
-                  Created by {task.profiles?.full_name || 'Unknown'} • {format(new Date(task.created_at), 'PPp')}
+                  {task.due_date && `Due: ${format(new Date(task.due_date), 'dd/MM/yyyy')} • `}
+                  Created by {task.profiles?.full_name || 'Unknown'} • {format(new Date(task.created_at), 'dd/MM/yyyy HH:mm')}
                 </div>
               </div>
             </div>

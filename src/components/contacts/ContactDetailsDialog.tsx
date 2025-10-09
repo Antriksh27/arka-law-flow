@@ -141,7 +141,7 @@ export const ContactDetailsDialog: React.FC<ContactDetailsDialogProps> = ({
                   {formatDistanceToNow(new Date(contact.last_visited_at), { addSuffix: true })}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {format(new Date(contact.last_visited_at), 'PPP')}
+                  {format(new Date(contact.last_visited_at), 'dd/MM/yyyy')}
                 </p>
               </div>
             </div>
@@ -197,12 +197,12 @@ export const ContactDetailsDialog: React.FC<ContactDetailsDialogProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-gray-500">
             <div>
               <p className="font-medium">Created</p>
-              <p>{format(new Date(contact.created_at), 'PPP p')}</p>
+              <p>{format(new Date(contact.created_at), 'dd/MM/yyyy HH:mm')}</p>
             </div>
             {contact.updated_at && (
               <div>
                 <p className="font-medium">Updated</p>
-                <p>{format(new Date(contact.updated_at), 'PPP p')}</p>
+                <p>{format(new Date(contact.updated_at), 'dd/MM/yyyy HH:mm')}</p>
               </div>
             )}
           </div>

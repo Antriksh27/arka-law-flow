@@ -45,7 +45,7 @@ const ECourts = () => {
   const formatDate = (date: string | null) => {
     if (!date) return '-';
     try {
-      return format(new Date(date), 'dd-MM-yyyy hh:mm a');
+      return format(new Date(date), 'dd/MM/yyyy hh:mm a');
     } catch {
       return '-';
     }
