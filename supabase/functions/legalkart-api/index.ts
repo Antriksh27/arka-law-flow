@@ -834,32 +834,46 @@ function mapLegalkartDataToCRM(data: any, searchType: string = 'unknown'): any {
   const parseDate = (dateStr: string | null | undefined): string | null => {
     if (!dateStr) return null;
     try {
-      // Handle DD-MM-YYYY, DD/MM/YYYY, YYYY-MM-DD formats
-      const cleanDate = dateStr.toString().trim();
-      if (cleanDate.includes('/')) {
-        const [day, month, year] = cleanDate.split('/');
-        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      const raw = dateStr.toString().trim();
+      const lower = raw.toLowerCase();
+      const nullTokens = new Set(['', '-', '--', '—', '#', 'n/a', 'na', 'nil', 'null', 'undefined']);
+      if (nullTokens.has(lower)) return null;
+
+      // DD/MM/YYYY
+      if (raw.includes('/')) {
+        const [day, month, year] = raw.split('/');
+        if (year && month && day) return `${year}-${month.padStart(2,'0')}-${day.padStart(2,'0')}`;
       }
-      if (cleanDate.includes('-') && cleanDate.split('-')[0].length === 2) {
-        const [day, month, year] = cleanDate.split('-');
-        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      // DD-MM-YYYY or DD.MM.YYYY
+      if ((raw.includes('-') || raw.includes('.')) && raw.split(/[\-.]/)[0].length === 2) {
+        const [day, month, year] = raw.split(/[\-.]/);
+        if (year && month && day) return `${year}-${month.padStart(2,'0')}-${day.padStart(2,'0')}`;
       }
-      // Handle formats like "19th December 2025"
-      if (cleanDate.includes('th ') || cleanDate.includes('st ') || cleanDate.includes('nd ') || cleanDate.includes('rd ')) {
+      // Formats like "19th November 2025"
+      if (/(th|st|nd|rd)\s/i.test(raw) || /[A-Za-z]/.test(raw)) {
         const monthMap: { [key: string]: string } = {
           'january': '01', 'february': '02', 'march': '03', 'april': '04',
           'may': '05', 'june': '06', 'july': '07', 'august': '08',
-          'september': '09', 'october': '10', 'november': '11', 'december': '12'
+          'september': '09', 'october': '10', 'november': '11', 'december': '12',
+          'jan': '01','feb': '02','mar': '03','apr': '04','jun': '06','jul': '07','aug': '08','sep': '09','sept': '09','oct': '10','nov': '11','dec': '12'
         };
-        const parts = cleanDate.toLowerCase().replace(/(\d+)(th|st|nd|rd)/, '$1').split(' ');
-        if (parts.length === 3) {
-          const day = parts[0].padStart(2, '0');
-          const month = monthMap[parts[1]];
+        const cleaned = raw.toLowerCase().replace(/(\d+)(th|st|nd|rd)/, '$1').replace(/\./g,'');
+        const parts = cleaned.split(/\s+/);
+        if (parts.length >= 3) {
+          const day = parts[0].padStart(2,'0');
+          const mon = monthMap[parts[1]];
           const year = parts[2];
-          if (month) return `${year}-${month}-${day}`;
+          if (mon && /^(19|20)\d{2}$/.test(year)) return `${year}-${mon}-${day}`;
         }
       }
-      return new Date(cleanDate).toISOString().split('T')[0];
+      // ISO with time
+      if (/^\d{4}-\d{2}-\d{2}T/.test(raw)) return raw.slice(0,10);
+      // ISO date
+      if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+
+      const d = new Date(raw);
+      if (!isNaN(d.getTime())) return d.toISOString().slice(0,10);
+      return null;
     } catch {
       return null;
     }
@@ -889,14 +903,14 @@ function mapLegalkartDataToCRM(data: any, searchType: string = 'unknown'): any {
   };
 
   // Extract data from nested Legalkart response structure
-  const caseInfo = data.data?.case_info || {};
-  const caseStatus = data.data?.case_status || {};
-  const categoryInfo = data.data?.category_info || {};
-  const hearingHistory = data.data?.history_of_case_hearing || [];
-  const orderDetails = data.data?.order_details || [];
-  const documents = data.data?.documents || [];
-  const objections = data.data?.objections || [];
-  const iaDetails = data.data?.ia_details || [];
+  const caseInfo = data.data?.case_info || data.case_info || {};
+  const caseStatus = data.data?.case_status || data.case_status || {};
+  const categoryInfo = data.data?.category_info || data.category_info || {};
+  const hearingHistory = data.data?.history_of_case_hearing || data.history_of_case_hearing || [];
+  const orderDetails = data.data?.order_details || data.order_details || [];
+  const documents = data.data?.documents || data.documents || [];
+  const objections = data.data?.objections || data.objections || [];
+  const iaDetails = data.data?.ia_details || data.ia_details || [];
 
   // BASIC CASE INFORMATION (15 fields)
   mappedData.cnr_number = cleanText(caseInfo.cnr_number || data.cnr_number || data.cnr || data.CNR);
@@ -949,8 +963,8 @@ function mapLegalkartDataToCRM(data: any, searchType: string = 'unknown'): any {
   }
 
   // PARTY INFORMATION (8 fields) - Enhanced parsing from Legalkart format
-  const petitionerInfo = parsePartyInfo(data.data?.petitioner_and_advocate || '');
-  const respondentInfo = parsePartyInfo(data.data?.respondent_and_advocate || '');
+  const petitionerInfo = parsePartyInfo(data.data?.petitioner_and_advocate || data.petitioner_and_advocate || '');
+  const respondentInfo = parsePartyInfo(data.data?.respondent_and_advocate || data.respondent_and_advocate || '');
 
   if (petitionerInfo.name) {
     mappedData.petitioner = cleanText(petitionerInfo.name);
@@ -963,15 +977,16 @@ function mapLegalkartDataToCRM(data: any, searchType: string = 'unknown'): any {
   }
 
   // Handle multiple respondents (format: "1) STATE OF GUJARAT ... 2) CENTRAL BUREAU ...")
-  if (data.data?.respondent_and_advocate?.includes('2)')) {
-    const respondents = data.data.respondent_and_advocate.split(/\d+\)/).filter(Boolean);
+  const respondentAdvStr = data.data?.respondent_and_advocate || data.respondent_and_advocate || '';
+  if (respondentAdvStr.includes('2)')) {
+    const respondents = respondentAdvStr.split(/\d+\)/).filter(Boolean);
     if (respondents.length > 1) {
       const firstRespondent = parsePartyInfo(respondents[0]);
       mappedData.respondent = cleanText(firstRespondent.name);
       mappedData.respondent_advocate = cleanText(firstRespondent.advocate);
     }
   }
-  
+
   // Construct vs field intelligently
   if (mappedData.petitioner && mappedData.respondent) {
     mappedData.vs = `${mappedData.petitioner} vs ${mappedData.respondent}`;
