@@ -20,6 +20,17 @@ export const RelatedMattersTab: React.FC<RelatedMattersTabProps> = ({ caseId }) 
 
   const queryClient = useQueryClient();
 
+  // Helper function to get display title
+  const getDisplayTitle = (caseData: any) => {
+    if (caseData.petitioner && caseData.respondent) {
+      return `${caseData.petitioner} Vs ${caseData.respondent}`;
+    }
+    if (caseData.vs) {
+      return caseData.vs;
+    }
+    return caseData.case_title || caseData.title || caseData.case_number;
+  };
+
   // Fetch related cases (both directions)
   const { data: relatedCases, isLoading } = useQuery({
     queryKey: ['related-cases', caseId],
@@ -27,7 +38,7 @@ export const RelatedMattersTab: React.FC<RelatedMattersTabProps> = ({ caseId }) 
       // Fetch relations where this case is the primary case
       const { data: forwardRelations, error: forwardError } = await supabase
         .from('case_relations')
-        .select('id, related_case_id, related_case:cases!case_relations_related_case_id_fkey(id, case_title, case_number, status)')
+        .select('id, related_case_id, related_case:cases!case_relations_related_case_id_fkey(id, case_title, title, case_number, status, petitioner, respondent, vs)')
         .eq('case_id', caseId);
       
       if (forwardError) throw forwardError;
@@ -35,7 +46,7 @@ export const RelatedMattersTab: React.FC<RelatedMattersTabProps> = ({ caseId }) 
       // Fetch relations where this case is the related case (reverse direction)
       const { data: reverseRelations, error: reverseError } = await supabase
         .from('case_relations')
-        .select('id, case_id, related_case:cases!case_relations_case_id_fkey(id, case_title, case_number, status)')
+        .select('id, case_id, related_case:cases!case_relations_case_id_fkey(id, case_title, title, case_number, status, petitioner, respondent, vs)')
         .eq('related_case_id', caseId);
       
       if (reverseError) throw reverseError;
@@ -76,7 +87,7 @@ export const RelatedMattersTab: React.FC<RelatedMattersTabProps> = ({ caseId }) 
 
       const { data, error } = await supabase
         .from('cases')
-        .select('id, case_title, case_number')
+        .select('id, case_title, title, case_number, petitioner, respondent, vs')
         .eq('firm_id', firmData.firm_id)
         .neq('id', caseId)
         .order('case_title');
@@ -150,10 +161,11 @@ export const RelatedMattersTab: React.FC<RelatedMattersTabProps> = ({ caseId }) 
     if (!searchQuery.trim()) return availableCases;
     
     const query = searchQuery.toLowerCase();
-    return availableCases.filter(c => 
-      c.case_title.toLowerCase().includes(query) ||
-      (c.case_number && c.case_number.toLowerCase().includes(query))
-    );
+    return availableCases.filter(c => {
+      const displayTitle = getDisplayTitle(c);
+      return displayTitle.toLowerCase().includes(query) ||
+        (c.case_number && c.case_number.toLowerCase().includes(query));
+    });
   }, [availableCases, searchQuery]);
 
   if (isLoading) {
@@ -198,14 +210,14 @@ export const RelatedMattersTab: React.FC<RelatedMattersTabProps> = ({ caseId }) 
                           key={c.id}
                           onClick={() => {
                             setSelectedCaseId(c.id);
-                            setSearchQuery(c.case_title);
+                            setSearchQuery(getDisplayTitle(c));
                           }}
                           className={`w-full text-left p-3 hover:bg-gray-50 transition-colors ${
                             selectedCaseId === c.id ? 'bg-blue-50' : ''
                           }`}
                         >
-                          <p className="font-medium text-sm">{c.case_title || c.case_number}</p>
-                          {c.case_number && c.case_title && (
+                          <p className="font-medium text-sm">{getDisplayTitle(c)}</p>
+                          {c.case_number && (
                             <p className="text-xs text-gray-500 mt-1">Case #: {c.case_number}</p>
                           )}
                         </button>
@@ -249,7 +261,7 @@ export const RelatedMattersTab: React.FC<RelatedMattersTabProps> = ({ caseId }) 
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                    <h4 className="font-semibold text-base">{relation.related_case?.case_title || relation.related_case?.case_number}</h4>
+                    <h4 className="font-semibold text-base">{getDisplayTitle(relation.related_case)}</h4>
                     {relation.related_case?.status && (
                       <span className="text-xs bg-gray-100 px-2 py-1 rounded capitalize">
                         {relation.related_case.status}
