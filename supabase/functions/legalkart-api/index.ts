@@ -236,12 +236,10 @@ serve(async (req) => {
     console.log('- LEGALKART_USER_ID:', legalkartUserId ? 'SET' : 'NOT SET');
     console.log('- LEGALKART_HASH_KEY:', legalkartHashKey ? 'SET' : 'NOT SET');
 
+    // Note: Legalkart credentials are only required for external API actions (authenticate/search).
+    // Proceeding without them for local upsert actions like 'upsert_from_json'.
     if (!legalkartUserId || !legalkartHashKey) {
-      console.error('Legalkart credentials not configured');
-      return new Response(
-        JSON.stringify({ error: 'Legalkart credentials not configured' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      console.warn('Legalkart credentials not configured - skipping for non-external actions');
     }
 
     // Create Supabase client (service role) and verify user from Authorization header
