@@ -29,6 +29,7 @@ export const OrdersTable = ({ orders }: OrdersTableProps) => {
             <TableRow className="bg-[#F9FAFB]">
               <TableHead className="font-semibold">Order No</TableHead>
               <TableHead className="font-semibold">Judge</TableHead>
+              <TableHead className="font-semibold">Judgment Date</TableHead>
               <TableHead className="font-semibold">Order Date</TableHead>
               <TableHead className="font-semibold">Actions</TableHead>
             </TableRow>
@@ -41,6 +42,11 @@ export const OrdersTable = ({ orders }: OrdersTableProps) => {
                 </TableCell>
                 <TableCell className="text-[#111827]">
                   {order.judge || 'N/A'}
+                </TableCell>
+                <TableCell className="text-[#111827]">
+                  {order.hearing_date 
+                    ? format(new Date(order.hearing_date), 'dd-MM-yyyy')
+                    : 'N/A'}
                 </TableCell>
                 <TableCell className="text-[#111827]">
                   {order.order_date 
