@@ -110,12 +110,19 @@ export function parsePartyList(partyStr: string | null | undefined): ParsedParty
       // Remove leading number and parenthesis
       let cleaned = entry.replace(/^\d+\)\s*/, '').trim();
       
-      // Split by "Advocate-" or "Advocate -" (case insensitive)
-      const advocatePattern = /Advocate\s*-\s*/i;
+      // Split by "Advocate-" or "Advocate -" or "Advocate:" (case insensitive)
+      const advocatePattern = /Advocate\s*[-:]\s*/i;
       const parts = cleaned.split(advocatePattern);
       
-      const name = parts[0]?.trim() || '';
-      const advocate = parts[1]?.trim() || null;
+      // Clean the name: remove '(' and any text after it, trim whitespace
+      let name = parts[0]?.trim() || '';
+      name = name.split('(')[0].trim(); // Remove anything after '(' including the '(' itself
+      
+      // Clean the advocate name
+      let advocate = parts[1]?.trim() || null;
+      if (advocate) {
+        advocate = advocate.split('(')[0].trim(); // Remove anything after '(' from advocate name too
+      }
       
       return {
         name,
