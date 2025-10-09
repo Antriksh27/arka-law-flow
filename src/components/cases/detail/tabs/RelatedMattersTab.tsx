@@ -20,36 +20,18 @@ export const RelatedMattersTab: React.FC<RelatedMattersTabProps> = ({ caseId }) 
 
   const queryClient = useQueryClient();
 
-  // Helper function to extract name without advocate
-  const extractName = (text: string) => {
-    if (!text) return '';
-    // Remove advocate names (after "Advocate:", "Adv:", etc.)
-    const patterns = [
-      /Advocate[s]?:\s*.+$/i,
-      /Adv\.?\s*:\s*.+$/i,
-      /\(Advocate[s]?:?\s*.+\)$/i,
-      /\(Adv\.?\s*:?\s*.+\)$/i
-    ];
-    
-    let cleaned = text;
-    for (const pattern of patterns) {
-      cleaned = cleaned.replace(pattern, '');
-    }
-    
-    return cleaned.trim();
-  };
-
-  // Helper function to get display title
+  // Helper function to get display title exactly like Cases list
   const getDisplayTitle = (caseData: any) => {
+    let displayTitle = caseData.case_title || caseData.title || '';
+
     if (caseData.petitioner && caseData.respondent) {
-      const petitioner = extractName(caseData.petitioner);
-      const respondent = extractName(caseData.respondent);
-      return `${petitioner} Vs ${respondent}`;
+      // Match CasesTable logic: strip advocate info and use "Petitioner Vs Respondent"
+      const cleanPetitioner = String(caseData.petitioner).replace(/\s*Advocate[:\s].*/gi, '').trim();
+      const cleanRespondent = String(caseData.respondent).replace(/\s*Advocate[:\s].*/gi, '').trim();
+      displayTitle = `${cleanPetitioner} Vs ${cleanRespondent}`;
     }
-    if (caseData.vs) {
-      return caseData.vs;
-    }
-    return caseData.case_title || caseData.title || caseData.case_number;
+
+    return displayTitle || caseData.case_number || '';
   };
 
   // Fetch related cases (both directions)
