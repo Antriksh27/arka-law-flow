@@ -20,17 +20,42 @@ export const RelatedMattersTab: React.FC<RelatedMattersTabProps> = ({ caseId }) 
 
   const queryClient = useQueryClient();
 
-  // Fetch related cases
+  // Fetch related cases (both directions)
   const { data: relatedCases, isLoading } = useQuery({
     queryKey: ['related-cases', caseId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Fetch relations where this case is the primary case
+      const { data: forwardRelations, error: forwardError } = await supabase
         .from('case_relations')
-        .select('*, related_case:cases!case_relations_related_case_id_fkey(id, case_title, case_number, status)')
+        .select('id, related_case_id, related_case:cases!case_relations_related_case_id_fkey(id, case_title, case_number, status)')
         .eq('case_id', caseId);
       
-      if (error) throw error;
-      return data;
+      if (forwardError) throw forwardError;
+
+      // Fetch relations where this case is the related case (reverse direction)
+      const { data: reverseRelations, error: reverseError } = await supabase
+        .from('case_relations')
+        .select('id, case_id, related_case:cases!case_relations_case_id_fkey(id, case_title, case_number, status)')
+        .eq('related_case_id', caseId);
+      
+      if (reverseError) throw reverseError;
+
+      // Combine and deduplicate
+      const allRelations = [
+        ...(forwardRelations || []),
+        ...(reverseRelations || []).map(r => ({
+          id: r.id,
+          related_case_id: r.case_id,
+          related_case: r.related_case
+        }))
+      ];
+
+      // Remove duplicates based on related case ID
+      const uniqueRelations = allRelations.filter((relation, index, self) =>
+        index === self.findIndex(r => r.related_case?.id === relation.related_case?.id)
+      );
+
+      return uniqueRelations;
     }
   });
 
@@ -63,38 +88,51 @@ export const RelatedMattersTab: React.FC<RelatedMattersTabProps> = ({ caseId }) 
 
   const addRelationMutation = useMutation({
     mutationFn: async (relatedCaseId: string) => {
-      const { data, error } = await supabase
+      // Check if relation already exists in either direction
+      const { data: existing } = await supabase
         .from('case_relations')
-        .insert([{ case_id: caseId, related_case_id: relatedCaseId }])
-        .select()
-        .single();
+        .select('id')
+        .or(`and(case_id.eq.${caseId},related_case_id.eq.${relatedCaseId}),and(case_id.eq.${relatedCaseId},related_case_id.eq.${caseId})`);
+
+      if (existing && existing.length > 0) {
+        throw new Error('Cases are already linked');
+      }
+
+      // Create two-way link
+      const { error } = await supabase
+        .from('case_relations')
+        .insert([
+          { case_id: caseId, related_case_id: relatedCaseId },
+          { case_id: relatedCaseId, related_case_id: caseId }
+        ]);
       
       if (error) throw error;
-      return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['related-cases', caseId] });
-      toast.success('Related case linked successfully');
+      queryClient.invalidateQueries({ queryKey: ['related-cases'] });
+      toast.success('Cases linked successfully (two-way)');
       setIsAddDialogOpen(false);
       setSelectedCaseId('');
+      setSearchQuery('');
     },
-    onError: () => {
-      toast.error('Failed to link related case');
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to link related case');
     }
   });
 
   const deleteRelationMutation = useMutation({
-    mutationFn: async (relationId: string) => {
+    mutationFn: async (relatedCaseId: string) => {
+      // Delete both directions of the link
       const { error } = await supabase
         .from('case_relations')
         .delete()
-        .eq('id', relationId);
+        .or(`and(case_id.eq.${caseId},related_case_id.eq.${relatedCaseId}),and(case_id.eq.${relatedCaseId},related_case_id.eq.${caseId})`);
       
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['related-cases', caseId] });
-      toast.success('Related case unlinked successfully');
+      queryClient.invalidateQueries({ queryKey: ['related-cases'] });
+      toast.success('Cases unlinked successfully (two-way)');
     },
     onError: () => {
       toast.error('Failed to unlink related case');
@@ -231,7 +269,7 @@ export const RelatedMattersTab: React.FC<RelatedMattersTabProps> = ({ caseId }) 
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => deleteRelationMutation.mutate(relation.id)}
+                  onClick={() => deleteRelationMutation.mutate(relation.related_case_id)}
                   disabled={deleteRelationMutation.isPending}
                 >
                   <Trash2 className="w-4 h-4 text-red-600" />
