@@ -20,21 +20,6 @@ export const RelatedMattersTab: React.FC<RelatedMattersTabProps> = ({ caseId }) 
 
   const queryClient = useQueryClient();
 
-  // Fetch current case info
-  const { data: currentCase } = useQuery({
-    queryKey: ['current-case', caseId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('cases')
-        .select('case_title, case_number')
-        .eq('id', caseId)
-        .single();
-      
-      if (error) throw error;
-      return data;
-    }
-  });
-
   // Fetch related cases (both directions)
   const { data: relatedCases, isLoading } = useQuery({
     queryKey: ['related-cases', caseId],
@@ -177,17 +162,6 @@ export const RelatedMattersTab: React.FC<RelatedMattersTabProps> = ({ caseId }) 
 
   return (
     <div className="space-y-6">
-      {/* Current Case Info */}
-      {currentCase && (
-        <div className="bg-muted/30 p-4 rounded-lg">
-          <p className="text-sm text-muted-foreground mb-1">Current Case</p>
-          <p className="font-medium text-sm">{currentCase.case_title}</p>
-          {currentCase.case_number && (
-            <p className="text-xs text-muted-foreground mt-1">Case #: {currentCase.case_number}</p>
-          )}
-        </div>
-      )}
-
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Related Matters</h3>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
