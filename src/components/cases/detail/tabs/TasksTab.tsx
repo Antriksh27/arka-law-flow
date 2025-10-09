@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, CheckCircle2, Circle } from 'lucide-react';
+import { Plus, CheckCircle2, Circle, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
@@ -80,6 +80,24 @@ export const TasksTab: React.FC<TasksTabProps> = ({ caseId }) => {
     }
   });
 
+  const deleteTask = useMutation({
+    mutationFn: async (taskId: string) => {
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', taskId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['case-tasks', caseId] });
+      toast.success('Task deleted successfully');
+    },
+    onError: () => {
+      toast.error('Failed to delete task');
+    }
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) {
@@ -140,6 +158,13 @@ export const TasksTab: React.FC<TasksTabProps> = ({ caseId }) => {
                     {task.title}
                   </h4>
                 </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => deleteTask.mutate(task.id)}
+                >
+                  <Trash2 className="w-4 h-4 text-destructive" />
+                </Button>
               </div>
               {task.description && (
                 <p className="text-sm text-muted-foreground mb-2 ml-8">{task.description}</p>
