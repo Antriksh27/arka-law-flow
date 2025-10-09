@@ -16,6 +16,7 @@ import { DocumentsTable } from '@/components/cases/enhanced/DocumentsTable';
 import { OrdersTable } from '@/components/cases/enhanced/OrdersTable';
 import { HearingsTable } from '@/components/cases/enhanced/HearingsTable';
 import { ObjectionsTable } from '@/components/cases/enhanced/ObjectionsTable';
+import { IADetailsTable } from '@/components/cases/enhanced/IADetailsTable';
 import { CreateNoteMultiModal } from '@/components/notes/CreateNoteMultiModal';
 import { CreateTaskDialog } from '@/components/tasks/CreateTaskDialog';
 import { useLegalkartCaseDetails } from '@/hooks/useLegalkartCaseDetails';
@@ -84,6 +85,10 @@ export default function CaseDetailEnhanced() {
     value: 'objections',
     label: 'Objections',
     icon: XCircle
+  }, {
+    value: 'ia-details',
+    label: 'IA Details',
+    icon: CheckSquare
   }];
   if (caseLoading || legalkartLoading) {
     return <div className="min-h-screen bg-gray-50">
@@ -173,6 +178,10 @@ export default function CaseDetailEnhanced() {
 
             <TabsContent value="objections" className="m-0">
               <ObjectionsTable objections={objections} />
+            </TabsContent>
+
+            <TabsContent value="ia-details" className="m-0">
+              <IADetailsTable iaDetails={iaDetails} />
             </TabsContent>
 
           </div>
