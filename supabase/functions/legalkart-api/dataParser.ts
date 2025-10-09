@@ -128,7 +128,18 @@ export function parsePartyList(partyStr: string | null | undefined): ParsedParty
         name,
         advocate
       };
-    }).filter(party => party.name); // Only return entries with names
+    }).filter(party => {
+      // Only return entries with valid names (not empty, not just numbers, not just whitespace)
+      if (!party.name || party.name.trim() === '') return false;
+      
+      // Filter out entries that are just numbers (like "3", "5", "0", "5.9")
+      if (/^[\d\.\s]+$/.test(party.name)) return false;
+      
+      // Filter out entries that are too short (less than 3 characters after trimming)
+      if (party.name.length < 3) return false;
+      
+      return true;
+    });
   } catch (error) {
     console.error('Party parsing error:', error, 'for input:', partyStr);
     return [];
