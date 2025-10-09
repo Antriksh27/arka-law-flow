@@ -1,15 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { FileText } from 'lucide-react';
+import { FileText, Upload } from 'lucide-react';
 import { format } from 'date-fns';
+import { Button } from '@/components/ui/button';
+import { UploadDocumentDialog } from '@/components/documents/UploadDocumentDialog';
+import { toast } from 'sonner';
 
 interface DocumentsTabProps {
   caseId: string;
 }
 
 export const DocumentsTab: React.FC<DocumentsTabProps> = ({ caseId }) => {
-  const { data: documents, isLoading } = useQuery({
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
+
+  const { data: documents, isLoading, refetch } = useQuery({
     queryKey: ['case-documents', caseId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -46,7 +51,16 @@ export const DocumentsTab: React.FC<DocumentsTabProps> = ({ caseId }) => {
     <div className="space-y-6">
       {/* Case Documents */}
       <div>
-        <h3 className="text-lg font-semibold mb-4">Case Documents</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">Case Documents</h3>
+          <Button
+            onClick={() => setShowUploadDialog(true)}
+            size="sm"
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            Upload Document
+          </Button>
+        </div>
         {isLoading ? (
           <div className="text-center py-8">
             <p className="text-muted-foreground">Loading documents...</p>
@@ -92,6 +106,18 @@ export const DocumentsTab: React.FC<DocumentsTabProps> = ({ caseId }) => {
           </div>
         </div>
       )}
+
+      {/* Upload Document Dialog */}
+      <UploadDocumentDialog
+        open={showUploadDialog}
+        onClose={() => setShowUploadDialog(false)}
+        caseId={caseId}
+        onUploadSuccess={() => {
+          refetch();
+          toast.success('Document uploaded successfully');
+          setShowUploadDialog(false);
+        }}
+      />
     </div>
   );
 };
