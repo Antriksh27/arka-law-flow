@@ -4,10 +4,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, CheckCircle2, Circle } from 'lucide-react';
+import { Plus, CheckCircle2, Circle, Trash2, Upload } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
+import { UploadDocumentDialog } from '@/components/documents/UploadDocumentDialog';
 
 interface TasksTabProps {
   caseId: string;
@@ -17,6 +18,7 @@ export const TasksTab: React.FC<TasksTabProps> = ({ caseId }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState('');
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: tasks, isLoading } = useQuery({
@@ -91,6 +93,19 @@ export const TasksTab: React.FC<TasksTabProps> = ({ caseId }) => {
 
   return (
     <div className="space-y-6">
+      {/* Header with Upload Button */}
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">Case Tasks</h3>
+        <Button
+          onClick={() => setShowUploadDialog(true)}
+          variant="outline"
+          size="sm"
+        >
+          <Upload className="w-4 h-4 mr-2" />
+          Upload Document
+        </Button>
+      </div>
+
       {/* Create Task Form */}
       <form onSubmit={handleSubmit} className="space-y-4 p-4 bg-muted/30 rounded-lg">
         <h3 className="text-lg font-semibold">Add New Task</h3>
@@ -160,6 +175,17 @@ export const TasksTab: React.FC<TasksTabProps> = ({ caseId }) => {
           </div>
         )}
       </div>
+
+      {/* Upload Document Dialog */}
+      <UploadDocumentDialog
+        open={showUploadDialog}
+        onClose={() => setShowUploadDialog(false)}
+        caseId={caseId}
+        onUploadSuccess={() => {
+          toast.success('Document uploaded successfully');
+          setShowUploadDialog(false);
+        }}
+      />
     </div>
   );
 };
