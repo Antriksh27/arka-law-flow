@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, CheckCircle2, Circle, Trash2 } from 'lucide-react';
+import { Plus, CheckCircle2, Circle } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
@@ -80,24 +80,6 @@ export const TasksTab: React.FC<TasksTabProps> = ({ caseId }) => {
     }
   });
 
-  const deleteTask = useMutation({
-    mutationFn: async (taskId: string) => {
-      const { error } = await supabase
-        .from('tasks')
-        .delete()
-        .eq('id', taskId);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['case-tasks', caseId] });
-      toast.success('Task deleted successfully');
-    },
-    onError: () => {
-      toast.error('Failed to delete task');
-    }
-  });
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) {
@@ -121,7 +103,7 @@ export const TasksTab: React.FC<TasksTabProps> = ({ caseId }) => {
           placeholder="Task description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          rows={4}
+          rows={3}
         />
         <Input
           type="date"
@@ -135,47 +117,40 @@ export const TasksTab: React.FC<TasksTabProps> = ({ caseId }) => {
       </form>
 
       {/* Tasks List */}
-      <div className="space-y-4">
+      <div className="space-y-3">
         {isLoading ? (
           <div className="text-center py-8">
             <p className="text-muted-foreground">Loading tasks...</p>
           </div>
         ) : tasks && tasks.length > 0 ? (
           tasks.map((task: any) => (
-            <div key={task.id} className="p-4 border border-border rounded-lg">
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex items-center gap-3 flex-1">
-                  <button
-                    onClick={() => toggleTaskStatus.mutate({ taskId: task.id, currentStatus: task.status })}
-                  >
-                    {task.status === 'completed' ? (
-                      <CheckCircle2 className="w-5 h-5 text-green-600" />
-                    ) : (
-                      <Circle className="w-5 h-5 text-muted-foreground" />
-                    )}
-                  </button>
-                  <h4 className={`font-semibold ${task.status === 'completed' ? 'line-through text-muted-foreground' : ''}`}>
+            <div key={task.id} className="flex items-start gap-3 p-4 border border-border rounded-lg hover:bg-muted/30 transition-colors">
+              <button
+                onClick={() => toggleTaskStatus.mutate({ taskId: task.id, currentStatus: task.status })}
+                className="mt-1"
+              >
+                {task.status === 'completed' ? (
+                  <CheckCircle2 className="w-5 h-5 text-green-600" />
+                ) : (
+                  <Circle className="w-5 h-5 text-muted-foreground" />
+                )}
+              </button>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <h4 className={`font-medium ${task.status === 'completed' ? 'line-through text-muted-foreground' : ''}`}>
                     {task.title}
                   </h4>
+                  <Badge variant={task.status === 'completed' ? 'success' : 'default'}>
+                    {task.status}
+                  </Badge>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => deleteTask.mutate(task.id)}
-                >
-                  <Trash2 className="w-4 h-4 text-destructive" />
-                </Button>
-              </div>
-              {task.description && (
-                <p className="text-sm text-muted-foreground mb-2 ml-8">{task.description}</p>
-              )}
-              {task.due_date && (
-                <div className="text-sm text-muted-foreground mb-2 ml-8">
-                  Due: {format(new Date(task.due_date), 'dd/MM/yyyy')}
+                {task.description && (
+                  <p className="text-sm text-muted-foreground mb-2">{task.description}</p>
+                )}
+                <div className="text-xs text-muted-foreground">
+                  {task.due_date && `Due: ${format(new Date(task.due_date), 'dd/MM/yyyy')} • `}
+                  Created by {task.profiles?.full_name || 'Unknown'} • {format(new Date(task.created_at), 'dd/MM/yyyy HH:mm')}
                 </div>
-              )}
-              <div className="text-xs text-muted-foreground ml-8">
-                {task.profiles?.full_name || 'Unknown'} • {format(new Date(task.created_at), 'dd/MM/yyyy HH:mm')}
               </div>
             </div>
           ))
