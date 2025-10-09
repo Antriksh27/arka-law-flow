@@ -204,8 +204,8 @@ export const RelatedMattersTab: React.FC<RelatedMattersTabProps> = ({ caseId }) 
                             selectedCaseId === c.id ? 'bg-blue-50' : ''
                           }`}
                         >
-                          <p className="font-medium text-sm">{c.case_title}</p>
-                          {c.case_number && (
+                          <p className="font-medium text-sm">{c.case_title || c.case_number}</p>
+                          {c.case_number && c.case_title && (
                             <p className="text-xs text-gray-500 mt-1">Case #: {c.case_number}</p>
                           )}
                         </button>
@@ -249,7 +249,7 @@ export const RelatedMattersTab: React.FC<RelatedMattersTabProps> = ({ caseId }) 
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                    <h4 className="font-semibold text-base">{relation.related_case?.case_title}</h4>
+                    <h4 className="font-semibold text-base">{relation.related_case?.case_title || relation.related_case?.case_number}</h4>
                     {relation.related_case?.status && (
                       <span className="text-xs bg-gray-100 px-2 py-1 rounded capitalize">
                         {relation.related_case.status}
