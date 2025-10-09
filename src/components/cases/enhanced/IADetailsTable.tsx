@@ -23,10 +23,9 @@ export const IADetailsTable = ({ iaDetails }: IADetailsTableProps) => {
           <TableRow className="bg-[#F9FAFB]">
             <TableHead className="font-semibold">IA Number</TableHead>
             <TableHead className="font-semibold">Party</TableHead>
-            <TableHead className="font-semibold">Status Name</TableHead>
             <TableHead className="font-semibold">Date of Filing</TableHead>
-            <TableHead className="font-semibold">Last/Next Listing Date</TableHead>
-            <TableHead className="font-semibold">Disposal Date</TableHead>
+            <TableHead className="font-semibold">Next Date</TableHead>
+            <TableHead className="font-semibold">IA Status</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -39,9 +38,6 @@ export const IADetailsTable = ({ iaDetails }: IADetailsTableProps) => {
                 {ia.party || 'N/A'}
               </TableCell>
               <TableCell className="text-[#111827]">
-                {ia.ia_status || 'N/A'}
-              </TableCell>
-              <TableCell className="text-[#111827]">
                 {ia.date_of_filing 
                   ? format(new Date(ia.date_of_filing), 'dd-MM-yyyy')
                   : 'N/A'}
@@ -52,9 +48,7 @@ export const IADetailsTable = ({ iaDetails }: IADetailsTableProps) => {
                   : 'N/A'}
               </TableCell>
               <TableCell className="text-[#111827]">
-                {ia.disposal_date 
-                  ? format(new Date(ia.disposal_date), 'dd-MM-yyyy')
-                  : 'N/A'}
+                {ia.ia_status || 'N/A'}
               </TableCell>
             </TableRow>
           ))}
