@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, FileText, File, Scale, Calendar, XCircle, StickyNote, CheckSquare, Pencil } from 'lucide-react';
+import { RefreshCw, FileText, File, Scale, Calendar, XCircle, StickyNote, CheckSquare, Pencil, Users } from 'lucide-react';
 import { format } from 'date-fns';
 
 import { EditCaseDialog } from '@/components/cases/EditCaseDialog';
@@ -13,6 +13,12 @@ import { DetailsTab } from '@/components/cases/detail/tabs/DetailsTab';
 import { DocumentsTab } from '@/components/cases/detail/tabs/DocumentsTab';
 import { NotesTab } from '@/components/cases/detail/tabs/NotesTab';
 import { TasksTab } from '@/components/cases/detail/tabs/TasksTab';
+import { ContactTab } from '@/components/cases/detail/tabs/CaseContactsTab';
+import { ExpensesTab } from '@/components/cases/detail/tabs/ExpensesTab';
+import { InvoicesTab } from '@/components/cases/detail/tabs/InvoicesTab';
+import { PaymentsTab } from '@/components/cases/detail/tabs/PaymentsTab';
+import { TimelineTab } from '@/components/cases/detail/tabs/TimelineTab';
+import { RelatedMattersTab } from '@/components/cases/detail/tabs/RelatedMattersTab';
 import { DocumentsTable } from '@/components/cases/enhanced/DocumentsTable';
 import { OrdersTable } from '@/components/cases/enhanced/OrdersTable';
 import { HearingsTable } from '@/components/cases/enhanced/HearingsTable';
@@ -84,11 +90,18 @@ export default function CaseDetailEnhanced() {
   } = useLegalkartCaseDetails(id!);
 
   // Refresh handled by useLegalkartCaseDetails.refreshCaseData
-  const tabs = [{
-    value: 'details',
-    label: 'Details',
-    icon: FileText
-  }];
+  const tabs = [
+    { value: 'details', label: 'Details', icon: FileText },
+    { value: 'contacts', label: 'Contacts', icon: File },
+    { value: 'notes', label: 'Notes', icon: StickyNote },
+    { value: 'tasks', label: 'Tasks', icon: CheckSquare },
+    { value: 'documents', label: 'Documents', icon: File },
+    { value: 'expenses', label: 'Expenses', icon: FileText },
+    { value: 'invoices', label: 'Invoices', icon: FileText },
+    { value: 'payments', label: 'Payments', icon: FileText },
+    { value: 'timeline', label: 'Timeline', icon: Calendar },
+    { value: 'related', label: 'Related Matters', icon: Scale }
+  ];
   if (caseLoading || legalkartLoading) {
     return <div className="min-h-screen bg-gray-50">
       <div className="space-y-4">
@@ -182,6 +195,33 @@ export default function CaseDetailEnhanced() {
                 hearings={hearings}
                 objections={objections}
               />
+            </TabsContent>
+            <TabsContent value="contacts" className="m-0">
+              <ContactTab caseId={id!} />
+            </TabsContent>
+            <TabsContent value="notes" className="m-0">
+              <NotesTab caseId={id!} />
+            </TabsContent>
+            <TabsContent value="tasks" className="m-0">
+              <TasksTab caseId={id!} />
+            </TabsContent>
+            <TabsContent value="documents" className="m-0">
+              <DocumentsTab caseId={id!} />
+            </TabsContent>
+            <TabsContent value="expenses" className="m-0">
+              <ExpensesTab caseId={id!} />
+            </TabsContent>
+            <TabsContent value="invoices" className="m-0">
+              <InvoicesTab caseId={id!} />
+            </TabsContent>
+            <TabsContent value="payments" className="m-0">
+              <PaymentsTab caseId={id!} />
+            </TabsContent>
+            <TabsContent value="timeline" className="m-0">
+              <TimelineTab caseId={id!} caseData={caseData} legalkartData={legalkartCase} hearings={hearings} />
+            </TabsContent>
+            <TabsContent value="related" className="m-0">
+              <RelatedMattersTab caseId={id!} />
             </TabsContent>
           </div>
         </Tabs>
