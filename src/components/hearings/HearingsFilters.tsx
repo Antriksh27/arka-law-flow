@@ -113,5 +113,55 @@ export const HearingsFilters: React.FC<HearingsFiltersProps> = ({
       clientId: undefined
     });
   };
-  return;
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-4">
+        <Input
+          placeholder="Search hearings..."
+          value={filters.searchQuery}
+          onChange={(e) => onFilterChange({ ...filters, searchQuery: e.target.value })}
+          className="max-w-xs"
+        />
+        
+        <Select
+          value={filters.case}
+          onValueChange={(value) => onFilterChange({ ...filters, case: value })}
+        >
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Filter by case" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All cases</SelectItem>
+            {cases?.map((c) => (
+              <SelectItem key={c.id} value={c.id}>
+                {c.case_title}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={filters.court}
+          onValueChange={(value) => onFilterChange({ ...filters, court: value })}
+        >
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Filter by court" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All courts</SelectItem>
+            {courts?.map((court) => (
+              <SelectItem key={court} value={court}>
+                {court}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Button variant="outline" onClick={clearFilters}>
+          <X className="h-4 w-4 mr-2" />
+          Clear Filters
+        </Button>
+      </div>
+    </div>
+  );
 };
