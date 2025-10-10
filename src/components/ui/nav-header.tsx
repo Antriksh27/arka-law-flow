@@ -34,6 +34,9 @@ const navigation = [{
   name: 'Messages',
   href: '/messages'
 }, {
+  name: 'Invoices',
+  href: '/invoices'
+}, {
   name: 'Team',
   href: '/team'
 }];
