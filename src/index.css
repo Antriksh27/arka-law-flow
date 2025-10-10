@@ -1,9 +1,9 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import 'react-big-calendar/lib/css/react-big-calendar.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
 @layer base {
   :root {
     --background: 249 250 251;
@@ -77,4 +77,76 @@
 /* Muted overlay for dialog */
 .dialog-overlay {
   background: rgba(0,0,0,0.3);
+}
+
+/* Calendar customization */
+.rbc-calendar {
+  font-family: 'Inter', sans-serif;
+}
+
+.rbc-header {
+  padding: 12px 4px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #111827;
+  border-bottom: 2px solid #E5E7EB;
+}
+
+.rbc-today {
+  background-color: #EEF2FF;
+}
+
+.rbc-off-range-bg {
+  background-color: #F9FAFB;
+}
+
+.rbc-event {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  border: none;
+}
+
+.rbc-event:hover {
+  opacity: 0.8;
+  cursor: pointer;
+}
+
+.rbc-toolbar {
+  padding: 16px 0;
+  font-family: 'Inter', sans-serif;
+}
+
+.rbc-toolbar button {
+  color: #111827;
+  border: 1px solid #E5E7EB;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.rbc-toolbar button:hover {
+  background-color: #F3F4F6;
+}
+
+.rbc-toolbar button.rbc-active {
+  background-color: #1E3A8A;
+  color: white;
+  border-color: #1E3A8A;
+}
+
+.rbc-month-view {
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.rbc-day-bg {
+  border-left: 1px solid #E5E7EB;
+}
+
+.rbc-month-row {
+  border-top: 1px solid #E5E7EB;
 }

@@ -1,5 +1,5 @@
 
-export type ViewType = 'timeline' | 'table';
+export type ViewType = 'calendar' | 'timeline' | 'table';
 
 export type HearingStatus = 'scheduled' | 'adjourned' | 'completed' | 'cancelled';
 

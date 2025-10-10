@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '../ui/button';
-import { Plus, Calendar, List } from 'lucide-react';
+import { Plus, Calendar, List, CalendarDays } from 'lucide-react';
 import { useDialog } from '@/hooks/use-dialog';
 import { CreateHearingDialog } from './CreateHearingDialog';
 import { ViewType } from './types';
@@ -38,6 +38,17 @@ export const HearingsHeader: React.FC<HearingsHeaderProps> = ({
       </div>
       <div className="flex w-full flex-wrap items-center gap-4 justify-end">
         <div className="bg-gray-100 rounded-lg flex p-1">
+          <button 
+            className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 ${
+              currentView === 'calendar' 
+                ? 'bg-white shadow-sm text-blue-600' 
+                : 'text-gray-600 hover:text-gray-900'
+            }`} 
+            onClick={() => onViewChange('calendar')}
+          >
+            <CalendarDays className="h-4 w-4" />
+            <span className="text-sm font-medium">Calendar</span>
+          </button>
           <button 
             className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 ${
               currentView === 'timeline' 
