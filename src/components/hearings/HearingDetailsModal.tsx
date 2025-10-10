@@ -15,7 +15,7 @@ export const HearingDetailsModal: React.FC<HearingDetailsModalProps> = ({ hearin
 
   const handleViewCase = () => {
     closeDialog();
-    navigate(`/case/${hearing.case_id}`);
+    navigate(`/cases/${hearing.case_id}`);
   };
 
   return (
