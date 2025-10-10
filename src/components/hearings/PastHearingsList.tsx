@@ -19,6 +19,7 @@ export const PastHearingsList: React.FC<PastHearingsListProps> = ({ filters }) =
         .select(`
           *,
           cases!inner(
+            title,
             case_title,
             case_number,
             court_name,
@@ -87,7 +88,7 @@ export const PastHearingsList: React.FC<PastHearingsListProps> = ({ filters }) =
           {Object.entries(groupedByCaseId).map(([caseId, caseHearings]) => (
             <div key={caseId} className="border border-gray-200 rounded-lg p-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                {caseHearings[0].cases?.case_title}
+                {caseHearings[0].cases?.title || caseHearings[0].cases?.case_title}
               </h3>
               <div className="space-y-2">
                 {caseHearings.map((hearing) => (

@@ -23,7 +23,7 @@ export const HearingDetailsModal: React.FC<HearingDetailsModalProps> = ({ hearin
       <div className="flex items-start justify-between">
         <div>
           <h2 className="text-2xl font-semibold text-[#111827]">Hearing Details</h2>
-          <p className="text-sm text-[#6B7280] mt-1">Case: {hearing.cases?.case_title}</p>
+          <p className="text-sm text-[#6B7280] mt-1">Case: {hearing.cases?.title || hearing.cases?.case_title}</p>
         </div>
       </div>
 

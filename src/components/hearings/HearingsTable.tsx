@@ -18,6 +18,7 @@ export const HearingsTable: React.FC<HearingsTableProps> = ({ filters }) => {
         .select(`
           *,
           cases!inner(
+            title,
             case_title,
             case_number,
             registration_number,
@@ -93,7 +94,7 @@ export const HearingsTable: React.FC<HearingsTableProps> = ({ filters }) => {
                   </td>
                   <td className="py-3 px-4">
                     <div>
-                      <div className="font-medium">{hearing.cases?.case_title}</div>
+                      <div className="font-medium">{hearing.cases?.title || hearing.cases?.case_title}</div>
                       <div className="text-sm text-gray-500">{hearing.cases?.registration_number || 'Not registered'}</div>
                     </div>
                   </td>

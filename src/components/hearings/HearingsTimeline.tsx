@@ -19,6 +19,7 @@ export const HearingsTimeline: React.FC<HearingsTimelineProps> = ({ filters }) =
         .select(`
           *,
           cases!inner(
+            title,
             case_title,
             case_number,
             court_name,
@@ -106,7 +107,7 @@ export const HearingsTimeline: React.FC<HearingsTimelineProps> = ({ filters }) =
                           <Badge className="bg-blue-100 text-blue-800 border-blue-200">Scheduled</Badge>
                         </div>
                         <span className="text-lg font-semibold text-gray-900">
-                          {hearing.cases?.case_title || 'Case title not available'}
+                          {hearing.cases?.title || hearing.cases?.case_title || 'Case title not available'}
                         </span>
                       </div>
                     </div>
