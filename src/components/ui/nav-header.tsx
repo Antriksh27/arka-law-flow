@@ -10,11 +10,11 @@ const navigation = [{
   name: 'Contacts',
   href: '/contacts'
 }, {
-  name: 'Cases',
-  href: '/cases'
-}, {
   name: 'Clients',
   href: '/clients'
+}, {
+  name: 'Cases',
+  href: '/cases'
 }, {
   name: 'Appointments',
   href: '/appointments'
@@ -22,20 +22,17 @@ const navigation = [{
   name: 'Hearings',
   href: '/hearings'
 }, {
-  name: 'Tasks',
-  href: '/tasks'
-}, {
-  name: 'Invoices',
-  href: '/invoices'
-}, {
   name: 'Notes',
   href: '/notes'
 }, {
-  name: 'Messages',
-  href: '/messages'
+  name: 'Tasks',
+  href: '/tasks'
 }, {
   name: 'Documents',
   href: '/documents'
+}, {
+  name: 'Messages',
+  href: '/messages'
 }, {
   name: 'Team',
   href: '/team'
