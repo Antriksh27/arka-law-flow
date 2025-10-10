@@ -1,71 +1,62 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
 import { format, parseISO } from 'date-fns';
-import { Edit } from 'lucide-react';
 import { FilterState } from './types';
-import { getHearingStatusBadge, formatHearingType } from './utils';
-import { useDialog } from '@/hooks/use-dialog';
-import { EditHearingDialog } from './EditHearingDialog';
+import { Badge } from '@/components/ui/badge';
 
 interface HearingsTableProps {
   filters: FilterState;
 }
 
 export const HearingsTable: React.FC<HearingsTableProps> = ({ filters }) => {
-  const { openDialog } = useDialog();
-
   const { data: hearings, isLoading } = useQuery({
     queryKey: ['hearings', filters],
     queryFn: async () => {
       let query = supabase
-        .from('hearings')
+        .from('case_hearings')
         .select(`
           *,
-          cases!hearings_case_id_fkey(case_title, case_number)
+          cases!inner(
+            case_title,
+            case_number,
+            court_name,
+            client_id,
+            clients(full_name)
+          )
         `);
 
-      // Always filter for today and after
       const today = format(new Date(), 'yyyy-MM-dd');
       query = query.gte('hearing_date', today);
 
-      // Apply date range filter only if both dates are provided
       if (filters.dateRange.from && filters.dateRange.to) {
         query = query
           .gte('hearing_date', format(filters.dateRange.from, 'yyyy-MM-dd'))
           .lte('hearing_date', format(filters.dateRange.to, 'yyyy-MM-dd'));
-      } else if (filters.dateRange.from) {
-        query = query.gte('hearing_date', format(filters.dateRange.from, 'yyyy-MM-dd'));
-      } else if (filters.dateRange.to) {
-        query = query.lte('hearing_date', format(filters.dateRange.to, 'yyyy-MM-dd'));
       }
 
-      if (filters.status.length > 0) {
-        query = query.in('status', filters.status);
-      }
-      if (filters.case && filters.case !== 'all' && filters.case.trim() !== '') {
+      if (filters.case && filters.case !== 'all') {
         query = query.eq('case_id', filters.case);
       }
-      if (filters.court && filters.court !== 'all' && filters.court.trim() !== '') {
-        query = query.ilike('court_name', `%${filters.court}%`);
+      
+      if (filters.court && filters.court !== 'all') {
+        query = query.eq('cases.court_name', filters.court);
       }
-      if (filters.assignedUser && filters.assignedUser !== 'all' && filters.assignedUser.trim() !== '') {
-        query = query.eq('assigned_to', filters.assignedUser);
+      
+      if (filters.clientId) {
+        query = query.eq('cases.client_id', filters.clientId);
       }
-      if (filters.searchQuery && filters.searchQuery.trim() !== '') {
+      
+      if (filters.searchQuery) {
         query = query.or(
-          `court_name.ilike.%${filters.searchQuery}%,` +
-          `hearing_type.ilike.%${filters.searchQuery}%,` +
-          `notes.ilike.%${filters.searchQuery}%`
+          `judge.ilike.%${filters.searchQuery}%,` +
+          `purpose_of_hearing.ilike.%${filters.searchQuery}%,` +
+          `cause_list_type.ilike.%${filters.searchQuery}%`
         );
       }
 
       const { data, error } = await query.order('hearing_date', { ascending: true });
-      if (error) {
-        console.error('Error fetching hearings:', error);
-        throw error;
-      }
+      if (error) throw error;
       return data || [];
     }
   });
@@ -85,13 +76,11 @@ export const HearingsTable: React.FC<HearingsTableProps> = ({ filters }) => {
           <thead>
             <tr className="border-b border-gray-200">
               <th className="text-left py-3 px-4 font-medium text-gray-900">Date</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">Time</th>
               <th className="text-left py-3 px-4 font-medium text-gray-900">Case</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">Court</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">Type</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">Judge</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">Purpose</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">Cause List Type</th>
               <th className="text-left py-3 px-4 font-medium text-gray-900">Status</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">Outcome</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -102,42 +91,26 @@ export const HearingsTable: React.FC<HearingsTableProps> = ({ filters }) => {
                     {format(parseISO(hearing.hearing_date), 'MMM d, yyyy')}
                   </td>
                   <td className="py-3 px-4">
-                    {hearing.hearing_time || '-'}
-                  </td>
-                  <td className="py-3 px-4">
                     <div>
                       <div className="font-medium">{hearing.cases?.case_title}</div>
                       <div className="text-sm text-gray-500">{hearing.cases?.case_number}</div>
                     </div>
                   </td>
-                  <td className="py-3 px-4">{hearing.court_name}</td>
-                  <td className="py-3 px-4">{formatHearingType(hearing.hearing_type)}</td>
-                  <td className="py-3 px-4">
-                    {getHearingStatusBadge(hearing.status)}
-                  </td>
+                  <td className="py-3 px-4">{hearing.judge || '-'}</td>
                   <td className="py-3 px-4">
                     <div className="max-w-xs truncate">
-                      {hearing.outcome || '-'}
+                      {hearing.purpose_of_hearing || '-'}
                     </div>
                   </td>
+                  <td className="py-3 px-4">{hearing.cause_list_type || '-'}</td>
                   <td className="py-3 px-4">
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          openDialog(<EditHearingDialog hearingId={hearing.id} />);
-                        }}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                    </div>
+                    <Badge className="bg-blue-100 text-blue-800 border-blue-200">Scheduled</Badge>
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={8} className="py-12 text-center text-gray-500">
+                <td colSpan={6} className="py-12 text-center text-gray-500">
                   No hearings found
                 </td>
               </tr>

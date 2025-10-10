@@ -17,6 +17,7 @@ const Hearings = () => {
     court: '',
     assignedUser: '',
     searchQuery: '',
+    clientId: undefined,
   });
 
   return (

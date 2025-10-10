@@ -16,6 +16,7 @@ export interface FilterState {
   court: string;
   assignedUser: string;
   searchQuery: string;
+  clientId?: string;
 }
 
 export interface Hearing {

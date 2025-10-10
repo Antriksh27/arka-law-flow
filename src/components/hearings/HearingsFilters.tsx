@@ -25,7 +25,7 @@ export const HearingsFilters: React.FC<HearingsFiltersProps> = ({
     queryKey: ['hearing-courts'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('hearings')
+        .from('cases')
         .select('court_name')
         .not('court_name', 'is', null)
         .neq('court_name', '')
@@ -40,6 +40,25 @@ export const HearingsFilters: React.FC<HearingsFiltersProps> = ({
           .filter(court => court && court.trim() !== '')
       )];
       return uniqueCourts;
+    }
+  });
+
+  // Fetch clients for filter dropdown
+  const { data: clients } = useQuery({
+    queryKey: ['hearing-clients'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('id, full_name')
+        .not('full_name', 'is', null)
+        .neq('full_name', '')
+        .order('full_name');
+      
+      if (error) throw error;
+
+      return (data || []).filter(client => 
+        client.id && client.full_name && client.full_name.trim() !== ''
+      );
     }
   });
 
@@ -107,6 +126,7 @@ export const HearingsFilters: React.FC<HearingsFiltersProps> = ({
       court: '',
       assignedUser: '',
       searchQuery: '',
+      clientId: undefined,
     });
   };
 
@@ -217,6 +237,24 @@ export const HearingsFilters: React.FC<HearingsFiltersProps> = ({
             {users?.map((user) => (
               <SelectItem key={user.id} value={user.id} className="text-gray-900">
                 {user.full_name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Client Filter */}
+        <Select 
+          value={filters.clientId || 'all'} 
+          onValueChange={(value) => onFilterChange({ ...filters, clientId: value === 'all' ? undefined : value })}
+        >
+          <SelectTrigger className="w-[200px] bg-white border-gray-300 text-gray-900">
+            <SelectValue placeholder="Select client" />
+          </SelectTrigger>
+          <SelectContent className="bg-white border-gray-300">
+            <SelectItem value="all" className="text-gray-900">All Clients</SelectItem>
+            {clients?.map((client) => (
+              <SelectItem key={client.id} value={client.id} className="text-gray-900">
+                {client.full_name}
               </SelectItem>
             ))}
           </SelectContent>
