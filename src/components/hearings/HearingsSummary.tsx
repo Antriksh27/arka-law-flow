@@ -11,17 +11,19 @@ export const HearingsSummary: React.FC = () => {
       const today = format(new Date(), 'yyyy-MM-dd');
       const next7Days = format(addDays(new Date(), 7), 'yyyy-MM-dd');
 
-      // Get all hearings in the next 7 days
+      // Get all hearings in the next 7 days from case_hearings
       const { data: upcomingHearings } = await supabase
-        .from('hearings')
-        .select('status')
+        .from('case_hearings')
+        .select('*')
         .gte('hearing_date', today)
-        .lte('hearing_date', next7Days);
+        .lte('hearing_date', next7Days)
+        .not('hearing_date', 'is', null);
 
       const total = upcomingHearings?.length || 0;
-      const adjourned = upcomingHearings?.filter(h => h.status === 'adjourned').length || 0;
-      const cancelled = upcomingHearings?.filter(h => h.status === 'cancelled').length || 0;
-      const scheduled = upcomingHearings?.filter(h => h.status === 'scheduled').length || 0;
+      // case_hearings doesn't have status, so we show all as scheduled
+      const scheduled = total;
+      const adjourned = 0;
+      const cancelled = 0;
 
       return { total, adjourned, cancelled, scheduled };
     }

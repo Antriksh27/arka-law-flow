@@ -1,15 +1,12 @@
 import React from 'react';
 import { format, parseISO } from 'date-fns';
-import { Calendar, Clock, MapPin, User, FileText, Scale, CheckCircle } from 'lucide-react';
+import { Calendar, User, FileText, Scale, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Hearing } from './types';
-import { getHearingStatusBadge, formatHearingType } from './utils';
 import { useNavigate } from 'react-router-dom';
 import { useDialog } from '@/hooks/use-dialog';
 
 interface HearingDetailsModalProps {
-  hearing: Hearing & { cases?: any };
+  hearing: any; // Flexible type for case_hearings data
 }
 
 export const HearingDetailsModal: React.FC<HearingDetailsModalProps> = ({ hearing }) => {
@@ -28,7 +25,6 @@ export const HearingDetailsModal: React.FC<HearingDetailsModalProps> = ({ hearin
           <h2 className="text-2xl font-semibold text-[#111827]">Hearing Details</h2>
           <p className="text-sm text-[#6B7280] mt-1">Case: {hearing.cases?.case_title}</p>
         </div>
-        {getHearingStatusBadge(hearing.status)}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -43,21 +39,11 @@ export const HearingDetailsModal: React.FC<HearingDetailsModalProps> = ({ hearin
         </div>
 
         <div className="flex items-start gap-3 p-4 rounded-xl bg-[#F9FAFB] border border-[#E5E7EB]">
-          <Clock className="w-5 h-5 text-[#1E3A8A] mt-0.5" />
+          <User className="w-5 h-5 text-[#1E3A8A] mt-0.5" />
           <div>
-            <div className="text-sm font-medium text-[#6B7280]">Time</div>
+            <div className="text-sm font-medium text-[#6B7280]">Judge</div>
             <div className="text-base font-semibold text-[#111827]">
-              {hearing.hearing_time || 'Not specified'}
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-start gap-3 p-4 rounded-xl bg-[#F9FAFB] border border-[#E5E7EB]">
-          <MapPin className="w-5 h-5 text-[#1E3A8A] mt-0.5" />
-          <div>
-            <div className="text-sm font-medium text-[#6B7280]">Court</div>
-            <div className="text-base font-semibold text-[#111827]">
-              {hearing.court_name}
+              {hearing.judge || 'Not specified'}
             </div>
           </div>
         </div>
@@ -65,45 +51,31 @@ export const HearingDetailsModal: React.FC<HearingDetailsModalProps> = ({ hearin
         <div className="flex items-start gap-3 p-4 rounded-xl bg-[#F9FAFB] border border-[#E5E7EB]">
           <Scale className="w-5 h-5 text-[#1E3A8A] mt-0.5" />
           <div>
-            <div className="text-sm font-medium text-[#6B7280]">Type</div>
+            <div className="text-sm font-medium text-[#6B7280]">Cause List Type</div>
             <div className="text-base font-semibold text-[#111827]">
-              {formatHearingType(hearing.hearing_type)}
+              {hearing.cause_list_type || 'Not specified'}
             </div>
           </div>
         </div>
       </div>
 
-      {hearing.bench && (
-        <div className="p-4 rounded-xl bg-[#F9FAFB] border border-[#E5E7EB]">
-          <div className="text-sm font-medium text-[#6B7280] mb-1">Bench</div>
-          <div className="text-base text-[#111827]">{hearing.bench}</div>
-        </div>
-      )}
-
-      {hearing.coram && (
-        <div className="p-4 rounded-xl bg-[#F9FAFB] border border-[#E5E7EB]">
-          <div className="text-sm font-medium text-[#6B7280] mb-1">Coram</div>
-          <div className="text-base text-[#111827]">{hearing.coram}</div>
-        </div>
-      )}
-
-      {hearing.notes && (
+      {hearing.purpose_of_hearing && (
         <div className="p-4 rounded-xl bg-[#F9FAFB] border border-[#E5E7EB]">
           <div className="flex items-center gap-2 mb-2">
             <FileText className="w-4 h-4 text-[#1E3A8A]" />
-            <div className="text-sm font-medium text-[#6B7280]">Notes</div>
+            <div className="text-sm font-medium text-[#6B7280]">Purpose of Hearing</div>
           </div>
-          <div className="text-base text-[#111827] whitespace-pre-wrap">{hearing.notes}</div>
+          <div className="text-base text-[#111827] whitespace-pre-wrap">{hearing.purpose_of_hearing}</div>
         </div>
       )}
 
-      {hearing.outcome && (
+      {hearing.business_on_date && (
         <div className="p-4 rounded-xl bg-[#E0E7FF] border border-[#C7D2FE]">
           <div className="flex items-center gap-2 mb-2">
             <CheckCircle className="w-4 h-4 text-[#1E3A8A]" />
-            <div className="text-sm font-medium text-[#1E3A8A]">Outcome</div>
+            <div className="text-sm font-medium text-[#1E3A8A]">Business On Date</div>
           </div>
-          <div className="text-base text-[#111827] whitespace-pre-wrap">{hearing.outcome}</div>
+          <div className="text-base text-[#111827] whitespace-pre-wrap">{hearing.business_on_date}</div>
         </div>
       )}
 

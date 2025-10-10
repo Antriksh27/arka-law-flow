@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Calendar, momentLocalizer, Event } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
-import { FilterState, Hearing } from './types';
+import { FilterState } from './types';
 import { format, parseISO } from 'date-fns';
 import { useDialog } from '@/hooks/use-dialog';
 import { HearingDetailsModal } from './HearingDetailsModal';
@@ -17,7 +17,7 @@ interface HearingsCalendarViewProps {
 }
 
 interface CalendarEvent extends Event {
-  resource: Hearing & { cases?: any };
+  resource: any; // Use any for flexibility with case_hearings data
 }
 
 export const HearingsCalendarView: React.FC<HearingsCalendarViewProps> = ({ filters }) => {
@@ -29,10 +29,10 @@ export const HearingsCalendarView: React.FC<HearingsCalendarViewProps> = ({ filt
     queryKey: ['hearings-calendar', filters],
     queryFn: async () => {
       let query = supabase
-        .from('hearings')
+        .from('case_hearings')
         .select(`
           *,
-          cases!hearings_case_id_fkey(
+          cases(
             case_title, 
             case_number,
             client_id,
@@ -50,22 +50,22 @@ export const HearingsCalendarView: React.FC<HearingsCalendarViewProps> = ({ filt
       }
 
       if (filters.status.length > 0) {
-        query = query.in('status', filters.status);
+        // case_hearings doesn't have status field, skip this filter
       }
       if (filters.case && filters.case !== 'all') {
         query = query.eq('case_id', filters.case);
       }
       if (filters.court && filters.court !== 'all') {
-        query = query.ilike('court_name', `%${filters.court}%`);
+        // case_hearings doesn't have court_name field, skip this filter
       }
       if (filters.assignedUser && filters.assignedUser !== 'all') {
-        query = query.eq('assigned_to', filters.assignedUser);
+        // case_hearings doesn't have assigned_to field, skip this filter
       }
       if (filters.searchQuery) {
         query = query.or(
-          `court_name.ilike.%${filters.searchQuery}%,` +
-          `hearing_type.ilike.%${filters.searchQuery}%,` +
-          `notes.ilike.%${filters.searchQuery}%`
+          `judge.ilike.%${filters.searchQuery}%,` +
+          `purpose_of_hearing.ilike.%${filters.searchQuery}%,` +
+          `cause_list_type.ilike.%${filters.searchQuery}%`
         );
       }
 
@@ -78,13 +78,13 @@ export const HearingsCalendarView: React.FC<HearingsCalendarViewProps> = ({ filt
   // Real-time subscription
   useEffect(() => {
     const channel = supabase
-      .channel('hearings-changes')
+      .channel('case-hearings-changes')
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
-          table: 'hearings'
+          table: 'case_hearings'
         },
         (payload) => {
           queryClient.invalidateQueries({ queryKey: ['hearings-calendar'] });
@@ -104,37 +104,27 @@ export const HearingsCalendarView: React.FC<HearingsCalendarViewProps> = ({ filt
   const events: CalendarEvent[] = useMemo(() => {
     if (!hearings) return [];
 
-    return hearings.map(hearing => {
-      const date = parseISO(hearing.hearing_date);
-      let startTime = date;
-      let endTime = date;
+    return hearings
+      .filter(hearing => hearing.hearing_date) // Only show hearings with dates
+      .map(hearing => {
+        const date = parseISO(hearing.hearing_date);
+        let startTime = date;
+        let endTime = date;
 
-      if (hearing.hearing_time) {
-        const [hours, minutes] = hearing.hearing_time.split(':');
-        startTime = new Date(date);
-        startTime.setHours(parseInt(hours), parseInt(minutes));
-        endTime = new Date(startTime);
-        endTime.setHours(endTime.getHours() + 1);
-      }
-
-      return {
-        title: hearing.cases?.case_title || 'Untitled Case',
-        start: startTime,
-        end: endTime,
-        resource: hearing,
-        allDay: !hearing.hearing_time
-      };
-    });
+        // Since case_hearings doesn't have hearing_time, all events are all-day
+        return {
+          title: hearing.cases?.case_title || 'Untitled Case',
+          start: startTime,
+          end: endTime,
+          resource: hearing,
+          allDay: true
+        };
+      });
   }, [hearings]);
 
   const eventStyleGetter = (event: CalendarEvent) => {
-    const status = event.resource.status;
+    // case_hearings doesn't have status field, use default color
     let backgroundColor = '#1E3A8A'; // Default blue
-    
-    if (status === 'scheduled') backgroundColor = '#10B981'; // Green
-    if (status === 'adjourned') backgroundColor = '#F59E0B'; // Yellow
-    if (status === 'completed') backgroundColor = '#6B7280'; // Gray
-    if (status === 'cancelled') backgroundColor = '#EF4444'; // Red
 
     return {
       style: {
