@@ -45,6 +45,22 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [showSuccessOptions, setShowSuccessOptions] = useState(false);
   
+  // Fetch case details if caseId is provided
+  const { data: caseDetails } = useQuery({
+    queryKey: ['case-details', caseId],
+    queryFn: async () => {
+      if (!caseId) return null;
+      const { data, error } = await supabase
+        .from('cases')
+        .select('id, case_title, client_id')
+        .eq('id', caseId)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!caseId
+  });
+
   const {
     register,
     handleSubmit,
@@ -54,7 +70,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
     formState: { isSubmitting }
   } = useForm<UploadFormData>({
     defaultValues: {
-      client_id: '',
+      client_id: caseDetails?.client_id || '',
       case_id: caseId || 'no-case',
       document_category: '',
       document_type: '',
@@ -66,6 +82,16 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
       certified_copy: false
     }
   });
+
+  // Update form values when case details are loaded
+  React.useEffect(() => {
+    if (caseDetails) {
+      setValue('case_id', caseDetails.id);
+      if (caseDetails.client_id) {
+        setValue('client_id', caseDetails.client_id);
+      }
+    }
+  }, [caseDetails, setValue]);
   
   const selectedClientId = watch('client_id');
   const selectedCaseId = watch('case_id');
@@ -447,8 +473,8 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
       return;
     }
 
-    // Validate required fields
-    if (!data.client_id) {
+    // Validate required fields (only if not uploading from a case)
+    if (!caseId && !data.client_id) {
       toast({
         title: "Client selection required",
         description: "Please select a client",
@@ -563,54 +589,58 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
             )}
           </div>
 
-          {/* Client Selection */}
-          <div className="space-y-2">
-            <Label htmlFor="client_id" className="text-sm font-medium text-gray-700">
-              Select Client <span className="text-red-500">*</span>
-            </Label>
-            <ClientSelector
-              value={selectedClientId || ''}
-              onValueChange={(value) => {
-                setValue('client_id', value);
-                setValue('case_id', 'no-case'); // Reset case when client changes
-              }}
-              placeholder="Search and select client or contact..."
-              onClientAdded={(clientId) => {
-                if (clientId) {
-                  setValue('client_id', clientId);
-                }
-              }}
-            />
-          </div>
+          {/* Client Selection - Only show if not uploading from a case */}
+          {!caseId && (
+            <div className="space-y-2">
+              <Label htmlFor="client_id" className="text-sm font-medium text-gray-700">
+                Select Client <span className="text-red-500">*</span>
+              </Label>
+              <ClientSelector
+                value={selectedClientId || ''}
+                onValueChange={(value) => {
+                  setValue('client_id', value);
+                  setValue('case_id', 'no-case'); // Reset case when client changes
+                }}
+                placeholder="Search and select client or contact..."
+                onClientAdded={(clientId) => {
+                  if (clientId) {
+                    setValue('client_id', clientId);
+                  }
+                }}
+              />
+            </div>
+          )}
 
-          {/* Case Assignment */}
-          <div className="space-y-2">
-            <Label htmlFor="case_id" className="text-sm font-medium text-gray-700">
-              Assign to Case (Optional)
-            </Label>
-            <Select 
-              onValueChange={value => setValue('case_id', value)} 
-              value={selectedCaseId}
-              disabled={!selectedClientId}
-            >
-              <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                <SelectValue placeholder={selectedClientId ? "Select a case..." : "Select client first"} />
-              </SelectTrigger>
-              <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                <SelectItem value="no-case" className="hover:bg-gray-50">No Case (General Documents)</SelectItem>
-                {cases
-                  .filter(case_item => {
-                    // Only show cases for the selected client
-                    return !selectedClientId || case_item.client_id === selectedClientId;
-                  })
-                  .map(case_item => (
-                    <SelectItem key={case_item.id} value={case_item.id} className="hover:bg-gray-50">
-                      {case_item.title}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Case Assignment - Only show if not uploading from a case */}
+          {!caseId && (
+            <div className="space-y-2">
+              <Label htmlFor="case_id" className="text-sm font-medium text-gray-700">
+                Assign to Case (Optional)
+              </Label>
+              <Select 
+                onValueChange={value => setValue('case_id', value)} 
+                value={selectedCaseId}
+                disabled={!selectedClientId}
+              >
+                <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                  <SelectValue placeholder={selectedClientId ? "Select a case..." : "Select client first"} />
+                </SelectTrigger>
+                <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                  <SelectItem value="no-case" className="hover:bg-gray-50">No Case (General Documents)</SelectItem>
+                  {cases
+                    .filter(case_item => {
+                      // Only show cases for the selected client
+                      return !selectedClientId || case_item.client_id === selectedClientId;
+                    })
+                    .map(case_item => (
+                      <SelectItem key={case_item.id} value={case_item.id} className="hover:bg-gray-50">
+                        {case_item.title}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {/* Document Category */}
           <div className="space-y-2">
