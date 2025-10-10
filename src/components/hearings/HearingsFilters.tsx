@@ -113,5 +113,56 @@ export const HearingsFilters: React.FC<HearingsFiltersProps> = ({
       clientId: undefined
     });
   };
-  return;
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-[#E5E7EB] p-6 mb-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-[#111827]">Filters</h3>
+        <Button variant="ghost" size="sm" onClick={clearFilters}>
+          <X className="w-4 h-4 mr-1" />
+          Clear All
+        </Button>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label className="text-sm font-medium text-[#6B7280] mb-2 block">Case</label>
+          <Select value={filters.case} onValueChange={(value) => onFilterChange({ ...filters, case: value })}>
+            <SelectTrigger>
+              <SelectValue placeholder="All cases" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All cases</SelectItem>
+              {cases?.map(c => (
+                <SelectItem key={c.id} value={c.id}>{c.case_title}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <label className="text-sm font-medium text-[#6B7280] mb-2 block">Court</label>
+          <Select value={filters.court} onValueChange={(value) => onFilterChange({ ...filters, court: value })}>
+            <SelectTrigger>
+              <SelectValue placeholder="All courts" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All courts</SelectItem>
+              {courts?.map(court => (
+                <SelectItem key={court} value={court}>{court}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <label className="text-sm font-medium text-[#6B7280] mb-2 block">Search</label>
+          <Input
+            placeholder="Search hearings..."
+            value={filters.searchQuery}
+            onChange={(e) => onFilterChange({ ...filters, searchQuery: e.target.value })}
+          />
+        </div>
+      </div>
+    </div>
+  );
 };
