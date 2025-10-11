@@ -23,6 +23,7 @@ import Instructions from '@/pages/Instructions';
 import Availability from '@/pages/Availability';
 import ECourts from '@/pages/ECourts';
 import NotFound from '@/pages/NotFound';
+import Chat from '@/pages/Chat';
 
 // Reception pages
 import ReceptionHome from '@/pages/reception/ReceptionHome';
@@ -70,6 +71,7 @@ const RoleBasedRouter = () => {
           <Route path="/reception/appointments" element={<ReceptionAppointments />} />
           <Route path="/reception/schedule" element={<ReceptionSchedule />} />
           <Route path="/reception/calendar" element={<ReceptionCalendar />} />
+          <Route path="/chat" element={<Chat />} />
           <Route path="*" element={<ReceptionHome />} />
         </Routes>
       </ReceptionistLayout>
@@ -93,6 +95,7 @@ const RoleBasedRouter = () => {
           <Route path="/staff/tasks" element={<Tasks />} />
           <Route path="/staff/instructions" element={<Instructions />} />
           <Route path="/staff/invoices" element={<Invoices />} />
+          <Route path="/chat" element={<Chat />} />
           <Route path="*" element={<StaffDashboard />} />
         </Routes>
       </OfficeStaffLayout>
@@ -119,6 +122,7 @@ const RoleBasedRouter = () => {
         <Route path="/messages" element={<Messages />} />
         <Route path="/instructions" element={<Instructions />} />
         <Route path="/availability" element={<Availability />} />
+        <Route path="/chat" element={<Chat />} />
         {/* Redirect invoices to dashboard for juniors */}
         <Route path="/invoices" element={<Index />} />
         <Route path="/team" element={<Index />} />
@@ -150,6 +154,7 @@ const RoleBasedRouter = () => {
         <Route path="/invoices" element={<Invoices />} />
         <Route path="/availability" element={<Availability />} />
         <Route path="/team" element={<Team />} />
+        <Route path="/chat" element={<Chat />} />
         {/* Fallback for reception routes accessed by non-receptionists */}
         <Route path="/reception/*" element={<Index />} />
         <Route path="*" element={<NotFound />} />

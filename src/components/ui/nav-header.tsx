@@ -36,6 +36,9 @@ const navigation = [{
 }, {
   name: 'Team',
   href: '/team'
+}, {
+  name: 'Chat',
+  href: '/chat'
 }];
 function NavHeader() {
   const [position, setPosition] = useState({
