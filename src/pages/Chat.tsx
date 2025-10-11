@@ -19,6 +19,20 @@ const Chat = () => {
           <p className="text-lg text-muted-foreground">
             Connecting to chat service...
           </p>
+          <p className="text-sm text-muted-foreground max-w-md text-center">
+            If this takes too long, check the browser console (F12) for error details.
+          </p>
+          <div className="mt-4 p-4 bg-accent rounded-lg max-w-md">
+            <p className="text-xs text-muted-foreground">
+              <strong>Troubleshooting:</strong> Open browser console (F12) to see detailed error messages.
+              Common issues:
+            </p>
+            <ul className="text-xs text-muted-foreground mt-2 space-y-1 list-disc list-inside">
+              <li>Incorrect APP_ID or AUTH_KEY in src/lib/cometchat.ts</li>
+              <li>Wrong REGION (should be us, eu, or in)</li>
+              <li>APP_ID doesn't exist in the specified region</li>
+            </ul>
+          </div>
         </div>
       </div>
     );
