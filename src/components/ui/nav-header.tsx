@@ -31,9 +31,6 @@ const navigation = [{
   name: 'Documents',
   href: '/documents'
 }, {
-  name: 'Messages',
-  href: '/messages'
-}, {
   name: 'Invoices',
   href: '/invoices'
 }, {
