@@ -42,19 +42,6 @@ export const useCometChat = () => {
     };
 
     loginUser();
-
-    // Cleanup: logout when user changes (only if currently logged in)
-    return () => {
-      if (user && cometChatUser) {
-        CometChatUIKit.getLoggedinUser().then((loggedInUser) => {
-          if (loggedInUser) {
-            logoutCometChat();
-          }
-        }).catch(() => {
-          // User not logged in, no need to logout
-        });
-      }
-    };
   }, [isInitialized, user]);
 
   return {
