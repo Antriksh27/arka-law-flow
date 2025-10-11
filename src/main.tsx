@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
+import '@cometchat/chat-uikit-react/dist/style.css'
 import { applyCSPMetaTag } from './lib/contentSecurityPolicy'
 
 // Apply Content Security Policy for XSS protection
