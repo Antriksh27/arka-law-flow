@@ -15,6 +15,7 @@ interface FetchCaseDialogProps {
   open: boolean;
   onClose: () => void;
   onSuccess: (data: any) => void;
+  preSelectedClientId?: string;
 }
 
 interface FetchFormData {
@@ -24,7 +25,8 @@ interface FetchFormData {
 export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
   open,
   onClose,
-  onSuccess
+  onSuccess,
+  preSelectedClientId
 }) => {
   const { toast } = useToast();
   const [searchType, setSearchType] = useState<'high_court' | 'district_court' | 'supreme_court'>('district_court');
@@ -232,6 +234,9 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
         // Acts and sections
         under_act: caseData.under_act,
         under_section: caseData.under_section,
+        
+        // Client link
+        client_id: preSelectedClientId || null,
         
         // Metadata
         firm_id: firmId,

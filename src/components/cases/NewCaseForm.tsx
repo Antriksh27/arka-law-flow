@@ -435,6 +435,7 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
           open={showFetchDialog}
           onClose={() => setShowFetchDialog(false)}
           onSuccess={handleFetchSuccess}
+          preSelectedClientId={preSelectedClientId}
         />
       </div>
     </div>
