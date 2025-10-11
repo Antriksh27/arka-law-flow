@@ -4,7 +4,7 @@ import { CometChat } from "@cometchat/chat-sdk-javascript";
 const COMETCHAT_CONSTANTS = {
   APP_ID: "1669966b49b4aea85", // Replace with your CometChat App ID
   REGION: "in", // Replace with your region (us, eu, in)
-  AUTH_KEY: "902007c23fa04d6522ba9f92d4fa7b14a31a8f30", // Replace with your Auth Key
+  AUTH_KEY: "1ea8ba465c0006d6d01f059f58095d2582b9284c", // Replace with your Auth Key
 };
 
 // Validate that credentials are configured
@@ -69,7 +69,7 @@ export const loginCometChatUser = async (userId: string, userName: string) => {
       console.log("📝 User not found, creating new user...");
       return await createCometChatUser(userId, userName);
     }
-    
+
     // Log detailed error information
     console.error("❌ CometChat login failed:");
     console.error("   User ID:", userId);
@@ -77,17 +77,17 @@ export const loginCometChatUser = async (userId: string, userName: string) => {
     console.error("   Error name:", error?.name);
     console.error("   Error message:", error?.message);
     console.error("   AUTH_KEY (first 10 chars):", COMETCHAT_CONSTANTS.AUTH_KEY?.substring(0, 10) + "...");
-    
+
     if (error?.code === "FAILED_TO_FETCH") {
       throw new Error(
         "Failed to connect to CometChat. Please verify:\n" +
-        "1. Your APP_ID matches your CometChat dashboard\n" +
-        "2. Your REGION is correct (us, eu, or in)\n" +
-        "3. Your AUTH_KEY is valid and not expired\n" +
-        "4. The APP_ID exists in the specified region"
+          "1. Your APP_ID matches your CometChat dashboard\n" +
+          "2. Your REGION is correct (us, eu, or in)\n" +
+          "3. Your AUTH_KEY is valid and not expired\n" +
+          "4. The APP_ID exists in the specified region",
       );
     }
-    
+
     throw error;
   }
 };
