@@ -1,123 +1,102 @@
+import React, { useState, useEffect } from 'react';
 import { useCometChat } from '@/hooks/useCometChat';
-import { CometChatConversations, CometChatMessageList, CometChatMessageComposer } from '@cometchat/chat-uikit-react';
+import { CometChat } from '@/lib/cometchat';
+import { ChatUserList } from '@/components/chat/ChatUserList';
+import { ChatMessageList } from '@/components/chat/ChatMessageList';
+import { ChatInput } from '@/components/chat/ChatInput';
 import { Card } from '@/components/ui/card';
-import { MessageCircle, Loader2, AlertCircle } from 'lucide-react';
-import { useState } from 'react';
-import type { CometChat } from '@cometchat/chat-sdk-javascript';
+import { MessageCircle, Loader2 } from 'lucide-react';
 
 const Chat = () => {
-  const { isCometChatReady } = useCometChat();
+  const { isCometChatReady, cometChatUser } = useCometChat();
   const [selectedUser, setSelectedUser] = useState<CometChat.User | null>(null);
-  const [selectedGroup, setSelectedGroup] = useState<CometChat.Group | null>(null);
 
   if (!isCometChatReady) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6 bg-background">
-        <Card className="p-8 max-w-md w-full space-y-4 shadow-lg">
-          <div className="flex items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-          <div className="space-y-2 text-center">
-            <h2 className="text-xl font-semibold">Connecting to chat service...</h2>
-            <p className="text-sm text-muted-foreground">
-              Please wait while we establish a secure connection.
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="flex flex-col items-center justify-center h-[600px] gap-4">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <p className="text-lg text-muted-foreground">
+            Connecting to chat service...
+          </p>
+          <p className="text-sm text-muted-foreground max-w-md text-center">
+            If this takes too long, check the browser console (F12) for error details.
+          </p>
+          <div className="mt-4 p-4 bg-accent rounded-lg max-w-md">
+            <p className="text-xs text-muted-foreground">
+              <strong>Troubleshooting:</strong> Open browser console (F12) to see detailed error messages.
+              Common issues:
             </p>
+            <ul className="text-xs text-muted-foreground mt-2 space-y-1 list-disc list-inside">
+              <li>Incorrect APP_ID or AUTH_KEY in src/lib/cometchat.ts</li>
+              <li>Wrong REGION (should be us, eu, or in)</li>
+              <li>APP_ID doesn't exist in the specified region</li>
+            </ul>
           </div>
-          
-          <div className="mt-6 p-4 bg-muted rounded-lg space-y-2">
-            <div className="flex items-start gap-2">
-              <AlertCircle className="h-4 w-4 text-muted-foreground mt-0.5" />
-              <div className="text-xs text-muted-foreground space-y-1">
-                <p className="font-medium">Troubleshooting tips:</p>
-                <ul className="list-disc list-inside space-y-1 ml-2">
-                  <li>Check your internet connection</li>
-                  <li>Open browser console (F12) for detailed logs</li>
-                  <li>Verify CometChat credentials in src/lib/cometchat.ts</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </Card>
+        </div>
       </div>
     );
   }
 
-  const handleConversationClick = (conversation: any) => {
-    if (conversation.conversationType === 'user') {
-      setSelectedUser(conversation.conversationWith);
-      setSelectedGroup(null);
-    } else if (conversation.conversationType === 'group') {
-      setSelectedGroup(conversation.conversationWith);
-      setSelectedUser(null);
-    }
-  };
-
   return (
-    <div className="h-[calc(100vh-64px)] bg-background">
-      <div className="h-full flex flex-col">
-        {/* Header */}
-        <div className="border-b bg-card px-6 py-4">
-          <div className="max-w-7xl mx-auto flex items-center gap-3">
-            <div className="flex items-center justify-center h-10 w-10 rounded-full bg-primary/10">
-              <MessageCircle className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-xl font-semibold">Team Chat</h1>
-              <p className="text-sm text-muted-foreground">
-                Connect with your team
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* CometChat UI Kit Components */}
-        <div className="flex-1 overflow-hidden">
-          <div className="h-full flex">
-            {/* Conversations Sidebar */}
-            <div className="w-80 border-r">
-              <CometChatConversations
-                onItemClick={handleConversationClick}
-              />
-            </div>
-
-            {/* Messages Area */}
-            <div className="flex-1 flex flex-col">
-              {selectedUser || selectedGroup ? (
-                <>
-                  <div className="flex-1 overflow-hidden">
-                    <CometChatMessageList
-                      user={selectedUser || undefined}
-                      group={selectedGroup || undefined}
-                    />
-                  </div>
-                  <div className="border-t">
-                    <CometChatMessageComposer
-                      user={selectedUser || undefined}
-                      group={selectedGroup || undefined}
-                    />
-                  </div>
-                </>
-              ) : (
-                <div className="h-full flex items-center justify-center">
-                  <div className="text-center space-y-4">
-                    <div className="flex justify-center">
-                      <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                        <MessageCircle className="h-8 w-8 text-primary" />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <h3 className="text-lg font-semibold">Select a conversation</h3>
-                      <p className="text-sm text-muted-foreground max-w-sm">
-                        Choose a team member from the list to start messaging
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+    <div className="max-w-7xl mx-auto p-6 space-y-6">
+      <div className="flex items-center gap-3">
+        <MessageCircle className="h-8 w-8 text-primary" />
+        <div>
+          <h1 className="text-2xl font-semibold">Messages</h1>
+          <p className="text-sm text-muted-foreground">
+            Real-time chat with your team and clients
+          </p>
         </div>
       </div>
+
+      <Card className="h-[calc(100vh-200px)] flex overflow-hidden shadow-sm">
+        {/* Sidebar - User List */}
+        <div className="w-80 border-r border-border flex-shrink-0">
+          <ChatUserList
+            onSelectUser={setSelectedUser}
+            selectedUserId={selectedUser?.getUid() || null}
+          />
+        </div>
+
+        {/* Main Chat Area */}
+        <div className="flex-1 flex flex-col">
+          {selectedUser ? (
+            <>
+              {/* Chat Header */}
+              <div className="p-4 border-b border-border">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold">
+                    {selectedUser.getName().charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">{selectedUser.getName()}</h3>
+                    <p className="text-sm text-muted-foreground capitalize">
+                      {selectedUser.getStatus()}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Messages */}
+              <ChatMessageList
+                selectedUser={selectedUser}
+                currentUserId={cometChatUser?.getUid() || ''}
+              />
+
+              {/* Input */}
+              <ChatInput selectedUser={selectedUser} />
+            </>
+          ) : (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center text-muted-foreground">
+                <MessageCircle className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                <p className="text-lg">Select a user to start chatting</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </Card>
     </div>
   );
 };

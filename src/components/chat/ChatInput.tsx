@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { CometChat } from '@/lib/cometchat';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, Loader2 } from 'lucide-react';
+import { Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface ChatInputProps {
@@ -87,29 +87,25 @@ export const ChatInput: React.FC<ChatInputProps> = ({ selectedUser, onMessageSen
   };
 
   return (
-    <div className="flex gap-3 items-end">
-      <div className="flex-1">
+    <div className="p-4 border-t border-border">
+      <div className="flex gap-2">
         <Textarea
           value={message}
           onChange={(e) => handleTyping(e.target.value)}
           onKeyPress={handleKeyPress}
-          placeholder="Type your message..."
-          className="min-h-[56px] max-h-32 resize-none rounded-2xl border-input focus:border-primary transition-colors"
+          placeholder="Type a message..."
+          className="resize-none min-h-[60px] max-h-[120px]"
           disabled={sending}
         />
-      </div>
-      <Button
-        onClick={sendMessage}
-        disabled={!message.trim() || sending}
-        size="icon"
-        className="h-[56px] w-[56px] rounded-2xl shadow-sm hover:shadow-md transition-all"
-      >
-        {sending ? (
-          <Loader2 className="h-5 w-5 animate-spin" />
-        ) : (
+        <Button
+          onClick={sendMessage}
+          disabled={!message.trim() || sending}
+          size="icon"
+          className="h-[60px] w-[60px] flex-shrink-0"
+        >
           <Send className="h-5 w-5" />
-        )}
-      </Button>
+        </Button>
+      </div>
     </div>
   );
 };
