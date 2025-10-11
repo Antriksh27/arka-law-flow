@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useCometChat } from '@/hooks/useCometChat';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
+import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,7 +20,7 @@ const Chat = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  // Fetch current user and users list
+  // Fetch current user and team members
   useEffect(() => {
     if (!isCometChatReady) return;
 
@@ -31,13 +32,29 @@ const Chat = () => {
 
         if (!loggedInUser) return;
 
-        // Fetch users
-        const usersRequest = new CometChat.UsersRequestBuilder()
-          .setLimit(30)
-          .build();
-        
-        const usersList: CometChat.User[] = await usersRequest.fetchNext();
-        setUsers(usersList.filter(u => u.getUid() !== loggedInUser.getUid()));
+        // Fetch real team members from Supabase
+        const { data: teamMembers, error } = await supabase
+          .from('team_members')
+          .select('user_id, full_name')
+          .neq('user_id', loggedInUser.getUid());
+
+        if (error) {
+          console.error('Error fetching team members:', error);
+          return;
+        }
+
+        // Fetch only these specific users from CometChat
+        const realUsers: CometChat.User[] = [];
+        for (const member of teamMembers || []) {
+          try {
+            const user = await CometChat.getUser(member.user_id);
+            realUsers.push(user);
+          } catch (err) {
+            console.log(`User ${member.user_id} not found in CometChat`);
+          }
+        }
+
+        setUsers(realUsers);
       } catch (error) {
         console.error('Error fetching users:', error);
       }
