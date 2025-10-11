@@ -24,7 +24,8 @@ export const CSP_DIRECTIVES = {
     "data:",
     "blob:",
     "https://hpcnipcbymruvsnqrmjx.supabase.co",
-    "https://*.supabase.co"
+    "https://*.supabase.co",
+    "https://*.cometchat.io"
   ],
   'connect-src': [
     "'self'",
@@ -33,7 +34,9 @@ export const CSP_DIRECTIVES = {
     "wss://hpcnipcbymruvsnqrmjx.supabase.co",
     "https://accounts.google.com",
     "https://oauth2.googleapis.com",
-    "https://www.googleapis.com"
+    "https://www.googleapis.com",
+    "https://*.cometchat.io",
+    "wss://*.cometchat.io"
   ],
   'object-src': ["'none'"],
   'frame-src': ["'self'", 'blob:', 'data:', 'https:'],
@@ -56,13 +59,13 @@ export const generateCSPHeader = (): string => {
  */
 export const applyCSPMetaTag = (): void => {
   if (typeof document !== 'undefined') {
-    const existingMeta = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
-    if (!existingMeta) {
-      const meta = document.createElement('meta');
+    let meta = document.querySelector('meta[http-equiv="Content-Security-Policy"]') as HTMLMetaElement | null;
+    if (!meta) {
+      meta = document.createElement('meta');
       meta.httpEquiv = 'Content-Security-Policy';
-      meta.content = generateCSPHeader();
       document.head.appendChild(meta);
     }
+    meta.content = generateCSPHeader();
   }
 };
 
