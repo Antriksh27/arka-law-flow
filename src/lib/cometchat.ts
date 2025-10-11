@@ -1,4 +1,4 @@
-import { CometChat } from "@cometchat/chat-sdk-javascript";
+import { CometChatUIKit, UIKitSettingsBuilder } from "@cometchat/chat-uikit-react";
 
 // CometChat Configuration
 const COMETCHAT_CONSTANTS = {
@@ -28,20 +28,21 @@ export const initCometChat = async (): Promise<boolean> => {
     return false;
   }
 
-  const appSetting = new CometChat.AppSettingsBuilder()
-    .subscribePresenceForAllUsers()
+  const UIKitSettings = new UIKitSettingsBuilder()
+    .setAppId(COMETCHAT_CONSTANTS.APP_ID)
     .setRegion(COMETCHAT_CONSTANTS.REGION)
-    .autoEstablishSocketConnection(true)
+    .setAuthKey(COMETCHAT_CONSTANTS.AUTH_KEY)
+    .subscribePresenceForAllUsers()
     .build();
 
   try {
-    await CometChat.init(COMETCHAT_CONSTANTS.APP_ID, appSetting);
-    console.log("✅ CometChat initialized successfully");
+    await CometChatUIKit.init(UIKitSettings);
+    console.log("✅ CometChat UI Kit initialized successfully");
     console.log("   APP_ID:", COMETCHAT_CONSTANTS.APP_ID);
     console.log("   REGION:", COMETCHAT_CONSTANTS.REGION);
     return true;
   } catch (error: any) {
-    console.error("❌ CometChat initialization failed:", error);
+    console.error("❌ CometChat UI Kit initialization failed:", error);
     console.error("   APP_ID:", COMETCHAT_CONSTANTS.APP_ID);
     console.error("   REGION:", COMETCHAT_CONSTANTS.REGION);
     console.error("   Error details:", error?.message || error);
@@ -52,7 +53,7 @@ export const initCometChat = async (): Promise<boolean> => {
 export const loginCometChatUser = async (userId: string, userName: string) => {
   try {
     // Check if already logged in
-    const loggedInUser = await CometChat.getLoggedinUser();
+    const loggedInUser = await CometChatUIKit.getLoggedinUser();
     if (loggedInUser) {
       console.log("✅ User already logged in to CometChat:", loggedInUser.getName());
       return loggedInUser;
@@ -60,7 +61,7 @@ export const loginCometChatUser = async (userId: string, userName: string) => {
 
     console.log("🔄 Attempting CometChat login for user:", userId);
     // Try to login
-    const user = await CometChat.login(userId, COMETCHAT_CONSTANTS.AUTH_KEY);
+    const user = await CometChatUIKit.login(userId, COMETCHAT_CONSTANTS.AUTH_KEY);
     console.log("✅ CometChat login successful:", user.getName());
     return user;
   } catch (error: any) {
@@ -93,15 +94,12 @@ export const loginCometChatUser = async (userId: string, userName: string) => {
 };
 
 export const createCometChatUser = async (userId: string, userName: string) => {
-  const user = new CometChat.User(userId);
-  user.setName(userName);
-
   try {
-    const createdUser = await CometChat.createUser(user, COMETCHAT_CONSTANTS.AUTH_KEY);
+    const createdUser = await CometChatUIKit.createUser({ uid: userId, name: userName });
     console.log("User created successfully:", createdUser);
 
     // Now login the newly created user
-    const loggedInUser = await CometChat.login(userId, COMETCHAT_CONSTANTS.AUTH_KEY);
+    const loggedInUser = await CometChatUIKit.login(userId, COMETCHAT_CONSTANTS.AUTH_KEY);
     return loggedInUser;
   } catch (error) {
     console.error("Error creating CometChat user:", error);
@@ -111,23 +109,11 @@ export const createCometChatUser = async (userId: string, userName: string) => {
 
 export const logoutCometChat = async () => {
   try {
-    await CometChat.logout();
+    await CometChatUIKit.logout();
     console.log("CometChat logout successful");
   } catch (error) {
     console.error("CometChat logout error:", error);
   }
 };
 
-export const getCometChatUsers = async (limit: number = 30): Promise<CometChat.User[]> => {
-  const usersRequest = new CometChat.UsersRequestBuilder().setLimit(limit).build();
-
-  try {
-    const usersList = await usersRequest.fetchNext();
-    return usersList;
-  } catch (error) {
-    console.error("Error fetching CometChat users:", error);
-    return [];
-  }
-};
-
-export { CometChat };
+export { CometChatUIKit };

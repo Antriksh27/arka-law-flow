@@ -11,9 +11,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@cometchat-pro/chat": "^3.0.13",
-    "@cometchat-pro/react-ui-kit": "^3.0.12-pluto.beta.2",
     "@cometchat/chat-sdk-javascript": "^4.1.2",
+    "@cometchat/chat-uikit-react": "^6.3.1",
     "@hookform/resolvers": "^3.9.0",
     "@radix-ui/react-accordion": "^1.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",

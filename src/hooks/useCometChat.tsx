@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { CometChat, initCometChat, loginCometChatUser, logoutCometChat } from '@/lib/cometchat';
+import { CometChat } from '@cometchat/chat-sdk-javascript';
+import { initCometChat, loginCometChatUser, logoutCometChat } from '@/lib/cometchat';
 import { useAuth } from '@/contexts/AuthContext';
 
 export const useCometChat = () => {
