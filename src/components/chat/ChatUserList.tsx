@@ -103,20 +103,30 @@ export const ChatUserList: React.FC<ChatUserListProps> = ({ onSelectUser, select
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="p-4 border-b border-border">
-        <div className="flex items-center gap-2">
-          <Users className="h-5 w-5 text-primary" />
-          <h2 className="text-lg font-semibold">Messages</h2>
+    <div className="flex flex-col h-full bg-card">
+      <div className="px-4 py-5 border-b">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-primary/10">
+            <Users className="h-4 w-4 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-base font-semibold">Direct Messages</h2>
+            <p className="text-xs text-muted-foreground">Team members</p>
+          </div>
         </div>
       </div>
 
       <ScrollArea className="flex-1">
         <div className="p-2">
           {users.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <MessageCircle className="h-12 w-12 mx-auto mb-2 opacity-50" />
-              <p>No users available</p>
+            <div className="text-center py-12 px-4">
+              <div className="flex justify-center mb-3">
+                <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+                  <MessageCircle className="h-6 w-6 text-muted-foreground" />
+                </div>
+              </div>
+              <p className="text-sm font-medium text-muted-foreground">No team members</p>
+              <p className="text-xs text-muted-foreground mt-1">Users will appear here</p>
             </div>
           ) : (
             users.map((user) => {
@@ -128,33 +138,40 @@ export const ChatUserList: React.FC<ChatUserListProps> = ({ onSelectUser, select
                 <div
                   key={user.getUid()}
                   onClick={() => handleUserSelect(user)}
-                  className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
+                  className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200 mb-1 ${
                     isSelected 
-                      ? 'bg-primary/10 border-l-4 border-primary' 
-                      : 'hover:bg-accent'
+                      ? 'bg-primary/10 shadow-sm' 
+                      : 'hover:bg-accent/50'
                   }`}
                 >
                   <div className="relative">
-                    <Avatar>
-                      <AvatarFallback className="bg-primary/20 text-primary">
+                    <Avatar className="h-10 w-10">
+                      <AvatarFallback className={`${
+                        isSelected ? 'bg-primary text-primary-foreground' : 'bg-primary/20 text-primary'
+                      } font-medium`}>
                         {user.getName().charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     {isOnline && (
-                      <div className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 rounded-full border-2 border-white" />
+                      <div className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 rounded-full border-2 border-card shadow-sm" />
                     )}
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <p className="font-medium truncate">{user.getName()}</p>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className={`text-sm font-medium truncate ${
+                        isSelected ? 'text-foreground' : 'text-foreground'
+                      }`}>
+                        {user.getName()}
+                      </p>
                       {unreadCount > 0 && (
-                        <Badge variant="default" className="ml-2">
-                          {unreadCount}
+                        <Badge variant="default" className="h-5 min-w-5 px-1.5 text-xs">
+                          {unreadCount > 99 ? '99+' : unreadCount}
                         </Badge>
                       )}
                     </div>
-                    <p className="text-sm text-muted-foreground capitalize">
+                    <p className="text-xs text-muted-foreground capitalize flex items-center gap-1.5 mt-0.5">
+                      {isOnline && <span className="h-1.5 w-1.5 rounded-full bg-green-500" />}
                       {isOnline ? 'Online' : 'Offline'}
                     </p>
                   </div>
