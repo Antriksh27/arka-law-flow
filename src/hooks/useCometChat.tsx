@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
-import { initCometChat, loginCometChatUser, logoutCometChat } from '@/lib/cometchat';
+import { initCometChat, loginCometChatUser, logoutCometChat, CometChatUIKit } from '@/lib/cometchat';
 import { useAuth } from '@/contexts/AuthContext';
 
 export const useCometChat = () => {
@@ -43,10 +43,16 @@ export const useCometChat = () => {
 
     loginUser();
 
-    // Cleanup: logout when component unmounts or user changes
+    // Cleanup: logout when user changes (only if currently logged in)
     return () => {
-      if (user) {
-        logoutCometChat();
+      if (user && cometChatUser) {
+        CometChatUIKit.getLoggedinUser().then((loggedInUser) => {
+          if (loggedInUser) {
+            logoutCometChat();
+          }
+        }).catch(() => {
+          // User not logged in, no need to logout
+        });
       }
     };
   }, [isInitialized, user]);
