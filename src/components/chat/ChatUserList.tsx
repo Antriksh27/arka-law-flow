@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { CometChat, getCometChatUsers } from '@/lib/cometchat';
+import { CometChat, createCometChatUser } from '@/lib/cometchat';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Users, MessageCircle } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ChatUserListProps {
   onSelectUser: (user: CometChat.User) => void;
@@ -11,6 +13,7 @@ interface ChatUserListProps {
 }
 
 export const ChatUserList: React.FC<ChatUserListProps> = ({ onSelectUser, selectedUserId }) => {
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<CometChat.User[]>([]);
   const [loading, setLoading] = useState(true);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
@@ -42,8 +45,39 @@ export const ChatUserList: React.FC<ChatUserListProps> = ({ onSelectUser, select
   const loadUsers = async () => {
     setLoading(true);
     try {
-      const usersList = await getCometChatUsers(50);
-      setUsers(usersList);
+      // Fetch real users from Supabase team_members table
+      const { data: teamMembers, error } = await supabase
+        .from('team_members')
+        .select('user_id, full_name, email, role')
+        .neq('user_id', currentUser?.id || ''); // Exclude current user
+      
+      if (error) throw error;
+
+      const cometChatUsers: CometChat.User[] = [];
+
+      // For each team member, ensure they exist in CometChat and get their user object
+      for (const member of teamMembers || []) {
+        try {
+          // Try to get existing CometChat user
+          let cometUser = await CometChat.getUser(member.user_id);
+          cometChatUsers.push(cometUser);
+        } catch (err: any) {
+          // If user doesn't exist in CometChat, create them
+          if (err?.code === 'ERR_UID_NOT_FOUND') {
+            try {
+              const newUser = await createCometChatUser(
+                member.user_id, 
+                member.full_name || member.email || 'Unknown User'
+              );
+              cometChatUsers.push(newUser);
+            } catch (createErr) {
+              console.error('Error creating CometChat user:', createErr);
+            }
+          }
+        }
+      }
+
+      setUsers(cometChatUsers);
     } catch (error) {
       console.error('Error loading users:', error);
     } finally {
