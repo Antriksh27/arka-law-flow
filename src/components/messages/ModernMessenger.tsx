@@ -90,8 +90,23 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
           .setLimit(50)
           .setConversationType(CometChat.RECEIVER_TYPE.USER) // Only fetch 1-on-1 user conversations
           .build();
-        const conversationsList = await conversationsRequest.fetchNext();
-        setConversations(conversationsList);
+        const conversationsList: CometChat.Conversation[] = await conversationsRequest.fetchNext();
+        
+        // Filter to only show conversations where current user is involved
+        const currentUserId = cometChatUser.getUid();
+        const filteredConversations = conversationsList.filter((conv: CometChat.Conversation) => {
+          const lastMessage = conv.getLastMessage();
+          if (!lastMessage) return false;
+          
+          const senderId = lastMessage.getSender()?.getUid();
+          const receiverId = lastMessage.getReceiverId();
+          
+          // Only include if current user is sender or receiver
+          return senderId === currentUserId || receiverId === currentUserId;
+        });
+        
+        setConversations(filteredConversations);
+        console.log('Filtered conversations for user:', currentUserId, filteredConversations);
       } catch (error) {
         console.error('Error fetching conversations:', error);
       }
