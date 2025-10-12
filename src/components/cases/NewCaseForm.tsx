@@ -110,9 +110,16 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
 
   const createCaseMutation = useMutation({
     mutationFn: async (data: CaseFormData) => {
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      
+      // Get first assigned user for assigned_to field (single value)
+      const firstAssignedUser = Array.isArray(data.assigned_users) && data.assigned_users.length > 0
+        ? data.assigned_users[0]
+        : null;
+
       const caseData = {
-        title: data.case_title, // Keep the existing title field for backward compatibility
-        case_title: data.case_title, // Add the new case_title field
+        title: data.case_title,
+        case_title: data.case_title,
         description: data.description || null,
         client_id: data.client_id || null,
         case_type: data.case_type as any,
@@ -127,10 +134,9 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
         respondent: data.respondent || null,
         advocate_name: data.advocate_name || null,
         district: data.district || null,
-        assigned_users: Array.isArray(data.assigned_users)
-          ? data.assigned_users
-          : (data.assigned_users ? [data.assigned_users] : []),
-        created_by: (await supabase.auth.getUser()).data.user?.id
+        assigned_to: firstAssignedUser,
+        created_by: userId,
+        firm_id: firmId
       };
 
       const { error } = await supabase
