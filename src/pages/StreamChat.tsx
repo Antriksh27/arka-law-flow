@@ -45,42 +45,37 @@ const StreamChatPage: React.FC = () => {
         return;
       }
       
-      // Get all teammate user_ids in same firm (excluding self)
-      const { data: teamRows, error: teamErr } = await supabase
+      // Get team members directly from team_members table (it has full_name)
+      const { data: teamData, error: teamErr } = await supabase
         .from('team_members')
-        .select('user_id')
+        .select('user_id, full_name, role')
         .eq('firm_id', currentMember.firm_id)
         .neq('user_id', user.id);
       
       if (teamErr) {
-        console.error('Error fetching team member rows:', teamErr);
+        console.error('Error fetching team members:', teamErr);
         setTeamMembers([]);
         return;
       }
       
-      const ids = (teamRows || []).map(r => r.user_id).filter(Boolean);
-      if (ids.length === 0) {
-        setTeamMembers([]);
-        return;
-      }
-      
-      // Fetch profile details for those user_ids
-      const { data: profilesData, error: profilesErr } = await supabase
+      // Get profiles for email addresses
+      const userIds = (teamData || []).map(tm => tm.user_id);
+      const { data: profilesData } = await supabase
         .from('profiles')
-        .select('id, full_name, email')
-        .in('id', ids);
+        .select('id, email')
+        .in('id', userIds);
       
-      if (profilesErr) {
-        console.error('Error fetching profiles for team members:', profilesErr);
-        setTeamMembers([]);
-        return;
-      }
+      // Create a map of user_id to email
+      const emailMap = (profilesData || []).reduce((acc: Record<string, string>, profile: any) => {
+        acc[profile.id] = profile.email;
+        return acc;
+      }, {});
       
-      const formattedData: TeamMember[] = (profilesData || []).map((p: any) => ({
-        user_id: p.id,
+      const formattedData: TeamMember[] = (teamData || []).map((tm: any) => ({
+        user_id: tm.user_id,
         profiles: {
-          full_name: p.full_name || p.email || 'User',
-          email: p.email || '',
+          full_name: tm.full_name || 'User',
+          email: emailMap[tm.user_id] || '',
         },
       }));
       
