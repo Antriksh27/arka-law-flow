@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { NovuProvider, PopoverNotificationCenter, NotificationBell } from "@novu/react";
+import { Inbox } from "@novu/react";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function NotificationInbox({ userId }) {
@@ -19,16 +19,30 @@ export default function NotificationInbox({ userId }) {
   if (!applicationIdentifier || !subscriberId) return null;
 
   return (
-    <NovuProvider
-      subscriberId={subscriberId}
+    <Inbox
       applicationIdentifier={applicationIdentifier}
+      subscriberId={subscriberId}
       backendUrl={backendUrl}
       socketUrl={socketUrl}
-      theme="light"
-    >
-      <PopoverNotificationCenter colorScheme="light">
-        {({ unseenCount }) => <NotificationBell unseenCount={unseenCount} />}
-      </PopoverNotificationCenter>
-    </NovuProvider>
+      appearance={{
+        variables: {
+          colorPrimary: 'hsl(221, 83%, 53%)',
+          colorPrimaryForeground: 'hsl(0, 0%, 100%)',
+          colorSecondary: 'hsl(211, 100%, 93%)',
+          colorSecondaryForeground: 'hsl(222, 47%, 11%)',
+          colorCounter: 'hsl(221, 83%, 53%)',
+          colorCounterForeground: 'hsl(0, 0%, 100%)',
+          colorBackground: 'hsl(0, 0%, 100%)',
+          colorForeground: 'hsl(222, 47%, 11%)',
+          colorNeutral: 'hsl(220, 13%, 91%)',
+          fontSize: '14px',
+        },
+        elements: {
+          bellIcon: {
+            color: 'hsl(222, 47%, 11%)',
+          },
+        },
+      }}
+    />
   );
 }
