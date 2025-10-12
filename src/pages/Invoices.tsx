@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { InvoicesHeader } from '@/features/invoices/components/InvoicesHeader';
 import { InvoicesTable } from '@/features/invoices/components/InvoicesTable';
 import { InvoiceFormDialog } from '@/features/invoices/components/InvoiceFormDialog';
@@ -274,6 +275,8 @@ const Invoices: React.FC = () => {
   const { firmId, loading, firmError } = useAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
@@ -310,23 +313,29 @@ const Invoices: React.FC = () => {
     enabled: !!firmId
   });
 
-  // Listen for Zoho authorization success from popup window
+  // Handle Zoho callback redirect
   useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'zoho_auth_success') {
-        // Authorization completed, refetch the token
-        refetchZohoToken();
-        localStorage.removeItem('zoho_auth_success');
-        toast({ 
-          title: 'Zoho Connected', 
-          description: 'Successfully connected to Zoho Books!' 
-        });
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, [refetchZohoToken, toast]);
+    const params = new URLSearchParams(location.search);
+    const zohoStatus = params.get('zoho');
+    
+    if (zohoStatus === 'success') {
+      refetchZohoToken();
+      toast({ 
+        title: 'Success', 
+        description: 'Zoho Books connected successfully!' 
+      });
+      // Clean URL
+      navigate('/invoices', { replace: true });
+    } else if (zohoStatus === 'error') {
+      const message = params.get('message') || 'Failed to connect Zoho';
+      toast({ 
+        title: 'Error', 
+        description: message,
+        variant: 'destructive'
+      });
+      navigate('/invoices', { replace: true });
+    }
+  }, [location.search, refetchZohoToken, navigate]);
 
   const handleConnectZoho = () => {
     const zohoClientId = '1000.MC4YZPCGPZGGJ2J7BTJQZLURRPME6Z';
@@ -335,12 +344,8 @@ const Invoices: React.FC = () => {
     
     const authUrl = `https://accounts.zoho.com/oauth/v2/auth?scope=${scope}&client_id=${zohoClientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&access_type=offline`;
     
-    // Open in new tab to avoid iframe restrictions
-    window.open(authUrl, '_blank');
-    toast({ 
-      title: 'Opening Zoho Authorization', 
-      description: 'Complete the authorization in the new tab. This page will update automatically.' 
-    });
+    // Redirect to Zoho OAuth
+    window.location.href = authUrl;
   };
 
   const { data: invoices, isLoading, error } = useQuery({

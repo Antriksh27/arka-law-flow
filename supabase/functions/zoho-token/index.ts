@@ -55,8 +55,18 @@ serve(async (req) => {
 
     const tokenData = await tokenResponse.json();
 
-    // Calculate expiry time
-    const expiresAt = new Date(Date.now() + tokenData.expires_in * 1000);
+    console.log('Zoho token response:', JSON.stringify({
+      has_access_token: !!tokenData.access_token,
+      has_refresh_token: !!tokenData.refresh_token,
+      expires_in: tokenData.expires_in
+    }));
+
+    // Calculate expiry time with validation
+    const expiresInSeconds = typeof tokenData.expires_in === 'number' && tokenData.expires_in > 0
+      ? tokenData.expires_in 
+      : 3600; // Default to 1 hour if missing or invalid
+    
+    const expiresAt = new Date(Date.now() + expiresInSeconds * 1000);
 
     // Get the authenticated user
     const authHeader = req.headers.get('Authorization');

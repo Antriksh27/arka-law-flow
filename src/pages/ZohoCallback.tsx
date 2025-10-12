@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
 export default function ZohoCallback() {
   const [searchParams] = useSearchParams();
@@ -13,8 +12,8 @@ export default function ZohoCallback() {
       const error = searchParams.get("error");
 
       if (error) {
-        toast.error("Zoho authorization failed");
-        navigate("/invoices");
+        console.error("Zoho authorization failed:", error);
+        navigate("/invoices?zoho=error&message=" + encodeURIComponent("Authorization failed"));
         return;
       }
 
@@ -37,18 +36,12 @@ export default function ZohoCallback() {
           }
 
           console.log("Zoho connected successfully");
-          // Signal to the parent window/tab that authorization succeeded
-          localStorage.setItem('zoho_auth_success', Date.now().toString());
-          toast.success("Zoho connected successfully! Closing this window...");
-          
-          // Close the popup after a short delay
-          setTimeout(() => {
-            window.close();
-          }, 1500);
+          // Redirect back to invoices with success parameter
+          navigate("/invoices?zoho=success");
         } catch (err: any) {
           console.error("Error exchanging Zoho token:", err);
-          toast.error(err.message || "Failed to connect Zoho");
-          navigate("/invoices");
+          const errorMessage = err.message || "Failed to connect Zoho";
+          navigate("/invoices?zoho=error&message=" + encodeURIComponent(errorMessage));
         }
       }
     };
