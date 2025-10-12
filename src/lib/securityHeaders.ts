@@ -9,7 +9,7 @@ export const SECURITY_HEADERS = {
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: https: blob:",
     "font-src 'self' data:",
-    "connect-src 'self' https://hpcnipcbymruvsnqrmjx.supabase.co wss://hpcnipcbymruvsnqrmjx.supabase.co",
+    "connect-src 'self' https://hpcnipcbymruvsnqrmjx.supabase.co wss://hpcnipcbymruvsnqrmjx.supabase.co https://*.stream-io-api.com wss://*.stream-io-api.com",
     "frame-src 'none'",
     "object-src 'none'",
     "base-uri 'self'",

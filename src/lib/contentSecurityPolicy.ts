@@ -36,7 +36,10 @@ export const CSP_DIRECTIVES = {
     "https://oauth2.googleapis.com",
     "https://www.googleapis.com",
     "https://*.cometchat.io",
-    "wss://*.cometchat.io"
+    "wss://*.cometchat.io",
+    // Stream Chat (WebSocket + REST)
+    "https://*.stream-io-api.com",
+    "wss://*.stream-io-api.com"
   ],
   'object-src': ["'none'"],
   'frame-src': ["'self'", 'blob:', 'data:', 'https:'],
