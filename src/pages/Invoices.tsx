@@ -317,7 +317,12 @@ const Invoices: React.FC = () => {
     
     const authUrl = `https://accounts.zoho.com/oauth/v2/auth?scope=${scope}&client_id=${zohoClientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&access_type=offline`;
     
-    window.location.href = authUrl;
+    // Open in new tab to avoid iframe restrictions
+    window.open(authUrl, '_blank');
+    toast({ 
+      title: 'Opening Zoho Authorization', 
+      description: 'Complete the authorization in the new tab, then refresh this page.' 
+    });
   };
 
   const { data: invoices, isLoading, error } = useQuery({
