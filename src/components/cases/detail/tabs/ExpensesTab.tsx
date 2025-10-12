@@ -208,7 +208,7 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({ caseId }) => {
                 {caseData?.clients && (
                   <div className="text-sm text-muted-foreground bg-muted p-3 rounded-lg">
                     <p><strong>Linked to:</strong></p>
-                    <p>Case: {caseData.case_number}</p>
+                    <p>Title: {caseData.title}</p>
                     <p>Client: {caseData.clients.full_name}</p>
                   </div>
                 )}
