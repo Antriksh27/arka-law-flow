@@ -1,307 +1,331 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { ChatInput } from '@/components/ui/chat-input';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Send, Users, MessageCircle, Sparkles, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useCometChat } from '@/hooks/useCometChat';
+import { CometChat } from '@cometchat/chat-sdk-javascript';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Send, Search, Users, MessageCircle } from 'lucide-react';
-import { useStreamChat } from '@/contexts/StreamChatContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
-import { MessageLoading } from '@/components/ui/message-loading';
-import ChatList from './ui/ChatList';
-import { Channel } from 'stream-chat';
+import ChatList from '@/components/messages/ui/ChatList';
 import { cn } from '@/lib/utils';
-import { motion, AnimatePresence } from 'framer-motion';
+import { MessageLoading } from '@/components/ui/message-loading';
+import { createCometChatUser } from '@/lib/cometchat';
+import { toast } from '@/hooks/use-toast';
+
 interface TeamMember {
   user_id: string;
   full_name: string;
   email: string;
   role: string;
 }
+
 interface ModernMessengerProps {
   onChannelSelect?: (channel: any) => void;
 }
-const ModernMessenger: React.FC<ModernMessengerProps> = ({
-  onChannelSelect
-}) => {
-  const {
-    client,
-    isReady
-  } = useStreamChat();
-  const {
-    user
-  } = useAuth();
-  const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
-  const [messages, setMessages] = useState<any[]>([]);
+
+const ModernMessenger: React.FC<ModernMessengerProps> = ({ onChannelSelect }) => {
+  const { user } = useAuth();
+  const { isCometChatReady, cometChatUser } = useCometChat();
+  const [selectedUser, setSelectedUser] = useState<CometChat.User | null>(null);
+  const [messages, setMessages] = useState<CometChat.BaseMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
-  const [channels, setChannels] = useState<Channel[]>([]);
+  const [conversations, setConversations] = useState<CometChat.Conversation[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [activeTab, setActiveTab] = useState<'chats' | 'team'>('chats');
-  const [typingUsers, setTypingUsers] = useState<any[]>([]);
+  const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const MESSAGE_LISTENER_ID = 'modern_messenger_listener';
 
-  // Fetch team members using RPC function (same as StreamChat.tsx)
+  // Fetch team members and create CometChat users for them
   useEffect(() => {
     const fetchTeamMembers = async () => {
-      if (!user) return;
+      if (!user || !isCometChatReady) return;
+
       try {
-        // Get current user's firm
-        const {
-          data: currentMember
-        } = await supabase.from('team_members').select('firm_id').eq('user_id', user.id).maybeSingle();
-        if (!currentMember?.firm_id) {
-          console.warn('No firm membership found for current user');
-          setTeamMembers([]);
+        const { data, error } = await supabase.rpc('get_firm_members_for_chat');
+
+        if (error) {
+          console.error('Error fetching team members:', error);
           return;
         }
 
-        // Fetch firm members via secure RPC (bypasses RLS safely)
-        const {
-          data: rpcData,
-          error: rpcErr
-        } = await supabase.rpc('get_firm_members_for_chat');
-        if (rpcErr) {
-          console.error('Error fetching firm members via RPC:', rpcErr);
-          toast({
-            title: 'Error loading team members',
-            description: 'Could not fetch team members',
-            variant: 'destructive'
-          });
-          setTeamMembers([]);
-          return;
-        }
-        const formattedMembers: TeamMember[] = (rpcData || []).filter((m: any) => m.user_id !== user.id) // Exclude current user
-        .map((m: any) => ({
-          user_id: m.user_id,
-          full_name: m.full_name || m.email || 'Unknown User',
-          email: m.email || '',
-          role: m.role || 'member'
-        }));
-        setTeamMembers(formattedMembers);
-      } catch (error) {
-        console.error('Error fetching team members:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to load team members',
-          variant: 'destructive'
-        });
-      }
-    };
-    fetchTeamMembers();
-  }, [user]);
-
-  // Fetch channels
-  useEffect(() => {
-    if (!client || !isReady) return;
-    const fetchChannels = async () => {
-      try {
-        const filter = {
-          type: 'messaging',
-          members: {
-            $in: [client.userID!]
+        if (data) {
+          setTeamMembers(data);
+          
+          // Ensure all team members exist as CometChat users
+          for (const member of data) {
+            try {
+              await CometChat.getUser(member.user_id);
+            } catch (err) {
+              // User doesn't exist, create them
+              try {
+                await createCometChatUser(member.user_id, member.full_name || member.email);
+              } catch (createErr) {
+                console.error(`Error creating CometChat user for ${member.user_id}:`, createErr);
+              }
+            }
           }
-        };
-        const sort = [{
-          last_message_at: -1 as const
-        }];
-        const channelsResponse = await client.queryChannels(filter, sort, {
-          limit: 20
-        });
-        setChannels(channelsResponse);
+        }
       } catch (error) {
-        console.error('Error fetching channels:', error);
-        toast({
-          title: 'Error loading chats',
-          description: 'Could not fetch chat channels',
-          variant: 'destructive'
-        });
+        console.error('Error in fetchTeamMembers:', error);
       }
     };
-    fetchChannels();
-  }, [client, isReady]);
 
-  // Clear selected channel when client disconnects
+    fetchTeamMembers();
+  }, [user, isCometChatReady]);
+
+  // Fetch user's conversations
   useEffect(() => {
-    if (!client || !isReady) {
-      setSelectedChannel(null);
+    const fetchConversations = async () => {
+      if (!isCometChatReady || !cometChatUser) return;
+
+      try {
+        const conversationsRequest = new CometChat.ConversationsRequestBuilder()
+          .setLimit(50)
+          .build();
+        
+        const conversationsList = await conversationsRequest.fetchNext();
+        setConversations(conversationsList);
+      } catch (error) {
+        console.error('Error fetching conversations:', error);
+      }
+    };
+
+    fetchConversations();
+  }, [isCometChatReady, cometChatUser]);
+
+  // Clear selected user when CometChat is not ready
+  useEffect(() => {
+    if (!isCometChatReady) {
+      setSelectedUser(null);
       setMessages([]);
     }
-  }, [client, isReady]);
+  }, [isCometChatReady]);
 
-  // Fetch messages when channel is selected
+  // Fetch messages when a user is selected
   useEffect(() => {
-    if (!selectedChannel || !client || !isReady) return;
-    const loadMessages = async () => {
+    const fetchMessages = async () => {
+      if (!selectedUser || !cometChatUser) return;
+
       try {
-        await selectedChannel.watch();
-        const state = selectedChannel.state;
-        const messageArray = Object.values(state.messages || {});
-        setMessages(messageArray);
+        const messagesRequest = new CometChat.MessagesRequestBuilder()
+          .setUID(selectedUser.getUid())
+          .setLimit(50)
+          .build();
+        
+        const messagesList = await messagesRequest.fetchPrevious();
+        setMessages(messagesList);
+        scrollToBottom();
+
+        // Set up real-time message listeners
+        CometChat.addMessageListener(
+          MESSAGE_LISTENER_ID,
+          new CometChat.MessageListener({
+            onTextMessageReceived: (message: CometChat.TextMessage) => {
+              // Only add messages for the selected conversation
+              if (message.getSender().getUid() === selectedUser.getUid() ||
+                  message.getReceiverId() === selectedUser.getUid()) {
+                setMessages((prevMessages) => [...prevMessages, message]);
+                scrollToBottom();
+              }
+            },
+            onTypingStarted: (typingIndicator: CometChat.TypingIndicator) => {
+              if (typingIndicator.getSender().getUid() === selectedUser.getUid()) {
+                setTypingUsers((prev) => {
+                  const senderId = typingIndicator.getSender().getUid();
+                  if (!prev.includes(senderId)) {
+                    return [...prev, senderId];
+                  }
+                  return prev;
+                });
+              }
+            },
+            onTypingEnded: (typingIndicator: CometChat.TypingIndicator) => {
+              if (typingIndicator.getSender().getUid() === selectedUser.getUid()) {
+                setTypingUsers((prev) => 
+                  prev.filter((id) => id !== typingIndicator.getSender().getUid())
+                );
+              }
+            }
+          })
+        );
+
+        return () => {
+          CometChat.removeMessageListener(MESSAGE_LISTENER_ID);
+        };
       } catch (error) {
-        console.error('Error loading messages:', error);
-        toast({
-          title: 'Error loading messages',
-          description: 'Please refresh the page',
-          variant: 'destructive'
-        });
+        console.error('Error fetching messages:', error);
       }
     };
-    loadMessages();
 
-    // Listen for new messages
-    const handleNewMessage = (event: any) => {
-      setMessages(prev => [...prev, event.message]);
-    };
-
-    // Listen for typing events
-    const handleTypingStart = (event: any) => {
-      if (event.user?.id !== client.userID) {
-        setTypingUsers(prev => [...prev.filter(u => u.id !== event.user?.id), event.user]);
-      }
-    };
-    const handleTypingStop = (event: any) => {
-      setTypingUsers(prev => prev.filter(u => u.id !== event.user?.id));
-    };
-    selectedChannel.on('message.new', handleNewMessage);
-    selectedChannel.on('typing.start', handleTypingStart);
-    selectedChannel.on('typing.stop', handleTypingStop);
+    fetchMessages();
+    
     return () => {
-      selectedChannel.off('message.new', handleNewMessage);
-      selectedChannel.off('typing.start', handleTypingStart);
-      selectedChannel.off('typing.stop', handleTypingStop);
+      CometChat.removeMessageListener(MESSAGE_LISTENER_ID);
     };
-  }, [selectedChannel, client, isReady]);
-  // Auto-scroll to bottom
+  }, [selectedUser, cometChatUser]);
+
   const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'end'
-    });
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
+
   useEffect(() => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
-  useEffect(() => {
-    const observer = new MutationObserver(scrollToBottom);
-    if (containerRef.current) {
-      observer.observe(containerRef.current, {
-        childList: true,
-        subtree: true
-      });
-    }
-    return () => observer.disconnect();
-  }, [scrollToBottom]);
+
   const handleSendMessage = async () => {
-    if (!inputValue.trim() || !selectedChannel || !client || !isReady) return;
+    if (!inputValue.trim() || !selectedUser || !cometChatUser) return;
+
     try {
-      await selectedChannel.sendMessage({
-        text: inputValue
-      });
+      const textMessage = new CometChat.TextMessage(
+        selectedUser.getUid(),
+        inputValue,
+        CometChat.RECEIVER_TYPE.USER
+      );
+      
+      const sentMessage = await CometChat.sendMessage(textMessage);
+      setMessages((prevMessages) => [...prevMessages, sentMessage]);
       setInputValue('');
-      await selectedChannel.stopTyping();
+      scrollToBottom();
+      
+      // End typing indicator
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = null;
+      }
+      const typingNotification = new CometChat.TypingIndicator(
+        selectedUser.getUid(),
+        CometChat.RECEIVER_TYPE.USER
+      );
+      CometChat.endTyping(typingNotification);
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
         title: 'Error sending message',
-        description: 'Please try again or refresh the page',
+        description: 'Please try again',
         variant: 'destructive'
       });
     }
   };
-  const handleInputChange = async (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInputValue(e.target.value);
-    if (selectedChannel && e.target.value.trim()) {
-      await selectedChannel.keystroke();
-    }
-  };
-  const getChannelName = (channel: Channel) => {
-    const members = Object.values(channel.state.members);
-    const otherMember = members.find((m: any) => m.user?.id !== client?.userID);
-    return otherMember?.user?.name || otherMember?.user?.id || 'Unknown';
-  };
-  const getChannelAvatar = (channel: Channel) => {
-    const members = Object.values(channel.state.members);
-    const otherMember = members.find((m: any) => m.user?.id !== client?.userID);
-    return otherMember?.user?.image || '';
-  };
-  const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-  };
-  const handleStartDM = async (memberId: string) => {
-    if (!client || !isReady) {
-      toast({
-        title: 'Chat not ready',
-        description: 'Please wait for the chat to connect',
-        variant: 'destructive'
-      });
-      return;
-    }
-    try {
-      const members = [client.userID!, memberId].sort();
-      const hash = members.map(id => id.replace(/-/g, '')).join('');
-      const channelId = hash.substring(0, 63);
-      const channel = client.channel('messaging', channelId, {
-        members
-      });
-      await channel.watch();
-      setSelectedChannel(channel);
-      setActiveTab('chats');
 
-      // Refresh channels list
-      const filter = {
-        type: 'messaging',
-        members: {
-          $in: [client.userID!]
-        }
-      };
-      const sort = [{
-        last_message_at: -1 as const
-      }];
-      const channelsResponse = await client.queryChannels(filter, sort, {
-        limit: 20
-      });
-      setChannels(channelsResponse);
-      toast({
-        title: 'Chat opened',
-        description: 'Direct message channel ready'
-      });
-    } catch (error: any) {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+    
+    // Send typing indicator
+    if (selectedUser) {
+      const typingNotification = new CometChat.TypingIndicator(
+        selectedUser.getUid(),
+        CometChat.RECEIVER_TYPE.USER
+      );
+      CometChat.startTyping(typingNotification);
+      
+      // Clear previous timeout
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      
+      // End typing after 3 seconds of inactivity
+      typingTimeoutRef.current = setTimeout(() => {
+        CometChat.endTyping(typingNotification);
+      }, 3000);
+    }
+  };
+
+  const getConversationName = (conversation: CometChat.Conversation): string => {
+    const conversationWith = conversation.getConversationWith() as CometChat.User;
+    return conversationWith.getName() || conversationWith.getUid();
+  };
+
+  const getConversationAvatar = (conversation: CometChat.Conversation): string => {
+    const conversationWith = conversation.getConversationWith() as CometChat.User;
+    return conversationWith.getAvatar() || '';
+  };
+
+  const getInitials = (name: string): string => {
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const handleStartDM = async (teamMember: TeamMember) => {
+    if (!cometChatUser) return;
+
+    try {
+      // Get the user to chat with
+      const userToChat = await CometChat.getUser(teamMember.user_id);
+      setSelectedUser(userToChat);
+      onChannelSelect?.(userToChat as any);
+      
+      // Switch to chats tab
+      setActiveTab('chats');
+    } catch (error) {
       console.error('Error starting DM:', error);
       toast({
         title: 'Error',
-        description: error.message || 'Failed to start chat',
+        description: 'Could not start chat with this user',
         variant: 'destructive'
       });
     }
   };
-  if (!isReady || !client) {
-    return <div className="flex items-center justify-center h-[calc(100vh-64px)] bg-background">
+
+  if (!isCometChatReady || !cometChatUser) {
+    return (
+      <div className="flex items-center justify-center h-[calc(100vh-64px)] bg-background">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading messenger...</p>
+          <p className="text-muted-foreground">Loading chat...</p>
         </div>
-      </div>;
+      </div>
+    );
   }
-  return <div className="flex h-[calc(100vh-64px)] bg-gradient-to-br from-background via-background to-muted/20">
+
+  return (
+    <div className="flex h-[calc(100vh-64px)] bg-gradient-to-br from-background via-background to-muted/20">
       {/* Sidebar */}
       <div className="w-80 border-r border-border/50 flex flex-col bg-card/95 backdrop-blur-sm">
         {/* Header */}
         <div className="p-6 border-b border-border/50">
-          <h1 className="text-2xl font-semibold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">Messages</h1>
+          <h1 className="text-2xl font-semibold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+            Messages
+          </h1>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input type="text" placeholder="Search conversations..." className="w-full pl-10 pr-4 py-2.5 border border-border/50 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all bg-slate-50" />
+            <input
+              type="text"
+              placeholder="Search conversations..."
+              className="w-full pl-10 pr-4 py-2.5 border border-border/50 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all bg-background"
+            />
           </div>
         </div>
 
         {/* Tabs */}
         <div className="flex border-b border-border/50 bg-muted/30">
-          <button onClick={() => setActiveTab('chats')} className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-medium transition-all ${activeTab === 'chats' ? 'text-primary border-b-2 border-primary bg-background/50' : 'text-muted-foreground hover:text-foreground hover:bg-muted/20'}`}>
+          <button
+            onClick={() => setActiveTab('chats')}
+            className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-medium transition-all ${
+              activeTab === 'chats'
+                ? 'text-primary border-b-2 border-primary bg-background/50'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/20'
+            }`}
+          >
             <MessageCircle className="h-4 w-4" />
             <span>Chats</span>
           </button>
-          <button onClick={() => setActiveTab('team')} className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-medium transition-all ${activeTab === 'team' ? 'text-primary border-b-2 border-primary bg-background/50' : 'text-muted-foreground hover:text-foreground hover:bg-muted/20'}`}>
+          <button
+            onClick={() => setActiveTab('team')}
+            className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-medium transition-all ${
+              activeTab === 'team'
+                ? 'text-primary border-b-2 border-primary bg-background/50'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/20'
+            }`}
+          >
             <Users className="h-4 w-4" />
             <span>Team</span>
             <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded-full">
@@ -311,231 +335,237 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
         </div>
 
         {/* Chat List or Team List */}
-        <div className="flex-1 overflow-y-auto">
-          {activeTab === 'chats' ? <div className="p-3 space-y-1">
-              <ChatList>
-                {channels.map(channel => {
-              const channelName = getChannelName(channel);
-              const channelAvatar = getChannelAvatar(channel);
-              const lastMessage = channel.state.messages[channel.state.messages.length - 1];
-              const lastMessageText = lastMessage?.text || 'No messages yet';
-              const timestamp = lastMessage?.created_at ? new Date(lastMessage.created_at).toLocaleTimeString('en-US', {
-                hour: 'numeric',
-                minute: '2-digit'
-              }) : '';
-              return <ChatList.ChatListItem key={channel.id} avatar={channelAvatar} name={channelName} message={lastMessageText} timestamp={timestamp} selected={selectedChannel?.id === channel.id} onClick={() => {
-                setSelectedChannel(channel);
-                onChannelSelect?.(channel);
-              }} />;
-            })}
-                {channels.length === 0 && <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <MessageCircle className="h-12 w-12 text-muted-foreground/50 mb-3" />
-                    <p className="text-sm text-muted-foreground">No conversations yet</p>
-                    <p className="text-xs text-muted-foreground/70 mt-1">Start chatting with your team</p>
-                  </div>}
-              </ChatList>
-            </div> : <div className="p-3 space-y-1">
-              {teamMembers.map(member => <button key={member.user_id} onClick={() => handleStartDM(member.user_id)} disabled={!isReady} className="w-full p-3.5 rounded-xl hover:bg-muted/60 transition-all flex items-center gap-3 text-left disabled:opacity-50 disabled:cursor-not-allowed group hover:shadow-sm border border-transparent hover:border-border/50">
-                  <Avatar className="h-11 w-11 border-2 border-background shadow-sm">
-                    <AvatarFallback className="bg-gradient-to-br from-primary to-primary/70 text-primary-foreground font-medium">
-                      {getInitials(member.full_name)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-sm truncate text-foreground group-hover:text-primary transition-colors">
-                      {member.full_name}
-                    </div>
-                    <div className="text-xs text-muted-foreground truncate flex items-center gap-1.5">
-                      <span className="capitalize">{member.role}</span>
-                      <span className="text-muted-foreground/50">•</span>
-                      <span>{member.email}</span>
-                    </div>
-                  </div>
-                  <MessageCircle className="h-4 w-4 text-muted-foreground/50 group-hover:text-primary flex-shrink-0 transition-colors" />
-                </button>)}
-              {teamMembers.length === 0 && <div className="flex flex-col items-center justify-center py-12 text-center">
+        <div className="flex-1 overflow-y-auto p-3">
+          {activeTab === 'chats' && (
+            <ChatList>
+              {conversations.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center px-4">
+                  <MessageCircle className="h-12 w-12 text-muted-foreground/50 mb-3" />
+                  <p className="text-foreground font-medium">No conversations yet</p>
+                  <p className="text-muted-foreground text-sm mt-1">
+                    Start a conversation with a team member
+                  </p>
+                </div>
+              ) : (
+                conversations.map((conversation) => {
+                  const lastMessage = conversation.getLastMessage();
+                  const lastMessageText = lastMessage 
+                    ? (lastMessage as CometChat.TextMessage).getText?.() || 'Media message'
+                    : 'No messages yet';
+                  const lastMessageTime = lastMessage
+                    ? new Date(lastMessage.getSentAt() * 1000).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })
+                    : '';
+
+                  return (
+                    <ChatList.ChatListItem
+                      key={conversation.getConversationId()}
+                      avatar={getConversationAvatar(conversation)}
+                      name={getConversationName(conversation)}
+                      message={lastMessageText}
+                      timestamp={lastMessageTime}
+                      selected={selectedUser?.getUid() === (conversation.getConversationWith() as CometChat.User).getUid()}
+                      onClick={() => {
+                        const conversationWith = conversation.getConversationWith() as CometChat.User;
+                        setSelectedUser(conversationWith);
+                        onChannelSelect?.(conversationWith as any);
+                      }}
+                    />
+                  );
+                })
+              )}
+            </ChatList>
+          )}
+
+          {activeTab === 'team' && (
+            <div className="space-y-1">
+              {teamMembers.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center px-4">
                   <Users className="h-12 w-12 text-muted-foreground/50 mb-3" />
-                  <p className="text-sm text-muted-foreground">No team members found</p>
-                  <p className="text-xs text-muted-foreground/70 mt-1">Invite members to start collaborating</p>
-                </div>}
-            </div>}
+                  <p className="text-foreground font-medium">No team members</p>
+                  <p className="text-muted-foreground text-sm mt-1">
+                    Team members will appear here
+                  </p>
+                </div>
+              ) : (
+                teamMembers.map((member) => (
+                  <button
+                    key={member.user_id}
+                    onClick={() => handleStartDM(member)}
+                    className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors"
+                  >
+                    <Avatar className="h-10 w-10">
+                      <AvatarFallback className="bg-primary/10 text-primary">
+                        {getInitials(member.full_name || member.email)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 text-left">
+                      <p className="font-semibold text-sm text-foreground">
+                        {member.full_name || member.email}
+                      </p>
+                      <p className="text-xs text-muted-foreground capitalize">{member.role}</p>
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col bg-gradient-to-b from-background to-muted/10">
-        {selectedChannel ? <>
+      <div className="flex-1 flex flex-col bg-card">
+        {selectedUser ? (
+          <>
             {/* Chat Header */}
-            <div className="p-5 border-b border-border/50 flex items-center justify-between bg-card/95 backdrop-blur-sm">
-              <div className="flex items-center gap-4">
-                <Avatar className="h-11 w-11 border-2 border-background shadow-md">
-                  <AvatarImage src={getChannelAvatar(selectedChannel)} />
-                  <AvatarFallback className="bg-gradient-to-br from-primary to-primary/70 text-primary-foreground font-medium">
-                    {getInitials(getChannelName(selectedChannel))}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <h2 className="font-semibold text-base">{getChannelName(selectedChannel)}</h2>
-                  <div className="flex items-center gap-1.5">
-                    <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <p className="text-sm text-muted-foreground">Active now</p>
-                  </div>
-                </div>
+            <div className="border-b border-border px-6 py-4 flex items-center gap-3 bg-card">
+              <Avatar className="h-10 w-10">
+                <AvatarImage src={selectedUser.getAvatar()} />
+                <AvatarFallback className="bg-primary/10 text-primary">
+                  {getInitials(selectedUser.getName())}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h3 className="font-semibold text-foreground">
+                  {selectedUser.getName()}
+                </h3>
+                {typingUsers.length > 0 && (
+                  <p className="text-xs text-primary flex items-center gap-1">
+                    <span>typing</span>
+                    <MessageLoading />
+                  </p>
+                )}
               </div>
-              
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto relative [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]" ref={containerRef}>
-              {/* Top gradient overlay */}
-              <div className="absolute top-0 left-0 right-0 h-32 pointer-events-none z-10" style={{
-            background: 'linear-gradient(to bottom, hsl(var(--background)) 0%, hsla(var(--background), 0.95) 20%, hsla(var(--background), 0.8) 40%, hsla(var(--background), 0.4) 70%, hsla(var(--background), 0) 100%)'
-          }} />
-              
-              <div className="p-8 min-h-full flex flex-col justify-end bg-slate-50">
-                {messages.map((message, index) => {
-              const isMe = message.user?.id === client.userID;
-              const userName = message.user?.name || message.user?.id || 'Unknown';
-              const userAvatar = message.user?.image || '';
+            <div
+              ref={scrollContainerRef}
+              className="flex-1 overflow-y-auto p-6 space-y-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+            >
+              {messages.map((message, index) => {
+                const isMe = message.getSender().getUid() === cometChatUser?.getUid();
+                const prevMessage = index > 0 ? messages[index - 1] : null;
+                const nextMessage = index < messages.length - 1 ? messages[index + 1] : null;
 
-              // Message grouping logic
-              const previousMessage = index > 0 ? messages[index - 1] : null;
-              const nextMessage = index < messages.length - 1 ? messages[index + 1] : null;
-              const isContinuation = previousMessage?.user?.id === message.user?.id;
-              const nextMessageSameSender = nextMessage?.user?.id === message.user?.id;
-              const shouldShowAvatar = !nextMessageSameSender;
-              const spacingClass = index === 0 ? "" : isContinuation ? "mt-1.5" : "mt-8";
-              const roundedClass = isMe ? "rounded-bl-lg rounded-tl-lg rounded-tr-lg" // Right: rounded except bottom-right
-              : "rounded-br-lg rounded-tl-lg rounded-tr-lg"; // Left: rounded except bottom-left
+                // Check if this message is from the same sender as the previous one
+                const isSameSenderAsPrev = prevMessage && prevMessage.getSender().getUid() === message.getSender().getUid();
+                const isSameSenderAsNext = nextMessage && nextMessage.getSender().getUid() === message.getSender().getUid();
 
-              return <div key={message.id} className={spacingClass}>
-                        <div className={cn("flex items-end gap-3 max-w-[70%]", isMe ? "ml-auto flex-row-reverse" : "mr-auto")}>
-                            {/* Avatar with animation */}
-                          <AnimatePresence mode="wait">
-                            {shouldShowAvatar ? <motion.div key="avatar" initial={{
-                        opacity: 0,
-                        scale: 0
-                      }} animate={{
-                        opacity: 1,
-                        scale: 1
-                      }} exit={{
-                        opacity: 0,
-                        scale: 0
-                      }} transition={{
-                        duration: 0.2
-                      }}>
-                                <Avatar className="w-8 h-8 flex-shrink-0 border-[1.5px] border-white shadow-sm">
-                                  <AvatarImage src={userAvatar} />
-                                  <AvatarFallback className={isMe ? "bg-primary text-primary-foreground" : "bg-muted"}>
-                                    {getInitials(userName)}
-                                  </AvatarFallback>
-                                </Avatar>
-                              </motion.div> : <div className="w-8 h-8 flex-shrink-0" key="spacer" />}
-                          </AnimatePresence>
-                          
-                          {/* Message content */}
-                          <motion.div initial={{
-                      opacity: 0,
-                      scale: 0.9
-                    }} animate={{
-                      opacity: 1,
-                      scale: 1
-                    }} transition={{
-                      duration: 0.35,
-                      ease: "easeOut"
-                    }} className="flex flex-col" style={{
-                      alignItems: isMe ? 'flex-end' : 'flex-start'
-                    }}>
-                            {/* Username (only for first message in group) */}
-                            {!isContinuation && <motion.div style={{
-                        color: 'hsl(var(--muted-foreground))'
-                      }} initial={{
-                        opacity: 0
-                      }} animate={{
-                        opacity: 1
-                      }} transition={{
-                        delay: 0.15,
-                        duration: 0.25
-                      }} className="text-xs mb-1 px-1 bg-slate-50">
-                                {userName}
-                              </motion.div>}
-                            
-                            {/* Message bubble */}
-                            <div className={cn(roundedClass, "p-4 border-solid shadow-sm", isMe ? "bg-blue-50 text-gray-900 border border-blue-100" : "bg-card text-card-foreground border border-border/50")}>
-                              <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
-                                {message.text}
-                              </p>
-                            </div>
+                // Show avatar only for the last message in a group
+                const shouldShowAvatar = !isSameSenderAsNext;
+
+                // Adjust spacing based on grouping
+                const spacingClass = isSameSenderAsPrev ? 'mt-1.5' : 'mt-8';
+
+                // Dynamic border radius based on position in group
+                const borderRadius =
+                  !isSameSenderAsPrev && !isSameSenderAsNext
+                    ? 'rounded-2xl' // Single message (fully rounded)
+                    : !isSameSenderAsPrev && isSameSenderAsNext
+                    ? isMe
+                      ? 'rounded-tl-2xl rounded-tr-2xl rounded-bl-lg rounded-br-2xl' // First in group (right)
+                      : 'rounded-bl-2xl rounded-br-2xl rounded-tl-lg rounded-tr-2xl' // First in group (left)
+                    : isSameSenderAsPrev && isSameSenderAsNext
+                    ? isMe
+                      ? 'rounded-tl-lg rounded-tr-2xl rounded-bl-lg rounded-br-2xl' // Middle of group (right)
+                      : 'rounded-tl-2xl rounded-tr-lg rounded-bl-2xl rounded-br-lg' // Middle of group (left)
+                    : isMe
+                    ? 'rounded-tl-2xl rounded-tr-lg rounded-bl-2xl rounded-br-lg' // Last in group (right)
+                    : 'rounded-br-lg rounded-tl-lg rounded-tr-lg'; // Last in group (left)
+
+                const messageText = (message as CometChat.TextMessage).getText?.() || '';
+
+                return (
+                  <div key={message.getId()} className={spacingClass}>
+                    <div className={cn('flex items-end gap-3 max-w-[70%]', isMe ? 'ml-auto flex-row-reverse' : 'mr-auto')}>
+                      {/* Avatar with animation */}
+                      <AnimatePresence mode="wait">
+                        {shouldShowAvatar ? (
+                          <motion.div
+                            key="avatar"
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.8 }}
+                            transition={{ duration: 0.2 }}
+                            className="flex-shrink-0"
+                          >
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage src={message.getSender().getAvatar()} />
+                              <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                                {getInitials(message.getSender().getName())}
+                              </AvatarFallback>
+                            </Avatar>
                           </motion.div>
+                        ) : (
+                          <div className="w-8 flex-shrink-0" />
+                        )}
+                      </AnimatePresence>
+
+                      {/* Message bubble with animation */}
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        transition={{ duration: 0.3, ease: 'easeOut' }}
+                        className={cn(
+                          'px-4 py-2.5 shadow-sm relative overflow-hidden',
+                          borderRadius,
+                          isMe
+                            ? 'bg-gradient-to-br from-primary to-primary/90 text-primary-foreground'
+                            : 'bg-muted text-foreground'
+                        )}
+                      >
+                        {/* Subtle shine effect */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
+
+                        {/* Message content */}
+                        <div className="relative">
+                          <p className="text-sm leading-relaxed break-words">{messageText}</p>
                         </div>
-                    </div>;
-            })}
-                
-                {/* Typing indicator */}
-                {typingUsers.length > 0 && <motion.div initial={{
-              opacity: 0,
-              y: 10
-            }} animate={{
-              opacity: 1,
-              y: 0
-            }} exit={{
-              opacity: 0,
-              y: 10
-            }} className="mt-4">
-                    <div className="flex items-end gap-3">
-                      <Avatar className="w-8 h-8 flex-shrink-0 border-[1.5px] border-white shadow-sm">
-                        <AvatarImage src={typingUsers[0]?.image} />
-                        <AvatarFallback className="bg-muted">
-                          {getInitials(typingUsers[0]?.name || 'User')}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="bg-card border border-border/50 rounded-br-lg rounded-tl-lg rounded-tr-lg p-3 shadow-sm">
-                        <MessageLoading />
-                      </div>
+                      </motion.div>
                     </div>
-                  </motion.div>}
-                
-                <div ref={messagesEndRef} className="h-8" />
-              </div>
+                  </div>
+                );
+              })}
+              <div ref={messagesEndRef} />
             </div>
 
-            {/* Input Area */}
-            <div className="p-5 border-t border-border/50 bg-card/95 backdrop-blur-sm">
-              <div className="flex gap-3 items-end">
-                <ChatInput value={inputValue} onChange={handleInputChange} onKeyDown={e => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage();
-              }
-            }} placeholder="Type your message..." className="flex-1 border-border/50 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all resize-none bg-background" />
-                <Button onClick={handleSendMessage} size="icon" className="rounded-full h-11 w-11 shadow-lg hover:shadow-xl transition-all disabled:opacity-50 bg-gradient-to-r from-primary to-primary/80" disabled={!inputValue.trim() || !client || !isReady}>
-                  <Send className="h-4 w-4" />
+            {/* Message Input */}
+            <div className="border-t border-border px-6 py-4 bg-card">
+              <div className="flex items-center gap-3">
+                <Input
+                  placeholder="Type a message..."
+                  value={inputValue}
+                  onChange={handleInputChange}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      handleSendMessage();
+                    }
+                  }}
+                  className="flex-1"
+                />
+                <Button onClick={handleSendMessage} size="icon" className="h-10 w-10">
+                  <Send className="h-5 w-5" />
                 </Button>
               </div>
             </div>
-          </> : <div className="flex-1 flex items-center justify-center text-center px-6">
-            <div className="max-w-md space-y-6">
-              <div className="relative">
-                <div className="absolute inset-0 bg-primary/5 blur-3xl rounded-full"></div>
-                <div className="relative text-7xl mb-6 animate-pulse">💬</div>
-              </div>
-              <div className="space-y-3">
-                <h2 className="text-2xl font-semibold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                  Your Messages
-                </h2>
-                <p className="text-muted-foreground text-base">
-                  Select a conversation from the sidebar or start a new chat with a team member
-                </p>
-              </div>
-              <div className="pt-4">
-                <Button variant="outline" className="rounded-full border-border/50 hover:bg-muted/60" onClick={() => setActiveTab('team')}>
-                  <Users className="h-4 w-4 mr-2" />
-                  Browse Team
-                </Button>
-              </div>
-            </div>
-          </div>}
+          </>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full text-center px-6">
+            <Sparkles className="h-16 w-16 text-muted-foreground/50 mb-4" />
+            <h3 className="text-xl font-semibold text-foreground mb-2">
+              Start a Conversation
+            </h3>
+            <p className="text-muted-foreground max-w-md">
+              Select a chat from your conversations or choose a team member to start messaging
+            </p>
+          </div>
+        )}
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default ModernMessenger;

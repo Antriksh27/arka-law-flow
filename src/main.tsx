@@ -4,7 +4,6 @@ import App from './App.tsx'
 import './index.css'
 import { applyCSPMetaTag } from './lib/contentSecurityPolicy'
 import { AuthProvider } from './contexts/AuthContext'
-import { StreamChatProvider } from './contexts/StreamChatContext'
 
 // Apply Content Security Policy for XSS protection
 applyCSPMetaTag();
@@ -18,9 +17,7 @@ const root = createRoot(container);
 root.render(
   <StrictMode>
     <AuthProvider>
-      <StreamChatProvider>
-        <App />
-      </StreamChatProvider>
+      <App />
     </AuthProvider>
   </StrictMode>
 );
