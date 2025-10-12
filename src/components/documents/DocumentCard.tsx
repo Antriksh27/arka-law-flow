@@ -171,8 +171,8 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({ document, onRefresh 
 
         {/* Folder/Case Info */}
         <div className="mt-2 pt-2 border-t border-gray-100">
-          <p className="text-xs text-gray-500 text-center truncate">
-            {document.folder_name || 'General'}
+          <p className="text-xs text-gray-500 text-center truncate" title={document.cases?.title || document.folder_name || 'General'}>
+            {document.cases?.title || document.folder_name || 'General'}
           </p>
         </div>
       </div>

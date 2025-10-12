@@ -134,7 +134,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
                       <FileIcon className="w-8 h-8 text-gray-500" />
                       <div>
                         <p className="font-medium text-gray-900">{doc.file_name}</p>
-                        <p className="text-sm text-gray-500">{doc.folder_name}</p>
+                        <p className="text-sm text-gray-500">{doc.cases?.title || doc.folder_name || 'General'}</p>
                       </div>
                     </div>
                   </TableCell>
