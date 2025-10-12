@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Edit, Calendar, FileText, Users, Clock, Plus, Ban, User, Building2, Gavel, Flag, ChevronDown, RefreshCw } from 'lucide-react';
+import { Edit, Calendar, FileText, Users, Clock, Plus, Ban, User, Building2, Gavel, Flag, ChevronDown, RefreshCw, Contact } from 'lucide-react';
 import { format } from 'date-fns';
 import { AssignLawyerDialog } from './AssignLawyerDialog';
 import { EditCaseDialog } from './EditCaseDialog';
@@ -38,6 +38,23 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
       return data || [];
     },
     enabled: !!caseData?.assigned_users?.length
+  });
+
+  // Fetch main contact
+  const { data: mainContact } = useQuery({
+    queryKey: ['main-contact', caseData?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('case_contacts')
+        .select('*')
+        .eq('case_id', caseData?.id)
+        .eq('is_main', true)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') throw error;
+      return data;
+    },
+    enabled: !!caseData?.id
   });
 
   // Mutation to update case priority
@@ -201,7 +218,7 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
         </div>
 
         {/* Details Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className={`grid gap-6 ${mainContact ? 'grid-cols-2 md:grid-cols-5' : 'grid-cols-2 md:grid-cols-4'}`}>
           <div className="flex items-center gap-3">
             <User className="w-4 h-4 text-muted" />
             <div>
@@ -372,6 +389,19 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
               </p>
             </div>
           </div>
+
+          {mainContact && (
+            <div className="flex items-center gap-3">
+              <Contact className="w-4 h-4 text-muted" />
+              <div>
+                <p className="text-sm text-muted">Main Contact</p>
+                <p className="font-medium">{mainContact.name}</p>
+                {mainContact.phone && (
+                  <p className="text-xs text-gray-600">{mainContact.phone}</p>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Additional Details Row */}

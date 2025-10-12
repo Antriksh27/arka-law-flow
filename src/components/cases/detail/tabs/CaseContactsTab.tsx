@@ -6,7 +6,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Mail, Phone, Trash2 } from 'lucide-react';
+import { Plus, Mail, Phone, Trash2, Star } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 
 interface ContactTabProps {
@@ -76,6 +77,25 @@ export const ContactTab: React.FC<ContactTabProps> = ({ caseId }) => {
     },
     onError: () => {
       toast.error('Failed to delete contact');
+    }
+  });
+
+  const toggleMainContactMutation = useMutation({
+    mutationFn: async ({ contactId, isMain }: { contactId: string; isMain: boolean }) => {
+      const { error } = await supabase
+        .from('case_contacts')
+        .update({ is_main: isMain })
+        .eq('id', contactId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['case-contacts', caseId] });
+      queryClient.invalidateQueries({ queryKey: ['case', caseId] });
+      toast.success('Main contact updated successfully');
+    },
+    onError: () => {
+      toast.error('Failed to update main contact');
     }
   });
 
@@ -166,13 +186,27 @@ export const ContactTab: React.FC<ContactTabProps> = ({ caseId }) => {
           {contacts.map((contact) => (
             <div key={contact.id} className="bg-white border rounded-lg p-4">
               <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h4 className="font-semibold text-base">{contact.name}</h4>
-                    {contact.role && (
-                      <span className="text-xs bg-gray-100 px-2 py-1 rounded">{contact.role}</span>
-                    )}
+                <div className="flex items-center gap-3 flex-1">
+                  <div className="flex items-center">
+                    <Checkbox
+                      checked={contact.is_main || false}
+                      onCheckedChange={(checked) => {
+                        toggleMainContactMutation.mutate({ 
+                          contactId: contact.id, 
+                          isMain: checked as boolean 
+                        });
+                      }}
+                      className="mr-2"
+                    />
+                    {contact.is_main && <Star className="w-4 h-4 text-yellow-500 fill-yellow-500 mr-1" />}
                   </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h4 className="font-semibold text-base">{contact.name}</h4>
+                      {contact.role && (
+                        <span className="text-xs bg-gray-100 px-2 py-1 rounded">{contact.role}</span>
+                      )}
+                    </div>
                   <div className="space-y-1 text-sm text-gray-600">
                     {contact.email && (
                       <div className="flex items-center gap-2">
@@ -190,9 +224,10 @@ export const ContactTab: React.FC<ContactTabProps> = ({ caseId }) => {
                         </a>
                       </div>
                     )}
-                    {contact.notes && (
-                      <p className="mt-2 text-sm">{contact.notes}</p>
-                    )}
+                      {contact.notes && (
+                        <p className="mt-2 text-sm">{contact.notes}</p>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <Button
