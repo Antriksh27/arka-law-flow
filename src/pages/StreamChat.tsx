@@ -37,36 +37,52 @@ const StreamChatPage: React.FC = () => {
         .from('team_members')
         .select('firm_id')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
       
-      if (!currentMember?.firm_id) return;
-      
-      const { data, error } = await supabase
-        .from('team_members')
-        .select(`
-          user_id,
-          profiles:user_id (
-            full_name,
-            email
-          )
-        `)
-        .eq('firm_id', currentMember.firm_id)
-        .neq('user_id', user.id);
-      
-      if (error) {
-        console.error('Error fetching team members:', error);
+      if (!currentMember?.firm_id) {
+        console.warn('No firm membership found for current user');
+        setTeamMembers([]);
         return;
       }
       
-      const formattedData: TeamMember[] = (data || [])
-        .filter(tm => tm.profiles)
-        .map(tm => ({
-          user_id: tm.user_id,
-          profiles: {
-            full_name: (tm.profiles as any).full_name || (tm.profiles as any).email || 'User',
-            email: (tm.profiles as any).email || '',
-          },
-        }));
+      // Get all teammate user_ids in same firm (excluding self)
+      const { data: teamRows, error: teamErr } = await supabase
+        .from('team_members')
+        .select('user_id')
+        .eq('firm_id', currentMember.firm_id)
+        .neq('user_id', user.id);
+      
+      if (teamErr) {
+        console.error('Error fetching team member rows:', teamErr);
+        setTeamMembers([]);
+        return;
+      }
+      
+      const ids = (teamRows || []).map(r => r.user_id).filter(Boolean);
+      if (ids.length === 0) {
+        setTeamMembers([]);
+        return;
+      }
+      
+      // Fetch profile details for those user_ids
+      const { data: profilesData, error: profilesErr } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .in('id', ids);
+      
+      if (profilesErr) {
+        console.error('Error fetching profiles for team members:', profilesErr);
+        setTeamMembers([]);
+        return;
+      }
+      
+      const formattedData: TeamMember[] = (profilesData || []).map((p: any) => ({
+        user_id: p.id,
+        profiles: {
+          full_name: p.full_name || p.email || 'User',
+          email: p.email || '',
+        },
+      }));
       
       setTeamMembers(formattedData);
       
