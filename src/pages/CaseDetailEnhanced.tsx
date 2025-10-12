@@ -7,7 +7,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, FileText, File, Scale, Calendar, XCircle, StickyNote, CheckSquare, Pencil, Users } from 'lucide-react';
 import { format } from 'date-fns';
-
 import { EditCaseDialog } from '@/components/cases/EditCaseDialog';
 import { DetailsTab } from '@/components/cases/detail/tabs/DetailsTab';
 import { DocumentsTab } from '@/components/cases/detail/tabs/DocumentsTab';
@@ -33,7 +32,6 @@ export default function CaseDetailEnhanced() {
   } = useParams<{
     id: string;
   }>();
-  
   const [activeTab, setActiveTab] = useState('details');
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -75,15 +73,15 @@ export default function CaseDetailEnhanced() {
   });
 
   // Fetch main contact for this case
-  const { data: mainContact } = useQuery({
+  const {
+    data: mainContact
+  } = useQuery({
     queryKey: ['main-contact', id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('case_contacts')
-        .select('*')
-        .eq('case_id', id as string)
-        .eq('is_main', true)
-        .maybeSingle();
+      const {
+        data,
+        error
+      } = await supabase.from('case_contacts').select('*').eq('case_id', id as string).eq('is_main', true).maybeSingle();
       if (error) throw error;
       return data;
     },
@@ -102,22 +100,51 @@ export default function CaseDetailEnhanced() {
     hearings = [],
     isLoading: legalkartLoading,
     refreshCaseData,
-    isRefreshing,
+    isRefreshing
   } = useLegalkartCaseDetails(id!);
 
   // Refresh handled by useLegalkartCaseDetails.refreshCaseData
-  const tabs = [
-    { value: 'details', label: 'Details', icon: FileText },
-    { value: 'contacts', label: 'Contacts', icon: File },
-    { value: 'notes', label: 'Notes', icon: StickyNote },
-    { value: 'tasks', label: 'Tasks', icon: CheckSquare },
-    { value: 'documents', label: 'Documents', icon: File },
-    { value: 'expenses', label: 'Expenses', icon: FileText },
-    { value: 'invoices', label: 'Invoices', icon: FileText },
-    { value: 'payments', label: 'Payments', icon: FileText },
-    { value: 'timeline', label: 'Timeline', icon: Calendar },
-    { value: 'related', label: 'Related Matters', icon: Scale }
-  ];
+  const tabs = [{
+    value: 'details',
+    label: 'Details',
+    icon: FileText
+  }, {
+    value: 'contacts',
+    label: 'Contacts',
+    icon: File
+  }, {
+    value: 'notes',
+    label: 'Notes',
+    icon: StickyNote
+  }, {
+    value: 'tasks',
+    label: 'Tasks',
+    icon: CheckSquare
+  }, {
+    value: 'documents',
+    label: 'Documents',
+    icon: File
+  }, {
+    value: 'expenses',
+    label: 'Expenses',
+    icon: FileText
+  }, {
+    value: 'invoices',
+    label: 'Invoices',
+    icon: FileText
+  }, {
+    value: 'payments',
+    label: 'Payments',
+    icon: FileText
+  }, {
+    value: 'timeline',
+    label: 'Timeline',
+    icon: Calendar
+  }, {
+    value: 'related',
+    label: 'Related Matters',
+    icon: Scale
+  }];
   if (caseLoading || legalkartLoading) {
     return <div className="min-h-screen bg-gray-50">
       <div className="space-y-4">
@@ -161,24 +188,17 @@ export default function CaseDetailEnhanced() {
                     <div>
                       <span className="font-medium">Next Hearing:</span> {caseData.next_hearing_date ? format(new Date(caseData.next_hearing_date), 'dd/MM/yyyy') : 'N/A'}
                     </div>
-                    {clientData && (
-                      <div>
+                    {clientData && <div>
                         <span className="font-medium">Client:</span>{' '}
-                        <Link 
-                          to={`/clients/${clientData.id}`}
-                          className="text-blue-700 hover:text-blue-800 hover:underline"
-                        >
+                        <Link to={`/clients/${clientData.id}`} className="text-blue-700 hover:text-blue-800 hover:underline">
                           {clientData.full_name}
                         </Link>
-                      </div>
-                    )}
+                      </div>}
                   </div>
-                  {mainContact && (
-                    <div className="text-sm text-gray-600 mt-2">
-                      <span className="font-medium">Main Contact:</span> {mainContact.name}
+                  {mainContact && <div className="text-sm text-gray-600 mt-2">
+                      <span className="font-medium">Contact:</span> {mainContact.name}
                       {mainContact.phone && <span className="ml-1">({mainContact.phone})</span>}
-                    </div>
-                  )}
+                    </div>}
                 </div>
               </div>
               <div className="flex gap-2">
@@ -206,17 +226,7 @@ export default function CaseDetailEnhanced() {
 
           <div className="p-6">
             <TabsContent value="details" className="m-0">
-              <DetailsTab 
-                caseData={caseData} 
-                legalkartData={legalkartCase} 
-                petitioners={petitioners} 
-                respondents={respondents} 
-                iaDetails={iaDetails}
-                documents={documents}
-                orders={orders}
-                hearings={hearings}
-                objections={objections}
-              />
+              <DetailsTab caseData={caseData} legalkartData={legalkartCase} petitioners={petitioners} respondents={respondents} iaDetails={iaDetails} documents={documents} orders={orders} hearings={hearings} objections={objections} />
             </TabsContent>
             <TabsContent value="contacts" className="m-0">
               <ContactTab caseId={id!} />
