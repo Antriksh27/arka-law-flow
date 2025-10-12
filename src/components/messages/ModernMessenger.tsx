@@ -513,7 +513,7 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({ onChannelSelect }) =>
                           'px-4 py-2.5 shadow-sm relative overflow-hidden',
                           borderRadius,
                           isMe
-                            ? 'bg-gradient-to-br from-primary to-primary/90 text-primary-foreground'
+                            ? 'bg-blue-100 text-black'
                             : 'bg-muted text-foreground'
                         )}
                       >
