@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Edit, Calendar, FileText, Users, Clock, Plus, Ban, User, Building2, Gavel, Flag, ChevronDown, RefreshCw, Contact } from 'lucide-react';
+import { Edit, Calendar, FileText, Users, Clock, Plus, Ban, User, Building2, Gavel, Flag, ChevronDown, RefreshCw, User2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { AssignLawyerDialog } from './AssignLawyerDialog';
 import { EditCaseDialog } from './EditCaseDialog';
@@ -47,11 +47,10 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
       const { data, error } = await supabase
         .from('case_contacts')
         .select('*')
-        .eq('case_id', caseData?.id)
+        .eq('case_id', caseData?.id as string)
         .eq('is_main', true)
-        .single();
-      
-      if (error && error.code !== 'PGRST116') throw error;
+        .maybeSingle();
+      if (error) throw error;
       return data;
     },
     enabled: !!caseData?.id
@@ -392,7 +391,7 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
 
           {mainContact && (
             <div className="flex items-center gap-3">
-              <Contact className="w-4 h-4 text-muted" />
+              <User2 className="w-4 h-4 text-muted" />
               <div>
                 <p className="text-sm text-muted">Main Contact</p>
                 <p className="font-medium">{mainContact.name}</p>
