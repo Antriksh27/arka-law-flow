@@ -9,7 +9,7 @@ interface Client {
 
 interface Case {
   id: string;
-  case_title: string;
+  title: string;
   client_id: string;
 }
 
@@ -56,9 +56,9 @@ export default function ClientDocuments() {
       try {
         const { data, error } = await supabase
           .from('cases')
-          .select('id, case_title, client_id')
+          .select('id, title, client_id')
           .eq('client_id', selectedClientId)
-          .order('case_title');
+          .order('title');
 
         if (error) throw error;
         setCases(data || []);
@@ -87,7 +87,7 @@ export default function ClientDocuments() {
       
       // Create organized filename: ClientName/CaseName/DocumentType/filename
       const clientName = selectedClient?.full_name || 'Unknown Client';
-      const caseName = selectedCase?.case_title || 'Unknown Case';
+      const caseName = selectedCase?.title || 'Unknown Case';
       const organizedFilename = `${clientName}/${caseName}/${docType}/${file.name}`;
       
       console.log('🔧 Starting WebDAV upload for:', organizedFilename);
@@ -144,7 +144,7 @@ export default function ClientDocuments() {
           <option value="">Select Case</option>
           {cases.map((case_item) => (
             <option key={case_item.id} value={case_item.id}>
-              {case_item.case_title}
+              {case_item.title}
             </option>
           ))}
         </select>

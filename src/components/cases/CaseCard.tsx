@@ -41,12 +41,17 @@ export const CaseCard: React.FC<CaseCardProps> = ({ case: caseItem }) => {
 
   // Generate proper case title display
   const getDisplayTitle = () => {
+    // Prioritize the title field (actual Case Title)
+    if (caseItem.title) {
+      return caseItem.title;
+    }
+    // Fallback: generate from petitioner/respondent if title is missing
     if (caseItem.petitioner && caseItem.respondent) {
       const cleanPetitioner = caseItem.petitioner.replace(/\s*Advocate[:\s].*/gi, '').trim();
       const cleanRespondent = caseItem.respondent.replace(/\s*Advocate[:\s].*/gi, '').trim();
       return `${cleanPetitioner} Vs ${cleanRespondent}`;
     }
-    return caseItem.title || caseItem.case_title;
+    return 'Untitled Case';
   };
 
   return (

@@ -140,7 +140,7 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
     }
     
     // Final fallback to existing title
-    return caseData?.case_title || caseData?.title || 'Untitled Case';
+    return caseData?.title || 'Untitled Case';
   };
 
   const caseTitle = generateCaseTitle();

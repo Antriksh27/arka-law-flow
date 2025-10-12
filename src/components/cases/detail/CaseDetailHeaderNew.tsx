@@ -28,7 +28,7 @@ export const CaseDetailHeaderNew = ({
           {/* Left: Case Title & Key Info */}
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-[#111827] mb-2">
-              {caseData?.case_title || caseData?.title || 'Case Details'}
+              {caseData?.title || 'Case Details'}
             </h1>
             
             <div className="flex flex-wrap gap-4 text-sm text-[#6B7280]">

@@ -86,11 +86,12 @@ export const CasesTable: React.FC<CasesTableProps> = ({
       
       // Transform the data to match the expected structure
       const transformedData = data?.map((caseItem: any) => {
-        // Generate proper case title: "Petitioner Vs Respondent"
-        let displayTitle = caseItem.case_title;
+        // Use the title field as the Case Title
+        // If petitioner/respondent exist, we can generate "Petitioner Vs Respondent" format
+        let displayTitle = caseItem.title;
         
-        if (caseItem.petitioner && caseItem.respondent) {
-          // Remove advocate names from petitioner and respondent
+        if (!displayTitle && caseItem.petitioner && caseItem.respondent) {
+          // Fallback: Generate from petitioner/respondent if title is missing
           const cleanPetitioner = caseItem.petitioner.replace(/\s*Advocate[:\s].*/gi, '').trim();
           const cleanRespondent = caseItem.respondent.replace(/\s*Advocate[:\s].*/gi, '').trim();
           displayTitle = `${cleanPetitioner} Vs ${cleanRespondent}`;
@@ -98,7 +99,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
         
         return {
           ...caseItem,
-          title: displayTitle,
+          displayTitle,
           client_name: caseItem.clients?.full_name,
           created_by_name: caseItem.profiles?.full_name
         };
@@ -154,7 +155,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
         <TableBody>
           {cases?.map(caseItem => <TableRow key={caseItem.id} className="cursor-pointer hover:bg-gray-50" onClick={() => handleCaseClick(caseItem.id)}>
               <TableCell className="font-medium">
-                {caseItem.title}
+                {caseItem.displayTitle || caseItem.title}
               </TableCell>
               <TableCell>
                 {caseItem.client_name || 'No client assigned'}
