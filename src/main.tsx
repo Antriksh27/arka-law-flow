@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 import { applyCSPMetaTag } from './lib/contentSecurityPolicy'
+import { StreamChatProvider } from './contexts/StreamChatContext'
 
 // Apply Content Security Policy for XSS protection
 applyCSPMetaTag();
@@ -15,6 +16,8 @@ if (!container) {
 const root = createRoot(container);
 root.render(
   <StrictMode>
-    <App />
+    <StreamChatProvider>
+      <App />
+    </StreamChatProvider>
   </StrictMode>
 );

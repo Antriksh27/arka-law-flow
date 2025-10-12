@@ -1,13 +1,15 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { createHmac } from "https://deno.land/std@0.190.0/node/crypto.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const STREAM_API_KEY = "fvtnet5pupyf";
+
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -18,13 +20,11 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     );
 
-    // Get the authorization header
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       throw new Error('No authorization header');
     }
 
-    // Get the user from the auth token
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser(
       authHeader.replace('Bearer ', '')
     );
@@ -35,29 +35,51 @@ serve(async (req) => {
 
     console.log('Generating Stream Chat token for user:', user.id);
 
-    // Get user profile for name
+    // Get user profile
     const { data: profile } = await supabaseClient
       .from('profiles')
       .select('full_name, email')
       .eq('id', user.id)
       .single();
 
-    // TODO: Implement Stream Chat token generation
-    // This will need Stream Chat API credentials
-    const streamApiKey = Deno.env.get('STREAM_API_KEY');
     const streamApiSecret = Deno.env.get('STREAM_API_SECRET');
-
-    if (!streamApiKey || !streamApiSecret) {
-      throw new Error('Stream Chat credentials not configured');
+    if (!streamApiSecret) {
+      throw new Error('STREAM_API_SECRET not configured');
     }
 
-    // Return user data for now
+    // Generate Stream Chat token
+    const userId = user.id;
+    const header = {
+      alg: "HS256",
+      typ: "JWT"
+    };
+
+    const now = Math.floor(Date.now() / 1000);
+    const payload = {
+      user_id: userId,
+      iat: now,
+      exp: now + (60 * 60 * 24 * 7) // 7 days
+    };
+
+    const base64Header = btoa(JSON.stringify(header));
+    const base64Payload = btoa(JSON.stringify(payload));
+    const signature = createHmac("sha256", streamApiSecret)
+      .update(`${base64Header}.${base64Payload}`)
+      .digest("base64")
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=/g, "");
+
+    const token = `${base64Header}.${base64Payload}.${signature}`;
+
+    console.log('Stream Chat token generated successfully');
+
     return new Response(
       JSON.stringify({
-        user_id: user.id,
-        user_name: profile?.full_name || user.email,
-        email: profile?.email || user.email,
-        // token will be generated here
+        token,
+        user_id: userId,
+        user_name: profile?.full_name || user.email?.split('@')[0] || 'User',
+        api_key: STREAM_API_KEY
       }),
       {
         status: 200,
