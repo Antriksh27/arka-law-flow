@@ -55,8 +55,13 @@ export const loginCometChatUser = async (userId: string, userName: string) => {
     // Check if already logged in
     const loggedInUser = await CometChatUIKit.getLoggedinUser();
     if (loggedInUser) {
-      console.log("✅ User already logged in to CometChat:", loggedInUser.getName());
-      return loggedInUser;
+      if (loggedInUser.getUid && loggedInUser.getUid() !== userId) {
+        console.log("🔄 Different CometChat user in session (", loggedInUser.getUid(), ") — logging out and switching to", userId);
+        await CometChatUIKit.logout();
+      } else {
+        console.log("✅ User already logged in to CometChat:", loggedInUser.getName());
+        return loggedInUser;
+      }
     }
 
     console.log("🔄 Attempting CometChat login for user:", userId);
