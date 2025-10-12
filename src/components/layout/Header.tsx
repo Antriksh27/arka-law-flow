@@ -3,11 +3,10 @@ import { Bell, Settings, User, LogOut, TestTube } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { NotificationPanel } from '@/components/notifications/NotificationPanel';
+import NotificationInbox from '@/components/notifications/NotificationInbox';
 import { useNotifications } from '@/hooks/useNotifications';
 import NotificationSounds from '@/lib/notificationSounds';
 import { sendTestNotification } from '@/utils/testNotification';
-import NotificationInbox from '@/components/NotificationInbox';
 const Header = () => {
   const { user, signOut } = useAuth();
   const { unreadCount } = useNotifications();

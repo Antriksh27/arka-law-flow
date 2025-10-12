@@ -2,6 +2,7 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import OfficeStaffHeader from './OfficeStaffHeader';
+import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications';
 
 interface OfficeStaffLayoutProps {
   children: React.ReactNode;
@@ -9,6 +10,9 @@ interface OfficeStaffLayoutProps {
 
 const OfficeStaffLayout = ({ children }: OfficeStaffLayoutProps) => {
   const { user, role, loading } = useAuth();
+  
+  // Initialize real-time notifications
+  useRealtimeNotifications();
 
   if (loading) {
     return (
