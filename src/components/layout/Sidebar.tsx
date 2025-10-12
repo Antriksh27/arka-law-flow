@@ -24,6 +24,7 @@ const getNavigationForRole = (role: string | null) => {
     { name: 'Clients', href: '/clients', icon: Users },
     { name: 'Appointments', href: '/appointments', icon: Calendar },
     { name: 'Availability', href: '/availability', icon: Clock },
+    { name: 'Chat', href: '/chat', icon: MessageSquare },
     { name: 'Hearings', href: '/hearings', icon: Calendar },
     { name: 'Tasks', href: '/tasks', icon: File },
     { name: 'Instructions', href: '/instructions', icon: ClipboardList },

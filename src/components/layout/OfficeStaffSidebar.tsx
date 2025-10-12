@@ -32,6 +32,10 @@ const menuItems = [{
   name: 'Invoices',
   href: '/staff/invoices',
   icon: Receipt
+}, {
+  name: 'Chat',
+  href: '/chat',
+  icon: MessageSquareText
 }];
 const quickActions = [{
   name: 'Upload Document',
