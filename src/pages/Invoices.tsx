@@ -353,7 +353,7 @@ const Invoices: React.FC = () => {
   const handleConnectZoho = () => {
     const zohoClientId = '1000.MC4YZPCGPZGGJ2J7BTJQZLURRPME6Z';
     const redirectUri = 'https://crm.hrulegal.com/zoho/callback';
-    const scope = 'ZohoBooks.fullaccess.all';
+    const scope = 'ZohoBooks.invoices.READ,ZohoBooks.contacts.READ';
     
     const authUrl = `https://accounts.zoho.in/oauth/v2/auth?scope=${encodeURIComponent(scope)}&client_id=${zohoClientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&access_type=offline&prompt=consent`;
     
