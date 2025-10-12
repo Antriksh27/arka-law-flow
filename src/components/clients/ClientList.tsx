@@ -12,6 +12,7 @@ import { AddClientDialog } from './AddClientDialog';
 import { EditClientDialog } from './EditClientDialog';
 import { ClientDetailsDialog } from './ClientDetailsDialog';
 import { BulkImportClientsDialog } from './BulkImportClientsDialog';
+import { SyncClientsToZoho } from './SyncClientsToZoho';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface Client {
@@ -199,10 +200,13 @@ export const ClientList = () => {
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">Clients</h1>
         </div>
-        <Button onClick={() => setShowAddDialog(true)} className="bg-slate-800 hover:bg-slate-700">
-          <Plus className="w-4 h-4 mr-2" />
-          New Client
-        </Button>
+        <div className="flex gap-2">
+          <SyncClientsToZoho />
+          <Button onClick={() => setShowAddDialog(true)} className="bg-slate-800 hover:bg-slate-700">
+            <Plus className="w-4 h-4 mr-2" />
+            New Client
+          </Button>
+        </div>
       </div>
 
       {/* Filters Bar */}
