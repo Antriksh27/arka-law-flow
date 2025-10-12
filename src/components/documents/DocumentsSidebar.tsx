@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Folder, FolderOpen, Clock, Star } from 'lucide-react';
+import { Folder, FolderOpen, Clock, Star, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
 interface DocumentsSidebarProps {
   selectedFolder: string;
   onFolderSelect: (folder: string) => void;
@@ -11,6 +12,7 @@ export const DocumentsSidebar: React.FC<DocumentsSidebarProps> = ({
   selectedFolder,
   onFolderSelect
 }) => {
+  const [searchQuery, setSearchQuery] = useState('');
   // Fetch folders (unique folder names from documents)
   const {
     data: folders = []
@@ -55,6 +57,12 @@ export const DocumentsSidebar: React.FC<DocumentsSidebarProps> = ({
     icon: Star,
     count: null
   }];
+
+  // Filter folders based on search query
+  const filteredFolders = folders.filter(folder =>
+    folder.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return <div className="w-64 bg-gray-50 border-r border-gray-200 flex flex-col">
       {/* Main Navigation */}
       <div className="p-4">
@@ -80,9 +88,21 @@ export const DocumentsSidebar: React.FC<DocumentsSidebarProps> = ({
             Case Folders
           </h3>
         </div>
+
+        {/* Search Input */}
+        <div className="relative mb-3">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
+            type="text"
+            placeholder="Search cases..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 h-9 text-sm"
+          />
+        </div>
         
         <div className="space-y-1 max-h-96 overflow-y-auto">
-          {folders.map(folder => {
+          {filteredFolders.map(folder => {
           const isSelected = selectedFolder === folder.name;
           return <button key={folder.name} onClick={() => onFolderSelect(folder.name)} className={cn("w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors", isSelected ? "bg-primary text-white" : "text-gray-700 hover:bg-gray-200")}>
                 {isSelected ? <FolderOpen className="w-4 h-4" /> : <Folder className="w-4 h-4" />}
