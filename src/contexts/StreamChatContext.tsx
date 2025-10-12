@@ -58,7 +58,7 @@ export const StreamChatProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
         if (!data || !data.token) {
           console.error('Stream token function returned:', data);
-          throw new Error('Token missing from generate-stream-token response');
+          throw new Error('Token missing from stream-chat-token response');
         }
 
         console.log('Stream token retrieved successfully');
