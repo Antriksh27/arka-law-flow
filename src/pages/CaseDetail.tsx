@@ -19,6 +19,9 @@ import { DocumentsTable } from '@/components/cases/enhanced/DocumentsTable';
 import { OrdersTable } from '@/components/cases/enhanced/OrdersTable';
 import { HearingsTable } from '@/components/cases/enhanced/HearingsTable';
 import { ObjectionsTable } from '@/components/cases/enhanced/ObjectionsTable';
+import { InvoicesTab } from '@/components/cases/detail/tabs/InvoicesTab';
+import { ExpensesTab } from '@/components/cases/detail/tabs/ExpensesTab';
+import { PaymentsTab } from '@/components/cases/detail/tabs/PaymentsTab';
 
 const CaseDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -333,13 +336,15 @@ const CaseDetail = () => {
 
         {/* Tabs Section */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-6 mb-6">
+          <TabsList className="grid w-full grid-cols-9 mb-6">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="documents">📄 Documents</TabsTrigger>
             <TabsTrigger value="orders">⚖️ Orders</TabsTrigger>
             <TabsTrigger value="hearings">📅 Hearings</TabsTrigger>
             <TabsTrigger value="objections">🚫 Objections</TabsTrigger>
-            
+            <TabsTrigger value="invoices">💰 Invoices</TabsTrigger>
+            <TabsTrigger value="expenses">💳 Expenses</TabsTrigger>
+            <TabsTrigger value="payments">💵 Payments</TabsTrigger>
           </TabsList>
 
           <div className="bg-white rounded-2xl shadow-sm border border-[#E5E7EB] p-6">
@@ -375,6 +380,18 @@ const CaseDetail = () => {
 
             <TabsContent value="objections" className="mt-0">
               <ObjectionsTable objections={objections} />
+            </TabsContent>
+
+            <TabsContent value="invoices" className="mt-0">
+              <InvoicesTab caseId={id!} />
+            </TabsContent>
+
+            <TabsContent value="expenses" className="mt-0">
+              <ExpensesTab caseId={id!} />
+            </TabsContent>
+
+            <TabsContent value="payments" className="mt-0">
+              <PaymentsTab caseId={id!} />
             </TabsContent>
 
           </div>
