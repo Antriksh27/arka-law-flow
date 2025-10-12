@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 import { applyCSPMetaTag } from './lib/contentSecurityPolicy'
+import { AuthProvider } from './contexts/AuthContext'
 import { StreamChatProvider } from './contexts/StreamChatContext'
 
 // Apply Content Security Policy for XSS protection
@@ -16,8 +17,10 @@ if (!container) {
 const root = createRoot(container);
 root.render(
   <StrictMode>
-    <StreamChatProvider>
-      <App />
-    </StreamChatProvider>
+    <AuthProvider>
+      <StreamChatProvider>
+        <App />
+      </StreamChatProvider>
+    </AuthProvider>
   </StrictMode>
 );

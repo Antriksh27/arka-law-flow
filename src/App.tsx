@@ -1,7 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { DialogProvider } from './hooks/use-dialog';
 import RoleBasedRouter from './components/routing/RoleBasedRouter';
@@ -28,35 +27,33 @@ function App() {
     <div className="min-h-screen bg-gray-50" data-build={BUILD_INFO}>
       <Router>
         <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <DialogProvider>
-              <Routes>
-                {/* Public booking routes - completely public, no authentication */}
-                <Route path="/b/:code" element={<BookRedirect />} />
-                <Route path="/bk/:compact" element={<BookRedirect />} />
-                <Route path="/book/:lawyerId" element={<BookingPage />} />
-                <Route path="/book" element={<LawyerSelection />} />
-                
-                {/* Auth route */}
-                <Route path="/auth" element={<Auth />} />
-                
-                {/* Enhanced case details route */}
-                <Route path="/cases/:id/legalkart-details" element={
-                  <ProtectedRoute>
-                    <CaseDetailEnhanced />
-                  </ProtectedRoute>
-                } />
-                
-                {/* All other routes require authentication */}
-                <Route path="/*" element={
-                  <ProtectedRoute>
-                    <RoleBasedRouter />
-                  </ProtectedRoute>
-                } />
-              </Routes>
-              <Toaster />
-            </DialogProvider>
-          </AuthProvider>
+          <DialogProvider>
+            <Routes>
+              {/* Public booking routes - completely public, no authentication */}
+              <Route path="/b/:code" element={<BookRedirect />} />
+              <Route path="/bk/:compact" element={<BookRedirect />} />
+              <Route path="/book/:lawyerId" element={<BookingPage />} />
+              <Route path="/book" element={<LawyerSelection />} />
+              
+              {/* Auth route */}
+              <Route path="/auth" element={<Auth />} />
+              
+              {/* Enhanced case details route */}
+              <Route path="/cases/:id/legalkart-details" element={
+                <ProtectedRoute>
+                  <CaseDetailEnhanced />
+                </ProtectedRoute>
+              } />
+              
+              {/* All other routes require authentication */}
+              <Route path="/*" element={
+                <ProtectedRoute>
+                  <RoleBasedRouter />
+                </ProtectedRoute>
+              } />
+            </Routes>
+            <Toaster />
+          </DialogProvider>
         </QueryClientProvider>
       </Router>
     </div>
