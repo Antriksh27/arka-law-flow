@@ -1,18 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { ChatBubble, ChatBubbleAvatar, ChatBubbleMessage } from '@/components/ui/chat-bubble';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { ChatInput } from '@/components/ui/chat-input';
-import { ChatMessageList } from '@/components/ui/chat-message-list';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Send, Search, Phone, Video, Info, Users, MessageCircle } from 'lucide-react';
+import { Send, Search, Users, MessageCircle } from 'lucide-react';
 import { useStreamChat } from '@/contexts/StreamChatContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { MessageLoading } from '@/components/ui/message-loading';
 import ChatList from './ui/ChatList';
 import { Channel } from 'stream-chat';
-import { StreamChat } from 'stream-chat';
 import { cn } from '@/lib/utils';
+import { motion, AnimatePresence } from 'framer-motion';
 interface TeamMember {
   user_id: string;
   full_name: string;
@@ -38,6 +37,9 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
   const [channels, setChannels] = useState<Channel[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [activeTab, setActiveTab] = useState<'chats' | 'team'>('chats');
+  const [typingUsers, setTypingUsers] = useState<any[]>([]);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Fetch team members using RPC function (same as StreamChat.tsx)
   useEffect(() => {
@@ -151,11 +153,51 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
     const handleNewMessage = (event: any) => {
       setMessages(prev => [...prev, event.message]);
     };
+    
+    // Listen for typing events
+    const handleTypingStart = (event: any) => {
+      if (event.user?.id !== client.userID) {
+        setTypingUsers(prev => [...prev.filter(u => u.id !== event.user?.id), event.user]);
+      }
+    };
+    
+    const handleTypingStop = (event: any) => {
+      setTypingUsers(prev => prev.filter(u => u.id !== event.user?.id));
+    };
+    
     selectedChannel.on('message.new', handleNewMessage);
+    selectedChannel.on('typing.start', handleTypingStart);
+    selectedChannel.on('typing.stop', handleTypingStop);
+    
     return () => {
       selectedChannel.off('message.new', handleNewMessage);
+      selectedChannel.off('typing.start', handleTypingStart);
+      selectedChannel.off('typing.stop', handleTypingStop);
     };
   }, [selectedChannel, client, isReady]);
+  // Auto-scroll to bottom
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'end'
+    });
+  }, []);
+  
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, scrollToBottom]);
+  
+  useEffect(() => {
+    const observer = new MutationObserver(scrollToBottom);
+    if (containerRef.current) {
+      observer.observe(containerRef.current, {
+        childList: true,
+        subtree: true
+      });
+    }
+    return () => observer.disconnect();
+  }, [scrollToBottom]);
+  
   const handleSendMessage = async () => {
     if (!inputValue.trim() || !selectedChannel || !client || !isReady) return;
     try {
@@ -163,6 +205,7 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
         text: inputValue
       });
       setInputValue('');
+      await selectedChannel.stopTyping();
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
@@ -170,6 +213,13 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
         description: 'Please try again or refresh the page',
         variant: 'destructive'
       });
+    }
+  };
+  
+  const handleInputChange = async (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInputValue(e.target.value);
+    if (selectedChannel && e.target.value.trim()) {
+      await selectedChannel.keystroke();
     }
   };
   const getChannelName = (channel: Channel) => {
@@ -343,32 +393,149 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
             </div>
 
             {/* Messages */}
-            <ChatMessageList className="flex-1 p-6 space-y-4">
-              {messages.map(message => {
-            const isMe = message.user?.id === client.userID;
-            const userName = message.user?.name || message.user?.id || 'Unknown';
-            const userAvatar = message.user?.image || '';
-            return <div key={message.id} className={cn("flex w-full", isMe ? "justify-end" : "justify-start")}>
-                    <ChatBubble variant={isMe ? 'sent' : 'received'} className="max-w-[70%]">
-                      {!isMe && <ChatBubbleAvatar src={userAvatar} fallback={getInitials(userName)} />}
-                      <ChatBubbleMessage variant={isMe ? 'sent' : 'received'} className={isMe ? 'bg-primary text-primary-foreground shadow-md' : 'bg-card border border-border/50 shadow-sm'}>
-                        {message.text}
-                      </ChatBubbleMessage>
-                    </ChatBubble>
-                  </div>;
-          })}
-            </ChatMessageList>
+            <div 
+              className="flex-1 overflow-y-auto relative [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]" 
+              ref={containerRef}
+            >
+              {/* Top gradient overlay */}
+              <div 
+                className="absolute top-0 left-0 right-0 h-32 pointer-events-none z-10"
+                style={{
+                  background: 'linear-gradient(to bottom, hsl(var(--background)) 0%, hsla(var(--background), 0.95) 20%, hsla(var(--background), 0.8) 40%, hsla(var(--background), 0.4) 70%, hsla(var(--background), 0) 100%)'
+                }}
+              />
+              
+              <div className="p-8 min-h-full flex flex-col justify-end">
+                {messages.map((message, index) => {
+                  const isMe = message.user?.id === client.userID;
+                  const userName = message.user?.name || message.user?.id || 'Unknown';
+                  const userAvatar = message.user?.image || '';
+                  
+                  // Message grouping logic
+                  const previousMessage = index > 0 ? messages[index - 1] : null;
+                  const nextMessage = index < messages.length - 1 ? messages[index + 1] : null;
+                  const isContinuation = previousMessage?.user?.id === message.user?.id;
+                  const nextMessageSameSender = nextMessage?.user?.id === message.user?.id;
+                  const shouldShowAvatar = !nextMessageSameSender;
+                  
+                  const spacingClass = index === 0 ? "" : (isContinuation ? "mt-1.5" : "mt-8");
+                  const roundedClass = isMe
+                    ? "rounded-bl-lg rounded-tl-lg rounded-tr-lg" // Right: rounded except bottom-right
+                    : "rounded-br-lg rounded-tl-lg rounded-tr-lg"; // Left: rounded except bottom-left
+                  
+                  return (
+                    <div key={message.id} className={spacingClass}>
+                      <div className={cn("flex items-end gap-3", isMe ? "flex-row-reverse" : "")}>
+                        {/* Avatar with animation */}
+                        <AnimatePresence mode="wait">
+                          {shouldShowAvatar ? (
+                            <motion.div
+                              key="avatar"
+                              initial={{ opacity: 0, scale: 0 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0 }}
+                              transition={{ duration: 0.2 }}
+                            >
+                              <Avatar className="w-8 h-8 flex-shrink-0 border-[1.5px] border-white shadow-sm">
+                                <AvatarImage src={userAvatar} />
+                                <AvatarFallback className={isMe ? "bg-primary text-primary-foreground" : "bg-muted"}>
+                                  {getInitials(userName)}
+                                </AvatarFallback>
+                              </Avatar>
+                            </motion.div>
+                          ) : (
+                            <div className="w-8 h-8 flex-shrink-0" key="spacer" />
+                          )}
+                        </AnimatePresence>
+                        
+                        {/* Message content */}
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ duration: 0.35, ease: "easeOut" }}
+                          className="flex flex-col max-w-[70%]"
+                          style={{ alignItems: isMe ? 'flex-end' : 'flex-start' }}
+                        >
+                          {/* Username (only for first message in group) */}
+                          {!isContinuation && (
+                            <motion.div
+                              className="text-xs mb-1 px-1"
+                              style={{ color: 'hsl(var(--muted-foreground))' }}
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              transition={{ delay: 0.15, duration: 0.25 }}
+                            >
+                              {userName}
+                            </motion.div>
+                          )}
+                          
+                          {/* Message bubble */}
+                          <div
+                            className={cn(
+                              roundedClass,
+                              "p-4 border-solid shadow-sm",
+                              isMe 
+                                ? "bg-primary text-primary-foreground border border-primary/20" 
+                                : "bg-card text-card-foreground border border-border/50"
+                            )}
+                          >
+                            <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                              {message.text}
+                            </p>
+                          </div>
+                        </motion.div>
+                      </div>
+                    </div>
+                  );
+                })}
+                
+                {/* Typing indicator */}
+                {typingUsers.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="mt-4"
+                  >
+                    <div className="flex items-end gap-3">
+                      <Avatar className="w-8 h-8 flex-shrink-0 border-[1.5px] border-white shadow-sm">
+                        <AvatarImage src={typingUsers[0]?.image} />
+                        <AvatarFallback className="bg-muted">
+                          {getInitials(typingUsers[0]?.name || 'User')}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="bg-card border border-border/50 rounded-br-lg rounded-tl-lg rounded-tr-lg p-3 shadow-sm">
+                        <MessageLoading />
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+                
+                <div ref={messagesEndRef} className="h-8" />
+              </div>
+            </div>
 
             {/* Input Area */}
             <div className="p-5 border-t border-border/50 bg-card/95 backdrop-blur-sm">
               <div className="flex gap-3 items-end">
-                <ChatInput value={inputValue} onChange={e => setInputValue(e.target.value)} onKeyDown={e => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage();
-              }
-            }} placeholder="Type your message..." className="flex-1 border-border/50 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all resize-none bg-sky-100" />
-                <Button onClick={handleSendMessage} size="icon" className="rounded-full h-11 w-11 shadow-lg hover:shadow-xl transition-all disabled:opacity-50 bg-gradient-to-r from-primary to-primary/80" disabled={!inputValue.trim() || !client || !isReady}>
+                <ChatInput 
+                  value={inputValue} 
+                  onChange={handleInputChange}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }
+                  }} 
+                  placeholder="Type your message..." 
+                  className="flex-1 border-border/50 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all resize-none bg-background" 
+                />
+                <Button 
+                  onClick={handleSendMessage} 
+                  size="icon" 
+                  className="rounded-full h-11 w-11 shadow-lg hover:shadow-xl transition-all disabled:opacity-50 bg-gradient-to-r from-primary to-primary/80" 
+                  disabled={!inputValue.trim() || !client || !isReady}
+                >
                   <Send className="h-4 w-4" />
                 </Button>
               </div>
