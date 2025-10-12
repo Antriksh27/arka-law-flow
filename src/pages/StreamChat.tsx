@@ -24,6 +24,7 @@ const StreamChatPage: React.FC = () => {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [isNewChatOpen, setIsNewChatOpen] = useState(false);
   const [isCreatingChat, setIsCreatingChat] = useState(false);
+  const [connectionOnline, setConnectionOnline] = useState(true);
 
   // Reset selected channel when client changes or disconnects
   useEffect(() => {
@@ -31,6 +32,22 @@ const StreamChatPage: React.FC = () => {
       setSelectedChannel(null);
     }
   }, [client, isReady]);
+
+  // Track Stream connection changes to avoid using stale channels
+  useEffect(() => {
+    if (!client) return;
+    const handler = (event: any) => {
+      if (event.type === 'connection.changed') {
+        const online = !!event.online;
+        setConnectionOnline(online);
+        if (!online) setSelectedChannel(null);
+      }
+    };
+    client.on(handler);
+    return () => {
+      client.off(handler);
+    };
+  }, [client]);
 
   useEffect(() => {
     const fetchAndSyncTeamMembers = async () => {
@@ -126,6 +143,7 @@ const StreamChatPage: React.FC = () => {
   }
 
   const userId = client.userID!;
+  const connectionId = (client as any)?.wsConnection?.connectionID || userId;
   const filters = useMemo(() => ({ 
     type: 'messaging',
     members: { $in: [userId] }
@@ -133,9 +151,19 @@ const StreamChatPage: React.FC = () => {
   
   const sort = { last_message_at: -1 as const };
 
+  if (!connectionOnline) {
+    return (
+      <div className="flex items-center justify-center min-h-[calc(100vh-64px)] bg-background">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary" />
+          <p className="text-lg text-muted-foreground">Reconnecting to chat…</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="h-[calc(100vh-64px)] bg-background">
-      <Chat key={userId} client={client} theme="str-chat__theme-light">
+      <Chat key={connectionId} client={client} theme="str-chat__theme-light">
         <div className="flex h-full">
           {/* Sidebar */}
           <div className="w-80 border-r border-border bg-card flex flex-col">
