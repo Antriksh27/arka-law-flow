@@ -127,14 +127,7 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({
       amount: parseFloat(amount),
       description: description,
       reference_number: `Case: ${caseData?.case_number || caseId}`,
-      is_billable: true,
-      custom_fields: [{
-        label: 'Case ID',
-        value: caseId
-      }, {
-        label: 'Client Name',
-        value: caseData?.clients?.full_name || ''
-      }]
+      is_billable: true
     };
     createExpenseMutation.mutate(expenseData);
   };
