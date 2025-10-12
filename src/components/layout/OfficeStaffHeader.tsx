@@ -22,6 +22,7 @@ const OfficeStaffHeader = () => {
     { name: 'Tasks', href: '/staff/tasks' },
     { name: 'Instructions', href: '/staff/instructions' },
     { name: 'Invoices', href: '/staff/invoices' },
+    { name: 'Chat', href: '/chat' },
   ];
 
   const isActive = (path: string): boolean => {
