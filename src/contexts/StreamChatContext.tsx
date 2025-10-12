@@ -45,17 +45,24 @@ export const StreamChatProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           throw new Error('No session found');
         }
 
-        const response = await supabase.functions.invoke('stream-chat-token', {
+        const { data, error } = await supabase.functions.invoke('generate-stream-token', {
           headers: {
             Authorization: `Bearer ${session.session.access_token}`,
           },
         });
 
-        if (response.error) {
-          throw response.error;
+        if (error) {
+          console.error('Edge function error:', error);
+          throw error;
         }
 
-        const { token, user_name } = response.data;
+        if (!data || !data.token) {
+          console.error('Stream token function returned:', data);
+          throw new Error('Token missing from generate-stream-token response');
+        }
+
+        console.log('Stream token retrieved successfully');
+        const { token, user_name } = data;
 
         // Initialize Stream Chat client
         chatClient = StreamChat.getInstance(STREAM_API_KEY);
@@ -64,13 +71,13 @@ export const StreamChatProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         await chatClient.connectUser(
           {
             id: user.id,
-            name: user_name,
-            image: `https://api.dicebear.com/7.x/initials/svg?seed=${user_name}`,
+            name: user_name || user.user_metadata?.full_name || user.email || 'User',
+            image: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user_name || user.email || 'User')}`,
           },
           token
         );
 
-        console.log('Stream Chat connected successfully');
+        console.log('Stream Chat connected successfully for user:', user.id);
         setClient(chatClient);
         setIsReady(true);
 

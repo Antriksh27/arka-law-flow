@@ -1,14 +1,88 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Chat, Channel, ChannelHeader, MessageInput, MessageList, Thread, Window, ChannelList } from 'stream-chat-react';
 import { useStreamChat } from '@/contexts/StreamChatContext';
 import { MessageSquare, Users, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 import 'stream-chat-react/dist/css/v2/index.css';
 import './StreamChatStyled.css';
+
+interface TeamMember {
+  user_id: string;
+  profiles: {
+    full_name: string;
+    email: string;
+  };
+}
 
 const StreamChatPage: React.FC = () => {
   const { client, isReady } = useStreamChat();
   const [selectedChannel, setSelectedChannel] = useState<any>(null);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [isNewChatOpen, setIsNewChatOpen] = useState(false);
+  const [isCreatingChat, setIsCreatingChat] = useState(false);
+
+  useEffect(() => {
+    const fetchTeamMembers = async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .neq('id', client?.userID || '');
+      
+      if (error) {
+        console.error('Error fetching team members:', error);
+        return;
+      }
+      
+      const formattedData: TeamMember[] = (data || []).map(profile => ({
+        user_id: profile.id,
+        profiles: {
+          full_name: profile.full_name,
+          email: profile.email,
+        },
+      }));
+      
+      setTeamMembers(formattedData);
+    };
+
+    if (client?.userID) {
+      fetchTeamMembers();
+    }
+  }, [client?.userID]);
+
+  const handleCreateDM = async (otherUserId: string) => {
+    if (!client) return;
+    
+    setIsCreatingChat(true);
+    try {
+      const members = [client.userID!, otherUserId].sort();
+      const channelId = `dm-${members.join('-')}`;
+      const channel = client.channel('messaging', channelId, {
+        members,
+      });
+      
+      await channel.watch();
+      setSelectedChannel(channel);
+      setIsNewChatOpen(false);
+      
+      toast({
+        title: 'Chat opened',
+        description: 'Direct message channel ready',
+      });
+    } catch (error: any) {
+      console.error('Error creating DM:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to create chat',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsCreatingChat(false);
+    }
+  };
 
   if (!isReady || !client) {
     return (
@@ -37,10 +111,48 @@ const StreamChatPage: React.FC = () => {
             {/* Header */}
             <div className="p-6 border-b border-border">
               <h1 className="text-2xl font-semibold text-foreground mb-2">Messages</h1>
-              <Button className="w-full" variant="default">
-                <MessageSquare className="mr-2 h-4 w-4" />
-                New Chat
-              </Button>
+              <Dialog open={isNewChatOpen} onOpenChange={setIsNewChatOpen}>
+                <DialogTrigger asChild>
+                  <Button className="w-full" variant="default">
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    New Chat
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Start a new chat</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {teamMembers.map((member) => (
+                      <button
+                        key={member.user_id}
+                        onClick={() => handleCreateDM(member.user_id)}
+                        disabled={isCreatingChat}
+                        className="w-full p-3 rounded-lg hover:bg-muted transition-colors flex items-center gap-3 text-left"
+                      >
+                        <Avatar>
+                          <AvatarFallback>
+                            {(member.profiles?.full_name || member.profiles?.email || 'U')[0].toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium truncate">
+                            {member.profiles?.full_name || member.profiles?.email || 'Unknown User'}
+                          </div>
+                          <div className="text-sm text-muted-foreground truncate">
+                            {member.profiles?.email}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                    {teamMembers.length === 0 && (
+                      <div className="text-center py-8 text-muted-foreground">
+                        No team members found
+                      </div>
+                    )}
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
 
             {/* Channel List */}
