@@ -7,20 +7,20 @@
 @layer base {
   :root {
     --background: 239 246 255;      /* Light blue background #EFF6FF */
-    --foreground: 30 58 138;        /* Deep blue text #1E3A8A */
+    --foreground: 17 24 39;         /* Dark text #111827 */
 
     --card: 255 255 255;
-    --card-foreground: 30 58 138;   /* Deep blue #1E3A8A */
+    --card-foreground: 17 24 39;    /* Dark text #111827 */
 
     --primary: 37 99 235;           /* Vibrant blue #2563EB */
     --primary-hover: 29 78 216;     /* Darker blue #1D4ED8 */
     --primary-foreground: 255 255 255;
 
     --secondary: 219 234 254;       /* Light blue #DBEAFE */
-    --secondary-foreground: 30 58 138;
+    --secondary-foreground: 17 24 39; /* Dark text */
 
     --accent: 147 197 253;          /* Sky blue #93C5FD */
-    --accent-foreground: 30 58 138;
+    --accent-foreground: 17 24 39;  /* Dark text */
     
     --muted: 226 232 240;           /* Slate-200 #E2E8F0 */
     --muted-foreground: 71 85 105;  /* Slate-600 #475569 */
@@ -38,15 +38,15 @@
   }
 
   body {
-    @apply bg-[#EFF6FF] text-[#1E3A8A] font-sans antialiased;
+    @apply bg-[#EFF6FF] text-[#111827] font-sans antialiased;
   }
-  h1 { @apply text-3xl font-bold text-[#1E3A8A]; }
-  h2 { @apply text-2xl font-semibold text-[#1E3A8A]; }
-  h3 { @apply text-xl font-semibold text-[#1E3A8A]; }
-  h4 { @apply text-lg font-semibold text-[#1E3A8A]; }
-  h5, h6 { @apply font-medium text-[#1E3A8A]; }
+  h1 { @apply text-3xl font-bold text-[#111827]; }
+  h2 { @apply text-2xl font-semibold text-[#111827]; }
+  h3 { @apply text-xl font-semibold text-[#111827]; }
+  h4 { @apply text-lg font-semibold text-[#111827]; }
+  h5, h6 { @apply font-medium text-[#111827]; }
   p, span, label {
-    @apply font-normal text-[#1E3A8A];
+    @apply font-normal text-[#111827];
   }
 }
 
@@ -55,7 +55,7 @@
     @apply bg-[#2563EB] text-white font-medium rounded-lg px-4 py-2 shadow-sm hover:bg-[#1D4ED8] focus:ring-2 focus:ring-[#2563EB];
   }
   .btn-secondary {
-    @apply bg-[#DBEAFE] text-[#1E3A8A] font-medium rounded-lg px-4 py-2 hover:bg-[#BFDBFE] shadow-sm;
+    @apply bg-[#DBEAFE] text-[#111827] font-medium rounded-lg px-4 py-2 hover:bg-[#BFDBFE] shadow-sm;
   }
   .card {
     @apply bg-white rounded-2xl shadow-sm p-6 border border-[#BFDBFE];
@@ -63,12 +63,12 @@
   .card-interactive {
     @apply hover:shadow-md transition-shadow duration-100;
   }
-  .badge-info { @apply bg-[#DBEAFE] text-[#1E3A8A]; }
+  .badge-info { @apply bg-[#DBEAFE] text-[#111827]; }
   .badge-success { @apply bg-green-100 text-green-800; }
   .badge-error { @apply bg-red-50 text-red-500; }
   .badge-warning { @apply bg-yellow-50 text-yellow-800; }
   .table-header {
-    @apply bg-[#DBEAFE] text-[#1E3A8A] text-xs font-bold uppercase;
+    @apply bg-[#DBEAFE] text-[#111827] text-xs font-bold uppercase;
   }
   .border-default { @apply border-[#BFDBFE]; }
 }
@@ -93,7 +93,7 @@
   padding: 12px 4px;
   font-weight: 600;
   font-size: 0.875rem;
-  color: #1E3A8A;
+  color: #111827;
   border-bottom: 2px solid #BFDBFE;
 }
 
@@ -123,7 +123,7 @@
 }
 
 .rbc-toolbar button {
-  color: #1E3A8A;
+  color: #111827;
   border: 1px solid #BFDBFE;
   padding: 8px 16px;
   border-radius: 8px;
