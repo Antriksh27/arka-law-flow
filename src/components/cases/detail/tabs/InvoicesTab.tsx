@@ -41,23 +41,51 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({
 
   // Helpers for matching client to Zoho contact
   const normalize = (s?: string) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-  const findMatchingContact = (contacts: any[], clientName?: string, clientEmail?: string) => {
+  const findMatchingContact = (contacts: any[], clientName?: string, clientEmail?: string, clientPhone?: string) => {
     const nClient = normalize(clientName);
-    // 1) Exact email match on contact or any contact person
+    
+    // 1) Exact email match (highest priority)
     if (clientEmail) {
       const lowerEmail = clientEmail.toLowerCase();
-      const byEmail = contacts.find((c: any) => c.email?.toLowerCase() === lowerEmail || Array.isArray(c.contact_persons) && c.contact_persons.some((p: any) => p.email?.toLowerCase() === lowerEmail));
+      const byEmail = contacts.find((c: any) => 
+        c.email?.toLowerCase() === lowerEmail || 
+        (Array.isArray(c.contact_persons) && c.contact_persons.some((p: any) => p.email?.toLowerCase() === lowerEmail))
+      );
       if (byEmail) return byEmail;
     }
-    // 2) Normalize name/company and compare
+    
+    // 2) Phone match (normalize to digits only)
+    if (clientPhone) {
+      const normalizePhone = (p?: string) => (p || '').replace(/\D/g, '');
+      const clientPhoneNorm = normalizePhone(clientPhone);
+      if (clientPhoneNorm.length >= 10) {
+        const byPhone = contacts.find((c: any) => {
+          const contactPhone = normalizePhone(c.phone || c.mobile);
+          return contactPhone.includes(clientPhoneNorm.slice(-10)) || 
+                 clientPhoneNorm.includes(contactPhone.slice(-10));
+        });
+        if (byPhone) return byPhone;
+      }
+    }
+    
+    // 3) Flexible name/company matching
     const byName = contacts.find((c: any) => {
-      const names = [c.contact_name, c.company_name].filter(Boolean);
+      const names = [c.contact_name, c.company_name, c.first_name, c.last_name].filter(Boolean);
       return names.some((n: string) => {
         const nn = normalize(n);
-        return nn === nClient || nn.includes(nClient) || nClient.includes(nn);
+        // Check if either contains the other, or if words match
+        if (nn === nClient || nn.includes(nClient) || nClient.includes(nn)) {
+          return true;
+        }
+        // Word-based matching (split by space, check overlapping words)
+        const clientWords = clientName?.toLowerCase().split(/\s+/).filter(w => w.length > 2) || [];
+        const nameWords = n.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+        const matchingWords = clientWords.filter(cw => nameWords.some(nw => nw.includes(cw) || cw.includes(nw)));
+        return matchingWords.length >= Math.min(clientWords.length, nameWords.length, 2);
       });
     });
     if (byName) return byName;
+    
     return null;
   };
 
@@ -70,7 +98,7 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({
       const {
         data,
         error
-      } = await supabase.from('cases').select('*, clients(id, full_name, email)').eq('id', caseId).single();
+      } = await supabase.from('cases').select('*, clients(id, full_name, email, phone)').eq('id', caseId).single();
       if (error) throw error;
       return data;
     }
@@ -111,7 +139,12 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({
   // Auto-select client when dialog opens and contacts are loaded
   React.useEffect(() => {
     if (createDialogOpen && zohoContacts && caseData?.clients?.full_name && !isClientAutoSelected) {
-      const match = findMatchingContact(zohoContacts as any[], caseData?.clients?.full_name, caseData?.clients?.email);
+      const match = findMatchingContact(
+        zohoContacts as any[], 
+        caseData?.clients?.full_name, 
+        caseData?.clients?.email,
+        caseData?.clients?.phone
+      );
       if (match) {
         setNewInvoice(prev => ({
           ...prev,
@@ -120,7 +153,7 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({
         setIsClientAutoSelected(true);
       }
     }
-  }, [createDialogOpen, zohoContacts, caseData?.clients?.full_name, caseData?.clients?.email, isClientAutoSelected]);
+  }, [createDialogOpen, zohoContacts, caseData?.clients?.full_name, caseData?.clients?.email, caseData?.clients?.phone, isClientAutoSelected]);
   const createInvoiceMutation = useMutation({
     mutationFn: async (invoiceData: any) => {
       const {
@@ -191,7 +224,7 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({
       toast({
         title: 'Missing info',
         description: !newInvoice.customer_id
-          ? 'Couldn\'t auto-link this client to a Zoho customer. Please ensure the client exists in Zoho Books (name/email match) and try again.'
+          ? 'Please select a customer from the dropdown'
           : 'Please add at least one line item',
         variant: 'destructive'
       });
@@ -299,7 +332,9 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({
           <DialogHeader>
             <DialogTitle>Create Invoice</DialogTitle>
             <DialogDescription>
-              Customer is auto-selected from the case client. Review and add line items.
+              {newInvoice.customer_id 
+                ? 'Customer auto-selected from case client. Review and add line items.'
+                : 'Select a customer manually (auto-match failed).'}
             </DialogDescription>
           </DialogHeader>
           
@@ -307,13 +342,39 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({
             {/* Display Case and Client Info */}
             <div className="p-4 rounded-lg space-y-2 bg-sky-100">
               <div>
-                <Label className="text-xs text-muted-foreground">Title</Label>
+                <Label className="text-xs text-muted-foreground">Case</Label>
                 <p className="text-sm font-medium">{caseData?.title || 'Loading...'}</p>
               </div>
               <div>
                 <Label className="text-xs text-muted-foreground">Client</Label>
                 <p className="text-sm font-medium">{caseData?.clients?.full_name || 'Loading...'}</p>
               </div>
+            </div>
+
+            {/* Customer Selector (manual fallback) */}
+            <div>
+              <Label>Zoho Customer *</Label>
+              <Select 
+                value={newInvoice.customer_id} 
+                onValueChange={(value) => setNewInvoice(prev => ({ ...prev, customer_id: value }))}
+              >
+                <SelectTrigger className={!newInvoice.customer_id ? 'border-orange-500' : ''}>
+                  <SelectValue placeholder="Select customer..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {zohoContacts?.map((contact: any) => (
+                    <SelectItem key={contact.contact_id} value={contact.contact_id}>
+                      {contact.contact_name || contact.company_name} 
+                      {contact.email && ` (${contact.email})`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {!newInvoice.customer_id && (
+                <p className="text-xs text-orange-600 mt-1">
+                  Auto-link failed. Please select manually.
+                </p>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
