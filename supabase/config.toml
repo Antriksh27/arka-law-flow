@@ -1,5 +1,8 @@
 project_id = "hpcnipcbymruvsnqrmjx"
 
+[functions.send-notification]
+verify_jwt = true
+
 [functions.stream-chat-token]
 verify_jwt = true
 
