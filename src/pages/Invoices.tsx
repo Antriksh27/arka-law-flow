@@ -9,7 +9,7 @@ import { InvoiceViewDialog } from '@/features/invoices/components/InvoiceViewDia
 import { DeleteInvoiceDialog } from '@/features/invoices/components/DeleteInvoiceDialog';
 import { useInvoiceStats } from '@/features/invoices/hooks/useInvoiceStats';
 import type { InvoiceListData } from '@/features/invoices/types';
-import { Loader2, AlertCircle, Search, Plus, Download, RefreshCw, Calendar, FileText } from 'lucide-react';
+import { Loader2, AlertCircle, Search, Plus, Download, RefreshCw, Calendar, FileText, Link as LinkIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -289,6 +289,36 @@ const Invoices: React.FC = () => {
     dateTo: undefined,
   });
 
+  // Check if Zoho is connected
+  const { data: zohoToken } = useQuery({
+    queryKey: ['zoho-token', firmId],
+    queryFn: async () => {
+      if (!firmId) return null;
+      const { data, error } = await supabase
+        .from('zoho_tokens')
+        .select('*')
+        .eq('firm_id', firmId)
+        .maybeSingle();
+      
+      if (error) {
+        console.error('Error fetching Zoho token:', error);
+        return null;
+      }
+      return data;
+    },
+    enabled: !!firmId
+  });
+
+  const handleConnectZoho = () => {
+    const zohoClientId = '1000.MC4YZPCGPZGGJ2J7BTJQZLURRPME6Z';
+    const redirectUri = 'https://crm.hrulegal.com/zoho/callback';
+    const scope = 'ZohoInvoice.invoices.ALL';
+    
+    const authUrl = `https://accounts.zoho.com/oauth/v2/auth?scope=${scope}&client_id=${zohoClientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&access_type=offline`;
+    
+    window.location.href = authUrl;
+  };
+
   const { data: invoices, isLoading, error } = useQuery({
     queryKey: ['invoices', firmId, filters],
     queryFn: () => fetchInvoices(firmId, filters),
@@ -348,10 +378,27 @@ const Invoices: React.FC = () => {
           <h1 className="text-2xl font-semibold text-gray-900">Invoices</h1>
           <Badge variant="default">{invoices ? `${invoices.length} total` : "--"}</Badge>
         </div>
-        <Button className="bg-primary hover:bg-primary/90 text-white px-4" onClick={() => setCreateDialogOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          New Invoice
-        </Button>
+        <div className="flex items-center gap-2">
+          {!zohoToken ? (
+            <Button 
+              variant="outline" 
+              className="border-blue-500 text-blue-600 hover:bg-blue-50" 
+              onClick={handleConnectZoho}
+            >
+              <LinkIcon className="w-4 h-4 mr-2" />
+              Connect Zoho
+            </Button>
+          ) : (
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-200 rounded-md">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span className="text-sm text-green-700">Zoho Connected</span>
+            </div>
+          )}
+          <Button className="bg-primary hover:bg-primary/90 text-white px-4" onClick={() => setCreateDialogOpen(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            New Invoice
+          </Button>
+        </div>
       </div>
       {/* Stats Row (cards) */}
       <InvoiceStats firmId={firmId} />

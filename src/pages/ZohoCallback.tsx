@@ -20,18 +20,28 @@ export default function ZohoCallback() {
 
       if (code) {
         try {
-          // Send the authorization code to your backend to exchange for tokens
+          console.log("Exchanging Zoho authorization code...");
+          
           const { data, error } = await supabase.functions.invoke("zoho-token", {
             body: { code },
           });
 
-          if (error) throw error;
+          if (error) {
+            console.error("Edge function error:", error);
+            throw error;
+          }
 
-          toast.success("Zoho connected successfully");
+          if (data?.error) {
+            console.error("Zoho API error:", data.error);
+            throw new Error(data.error);
+          }
+
+          console.log("Zoho connected successfully");
+          toast.success("Zoho connected successfully! You can now create invoices.");
           navigate("/invoices");
-        } catch (err) {
+        } catch (err: any) {
           console.error("Error exchanging Zoho token:", err);
-          toast.error("Failed to connect Zoho");
+          toast.error(err.message || "Failed to connect Zoho");
           navigate("/invoices");
         }
       }
