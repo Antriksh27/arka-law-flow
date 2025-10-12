@@ -189,8 +189,10 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({
   const handleCreateInvoice = () => {
     if (!newInvoice.customer_id || newInvoice.line_items.length === 0) {
       toast({
-        title: 'Error',
-        description: 'Please select customer and add line items',
+        title: 'Missing info',
+        description: !newInvoice.customer_id
+          ? 'Couldn\'t auto-link this client to a Zoho customer. Please ensure the client exists in Zoho Books (name/email match) and try again.'
+          : 'Please add at least one line item',
         variant: 'destructive'
       });
       return;
