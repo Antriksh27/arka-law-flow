@@ -11,6 +11,7 @@ import {
   ClipboardList,
   Clock,
   FileCode,
+  Activity,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -40,6 +41,7 @@ const getNavigationForRole = (role: string | null) => {
 
   if (role && ['admin', 'lawyer'].includes(role)) {
     baseNavigation.push({ name: 'Team', href: '/team', icon: Users });
+    baseNavigation.push({ name: 'Notifications', href: '/notifications/monitoring', icon: Activity });
   }
 
   return baseNavigation;

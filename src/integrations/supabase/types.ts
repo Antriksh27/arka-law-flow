@@ -3866,12 +3866,29 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_notification_statistics: {
+        Args: { p_days?: number; p_firm_id: string }
+        Returns: Json
+      }
       get_profile_by_id: {
         Args: { user_id: string }
         Returns: {
           full_name: string
           id: string
           role: string
+        }[]
+      }
+      get_recent_notification_activity: {
+        Args: { p_firm_id: string; p_limit?: number }
+        Returns: {
+          category: string
+          created_at: string
+          id: string
+          message: string
+          priority: string
+          read: boolean
+          recipient_name: string
+          title: string
         }[]
       }
       get_security_metrics: {
@@ -3894,6 +3911,16 @@ export type Database = {
       get_system_timestamp: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_top_notification_recipients: {
+        Args: { p_firm_id: string; p_limit?: number }
+        Returns: {
+          full_name: string
+          read_rate: number
+          total_received: number
+          unread_count: number
+          user_id: string
+        }[]
       }
       get_user_firm_id_from_team: {
         Args: Record<PropertyKey, never>

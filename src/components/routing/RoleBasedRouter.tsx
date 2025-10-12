@@ -24,6 +24,7 @@ import Availability from '@/pages/Availability';
 import ECourts from '@/pages/ECourts';
 import NotFound from '@/pages/NotFound';
 import ModernMessenger from '@/components/messages/ModernMessenger';
+import NotificationMonitoring from '@/pages/NotificationMonitoring';
 
 // Reception pages
 import ReceptionHome from '@/pages/reception/ReceptionHome';
@@ -154,6 +155,7 @@ const RoleBasedRouter = () => {
         <Route path="/invoices" element={<Invoices />} />
         <Route path="/availability" element={<Availability />} />
         <Route path="/team" element={<Team />} />
+        <Route path="/notifications/monitoring" element={<NotificationMonitoring />} />
         <Route path="/chat" element={<ModernMessenger />} />
         {/* Fallback for reception routes accessed by non-receptionists */}
         <Route path="/reception/*" element={<Index />} />
