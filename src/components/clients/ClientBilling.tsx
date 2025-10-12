@@ -19,18 +19,48 @@ const statusColors: Record<string, string> = {
 };
 
 export const ClientBilling: React.FC<ClientBillingProps> = ({ clientId }) => {
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['client-invoices', clientId],
+  const { data: clientData } = useQuery({
+    queryKey: ['client-zoho', clientId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('invoices')
-        .select('id, invoice_number, title, issue_date, due_date, total_amount, status')
-        .eq('client_id', clientId)
-        .order('issue_date', { ascending: false });
+        .from('clients')
+        .select('full_name, email')
+        .eq('id', clientId)
+        .single();
       if (error) throw error;
       return data;
     }
   });
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['zoho-client-invoices', clientId, clientData?.email],
+    enabled: !!clientData?.email,
+    queryFn: async () => {
+      const { data: invoicesData, error } = await supabase.functions.invoke('zoho-books-invoices');
+      if (error) throw error;
+      
+      // Filter invoices by client email
+      const clientInvoices = invoicesData?.invoices?.filter((inv: any) => 
+        inv.customer_name?.toLowerCase().includes(clientData.full_name.toLowerCase()) ||
+        inv.email?.toLowerCase() === clientData.email.toLowerCase()
+      ) || [];
+      
+      return clientInvoices;
+    }
+  });
+
+  if (!clientData?.email) {
+    return (
+      <Card className="bg-white rounded-2xl shadow-sm">
+        <CardContent className="p-6">
+          <div className="text-center py-8 text-gray-500">
+            <Receipt className="w-8 h-8 mx-auto mb-2" />
+            Client email required to fetch invoices from Zoho Books.
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -91,14 +121,14 @@ export const ClientBilling: React.FC<ClientBillingProps> = ({ clientId }) => {
             </thead>
             <tbody>
               {data.map((inv: any) => (
-                <tr key={inv.id} className="border-b last:border-b-0 hover:bg-gray-50 transition">
+                <tr key={inv.invoice_id} className="border-b last:border-b-0 hover:bg-gray-50 transition">
                   <td className="px-4 py-3 font-mono">{inv.invoice_number}</td>
-                  <td className="px-4 py-3">{inv.title || <span className="text-gray-400">—</span>}</td>
-                  <td className="px-4 py-3">{inv.issue_date ? new Date(inv.issue_date).toLocaleDateString() : '—'}</td>
+                  <td className="px-4 py-3">{inv.reference_number || <span className="text-gray-400">—</span>}</td>
+                  <td className="px-4 py-3">{inv.date ? new Date(inv.date).toLocaleDateString() : '—'}</td>
                   <td className="px-4 py-3">{inv.due_date ? new Date(inv.due_date).toLocaleDateString() : '—'}</td>
-                  <td className="px-4 py-3">₹{Number(inv.total_amount).toLocaleString()}</td>
+                  <td className="px-4 py-3">₹{Number(inv.total).toLocaleString()}</td>
                   <td className="px-4 py-3">
-                    <Badge className={`${statusColors[inv.status] || 'bg-gray-100 text-gray-700 border-gray-200'} rounded-full text-xs px-2`}>
+                    <Badge className={`${statusColors[inv.status?.toLowerCase()] || 'bg-gray-100 text-gray-700 border-gray-200'} rounded-full text-xs px-2`}>
                       {inv.status}
                     </Badge>
                   </td>
