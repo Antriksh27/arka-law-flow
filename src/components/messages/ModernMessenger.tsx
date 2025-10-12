@@ -118,14 +118,31 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
     fetchChannels();
   }, [client, isReady]);
 
+  // Clear selected channel when client disconnects
+  useEffect(() => {
+    if (!client || !isReady) {
+      setSelectedChannel(null);
+      setMessages([]);
+    }
+  }, [client, isReady]);
+
   // Fetch messages when channel is selected
   useEffect(() => {
-    if (!selectedChannel) return;
+    if (!selectedChannel || !client || !isReady) return;
     const loadMessages = async () => {
-      await selectedChannel.watch();
-      const state = selectedChannel.state;
-      const messageArray = Object.values(state.messages || {});
-      setMessages(messageArray);
+      try {
+        await selectedChannel.watch();
+        const state = selectedChannel.state;
+        const messageArray = Object.values(state.messages || {});
+        setMessages(messageArray);
+      } catch (error) {
+        console.error('Error loading messages:', error);
+        toast({
+          title: 'Error loading messages',
+          description: 'Please refresh the page',
+          variant: 'destructive'
+        });
+      }
     };
     loadMessages();
 
@@ -137,9 +154,9 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
     return () => {
       selectedChannel.off('message.new', handleNewMessage);
     };
-  }, [selectedChannel]);
+  }, [selectedChannel, client, isReady]);
   const handleSendMessage = async () => {
-    if (!inputValue.trim() || !selectedChannel) return;
+    if (!inputValue.trim() || !selectedChannel || !client || !isReady) return;
     try {
       await selectedChannel.sendMessage({
         text: inputValue
@@ -147,6 +164,11 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
       setInputValue('');
     } catch (error) {
       console.error('Error sending message:', error);
+      toast({
+        title: 'Error sending message',
+        description: 'Please try again or refresh the page',
+        variant: 'destructive'
+      });
     }
   };
   const getChannelName = (channel: Channel) => {
@@ -343,7 +365,7 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
                 handleSendMessage();
               }
             }} placeholder="Type your message..." className="flex-1 border-border/50 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all resize-none bg-sky-100" />
-                <Button onClick={handleSendMessage} size="icon" className="rounded-full h-11 w-11 shadow-lg hover:shadow-xl transition-all disabled:opacity-50 bg-gradient-to-r from-primary to-primary/80" disabled={!inputValue.trim()}>
+                <Button onClick={handleSendMessage} size="icon" className="rounded-full h-11 w-11 shadow-lg hover:shadow-xl transition-all disabled:opacity-50 bg-gradient-to-r from-primary to-primary/80" disabled={!inputValue.trim() || !client || !isReady}>
                   <Send className="h-4 w-4" />
                 </Button>
               </div>
