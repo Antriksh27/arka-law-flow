@@ -173,7 +173,14 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({ onChannelSelect }) =>
   };
 
   const handleStartDM = async (memberId: string) => {
-    if (!client) return;
+    if (!client || !isReady) {
+      toast({
+        title: 'Chat not ready',
+        description: 'Please wait for the chat to connect',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     try {
       const members = [client.userID!, memberId].sort();
@@ -308,7 +315,8 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({ onChannelSelect }) =>
                   <button
                     key={member.user_id}
                     onClick={() => handleStartDM(member.user_id)}
-                    className="w-full p-3 rounded-lg hover:bg-muted transition-colors flex items-center gap-3 text-left"
+                    disabled={!isReady}
+                    className="w-full p-3 rounded-lg hover:bg-muted transition-colors flex items-center gap-3 text-left disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Avatar className="h-10 w-10">
                       <AvatarFallback className="bg-primary text-primary-foreground">
