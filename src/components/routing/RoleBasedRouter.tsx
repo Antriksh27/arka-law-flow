@@ -23,7 +23,6 @@ import Instructions from '@/pages/Instructions';
 import Availability from '@/pages/Availability';
 import ECourts from '@/pages/ECourts';
 import NotFound from '@/pages/NotFound';
-import Chat from '@/pages/Chat';
 import StreamChatPage from '@/pages/StreamChat';
 
 // Reception pages
