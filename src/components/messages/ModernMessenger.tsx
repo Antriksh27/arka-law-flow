@@ -392,7 +392,7 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
             background: 'linear-gradient(to bottom, hsl(var(--background)) 0%, hsla(var(--background), 0.95) 20%, hsla(var(--background), 0.8) 40%, hsla(var(--background), 0.4) 70%, hsla(var(--background), 0) 100%)'
           }} />
               
-              <div className="p-8 min-h-full flex flex-col justify-end">
+              <div className="p-8 min-h-full flex flex-col justify-end bg-slate-50">
                 {messages.map((message, index) => {
               const isMe = message.user?.id === client.userID;
               const userName = message.user?.name || message.user?.id || 'Unknown';
