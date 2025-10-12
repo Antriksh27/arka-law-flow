@@ -514,7 +514,7 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({ onChannelSelect }) =>
                           borderRadius,
                           isMe
                             ? 'bg-blue-100 text-black'
-                            : 'bg-muted text-foreground'
+                            : 'bg-green-100 text-black'
                         )}
                       >
                         {/* Subtle shine effect */}
