@@ -2876,6 +2876,36 @@ export type Database = {
           },
         ]
       }
+      notification_reminders: {
+        Row: {
+          created_at: string
+          entity_id: string
+          entity_type: string
+          firm_id: string | null
+          id: string
+          reminder_type: string
+          sent_at: string
+        }
+        Insert: {
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          firm_id?: string | null
+          id?: string
+          reminder_type: string
+          sent_at?: string
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          firm_id?: string | null
+          id?: string
+          reminder_type?: string
+          sent_at?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           action_url: string | null
@@ -3982,6 +4012,18 @@ export type Database = {
           details: string
           status: string
         }[]
+      }
+      send_appointment_reminders: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      send_hearing_reminders: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      send_task_reminders: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       set_super_admin_role: {
         Args: { user_id: string }
