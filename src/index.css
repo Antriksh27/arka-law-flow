@@ -6,71 +6,76 @@
 @tailwind utilities;
 @layer base {
   :root {
-    --background: 249 250 251;
-    --foreground: 17 24 39;
+    --background: 239 246 255;      /* Light blue background #EFF6FF */
+    --foreground: 30 58 138;        /* Deep blue text #1E3A8A */
 
     --card: 255 255 255;
-    --card-foreground: 17 24 39;
+    --card-foreground: 30 58 138;   /* Deep blue #1E3A8A */
 
-    --primary: 17 24 39;         /* #111827 Gray-900 */
-    --primary-hover: 31 41 55;   /* #1F2937 Gray-800 */
+    --primary: 37 99 235;           /* Vibrant blue #2563EB */
+    --primary-hover: 29 78 216;     /* Darker blue #1D4ED8 */
     --primary-foreground: 255 255 255;
 
-    --secondary: 243 244 246;
-    --secondary-foreground: 17 24 39;
+    --secondary: 219 234 254;       /* Light blue #DBEAFE */
+    --secondary-foreground: 30 58 138;
 
-    --accent: 243 244 246;
+    --accent: 147 197 253;          /* Sky blue #93C5FD */
+    --accent-foreground: 30 58 138;
+    
+    --muted: 226 232 240;           /* Slate-200 #E2E8F0 */
+    --muted-foreground: 71 85 105;  /* Slate-600 #475569 */
+    
     --destructive: 239 68 68;
     --success: 16 185 129;
     --warning: 245 158 11;
-    --info: 107 114 128;
+    --info: 59 130 246;             /* Blue-500 #3B82F6 */
 
-    --border: 229 231 235;
-    --input: 229 231 235;
-    --ring: 17 24 39;
+    --border: 191 219 254;          /* Light blue border #BFDBFE */
+    --input: 191 219 254;
+    --ring: 37 99 235;              /* Blue-600 #2563EB */
 
     --radius: 0.75rem;
   }
 
   body {
-    @apply bg-[#F9FAFB] text-[#111827] font-sans antialiased;
+    @apply bg-[#EFF6FF] text-[#1E3A8A] font-sans antialiased;
   }
-  h1 { @apply text-3xl font-bold text-[#111827]; }
-  h2 { @apply text-2xl font-semibold text-[#111827]; }
-  h3 { @apply text-xl font-semibold text-[#111827]; }
-  h4 { @apply text-lg font-semibold text-[#111827]; }
-  h5, h6 { @apply font-medium text-[#111827]; }
+  h1 { @apply text-3xl font-bold text-[#1E3A8A]; }
+  h2 { @apply text-2xl font-semibold text-[#1E3A8A]; }
+  h3 { @apply text-xl font-semibold text-[#1E3A8A]; }
+  h4 { @apply text-lg font-semibold text-[#1E3A8A]; }
+  h5, h6 { @apply font-medium text-[#1E3A8A]; }
   p, span, label {
-    @apply font-normal text-[#111827];
+    @apply font-normal text-[#1E3A8A];
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-[#111827] text-white font-medium rounded-lg px-4 py-2 shadow-sm hover:bg-[#1F2937] focus:ring-2 focus:ring-[#111827];
+    @apply bg-[#2563EB] text-white font-medium rounded-lg px-4 py-2 shadow-sm hover:bg-[#1D4ED8] focus:ring-2 focus:ring-[#2563EB];
   }
   .btn-secondary {
-    @apply bg-[#F3F4F6] text-[#111827] font-medium rounded-lg px-4 py-2 hover:bg-[#E5E7EB] shadow-sm;
+    @apply bg-[#DBEAFE] text-[#1E3A8A] font-medium rounded-lg px-4 py-2 hover:bg-[#BFDBFE] shadow-sm;
   }
   .card {
-    @apply bg-white rounded-2xl shadow-sm p-6 border border-[#E5E7EB];
+    @apply bg-white rounded-2xl shadow-sm p-6 border border-[#BFDBFE];
   }
   .card-interactive {
     @apply hover:shadow-md transition-shadow duration-100;
   }
-  .badge-info { @apply bg-[#F3F4F6] text-[#111827]; }
+  .badge-info { @apply bg-[#DBEAFE] text-[#1E3A8A]; }
   .badge-success { @apply bg-green-100 text-green-800; }
   .badge-error { @apply bg-red-50 text-red-500; }
   .badge-warning { @apply bg-yellow-50 text-yellow-800; }
   .table-header {
-    @apply bg-[#F3F4F6] text-[#111827] text-xs font-bold uppercase;
+    @apply bg-[#DBEAFE] text-[#1E3A8A] text-xs font-bold uppercase;
   }
-  .border-default { @apply border-[#E5E7EB]; }
+  .border-default { @apply border-[#BFDBFE]; }
 }
 
 @layer utilities {
-  .text-muted { color: #6B7280; }
-  .bg-soft { background-color: #F3F4F6; }
+  .text-muted { color: #475569; }
+  .bg-soft { background-color: #DBEAFE; }
   .whitespace-block { @apply p-4 md:p-6; }
 }
 
@@ -88,16 +93,16 @@
   padding: 12px 4px;
   font-weight: 600;
   font-size: 0.875rem;
-  color: #111827;
-  border-bottom: 2px solid #E5E7EB;
+  color: #1E3A8A;
+  border-bottom: 2px solid #BFDBFE;
 }
 
 .rbc-today {
-  background-color: #EEF2FF;
+  background-color: #DBEAFE;
 }
 
 .rbc-off-range-bg {
-  background-color: #F9FAFB;
+  background-color: #EFF6FF;
 }
 
 .rbc-event {
@@ -118,8 +123,8 @@
 }
 
 .rbc-toolbar button {
-  color: #111827;
-  border: 1px solid #E5E7EB;
+  color: #1E3A8A;
+  border: 1px solid #BFDBFE;
   padding: 8px 16px;
   border-radius: 8px;
   font-weight: 500;
@@ -128,25 +133,25 @@
 }
 
 .rbc-toolbar button:hover {
-  background-color: #F3F4F6;
+  background-color: #DBEAFE;
 }
 
 .rbc-toolbar button.rbc-active {
-  background-color: #1E3A8A;
+  background-color: #2563EB;
   color: white;
-  border-color: #1E3A8A;
+  border-color: #2563EB;
 }
 
 .rbc-month-view {
-  border: 1px solid #E5E7EB;
+  border: 1px solid #BFDBFE;
   border-radius: 12px;
   overflow: hidden;
 }
 
 .rbc-day-bg {
-  border-left: 1px solid #E5E7EB;
+  border-left: 1px solid #BFDBFE;
 }
 
 .rbc-month-row {
-  border-top: 1px solid #E5E7EB;
+  border-top: 1px solid #BFDBFE;
 }
