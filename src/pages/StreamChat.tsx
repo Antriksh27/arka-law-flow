@@ -25,6 +25,13 @@ const StreamChatPage: React.FC = () => {
   const [isNewChatOpen, setIsNewChatOpen] = useState(false);
   const [isCreatingChat, setIsCreatingChat] = useState(false);
 
+  // Reset selected channel when client changes or disconnects
+  useEffect(() => {
+    if (!client || !isReady) {
+      setSelectedChannel(null);
+    }
+  }, [client, isReady]);
+
   useEffect(() => {
     const fetchAndSyncTeamMembers = async () => {
       if (!client) return;

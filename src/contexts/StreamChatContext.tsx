@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { StreamChat } from 'stream-chat';
 import { useAuth } from './AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,6 +22,7 @@ export const StreamChatProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const { user } = useAuth();
   const [client, setClient] = useState<StreamChat | null>(null);
   const [isReady, setIsReady] = useState(false);
+  const isConnectingRef = useRef(false);
 
   useEffect(() => {
     let chatClient: StreamChat | null = null;
@@ -30,6 +31,7 @@ export const StreamChatProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     const initStreamChat = async () => {
       if (!user) {
         if (client) {
+          console.log('User logged out, disconnecting Stream Chat');
           await client.disconnectUser();
           setClient(null);
           setIsReady(false);
@@ -38,10 +40,17 @@ export const StreamChatProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       }
 
       // Prevent duplicate initialization
-      if (client) {
-        console.log('Stream Chat already initialized');
+      if (client?.userID === user.id) {
+        console.log('Stream Chat already connected for this user');
         return;
       }
+
+      if (isConnectingRef.current) {
+        console.log('Stream Chat connection already in progress');
+        return;
+      }
+
+      isConnectingRef.current = true;
 
       try {
         console.log('Initializing Stream Chat for user:', user.id);
@@ -89,8 +98,10 @@ export const StreamChatProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         console.log('Stream Chat connected successfully for user:', user.id);
         setClient(chatClient);
         setIsReady(true);
+        isConnectingRef.current = false;
 
       } catch (error: any) {
+        isConnectingRef.current = false;
         console.error('Failed to initialize Stream Chat:', error);
         
         // Check if it's a WebSocket connection error
@@ -119,6 +130,7 @@ export const StreamChatProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
     return () => {
       mounted = false;
+      isConnectingRef.current = false;
       if (chatClient) {
         chatClient.disconnectUser().catch(console.error);
       }
