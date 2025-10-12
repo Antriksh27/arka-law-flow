@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-import { createHmac } from "https://deno.land/std@0.190.0/node/crypto.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -79,10 +78,27 @@ serve(async (req) => {
 
     const base64Header = base64UrlEncode(JSON.stringify(header));
     const base64Payload = base64UrlEncode(JSON.stringify(payload));
-    const signature = createHmac('sha256', streamApiSecret)
-      .update(`${base64Header}.${base64Payload}`)
-      .digest('base64')
-      .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+    
+    // Use Web Crypto API for HMAC signature
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(streamApiSecret);
+    const key = await crypto.subtle.importKey(
+      'raw',
+      keyData,
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+    
+    const signatureData = encoder.encode(`${base64Header}.${base64Payload}`);
+    const signatureBuffer = await crypto.subtle.sign('HMAC', key, signatureData);
+    const signatureArray = new Uint8Array(signatureBuffer);
+    
+    // Convert to base64url
+    let signature = btoa(String.fromCharCode(...signatureArray))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=/g, '');
 
     const token = `${base64Header}.${base64Payload}.${signature}`;
 
