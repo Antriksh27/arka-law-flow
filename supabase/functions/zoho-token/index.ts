@@ -55,11 +55,19 @@ serve(async (req) => {
 
     const tokenData = await tokenResponse.json();
 
-    console.log('Zoho token response:', JSON.stringify({
-      has_access_token: !!tokenData.access_token,
-      has_refresh_token: !!tokenData.refresh_token,
-      expires_in: tokenData.expires_in
-    }));
+    console.log('Zoho token response:', JSON.stringify(tokenData));
+
+    // Check if we got an error from Zoho
+    if (tokenData.error) {
+      console.error("Zoho API error:", tokenData);
+      throw new Error(tokenData.error_description || tokenData.error || "Zoho authentication failed");
+    }
+
+    // Validate we have required tokens
+    if (!tokenData.access_token) {
+      console.error("No access token in response:", tokenData);
+      throw new Error("No access token received from Zoho");
+    }
 
     // Calculate expiry time with validation
     const expiresInSeconds = typeof tokenData.expires_in === 'number' && tokenData.expires_in > 0
