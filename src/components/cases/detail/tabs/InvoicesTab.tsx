@@ -235,17 +235,7 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({
     const invoiceData = {
       ...newInvoice,
       reference_number: `Case: ${caseData?.case_number || caseId}`,
-      notes: `${newInvoice.notes}\n\nLinked to Case: ${caseData?.case_number || caseId}\nClient: ${caseData?.clients?.full_name || ''}`.trim(),
-      custom_fields: [{
-        label: 'Case ID',
-        value: caseId
-      }, {
-        label: 'Case Number',
-        value: caseData?.case_number || ''
-      }, {
-        label: 'Client Name',
-        value: caseData?.clients?.full_name || ''
-      }]
+      notes: `${newInvoice.notes}\n\nLinked to Case: ${caseData?.case_number || caseId}\nClient: ${caseData?.clients?.full_name || ''}`.trim()
     };
     createInvoiceMutation.mutate(invoiceData);
   };
