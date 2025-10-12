@@ -31,7 +31,7 @@ serve(async (req) => {
 
     // Exchange authorization code for access token
     const tokenResponse = await fetch(
-      "https://accounts.zoho.com/oauth/v2/token",
+      "https://accounts.zoho.in/oauth/v2/token",
       {
         method: "POST",
         headers: {
@@ -109,6 +109,15 @@ serve(async (req) => {
       throw new Error("Failed to get user's firm");
     }
 
+    // Fetch existing token (to preserve refresh_token if Zoho doesn't resend it)
+    const { data: existingToken } = await supabaseClient
+      .from('zoho_tokens')
+      .select('refresh_token')
+      .eq('firm_id', teamMember.firm_id)
+      .maybeSingle();
+
+    const refreshTokenToStore = tokenData.refresh_token || existingToken?.refresh_token;
+
     // Store tokens in database (upsert)
     const { error: insertError } = await supabaseClient
       .from('zoho_tokens')
@@ -116,7 +125,7 @@ serve(async (req) => {
         firm_id: teamMember.firm_id,
         user_id: user.id,
         access_token: tokenData.access_token,
-        refresh_token: tokenData.refresh_token,
+        refresh_token: refreshTokenToStore,
         expires_at: expiresAt.toISOString(),
       }, {
         onConflict: 'firm_id',
