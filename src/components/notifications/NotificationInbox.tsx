@@ -3,9 +3,9 @@ import { useAuth } from '@/contexts/AuthContext';
 
 function NotificationInbox() {
   const { user } = useAuth();
-  const applicationIdentifier = import.meta.env.REACT_APP_NOVU_APPLICATION_IDENTIFIER || import.meta.env.VITE_NOVU_APPLICATION_IDENTIFIER;
-  const backendUrl = import.meta.env.REACT_APP_NOVU_BACKEND_URL || import.meta.env.VITE_NOVU_BACKEND_URL;
-  const socketUrl = import.meta.env.REACT_APP_NOVU_SOCKET_URL || import.meta.env.VITE_NOVU_SOCKET_URL;
+  const applicationIdentifier = import.meta.env.VITE_NOVU_APPLICATION_IDENTIFIER;
+  const backendUrl = import.meta.env.VITE_NOVU_BACKEND_URL;
+  const socketUrl = import.meta.env.VITE_NOVU_SOCKET_URL;
 
   if (!applicationIdentifier) {
     console.error('Novu application identifier is not defined');

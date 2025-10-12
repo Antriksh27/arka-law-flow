@@ -6,9 +6,9 @@ export default function NotificationInbox({ userId }) {
   const { user } = useAuth();
   const [subscriberId, setSubscriberId] = useState(userId || null);
 
-  const applicationIdentifier = import.meta.env.REACT_APP_NOVU_APPLICATION_IDENTIFIER || import.meta.env.VITE_NOVU_APPLICATION_IDENTIFIER;
-  const backendUrl = import.meta.env.REACT_APP_NOVU_BACKEND_URL || import.meta.env.VITE_NOVU_BACKEND_URL;
-  const socketUrl = import.meta.env.REACT_APP_NOVU_SOCKET_URL || import.meta.env.VITE_NOVU_SOCKET_URL;
+  const applicationIdentifier = import.meta.env.VITE_NOVU_APPLICATION_IDENTIFIER;
+  const backendUrl = import.meta.env.VITE_NOVU_BACKEND_URL;
+  const socketUrl = import.meta.env.VITE_NOVU_SOCKET_URL;
 
   useEffect(() => {
     if (user?.id) {
