@@ -29,23 +29,44 @@ const StreamChatPage: React.FC = () => {
     const fetchAndSyncTeamMembers = async () => {
       if (!client) return;
       
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
+      // Fetch team members from the same firm
+      const { data: currentMember } = await supabase
+        .from('team_members')
+        .select('firm_id')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (!currentMember?.firm_id) return;
+      
       const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, email')
-        .neq('id', client.userID || '');
+        .from('team_members')
+        .select(`
+          user_id,
+          profiles:user_id (
+            full_name,
+            email
+          )
+        `)
+        .eq('firm_id', currentMember.firm_id)
+        .neq('user_id', user.id);
       
       if (error) {
         console.error('Error fetching team members:', error);
         return;
       }
       
-      const formattedData: TeamMember[] = (data || []).map(profile => ({
-        user_id: profile.id,
-        profiles: {
-          full_name: profile.full_name,
-          email: profile.email,
-        },
-      }));
+      const formattedData: TeamMember[] = (data || [])
+        .filter(tm => tm.profiles)
+        .map(tm => ({
+          user_id: tm.user_id,
+          profiles: {
+            full_name: (tm.profiles as any).full_name || (tm.profiles as any).email || 'User',
+            email: (tm.profiles as any).email || '',
+          },
+        }));
       
       setTeamMembers(formattedData);
       
