@@ -123,3 +123,6 @@ export const logoutCometChat = async () => {
 };
 
 export { CometChatUIKit };
+
+// Export CometChat SDK for direct access
+export { CometChat } from '@cometchat/chat-sdk-javascript';
