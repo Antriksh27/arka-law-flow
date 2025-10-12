@@ -106,7 +106,7 @@ export const DocumentsSidebar: React.FC<DocumentsSidebarProps> = ({
           const isSelected = selectedFolder === folder.name;
           return <button key={folder.name} onClick={() => onFolderSelect(folder.name)} className={cn("w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors", isSelected ? "bg-primary text-white" : "text-gray-700 hover:bg-gray-200")}>
                 {isSelected ? <FolderOpen className="w-4 h-4" /> : <Folder className="w-4 h-4" />}
-                <span className="flex-1 text-left truncate" title={folder.name}>
+                <span className={cn("flex-1 text-left truncate", isSelected ? "text-white" : "text-gray-700")} title={folder.name}>
                   {folder.name}
                 </span>
                 <span className="text-xs bg-gray-300 text-gray-700 px-2 py-1 rounded-full">
