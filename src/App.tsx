@@ -11,6 +11,7 @@ import { Toaster } from './components/ui/toaster';
 import { BookRedirect } from './pages/BookRedirect';
 import CaseDetailEnhanced from './pages/CaseDetailEnhanced';
 import ChatbotDemo from './pages/ChatbotDemo';
+import ZohoCallback from './pages/ZohoCallback';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -41,6 +42,9 @@ function App() {
               
               {/* Auth route */}
               <Route path="/auth" element={<Auth />} />
+              
+              {/* Zoho OAuth callback */}
+              <Route path="/zoho/callback" element={<ZohoCallback />} />
               
               {/* Enhanced case details route */}
               <Route path="/cases/:id/legalkart-details" element={
