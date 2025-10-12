@@ -37,6 +37,21 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({ caseId }) => {
     line_items: [] as LineItem[],
   });
 
+  // Fetch case details to get client info
+  const { data: caseData } = useQuery({
+    queryKey: ['case-details', caseId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('cases')
+        .select('*, clients(id, full_name)')
+        .eq('id', caseId)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
   const { data: invoices, isLoading } = useQuery({
     queryKey: ['zoho-case-invoices', caseId],
     queryFn: async () => {
@@ -45,19 +60,37 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({ caseId }) => {
       if (error) throw error;
       if (!data?.success) throw new Error(data?.error || 'Failed to fetch invoices');
       
-      return data.invoices || [];
+      // Filter invoices that have this case ID in reference_number or notes
+      const allInvoices = data.invoices || [];
+      return allInvoices.filter((inv: any) => 
+        inv.reference_number?.includes(caseId) || 
+        inv.notes?.includes(caseId) ||
+        inv.custom_fields?.some((cf: any) => cf.value === caseId)
+      );
     }
   });
 
   const { data: zohoContacts } = useQuery({
-    queryKey: ['zoho-contacts-for-invoice'],
+    queryKey: ['zoho-contacts-for-invoice', caseData?.clients?.full_name],
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke('zoho-books-get-contacts');
       
       if (error) return [];
-      return data?.contacts || [];
+      const contacts = data?.contacts || [];
+      
+      // Auto-select the case's client if not already selected
+      if (!newInvoice.customer_id && caseData?.clients?.full_name) {
+        const matchingContact = contacts.find((c: any) => 
+          c.contact_name?.toLowerCase() === caseData.clients.full_name?.toLowerCase()
+        );
+        if (matchingContact) {
+          setNewInvoice(prev => ({ ...prev, customer_id: matchingContact.contact_id }));
+        }
+      }
+      
+      return contacts;
     },
-    enabled: createDialogOpen,
+    enabled: createDialogOpen && !!caseData,
   });
 
   const createInvoiceMutation = useMutation({
@@ -72,10 +105,9 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({ caseId }) => {
       return data.invoice;
     },
     onSuccess: () => {
-      toast({ title: 'Success', description: 'Invoice created successfully!' });
+      toast({ title: 'Success', description: 'Invoice created and linked to case' });
       setCreateDialogOpen(false);
-      queryClient.invalidateQueries({ queryKey: ['zoho-case-invoices'] });
-      queryClient.invalidateQueries({ queryKey: ['zoho-invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['zoho-case-invoices', caseId] });
       setNewInvoice({
         customer_id: '',
         date: format(new Date(), 'yyyy-MM-dd'),
@@ -119,7 +151,28 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({ caseId }) => {
       return;
     }
 
-    createInvoiceMutation.mutate(newInvoice);
+    // Add case and client info to the invoice
+    const invoiceData = {
+      ...newInvoice,
+      reference_number: `Case: ${caseData?.case_number || caseId}`,
+      notes: `${newInvoice.notes}\n\nLinked to Case: ${caseData?.case_number || caseId}\nClient: ${caseData?.clients?.full_name || ''}`.trim(),
+      custom_fields: [
+        {
+          label: 'Case ID',
+          value: caseId
+        },
+        {
+          label: 'Case Number',
+          value: caseData?.case_number || ''
+        },
+        {
+          label: 'Client Name',
+          value: caseData?.clients?.full_name || ''
+        }
+      ]
+    };
+
+    createInvoiceMutation.mutate(invoiceData);
   };
 
   if (isLoading) {
@@ -155,6 +208,10 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({ caseId }) => {
           <p className="text-sm text-muted-foreground mb-1">Pending</p>
           <p className="text-2xl font-semibold text-orange-600">₹{pendingAmount.toFixed(2)}</p>
         </Card>
+      </div>
+
+      <div className="text-sm text-muted-foreground mb-4">
+        Showing invoices linked to this case
       </div>
 
       {invoices && invoices.length > 0 ? (
