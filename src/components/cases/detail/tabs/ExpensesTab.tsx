@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Plus } from 'lucide-react';
 
@@ -35,6 +36,17 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({ caseId }) => {
       
       if (error) throw error;
       return data;
+    }
+  });
+
+  // Fetch expense accounts from Zoho Books
+  const { data: expenseAccounts } = useQuery({
+    queryKey: ['zoho-expense-accounts'],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke('zoho-books-get-expense-accounts');
+      
+      if (error) throw error;
+      return data?.accounts || [];
     }
   });
 
@@ -90,7 +102,7 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({ caseId }) => {
   };
 
   const handleAddExpense = () => {
-    if (!amount || !description) {
+    if (!amount || !description || !category) {
       toast({
         title: "Error",
         description: "Please fill in all required fields",
@@ -100,7 +112,7 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({ caseId }) => {
     }
 
     const expenseData = {
-      account_name: category || 'Legal Expenses',
+      account_name: category,
       date: expenseDate,
       amount: parseFloat(amount),
       description: description,
@@ -169,13 +181,19 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({ caseId }) => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="category">Category</Label>
-                  <Input
-                    id="category"
-                    placeholder="e.g., Court Fees, Travel, etc."
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                  />
+                  <Label htmlFor="category">Expense Account *</Label>
+                  <Select value={category} onValueChange={setCategory}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select expense account" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {expenseAccounts?.map((account: any) => (
+                        <SelectItem key={account.account_id} value={account.account_name}>
+                          {account.account_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label htmlFor="description">Description *</Label>
