@@ -1555,6 +1555,7 @@ export type Database = {
           original_copy_retained: boolean | null
           sync_attempted_at: string | null
           synced_at: string | null
+          task_id: string | null
           title: string | null
           uploaded_at: string | null
           uploaded_by: string | null
@@ -1583,6 +1584,7 @@ export type Database = {
           original_copy_retained?: boolean | null
           sync_attempted_at?: string | null
           synced_at?: string | null
+          task_id?: string | null
           title?: string | null
           uploaded_at?: string | null
           uploaded_by?: string | null
@@ -1611,6 +1613,7 @@ export type Database = {
           original_copy_retained?: boolean | null
           sync_attempted_at?: string | null
           synced_at?: string | null
+          task_id?: string | null
           title?: string | null
           uploaded_at?: string | null
           uploaded_by?: string | null
@@ -1646,6 +1649,13 @@ export type Database = {
             columns: ["document_type_id"]
             isOneToOne: false
             referencedRelation: "document_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
             referencedColumns: ["id"]
           },
           {
@@ -3750,6 +3760,15 @@ export type Database = {
       get_current_user_role_secure: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_firm_members_for_chat: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          email: string
+          full_name: string
+          role: string
+          user_id: string
+        }[]
       }
       get_lawyers_and_juniors: {
         Args: Record<PropertyKey, never>

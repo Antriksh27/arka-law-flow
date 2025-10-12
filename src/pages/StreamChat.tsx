@@ -45,57 +45,25 @@ const StreamChatPage: React.FC = () => {
         return;
       }
       
-      // Get team members directly from team_members table (it has full_name)
-      const { data: teamData, error: teamErr } = await supabase
-        .from('team_members')
-        .select('user_id, full_name, role')
-        .eq('firm_id', currentMember.firm_id)
-        .neq('user_id', user.id);
-      
-      if (teamErr) {
-        console.error('Error fetching team members:', teamErr);
+      // Fetch firm members via secure RPC (bypasses RLS safely)
+      const { data: rpcData, error: rpcErr } = await supabase
+        .rpc('get_firm_members_for_chat');
+
+      if (rpcErr) {
+        console.error('Error fetching firm members via RPC:', rpcErr);
         setTeamMembers([]);
         return;
       }
-      
-      // Get profiles for email addresses
-      const userIds = (teamData || []).map(tm => tm.user_id);
-      const { data: profilesData } = await supabase
-        .from('profiles')
-        .select('id, email')
-        .in('id', userIds);
-      
-      // Create a map of user_id to email
-      const emailMap = (profilesData || []).reduce((acc: Record<string, string>, profile: any) => {
-        acc[profile.id] = profile.email;
-        return acc;
-      }, {});
-      
-      const formattedData: TeamMember[] = (teamData || []).map((tm: any) => ({
-        user_id: tm.user_id,
+
+      const formattedData: TeamMember[] = (rpcData || []).map((m: any) => ({
+        user_id: m.user_id,
         profiles: {
-          full_name: tm.full_name || 'User',
-          email: emailMap[tm.user_id] || '',
+          full_name: m.full_name || m.email || 'User',
+          email: m.email || '',
         },
       }));
-      
+
       setTeamMembers(formattedData);
-      
-      // Sync team members to Stream Chat so they appear in the user list
-      if (formattedData.length > 0) {
-        try {
-          const streamUsers = formattedData.map(member => ({
-            id: member.user_id,
-            name: member.profiles?.full_name || member.profiles?.email || 'User',
-            image: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(member.profiles?.full_name || member.profiles?.email || 'User')}`,
-          }));
-          
-          await client.upsertUsers(streamUsers);
-          console.log(`Synced ${streamUsers.length} team members to Stream Chat`);
-        } catch (syncError) {
-          console.error('Error syncing team members to Stream:', syncError);
-        }
-      }
     };
 
     if (client?.userID) {
@@ -197,7 +165,7 @@ const StreamChatPage: React.FC = () => {
                     ))}
                     {teamMembers.length === 0 && (
                       <div className="text-center py-8 text-muted-foreground">
-                        No team members found
+                        No active team members in your firm
                       </div>
                     )}
                   </div>
