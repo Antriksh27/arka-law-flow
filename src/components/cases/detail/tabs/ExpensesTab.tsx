@@ -24,7 +24,7 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({
   const [expenseDate, setExpenseDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('');
+  const [accountId, setAccountId] = useState('');
 
   // Fetch case details to get client info
   const {
@@ -110,10 +110,10 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({
     setExpenseDate(format(new Date(), 'yyyy-MM-dd'));
     setAmount('');
     setDescription('');
-    setCategory('');
+    setAccountId('');
   };
   const handleAddExpense = () => {
-    if (!amount || !description || !category) {
+    if (!amount || !description || !accountId) {
       toast({
         title: "Error",
         description: "Please fill in all required fields",
@@ -122,7 +122,7 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({
       return;
     }
     const expenseData = {
-      account_name: category,
+      account_id: accountId,
       date: expenseDate,
       amount: parseFloat(amount),
       description: description,
@@ -172,12 +172,12 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({
                 </div>
                 <div>
                   <Label htmlFor="category">Expense Account *</Label>
-                  <Select value={category} onValueChange={setCategory}>
+                  <Select value={accountId} onValueChange={setAccountId}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select expense account" />
                     </SelectTrigger>
                     <SelectContent>
-                      {expenseAccounts?.map((account: any) => <SelectItem key={account.account_id} value={account.account_name}>
+                      {expenseAccounts?.map((account: any) => <SelectItem key={account.account_id} value={account.account_id}>
                           {account.account_name}
                         </SelectItem>)}
                     </SelectContent>

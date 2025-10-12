@@ -99,7 +99,7 @@ serve(async (req) => {
 
     const expenseData = await req.json();
 
-    console.log("Creating expense in Zoho Books...");
+    console.log("Creating expense in Zoho Books with data:", JSON.stringify(expenseData, null, 2));
     
     const createResponse = await fetch(
       `https://www.zohoapis.in/books/v3/expenses?organization_id=${organizationId}`,
