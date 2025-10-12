@@ -26,6 +26,18 @@ const StreamChatPage: React.FC = () => {
   const [isCreatingChat, setIsCreatingChat] = useState(false);
   const [connectionOnline, setConnectionOnline] = useState(true);
 
+  // Compute filters early (before any early returns)
+  const userId = client?.userID;
+  const connectionId = (client as any)?.wsConnection?.connectionID || userId;
+  const filters = useMemo(() => {
+    if (!userId) return {};
+    return { 
+      type: 'messaging',
+      members: { $in: [userId] }
+    };
+  }, [userId]);
+  const sort = { last_message_at: -1 as const };
+
   // Reset selected channel when client changes or disconnects
   useEffect(() => {
     if (!client || !isReady) {
@@ -142,15 +154,6 @@ const StreamChatPage: React.FC = () => {
     );
   }
 
-  const userId = client.userID!;
-  const connectionId = (client as any)?.wsConnection?.connectionID || userId;
-  const filters = useMemo(() => ({ 
-    type: 'messaging',
-    members: { $in: [userId] }
-  }), [userId]);
-  
-  const sort = { last_message_at: -1 as const };
-
   if (!connectionOnline) {
     return (
       <div className="flex items-center justify-center min-h-[calc(100vh-64px)] bg-background">
@@ -161,6 +164,7 @@ const StreamChatPage: React.FC = () => {
       </div>
     );
   }
+  
   return (
     <div className="h-[calc(100vh-64px)] bg-background">
       <Chat key={connectionId} client={client} theme="str-chat__theme-light">
