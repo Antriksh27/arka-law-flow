@@ -23,17 +23,18 @@ export const DocumentsSidebar: React.FC<DocumentsSidebarProps> = ({
       } = await supabase.from('documents').select('folder_name, case_id, cases!inner(title)').not('folder_name', 'is', null);
       if (error) throw error;
 
-      // Group by folder name and count documents
+      // Group by case and count documents
       const folderMap = new Map();
       data?.forEach(doc => {
-        if (!folderMap.has(doc.folder_name)) {
-          folderMap.set(doc.folder_name, {
-            name: doc.folder_name,
+        const caseTitle = doc.cases?.title || doc.folder_name;
+        if (!folderMap.has(doc.case_id)) {
+          folderMap.set(doc.case_id, {
+            name: caseTitle,
             count: 0,
             caseId: doc.case_id
           });
         }
-        folderMap.get(doc.folder_name).count++;
+        folderMap.get(doc.case_id).count++;
       });
       return Array.from(folderMap.values());
     }
