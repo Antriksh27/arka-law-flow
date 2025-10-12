@@ -236,6 +236,46 @@ Deno.serve(async (req) => {
       )
     }
 
+    // Send notification to all admins in the firm
+    console.log('Sending user_added notification to admins')
+    try {
+      const { data: admins } = await supabaseAdmin
+        .from('team_members')
+        .select('user_id')
+        .eq('firm_id', requestData.firm_id)
+        .eq('role', 'admin')
+
+      const adminIds = admins?.map(admin => admin.user_id).filter(id => id !== user.id) || []
+
+      if (adminIds.length > 0) {
+        await supabaseAdmin
+          .from('notifications')
+          .insert(
+            adminIds.map(adminId => ({
+              recipient_id: adminId,
+              notification_type: 'user_added',
+              title: 'New Team Member Added',
+              message: `${requestData.full_name} has been added as ${requestData.role}`,
+              reference_id: userId,
+              category: 'system',
+              priority: 'normal',
+              action_url: '/team',
+              metadata: {
+                user_id: userId,
+                full_name: requestData.full_name,
+                role: requestData.role,
+                added_by: user.id
+              },
+              read: false
+            }))
+          )
+        console.log(`Sent user_added notification to ${adminIds.length} admins`)
+      }
+    } catch (notifError) {
+      console.error('Error sending notification:', notifError)
+      // Don't fail the request if notification fails
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true, 

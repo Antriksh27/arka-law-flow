@@ -18,6 +18,60 @@ export const CaseMessages: React.FC<CaseMessagesProps> = ({
   // TODO: This component needs to be updated to use the new messaging hooks.
   // It should fetch the message thread associated with `caseId`, or create one if it doesn't exist.
   // It will then use the ChatView component or a similar implementation to display and send messages.
+  
+  /* NOTIFICATION INTEGRATION GUIDE:
+   * 
+   * When implementing message sending, add notification calls:
+   * 
+   * Example for sending a message:
+   * 
+   * const sendMessage = async (content: string) => {
+   *   // 1. Save message to database
+   *   const { data: message } = await supabase
+   *     .from('messages')
+   *     .insert({ content, case_id: caseId, sender_id: userId })
+   *     .select()
+   *     .single();
+   * 
+   *   // 2. Send notification to case members
+   *   await notifyMessageReceived(
+   *     message.id,
+   *     caseId,
+   *     caseTitle,
+   *     senderName,
+   *     content
+   *   );
+   * 
+   *   // 3. Check for @mentions and notify mentioned users
+   *   const mentions = content.match(/@\w+/g);
+   *   if (mentions) {
+   *     for (const mention of mentions) {
+   *       const username = mention.substring(1);
+   *       // Find user by username and notify
+   *       const { data: user } = await supabase
+   *         .from('profiles')
+   *         .select('id')
+   *         .eq('username', username)
+   *         .single();
+   *       
+   *       if (user) {
+   *         await notifyUserMentioned(
+   *           message.id,
+   *           user.id,
+   *           caseId,
+   *           caseTitle,
+   *           senderName,
+   *           content
+   *         );
+   *       }
+   *     }
+   *   }
+   * };
+   * 
+   * Import required:
+   * import { notifyMessageReceived, notifyUserMentioned } from '@/lib/notifications';
+   */
+  
   return (
     <div className="border border-gray-200 rounded-lg h-[600px] flex flex-col bg-white">
       <div className="p-4 border-b border-gray-200 flex justify-between items-center">

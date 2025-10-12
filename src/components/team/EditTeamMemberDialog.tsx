@@ -91,6 +91,9 @@ const EditTeamMemberDialog = ({ open, onOpenChange, member }: EditTeamMemberDial
           throw new Error('Invalid email format');
         }
 
+        const oldRole = member.role;
+        const roleChanged = oldRole !== data.role;
+
         // Update team member
         const { error } = await supabase
           .from('team_members')
@@ -98,6 +101,25 @@ const EditTeamMemberDialog = ({ open, onOpenChange, member }: EditTeamMemberDial
           .eq('id', member.id);
 
         if (error) throw error;
+
+        // Send notification if role changed
+        if (roleChanged) {
+          await supabase.from('notifications').insert({
+            recipient_id: member.user_id,
+            notification_type: 'role_changed',
+            title: 'Your Role Has Been Updated',
+            message: `Your role has been changed from ${oldRole} to ${data.role}`,
+            reference_id: member.user_id,
+            category: 'system',
+            priority: 'high',
+            action_url: '/team',
+            metadata: {
+              old_role: oldRole,
+              new_role: data.role
+            },
+            read: false
+          });
+        }
 
         return sanitizedData;
       } finally {

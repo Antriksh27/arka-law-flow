@@ -287,3 +287,129 @@ export const notifyMessageReceived = async (
     }
   });
 };
+
+/**
+ * Notify when a user is mentioned in a message
+ */
+export const notifyUserMentioned = async (
+  messageId: string,
+  mentionedUserId: string,
+  caseId: string,
+  caseTitle: string,
+  senderName: string,
+  messageContent: string
+) => {
+  return sendNotification({
+    event_type: 'message_mention',
+    recipients: 'single',
+    recipient_ids: [mentionedUserId],
+    reference_id: messageId,
+    case_id: caseId,
+    title: `${senderName} mentioned you`,
+    message: messageContent.substring(0, 100),
+    category: 'message',
+    priority: 'high',
+    action_url: `/cases/${caseId}?tab=messages`,
+    metadata: {
+      case_title: caseTitle,
+      sender: senderName
+    }
+  });
+};
+
+/**
+ * Notify when a user is added to the team
+ */
+export const notifyUserAdded = async (
+  userId: string,
+  userName: string,
+  userRole: string,
+  firmId: string,
+  addedBy: string
+) => {
+  // Get all admins except the one who added
+  const { data: admins } = await supabase
+    .from('team_members')
+    .select('user_id')
+    .eq('firm_id', firmId)
+    .eq('role', 'admin')
+    .neq('user_id', addedBy);
+
+  const adminIds = admins?.map(admin => admin.user_id) || [];
+
+  if (adminIds.length === 0) {
+    return;
+  }
+
+  return sendNotification({
+    event_type: 'user_added',
+    recipients: 'custom',
+    recipient_ids: adminIds,
+    reference_id: userId,
+    firm_id: firmId,
+    title: 'New Team Member Added',
+    message: `${userName} has been added as ${userRole}`,
+    category: 'system',
+    priority: 'normal',
+    action_url: '/team',
+    metadata: {
+      user_id: userId,
+      user_name: userName,
+      role: userRole,
+      added_by: addedBy
+    }
+  });
+};
+
+/**
+ * Notify when a user's role changes
+ */
+export const notifyRoleChanged = async (
+  userId: string,
+  userName: string,
+  oldRole: string,
+  newRole: string
+) => {
+  return sendNotification({
+    event_type: 'role_changed',
+    recipients: 'single',
+    recipient_ids: [userId],
+    reference_id: userId,
+    title: 'Your Role Has Been Updated',
+    message: `Your role has been changed from ${oldRole} to ${newRole}`,
+    category: 'system',
+    priority: 'high',
+    action_url: '/team',
+    metadata: {
+      user_name: userName,
+      old_role: oldRole,
+      new_role: newRole
+    }
+  });
+};
+
+/**
+ * Notify security alert
+ */
+export const notifySecurityAlert = async (
+  userId: string,
+  alertType: string,
+  alertMessage: string,
+  metadata?: any
+) => {
+  return sendNotification({
+    event_type: 'security_alert',
+    recipients: 'single',
+    recipient_ids: [userId],
+    reference_id: userId,
+    title: 'Security Alert',
+    message: alertMessage,
+    category: 'system',
+    priority: 'urgent',
+    action_url: '/settings',
+    metadata: {
+      alert_type: alertType,
+      ...metadata
+    }
+  });
+};
