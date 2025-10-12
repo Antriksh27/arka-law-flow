@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
     SmilePlus,
@@ -27,12 +26,12 @@ interface Message {
     }>;
 }
 
-interface RuixenCard04Props {
+interface RuixenMonoChatProps {
     chatName?: string;
     messages?: Message[];
 }
 
-export default function RuixenCard04({
+export default function RuixenMonoChat({
     chatName = "Software Team",
     messages = [
         {
@@ -40,8 +39,7 @@ export default function RuixenCard04({
             content: "Just pushed the latest design system updates ✨",
             sender: {
                 name: "Alex Chen",
-                avatar:
-                    "https://github.com/shadcn.png",
+                avatar: "https://github.com/shadcn.png",
                 isOnline: true,
             },
             timestamp: "10:24 AM",
@@ -57,15 +55,14 @@ export default function RuixenCard04({
                 "The new components look amazing! Great work on the animations.",
             sender: {
                 name: "Sarah Kim",
-                avatar:
-                    "https://github.com/evilrabbit.png",
+                avatar: "https://github.com/evilrabbit.png",
                 isOnline: true,
             },
             timestamp: "10:26 AM",
             status: "delivered",
         },
     ],
-}: RuixenCard04Props) {
+}: RuixenMonoChatProps) {
     const [selectedSender, setSelectedSender] = useState<string | null>(null);
 
     // Get unique senders from messages
@@ -241,3 +238,5 @@ export default function RuixenCard04({
         </div>
     );
 }
+
+export { RuixenMonoChat };
