@@ -34,7 +34,7 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({ onChannelSelect }) =>
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [activeTab, setActiveTab] = useState<'chats' | 'team'>('chats');
 
-  // Fetch team members
+  // Fetch team members using RPC function (same as StreamChat.tsx)
   useEffect(() => {
     const fetchTeamMembers = async () => {
       if (!user) return;
@@ -47,34 +47,44 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({ onChannelSelect }) =>
           .eq('user_id', user.id)
           .maybeSingle();
 
-        if (!currentMember?.firm_id) return;
+        if (!currentMember?.firm_id) {
+          console.warn('No firm membership found for current user');
+          setTeamMembers([]);
+          return;
+        }
 
-        // Fetch all team members from the same firm
-        const { data: members, error } = await supabase
-          .from('team_members')
-          .select(`
-            user_id,
-            role,
-            profiles!inner(
-              full_name,
-              email
-            )
-          `)
-          .eq('firm_id', currentMember.firm_id)
-          .neq('user_id', user.id); // Exclude current user
+        // Fetch firm members via secure RPC (bypasses RLS safely)
+        const { data: rpcData, error: rpcErr } = await supabase
+          .rpc('get_firm_members_for_chat');
 
-        if (error) throw error;
+        if (rpcErr) {
+          console.error('Error fetching firm members via RPC:', rpcErr);
+          toast({
+            title: 'Error loading team members',
+            description: 'Could not fetch team members',
+            variant: 'destructive',
+          });
+          setTeamMembers([]);
+          return;
+        }
 
-        const formattedMembers: TeamMember[] = (members || []).map((m: any) => ({
-          user_id: m.user_id,
-          full_name: m.profiles?.full_name || m.profiles?.email || 'Unknown',
-          email: m.profiles?.email || '',
-          role: m.role,
-        }));
+        const formattedMembers: TeamMember[] = (rpcData || [])
+          .filter((m: any) => m.user_id !== user.id) // Exclude current user
+          .map((m: any) => ({
+            user_id: m.user_id,
+            full_name: m.full_name || m.email || 'Unknown User',
+            email: m.email || '',
+            role: m.role || 'member',
+          }));
 
         setTeamMembers(formattedMembers);
       } catch (error) {
         console.error('Error fetching team members:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load team members',
+          variant: 'destructive',
+        });
       }
     };
 
@@ -86,14 +96,23 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({ onChannelSelect }) =>
     if (!client || !isReady) return;
 
     const fetchChannels = async () => {
-      const filter = { 
-        type: 'messaging',
-        members: { $in: [client.userID!] }
-      };
-      const sort = [{ last_message_at: -1 as const }];
-      
-      const channelsResponse = await client.queryChannels(filter, sort, { limit: 20 });
-      setChannels(channelsResponse);
+      try {
+        const filter = { 
+          type: 'messaging',
+          members: { $in: [client.userID!] }
+        };
+        const sort = [{ last_message_at: -1 as const }];
+        
+        const channelsResponse = await client.queryChannels(filter, sort, { limit: 20 });
+        setChannels(channelsResponse);
+      } catch (error) {
+        console.error('Error fetching channels:', error);
+        toast({
+          title: 'Error loading chats',
+          description: 'Could not fetch chat channels',
+          variant: 'destructive',
+        });
+      }
     };
 
     fetchChannels();
