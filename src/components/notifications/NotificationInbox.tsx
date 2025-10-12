@@ -3,10 +3,12 @@ import { useAuth } from '@/contexts/AuthContext';
 
 function NotificationInbox() {
   const { user } = useAuth();
-  const applicationIdentifier = import.meta.env.REACT_APP_NOVU_APPLICATION_IDENTIFIER;
-  
+  const applicationIdentifier = import.meta.env.REACT_APP_NOVU_APPLICATION_IDENTIFIER || import.meta.env.VITE_NOVU_APPLICATION_IDENTIFIER;
+  const backendUrl = import.meta.env.REACT_APP_NOVU_BACKEND_URL || import.meta.env.VITE_NOVU_BACKEND_URL;
+  const socketUrl = import.meta.env.REACT_APP_NOVU_SOCKET_URL || import.meta.env.VITE_NOVU_SOCKET_URL;
+
   if (!applicationIdentifier) {
-    console.error('REACT_APP_NOVU_APPLICATION_IDENTIFIER is not defined');
+    console.error('Novu application identifier is not defined');
     return null;
   }
 
@@ -18,22 +20,24 @@ function NotificationInbox() {
     <Inbox
       applicationIdentifier={applicationIdentifier}
       subscriberId={user.id}
+      {...(backendUrl ? { backendUrl } : {})}
+      {...(socketUrl ? { socketUrl } : {})}
       appearance={{
         variables: {
-          colorPrimary: 'hsl(221, 83%, 53%)',
-          colorPrimaryForeground: 'hsl(0, 0%, 100%)',
-          colorSecondary: 'hsl(211, 100%, 93%)',
-          colorSecondaryForeground: 'hsl(222, 47%, 11%)',
-          colorCounter: 'hsl(221, 83%, 53%)',
-          colorCounterForeground: 'hsl(0, 0%, 100%)',
-          colorBackground: 'hsl(0, 0%, 100%)',
-          colorForeground: 'hsl(222, 47%, 11%)',
-          colorNeutral: 'hsl(220, 13%, 91%)',
+          colorPrimary: 'rgb(var(--primary))',
+          colorPrimaryForeground: 'rgb(var(--primary-foreground))',
+          colorSecondary: 'rgb(var(--secondary))',
+          colorSecondaryForeground: 'rgb(var(--secondary-foreground))',
+          colorCounter: 'rgb(var(--primary))',
+          colorCounterForeground: 'rgb(var(--primary-foreground))',
+          colorBackground: 'rgb(var(--card))',
+          colorForeground: 'rgb(var(--foreground))',
+          colorNeutral: 'rgb(var(--border))',
           fontSize: '14px',
         },
         elements: {
           bellIcon: {
-            color: 'hsl(222, 47%, 11%)',
+            color: 'rgb(var(--foreground))',
           },
         },
       }}
