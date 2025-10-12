@@ -10,13 +10,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Plus } from 'lucide-react';
-
 interface ExpensesTabProps {
   caseId: string;
 }
-
-export const ExpensesTab: React.FC<ExpensesTabProps> = ({ caseId }) => {
-  const { toast } = useToast();
+export const ExpensesTab: React.FC<ExpensesTabProps> = ({
+  caseId
+}) => {
+  const {
+    toast
+  } = useToast();
   const queryClient = useQueryClient();
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
   const [expenseDate, setExpenseDate] = useState(format(new Date(), 'yyyy-MM-dd'));
@@ -25,63 +27,74 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({ caseId }) => {
   const [category, setCategory] = useState('');
 
   // Fetch case details to get client info
-  const { data: caseData } = useQuery({
+  const {
+    data: caseData
+  } = useQuery({
     queryKey: ['case-details', caseId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('cases')
-        .select('*, clients(id, full_name)')
-        .eq('id', caseId)
-        .single();
-      
+      const {
+        data,
+        error
+      } = await supabase.from('cases').select('*, clients(id, full_name)').eq('id', caseId).single();
       if (error) throw error;
       return data;
     }
   });
 
   // Fetch expense accounts from Zoho Books
-  const { data: expenseAccounts } = useQuery({
+  const {
+    data: expenseAccounts
+  } = useQuery({
     queryKey: ['zoho-expense-accounts'],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke('zoho-books-get-expense-accounts');
-      
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('zoho-books-get-expense-accounts');
       if (error) throw error;
       return data?.accounts || [];
     }
   });
 
   // Fetch expenses from Zoho Books
-  const { data: expenses, isLoading } = useQuery({
+  const {
+    data: expenses,
+    isLoading
+  } = useQuery({
     queryKey: ['zoho-expenses', caseId],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke('zoho-books-get-expenses');
-      
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('zoho-books-get-expenses');
       if (error) throw error;
-      
+
       // Filter expenses that have this case ID in reference_number
       const allExpenses = data?.expenses || [];
-      return allExpenses.filter((exp: any) => 
-        exp.reference_number?.includes(caseId)
-      );
+      return allExpenses.filter((exp: any) => exp.reference_number?.includes(caseId));
     }
   });
 
   // Create expense mutation
   const createExpenseMutation = useMutation({
     mutationFn: async (expenseData: any) => {
-      const { data, error } = await supabase.functions.invoke('zoho-books-create-expense', {
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('zoho-books-create-expense', {
         body: expenseData
       });
-      
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "Expense added successfully",
+        description: "Expense added successfully"
       });
-      queryClient.invalidateQueries({ queryKey: ['zoho-expenses', caseId] });
+      queryClient.invalidateQueries({
+        queryKey: ['zoho-expenses', caseId]
+      });
       setIsAddExpenseOpen(false);
       resetForm();
     },
@@ -89,28 +102,25 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({ caseId }) => {
       toast({
         title: "Error",
         description: error.message || "Failed to add expense",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   });
-
   const resetForm = () => {
     setExpenseDate(format(new Date(), 'yyyy-MM-dd'));
     setAmount('');
     setDescription('');
     setCategory('');
   };
-
   const handleAddExpense = () => {
     if (!amount || !description || !category) {
       toast({
         title: "Error",
         description: "Please fill in all required fields",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-
     const expenseData = {
       account_name: category,
       date: expenseDate,
@@ -118,29 +128,21 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({ caseId }) => {
       description: description,
       reference_number: `Case: ${caseData?.case_number || caseId}`,
       is_billable: true,
-      custom_fields: [
-        {
-          label: 'Case ID',
-          value: caseId
-        },
-        {
-          label: 'Client Name',
-          value: caseData?.clients?.full_name || ''
-        }
-      ]
+      custom_fields: [{
+        label: 'Case ID',
+        value: caseId
+      }, {
+        label: 'Client Name',
+        value: caseData?.clients?.full_name || ''
+      }]
     };
-
     createExpenseMutation.mutate(expenseData);
   };
-
   if (isLoading) {
     return <div className="p-6">Loading expenses...</div>;
   }
-
   const totalExpenses = expenses?.reduce((sum: number, exp: any) => sum + Number(exp.amount || 0), 0) || 0;
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Case Expenses</h3>
         <div className="flex items-center gap-4">
@@ -162,23 +164,11 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({ caseId }) => {
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="date">Date</Label>
-                  <Input
-                    id="date"
-                    type="date"
-                    value={expenseDate}
-                    onChange={(e) => setExpenseDate(e.target.value)}
-                  />
+                  <Input id="date" type="date" value={expenseDate} onChange={e => setExpenseDate(e.target.value)} />
                 </div>
                 <div>
                   <Label htmlFor="amount">Amount (₹) *</Label>
-                  <Input
-                    id="amount"
-                    type="number"
-                    step="0.01"
-                    placeholder="0.00"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                  />
+                  <Input id="amount" type="number" step="0.01" placeholder="0.00" value={amount} onChange={e => setAmount(e.target.value)} />
                 </div>
                 <div>
                   <Label htmlFor="category">Expense Account *</Label>
@@ -187,44 +177,26 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({ caseId }) => {
                       <SelectValue placeholder="Select expense account" />
                     </SelectTrigger>
                     <SelectContent>
-                      {expenseAccounts?.map((account: any) => (
-                        <SelectItem key={account.account_id} value={account.account_name}>
+                      {expenseAccounts?.map((account: any) => <SelectItem key={account.account_id} value={account.account_name}>
                           {account.account_name}
-                        </SelectItem>
-                      ))}
+                        </SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
                   <Label htmlFor="description">Description *</Label>
-                  <Textarea
-                    id="description"
-                    placeholder="Enter expense details"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    rows={3}
-                  />
+                  <Textarea id="description" placeholder="Enter expense details" value={description} onChange={e => setDescription(e.target.value)} rows={3} />
                 </div>
-                {caseData?.clients && (
-                  <div className="text-sm text-muted-foreground bg-muted p-3 rounded-lg">
+                {caseData?.clients && <div className="text-sm text-muted-foreground p-3 rounded-lg bg-teal-50">
                     <p><strong>Linked to:</strong></p>
                     <p>Title: {caseData.title}</p>
                     <p>Client: {caseData.clients.full_name}</p>
-                  </div>
-                )}
+                  </div>}
                 <div className="flex gap-2 pt-4">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setIsAddExpenseOpen(false)}
-                    className="flex-1"
-                  >
+                  <Button variant="outline" onClick={() => setIsAddExpenseOpen(false)} className="flex-1">
                     Cancel
                   </Button>
-                  <Button 
-                    onClick={handleAddExpense}
-                    disabled={createExpenseMutation.isPending}
-                    className="flex-1"
-                  >
+                  <Button onClick={handleAddExpense} disabled={createExpenseMutation.isPending} className="flex-1">
                     {createExpenseMutation.isPending ? 'Adding...' : 'Add Expense'}
                   </Button>
                 </div>
@@ -234,8 +206,7 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({ caseId }) => {
         </div>
       </div>
 
-      {expenses && expenses.length > 0 ? (
-        <div className="border rounded-lg overflow-hidden">
+      {expenses && expenses.length > 0 ? <div className="border rounded-lg overflow-hidden">
           <table className="w-full">
             <thead className="bg-muted border-b">
               <tr>
@@ -246,24 +217,18 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({ caseId }) => {
               </tr>
             </thead>
             <tbody>
-              {expenses.map((expense: any) => (
-                <tr key={expense.expense_id} className="border-b hover:bg-muted/50">
+              {expenses.map((expense: any) => <tr key={expense.expense_id} className="border-b hover:bg-muted/50">
                   <td className="p-3 text-sm">
                     {expense.date ? format(new Date(expense.date), 'dd/MM/yyyy') : '-'}
                   </td>
                   <td className="p-3 text-sm">{expense.description}</td>
                   <td className="p-3 text-sm">{expense.account_name || '-'}</td>
                   <td className="p-3 text-sm text-right font-medium">₹{Number(expense.amount || 0).toFixed(2)}</td>
-                </tr>
-              ))}
+                </tr>)}
             </tbody>
           </table>
-        </div>
-      ) : (
-        <div className="text-center py-12 text-muted-foreground">
+        </div> : <div className="text-center py-12 text-muted-foreground">
           <p>No expenses recorded for this case</p>
-        </div>
-      )}
-    </div>
-  );
+        </div>}
+    </div>;
 };
