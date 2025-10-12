@@ -74,6 +74,22 @@ export default function CaseDetailEnhanced() {
     enabled: !!caseData?.client_id
   });
 
+  // Fetch main contact for this case
+  const { data: mainContact } = useQuery({
+    queryKey: ['main-contact', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('case_contacts')
+        .select('*')
+        .eq('case_id', id as string)
+        .eq('is_main', true)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id
+  });
+
   // Unified LegalKart/eCourt data via hook
   const {
     legalkartCase,
@@ -145,6 +161,12 @@ export default function CaseDetailEnhanced() {
                     <div>
                       <span className="font-medium">Next Hearing:</span> {caseData.next_hearing_date ? format(new Date(caseData.next_hearing_date), 'dd/MM/yyyy') : 'N/A'}
                     </div>
+                    {mainContact && (
+                      <div>
+                        <span className="font-medium">Main Contact:</span> {mainContact.name}
+                        {mainContact.phone && <span className="ml-1">({mainContact.phone})</span>}
+                      </div>
+                    )}
                     {clientData && (
                       <div>
                         <span className="font-medium">Client:</span>{' '}
