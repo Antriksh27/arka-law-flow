@@ -26,11 +26,13 @@ const StreamChatPage: React.FC = () => {
   const [isCreatingChat, setIsCreatingChat] = useState(false);
 
   useEffect(() => {
-    const fetchTeamMembers = async () => {
+    const fetchAndSyncTeamMembers = async () => {
+      if (!client) return;
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('id, full_name, email')
-        .neq('id', client?.userID || '');
+        .neq('id', client.userID || '');
       
       if (error) {
         console.error('Error fetching team members:', error);
@@ -46,12 +48,28 @@ const StreamChatPage: React.FC = () => {
       }));
       
       setTeamMembers(formattedData);
+      
+      // Sync team members to Stream Chat so they appear in the user list
+      if (formattedData.length > 0) {
+        try {
+          const streamUsers = formattedData.map(member => ({
+            id: member.user_id,
+            name: member.profiles?.full_name || member.profiles?.email || 'User',
+            image: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(member.profiles?.full_name || member.profiles?.email || 'User')}`,
+          }));
+          
+          await client.upsertUsers(streamUsers);
+          console.log(`Synced ${streamUsers.length} team members to Stream Chat`);
+        } catch (syncError) {
+          console.error('Error syncing team members to Stream:', syncError);
+        }
+      }
     };
 
     if (client?.userID) {
-      fetchTeamMembers();
+      fetchAndSyncTeamMembers();
     }
-  }, [client?.userID]);
+  }, [client]);
 
   const handleCreateDM = async (otherUserId: string) => {
     if (!client) return;
