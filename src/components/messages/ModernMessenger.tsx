@@ -86,7 +86,10 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
     const fetchConversations = async () => {
       if (!isCometChatReady || !cometChatUser) return;
       try {
-        const conversationsRequest = new CometChat.ConversationsRequestBuilder().setLimit(50).build();
+        const conversationsRequest = new CometChat.ConversationsRequestBuilder()
+          .setLimit(50)
+          .setConversationType(CometChat.RECEIVER_TYPE.USER) // Only fetch 1-on-1 user conversations
+          .build();
         const conversationsList = await conversationsRequest.fetchNext();
         setConversations(conversationsList);
       } catch (error) {
