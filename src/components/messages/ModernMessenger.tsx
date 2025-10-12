@@ -409,9 +409,8 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
               : "rounded-br-lg rounded-tl-lg rounded-tr-lg"; // Left: rounded except bottom-left
 
               return <div key={message.id} className={spacingClass}>
-                      <div className={cn("flex w-full", isMe ? "justify-end" : "justify-start")}>
-                        <div className={cn("flex items-end gap-3 max-w-[70%]", isMe ? "flex-row-reverse" : "")}>
-                          {/* Avatar with animation */}
+                        <div className={cn("flex items-end gap-3 max-w-[70%]", isMe ? "ml-auto flex-row-reverse" : "mr-auto")}>
+                            {/* Avatar with animation */}
                           <AnimatePresence mode="wait">
                             {shouldShowAvatar ? <motion.div key="avatar" initial={{
                         opacity: 0,
@@ -469,7 +468,6 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
                             </div>
                           </motion.div>
                         </div>
-                      </div>
                     </div>;
             })}
                 
