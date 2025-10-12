@@ -298,23 +298,16 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({ caseId }) => {
           </DialogHeader>
           
           <div className="space-y-4 py-4">
-            <div>
-              <Label>Customer *</Label>
-              <Select 
-                value={newInvoice.customer_id} 
-                onValueChange={(value) => setNewInvoice(prev => ({ ...prev, customer_id: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select customer" />
-                </SelectTrigger>
-                <SelectContent>
-                  {zohoContacts?.map((contact: any) => (
-                    <SelectItem key={contact.contact_id} value={contact.contact_id}>
-                      {contact.contact_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            {/* Display Case and Client Info */}
+            <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+              <div>
+                <Label className="text-xs text-muted-foreground">Case</Label>
+                <p className="text-sm font-medium">{caseData?.case_number || caseData?.title || 'Loading...'}</p>
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground">Client</Label>
+                <p className="text-sm font-medium">{caseData?.clients?.full_name || 'Loading...'}</p>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
