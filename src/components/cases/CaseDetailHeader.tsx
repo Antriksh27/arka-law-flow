@@ -217,7 +217,7 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
         </div>
 
         {/* Details Grid */}
-        <div className={`grid gap-6 ${mainContact ? 'grid-cols-2 md:grid-cols-5' : 'grid-cols-2 md:grid-cols-4'}`}>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           <div className="flex items-center gap-3">
             <User className="w-4 h-4 text-muted" />
             <div>
@@ -388,8 +388,11 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
               </p>
             </div>
           </div>
+        </div>
 
-          {mainContact && (
+        {/* Main Contact Section - Below first row */}
+        {mainContact && (
+          <div className="mt-4 pt-4 border-t border-gray-100">
             <div className="flex items-center gap-3">
               <User2 className="w-4 h-4 text-muted" />
               <div>
@@ -400,8 +403,8 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
                 )}
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Additional Details Row */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mt-6 pt-6 border-t border-gray-100">
