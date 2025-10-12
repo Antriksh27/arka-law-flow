@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import NotificationSounds from '@/lib/notificationSounds';
+import BrowserNotifications from '@/lib/browserNotifications';
 
 interface Notification {
   id: string;
@@ -55,43 +56,69 @@ export const useRealtimeNotifications = () => {
               message: newNotification.message
             });
 
-            // Always show toast first
+            // Check category preferences
+            const preferences = localStorage.getItem('notification-category-preferences');
+            let categoryEnabled = true;
+            
+            if (preferences) {
+              try {
+                const prefs = JSON.parse(preferences);
+                const category = (newNotification as any).category || 'system';
+                categoryEnabled = prefs[category] !== false;
+              } catch (e) {
+                console.error('Error parsing notification preferences:', e);
+              }
+            }
+
+            if (!categoryEnabled) {
+              console.log('🔕 Notification category disabled, skipping');
+              // Still update queries but don't show notification
+              queryClient.invalidateQueries({ queryKey: ['notifications'] });
+              queryClient.invalidateQueries({ queryKey: ['notifications-count'] });
+              return;
+            }
+
+            // Show toast notification
             toast({
               title: newNotification.title,
               description: newNotification.message,
-              duration: 8000, // Longer duration for better visibility
-              sound: false, // We'll handle sound separately
+              duration: 8000,
             });
             console.log('✅ Toast notification shown');
 
-            // Play notification sound - with better error handling
-            try {
-              const soundType = newNotification.notification_type === 'appointment' ? 'info' : 'default';
-              console.log('🔊 Attempting to play notification sound:', soundType);
-              
-              // Ensure audio context is ready
-              const testResult = await NotificationSounds.testSound();
-              if (testResult) {
-                console.log('🔊 Audio context ready, playing notification sound...');
+            // Play notification sound
+            if (NotificationSounds.isAudioEnabled()) {
+              try {
+                const priority = (newNotification as any).priority || 'normal';
+                const soundType = priority === 'urgent' ? 'warning' : 
+                                priority === 'high' ? 'info' : 'default';
+                
+                console.log('🔊 Playing notification sound:', soundType);
                 await NotificationSounds.play(soundType);
-                console.log('✅ Notification sound played successfully');
-              } else {
-                console.error('❌ Audio context not ready for notification sound');
-                // Still show a visual indicator that sound failed
-                toast({
-                  title: "🔇 Sound Alert",
-                  description: "Click Settings to enable notification sounds",
-                  duration: 3000,
-                });
+                console.log('✅ Notification sound played');
+              } catch (soundError) {
+                console.error('❌ Sound error:', soundError);
               }
-            } catch (soundError) {
-              console.error('❌ Error playing notification sound:', soundError);
-              // Fallback: show visual notification that sound failed
-              toast({
-                title: "🔇 Sound Error",
-                description: "Notification sound failed to play",
-                duration: 3000,
-              });
+            }
+
+            // Show browser notification if enabled and app not in focus
+            if (BrowserNotifications.getPermission() === 'granted' && document.hidden) {
+              try {
+                const category = (newNotification as any).category || 'system';
+                const priority = (newNotification as any).priority || 'normal';
+                const actionUrl = (newNotification as any).action_url;
+                
+                await BrowserNotifications.showCategoryNotification(
+                  category,
+                  newNotification.title,
+                  newNotification.message,
+                  actionUrl,
+                  priority
+                );
+                console.log('✅ Browser notification shown');
+              } catch (browserError) {
+                console.error('❌ Browser notification error:', browserError);
+              }
             }
 
             // Refresh notification queries
@@ -102,7 +129,7 @@ export const useRealtimeNotifications = () => {
           } catch (error) {
             console.error('🔔 Error processing notification:', error);
             
-            // Fallback toast even if everything fails
+            // Fallback toast
             toast({
               title: "New Notification",
               description: newNotification.message || "You have a new notification",

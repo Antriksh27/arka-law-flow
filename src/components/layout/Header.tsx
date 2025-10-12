@@ -1,51 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Settings, User, LogOut, TestTube } from 'lucide-react';
+import { Bell, User, LogOut, TestTube } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import NotificationInbox from '@/components/notifications/NotificationInbox';
+import { NotificationSettings } from '@/components/notifications/NotificationSettings';
 import { useNotifications } from '@/hooks/useNotifications';
-import NotificationSounds from '@/lib/notificationSounds';
 import { sendTestNotification } from '@/utils/testNotification';
 const Header = () => {
   const { user, signOut } = useAuth();
-  const { unreadCount } = useNotifications();
-  const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
-  const [audioInitialized, setAudioInitialized] = useState(false);
-
-  // Initialize audio context on first user interaction
-  const initializeAudio = async () => {
-    if (!audioInitialized) {
-      console.log('🎵 Initializing audio context from user interaction...');
-      const success = await NotificationSounds.testSound();
-      if (success) {
-        setAudioInitialized(true);
-        console.log('🎵 Audio context initialized successfully');
-      }
-    }
-  };
-
-  const handleNotificationClick = async () => {
-    await initializeAudio();
-    setIsNotificationPanelOpen(!isNotificationPanelOpen);
-  };
-
-  const handleTestSound = async () => {
-    console.log('🧪 Testing notification sound...');
-    await initializeAudio();
-    try {
-      await NotificationSounds.testSound();
-      console.log('🧪 Test sound completed');
-    } catch (error) {
-      console.error('🧪 Test sound failed:', error);
-    }
-  };
-
+  
   const handleTestNotification = async () => {
     if (!user?.id) return;
     
     console.log('🧪 Sending test notification...');
-    await initializeAudio();
     
     try {
       await sendTestNotification(user.id);
@@ -62,15 +30,7 @@ const Header = () => {
         </div>
         {/* Right Side Actions */}
         <div className="flex items-center gap-3">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="focus:ring-[#111827] bg-slate-50 text-slate-900" 
-            onClick={handleTestSound}
-            title="Test notification sound"
-          >
-            <Settings className="w-5 h-5" />
-          </Button>
+          <NotificationSettings />
           
           <NotificationInbox userId={user?.id} />
           
