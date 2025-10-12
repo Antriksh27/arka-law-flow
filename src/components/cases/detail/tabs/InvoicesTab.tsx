@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Eye, Plus, Loader2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -38,13 +38,38 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({ caseId }) => {
   });
   const [isClientAutoSelected, setIsClientAutoSelected] = useState(false);
 
+  // Helpers for matching client to Zoho contact
+  const normalize = (s?: string) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const findMatchingContact = (contacts: any[], clientName?: string, clientEmail?: string) => {
+    const nClient = normalize(clientName);
+    // 1) Exact email match on contact or any contact person
+    if (clientEmail) {
+      const lowerEmail = clientEmail.toLowerCase();
+      const byEmail = contacts.find((c: any) => 
+        c.email?.toLowerCase() === lowerEmail ||
+        (Array.isArray(c.contact_persons) && c.contact_persons.some((p: any) => p.email?.toLowerCase() === lowerEmail))
+      );
+      if (byEmail) return byEmail;
+    }
+    // 2) Normalize name/company and compare
+    const byName = contacts.find((c: any) => {
+      const names = [c.contact_name, c.company_name].filter(Boolean);
+      return names.some((n: string) => {
+        const nn = normalize(n);
+        return nn === nClient || nn.includes(nClient) || nClient.includes(nn);
+      });
+    });
+    if (byName) return byName;
+    return null;
+  };
+
   // Fetch case details to get client info
   const { data: caseData } = useQuery({
     queryKey: ['case-details', caseId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('cases')
-        .select('*, clients(id, full_name)')
+        .select('*, clients(id, full_name, email)')
         .eq('id', caseId)
         .single();
       
@@ -85,15 +110,13 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({ caseId }) => {
   // Auto-select client when dialog opens and contacts are loaded
   React.useEffect(() => {
     if (createDialogOpen && zohoContacts && caseData?.clients?.full_name && !isClientAutoSelected) {
-      const matchingContact = zohoContacts.find((c: any) => 
-        c.contact_name?.toLowerCase() === caseData.clients.full_name?.toLowerCase()
-      );
-      if (matchingContact) {
-        setNewInvoice(prev => ({ ...prev, customer_id: matchingContact.contact_id }));
+      const match = findMatchingContact(zohoContacts as any[], caseData?.clients?.full_name, caseData?.clients?.email);
+      if (match) {
+        setNewInvoice(prev => ({ ...prev, customer_id: match.contact_id }));
         setIsClientAutoSelected(true);
       }
     }
-  }, [createDialogOpen, zohoContacts, caseData?.clients?.full_name, isClientAutoSelected]);
+  }, [createDialogOpen, zohoContacts, caseData?.clients?.full_name, caseData?.clients?.email, isClientAutoSelected]);
 
   const createInvoiceMutation = useMutation({
     mutationFn: async (invoiceData: any) => {
@@ -269,6 +292,9 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({ caseId }) => {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create Invoice</DialogTitle>
+            <DialogDescription>
+              Customer is auto-selected from the case client. Review and add line items.
+            </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4 py-4">
