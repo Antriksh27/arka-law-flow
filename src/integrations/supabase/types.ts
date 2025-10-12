@@ -2878,30 +2878,51 @@ export type Database = {
       }
       notifications: {
         Row: {
+          action_url: string | null
+          category: string | null
           created_at: string | null
+          expires_at: string | null
           id: string
           message: string
-          notification_type: string | null
+          metadata: Json | null
+          notification_type:
+            | Database["public"]["Enums"]["notification_event_type"]
+            | null
+          priority: string | null
           read: boolean | null
           recipient_id: string | null
           reference_id: string | null
           title: string
         }
         Insert: {
+          action_url?: string | null
+          category?: string | null
           created_at?: string | null
+          expires_at?: string | null
           id?: string
           message: string
-          notification_type?: string | null
+          metadata?: Json | null
+          notification_type?:
+            | Database["public"]["Enums"]["notification_event_type"]
+            | null
+          priority?: string | null
           read?: boolean | null
           recipient_id?: string | null
           reference_id?: string | null
           title: string
         }
         Update: {
+          action_url?: string | null
+          category?: string | null
           created_at?: string | null
+          expires_at?: string | null
           id?: string
           message?: string
-          notification_type?: string | null
+          metadata?: Json | null
+          notification_type?:
+            | Database["public"]["Enums"]["notification_event_type"]
+            | null
+          priority?: string | null
           read?: boolean | null
           recipient_id?: string | null
           reference_id?: string | null
@@ -4101,6 +4122,30 @@ export type Database = {
         | "retail"
         | "other"
       invoice_status_enum: "draft" | "sent" | "paid" | "overdue" | "cancelled"
+      notification_event_type:
+        | "case_created"
+        | "case_updated"
+        | "case_status_changed"
+        | "case_closed"
+        | "case_assigned"
+        | "hearing_scheduled"
+        | "hearing_updated"
+        | "hearing_reminder"
+        | "hearing_cancelled"
+        | "document_uploaded"
+        | "document_deleted"
+        | "document_shared"
+        | "invoice_created"
+        | "invoice_paid"
+        | "invoice_overdue"
+        | "invoice_reminder"
+        | "message_received"
+        | "message_mention"
+        | "user_added"
+        | "role_changed"
+        | "security_alert"
+        | "client"
+        | "appointment"
       pipeline_type: "litigation" | "advisory" | "corporate" | "regulatory"
       task_priority: "low" | "medium" | "high"
       task_status: "todo" | "in_progress" | "completed"
@@ -4286,6 +4331,31 @@ export const Constants = {
         "other",
       ],
       invoice_status_enum: ["draft", "sent", "paid", "overdue", "cancelled"],
+      notification_event_type: [
+        "case_created",
+        "case_updated",
+        "case_status_changed",
+        "case_closed",
+        "case_assigned",
+        "hearing_scheduled",
+        "hearing_updated",
+        "hearing_reminder",
+        "hearing_cancelled",
+        "document_uploaded",
+        "document_deleted",
+        "document_shared",
+        "invoice_created",
+        "invoice_paid",
+        "invoice_overdue",
+        "invoice_reminder",
+        "message_received",
+        "message_mention",
+        "user_added",
+        "role_changed",
+        "security_alert",
+        "client",
+        "appointment",
+      ],
       pipeline_type: ["litigation", "advisory", "corporate", "regulatory"],
       task_priority: ["low", "medium", "high"],
       task_status: ["todo", "in_progress", "completed"],
