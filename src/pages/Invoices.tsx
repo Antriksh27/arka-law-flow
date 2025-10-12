@@ -1,278 +1,54 @@
 import React, { useState, useEffect } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { InvoicesHeader } from '@/features/invoices/components/InvoicesHeader';
-import { InvoicesTable } from '@/features/invoices/components/InvoicesTable';
-import { InvoiceFormDialog } from '@/features/invoices/components/InvoiceFormDialog';
-import { InvoiceViewDialog } from '@/features/invoices/components/InvoiceViewDialog';
-import { DeleteInvoiceDialog } from '@/features/invoices/components/DeleteInvoiceDialog';
-import { useInvoiceStats } from '@/features/invoices/hooks/useInvoiceStats';
-import type { InvoiceListData } from '@/features/invoices/types';
-import { Loader2, AlertCircle, Search, Plus, Download, RefreshCw, Calendar, FileText } from 'lucide-react';
+import { Loader2, AlertCircle, Search, Plus, RefreshCw, Eye, Trash2, FileText, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import { Card } from '@/components/ui/card';
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
+
 interface FilterState {
   searchQuery: string;
   status: string;
-  caseId: string;
-  dateFrom: Date | undefined;
-  dateTo: Date | undefined;
 }
 
-const fetchInvoices = async (firmId: string | undefined, filters: FilterState): Promise<InvoiceListData[]> => {
-  if (!firmId) {
-    throw new Error('Firm ID is required to fetch invoices.');
-  }
-  
-  let query = supabase
-    .from('invoices')
-    .select(`
-      *,
-      client:clients(full_name),
-      case:cases(title)
-    `)
-    .eq('firm_id', firmId);
-
-  // Apply filters
-  if (filters.searchQuery) {
-    query = query.or(`invoice_number.ilike.%${filters.searchQuery}%,client.full_name.ilike.%${filters.searchQuery}%`);
-  }
-  
-  if (filters.status && filters.status !== 'all') {
-    query = query.eq('status', filters.status as 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled');
-  }
-  
-  if (filters.caseId && filters.caseId !== 'all') {
-    query = query.eq('case_id', filters.caseId);
-  }
-  
-  if (filters.dateFrom) {
-    query = query.gte('issue_date', format(filters.dateFrom, 'yyyy-MM-dd'));
-  }
-  
-  if (filters.dateTo) {
-    query = query.lte('issue_date', format(filters.dateTo, 'yyyy-MM-dd'));
-  }
-
-  query = query.order('created_at', { ascending: false });
-
-  const { data, error } = await query;
-  
-  if (error) {
-    console.error('Error fetching invoices:', error);
-    throw new Error(error.message);
-  }
-  return data as InvoiceListData[];
-};
-
-const fetchCases = async (firmId: string | undefined) => {
-  if (!firmId) return [];
-  
-  const { data, error } = await supabase
-    .from('cases')
-    .select('id, title')
-    .eq('firm_id', firmId)
-    .order('title');
-    
-  if (error) {
-    console.error('Error fetching cases:', error);
-    return [];
-  }
-  return data;
-};
-const InvoiceStats = ({ firmId }: { firmId: string | undefined }) => {
-  const { data: stats, isLoading } = useInvoiceStats(firmId);
-
-  if (isLoading) {
-    return <div className="flex w-full flex-wrap items-start gap-4 mobile:flex-col">
-      {[...Array(4)].map((_, i) => (
-        <div key={i} className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-2xl border border-gray-200 px-6 py-6 shadow-sm bg-slate-100 animate-pulse">
-          <div className="h-4 bg-gray-300 rounded w-20"></div>
-          <div className="h-8 bg-gray-300 rounded w-16"></div>
-        </div>
-      ))}
-    </div>;
-  }
-
-  return <div className="flex w-full flex-wrap items-start gap-4 mobile:flex-col">
-      {/* Outstanding */}
-      <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-2xl border border-gray-200 px-6 py-6 shadow-sm hover:shadow-md transition-shadow bg-slate-100">
-        <span className="text-sm font-medium text-muted-foreground">Outstanding</span>
-        <span className="text-2xl font-semibold text-cyan-500">₹{stats?.outstanding.toLocaleString('en-IN') || '0'}</span>
-      </div>
-      {/* Overdue */}
-      <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-2xl border border-gray-200 px-6 py-6 shadow-sm hover:shadow-md transition-shadow bg-slate-100">
-        <span className="text-sm font-medium text-muted-foreground">Overdue</span>
-        <span className="text-2xl font-semibold text-red-600">₹{stats?.overdue.toLocaleString('en-IN') || '0'}</span>
-      </div>
-      {/* Paid this month */}
-      <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-2xl border border-gray-200 px-6 py-6 shadow-sm hover:shadow-md transition-shadow bg-slate-100">
-        <span className="text-sm font-medium text-muted-foreground">Paid this month</span>
-        <span className="text-2xl font-semibold text-green-600">₹{stats?.paidThisMonth.toLocaleString('en-IN') || '0'}</span>
-      </div>
-      {/* Draft */}
-      <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-2xl border border-gray-200 px-6 py-6 shadow-sm hover:shadow-md transition-shadow bg-slate-100">
-        <span className="text-sm font-medium text-muted-foreground">Draft</span>
-        <span className="text-2xl font-semibold text-yellow-500">{stats?.draftCount || 0}</span>
-      </div>
-    </div>;
-};
-interface InvoiceToolbarProps {
+interface ZohoInvoice {
+  invoice_id: string;
+  invoice_number: string;
+  customer_name: string;
+  date: string;
+  due_date: string;
   total: number;
-  onNewInvoice: () => void;
-  filters: FilterState;
-  onFiltersChange: (filters: FilterState) => void;
-  onRefresh: () => void;
-  onDownload: () => void;
-  cases: Array<{ id: string; title: string }>;
+  balance: number;
+  status: string;
+  currency_code: string;
 }
 
-const InvoiceToolbar: React.FC<InvoiceToolbarProps> = ({
-  total = 0,
-  onNewInvoice,
-  filters,
-  onFiltersChange,
-  onRefresh,
-  onDownload,
-  cases
-}) => {
-  const [dateFromOpen, setDateFromOpen] = useState(false);
-  const [dateToOpen, setDateToOpen] = useState(false);
+interface ZohoContact {
+  contact_id: string;
+  contact_name: string;
+  company_name: string;
+  email: string;
+}
 
-  const updateFilters = (updates: Partial<FilterState>) => {
-    onFiltersChange({ ...filters, ...updates });
-  };
+interface LineItem {
+  name: string;
+  description: string;
+  rate: number;
+  quantity: number;
+}
 
-  return (
-    <div className="flex w-full flex-wrap items-center gap-4 mb-2">
-      <div className="flex grow shrink-0 basis-0 items-center gap-3">
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-          <Input 
-            className="max-w-xs pl-10 bg-white rounded-lg border border-gray-200 text-base focus:ring-2 focus:ring-primary outline-none" 
-            placeholder="Search invoices..."
-            value={filters.searchQuery}
-            onChange={(e) => updateFilters({ searchQuery: e.target.value })}
-          />
-        </div>
-        
-        {/* Status Filter */}
-        <Select value={filters.status} onValueChange={(value) => updateFilters({ status: value })}>
-          <SelectTrigger className="w-32 bg-white border-gray-200">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="draft">Draft</SelectItem>
-            <SelectItem value="sent">Sent</SelectItem>
-            <SelectItem value="paid">Paid</SelectItem>
-            <SelectItem value="overdue">Overdue</SelectItem>
-            <SelectItem value="cancelled">Cancelled</SelectItem>
-          </SelectContent>
-        </Select>
-
-        {/* Date Range */}
-        <div className="flex items-center gap-2">
-          <Popover open={dateFromOpen} onOpenChange={setDateFromOpen}>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="bg-white border-gray-200 justify-start text-left font-normal">
-                <Calendar className="mr-2 h-4 w-4" />
-                {filters.dateFrom ? format(filters.dateFrom, 'MMM d, yyyy') : 'From'}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 bg-white border border-gray-200 shadow-lg z-50">
-              <CalendarComponent
-                mode="single"
-                selected={filters.dateFrom}
-                onSelect={(date) => {
-                  updateFilters({ dateFrom: date });
-                  setDateFromOpen(false);
-                }}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-          
-          <Popover open={dateToOpen} onOpenChange={setDateToOpen}>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="bg-white border-gray-200 justify-start text-left font-normal">
-                <Calendar className="mr-2 h-4 w-4" />
-                {filters.dateTo ? format(filters.dateTo, 'MMM d, yyyy') : 'To'}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 bg-white border border-gray-200 shadow-lg z-50">
-              <CalendarComponent
-                mode="single"
-                selected={filters.dateTo}
-                onSelect={(date) => {
-                  updateFilters({ dateTo: date });
-                  setDateToOpen(false);
-                }}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
-
-        {/* Case Filter */}
-        <Select value={filters.caseId} onValueChange={(value) => updateFilters({ caseId: value })}>
-          <SelectTrigger className="w-48 bg-white border-gray-200">
-            <SelectValue placeholder="All Cases" />
-          </SelectTrigger>
-          <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-            <SelectItem value="all">All Cases</SelectItem>
-            {cases.map((case_) => (
-              <SelectItem key={case_.id} value={case_.id}>
-                {case_.title}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      
-      <div className="flex items-center gap-2">
-        <Button 
-          variant="secondary" 
-          size="icon" 
-          className="border-gray-200 text-slate-50 bg-slate-900 hover:bg-slate-800"
-          onClick={onDownload}
-        >
-          <Download className="w-4 h-4" />
-          <span className="sr-only">Download as CSV</span>
-        </Button>
-        <Button 
-          variant="secondary" 
-          size="icon" 
-          className="border-gray-200 text-slate-50 bg-slate-900 hover:bg-slate-800"
-          onClick={onRefresh}
-        >
-          <RefreshCw className="w-4 h-4" />
-          <span className="sr-only">Refresh</span>
-        </Button>
-        <Button className="text-white px-4 bg-slate-900 hover:bg-slate-800" onClick={onNewInvoice}>
-          <Plus className="w-4 h-4 mr-1" />
-          New Invoice
-        </Button>
-      </div>
-    </div>
-  );
-};
-const Breadcrumbs = () => <nav className="mb-4 flex items-center space-x-3 text-sm text-muted-foreground" aria-label="Breadcrumb">
-    <span className="font-medium">Arka</span>
-    <span className="mx-1">/</span>
-    
-  </nav>;
 const Invoices: React.FC = () => {
-  const { firmId, loading, firmError } = useAuth();
+  const { firmId } = useAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -280,19 +56,22 @@ const Invoices: React.FC = () => {
 
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string>('');
-  const [organizationId, setOrganizationId] = useState('');
-  const [showOrgIdDialog, setShowOrgIdDialog] = useState(false);
-  const [tempOrgId, setTempOrgId] = useState('');
+  const [selectedInvoice, setSelectedInvoice] = useState<ZohoInvoice | null>(null);
   
   const [filters, setFilters] = useState<FilterState>({
     searchQuery: '',
     status: 'all',
-    caseId: 'all',
-    dateFrom: undefined,
-    dateTo: undefined,
+  });
+
+  // New invoice form state
+  const [newInvoice, setNewInvoice] = useState({
+    customer_id: '',
+    date: format(new Date(), 'yyyy-MM-dd'),
+    due_date: format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
+    payment_terms_label: 'Net 30',
+    notes: '',
+    terms: '',
+    line_items: [] as LineItem[],
   });
 
   // Check if Zoho is connected
@@ -322,14 +101,10 @@ const Invoices: React.FC = () => {
     
     if (zohoStatus === 'success') {
       refetchZohoToken();
-      // Pre-fill with user's org ID
-      setTempOrgId('60028661228');
       toast({ 
         title: 'Success', 
-        description: 'Zoho Books connected successfully! Please confirm your organization ID.' 
+        description: 'Zoho Books connected successfully!' 
       });
-      setShowOrgIdDialog(true);
-      // Clean URL
       navigate('/invoices', { replace: true });
     } else if (zohoStatus === 'error') {
       const message = params.get('message') || 'Failed to connect Zoho';
@@ -340,326 +115,549 @@ const Invoices: React.FC = () => {
       });
       navigate('/invoices', { replace: true });
     }
-  }, [location.search, refetchZohoToken, navigate]);
+  }, [location.search, refetchZohoToken, navigate, toast]);
 
-  // Set organizationId from zohoToken
-  useEffect(() => {
-    if (zohoToken?.organization_id) {
-      setOrganizationId(zohoToken.organization_id);
-      setTempOrgId(zohoToken.organization_id);
-    }
-  }, [zohoToken]);
-
-
-  const handleSaveOrgId = async () => {
-    if (!tempOrgId || !firmId) {
-      toast({ title: 'Error', description: 'Please enter a valid organization ID', variant: 'destructive' });
-      return;
-    }
-
-    const { error } = await supabase
-      .from('zoho_tokens')
-      .update({ organization_id: tempOrgId })
-      .eq('firm_id', firmId);
-
-    if (error) {
-      toast({ title: 'Error', description: 'Failed to save organization ID', variant: 'destructive' });
-      return;
-    }
-
-    setOrganizationId(tempOrgId);
-    setShowOrgIdDialog(false);
-    refetchZohoToken();
-    toast({ title: 'Success', description: 'Organization ID saved successfully!' });
-  };
-
-  const handleOrgIdChange = async (value: string) => {
-    setOrganizationId(value);
-    
-    // Auto-save to database if we have a firm ID and zoho token
-    if (firmId && zohoToken && value) {
-      const { error } = await supabase
-        .from('zoho_tokens')
-        .update({ organization_id: value })
-        .eq('firm_id', firmId);
-
-      if (!error) {
-        refetchZohoToken();
-      }
-    }
-  };
-
-
-  const { data: invoices, isLoading, error } = useQuery({
-    queryKey: ['invoices', firmId, filters],
-    queryFn: () => fetchInvoices(firmId, filters),
-    enabled: !!firmId
-  });
-
-  const { data: cases = [] } = useQuery({
-    queryKey: ['cases', firmId],
-    queryFn: () => fetchCases(firmId),
-    enabled: !!firmId
-  });
-
-  const { data: zohoInvoices, isLoading: isLoadingZohoInvoices } = useQuery({
-    queryKey: ['zoho-invoices', organizationId],
+  // Fetch Zoho invoices
+  const { data: zohoInvoices, isLoading: isLoadingInvoices, refetch: refetchInvoices } = useQuery({
+    queryKey: ['zoho-invoices', zohoToken?.organization_id],
     queryFn: async () => {
-      if (!organizationId) return null;
-      const { data, error } = await supabase.functions.invoke('zoho-books-invoices', {
-        body: { organization_id: organizationId }
-      });
+      const { data, error } = await supabase.functions.invoke('zoho-books-invoices');
       
       if (error) {
         console.error('Error fetching Zoho invoices:', error);
-        toast({ title: 'Error', description: 'Failed to fetch Zoho invoices', variant: 'destructive' });
-        return null;
+        throw error;
       }
 
-      // Check if we need organization ID
-      if (data?.needsOrgId) {
-        setShowOrgIdDialog(true);
-        return null;
+      if (!data?.success) {
+        throw new Error(data?.error || 'Failed to fetch invoices');
       }
+      
+      return data.invoices || [];
+    },
+    enabled: !!zohoToken,
+  });
+
+  // Fetch Zoho contacts for invoice creation
+  const { data: zohoContacts } = useQuery({
+    queryKey: ['zoho-contacts'],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke('zoho-books-get-contacts');
+      
+      if (error) {
+        console.error('Error fetching Zoho contacts:', error);
+        return [];
+      }
+      
+      return data?.contacts || [];
+    },
+    enabled: !!zohoToken && createDialogOpen,
+  });
+
+  // Create invoice mutation
+  const createInvoiceMutation = useMutation({
+    mutationFn: async (invoiceData: any) => {
+      const { data, error } = await supabase.functions.invoke('zoho-books-create-invoice', {
+        body: invoiceData
+      });
+      
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || 'Failed to create invoice');
+      
+      return data.invoice;
+    },
+    onSuccess: () => {
+      toast({ title: 'Success', description: 'Invoice created successfully!' });
+      setCreateDialogOpen(false);
+      refetchInvoices();
+      resetNewInvoice();
+    },
+    onError: (error: any) => {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    }
+  });
+
+  // Delete invoice mutation
+  const deleteInvoiceMutation = useMutation({
+    mutationFn: async (invoiceId: string) => {
+      const { data, error } = await supabase.functions.invoke('zoho-books-delete-invoice', {
+        body: { invoice_id: invoiceId }
+      });
+      
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || 'Failed to delete invoice');
       
       return data;
     },
-    enabled: !!zohoToken && !!organizationId,
+    onSuccess: () => {
+      toast({ title: 'Success', description: 'Invoice deleted successfully!' });
+      refetchInvoices();
+    },
+    onError: (error: any) => {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    }
   });
 
-  const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ['invoices', firmId] });
-    toast({ title: 'Refreshed', description: 'Invoice data has been refreshed.' });
+  const resetNewInvoice = () => {
+    setNewInvoice({
+      customer_id: '',
+      date: format(new Date(), 'yyyy-MM-dd'),
+      due_date: format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
+      payment_terms_label: 'Net 30',
+      notes: '',
+      terms: '',
+      line_items: [],
+    });
   };
 
-  const handleDownload = () => {
-    if (!invoices || invoices.length === 0) {
-      toast({ title: 'No data', description: 'No invoices to download.', variant: 'destructive' });
+  const addLineItem = () => {
+    setNewInvoice(prev => ({
+      ...prev,
+      line_items: [...prev.line_items, { name: '', description: '', rate: 0, quantity: 1 }]
+    }));
+  };
+
+  const removeLineItem = (index: number) => {
+    setNewInvoice(prev => ({
+      ...prev,
+      line_items: prev.line_items.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateLineItem = (index: number, field: keyof LineItem, value: any) => {
+    setNewInvoice(prev => ({
+      ...prev,
+      line_items: prev.line_items.map((item, i) => 
+        i === index ? { ...item, [field]: value } : item
+      )
+    }));
+  };
+
+  const handleCreateInvoice = () => {
+    if (!newInvoice.customer_id || newInvoice.line_items.length === 0) {
+      toast({ title: 'Error', description: 'Please select a customer and add line items', variant: 'destructive' });
       return;
     }
 
-    // Create CSV content
-    const headers = ['Invoice Number', 'Client', 'Case', 'Issue Date', 'Due Date', 'Amount', 'Status'];
-    const csvContent = [
-      headers.join(','),
-      ...invoices.map(invoice => [
-        invoice.invoice_number,
-        invoice.client?.full_name || 'N/A',
-        invoice.case?.title || 'N/A',
-        invoice.issue_date || 'N/A',
-        invoice.due_date || 'N/A',
-        invoice.total_amount || 0,
-        invoice.status
-      ].join(','))
-    ].join('\n');
-
-    // Download the file
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `invoices_${format(new Date(), 'yyyy-MM-dd')}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-    
-    toast({ title: 'Downloaded', description: 'Invoice data has been downloaded as CSV.' });
+    createInvoiceMutation.mutate(newInvoice);
   };
-  return <div className="max-w-7xl mx-auto p-6 space-y-6">
-      {/* Breadcrumbs */}
-      {/* Header */}
-      <div className="flex w-full flex-wrap items-center gap-4">
-        <div className="flex grow shrink-0 basis-0 items-center gap-2">
-          <h1 className="text-2xl font-semibold text-gray-900">Invoices</h1>
-          <Badge variant="default">{invoices ? `${invoices.length} total` : "--"}</Badge>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button className="bg-primary hover:bg-primary/90 text-white px-4" onClick={() => setCreateDialogOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            New Invoice
+
+  const handleDeleteInvoice = (invoiceId: string) => {
+    if (confirm('Are you sure you want to delete this invoice?')) {
+      deleteInvoiceMutation.mutate(invoiceId);
+    }
+  };
+
+  const handleConnectZoho = () => {
+    const zohoClientId = '1000.MC4YZPCGPZGGJ2J7BTJQZLURRPME6Z';
+    const redirectUri = 'https://crm.hrulegal.com/zoho/callback';
+    const scope = 'ZohoBooks.invoices.READ,ZohoBooks.invoices.CREATE,ZohoBooks.invoices.UPDATE,ZohoBooks.invoices.DELETE,ZohoBooks.contacts.READ';
+    
+    const authUrl = `https://accounts.zoho.in/oauth/v2/auth?scope=${encodeURIComponent(scope)}&client_id=${zohoClientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&access_type=offline&prompt=consent`;
+    
+    window.location.href = authUrl;
+  };
+
+  // Filter invoices
+  const filteredInvoices = zohoInvoices?.filter((invoice: ZohoInvoice) => {
+    const matchesSearch = filters.searchQuery === '' || 
+      invoice.invoice_number.toLowerCase().includes(filters.searchQuery.toLowerCase()) ||
+      invoice.customer_name.toLowerCase().includes(filters.searchQuery.toLowerCase());
+    
+    const matchesStatus = filters.status === 'all' || invoice.status.toLowerCase() === filters.status.toLowerCase();
+    
+    return matchesSearch && matchesStatus;
+  }) || [];
+
+  // Calculate stats
+  const stats = {
+    outstanding: filteredInvoices.reduce((sum: number, inv: ZohoInvoice) => 
+      inv.status !== 'paid' ? sum + inv.balance : sum, 0),
+    overdue: filteredInvoices.reduce((sum: number, inv: ZohoInvoice) => 
+      inv.status === 'overdue' ? sum + inv.balance : sum, 0),
+    paid: filteredInvoices.reduce((sum: number, inv: ZohoInvoice) => 
+      inv.status === 'paid' ? sum + inv.total : sum, 0),
+    draftCount: filteredInvoices.filter((inv: ZohoInvoice) => inv.status === 'draft').length,
+  };
+
+  const getStatusBadge = (status: string) => {
+    const statusColors: Record<string, string> = {
+      draft: 'bg-gray-100 text-gray-800',
+      sent: 'bg-blue-100 text-blue-800',
+      paid: 'bg-green-100 text-green-800',
+      overdue: 'bg-red-100 text-red-800',
+      void: 'bg-gray-100 text-gray-600',
+    };
+
+    return (
+      <Badge className={`${statusColors[status.toLowerCase()] || 'bg-gray-100 text-gray-800'} capitalize`}>
+        {status}
+      </Badge>
+    );
+  };
+
+  if (!zohoToken) {
+    return (
+      <div className="max-w-7xl mx-auto p-6">
+        <Card className="p-12 text-center">
+          <FileText className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+          <h2 className="text-2xl font-semibold mb-2">Connect Zoho Books</h2>
+          <p className="text-muted-foreground mb-6">
+            Connect your Zoho Books account to create and manage invoices
+          </p>
+          <Button onClick={handleConnectZoho} size="lg">
+            Connect Zoho Books
           </Button>
+        </Card>
+      </div>
+    );
+  }
+
+  if (isLoadingInvoices) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-7xl mx-auto p-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-semibold">Invoices</h1>
+          <p className="text-muted-foreground">Manage your Zoho Books invoices</p>
+        </div>
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+          <span>Connected to Zoho Books</span>
         </div>
       </div>
-      {/* Stats Row (cards) */}
-      <InvoiceStats firmId={firmId} />
-      {/* Zoho Organization ID Input */}
-      {zohoToken && (
-        <div className="bg-white border rounded-lg p-4 space-y-3">
-          <div className="flex items-center gap-4">
-            <div className="flex-1">
-              <label htmlFor="org-id" className="block text-sm font-medium mb-2">
-                Zoho Organization ID
-              </label>
-              <Input
-                id="org-id"
-                type="text"
-                value={organizationId}
-                onChange={(e) => handleOrgIdChange(e.target.value)}
-                placeholder="Enter your Zoho Books Organization ID (e.g., 60028661228)"
-                className="w-full"
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="p-6">
+          <p className="text-sm text-muted-foreground mb-1">Outstanding</p>
+          <p className="text-2xl font-semibold text-blue-600">₹{stats.outstanding.toLocaleString('en-IN')}</p>
+        </Card>
+        <Card className="p-6">
+          <p className="text-sm text-muted-foreground mb-1">Overdue</p>
+          <p className="text-2xl font-semibold text-red-600">₹{stats.overdue.toLocaleString('en-IN')}</p>
+        </Card>
+        <Card className="p-6">
+          <p className="text-sm text-muted-foreground mb-1">Paid</p>
+          <p className="text-2xl font-semibold text-green-600">₹{stats.paid.toLocaleString('en-IN')}</p>
+        </Card>
+        <Card className="p-6">
+          <p className="text-sm text-muted-foreground mb-1">Draft</p>
+          <p className="text-2xl font-semibold text-yellow-600">{stats.draftCount}</p>
+        </Card>
+      </div>
+
+      {/* Toolbar */}
+      <div className="flex items-center gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input 
+            className="pl-10" 
+            placeholder="Search invoices..."
+            value={filters.searchQuery}
+            onChange={(e) => setFilters(prev => ({ ...prev, searchQuery: e.target.value }))}
+          />
+        </div>
+        
+        <Select value={filters.status} onValueChange={(value) => setFilters(prev => ({ ...prev, status: value }))}>
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="draft">Draft</SelectItem>
+            <SelectItem value="sent">Sent</SelectItem>
+            <SelectItem value="paid">Paid</SelectItem>
+            <SelectItem value="overdue">Overdue</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Button variant="outline" size="icon" onClick={() => refetchInvoices()}>
+          <RefreshCw className="w-4 h-4" />
+        </Button>
+
+        <Button onClick={() => setCreateDialogOpen(true)}>
+          <Plus className="w-4 h-4 mr-2" />
+          New Invoice
+        </Button>
+      </div>
+
+      {/* Invoices Table */}
+      <Card>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Invoice #</TableHead>
+              <TableHead>Customer</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead>Due Date</TableHead>
+              <TableHead className="text-right">Amount</TableHead>
+              <TableHead className="text-right">Balance</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredInvoices.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
+                  No invoices found
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredInvoices.map((invoice: ZohoInvoice) => (
+                <TableRow key={invoice.invoice_id}>
+                  <TableCell className="font-medium">{invoice.invoice_number}</TableCell>
+                  <TableCell>{invoice.customer_name}</TableCell>
+                  <TableCell>{format(new Date(invoice.date), 'dd/MM/yyyy')}</TableCell>
+                  <TableCell>{format(new Date(invoice.due_date), 'dd/MM/yyyy')}</TableCell>
+                  <TableCell className="text-right">₹{invoice.total.toLocaleString('en-IN')}</TableCell>
+                  <TableCell className="text-right">₹{invoice.balance.toLocaleString('en-IN')}</TableCell>
+                  <TableCell>{getStatusBadge(invoice.status)}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => {
+                          setSelectedInvoice(invoice);
+                          setViewDialogOpen(true);
+                        }}
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleDeleteInvoice(invoice.invoice_id)}
+                        disabled={deleteInvoiceMutation.isPending}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </Card>
+
+      {/* Create Invoice Dialog */}
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create New Invoice</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Customer *</Label>
+                <Select 
+                  value={newInvoice.customer_id} 
+                  onValueChange={(value) => setNewInvoice(prev => ({ ...prev, customer_id: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select customer" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {zohoContacts?.map((contact: ZohoContact) => (
+                      <SelectItem key={contact.contact_id} value={contact.contact_id}>
+                        {contact.contact_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>Payment Terms</Label>
+                <Select 
+                  value={newInvoice.payment_terms_label} 
+                  onValueChange={(value) => setNewInvoice(prev => ({ ...prev, payment_terms_label: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Net 15">Net 15</SelectItem>
+                    <SelectItem value="Net 30">Net 30</SelectItem>
+                    <SelectItem value="Net 45">Net 45</SelectItem>
+                    <SelectItem value="Net 60">Net 60</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Invoice Date</Label>
+                <Input 
+                  type="date" 
+                  value={newInvoice.date}
+                  onChange={(e) => setNewInvoice(prev => ({ ...prev, date: e.target.value }))}
+                />
+              </div>
+
+              <div>
+                <Label>Due Date</Label>
+                <Input 
+                  type="date" 
+                  value={newInvoice.due_date}
+                  onChange={(e) => setNewInvoice(prev => ({ ...prev, due_date: e.target.value }))}
+                />
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <Label>Line Items *</Label>
+                <Button type="button" variant="outline" size="sm" onClick={addLineItem}>
+                  <Plus className="w-4 h-4 mr-1" />
+                  Add Item
+                </Button>
+              </div>
+
+              <div className="space-y-3">
+                {newInvoice.line_items.map((item, index) => (
+                  <div key={index} className="flex gap-2 items-start p-3 border rounded-lg">
+                    <div className="flex-1 space-y-2">
+                      <Input 
+                        placeholder="Item name"
+                        value={item.name}
+                        onChange={(e) => updateLineItem(index, 'name', e.target.value)}
+                      />
+                      <Input 
+                        placeholder="Description"
+                        value={item.description}
+                        onChange={(e) => updateLineItem(index, 'description', e.target.value)}
+                      />
+                      <div className="grid grid-cols-3 gap-2">
+                        <Input 
+                          type="number"
+                          placeholder="Quantity"
+                          value={item.quantity}
+                          onChange={(e) => updateLineItem(index, 'quantity', parseFloat(e.target.value))}
+                        />
+                        <Input 
+                          type="number"
+                          placeholder="Rate"
+                          value={item.rate}
+                          onChange={(e) => updateLineItem(index, 'rate', parseFloat(e.target.value))}
+                        />
+                        <div className="flex items-center justify-center font-semibold">
+                          ₹{(item.quantity * item.rate).toFixed(2)}
+                        </div>
+                      </div>
+                    </div>
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={() => removeLineItem(index)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <Label>Notes</Label>
+              <Textarea 
+                placeholder="Add notes..."
+                value={newInvoice.notes}
+                onChange={(e) => setNewInvoice(prev => ({ ...prev, notes: e.target.value }))}
               />
             </div>
-            {organizationId && (
-              <div className="text-sm text-muted-foreground pt-6">
-                {isLoadingZohoInvoices ? (
-                  <div className="flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Loading...</span>
-                  </div>
-                ) : (
-                  <span>{zohoInvoices?.invoices?.length || 0} Zoho invoices found</span>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
-      {/* Zoho Invoices Table */}
-      {zohoInvoices?.invoices && zohoInvoices.invoices.length > 0 && (
-        <div className="bg-white border rounded-lg overflow-hidden">
-          <div className="px-4 py-3 border-b bg-muted">
-            <h3 className="text-lg font-semibold">Zoho Books Invoices</h3>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-muted border-b">
-                <tr>
-                  <th className="text-left p-3 text-sm font-semibold">Invoice #</th>
-                  <th className="text-left p-3 text-sm font-semibold">Customer</th>
-                  <th className="text-left p-3 text-sm font-semibold">Date</th>
-                  <th className="text-right p-3 text-sm font-semibold">Amount</th>
-                  <th className="text-left p-3 text-sm font-semibold">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {zohoInvoices.invoices.map((invoice: any) => (
-                  <tr key={invoice.invoice_id} className="border-b hover:bg-muted/50">
-                    <td className="p-3 text-sm font-medium">{invoice.invoice_number}</td>
-                    <td className="p-3 text-sm">{invoice.customer_name}</td>
-                    <td className="p-3 text-sm">{invoice.date}</td>
-                    <td className="p-3 text-sm text-right font-medium">
-                      {invoice.currency_symbol}{Number(invoice.total).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                    </td>
-                    <td className="p-3 text-sm">
-                      <Badge variant={invoice.status === 'paid' ? 'success' : 'outline'}>
-                        {invoice.status}
-                      </Badge>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-      
-      {/* Filters/Search Bar */}
-      <InvoiceToolbar 
-        total={invoices?.length || 0} 
-        onNewInvoice={() => setCreateDialogOpen(true)}
-        filters={filters}
-        onFiltersChange={setFilters}
-        onRefresh={handleRefresh}
-        onDownload={handleDownload}
-        cases={cases}
-      />
-      {/* Table / Loading / Error */}
-      {(isLoading || loading) && <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2 text-gray-600">Loading invoices...</span>
-      </div>}
-      {error && <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md mt-4">
-        <div className="flex">
-          <div className="flex-shrink-0">
-            <AlertCircle className="h-5 w-5 text-red-400" aria-hidden="true" />
-          </div>
-          <div className="ml-3">
-            <p className="text-sm text-red-700">
-              Failed to load invoices: {error.message}
-            </p>
-          </div>
-        </div>
-      </div>}
-      {!isLoading && !loading && !error && invoices && <div className="bg-white shadow-sm rounded-2xl border border-gray-200 p-0 mt-2">
-        <InvoicesTable 
-          invoices={invoices} 
-          isLoading={isLoading}
-          onView={(id) => {
-            setSelectedInvoiceId(id);
-            setViewDialogOpen(true);
-          }}
-          onEdit={(id) => {
-            setSelectedInvoiceId(id);
-            setEditDialogOpen(true);
-          }}
-          onDelete={(id) => {
-            setSelectedInvoiceId(id);
-            setDeleteDialogOpen(true);
-          }}
-        />
-      </div>}
-      {!isLoading && !loading && !error && (!invoices || invoices.length === 0) && firmId && <div className="text-center py-12">
-        <p className="text-gray-500">No invoices found for this firm.</p>
-      </div>}
-      {!isLoading && !loading && !firmId && <div className="text-center py-12">
-        <p className="text-gray-500">Firm information not available. Cannot load invoices.</p>
-        {firmError && <p className="mt-2 text-red-400 text-sm">{firmError}</p>}
-      </div>}
-
-      {/* Dialogs */}
-      <InvoiceFormDialog
-        open={createDialogOpen}
-        onOpenChange={setCreateDialogOpen}
-      />
-      <InvoiceFormDialog
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-        invoiceId={selectedInvoiceId}
-      />
-      <InvoiceViewDialog
-        open={viewDialogOpen}
-        onOpenChange={setViewDialogOpen}
-        invoiceId={selectedInvoiceId}
-        onEdit={() => {
-          setViewDialogOpen(false);
-          setEditDialogOpen(true);
-        }}
-      />
-      <DeleteInvoiceDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        invoiceId={selectedInvoiceId}
-        invoiceNumber={invoices?.find(inv => inv.id === selectedInvoiceId)?.invoice_number}
-      />
-
-      {/* Organization ID Dialog */}
-      {showOrgIdDialog && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-2">Set Zoho Organization ID</h3>
-            <p className="text-sm text-gray-600 mb-4">
-              Please confirm your Zoho Books Organization ID to fetch invoices.
-            </p>
-            <Input
-              placeholder="60028661228"
-              value={tempOrgId}
-              onChange={(e) => setTempOrgId(e.target.value)}
-              className="mb-4"
-              autoFocus
-            />
-            <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={() => setShowOrgIdDialog(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleSaveOrgId}>
-                Save
-              </Button>
+            <div>
+              <Label>Terms & Conditions</Label>
+              <Textarea 
+                placeholder="Add terms and conditions..."
+                value={newInvoice.terms}
+                onChange={(e) => setNewInvoice(prev => ({ ...prev, terms: e.target.value }))}
+              />
             </div>
           </div>
-        </div>
-      )}
-    </div>;
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleCreateInvoice} 
+              disabled={createInvoiceMutation.isPending}
+            >
+              {createInvoiceMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Create Invoice
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Invoice Dialog */}
+      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Invoice Details</DialogTitle>
+          </DialogHeader>
+          
+          {selectedInvoice && (
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Invoice Number</p>
+                  <p className="font-medium">{selectedInvoice.invoice_number}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Status</p>
+                  {getStatusBadge(selectedInvoice.status)}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Customer</p>
+                  <p className="font-medium">{selectedInvoice.customer_name}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Date</p>
+                  <p className="font-medium">{format(new Date(selectedInvoice.date), 'dd MMM yyyy')}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Amount</p>
+                  <p className="text-xl font-semibold">₹{selectedInvoice.total.toLocaleString('en-IN')}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Balance Due</p>
+                  <p className="text-xl font-semibold text-red-600">₹{selectedInvoice.balance.toLocaleString('en-IN')}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewDialogOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
 };
+
 export default Invoices;

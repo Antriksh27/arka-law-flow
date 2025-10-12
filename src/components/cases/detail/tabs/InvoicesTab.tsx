@@ -2,7 +2,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
-import { InvoiceStatusBadge } from '@/features/invoices/components/InvoiceStatusBadge';
+import { Badge } from '@/components/ui/badge';
 import { Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -73,7 +73,9 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({ caseId }) => {
                   <td className="p-3 text-sm">{format(new Date(invoice.due_date), 'dd/MM/yyyy')}</td>
                   <td className="p-3 text-sm text-right font-medium">₹{Number(invoice.total_amount || 0).toFixed(2)}</td>
                   <td className="p-3 text-sm">
-                    <InvoiceStatusBadge status={invoice.status} />
+                    <Badge variant={invoice.status === 'paid' ? 'success' : invoice.status === 'overdue' ? 'error' : 'default'}>
+                      {invoice.status}
+                    </Badge>
                   </td>
                   <td className="p-3 text-center">
                     <Button variant="ghost" size="sm">

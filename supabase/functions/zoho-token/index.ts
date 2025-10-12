@@ -55,7 +55,7 @@ serve(async (req) => {
 
     const tokenData = await tokenResponse.json();
 
-    console.log('Zoho token response:', JSON.stringify(tokenData));
+    console.log('Zoho token response received');
 
     // Check if we got an error from Zoho
     if (tokenData.error) {
@@ -118,9 +118,31 @@ serve(async (req) => {
 
     const refreshTokenToStore = tokenData.refresh_token || existingToken?.refresh_token;
 
-    // Get organization_id from request body if provided
-    const requestBody = await req.json().catch(() => ({}));
-    const organizationId = requestBody.organization_id;
+    // Auto-fetch organization ID from Zoho Books
+    console.log("Fetching organization list from Zoho Books...");
+    let organizationId = null;
+    
+    try {
+      const orgsResponse = await fetch(
+        "https://www.zohoapis.in/books/v3/organizations",
+        {
+          headers: {
+            "Authorization": `Zoho-oauthtoken ${tokenData.access_token}`,
+          },
+        }
+      );
+
+      if (orgsResponse.ok) {
+        const orgsData = await orgsResponse.json();
+        if (orgsData.organizations && orgsData.organizations.length > 0) {
+          // Use the first organization
+          organizationId = orgsData.organizations[0].organization_id;
+          console.log("Auto-fetched organization ID:", organizationId);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch organizations, will continue without org ID:", error);
+    }
 
     // Store tokens in database (upsert)
     const upsertData: any = {
@@ -131,7 +153,7 @@ serve(async (req) => {
       expires_at: expiresAt.toISOString(),
     };
 
-    // Only include organization_id if provided
+    // Include organization_id if we got it
     if (organizationId) {
       upsertData.organization_id = organizationId;
     }
@@ -152,7 +174,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: "Zoho connected successfully"
+        message: "Zoho connected successfully",
+        organization_id: organizationId
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
