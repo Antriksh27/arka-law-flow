@@ -63,7 +63,6 @@ const Header = () => {
         </div>
         {/* Right Side Actions */}
         <div className="flex items-center gap-3">
-          <NotificationInbox userId={user?.id} />
           <Button 
             variant="ghost" 
             size="icon" 
@@ -73,6 +72,9 @@ const Header = () => {
           >
             <Settings className="w-5 h-5" />
           </Button>
+          
+          <NotificationInbox userId={user?.id} />
+          
           {/* User Profile Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
