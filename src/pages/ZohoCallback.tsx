@@ -37,8 +37,14 @@ export default function ZohoCallback() {
           }
 
           console.log("Zoho connected successfully");
-          toast.success("Zoho connected successfully! You can now create invoices.");
-          navigate("/invoices");
+          // Signal to the parent window/tab that authorization succeeded
+          localStorage.setItem('zoho_auth_success', Date.now().toString());
+          toast.success("Zoho connected successfully! Closing this window...");
+          
+          // Close the popup after a short delay
+          setTimeout(() => {
+            window.close();
+          }, 1500);
         } catch (err: any) {
           console.error("Error exchanging Zoho token:", err);
           toast.error(err.message || "Failed to connect Zoho");

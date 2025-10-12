@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -291,7 +291,7 @@ const Invoices: React.FC = () => {
   });
 
   // Check if Zoho is connected
-  const { data: zohoToken } = useQuery({
+  const { data: zohoToken, refetch: refetchZohoToken } = useQuery({
     queryKey: ['zoho-token', firmId],
     queryFn: async () => {
       if (!firmId) return null;
@@ -310,6 +310,24 @@ const Invoices: React.FC = () => {
     enabled: !!firmId
   });
 
+  // Listen for Zoho authorization success from popup window
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'zoho_auth_success') {
+        // Authorization completed, refetch the token
+        refetchZohoToken();
+        localStorage.removeItem('zoho_auth_success');
+        toast({ 
+          title: 'Zoho Connected', 
+          description: 'Successfully connected to Zoho Books!' 
+        });
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [refetchZohoToken, toast]);
+
   const handleConnectZoho = () => {
     const zohoClientId = '1000.MC4YZPCGPZGGJ2J7BTJQZLURRPME6Z';
     const redirectUri = 'https://crm.hrulegal.com/zoho/callback';
@@ -321,7 +339,7 @@ const Invoices: React.FC = () => {
     window.open(authUrl, '_blank');
     toast({ 
       title: 'Opening Zoho Authorization', 
-      description: 'Complete the authorization in the new tab, then refresh this page.' 
+      description: 'Complete the authorization in the new tab. This page will update automatically.' 
     });
   };
 
