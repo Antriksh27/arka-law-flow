@@ -10,7 +10,7 @@ import { InvoiceViewDialog } from '@/features/invoices/components/InvoiceViewDia
 import { DeleteInvoiceDialog } from '@/features/invoices/components/DeleteInvoiceDialog';
 import { useInvoiceStats } from '@/features/invoices/hooks/useInvoiceStats';
 import type { InvoiceListData } from '@/features/invoices/types';
-import { Loader2, AlertCircle, Search, Plus, Download, RefreshCw, Calendar, FileText, Link as LinkIcon } from 'lucide-react';
+import { Loader2, AlertCircle, Search, Plus, Download, RefreshCw, Calendar, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -350,16 +350,6 @@ const Invoices: React.FC = () => {
     }
   }, [zohoToken]);
 
-  const handleConnectZoho = () => {
-    const zohoClientId = '1000.MC4YZPCGPZGGJ2J7BTJQZLURRPME6Z';
-    const redirectUri = 'https://crm.hrulegal.com/zoho/callback';
-    const scope = 'ZohoBooks.invoices.READ,ZohoBooks.contacts.READ';
-    
-    const authUrl = `https://accounts.zoho.in/oauth/v2/auth?scope=${encodeURIComponent(scope)}&client_id=${zohoClientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&access_type=offline&prompt=consent`;
-    
-    // Redirect to Zoho OAuth
-    window.location.href = authUrl;
-  };
 
   const handleSaveOrgId = async () => {
     if (!tempOrgId || !firmId) {
@@ -399,23 +389,6 @@ const Invoices: React.FC = () => {
     }
   };
 
-  const handleDisconnectZoho = async () => {
-    if (!firmId) return;
-    
-    const { error } = await supabase
-      .from('zoho_tokens')
-      .delete()
-      .eq('firm_id', firmId);
-    
-    if (error) {
-      toast({ title: 'Error', description: 'Failed to disconnect Zoho Books', variant: 'destructive' });
-      return;
-    }
-    
-    setOrganizationId('');
-    refetchZohoToken();
-    toast({ title: 'Success', description: 'Zoho Books disconnected successfully!' });
-  };
 
   const { data: invoices, isLoading, error } = useQuery({
     queryKey: ['invoices', firmId, filters],
@@ -502,31 +475,6 @@ const Invoices: React.FC = () => {
           <Badge variant="default">{invoices ? `${invoices.length} total` : "--"}</Badge>
         </div>
         <div className="flex items-center gap-2">
-          {!zohoToken ? (
-            <Button 
-              variant="outline" 
-              className="border-blue-500 text-blue-600 hover:bg-blue-50" 
-              onClick={handleConnectZoho}
-            >
-              <LinkIcon className="w-4 h-4 mr-2" />
-              Connect Zoho
-            </Button>
-          ) : (
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-200 rounded-md">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-sm text-green-700">Zoho Connected</span>
-              </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleDisconnectZoho}
-                className="text-red-600 hover:text-red-700 hover:bg-red-50"
-              >
-                Disconnect
-              </Button>
-            </div>
-          )}
           <Button className="bg-primary hover:bg-primary/90 text-white px-4" onClick={() => setCreateDialogOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
             New Invoice
