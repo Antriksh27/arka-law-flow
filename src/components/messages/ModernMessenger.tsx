@@ -475,7 +475,7 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
                               roundedClass,
                               "p-4 border-solid shadow-sm",
                               isMe 
-                                ? "bg-primary text-primary-foreground border border-primary/20" 
+                                ? "bg-blue-50 text-gray-900 border border-blue-100" 
                                 : "bg-card text-card-foreground border border-border/50"
                             )}
                           >
