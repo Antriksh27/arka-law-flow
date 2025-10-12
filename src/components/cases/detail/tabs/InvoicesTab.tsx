@@ -36,6 +36,7 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({ caseId }) => {
     notes: '',
     line_items: [] as LineItem[],
   });
+  const [isClientAutoSelected, setIsClientAutoSelected] = useState(false);
 
   // Fetch case details to get client info
   const { data: caseData } = useQuery({
@@ -71,27 +72,28 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({ caseId }) => {
   });
 
   const { data: zohoContacts } = useQuery({
-    queryKey: ['zoho-contacts-for-invoice', caseData?.clients?.full_name],
+    queryKey: ['zoho-contacts-for-invoice'],
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke('zoho-books-get-contacts');
       
       if (error) return [];
-      const contacts = data?.contacts || [];
-      
-      // Auto-select the case's client if not already selected
-      if (!newInvoice.customer_id && caseData?.clients?.full_name) {
-        const matchingContact = contacts.find((c: any) => 
-          c.contact_name?.toLowerCase() === caseData.clients.full_name?.toLowerCase()
-        );
-        if (matchingContact) {
-          setNewInvoice(prev => ({ ...prev, customer_id: matchingContact.contact_id }));
-        }
-      }
-      
-      return contacts;
+      return data?.contacts || [];
     },
-    enabled: createDialogOpen && !!caseData,
+    enabled: createDialogOpen,
   });
+
+  // Auto-select client when dialog opens and contacts are loaded
+  React.useEffect(() => {
+    if (createDialogOpen && zohoContacts && caseData?.clients?.full_name && !isClientAutoSelected) {
+      const matchingContact = zohoContacts.find((c: any) => 
+        c.contact_name?.toLowerCase() === caseData.clients.full_name?.toLowerCase()
+      );
+      if (matchingContact) {
+        setNewInvoice(prev => ({ ...prev, customer_id: matchingContact.contact_id }));
+        setIsClientAutoSelected(true);
+      }
+    }
+  }, [createDialogOpen, zohoContacts, caseData?.clients?.full_name, isClientAutoSelected]);
 
   const createInvoiceMutation = useMutation({
     mutationFn: async (invoiceData: any) => {
@@ -116,6 +118,7 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({ caseId }) => {
         notes: '',
         line_items: [],
       });
+      setIsClientAutoSelected(false);
     },
     onError: (error: any) => {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
@@ -189,7 +192,10 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({ caseId }) => {
         <div>
           <h3 className="text-xl font-semibold">Case Invoices</h3>
         </div>
-        <Button onClick={() => setCreateDialogOpen(true)}>
+        <Button onClick={() => {
+          setCreateDialogOpen(true);
+          setIsClientAutoSelected(false);
+        }}>
           <Plus className="w-4 h-4 mr-2" />
           Create Invoice
         </Button>
