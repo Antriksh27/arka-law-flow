@@ -230,52 +230,55 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({ onChannelSelect }) =>
   }
 
   return (
-    <div className="flex h-[calc(100vh-64px)] bg-background">
+    <div className="flex h-[calc(100vh-64px)] bg-gradient-to-br from-background via-background to-muted/20">
       {/* Sidebar */}
-      <div className="w-80 border-r border-border flex flex-col bg-card">
+      <div className="w-80 border-r border-border/50 flex flex-col bg-card/95 backdrop-blur-sm">
         {/* Header */}
-        <div className="p-4 border-b border-border">
-          <h1 className="text-2xl font-semibold mb-3">Messages</h1>
+        <div className="p-6 border-b border-border/50">
+          <h1 className="text-2xl font-semibold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">Messages</h1>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               type="text"
-              placeholder="Search messages"
-              className="w-full pl-10 pr-4 py-2 bg-muted rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              placeholder="Search conversations..."
+              className="w-full pl-10 pr-4 py-2.5 bg-muted/50 border border-border/50 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all"
             />
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-border bg-card">
+        <div className="flex border-b border-border/50 bg-muted/30">
           <button
             onClick={() => setActiveTab('chats')}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium transition-colors ${
+            className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-medium transition-all ${
               activeTab === 'chats'
-                ? 'text-primary border-b-2 border-primary'
-                : 'text-muted-foreground hover:text-foreground'
+                ? 'text-primary border-b-2 border-primary bg-background/50'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/20'
             }`}
           >
             <MessageCircle className="h-4 w-4" />
-            Chats
+            <span>Chats</span>
           </button>
           <button
             onClick={() => setActiveTab('team')}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium transition-colors ${
+            className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-medium transition-all ${
               activeTab === 'team'
-                ? 'text-primary border-b-2 border-primary'
-                : 'text-muted-foreground hover:text-foreground'
+                ? 'text-primary border-b-2 border-primary bg-background/50'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/20'
             }`}
           >
             <Users className="h-4 w-4" />
-            Team ({teamMembers.length})
+            <span>Team</span>
+            <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded-full">
+              {teamMembers.length}
+            </span>
           </button>
         </div>
 
         {/* Chat List or Team List */}
         <div className="flex-1 overflow-y-auto">
           {activeTab === 'chats' ? (
-            <div className="p-2">
+            <div className="p-3 space-y-1">
               <ChatList>
                 {channels.map((channel) => {
                   const channelName = getChannelName(channel);
@@ -302,80 +305,89 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({ onChannelSelect }) =>
                   );
                 })}
                 {channels.length === 0 && (
-                  <div className="text-center py-8 text-muted-foreground text-sm">
-                    No conversations yet
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <MessageCircle className="h-12 w-12 text-muted-foreground/50 mb-3" />
+                    <p className="text-sm text-muted-foreground">No conversations yet</p>
+                    <p className="text-xs text-muted-foreground/70 mt-1">Start chatting with your team</p>
                   </div>
                 )}
               </ChatList>
             </div>
           ) : (
-            <div className="p-2">
-              <div className="space-y-1">
-                {teamMembers.map((member) => (
-                  <button
-                    key={member.user_id}
-                    onClick={() => handleStartDM(member.user_id)}
-                    disabled={!isReady}
-                    className="w-full p-3 rounded-lg hover:bg-muted transition-colors flex items-center gap-3 text-left disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <Avatar className="h-10 w-10">
-                      <AvatarFallback className="bg-primary text-primary-foreground">
-                        {getInitials(member.full_name)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm truncate text-foreground">
-                        {member.full_name}
-                      </div>
-                      <div className="text-xs text-muted-foreground truncate">
-                        {member.role.charAt(0).toUpperCase() + member.role.slice(1)} • {member.email}
-                      </div>
+            <div className="p-3 space-y-1">
+              {teamMembers.map((member) => (
+                <button
+                  key={member.user_id}
+                  onClick={() => handleStartDM(member.user_id)}
+                  disabled={!isReady}
+                  className="w-full p-3.5 rounded-xl hover:bg-muted/60 transition-all flex items-center gap-3 text-left disabled:opacity-50 disabled:cursor-not-allowed group hover:shadow-sm border border-transparent hover:border-border/50"
+                >
+                  <Avatar className="h-11 w-11 border-2 border-background shadow-sm">
+                    <AvatarFallback className="bg-gradient-to-br from-primary to-primary/70 text-primary-foreground font-medium">
+                      {getInitials(member.full_name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-sm truncate text-foreground group-hover:text-primary transition-colors">
+                      {member.full_name}
                     </div>
-                    <MessageCircle className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  </button>
-                ))}
-                {teamMembers.length === 0 && (
-                  <div className="text-center py-8 text-muted-foreground text-sm">
-                    No team members found
+                    <div className="text-xs text-muted-foreground truncate flex items-center gap-1.5">
+                      <span className="capitalize">{member.role}</span>
+                      <span className="text-muted-foreground/50">•</span>
+                      <span>{member.email}</span>
+                    </div>
                   </div>
-                )}
-              </div>
+                  <MessageCircle className="h-4 w-4 text-muted-foreground/50 group-hover:text-primary flex-shrink-0 transition-colors" />
+                </button>
+              ))}
+              {teamMembers.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <Users className="h-12 w-12 text-muted-foreground/50 mb-3" />
+                  <p className="text-sm text-muted-foreground">No team members found</p>
+                  <p className="text-xs text-muted-foreground/70 mt-1">Invite members to start collaborating</p>
+                </div>
+              )}
             </div>
           )}
         </div>
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col bg-gradient-to-b from-background to-muted/10">
         {selectedChannel ? (
           <>
             {/* Chat Header */}
-            <div className="p-4 border-b border-border flex items-center justify-between bg-card">
-              <div className="flex items-center gap-3">
-                <Avatar className="h-10 w-10">
+            <div className="p-5 border-b border-border/50 flex items-center justify-between bg-card/95 backdrop-blur-sm">
+              <div className="flex items-center gap-4">
+                <Avatar className="h-11 w-11 border-2 border-background shadow-md">
                   <AvatarImage src={getChannelAvatar(selectedChannel)} />
-                  <AvatarFallback>{getInitials(getChannelName(selectedChannel))}</AvatarFallback>
+                  <AvatarFallback className="bg-gradient-to-br from-primary to-primary/70 text-primary-foreground font-medium">
+                    {getInitials(getChannelName(selectedChannel))}
+                  </AvatarFallback>
                 </Avatar>
                 <div>
-                  <h2 className="font-semibold">{getChannelName(selectedChannel)}</h2>
-                  <p className="text-sm text-muted-foreground">Active now</p>
+                  <h2 className="font-semibold text-base">{getChannelName(selectedChannel)}</h2>
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <p className="text-sm text-muted-foreground">Active now</p>
+                  </div>
                 </div>
               </div>
-              <div className="flex gap-2">
-                <Button variant="ghost" size="icon">
-                  <Phone className="h-5 w-5" />
+              <div className="flex gap-1">
+                <Button variant="ghost" size="icon" className="rounded-full hover:bg-muted/60">
+                  <Phone className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="icon">
-                  <Video className="h-5 w-5" />
+                <Button variant="ghost" size="icon" className="rounded-full hover:bg-muted/60">
+                  <Video className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="icon">
-                  <Info className="h-5 w-5" />
+                <Button variant="ghost" size="icon" className="rounded-full hover:bg-muted/60">
+                  <Info className="h-4 w-4" />
                 </Button>
               </div>
             </div>
 
             {/* Messages */}
-            <ChatMessageList className="flex-1 p-4">
+            <ChatMessageList className="flex-1 p-6 space-y-4">
               {messages.map((message) => {
                 const isMe = message.user?.id === client.userID;
                 const userName = message.user?.name || message.user?.id || 'Unknown';
@@ -389,7 +401,13 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({ onChannelSelect }) =>
                         fallback={getInitials(userName)}
                       />
                     )}
-                    <ChatBubbleMessage variant={isMe ? 'sent' : 'received'}>
+                    <ChatBubbleMessage 
+                      variant={isMe ? 'sent' : 'received'}
+                      className={isMe 
+                        ? 'bg-primary text-primary-foreground shadow-md' 
+                        : 'bg-card border border-border/50 shadow-sm'
+                      }
+                    >
                       {message.text}
                     </ChatBubbleMessage>
                   </ChatBubble>
@@ -398,8 +416,8 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({ onChannelSelect }) =>
             </ChatMessageList>
 
             {/* Input Area */}
-            <div className="p-4 border-t border-border bg-card">
-              <div className="flex gap-2 items-center">
+            <div className="p-5 border-t border-border/50 bg-card/95 backdrop-blur-sm">
+              <div className="flex gap-3 items-end">
                 <ChatInput
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
@@ -409,13 +427,13 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({ onChannelSelect }) =>
                       handleSendMessage();
                     }
                   }}
-                  placeholder="Type a message..."
-                  className="flex-1"
+                  placeholder="Type your message..."
+                  className="flex-1 bg-muted/50 border-border/50 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all resize-none"
                 />
                 <Button 
                   onClick={handleSendMessage}
                   size="icon"
-                  className="rounded-full"
+                  className="rounded-full h-11 w-11 shadow-lg hover:shadow-xl transition-all disabled:opacity-50 bg-gradient-to-r from-primary to-primary/80"
                   disabled={!inputValue.trim()}
                 >
                   <Send className="h-4 w-4" />
@@ -425,12 +443,29 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({ onChannelSelect }) =>
           </>
         ) : (
           <div className="flex-1 flex items-center justify-center text-center px-6">
-            <div className="max-w-md">
-              <div className="text-6xl mb-4">💬</div>
-              <h2 className="text-2xl font-semibold mb-2">Your Messages</h2>
-              <p className="text-muted-foreground">
-                Select a conversation to start messaging
-              </p>
+            <div className="max-w-md space-y-6">
+              <div className="relative">
+                <div className="absolute inset-0 bg-primary/5 blur-3xl rounded-full"></div>
+                <div className="relative text-7xl mb-6 animate-pulse">💬</div>
+              </div>
+              <div className="space-y-3">
+                <h2 className="text-2xl font-semibold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                  Your Messages
+                </h2>
+                <p className="text-muted-foreground text-base">
+                  Select a conversation from the sidebar or start a new chat with a team member
+                </p>
+              </div>
+              <div className="pt-4">
+                <Button 
+                  variant="outline" 
+                  className="rounded-full border-border/50 hover:bg-muted/60"
+                  onClick={() => setActiveTab('team')}
+                >
+                  <Users className="h-4 w-4 mr-2" />
+                  Browse Team
+                </Button>
+              </div>
             </div>
           </div>
         )}
