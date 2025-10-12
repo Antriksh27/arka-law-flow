@@ -49,6 +49,15 @@ serve(async (req) => {
 
     // Generate Stream Chat token
     const userId = user.id;
+    
+    // Helper function to create base64url encoding
+    const base64UrlEncode = (str: string): string => {
+      return btoa(str)
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=/g, "");
+    };
+    
     const header = {
       alg: "HS256",
       typ: "JWT"
@@ -61,8 +70,8 @@ serve(async (req) => {
       exp: now + (60 * 60 * 24 * 7) // 7 days
     };
 
-    const base64Header = btoa(JSON.stringify(header));
-    const base64Payload = btoa(JSON.stringify(payload));
+    const base64Header = base64UrlEncode(JSON.stringify(header));
+    const base64Payload = base64UrlEncode(JSON.stringify(payload));
     const signature = createHmac("sha256", streamApiSecret)
       .update(`${base64Header}.${base64Payload}`)
       .digest("base64")
@@ -71,6 +80,8 @@ serve(async (req) => {
       .replace(/=/g, "");
 
     const token = `${base64Header}.${base64Payload}.${signature}`;
+    
+    console.log('Stream Chat token generated successfully for user:', userId);
 
     console.log('Stream Chat token generated successfully');
 
