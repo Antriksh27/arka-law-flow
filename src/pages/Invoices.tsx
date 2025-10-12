@@ -399,6 +399,24 @@ const Invoices: React.FC = () => {
     }
   };
 
+  const handleDisconnectZoho = async () => {
+    if (!firmId) return;
+    
+    const { error } = await supabase
+      .from('zoho_tokens')
+      .delete()
+      .eq('firm_id', firmId);
+    
+    if (error) {
+      toast({ title: 'Error', description: 'Failed to disconnect Zoho Books', variant: 'destructive' });
+      return;
+    }
+    
+    setOrganizationId('');
+    refetchZohoToken();
+    toast({ title: 'Success', description: 'Zoho Books disconnected successfully!' });
+  };
+
   const { data: invoices, isLoading, error } = useQuery({
     queryKey: ['invoices', firmId, filters],
     queryFn: () => fetchInvoices(firmId, filters),
@@ -494,9 +512,19 @@ const Invoices: React.FC = () => {
               Connect Zoho
             </Button>
           ) : (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-200 rounded-md">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-sm text-green-700">Zoho Connected</span>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-200 rounded-md">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span className="text-sm text-green-700">Zoho Connected</span>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleDisconnectZoho}
+                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              >
+                Disconnect
+              </Button>
             </div>
           )}
           <Button className="bg-primary hover:bg-primary/90 text-white px-4" onClick={() => setCreateDialogOpen(true)}>
