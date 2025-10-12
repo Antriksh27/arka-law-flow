@@ -12,20 +12,21 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Card } from '@/components/ui/card';
-
 interface InvoicesTabProps {
   caseId: string;
 }
-
 interface LineItem {
   name: string;
   description: string;
   rate: number;
   quantity: number;
 }
-
-export const InvoicesTab: React.FC<InvoicesTabProps> = ({ caseId }) => {
-  const { toast } = useToast();
+export const InvoicesTab: React.FC<InvoicesTabProps> = ({
+  caseId
+}) => {
+  const {
+    toast
+  } = useToast();
   const queryClient = useQueryClient();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [newInvoice, setNewInvoice] = useState({
@@ -34,7 +35,7 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({ caseId }) => {
     due_date: format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
     payment_terms_label: 'Net 30',
     notes: '',
-    line_items: [] as LineItem[],
+    line_items: [] as LineItem[]
   });
   const [isClientAutoSelected, setIsClientAutoSelected] = useState(false);
 
@@ -45,10 +46,7 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({ caseId }) => {
     // 1) Exact email match on contact or any contact person
     if (clientEmail) {
       const lowerEmail = clientEmail.toLowerCase();
-      const byEmail = contacts.find((c: any) => 
-        c.email?.toLowerCase() === lowerEmail ||
-        (Array.isArray(c.contact_persons) && c.contact_persons.some((p: any) => p.email?.toLowerCase() === lowerEmail))
-      );
+      const byEmail = contacts.find((c: any) => c.email?.toLowerCase() === lowerEmail || Array.isArray(c.contact_persons) && c.contact_persons.some((p: any) => p.email?.toLowerCase() === lowerEmail));
       if (byEmail) return byEmail;
     }
     // 2) Normalize name/company and compare
@@ -64,47 +62,50 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({ caseId }) => {
   };
 
   // Fetch case details to get client info
-  const { data: caseData } = useQuery({
+  const {
+    data: caseData
+  } = useQuery({
     queryKey: ['case-details', caseId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('cases')
-        .select('*, clients(id, full_name, email)')
-        .eq('id', caseId)
-        .single();
-      
+      const {
+        data,
+        error
+      } = await supabase.from('cases').select('*, clients(id, full_name, email)').eq('id', caseId).single();
       if (error) throw error;
       return data;
     }
   });
-
-  const { data: invoices, isLoading } = useQuery({
+  const {
+    data: invoices,
+    isLoading
+  } = useQuery({
     queryKey: ['zoho-case-invoices', caseId],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke('zoho-books-invoices');
-      
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('zoho-books-invoices');
       if (error) throw error;
       if (!data?.success) throw new Error(data?.error || 'Failed to fetch invoices');
-      
+
       // Filter invoices that have this case ID in reference_number or notes
       const allInvoices = data.invoices || [];
-      return allInvoices.filter((inv: any) => 
-        inv.reference_number?.includes(caseId) || 
-        inv.notes?.includes(caseId) ||
-        inv.custom_fields?.some((cf: any) => cf.value === caseId)
-      );
+      return allInvoices.filter((inv: any) => inv.reference_number?.includes(caseId) || inv.notes?.includes(caseId) || inv.custom_fields?.some((cf: any) => cf.value === caseId));
     }
   });
-
-  const { data: zohoContacts } = useQuery({
+  const {
+    data: zohoContacts
+  } = useQuery({
     queryKey: ['zoho-contacts-for-invoice'],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke('zoho-books-get-contacts');
-      
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('zoho-books-get-contacts');
       if (error) return [];
       return data?.contacts || [];
     },
-    enabled: createDialogOpen,
+    enabled: createDialogOpen
   });
 
   // Auto-select client when dialog opens and contacts are loaded
@@ -112,68 +113,86 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({ caseId }) => {
     if (createDialogOpen && zohoContacts && caseData?.clients?.full_name && !isClientAutoSelected) {
       const match = findMatchingContact(zohoContacts as any[], caseData?.clients?.full_name, caseData?.clients?.email);
       if (match) {
-        setNewInvoice(prev => ({ ...prev, customer_id: match.contact_id }));
+        setNewInvoice(prev => ({
+          ...prev,
+          customer_id: match.contact_id
+        }));
         setIsClientAutoSelected(true);
       }
     }
   }, [createDialogOpen, zohoContacts, caseData?.clients?.full_name, caseData?.clients?.email, isClientAutoSelected]);
-
   const createInvoiceMutation = useMutation({
     mutationFn: async (invoiceData: any) => {
-      const { data, error } = await supabase.functions.invoke('zoho-books-create-invoice', {
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('zoho-books-create-invoice', {
         body: invoiceData
       });
-      
       if (error) throw error;
       if (!data?.success) throw new Error(data?.error || 'Failed to create invoice');
-      
       return data.invoice;
     },
     onSuccess: () => {
-      toast({ title: 'Success', description: 'Invoice created and linked to case' });
+      toast({
+        title: 'Success',
+        description: 'Invoice created and linked to case'
+      });
       setCreateDialogOpen(false);
-      queryClient.invalidateQueries({ queryKey: ['zoho-case-invoices', caseId] });
+      queryClient.invalidateQueries({
+        queryKey: ['zoho-case-invoices', caseId]
+      });
       setNewInvoice({
         customer_id: '',
         date: format(new Date(), 'yyyy-MM-dd'),
         due_date: format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
         payment_terms_label: 'Net 30',
         notes: '',
-        line_items: [],
+        line_items: []
       });
       setIsClientAutoSelected(false);
     },
     onError: (error: any) => {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive'
+      });
     }
   });
-
   const addLineItem = () => {
     setNewInvoice(prev => ({
       ...prev,
-      line_items: [...prev.line_items, { name: '', description: '', rate: 0, quantity: 1 }]
+      line_items: [...prev.line_items, {
+        name: '',
+        description: '',
+        rate: 0,
+        quantity: 1
+      }]
     }));
   };
-
   const removeLineItem = (index: number) => {
     setNewInvoice(prev => ({
       ...prev,
       line_items: prev.line_items.filter((_, i) => i !== index)
     }));
   };
-
   const updateLineItem = (index: number, field: keyof LineItem, value: any) => {
     setNewInvoice(prev => ({
       ...prev,
-      line_items: prev.line_items.map((item, i) => 
-        i === index ? { ...item, [field]: value } : item
-      )
+      line_items: prev.line_items.map((item, i) => i === index ? {
+        ...item,
+        [field]: value
+      } : item)
     }));
   };
-
   const handleCreateInvoice = () => {
     if (!newInvoice.customer_id || newInvoice.line_items.length === 0) {
-      toast({ title: 'Error', description: 'Please select customer and add line items', variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: 'Please select customer and add line items',
+        variant: 'destructive'
+      });
       return;
     }
 
@@ -182,43 +201,34 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({ caseId }) => {
       ...newInvoice,
       reference_number: `Case: ${caseData?.case_number || caseId}`,
       notes: `${newInvoice.notes}\n\nLinked to Case: ${caseData?.case_number || caseId}\nClient: ${caseData?.clients?.full_name || ''}`.trim(),
-      custom_fields: [
-        {
-          label: 'Case ID',
-          value: caseId
-        },
-        {
-          label: 'Case Number',
-          value: caseData?.case_number || ''
-        },
-        {
-          label: 'Client Name',
-          value: caseData?.clients?.full_name || ''
-        }
-      ]
+      custom_fields: [{
+        label: 'Case ID',
+        value: caseId
+      }, {
+        label: 'Case Number',
+        value: caseData?.case_number || ''
+      }, {
+        label: 'Client Name',
+        value: caseData?.clients?.full_name || ''
+      }]
     };
-
     createInvoiceMutation.mutate(invoiceData);
   };
-
   if (isLoading) {
     return <div className="p-6 flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin" /></div>;
   }
-
   const totalAmount = invoices?.reduce((sum: number, inv: any) => sum + Number(inv.total || 0), 0) || 0;
   const paidAmount = invoices?.filter((inv: any) => inv.status === 'paid').reduce((sum: number, inv: any) => sum + Number(inv.total || 0), 0) || 0;
   const pendingAmount = totalAmount - paidAmount;
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="text-xl font-semibold">Case Invoices</h3>
         </div>
         <Button onClick={() => {
-          setCreateDialogOpen(true);
-          setIsClientAutoSelected(false);
-        }}>
+        setCreateDialogOpen(true);
+        setIsClientAutoSelected(false);
+      }}>
           <Plus className="w-4 h-4 mr-2" />
           Create Invoice
         </Button>
@@ -243,8 +253,7 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({ caseId }) => {
         Showing invoices linked to this case
       </div>
 
-      {invoices && invoices.length > 0 ? (
-        <Card>
+      {invoices && invoices.length > 0 ? <Card>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-muted border-b">
@@ -259,8 +268,7 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({ caseId }) => {
                 </tr>
               </thead>
               <tbody>
-                {invoices.map((invoice: any) => (
-                  <tr key={invoice.invoice_id} className="border-b hover:bg-muted/50">
+                {invoices.map((invoice: any) => <tr key={invoice.invoice_id} className="border-b hover:bg-muted/50">
                     <td className="p-3 text-sm font-medium">{invoice.invoice_number}</td>
                     <td className="p-3 text-sm">{invoice.customer_name || '-'}</td>
                     <td className="p-3 text-sm">{format(new Date(invoice.date), 'dd/MM/yyyy')}</td>
@@ -276,17 +284,13 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({ caseId }) => {
                         <Eye className="w-4 h-4" />
                       </Button>
                     </td>
-                  </tr>
-                ))}
+                  </tr>)}
               </tbody>
             </table>
           </div>
-        </Card>
-      ) : (
-        <div className="text-center py-12 text-muted-foreground">
+        </Card> : <div className="text-center py-12 text-muted-foreground">
           <p>No invoices generated for this case</p>
-        </div>
-      )}
+        </div>}
 
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -299,7 +303,7 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({ caseId }) => {
           
           <div className="space-y-4 py-4">
             {/* Display Case and Client Info */}
-            <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+            <div className="p-4 rounded-lg space-y-2 bg-sky-100">
               <div>
                 <Label className="text-xs text-muted-foreground">Title</Label>
                 <p className="text-sm font-medium">{caseData?.title || 'Loading...'}</p>
@@ -313,19 +317,17 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({ caseId }) => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Invoice Date</Label>
-                <Input 
-                  type="date" 
-                  value={newInvoice.date}
-                  onChange={(e) => setNewInvoice(prev => ({ ...prev, date: e.target.value }))}
-                />
+                <Input type="date" value={newInvoice.date} onChange={e => setNewInvoice(prev => ({
+                ...prev,
+                date: e.target.value
+              }))} />
               </div>
               <div>
                 <Label>Due Date</Label>
-                <Input 
-                  type="date" 
-                  value={newInvoice.due_date}
-                  onChange={(e) => setNewInvoice(prev => ({ ...prev, due_date: e.target.value }))}
-                />
+                <Input type="date" value={newInvoice.due_date} onChange={e => setNewInvoice(prev => ({
+                ...prev,
+                due_date: e.target.value
+              }))} />
               </div>
             </div>
 
@@ -339,52 +341,30 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({ caseId }) => {
               </div>
 
               <div className="space-y-3">
-                {newInvoice.line_items.map((item, index) => (
-                  <div key={index} className="flex gap-2 items-start p-3 border rounded-lg">
+                {newInvoice.line_items.map((item, index) => <div key={index} className="flex gap-2 items-start p-3 border rounded-lg">
                     <div className="flex-1 space-y-2">
-                      <Input 
-                        placeholder="Item name"
-                        value={item.name}
-                        onChange={(e) => updateLineItem(index, 'name', e.target.value)}
-                      />
+                      <Input placeholder="Item name" value={item.name} onChange={e => updateLineItem(index, 'name', e.target.value)} />
                       <div className="grid grid-cols-3 gap-2">
-                        <Input 
-                          type="number"
-                          placeholder="Qty"
-                          value={item.quantity}
-                          onChange={(e) => updateLineItem(index, 'quantity', parseFloat(e.target.value))}
-                        />
-                        <Input 
-                          type="number"
-                          placeholder="Rate"
-                          value={item.rate}
-                          onChange={(e) => updateLineItem(index, 'rate', parseFloat(e.target.value))}
-                        />
+                        <Input type="number" placeholder="Qty" value={item.quantity} onChange={e => updateLineItem(index, 'quantity', parseFloat(e.target.value))} />
+                        <Input type="number" placeholder="Rate" value={item.rate} onChange={e => updateLineItem(index, 'rate', parseFloat(e.target.value))} />
                         <div className="flex items-center justify-center font-semibold">
                           ₹{(item.quantity * item.rate).toFixed(2)}
                         </div>
                       </div>
                     </div>
-                    <Button 
-                      type="button" 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={() => removeLineItem(index)}
-                    >
+                    <Button type="button" variant="ghost" size="icon" onClick={() => removeLineItem(index)}>
                       <Trash2 className="w-4 h-4" />
                     </Button>
-                  </div>
-                ))}
+                  </div>)}
               </div>
             </div>
 
             <div>
               <Label>Notes</Label>
-              <Textarea 
-                placeholder="Invoice notes..."
-                value={newInvoice.notes}
-                onChange={(e) => setNewInvoice(prev => ({ ...prev, notes: e.target.value }))}
-              />
+              <Textarea placeholder="Invoice notes..." value={newInvoice.notes} onChange={e => setNewInvoice(prev => ({
+              ...prev,
+              notes: e.target.value
+            }))} />
             </div>
           </div>
 
@@ -392,16 +372,12 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({ caseId }) => {
             <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
               Cancel
             </Button>
-            <Button 
-              onClick={handleCreateInvoice} 
-              disabled={createInvoiceMutation.isPending}
-            >
+            <Button onClick={handleCreateInvoice} disabled={createInvoiceMutation.isPending}>
               {createInvoiceMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Create Invoice
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>;
 };
