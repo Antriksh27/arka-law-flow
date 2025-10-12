@@ -76,7 +76,7 @@ serve(async (req) => {
       const zohoClientSecret = Deno.env.get('ZOHO_CLIENT_SECRET');
 
       const refreshResponse = await fetch(
-        "https://accounts.zoho.com/oauth/v2/token",
+        "https://accounts.zoho.in/oauth/v2/token",
         {
           method: "POST",
           headers: {
@@ -113,17 +113,33 @@ serve(async (req) => {
       console.log("Token refreshed successfully");
     }
 
-    // Fetch invoices from Zoho Books
-    const { organization_id } = await req.json();
+    // Get organization_id from token data or request body
+    let organizationId = tokenData.organization_id;
     
-    if (!organization_id) {
-      throw new Error("organization_id is required");
+    // If not stored, try to get from request body
+    if (!organizationId) {
+      const body = await req.json().catch(() => ({}));
+      organizationId = body.organization_id;
+    }
+    
+    if (!organizationId) {
+      return new Response(
+        JSON.stringify({ 
+          error: "organization_id is required. Please set your Zoho organization ID.",
+          needsOrgId: true,
+          connected: true
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      );
     }
 
     console.log("Fetching invoices from Zoho Books...");
     
     const invoicesResponse = await fetch(
-      `https://www.zohoapis.com/books/v3/invoices?organization_id=${organization_id}`,
+      `https://www.zohoapis.in/books/v3/invoices?organization_id=${organizationId}`,
       {
         headers: {
           "Authorization": `Zoho-oauthtoken ${accessToken}`,

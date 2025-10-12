@@ -3508,6 +3508,7 @@ export type Database = {
           expires_at: string
           firm_id: string
           id: string
+          organization_id: string | null
           refresh_token: string
           updated_at: string | null
           user_id: string
@@ -3518,6 +3519,7 @@ export type Database = {
           expires_at: string
           firm_id: string
           id?: string
+          organization_id?: string | null
           refresh_token: string
           updated_at?: string | null
           user_id: string
@@ -3528,6 +3530,7 @@ export type Database = {
           expires_at?: string
           firm_id?: string
           id?: string
+          organization_id?: string | null
           refresh_token?: string
           updated_at?: string | null
           user_id?: string

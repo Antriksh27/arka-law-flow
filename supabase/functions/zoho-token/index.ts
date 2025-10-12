@@ -118,16 +118,27 @@ serve(async (req) => {
 
     const refreshTokenToStore = tokenData.refresh_token || existingToken?.refresh_token;
 
+    // Get organization_id from request body if provided
+    const requestBody = await req.json().catch(() => ({}));
+    const organizationId = requestBody.organization_id;
+
     // Store tokens in database (upsert)
+    const upsertData: any = {
+      firm_id: teamMember.firm_id,
+      user_id: user.id,
+      access_token: tokenData.access_token,
+      refresh_token: refreshTokenToStore,
+      expires_at: expiresAt.toISOString(),
+    };
+
+    // Only include organization_id if provided
+    if (organizationId) {
+      upsertData.organization_id = organizationId;
+    }
+
     const { error: insertError } = await supabaseClient
       .from('zoho_tokens')
-      .upsert({
-        firm_id: teamMember.firm_id,
-        user_id: user.id,
-        access_token: tokenData.access_token,
-        refresh_token: refreshTokenToStore,
-        expires_at: expiresAt.toISOString(),
-      }, {
+      .upsert(upsertData, {
         onConflict: 'firm_id',
       });
 

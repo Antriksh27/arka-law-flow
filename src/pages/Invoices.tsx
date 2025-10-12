@@ -284,6 +284,8 @@ const Invoices: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string>('');
   const [organizationId, setOrganizationId] = useState('');
+  const [showOrgIdDialog, setShowOrgIdDialog] = useState(false);
+  const [tempOrgId, setTempOrgId] = useState('');
   
   const [filters, setFilters] = useState<FilterState>({
     searchQuery: '',
@@ -320,10 +322,13 @@ const Invoices: React.FC = () => {
     
     if (zohoStatus === 'success') {
       refetchZohoToken();
+      // Pre-fill with user's org ID
+      setTempOrgId('60028661228');
       toast({ 
         title: 'Success', 
-        description: 'Zoho Books connected successfully!' 
+        description: 'Zoho Books connected successfully! Please confirm your organization ID.' 
       });
+      setShowOrgIdDialog(true);
       // Clean URL
       navigate('/invoices', { replace: true });
     } else if (zohoStatus === 'error') {
@@ -337,6 +342,14 @@ const Invoices: React.FC = () => {
     }
   }, [location.search, refetchZohoToken, navigate]);
 
+  // Set organizationId from zohoToken
+  useEffect(() => {
+    if (zohoToken?.organization_id) {
+      setOrganizationId(zohoToken.organization_id);
+      setTempOrgId(zohoToken.organization_id);
+    }
+  }, [zohoToken]);
+
   const handleConnectZoho = () => {
     const zohoClientId = '1000.MC4YZPCGPZGGJ2J7BTJQZLURRPME6Z';
     const redirectUri = 'https://crm.hrulegal.com/zoho/callback';
@@ -346,6 +359,44 @@ const Invoices: React.FC = () => {
     
     // Redirect to Zoho OAuth
     window.location.href = authUrl;
+  };
+
+  const handleSaveOrgId = async () => {
+    if (!tempOrgId || !firmId) {
+      toast({ title: 'Error', description: 'Please enter a valid organization ID', variant: 'destructive' });
+      return;
+    }
+
+    const { error } = await supabase
+      .from('zoho_tokens')
+      .update({ organization_id: tempOrgId })
+      .eq('firm_id', firmId);
+
+    if (error) {
+      toast({ title: 'Error', description: 'Failed to save organization ID', variant: 'destructive' });
+      return;
+    }
+
+    setOrganizationId(tempOrgId);
+    setShowOrgIdDialog(false);
+    refetchZohoToken();
+    toast({ title: 'Success', description: 'Organization ID saved successfully!' });
+  };
+
+  const handleOrgIdChange = async (value: string) => {
+    setOrganizationId(value);
+    
+    // Auto-save to database if we have a firm ID and zoho token
+    if (firmId && zohoToken && value) {
+      const { error } = await supabase
+        .from('zoho_tokens')
+        .update({ organization_id: value })
+        .eq('firm_id', firmId);
+
+      if (!error) {
+        refetchZohoToken();
+      }
+    }
   };
 
   const { data: invoices, isLoading, error } = useQuery({
@@ -371,6 +422,12 @@ const Invoices: React.FC = () => {
       if (error) {
         console.error('Error fetching Zoho invoices:', error);
         toast({ title: 'Error', description: 'Failed to fetch Zoho invoices', variant: 'destructive' });
+        return null;
+      }
+
+      // Check if we need organization ID
+      if (data?.needsOrgId) {
+        setShowOrgIdDialog(true);
         return null;
       }
       
@@ -462,8 +519,8 @@ const Invoices: React.FC = () => {
                 id="org-id"
                 type="text"
                 value={organizationId}
-                onChange={(e) => setOrganizationId(e.target.value)}
-                placeholder="Enter your Zoho Books Organization ID"
+                onChange={(e) => handleOrgIdChange(e.target.value)}
+                placeholder="Enter your Zoho Books Organization ID (e.g., 60028661228)"
                 className="w-full"
               />
             </div>
@@ -600,6 +657,33 @@ const Invoices: React.FC = () => {
         invoiceId={selectedInvoiceId}
         invoiceNumber={invoices?.find(inv => inv.id === selectedInvoiceId)?.invoice_number}
       />
+
+      {/* Organization ID Dialog */}
+      {showOrgIdDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-2">Set Zoho Organization ID</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Please confirm your Zoho Books Organization ID to fetch invoices.
+            </p>
+            <Input
+              placeholder="60028661228"
+              value={tempOrgId}
+              onChange={(e) => setTempOrgId(e.target.value)}
+              className="mb-4"
+              autoFocus
+            />
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setShowOrgIdDialog(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveOrgId}>
+                Save
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>;
 };
 export default Invoices;
