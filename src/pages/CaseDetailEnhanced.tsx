@@ -161,12 +161,6 @@ export default function CaseDetailEnhanced() {
                     <div>
                       <span className="font-medium">Next Hearing:</span> {caseData.next_hearing_date ? format(new Date(caseData.next_hearing_date), 'dd/MM/yyyy') : 'N/A'}
                     </div>
-                    {mainContact && (
-                      <div>
-                        <span className="font-medium">Main Contact:</span> {mainContact.name}
-                        {mainContact.phone && <span className="ml-1">({mainContact.phone})</span>}
-                      </div>
-                    )}
                     {clientData && (
                       <div>
                         <span className="font-medium">Client:</span>{' '}
@@ -179,6 +173,12 @@ export default function CaseDetailEnhanced() {
                       </div>
                     )}
                   </div>
+                  {mainContact && (
+                    <div className="text-sm text-gray-600 mt-2">
+                      <span className="font-medium">Main Contact:</span> {mainContact.name}
+                      {mainContact.phone && <span className="ml-1">({mainContact.phone})</span>}
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="flex gap-2">
