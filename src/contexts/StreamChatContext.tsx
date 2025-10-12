@@ -45,7 +45,7 @@ export const StreamChatProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           throw new Error('No session found');
         }
 
-        const { data, error } = await supabase.functions.invoke('generate-stream-token', {
+        const { data, error } = await supabase.functions.invoke('stream-chat-token', {
           headers: {
             Authorization: `Bearer ${session.session.access_token}`,
           },
