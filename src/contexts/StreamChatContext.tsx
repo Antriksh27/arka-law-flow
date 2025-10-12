@@ -25,6 +25,7 @@ export const StreamChatProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   useEffect(() => {
     let chatClient: StreamChat | null = null;
+    let mounted = true;
 
     const initStreamChat = async () => {
       if (!user) {
@@ -33,6 +34,12 @@ export const StreamChatProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           setClient(null);
           setIsReady(false);
         }
+        return;
+      }
+
+      // Prevent duplicate initialization
+      if (client) {
+        console.log('Stream Chat already initialized');
         return;
       }
 
@@ -77,17 +84,33 @@ export const StreamChatProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           token
         );
 
+        if (!mounted) return;
+
         console.log('Stream Chat connected successfully for user:', user.id);
         setClient(chatClient);
         setIsReady(true);
 
       } catch (error: any) {
         console.error('Failed to initialize Stream Chat:', error);
-        toast({
-          title: 'Chat Connection Failed',
-          description: error.message || 'Failed to connect to chat service',
-          variant: 'destructive',
-        });
+        
+        // Check if it's a WebSocket connection error
+        const errorMessage = typeof error === 'object' && error.message 
+          ? error.message 
+          : JSON.stringify(error);
+        
+        if (errorMessage.includes('WS connection') || errorMessage.includes('isWSFailure')) {
+          toast({
+            title: 'Chat Service Unavailable',
+            description: 'Unable to connect to chat servers. Please verify your Stream Chat configuration.',
+            variant: 'destructive',
+          });
+        } else {
+          toast({
+            title: 'Chat Connection Failed',
+            description: 'Failed to connect to chat service',
+            variant: 'destructive',
+          });
+        }
         setIsReady(false);
       }
     };
@@ -95,11 +118,12 @@ export const StreamChatProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     initStreamChat();
 
     return () => {
+      mounted = false;
       if (chatClient) {
         chatClient.disconnectUser().catch(console.error);
       }
     };
-  }, [user]);
+  }, [user, client]);
 
   return (
     <StreamChatContext.Provider value={{ client, isReady }}>
