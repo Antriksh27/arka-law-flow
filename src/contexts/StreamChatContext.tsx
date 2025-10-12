@@ -16,7 +16,7 @@ const StreamChatContext = createContext<StreamChatContextType>({
 
 export const useStreamChat = () => useContext(StreamChatContext);
 
-const STREAM_API_KEY = 'fvtnet5pupyf';
+const STREAM_API_KEY = 'uxgcea9mfdcx';
 
 export const StreamChatProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
