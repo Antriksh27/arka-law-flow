@@ -40,7 +40,7 @@ export default function NotificationInbox({ userId }) {
           },
           elements: {
             bellIcon: {
-              color: 'rgb(17, 24, 39)',
+              color: 'rgb(255, 255, 255)',
             },
             notificationList: {
               backgroundColor: 'rgb(255, 255, 255)',
