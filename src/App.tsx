@@ -10,6 +10,7 @@ import { LawyerSelection } from './pages/LawyerSelection';
 import { Toaster } from './components/ui/toaster';
 import { BookRedirect } from './pages/BookRedirect';
 import CaseDetailEnhanced from './pages/CaseDetailEnhanced';
+import ChatbotDemo from './pages/ChatbotDemo';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,6 +35,9 @@ function App() {
               <Route path="/bk/:compact" element={<BookRedirect />} />
               <Route path="/book/:lawyerId" element={<BookingPage />} />
               <Route path="/book" element={<LawyerSelection />} />
+              
+              {/* Chatbot demo - public route */}
+              <Route path="/chatbot-demo" element={<ChatbotDemo />} />
               
               {/* Auth route */}
               <Route path="/auth" element={<Auth />} />
