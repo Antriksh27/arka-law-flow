@@ -77,7 +77,12 @@ const StreamChatPage: React.FC = () => {
     setIsCreatingChat(true);
     try {
       const members = [client.userID!, otherUserId].sort();
-      const channelId = `dm-${members.join('-')}`;
+      
+      // Create a shorter channel ID by hashing the user IDs (max 64 chars)
+      // Remove hyphens from UUIDs and concatenate: 32+32 = 64 chars total
+      const hash = members.map(id => id.replace(/-/g, '')).join('');
+      const channelId = hash.substring(0, 63); // Ensure under 64 char limit
+      
       const channel = client.channel('messaging', channelId, {
         members,
       });
