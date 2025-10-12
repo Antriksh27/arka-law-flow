@@ -352,7 +352,7 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
                 e.preventDefault();
                 handleSendMessage();
               }
-            }} placeholder="Type your message..." className="flex-1 border-border/50 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all resize-none bg-gray-50" />
+            }} placeholder="Type your message..." className="flex-1 border-border/50 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all resize-none bg-sky-100" />
                 <Button onClick={handleSendMessage} size="icon" className="rounded-full h-11 w-11 shadow-lg hover:shadow-xl transition-all disabled:opacity-50 bg-gradient-to-r from-primary to-primary/80" disabled={!inputValue.trim()}>
                   <Send className="h-4 w-4" />
                 </Button>
