@@ -12,6 +12,7 @@ import { toast } from '@/hooks/use-toast';
 import ChatList from './ui/ChatList';
 import { Channel } from 'stream-chat';
 import { StreamChat } from 'stream-chat';
+import { cn } from '@/lib/utils';
 interface TeamMember {
   user_id: string;
   full_name: string;
@@ -347,12 +348,14 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
             const isMe = message.user?.id === client.userID;
             const userName = message.user?.name || message.user?.id || 'Unknown';
             const userAvatar = message.user?.image || '';
-            return <ChatBubble key={message.id} variant={isMe ? 'sent' : 'received'}>
-                    {!isMe && <ChatBubbleAvatar src={userAvatar} fallback={getInitials(userName)} />}
-                    <ChatBubbleMessage variant={isMe ? 'sent' : 'received'} className={isMe ? 'bg-primary text-primary-foreground shadow-md' : 'bg-card border border-border/50 shadow-sm'}>
-                      {message.text}
-                    </ChatBubbleMessage>
-                  </ChatBubble>;
+            return <div key={message.id} className={cn("flex w-full", isMe ? "justify-end" : "justify-start")}>
+                    <ChatBubble variant={isMe ? 'sent' : 'received'} className="max-w-[70%]">
+                      {!isMe && <ChatBubbleAvatar src={userAvatar} fallback={getInitials(userName)} />}
+                      <ChatBubbleMessage variant={isMe ? 'sent' : 'received'} className={isMe ? 'bg-primary text-primary-foreground shadow-md' : 'bg-card border border-border/50 shadow-sm'}>
+                        {message.text}
+                      </ChatBubbleMessage>
+                    </ChatBubble>
+                  </div>;
           })}
             </ChatMessageList>
 
