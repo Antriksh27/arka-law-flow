@@ -88,13 +88,42 @@ export const ContactTab: React.FC<ContactTabProps> = ({ caseId }) => {
         .eq('id', contactId);
       
       if (error) throw error;
+      return { contactId, isMain };
+    },
+    onMutate: async ({ contactId, isMain }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['case-contacts', caseId] });
+      
+      // Snapshot the previous value
+      const previousContacts = queryClient.getQueryData(['case-contacts', caseId]);
+      
+      // Optimistically update to the new value
+      queryClient.setQueryData(['case-contacts', caseId], (old: any) => {
+        if (!old) return old;
+        return old.map((contact: any) => {
+          if (contact.id === contactId) {
+            return { ...contact, is_main: isMain };
+          }
+          // Unset is_main for other contacts when setting a new main
+          if (isMain) {
+            return { ...contact, is_main: false };
+          }
+          return contact;
+        });
+      });
+      
+      return { previousContacts };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['case-contacts', caseId] });
+      queryClient.invalidateQueries({ queryKey: ['main-contact', caseId] });
       queryClient.invalidateQueries({ queryKey: ['case', caseId] });
-      toast.success('Main contact updated successfully');
     },
-    onError: () => {
+    onError: (err, variables, context) => {
+      // Rollback on error
+      if (context?.previousContacts) {
+        queryClient.setQueryData(['case-contacts', caseId], context.previousContacts);
+      }
       toast.error('Failed to update main contact');
     }
   });
@@ -187,16 +216,19 @@ export const ContactTab: React.FC<ContactTabProps> = ({ caseId }) => {
             <div key={contact.id} className="bg-white border rounded-lg p-4">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3 flex-1">
-                  <div className="flex items-center">
+                  <div className="flex items-center shrink-0">
                     <Checkbox
-                      checked={contact.is_main || false}
+                      id={`contact-main-${contact.id}`}
+                      checked={contact.is_main === true}
                       onCheckedChange={(checked) => {
                         toggleMainContactMutation.mutate({ 
                           contactId: contact.id, 
-                          isMain: checked as boolean 
+                          isMain: checked === true 
                         });
                       }}
+                      disabled={toggleMainContactMutation.isPending}
                       className="mr-2"
+                      aria-label="Mark as main contact"
                     />
                     {contact.is_main && <Star className="w-4 h-4 text-yellow-500 fill-yellow-500 mr-1" />}
                   </div>
