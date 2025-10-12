@@ -123,7 +123,7 @@ export const StreamChatProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         chatClient.disconnectUser().catch(console.error);
       }
     };
-  }, [user, client]);
+  }, [user]);
 
   return (
     <StreamChatContext.Provider value={{ client, isReady }}>
