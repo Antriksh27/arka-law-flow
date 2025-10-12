@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Chat, Channel, ChannelHeader, MessageInput, MessageList, Thread, Window, ChannelList } from 'stream-chat-react';
 import { useStreamChat } from '@/contexts/StreamChatContext';
 import { MessageSquare, Users, Loader2 } from 'lucide-react';
@@ -125,16 +125,17 @@ const StreamChatPage: React.FC = () => {
     );
   }
 
-  const filters = { 
+  const userId = client.userID!;
+  const filters = useMemo(() => ({ 
     type: 'messaging',
-    members: { $in: [client.userID!] }
-  };
+    members: { $in: [userId] }
+  }), [userId]);
   
   const sort = { last_message_at: -1 as const };
 
   return (
     <div className="h-[calc(100vh-64px)] bg-background">
-      <Chat client={client} theme="str-chat__theme-light">
+      <Chat key={userId} client={client} theme="str-chat__theme-light">
         <div className="flex h-full">
           {/* Sidebar */}
           <div className="w-80 border-r border-border bg-card flex flex-col">
