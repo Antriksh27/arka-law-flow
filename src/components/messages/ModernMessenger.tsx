@@ -425,65 +425,67 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
                   
                   return (
                     <div key={message.id} className={spacingClass}>
-                      <div className={cn("flex items-end gap-3", isMe ? "flex-row-reverse" : "")}>
-                        {/* Avatar with animation */}
-                        <AnimatePresence mode="wait">
-                          {shouldShowAvatar ? (
-                            <motion.div
-                              key="avatar"
-                              initial={{ opacity: 0, scale: 0 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              exit={{ opacity: 0, scale: 0 }}
-                              transition={{ duration: 0.2 }}
-                            >
-                              <Avatar className="w-8 h-8 flex-shrink-0 border-[1.5px] border-white shadow-sm">
-                                <AvatarImage src={userAvatar} />
-                                <AvatarFallback className={isMe ? "bg-primary text-primary-foreground" : "bg-muted"}>
-                                  {getInitials(userName)}
-                                </AvatarFallback>
-                              </Avatar>
-                            </motion.div>
-                          ) : (
-                            <div className="w-8 h-8 flex-shrink-0" key="spacer" />
-                          )}
-                        </AnimatePresence>
-                        
-                        {/* Message content */}
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.9 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ duration: 0.35, ease: "easeOut" }}
-                          className="flex flex-col max-w-[70%]"
-                          style={{ alignItems: isMe ? 'flex-end' : 'flex-start' }}
-                        >
-                          {/* Username (only for first message in group) */}
-                          {!isContinuation && (
-                            <motion.div
-                              className="text-xs mb-1 px-1"
-                              style={{ color: 'hsl(var(--muted-foreground))' }}
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              transition={{ delay: 0.15, duration: 0.25 }}
-                            >
-                              {userName}
-                            </motion.div>
-                          )}
-                          
-                          {/* Message bubble */}
-                          <div
-                            className={cn(
-                              roundedClass,
-                              "p-4 border-solid shadow-sm",
-                              isMe 
-                                ? "bg-blue-50 text-gray-900 border border-blue-100" 
-                                : "bg-card text-card-foreground border border-border/50"
+                      <div className={cn("flex w-full", isMe ? "justify-end" : "justify-start")}>
+                        <div className={cn("flex items-end gap-3 max-w-[70%]", isMe ? "flex-row-reverse" : "")}>
+                          {/* Avatar with animation */}
+                          <AnimatePresence mode="wait">
+                            {shouldShowAvatar ? (
+                              <motion.div
+                                key="avatar"
+                                initial={{ opacity: 0, scale: 0 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0 }}
+                                transition={{ duration: 0.2 }}
+                              >
+                                <Avatar className="w-8 h-8 flex-shrink-0 border-[1.5px] border-white shadow-sm">
+                                  <AvatarImage src={userAvatar} />
+                                  <AvatarFallback className={isMe ? "bg-primary text-primary-foreground" : "bg-muted"}>
+                                    {getInitials(userName)}
+                                  </AvatarFallback>
+                                </Avatar>
+                              </motion.div>
+                            ) : (
+                              <div className="w-8 h-8 flex-shrink-0" key="spacer" />
                             )}
+                          </AnimatePresence>
+                          
+                          {/* Message content */}
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.35, ease: "easeOut" }}
+                            className="flex flex-col"
+                            style={{ alignItems: isMe ? 'flex-end' : 'flex-start' }}
                           >
-                            <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
-                              {message.text}
-                            </p>
-                          </div>
-                        </motion.div>
+                            {/* Username (only for first message in group) */}
+                            {!isContinuation && (
+                              <motion.div
+                                className="text-xs mb-1 px-1"
+                                style={{ color: 'hsl(var(--muted-foreground))' }}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ delay: 0.15, duration: 0.25 }}
+                              >
+                                {userName}
+                              </motion.div>
+                            )}
+                            
+                            {/* Message bubble */}
+                            <div
+                              className={cn(
+                                roundedClass,
+                                "p-4 border-solid shadow-sm",
+                                isMe 
+                                  ? "bg-blue-50 text-gray-900 border border-blue-100" 
+                                  : "bg-card text-card-foreground border border-border/50"
+                              )}
+                            >
+                              <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                                {message.text}
+                              </p>
+                            </div>
+                          </motion.div>
+                        </div>
                       </div>
                     </div>
                   );
