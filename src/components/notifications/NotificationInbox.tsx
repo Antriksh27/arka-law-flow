@@ -17,31 +17,36 @@ function NotificationInbox() {
   }
 
   return (
-    <Inbox
-      applicationIdentifier={applicationIdentifier}
-      subscriberId={user.id}
-      {...(backendUrl ? { backendUrl } : {})}
-      {...(socketUrl ? { socketUrl } : {})}
-      appearance={{
-        variables: {
-          colorPrimary: 'rgb(var(--primary))',
-          colorPrimaryForeground: 'rgb(var(--primary-foreground))',
-          colorSecondary: 'rgb(var(--secondary))',
-          colorSecondaryForeground: 'rgb(var(--secondary-foreground))',
-          colorCounter: 'rgb(var(--primary))',
-          colorCounterForeground: 'rgb(var(--primary-foreground))',
-          colorBackground: 'rgb(var(--card))',
-          colorForeground: 'rgb(var(--foreground))',
-          colorNeutral: 'rgb(var(--border))',
-          fontSize: '14px',
-        },
-        elements: {
-          bellIcon: {
-            color: 'rgb(var(--foreground))',
+    <div className="relative z-50" style={{ opacity: 1 }}>
+      <Inbox
+        applicationIdentifier={applicationIdentifier}
+        subscriberId={user.id}
+        {...(backendUrl ? { backendUrl } : {})}
+        {...(socketUrl ? { socketUrl } : {})}
+        appearance={{
+          variables: {
+            colorPrimary: 'rgb(37, 99, 235)',
+            colorPrimaryForeground: 'rgb(255, 255, 255)',
+            colorSecondary: 'rgb(219, 234, 254)',
+            colorSecondaryForeground: 'rgb(17, 24, 39)',
+            colorCounter: 'rgb(37, 99, 235)',
+            colorCounterForeground: 'rgb(255, 255, 255)',
+            colorBackground: 'rgb(255, 255, 255)',
+            colorForeground: 'rgb(17, 24, 39)',
+            colorNeutral: 'rgb(191, 219, 254)',
+            fontSize: '14px',
           },
-        },
-      }}
-    />
+          elements: {
+            bellIcon: {
+              color: 'rgb(17, 24, 39)',
+            },
+            notificationList: {
+              backgroundColor: 'rgb(255, 255, 255)',
+            },
+          },
+        }}
+      />
+    </div>
   );
 }
 
