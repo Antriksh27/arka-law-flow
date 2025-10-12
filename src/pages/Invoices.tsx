@@ -280,6 +280,7 @@ const Invoices: React.FC = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string>('');
+  const [organizationId, setOrganizationId] = useState('');
   
   const [filters, setFilters] = useState<FilterState>({
     searchQuery: '',
@@ -329,6 +330,25 @@ const Invoices: React.FC = () => {
     queryKey: ['cases', firmId],
     queryFn: () => fetchCases(firmId),
     enabled: !!firmId
+  });
+
+  const { data: zohoInvoices, isLoading: isLoadingZohoInvoices } = useQuery({
+    queryKey: ['zoho-invoices', organizationId],
+    queryFn: async () => {
+      if (!organizationId) return null;
+      const { data, error } = await supabase.functions.invoke('zoho-books-invoices', {
+        body: { organization_id: organizationId }
+      });
+      
+      if (error) {
+        console.error('Error fetching Zoho invoices:', error);
+        toast({ title: 'Error', description: 'Failed to fetch Zoho invoices', variant: 'destructive' });
+        return null;
+      }
+      
+      return data;
+    },
+    enabled: !!zohoToken && !!organizationId,
   });
 
   const handleRefresh = () => {
@@ -402,6 +422,78 @@ const Invoices: React.FC = () => {
       </div>
       {/* Stats Row (cards) */}
       <InvoiceStats firmId={firmId} />
+      {/* Zoho Organization ID Input */}
+      {zohoToken && (
+        <div className="bg-white border rounded-lg p-4 space-y-3">
+          <div className="flex items-center gap-4">
+            <div className="flex-1">
+              <label htmlFor="org-id" className="block text-sm font-medium mb-2">
+                Zoho Organization ID
+              </label>
+              <Input
+                id="org-id"
+                type="text"
+                value={organizationId}
+                onChange={(e) => setOrganizationId(e.target.value)}
+                placeholder="Enter your Zoho Books Organization ID"
+                className="w-full"
+              />
+            </div>
+            {organizationId && (
+              <div className="text-sm text-muted-foreground pt-6">
+                {isLoadingZohoInvoices ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Loading...</span>
+                  </div>
+                ) : (
+                  <span>{zohoInvoices?.invoices?.length || 0} Zoho invoices found</span>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Zoho Invoices Table */}
+      {zohoInvoices?.invoices && zohoInvoices.invoices.length > 0 && (
+        <div className="bg-white border rounded-lg overflow-hidden">
+          <div className="px-4 py-3 border-b bg-muted">
+            <h3 className="text-lg font-semibold">Zoho Books Invoices</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-muted border-b">
+                <tr>
+                  <th className="text-left p-3 text-sm font-semibold">Invoice #</th>
+                  <th className="text-left p-3 text-sm font-semibold">Customer</th>
+                  <th className="text-left p-3 text-sm font-semibold">Date</th>
+                  <th className="text-right p-3 text-sm font-semibold">Amount</th>
+                  <th className="text-left p-3 text-sm font-semibold">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {zohoInvoices.invoices.map((invoice: any) => (
+                  <tr key={invoice.invoice_id} className="border-b hover:bg-muted/50">
+                    <td className="p-3 text-sm font-medium">{invoice.invoice_number}</td>
+                    <td className="p-3 text-sm">{invoice.customer_name}</td>
+                    <td className="p-3 text-sm">{invoice.date}</td>
+                    <td className="p-3 text-sm text-right font-medium">
+                      {invoice.currency_symbol}{Number(invoice.total).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="p-3 text-sm">
+                      <Badge variant={invoice.status === 'paid' ? 'success' : 'outline'}>
+                        {invoice.status}
+                      </Badge>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+      
       {/* Filters/Search Bar */}
       <InvoiceToolbar 
         total={invoices?.length || 0} 
