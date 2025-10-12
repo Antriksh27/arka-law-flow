@@ -313,7 +313,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                 is_evidence: data.is_evidence,
                 uploaded_at: new Date().toISOString(),
                 firm_id: firmId,
-                folder_name: (!data.client_id && (!data.case_id || data.case_id === 'no-case')) ? 'General Documents' : null,
+                folder_name: (data.case_id && data.case_id !== 'no-case') ? caseName : 'General Documents',
                 document_type_id: null,
                 notes: data.notes || null,
                 confidential: data.confidential || false,
@@ -354,7 +354,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
               is_evidence: data.is_evidence,
               uploaded_at: new Date().toISOString(),
               firm_id: firmId,
-              folder_name: (!data.client_id && (!data.case_id || data.case_id === 'no-case')) ? 'General Documents' : null,
+              folder_name: (data.case_id && data.case_id !== 'no-case') ? caseName : 'General Documents',
               document_type_id: null, // Using new category/type system
               notes: data.notes || null,
               confidential: data.confidential || false,
