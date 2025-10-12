@@ -301,8 +301,8 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({ caseId }) => {
             {/* Display Case and Client Info */}
             <div className="bg-muted/50 p-4 rounded-lg space-y-2">
               <div>
-                <Label className="text-xs text-muted-foreground">Case</Label>
-                <p className="text-sm font-medium">{caseData?.case_number || caseData?.title || 'Loading...'}</p>
+                <Label className="text-xs text-muted-foreground">Title</Label>
+                <p className="text-sm font-medium">{caseData?.title || 'Loading...'}</p>
               </div>
               <div>
                 <Label className="text-xs text-muted-foreground">Client</Label>
