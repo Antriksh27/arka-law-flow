@@ -66,8 +66,6 @@ export const HearingDetailsModal: React.FC<HearingDetailsModalProps> = ({
           <div className="text-base text-[#111827] whitespace-pre-wrap">{hearing.purpose_of_hearing}</div>
         </div>}
 
-      {hearing.business_on_date}
-
       <div className="flex items-center gap-3 pt-4 border-t border-[#E5E7EB]">
         <Button onClick={handleViewCase} className="flex-1">
           View Case
