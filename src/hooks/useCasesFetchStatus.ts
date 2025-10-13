@@ -42,112 +42,72 @@ export const useCasesFetchStatus = () => {
       if (teamError) throw teamError;
       if (!teamMember) throw new Error("No firm found");
 
-      // Fetch all cases with CNR numbers
+      // Limit to 100 cases to prevent timeout - add pagination if needed
       const { data: cases, error: casesError } = await supabase
         .from("cases")
-        .select(`
-          id,
-          case_title,
-          cnr_number,
-          court_name,
-          court_type,
-          case_number,
-          created_at,
-          client_id,
-          firm_id,
-          clients(
-            id,
-            full_name
-          )
-        `)
+        .select("id, case_title, cnr_number, court_name, court_type, case_number, created_at, client_id, firm_id, clients(full_name)")
         .not("cnr_number", "is", null)
         .eq("firm_id", teamMember.firm_id)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(100);
 
       if (casesError) throw casesError;
 
       if (!cases || cases.length === 0) {
         return {
           cases: [],
-          counts: {
-            not_fetched: 0,
-            success: 0,
-            failed: 0,
-            pending: 0,
-            total: 0,
-          },
+          counts: { not_fetched: 0, success: 0, failed: 0, pending: 0, total: 0 },
         };
       }
 
-      // Get fetch history for all cases
-      const caseIds = cases.map((c) => c.id);
-      const { data: searches, error: searchesError } = await supabase
+      // Fetch latest search for each case efficiently
+      const { data: searches } = await supabase
         .from("legalkart_case_searches")
         .select("case_id, created_at, error_message, response_data")
-        .in("case_id", caseIds)
+        .in("case_id", cases.map(c => c.id))
         .order("created_at", { ascending: false });
 
-      if (searchesError) throw searchesError;
+      // Map latest search per case
+      const latestSearchMap = new Map();
+      searches?.forEach(s => {
+        if (!latestSearchMap.has(s.case_id)) latestSearchMap.set(s.case_id, s);
+      });
 
-      // Build lookup map for latest search per case
-      const latestSearchMap = new Map<string, any>();
-      if (searches) {
-        searches.forEach((search) => {
-          if (!latestSearchMap.has(search.case_id)) {
-            latestSearchMap.set(search.case_id, search);
-          }
-        });
-      }
-
-      // Build cases with fetch status
-      const casesWithStatus: CaseWithFetchStatus[] = cases.map((caseItem: any) => {
-        const latestSearch = latestSearchMap.get(caseItem.id);
+      const casesWithStatus: CaseWithFetchStatus[] = cases.map((c: any) => {
+        const search = latestSearchMap.get(c.id);
+        let status: CaseWithFetchStatus["fetch_status"] = "not_fetched";
         
-        let fetchStatus: CaseWithFetchStatus["fetch_status"] = "not_fetched";
-        let lastFetchedAt = null;
-        let errorMessage = null;
-
-        if (latestSearch) {
-          lastFetchedAt = latestSearch.created_at;
-          errorMessage = latestSearch.error_message;
-
-          if (latestSearch.error_message) {
-            fetchStatus = "failed";
-          } else if (latestSearch.response_data) {
-            fetchStatus = "success";
-          }
+        if (search) {
+          if (search.error_message) status = "failed";
+          else if (search.response_data) status = "success";
         }
 
         return {
-          id: caseItem.id,
-          case_title: caseItem.case_title,
-          cnr_number: caseItem.cnr_number,
-          court_name: caseItem.court_name,
-          court_type: caseItem.court_type,
-          case_number: caseItem.case_number,
-          created_at: caseItem.created_at,
-          client_id: caseItem.client_id,
-          client_name: caseItem.clients?.full_name || null,
-          firm_id: caseItem.firm_id,
-          fetch_status: fetchStatus,
-          last_fetched_at: lastFetchedAt,
-          error_message: errorMessage,
+          id: c.id,
+          case_title: c.case_title,
+          cnr_number: c.cnr_number,
+          court_name: c.court_name,
+          court_type: c.court_type,
+          case_number: c.case_number,
+          created_at: c.created_at,
+          client_id: c.client_id,
+          client_name: c.clients?.full_name || null,
+          firm_id: c.firm_id,
+          fetch_status: status,
+          last_fetched_at: search?.created_at || null,
+          error_message: search?.error_message || null,
         };
       });
 
-      // Calculate status counts
       const counts: StatusCounts = {
-        not_fetched: casesWithStatus.filter((c) => c.fetch_status === "not_fetched").length,
-        success: casesWithStatus.filter((c) => c.fetch_status === "success").length,
-        failed: casesWithStatus.filter((c) => c.fetch_status === "failed").length,
-        pending: casesWithStatus.filter((c) => c.fetch_status === "pending").length,
+        not_fetched: casesWithStatus.filter(c => c.fetch_status === "not_fetched").length,
+        success: casesWithStatus.filter(c => c.fetch_status === "success").length,
+        failed: casesWithStatus.filter(c => c.fetch_status === "failed").length,
+        pending: casesWithStatus.filter(c => c.fetch_status === "pending").length,
         total: casesWithStatus.length,
       };
 
-      return {
-        cases: casesWithStatus,
-        counts,
-      };
+      return { cases: casesWithStatus, counts };
     },
   });
 };
