@@ -198,7 +198,7 @@ export const useLegalkartCaseDetails = (caseId: string) => {
       console.log('Starting refresh for case:', caseId);
       const { data: caseData, error: caseError } = await supabase
         .from('cases')
-        .select('cnr_number, firm_id')
+        .select('cnr_number, firm_id, court_type')
         .eq('id', caseId)
         .single();
 
@@ -207,10 +207,23 @@ export const useLegalkartCaseDetails = (caseId: string) => {
         throw caseError;
       }
 
+      // Auto-select court type based on case.court_type
+      let searchType: 'high_court' | 'district_court' | 'supreme_court' = 'high_court';
+      if (caseData.court_type) {
+        const courtTypeStr = caseData.court_type.toLowerCase();
+        if (courtTypeStr.includes('supreme')) {
+          searchType = 'supreme_court';
+        } else if (courtTypeStr.includes('district')) {
+          searchType = 'district_court';
+        } else if (courtTypeStr.includes('high')) {
+          searchType = 'high_court';
+        }
+      }
+
       console.log('Invoking legalkart-api with:', {
         action: 'search',
         cnr: caseData.cnr_number,
-        searchType: 'high_court',
+        searchType,
         caseId,
         firmId: caseData.firm_id
       });
@@ -219,7 +232,7 @@ export const useLegalkartCaseDetails = (caseId: string) => {
         body: {
           action: 'search',
           cnr: caseData.cnr_number,
-          searchType: 'high_court',
+          searchType,
           caseId,
           firmId: caseData.firm_id
         }

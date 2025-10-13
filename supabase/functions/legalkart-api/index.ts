@@ -134,7 +134,7 @@ async function upsertCaseRelationalData(
         party: ia.party,
         date_of_filing: normalizeDate(ia.dateOfFiling),
         next_date: normalizeDate(ia.nextDate),
-        ia_status: ia.status,
+        ia_status: ia.iaStatus,
       }))
     );
     if (error) console.error('Error inserting IA details:', error);
@@ -581,6 +581,119 @@ serve(async (req) => {
         // Upsert relational data using helper function
         try {
           await upsertCaseRelationalData(supabase, effectiveCaseId, teamMember.firm_id, searchResult.data);
+          
+          // Also populate legalkart_* tables via RPC
+          console.log('📦 Calling upsert_legalkart_case_data RPC...');
+          const parsedData = parseECourtsData(searchResult.data);
+          const rd = searchResult.data?.data ?? searchResult.data ?? {};
+          
+          // Simple date normalizer for RPC calls
+          const normDate = (val: any): string | null => {
+            if (!val) return null;
+            const s = String(val).trim();
+            if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+            if (/^\d{4}-\d{2}-\d{2}T/.test(s)) return s.slice(0, 10);
+            const m = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})$/);
+            if (m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+            const d = new Date(s);
+            return !isNaN(d.getTime()) ? d.toISOString().slice(0,10) : null;
+          };
+          
+          // Prepare documents array
+          const documents = Array.isArray(rd?.documents) ? rd.documents : [];
+          const docsForRpc = documents.map((d: any) => ({
+            document_name: d.document_filed ?? null,
+            filed_by: d.filed_by ?? null,
+            filed_date: normDate(d.date_of_receiving),
+            document_type: d.document_type ?? null,
+            document_url: d.document_link || d.document_url || null
+          }));
+          
+          // Prepare objections array
+          const objections = Array.isArray(rd?.objections) ? rd.objections : [];
+          const objectionsForRpc = objections.map((o: any) => ({
+            objection_date: normDate(o.receipt_date || o.scrutiny_date),
+            objection_by: null,
+            objection_status: o.objection_compliance_date ? 'Complied' : 'Pending',
+            objection_details: o.objection ?? null
+          }));
+          
+          // Prepare orders array - merge final_orders, interim_orders, order_details
+          const finalOrders = Array.isArray(rd?.final_orders) ? rd.final_orders : [];
+          const interimOrders = Array.isArray(rd?.interim_orders) ? rd.interim_orders : [];
+          const orderDetails = Array.isArray(rd?.order_details) ? rd.order_details : [];
+          const allOrders = [...finalOrders, ...interimOrders, ...orderDetails];
+          const ordersForRpc = allOrders.map((o: any) => ({
+            order_date: normDate(o.order_date || o.date || o.hearing_date),
+            judge_name: o.judge || o.judge_name || null,
+            order_summary: o.summary || o.details || o.purpose_of_hearing || null,
+            order_link: o.order_link || o.pdf_url || o.pdf_link || null
+          }));
+          
+          // Prepare history array
+          const history = Array.isArray(rd?.case_history) 
+            ? rd.case_history 
+            : Array.isArray(rd?.history_of_case_hearing)
+            ? rd.history_of_case_hearing
+            : [];
+          const historyForRpc = history.map((h: any) => ({
+            hearing_date: normDate(h.hearing_date || h.date),
+            judge_name: h.judge || h.judge_name || null,
+            purpose: h.purpose_of_hearing || h.purpose || null,
+            business_on_date: h.business_on_date ?? null
+          }));
+          
+          // Prepare case data object
+          const caseDetails = rd.case_details || rd.case_info || {};
+          const caseStatus = rd.case_status || {};
+          const categoryInfo = rd.category_info || {};
+          const caseDataForRpc = {
+            filing_number: caseDetails.filing_number || rd.filing_number || null,
+            filing_date: normDate(caseDetails.filing_date || rd.filing_date),
+            registration_number: caseDetails.registration_number || rd.registration_number || null,
+            registration_date: normDate(caseDetails.registration_date || rd.registration_date),
+            cnr_number: mappedData.cnr_number || normalizedCnr,
+            case_type: mappedData.case_type || 'civil',
+            case_status: caseStatus.stage_of_case || rd.case_status || 'Active',
+            stage_of_case: caseStatus.stage_of_case || mappedData.stage || null,
+            next_hearing_date: normDate(caseStatus.next_hearing_date || rd.next_hearing_date),
+            coram: caseStatus.coram || rd.coram || null,
+            bench_type: caseStatus.bench_type || rd.bench_type || null,
+            judicial_branch: caseStatus.judicial_branch || rd.judicial_branch || null,
+            state: caseStatus.state || rd.state || null,
+            district: caseStatus.district || rd.district || null,
+            category: categoryInfo.category || rd.category || null,
+            sub_category: categoryInfo.sub_category || rd.sub_category || null,
+            petitioner_and_advocate: rd.petitioner_and_advocate || null,
+            respondent_and_advocate: rd.respondent_and_advocate || null,
+            acts: mappedData.acts || []
+          };
+          
+          const { data: legalkartCaseId, error: rpcError } = await supabase.rpc('upsert_legalkart_case_data', {
+            p_cnr_number: normalizedCnr,
+            p_firm_id: teamMember.firm_id,
+            p_case_id: effectiveCaseId,
+            p_case_data: caseDataForRpc,
+            p_documents: docsForRpc,
+            p_objections: objectionsForRpc,
+            p_orders: ordersForRpc,
+            p_history: historyForRpc,
+            p_petitioners: parsedData.petitioners.map(p => ({ name: p.name, advocate: p.advocate })),
+            p_respondents: parsedData.respondents.map(r => ({ name: r.name, advocate: r.advocate })),
+            p_ia_details: parsedData.iaDetails.map(ia => ({
+              ia_number: ia.iaNumber,
+              party: ia.party,
+              date_of_filing: normDate(ia.dateOfFiling),
+              next_date: normDate(ia.nextDate),
+              ia_status: ia.iaStatus
+            }))
+          });
+          
+          if (rpcError) {
+            console.error('❌ Error calling upsert_legalkart_case_data:', rpcError);
+          } else {
+            console.log('✅ Successfully populated legalkart_* tables. LegalKart case ID:', legalkartCaseId);
+          }
         } catch (upsertErr) {
           console.error('Failed to upsert case relational data:', upsertErr);
         }
