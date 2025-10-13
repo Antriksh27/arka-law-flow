@@ -22,26 +22,36 @@ export const CasesUploadSection = ({ onUploadComplete }: CasesUploadSectionProps
   const { toast } = useToast();
 
   const downloadTemplate = () => {
-    const template = [
-      {
-        case_title: "Example: ABC vs XYZ",
-        cnr_number: "ABCD12345678901234",
-        forum: "High Court",
-        client_name: "John Doe",
-        case_number: "123/2024",
-        description: "Sample case description"
-      }
-    ];
+    try {
+      const template = [
+        {
+          case_title: "Example: ABC vs XYZ",
+          cnr_number: "GJHC010012342025",
+          forum: "High Court",
+          client_name: "John Doe",
+          case_number: "123/2024",
+          description: "Sample case description"
+        }
+      ];
 
-    const ws = XLSX.utils.json_to_sheet(template);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Cases Template");
-    XLSX.writeFile(wb, "cases_upload_template.xlsx");
+      const ws = XLSX.utils.json_to_sheet(template);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Cases Template");
+      
+      // Use writeFile which handles browser downloads
+      XLSX.writeFile(wb, "cases_upload_template.xlsx", { bookType: 'xlsx' });
 
-    toast({
-      title: "Template downloaded",
-      description: "Fill in the template and upload it back. Forum must be: High Court, District Court, or Supreme Court",
-    });
+      toast({
+        title: "Template downloaded",
+        description: "Fill in the template. Forum must be: High Court, District Court, or Supreme Court",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Download failed",
+        description: error.message || "Could not download template",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
