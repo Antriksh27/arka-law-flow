@@ -86,50 +86,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     setLoading(true);
-    console.log('AuthContext: useEffect mounting. Checking initial session and subscribing to onAuthStateChange.');
+    console.log('AuthContext: useEffect mounting. Subscribing to onAuthStateChange and checking initial session.');
 
-    // Check for existing session first
-    const initializeAuth = async () => {
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
-      console.log('AuthContext: Initial session check:', !!currentSession);
-      
+    // 1) Subscribe to auth changes FIRST (sync callback only)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
+      console.log('AuthContext: onAuthStateChange event:', event, 'Session:', !!currentSession);
       setSession(currentSession);
       const currentUser = currentSession?.user ?? null;
       setUser(currentUser);
 
       if (currentUser) {
-        console.log(`AuthContext: User (id: ${currentUser.id}) present in initial check. Fetching firm_id and role.`);
-        await fetchFirmIdAndRole(currentUser.id);
-        initializeSessionSecurity();
+        // Defer additional Supabase calls to avoid deadlocks
+        setTimeout(async () => {
+          await fetchFirmIdAndRole(currentUser.id);
+          initializeSessionSecurity();
+        }, 0);
       } else {
         setFirmId(undefined);
         setRole(null);
         setFirmError(null);
       }
-      setLoading(false);
-    };
+    });
 
-    initializeAuth();
+    // 2) THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      console.log('AuthContext: Initial session check:', !!currentSession);
 
-    // Subscribe to auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
-        console.log('AuthContext: onAuthStateChange event:', event, 'Session:', !!currentSession);
-        setSession(currentSession);
-        const currentUser = currentSession?.user ?? null;
-        setUser(currentUser);
+      setSession(currentSession);
+      const currentUser = currentSession?.user ?? null;
+      setUser(currentUser);
 
-        if (currentUser) {
-          console.log(`AuthContext: User (id: ${currentUser.id}) present in onAuthStateChange. Fetching firm_id and role.`);
+      if (currentUser) {
+        // Defer fetch to avoid doing async work directly here
+        setTimeout(async () => {
           await fetchFirmIdAndRole(currentUser.id);
           initializeSessionSecurity();
-        } else {
-          setFirmId(undefined);
-          setRole(null);
-          setFirmError(null);
-        }
+        }, 0);
+      } else {
+        setFirmId(undefined);
+        setRole(null);
+        setFirmError(null);
       }
-    );
+
+      setLoading(false);
+    });
 
     return () => {
       console.log('AuthContext: useEffect unmounting. Unsubscribing from onAuthStateChange.');
