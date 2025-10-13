@@ -1067,12 +1067,25 @@ function mapLegalkartDataToCRM(data: any, searchType: string = 'unknown'): any {
   const parsePartyInfo = (partyStr: string): { name: string; advocate: string } => {
     if (!partyStr) return { name: '', advocate: '' };
     
-    // Handle format like "1) KOMALKANT FAKIRCHAND SHARMA Advocate- MR C B UPADHYAYA(3508)"
-    const parts = partyStr.split('Advocate-');
-    const name = parts[0]?.replace(/^\d+\)\s*/, '').trim() || '';
-    const advocate = parts[1]?.trim() || '';
+    // Remove numbering like "1)" or "2)"
+    let cleaned = partyStr.replace(/^\d+\)\s*/, '').trim();
     
-    return { name, advocate };
+    // Handle multiple advocate formats:
+    // "Advocate-", "Advocate -", "Advocate - ", "Advocate ("
+    const advocateMatch = cleaned.match(/^(.*?)\s+Advocate[\s\-\(]+(.*)$/i);
+    
+    if (advocateMatch) {
+      const name = advocateMatch[1].trim();
+      const advocate = advocateMatch[2]
+        .replace(/^\s*-\s*/, '') // Remove leading dash
+        .replace(/\(.*$/, '')     // Remove anything in parentheses
+        .replace(/\d+\).*$/, '')  // Remove trailing number references like "2)"
+        .trim();
+      return { name, advocate };
+    }
+    
+    // If no advocate pattern found, return the cleaned name
+    return { name: cleaned, advocate: '' };
   };
 
   // Extract data from nested Legalkart response structure
@@ -1127,8 +1140,19 @@ function mapLegalkartDataToCRM(data: any, searchType: string = 'unknown'): any {
   }
 
   // PARTY INFORMATION (8 fields) - Enhanced parsing from Legalkart format
-  const petitionerInfo = parsePartyInfo(data.data?.petitioner_and_advocate || data.petitioner_and_advocate || '');
-  const respondentInfo = parsePartyInfo(data.data?.respondent_and_advocate || data.respondent_and_advocate || '');
+  // First extract the first party from strings that may contain multiple parties
+  const extractFirstParty = (partyStr: string): string => {
+    if (!partyStr) return '';
+    // Split by patterns like "2)", "3)" to get only the first party
+    const firstPartyMatch = partyStr.match(/^(1\).+?)(?=\s*\d+\)|$)/);
+    return firstPartyMatch ? firstPartyMatch[1] : partyStr;
+  };
+  
+  const petitionerStr = data.data?.petitioner_and_advocate || data.petitioner_and_advocate || '';
+  const respondentStr = data.data?.respondent_and_advocate || data.respondent_and_advocate || '';
+  
+  const petitionerInfo = parsePartyInfo(extractFirstParty(petitionerStr));
+  const respondentInfo = parsePartyInfo(extractFirstParty(respondentStr));
 
   if (petitionerInfo.name) {
     mappedData.petitioner = cleanText(petitionerInfo.name);
@@ -1138,17 +1162,6 @@ function mapLegalkartDataToCRM(data: any, searchType: string = 'unknown'): any {
   if (respondentInfo.name) {
     mappedData.respondent = cleanText(respondentInfo.name);
     mappedData.respondent_advocate = cleanText(respondentInfo.advocate);
-  }
-
-  // Handle multiple respondents (format: "1) STATE OF GUJARAT ... 2) CENTRAL BUREAU ...")
-  const respondentAdvStr = data.data?.respondent_and_advocate || data.respondent_and_advocate || '';
-  if (respondentAdvStr.includes('2)')) {
-    const respondents = respondentAdvStr.split(/\d+\)/).filter(Boolean);
-    if (respondents.length > 1) {
-      const firstRespondent = parsePartyInfo(respondents[0]);
-      mappedData.respondent = cleanText(firstRespondent.name);
-      mappedData.respondent_advocate = cleanText(firstRespondent.advocate);
-    }
   }
 
   // Construct vs field intelligently
