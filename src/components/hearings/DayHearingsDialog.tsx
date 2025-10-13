@@ -48,9 +48,7 @@ export const DayHearingsDialog: React.FC<DayHearingsDialogProps> = ({
             {hearings.length} hearing{hearings.length !== 1 ? 's' : ''} scheduled
           </p>
         </div>
-        <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0">
-          <X className="h-4 w-4" />
-        </Button>
+        
       </div>
 
       <div className="space-y-3 max-h-[60vh] overflow-y-auto">
