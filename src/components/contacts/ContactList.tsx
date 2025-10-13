@@ -27,13 +27,11 @@ export const ContactList = () => {
   const { data: contacts = [], isLoading } = useQuery({
     queryKey: ['contacts', firmId, searchTerm],
     queryFn: async () => {
+      if (!firmId) return [];
+      
       let query = supabase
         .from('contacts')
-        .select(`
-          *,
-          states(name),
-          districts(name)
-        `)
+        .select('*')
         .eq('firm_id', firmId)
         .order('created_at', { ascending: false });
 
@@ -42,7 +40,10 @@ export const ContactList = () => {
       }
 
       const { data, error } = await query;
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching contacts:', error);
+        throw error;
+      }
       return data || [];
     },
     enabled: !!firmId,
