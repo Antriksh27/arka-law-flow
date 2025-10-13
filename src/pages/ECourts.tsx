@@ -50,17 +50,17 @@ export const ECourts = () => {
     }
   };
 
-  const detectCourtType = (cnr: string): string => {
-    if (!cnr) return "high_court";
-    const prefix = cnr.substring(0, 4).toUpperCase();
-    if (prefix.match(/^(GH|BH|KH|MH)/)) return "high_court";
-    if (prefix.match(/^SC/)) return "supreme_court";
-    return "district_court";
+  const mapCourtTypeToSearchType = (courtType: string): string => {
+    const courtLower = courtType.toLowerCase();
+    if (courtLower.includes("high")) return "high_court";
+    if (courtLower.includes("district")) return "district_court";
+    if (courtLower.includes("supreme")) return "supreme_court";
+    return "high_court"; // fallback
   };
 
-  const handleFetchCase = async (caseId: string, cnrNumber: string) => {
+  const handleFetchCase = async (caseId: string, cnrNumber: string, courtType: string) => {
     setIsFetchingCase(true);
-    const searchType = detectCourtType(cnrNumber);
+    const searchType = mapCourtTypeToSearchType(courtType);
 
     try {
       const response = await supabase.functions.invoke("legalkart-api", {
@@ -106,9 +106,9 @@ export const ECourts = () => {
       });
 
       try {
-        const searchType = detectCourtType(caseItem.cnr_number);
+        const searchType = mapCourtTypeToSearchType(caseItem.court_type || "");
         await supabase.functions.invoke("legalkart-api", {
-          body: { action: "search", cnr: caseItem.cnr_number, searchType, caseId: caseItem.id },
+          body: { action: "search", cnr: caseItem.cnr_number, searchType, caseId: caseItem.id, firmId: caseItem.firm_id },
         });
       } catch (error) {}
 

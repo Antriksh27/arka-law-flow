@@ -6,10 +6,12 @@ export interface CaseWithFetchStatus {
   case_title: string;
   cnr_number: string;
   court_name: string | null;
+  court_type: string | null;
   case_number: string | null;
   created_at: string;
   client_id: string | null;
   client_name: string | null;
+  firm_id: string;
   fetch_status: "not_fetched" | "success" | "failed" | "pending";
   last_fetched_at: string | null;
   error_message: string | null;
@@ -47,9 +49,11 @@ export const useCasesFetchStatus = () => {
           case_title,
           cnr_number,
           court_name,
+          court_type,
           case_number,
           created_at,
           client_id,
+          firm_id,
           clients(
             id,
             full_name
@@ -118,10 +122,12 @@ export const useCasesFetchStatus = () => {
           case_title: caseItem.case_title,
           cnr_number: caseItem.cnr_number,
           court_name: caseItem.court_name,
+          court_type: caseItem.court_type,
           case_number: caseItem.case_number,
           created_at: caseItem.created_at,
           client_id: caseItem.client_id,
           client_name: caseItem.clients?.full_name || null,
+          firm_id: caseItem.firm_id,
           fetch_status: fetchStatus,
           last_fetched_at: lastFetchedAt,
           error_message: errorMessage,

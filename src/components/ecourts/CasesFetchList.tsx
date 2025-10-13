@@ -29,7 +29,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 
 interface CasesFetchListProps {
-  onFetchCase: (caseId: string, cnrNumber: string, courtName: string) => void;
+  onFetchCase: (caseId: string, cnrNumber: string, courtType: string) => void;
   isFetching: boolean;
 }
 
@@ -145,7 +145,7 @@ export const CasesFetchList = ({ onFetchCase, isFetching }: CasesFetchListProps)
 
   const handleRetryFetch = (searchType: string) => {
     if (historyCase) {
-      onFetchCase(historyCase.id, historyCase.cnr_number, historyCase.court_name || "");
+      onFetchCase(historyCase.id, historyCase.cnr_number, historyCase.court_type || "");
       setHistoryCase(null);
     }
   };
@@ -321,7 +321,7 @@ export const CasesFetchList = ({ onFetchCase, isFetching }: CasesFetchListProps)
                               onFetchCase(
                                 caseItem.id,
                                 caseItem.cnr_number,
-                                caseItem.court_name || ""
+                                caseItem.court_type || ""
                               )
                             }
                             disabled={isFetching}

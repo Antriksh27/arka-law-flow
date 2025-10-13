@@ -26,7 +26,7 @@ export const CasesUploadSection = ({ onUploadComplete }: CasesUploadSectionProps
       {
         case_title: "Example: ABC vs XYZ",
         cnr_number: "ABCD12345678901234",
-        court_name: "Gujarat High Court",
+        forum: "High Court",
         client_name: "John Doe",
         case_number: "123/2024",
         description: "Sample case description"
@@ -40,7 +40,7 @@ export const CasesUploadSection = ({ onUploadComplete }: CasesUploadSectionProps
 
     toast({
       title: "Template downloaded",
-      description: "Fill in the template and upload it back",
+      description: "Fill in the template and upload it back. Forum must be: High Court, District Court, or Supreme Court",
     });
   };
 
@@ -93,8 +93,21 @@ export const CasesUploadSection = ({ onUploadComplete }: CasesUploadSectionProps
           if (!row.cnr_number) {
             throw new Error("Missing cnr_number");
           }
-          if (!row.court_name) {
-            throw new Error("Missing court_name");
+          if (!row.forum) {
+            throw new Error("Missing forum (court type)");
+          }
+
+          // Map forum to court_type for storage
+          const forumLower = row.forum.toLowerCase();
+          let courtType = "";
+          if (forumLower.includes("high")) {
+            courtType = "High Court";
+          } else if (forumLower.includes("district")) {
+            courtType = "District Court";
+          } else if (forumLower.includes("supreme")) {
+            courtType = "Supreme Court";
+          } else {
+            throw new Error("Invalid forum. Must be: High Court, District Court, or Supreme Court");
           }
 
           // Find matching client by name (case-insensitive)
@@ -113,7 +126,8 @@ export const CasesUploadSection = ({ onUploadComplete }: CasesUploadSectionProps
               title: row.case_title,
               case_title: row.case_title,
               cnr_number: row.cnr_number,
-              court_name: row.court_name,
+              court_type: courtType,
+              court_name: courtType,
               case_number: row.case_number || null,
               description: row.description || null,
               client_id: clientId,
@@ -169,7 +183,7 @@ export const CasesUploadSection = ({ onUploadComplete }: CasesUploadSectionProps
         <div>
           <h3 className="text-xl font-semibold mb-2">Upload Cases in Bulk</h3>
           <p className="text-sm text-muted-foreground">
-            Download the template, fill in case details (case_title, cnr_number, court_name, client_name, case_number, description), and upload.
+            Download the template, fill in: <strong>case_title</strong>, <strong>cnr_number</strong>, <strong>forum</strong> (High Court/District Court/Supreme Court), <strong>client_name</strong> (optional), case_number, description. Then upload.
           </p>
         </div>
 
