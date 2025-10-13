@@ -60,25 +60,20 @@ export const useCasesFetchStatus = () => {
       }
 
       // Fetch client names separately to avoid join overhead
-const clientIds = [...new Set(cases.map(c => c.client_id).filter(Boolean))];
-let clients: { id: string; full_name: string }[] | null = [];
-if (clientIds.length > 0) {
-  const { data: clientsData } = await supabase
-    .from("clients")
-    .select("id, full_name")
-    .in("id", clientIds);
-  clients = clientsData;
-}
+      const clientIds = [...new Set(cases.map(c => c.client_id).filter(Boolean))];
+      const { data: clients } = await supabase
+        .from("clients")
+        .select("id, full_name")
+        .in("id", clientIds);
       
       const clientMap = new Map(clients?.map(c => [c.id, c.full_name]) || []);
 
       // Fetch latest search for each case
-const { data: searches } = await supabase
-  .from("legalkart_case_searches")
-  .select("case_id, created_at, error_message, response_data, status")
-  .eq("firm_id", teamMember.firm_id)
-  .in("case_id", cases.map(c => c.id))
-  .order("created_at", { ascending: false });
+      const { data: searches } = await supabase
+        .from("legalkart_case_searches")
+        .select("case_id, created_at, error_message, response_data, status")
+        .in("case_id", cases.map(c => c.id))
+        .order("created_at", { ascending: false });
 
       // Map latest search per case
       const latestSearchMap = new Map();
@@ -88,13 +83,13 @@ const { data: searches } = await supabase
 
       const casesWithStatus: CaseWithFetchStatus[] = cases.map((c: any) => {
         const search = latestSearchMap.get(c.id);
-let status: CaseWithFetchStatus["fetch_status"] = "not_fetched";
+        let status: CaseWithFetchStatus["fetch_status"] = "not_fetched";
 
-if (search) {
-  if (search.status === "pending") status = "pending";
-  else if (search.error_message) status = "failed";
-  else if (search.response_data || search.status === "completed" || search.status === "success") status = "success";
-}
+        if (search) {
+          if (search.status === "pending") status = "pending";
+          else if (search.error_message) status = "failed";
+          else if (search.response_data || search.status === "completed" || search.status === "success") status = "success";
+        }
 
         return {
           id: c.id,
@@ -114,10 +109,10 @@ if (search) {
       });
 
       const counts: StatusCounts = {
-not_fetched: casesWithStatus.filter(c => c.fetch_status === "not_fetched").length,
-success: casesWithStatus.filter(c => c.fetch_status === "success").length,
-failed: casesWithStatus.filter(c => c.fetch_status === "failed").length,
-pending: casesWithStatus.filter(c => c.fetch_status === "pending").length,
+        not_fetched: casesWithStatus.filter(c => c.fetch_status === "not_fetched").length,
+        success: casesWithStatus.filter(c => c.fetch_status === "success").length,
+        failed: casesWithStatus.filter(c => c.fetch_status === "failed").length,
+        pending: casesWithStatus.filter(c => c.fetch_status === "pending").length,
         total: casesWithStatus.length,
       };
 
