@@ -8,19 +8,18 @@ import { Settings, Bell, Volume2, Monitor, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import NotificationSounds from '@/lib/notificationSounds';
 import BrowserNotifications from '@/lib/browserNotifications';
-
 export const NotificationSettings: React.FC = () => {
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const [isOpen, setIsOpen] = useState(false);
-  
+
   // Sound settings
   const [soundEnabled, setSoundEnabled] = useState(NotificationSounds.isAudioEnabled());
-  
+
   // Browser notification settings
   const [browserNotificationsSupported] = useState(BrowserNotifications.isNotificationSupported());
-  const [browserNotificationsEnabled, setBrowserNotificationsEnabled] = useState(
-    BrowserNotifications.getPermission() === 'granted'
-  );
+  const [browserNotificationsEnabled, setBrowserNotificationsEnabled] = useState(BrowserNotifications.getPermission() === 'granted');
 
   // Category preferences
   const [categoryPreferences, setCategoryPreferences] = useState({
@@ -31,7 +30,7 @@ export const NotificationSettings: React.FC = () => {
     document: true,
     invoice: true,
     message: true,
-    system: true,
+    system: true
   });
 
   // Load preferences from localStorage
@@ -56,18 +55,17 @@ export const NotificationSettings: React.FC = () => {
   const handleSoundToggle = async (enabled: boolean) => {
     setSoundEnabled(enabled);
     NotificationSounds.setEnabled(enabled);
-    
     if (enabled) {
       // Test sound when enabling
       await NotificationSounds.testSound();
       toast({
         title: 'Sound Enabled',
-        description: 'Notification sounds are now active',
+        description: 'Notification sounds are now active'
       });
     } else {
       toast({
         title: 'Sound Disabled',
-        description: 'Notification sounds are now muted',
+        description: 'Notification sounds are now muted'
       });
     }
   };
@@ -77,38 +75,39 @@ export const NotificationSettings: React.FC = () => {
     if (enabled) {
       const granted = await BrowserNotifications.requestPermission();
       setBrowserNotificationsEnabled(granted);
-      
       if (granted) {
         // Test notification
         await BrowserNotifications.test();
         toast({
           title: 'Browser Notifications Enabled',
-          description: 'You will now receive desktop notifications',
+          description: 'You will now receive desktop notifications'
         });
       } else {
         toast({
           title: 'Permission Denied',
           description: 'Please enable notifications in your browser settings',
-          variant: 'destructive',
+          variant: 'destructive'
         });
       }
     } else {
       setBrowserNotificationsEnabled(false);
       toast({
         title: 'Browser Notifications Disabled',
-        description: 'Desktop notifications are now off',
+        description: 'Desktop notifications are now off'
       });
     }
   };
 
   // Handle category toggle
   const handleCategoryToggle = (category: keyof typeof categoryPreferences, enabled: boolean) => {
-    const newPreferences = { ...categoryPreferences, [category]: enabled };
+    const newPreferences = {
+      ...categoryPreferences,
+      [category]: enabled
+    };
     savePreferences(newPreferences);
-    
     toast({
       title: enabled ? 'Category Enabled' : 'Category Disabled',
-      description: `${category.charAt(0).toUpperCase() + category.slice(1)} notifications ${enabled ? 'enabled' : 'disabled'}`,
+      description: `${category.charAt(0).toUpperCase() + category.slice(1)} notifications ${enabled ? 'enabled' : 'disabled'}`
     });
   };
 
@@ -116,7 +115,7 @@ export const NotificationSettings: React.FC = () => {
   const handleTestAllNotifications = async () => {
     toast({
       title: 'Testing Notifications',
-      description: 'Playing test sound and showing browser notification...',
+      description: 'Playing test sound and showing browser notification...'
     });
 
     // Test sound
@@ -129,13 +128,9 @@ export const NotificationSettings: React.FC = () => {
       await BrowserNotifications.test();
     }
   };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+  return <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" title="Notification Settings">
-          <Settings className="w-5 h-5" />
-        </Button>
+        
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
@@ -159,11 +154,7 @@ export const NotificationSettings: React.FC = () => {
                   Play audio alerts when you receive notifications
                 </p>
               </div>
-              <Switch
-                id="sound-enabled"
-                checked={soundEnabled}
-                onCheckedChange={handleSoundToggle}
-              />
+              <Switch id="sound-enabled" checked={soundEnabled} onCheckedChange={handleSoundToggle} />
             </div>
           </div>
 
@@ -175,25 +166,17 @@ export const NotificationSettings: React.FC = () => {
               <Monitor className="w-5 h-5 text-primary" />
               <h3 className="text-lg font-semibold">Browser Notifications</h3>
             </div>
-            {browserNotificationsSupported ? (
-              <div className="flex items-center justify-between">
+            {browserNotificationsSupported ? <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <Label htmlFor="browser-notifications">Enable desktop notifications</Label>
                   <p className="text-sm text-muted-foreground">
                     Show notifications even when the browser is in the background
                   </p>
                 </div>
-                <Switch
-                  id="browser-notifications"
-                  checked={browserNotificationsEnabled}
-                  onCheckedChange={handleBrowserNotificationsToggle}
-                />
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">
+                <Switch id="browser-notifications" checked={browserNotificationsEnabled} onCheckedChange={handleBrowserNotificationsToggle} />
+              </div> : <p className="text-sm text-muted-foreground">
                 Browser notifications are not supported in your browser
-              </p>
-            )}
+              </p>}
           </div>
 
           <Separator />
@@ -208,18 +191,12 @@ export const NotificationSettings: React.FC = () => {
               Choose which types of notifications you want to receive
             </p>
             <div className="grid grid-cols-2 gap-4">
-              {Object.entries(categoryPreferences).map(([category, enabled]) => (
-                <div key={category} className="flex items-center justify-between p-3 border rounded-lg">
+              {Object.entries(categoryPreferences).map(([category, enabled]) => <div key={category} className="flex items-center justify-between p-3 border rounded-lg">
                   <Label htmlFor={`category-${category}`} className="capitalize">
                     {category}
                   </Label>
-                  <Switch
-                    id={`category-${category}`}
-                    checked={enabled}
-                    onCheckedChange={(checked) => handleCategoryToggle(category as keyof typeof categoryPreferences, checked)}
-                  />
-                </div>
-              ))}
+                  <Switch id={`category-${category}`} checked={enabled} onCheckedChange={checked => handleCategoryToggle(category as keyof typeof categoryPreferences, checked)} />
+                </div>)}
             </div>
           </div>
 
@@ -234,8 +211,6 @@ export const NotificationSettings: React.FC = () => {
           </div>
         </div>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 };
-
 export default NotificationSettings;
