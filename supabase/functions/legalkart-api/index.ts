@@ -961,18 +961,22 @@ function mapLegalkartDataToCRM(data: any, searchType: string = 'unknown'): any {
   const iaDetails = data.data?.ia_details || data.ia_details || [];
 
   // BASIC CASE INFORMATION (15 fields)
-  mappedData.cnr_number = cleanText(caseInfo.cnr_number || data.cnr_number || data.cnr || data.CNR);
-  mappedData.case_number = cleanText(caseInfo.filing_number || data.case_number || data.filing_number || data.case_no);
-  mappedData.filing_number = cleanText(caseInfo.filing_number || data.filing_number || data.filing_no);
-  mappedData.registration_number = cleanText(caseInfo.registration_number || data.registration_number || data.reg_no);
-  mappedData.docket_number = cleanText(data.docket_number || data.docket_no);
+  mappedData.cnr_number = cleanText(caseInfo.cnr_number || data.data?.cnr_number || data.cnr_number || data.cnr || data.CNR);
+  mappedData.case_number = cleanText(caseInfo.filing_number || data.data?.filing_number || data.case_number || data.filing_number || data.case_no);
+  mappedData.filing_number = cleanText(caseInfo.filing_number || data.data?.filing_number || data.filing_number || data.filing_no);
+  mappedData.registration_number = cleanText(caseInfo.registration_number || data.data?.registration_number || data.registration_number || data.reg_no);
+  mappedData.docket_number = cleanText(data.data?.docket_number || data.docket_number || data.docket_no);
   
   // Case title derivation - intelligent construction
   mappedData.case_title = cleanText(
     data.case_title || 
+    data.data?.case_title ||
     data.title || 
+    data.data?.title ||
     data.matter_title ||
+    data.data?.matter_title ||
     (data.petitioner && data.respondent ? `${data.petitioner} vs ${data.respondent}` : null) ||
+    (data.data?.petitioner && data.data?.respondent ? `${data.data.petitioner} vs ${data.data.respondent}` : null) ||
     `Case ${mappedData.case_number || mappedData.cnr_number || 'Unknown'}`
   );
 
