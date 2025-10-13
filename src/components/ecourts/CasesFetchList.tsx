@@ -41,11 +41,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 interface CasesFetchListProps {
   onFetchCase: (caseId: string, cnrNumber: string, courtType: string) => void;
   isFetching: boolean;
+  selectedCases: Set<string>;
+  onSelectedCasesChange: (selected: Set<string>) => void;
 }
 
-export const CasesFetchList = ({ onFetchCase, isFetching }: CasesFetchListProps) => {
+export const CasesFetchList = ({ onFetchCase, isFetching, selectedCases, onSelectedCasesChange }: CasesFetchListProps) => {
   const { data, isLoading } = useCasesFetchStatus();
-  const [selectedCases, setSelectedCases] = useState<Set<string>>(new Set());
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [courtFilter, setCourtFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -116,9 +117,9 @@ export const CasesFetchList = ({ onFetchCase, isFetching }: CasesFetchListProps)
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedCases(new Set(filteredCases.map((c) => c.id)));
+      onSelectedCasesChange(new Set(filteredCases.map((c) => c.id)));
     } else {
-      setSelectedCases(new Set());
+      onSelectedCasesChange(new Set());
     }
   };
 
@@ -129,7 +130,7 @@ export const CasesFetchList = ({ onFetchCase, isFetching }: CasesFetchListProps)
     } else {
       newSelected.delete(caseId);
     }
-    setSelectedCases(newSelected);
+    onSelectedCasesChange(newSelected);
   };
 
   const handleCopy = (text: string) => {
@@ -177,7 +178,7 @@ export const CasesFetchList = ({ onFetchCase, isFetching }: CasesFetchListProps)
         title: "Cases deleted",
         description: `${selectedCases.size} case(s) deleted successfully`,
       });
-      setSelectedCases(new Set());
+      onSelectedCasesChange(new Set());
       setShowDeleteDialog(false);
     },
     onError: (error: any) => {

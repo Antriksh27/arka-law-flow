@@ -21,6 +21,7 @@ export const ECourts = () => {
   const [showJsonDialog, setShowJsonDialog] = useState(false);
   const [isFetchingCase, setIsFetchingCase] = useState(false);
   const [shouldCancelFetch, setShouldCancelFetch] = useState(false);
+  const [selectedCases, setSelectedCases] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -127,6 +128,44 @@ export const ECourts = () => {
     setShouldCancelFetch(true);
   };
 
+  const handleFetchSelected = async () => {
+    const selectedCasesList = casesData?.cases.filter((c) => selectedCases.has(c.id)) || [];
+    if (selectedCasesList.length === 0) return;
+
+    setIsFetchingCase(true);
+    setShouldCancelFetch(false);
+
+    for (let i = 0; i < selectedCasesList.length; i++) {
+      if (shouldCancelFetch) {
+        toast({ title: "Fetch cancelled", description: `Stopped at ${i} of ${selectedCasesList.length}` });
+        break;
+      }
+
+      const caseItem = selectedCasesList[i];
+      toast({
+        title: "Fetching selected cases...",
+        description: `Processing ${i + 1} of ${selectedCasesList.length}`,
+      });
+
+      try {
+        const searchType = mapCourtTypeToSearchType(caseItem.court_type || "");
+        await supabase.functions.invoke("legalkart-api", {
+          body: { action: "search", cnr: caseItem.cnr_number, searchType, caseId: caseItem.id, firmId: caseItem.firm_id },
+        });
+      } catch (error) {}
+
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+
+    setIsFetchingCase(false);
+    setShouldCancelFetch(false);
+    setSelectedCases(new Set());
+    queryClient.invalidateQueries({ queryKey: ["cases-fetch-status"] });
+    if (!shouldCancelFetch) {
+      toast({ title: "Selected cases fetch complete" });
+    }
+  };
+
   return (
     <div className="min-h-screen p-6 space-y-6">
       <div>
@@ -147,6 +186,12 @@ export const ECourts = () => {
                 {shouldCancelFetch ? "Cancelling..." : "Stop Fetch"}
               </Button>
             )}
+            {selectedCases.size > 0 && (
+              <Button onClick={handleFetchSelected} disabled={isFetchingCase}>
+                {isFetchingCase ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                Fetch Selected ({selectedCases.size})
+              </Button>
+            )}
             <Button onClick={handleFetchAllUnfetched} disabled={isFetchingCase || !casesData?.counts.not_fetched}>
               {isFetchingCase ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
               Fetch All Unfetched ({casesData?.counts.not_fetched || 0})
@@ -154,7 +199,12 @@ export const ECourts = () => {
           </div>
         </div>
 
-        <CasesFetchList onFetchCase={handleFetchCase} isFetching={isFetchingCase} />
+        <CasesFetchList 
+          onFetchCase={handleFetchCase} 
+          isFetching={isFetchingCase}
+          selectedCases={selectedCases}
+          onSelectedCasesChange={setSelectedCases}
+        />
       </div>
 
       <Separator />
