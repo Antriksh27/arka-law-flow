@@ -26,7 +26,7 @@ export const ECourts = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { firmId } = useAuth();
-  const { data: casesData } = useCasesFetchStatus();
+  const { data: casesData } = useCasesFetchStatus(1, 100);
 
   const { data: legalkartCases, refetch } = useQuery({
     queryKey: ['legalkart-case-searches', firmId],

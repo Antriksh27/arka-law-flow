@@ -25,9 +25,9 @@ export interface StatusCounts {
   total: number;
 }
 
-export const useCasesFetchStatus = () => {
+export const useCasesFetchStatus = (page: number = 1, pageSize: number = 100) => {
   return useQuery({
-    queryKey: ["cases-fetch-status"],
+    queryKey: ["cases-fetch-status", page, pageSize],
     queryFn: async () => {
       // Get current user's firm
       const { data: { user } } = await supabase.auth.getUser();
@@ -42,20 +42,64 @@ export const useCasesFetchStatus = () => {
       if (teamError) throw teamError;
       if (!teamMember) throw new Error("No firm found");
 
-      // Fetch all cases with CNR numbers
+      // Get total count and status counts across all cases
+      const { count: totalCount } = await supabase
+        .from("cases")
+        .select("*", { count: 'exact', head: true })
+        .not("cnr_number", "is", null)
+        .eq("firm_id", teamMember.firm_id);
+
+      // Get counts for each status
+      const { count: notFetchedCount } = await supabase
+        .from("cases")
+        .select("*", { count: 'exact', head: true })
+        .not("cnr_number", "is", null)
+        .eq("firm_id", teamMember.firm_id)
+        .or("fetch_status.is.null,fetch_status.eq.not_fetched");
+
+      const { count: successCount } = await supabase
+        .from("cases")
+        .select("*", { count: 'exact', head: true })
+        .not("cnr_number", "is", null)
+        .eq("firm_id", teamMember.firm_id)
+        .or("fetch_status.eq.success,fetch_status.eq.completed,last_fetched_at.not.is.null");
+
+      const { count: failedCount } = await supabase
+        .from("cases")
+        .select("*", { count: 'exact', head: true })
+        .not("cnr_number", "is", null)
+        .eq("firm_id", teamMember.firm_id)
+        .eq("fetch_status", "failed");
+
+      const { count: pendingCount } = await supabase
+        .from("cases")
+        .select("*", { count: 'exact', head: true })
+        .not("cnr_number", "is", null)
+        .eq("firm_id", teamMember.firm_id)
+        .eq("fetch_status", "pending");
+
+      // Fetch paginated cases with CNR numbers
+      const offset = (page - 1) * pageSize;
       const { data: cases, error: casesError } = await supabase
         .from("cases")
         .select("id, case_title, cnr_number, court_name, court_type, case_number, created_at, client_id, firm_id, fetch_status, last_fetched_at, fetch_message, fetched_data")
         .not("cnr_number", "is", null)
         .eq("firm_id", teamMember.firm_id)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .range(offset, offset + pageSize - 1);
 
       if (casesError) throw casesError;
 
       if (!cases || cases.length === 0) {
         return {
           cases: [],
-          counts: { not_fetched: 0, success: 0, failed: 0, pending: 0, total: 0 },
+          counts: { not_fetched: 0, success: 0, failed: 0, pending: 0, total: totalCount || 0 },
+          pagination: {
+            page,
+            pageSize,
+            totalPages: Math.ceil((totalCount || 0) / pageSize),
+            totalCount: totalCount || 0
+          }
         };
       }
 
@@ -94,14 +138,23 @@ export const useCasesFetchStatus = () => {
       });
 
       const counts: StatusCounts = {
-        not_fetched: casesWithStatus.filter(c => c.fetch_status === "not_fetched").length,
-        success: casesWithStatus.filter(c => c.fetch_status === "success").length,
-        failed: casesWithStatus.filter(c => c.fetch_status === "failed").length,
-        pending: casesWithStatus.filter(c => c.fetch_status === "pending").length,
-        total: casesWithStatus.length,
+        not_fetched: notFetchedCount || 0,
+        success: successCount || 0,
+        failed: failedCount || 0,
+        pending: pendingCount || 0,
+        total: totalCount || 0,
       };
 
-      return { cases: casesWithStatus, counts };
+      return { 
+        cases: casesWithStatus, 
+        counts,
+        pagination: {
+          page,
+          pageSize,
+          totalPages: Math.ceil((totalCount || 0) / pageSize),
+          totalCount: totalCount || 0
+        }
+      };
     },
   });
 };

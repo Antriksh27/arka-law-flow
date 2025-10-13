@@ -46,7 +46,8 @@ interface CasesFetchListProps {
 }
 
 export const CasesFetchList = ({ onFetchCase, isFetching, selectedCases, onSelectedCasesChange }: CasesFetchListProps) => {
-  const { data, isLoading } = useCasesFetchStatus();
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useCasesFetchStatus(page, 100);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [courtFilter, setCourtFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -80,6 +81,12 @@ export const CasesFetchList = ({ onFetchCase, isFetching, selectedCases, onSelec
     failed: 0,
     pending: 0,
     total: 0,
+  };
+  const pagination = data?.pagination || {
+    page: 1,
+    pageSize: 100,
+    totalPages: 0,
+    totalCount: 0
   };
 
   // Get unique court names for filter
@@ -144,15 +151,15 @@ export const CasesFetchList = ({ onFetchCase, isFetching, selectedCases, onSelec
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "not_fetched":
-        return <Badge variant="default">Not Fetched</Badge>;
+        return <Badge variant="outline">Not Fetched</Badge>;
       case "success":
-        return <Badge variant="success">Success</Badge>;
+        return <Badge className="bg-green-100 text-green-700 border-green-200">Success</Badge>;
       case "failed":
-        return <Badge variant="error">Failed</Badge>;
+        return <Badge className="bg-red-100 text-red-700 border-red-200">Failed</Badge>;
       case "pending":
-        return <Badge variant="warning">Pending</Badge>;
+        return <Badge className="bg-yellow-100 text-yellow-700 border-yellow-200">Pending</Badge>;
       default:
-        return <Badge variant="default">{status}</Badge>;
+        return <Badge variant="outline">{status}</Badge>;
     }
   };
 
@@ -300,6 +307,73 @@ export const CasesFetchList = ({ onFetchCase, isFetching, selectedCases, onSelec
               </SelectContent>
             </Select>
           </div>
+
+          {/* Pagination Controls */}
+          {pagination.totalPages > 1 && (
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-muted-foreground">
+                Showing {((page - 1) * pagination.pageSize) + 1} to {Math.min(page * pagination.pageSize, pagination.totalCount)} of {pagination.totalCount} cases
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setPage(1)}
+                  disabled={page === 1}
+                >
+                  First
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setPage(page - 1)}
+                  disabled={page === 1}
+                >
+                  Previous
+                </Button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (pagination.totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (page <= 3) {
+                      pageNum = i + 1;
+                    } else if (page >= pagination.totalPages - 2) {
+                      pageNum = pagination.totalPages - 4 + i;
+                    } else {
+                      pageNum = page - 2 + i;
+                    }
+                    return (
+                      <Button
+                        key={pageNum}
+                        size="sm"
+                        variant={page === pageNum ? "default" : "outline"}
+                        onClick={() => setPage(pageNum)}
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  })}
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setPage(page + 1)}
+                  disabled={page === pagination.totalPages}
+                >
+                  Next
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setPage(pagination.totalPages)}
+                  disabled={page === pagination.totalPages}
+                >
+                  Last
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Table */}
           <div className="border rounded-lg">
