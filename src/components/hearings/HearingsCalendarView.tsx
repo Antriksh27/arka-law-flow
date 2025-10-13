@@ -8,6 +8,7 @@ import { FilterState } from './types';
 import { format, parseISO, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
 import { useDialog } from '@/hooks/use-dialog';
 import { HearingDetailsModal } from './HearingDetailsModal';
+import { DayHearingsDialog } from './DayHearingsDialog';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { CalendarIcon, ArrowRight } from 'lucide-react';
@@ -178,6 +179,22 @@ export const HearingsCalendarView: React.FC<HearingsCalendarViewProps> = ({ filt
     openDialog(<HearingDetailsModal hearing={event.resource} />);
   };
 
+  const handleSelectSlot = (slotInfo: { start: Date; end: Date }) => {
+    const selectedDate = slotInfo.start;
+    const dayHearings = hearings?.filter(h => {
+      const hearingDate = parseISO(h.hearing_date);
+      return format(hearingDate, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd');
+    }) || [];
+
+    openDialog(
+      <DayHearingsDialog
+        selectedDate={selectedDate}
+        hearings={dayHearings}
+        onClose={() => {}}
+      />
+    );
+  };
+
   const handleGoToToday = () => {
     setDate(new Date());
   };
@@ -240,6 +257,8 @@ export const HearingsCalendarView: React.FC<HearingsCalendarViewProps> = ({ filt
           endAccessor="end"
           style={{ height: '100%' }}
           onSelectEvent={handleSelectEvent}
+          onSelectSlot={handleSelectSlot}
+          selectable
           eventPropGetter={eventStyleGetter}
           view={view}
           onView={setView}
