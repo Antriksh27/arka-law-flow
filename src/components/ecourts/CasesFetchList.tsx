@@ -18,15 +18,25 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Copy, Download, History, Loader2, Search } from "lucide-react";
+import { Copy, Download, History, Loader2, Search, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CaseWithFetchStatus, useCasesFetchStatus } from "@/hooks/useCasesFetchStatus";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { FetchHistoryModal } from "./FetchHistoryModal";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface CasesFetchListProps {
   onFetchCase: (caseId: string, cnrNumber: string, courtType: string) => void;
@@ -40,8 +50,10 @@ export const CasesFetchList = ({ onFetchCase, isFetching }: CasesFetchListProps)
   const [courtFilter, setCourtFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [historyCase, setHistoryCase] = useState<CaseWithFetchStatus | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   // Fetch history for the selected case
   const { data: historyData } = useQuery({
@@ -150,6 +162,41 @@ export const CasesFetchList = ({ onFetchCase, isFetching }: CasesFetchListProps)
     }
   };
 
+  const deleteCasesMutation = useMutation({
+    mutationFn: async (caseIds: string[]) => {
+      const { error } = await supabase
+        .from("cases")
+        .delete()
+        .in("id", caseIds);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cases-fetch-status"] });
+      toast({
+        title: "Cases deleted",
+        description: `${selectedCases.size} case(s) deleted successfully`,
+      });
+      setSelectedCases(new Set());
+      setShowDeleteDialog(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete cases",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDeleteSelected = () => {
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = () => {
+    deleteCasesMutation.mutate(Array.from(selectedCases));
+  };
+
   if (isLoading) {
     return (
       <Card className="p-6">
@@ -183,8 +230,23 @@ export const CasesFetchList = ({ onFetchCase, isFetching }: CasesFetchListProps)
               </div>
             </div>
             {selectedCases.size > 0 && (
-              <div className="text-sm text-muted-foreground">
-                {selectedCases.size} selected
+              <div className="flex items-center gap-3">
+                <div className="text-sm text-muted-foreground">
+                  {selectedCases.size} selected
+                </div>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleDeleteSelected}
+                  disabled={deleteCasesMutation.isPending}
+                >
+                  {deleteCasesMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : (
+                    <Trash2 className="h-4 w-4 mr-2" />
+                  )}
+                  Delete Selected
+                </Button>
               </div>
             )}
           </div>
@@ -359,6 +421,26 @@ export const CasesFetchList = ({ onFetchCase, isFetching }: CasesFetchListProps)
           onRetry={handleRetryFetch}
         />
       )}
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Cases</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete {selectedCases.size} case(s)? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };
