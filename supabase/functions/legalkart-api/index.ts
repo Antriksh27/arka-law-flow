@@ -1091,19 +1091,6 @@ function mapLegalkartDataToCRM(data: any, searchType: string = 'unknown'): any {
   mappedData.filing_number = cleanText(caseInfo.filing_number || data.data?.filing_number || data.filing_number || data.filing_no);
   mappedData.registration_number = cleanText(caseInfo.registration_number || data.data?.registration_number || data.registration_number || data.reg_no);
   mappedData.docket_number = cleanText(data.data?.docket_number || data.docket_number || data.docket_no);
-  
-  // Case title derivation - intelligent construction
-  mappedData.case_title = cleanText(
-    data.case_title || 
-    data.data?.case_title ||
-    data.title || 
-    data.data?.title ||
-    data.matter_title ||
-    data.data?.matter_title ||
-    (data.petitioner && data.respondent ? `${data.petitioner} vs ${data.respondent}` : null) ||
-    (data.data?.petitioner && data.data?.respondent ? `${data.data.petitioner} vs ${data.data.respondent}` : null) ||
-    `Case ${mappedData.case_number || mappedData.cnr_number || 'Unknown'}`
-  );
 
   mappedData.description = cleanText(data.description || data.case_summary || data.nature_of_case);
   mappedData.case_summary = cleanText(data.case_summary || data.summary);
@@ -1168,6 +1155,21 @@ function mapLegalkartDataToCRM(data: any, searchType: string = 'unknown'): any {
   if (mappedData.petitioner && mappedData.respondent) {
     mappedData.vs = `${mappedData.petitioner} vs ${mappedData.respondent}`;
   }
+  
+  // Case title derivation - intelligent construction AFTER parsing parties
+  // Format: "FirstPetitioner Vs FirstRespondent"
+  mappedData.case_title = cleanText(
+    data.case_title || 
+    data.data?.case_title ||
+    data.title || 
+    data.data?.title ||
+    data.matter_title ||
+    data.data?.matter_title ||
+    (mappedData.petitioner && mappedData.respondent ? `${mappedData.petitioner} Vs ${mappedData.respondent}` : null) ||
+    (data.petitioner && data.respondent ? `${data.petitioner} Vs ${data.respondent}` : null) ||
+    (data.data?.petitioner && data.data?.respondent ? `${data.data.petitioner} Vs ${data.data.respondent}` : null) ||
+    `Case ${mappedData.case_number || mappedData.cnr_number || 'Unknown'}`
+  );
   
   // Primary advocate selection
   mappedData.advocate_name = cleanText(
