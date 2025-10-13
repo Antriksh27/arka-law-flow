@@ -183,15 +183,46 @@ export const CasesTable: React.FC<CasesTableProps> = ({
       for (let i = 0; i < caseIds.length; i += batchSize) {
         const batch = caseIds.slice(i, i + batchSize);
         
-        // First delete related documents
-        const { error: docsError } = await supabase
-          .from("documents")
-          .delete()
-          .in("case_id", batch);
+        // Delete all related records first
+        for (const caseId of batch) {
+          // Delete documents
+          await supabase.from("documents").delete().eq("case_id", caseId);
+          
+          // Delete case activities
+          await supabase.from("case_activities").delete().eq("case_id", caseId);
+          
+          // Delete case contacts
+          await supabase.from("case_contacts").delete().eq("case_id", caseId);
+          
+          // Delete case documents
+          await supabase.from("case_documents").delete().eq("case_id", caseId);
+          
+          // Delete case hearings
+          await supabase.from("case_hearings").delete().eq("case_id", caseId);
+          
+          // Delete case notes
+          await supabase.from("case_notes").delete().eq("case_id", caseId);
+          
+          // Delete case objections
+          await supabase.from("case_objections").delete().eq("case_id", caseId);
+          
+          // Delete case orders
+          await supabase.from("case_orders").delete().eq("case_id", caseId);
+          
+          // Delete case relations
+          await supabase.from("case_relations").delete().eq("case_id", caseId);
+          
+          // Delete hearings
+          await supabase.from("hearings").delete().eq("case_id", caseId);
+          
+          // Delete tasks
+          await supabase.from("tasks").delete().eq("case_id", caseId);
+          
+          // Delete appointments
+          await supabase.from("appointments").delete().eq("case_id", caseId);
+        }
         
-        if (docsError) throw docsError;
-        
-        // Then delete the cases
+        // Finally delete the cases
         const { error } = await supabase
           .from("cases")
           .delete()
