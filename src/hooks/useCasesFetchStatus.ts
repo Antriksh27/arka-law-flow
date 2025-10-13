@@ -33,12 +33,13 @@ export const useCasesFetchStatus = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      const { data: teamMember } = await supabase
+      const { data: teamMember, error: teamError } = await supabase
         .from("team_members")
         .select("firm_id")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
+      if (teamError) throw teamError;
       if (!teamMember) throw new Error("No firm found");
 
       // Fetch all cases with CNR numbers

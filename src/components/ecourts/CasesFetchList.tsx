@@ -165,12 +165,22 @@ export const CasesFetchList = ({ onFetchCase, isFetching, selectedCases, onSelec
 
   const deleteCasesMutation = useMutation({
     mutationFn: async (caseIds: string[]) => {
-      const { data, error } = await supabase.rpc('delete_cases_and_dependencies', {
-        p_case_ids: caseIds
-      });
+      // Delete related records first
+      const { error: searchesError } = await supabase
+        .from('legalkart_case_searches')
+        .delete()
+        .in('case_id', caseIds);
       
-      if (error) throw error;
-      return data;
+      if (searchesError) throw searchesError;
+
+      // Then delete the cases
+      const { error: casesError } = await supabase
+        .from('cases')
+        .delete()
+        .in('id', caseIds);
+      
+      if (casesError) throw casesError;
+      return true;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cases-fetch-status"] });
