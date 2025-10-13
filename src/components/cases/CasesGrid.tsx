@@ -110,12 +110,17 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
 
   const deleteCasesMutation = useMutation({
     mutationFn: async (caseIds: string[]) => {
-      const { error } = await supabase
-        .from("cases")
-        .delete()
-        .in("id", caseIds);
-      
-      if (error) throw error;
+      // Delete in batches of 50 to avoid URL length limits
+      const batchSize = 50;
+      for (let i = 0; i < caseIds.length; i += batchSize) {
+        const batch = caseIds.slice(i, i + batchSize);
+        const { error } = await supabase
+          .from("cases")
+          .delete()
+          .in("id", batch);
+        
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cases"] });
