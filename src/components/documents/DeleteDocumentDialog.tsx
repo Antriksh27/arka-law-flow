@@ -95,11 +95,10 @@ export const DeleteDocumentDialog: React.FC<DeleteDocumentDialogProps> = ({
         // Continue with database deletion even if storage fails
       }
 
-      // Delete document record from database
-      const { error: dbError } = await supabase
-        .from('documents')
-        .delete()
-        .eq('id', document.id);
+      // Delete document record from database using secure function
+      const { error: dbError } = await supabase.rpc('delete_document_secure', {
+        p_document_id: document.id
+      });
 
       if (dbError) throw dbError;
 
