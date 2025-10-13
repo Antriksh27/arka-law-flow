@@ -42,13 +42,14 @@ export const useCasesFetchStatus = () => {
       if (teamError) throw teamError;
       if (!teamMember) throw new Error("No firm found");
 
-      // Fetch all cases with CNR numbers - no limit
+      // Fetch cases with CNR numbers with limit
       const { data: cases, error: casesError } = await supabase
         .from("cases")
         .select("id, case_title, cnr_number, court_name, court_type, case_number, created_at, client_id, firm_id, fetch_status, last_fetched_at, fetch_message, fetched_data")
         .not("cnr_number", "is", null)
         .eq("firm_id", teamMember.firm_id)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(100);
 
       if (casesError) throw casesError;
 
