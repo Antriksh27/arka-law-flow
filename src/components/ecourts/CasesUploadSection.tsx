@@ -29,7 +29,6 @@ export const CasesUploadSection = ({ onUploadComplete }: CasesUploadSectionProps
         court_name: "Gujarat High Court",
         client_name: "John Doe",
         case_number: "123/2024",
-        filing_date: "2024-01-15",
         description: "Sample case description"
       }
     ];
@@ -116,7 +115,6 @@ export const CasesUploadSection = ({ onUploadComplete }: CasesUploadSectionProps
               cnr_number: row.cnr_number,
               court_name: row.court_name,
               case_number: row.case_number || null,
-              filing_date: row.filing_date || null,
               description: row.description || null,
               client_id: clientId,
               firm_id: teamMember.firm_id,
@@ -171,7 +169,7 @@ export const CasesUploadSection = ({ onUploadComplete }: CasesUploadSectionProps
         <div>
           <h3 className="text-xl font-semibold mb-2">Upload Cases in Bulk</h3>
           <p className="text-sm text-muted-foreground">
-            Download the template, fill in your case details, and upload to add multiple cases at once.
+            Download the template, fill in case details (case_title, cnr_number, court_name, client_name, case_number, description), and upload.
           </p>
         </div>
 
