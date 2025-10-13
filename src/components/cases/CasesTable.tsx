@@ -71,7 +71,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
         profiles!created_by(full_name)
       `).order('created_at', {
         ascending: false
-      }).limit(100);
+      });
 
       // Apply role-based filtering
       if (!isAdminOrLawyer) {

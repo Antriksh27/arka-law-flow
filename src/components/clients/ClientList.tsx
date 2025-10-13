@@ -61,8 +61,7 @@ export const ClientList = () => {
         let { data, error } = await supabase
           .from('client_stats')
           .select('*')
-          .order('created_at', { ascending: false })
-          .limit(100);
+          .order('created_at', { ascending: false });
 
         if (error) {
           console.log('client_stats view failed, trying clients table:', error);
@@ -70,8 +69,7 @@ export const ClientList = () => {
           const { data: clientData, error: clientError } = await supabase
             .from('clients')
             .select('*')
-            .order('created_at', { ascending: false })
-            .limit(100);
+            .order('created_at', { ascending: false });
           
           if (clientError) throw clientError;
           
