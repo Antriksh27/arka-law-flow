@@ -38,9 +38,9 @@ export const HearingsCalendarView: React.FC<HearingsCalendarViewProps> = ({ filt
         .select(`
           *,
           cases!inner(
-            title,
-            case_title, 
+            case_title,
             case_number,
+            registration_number,
             court_name,
             client_id,
             clients(full_name)
@@ -150,7 +150,7 @@ export const HearingsCalendarView: React.FC<HearingsCalendarViewProps> = ({ filt
         const endTime = new Date(startTime.getTime() + 60 * 60 * 1000);
 
         return {
-          title: hearing.cases?.title || hearing.cases?.case_title || 'Untitled Case',
+          title: hearing.cases?.case_title || 'Untitled Case',
           start: startTime,
           end: endTime,
           resource: hearing,
