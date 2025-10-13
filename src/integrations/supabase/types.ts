@@ -3818,6 +3818,14 @@ export type Database = {
         Args: { p_other_user_id: string }
         Returns: string
       }
+      delete_cases_and_dependencies: {
+        Args: { p_case_ids: string[] }
+        Returns: Json
+      }
+      delete_document_secure: {
+        Args: { p_document_id: string }
+        Returns: undefined
+      }
       get_all_lawyers_and_admin: {
         Args: Record<PropertyKey, never>
         Returns: {
