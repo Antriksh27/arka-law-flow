@@ -50,7 +50,7 @@ export const useCasesFetchStatus = () => {
           case_number,
           created_at,
           client_id,
-          clients!inner(
+          clients(
             id,
             full_name
           )
