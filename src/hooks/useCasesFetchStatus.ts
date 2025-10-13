@@ -42,14 +42,13 @@ export const useCasesFetchStatus = () => {
       if (teamError) throw teamError;
       if (!teamMember) throw new Error("No firm found");
 
-      // Limit to 100 cases to prevent timeout - add pagination if needed
+      // Fetch all cases with CNR numbers - no limit
       const { data: cases, error: casesError } = await supabase
         .from("cases")
-        .select("id, case_title, cnr_number, court_name, court_type, case_number, created_at, client_id, firm_id, clients(full_name)")
+        .select("id, case_title, cnr_number, court_name, court_type, case_number, created_at, client_id, firm_id")
         .not("cnr_number", "is", null)
         .eq("firm_id", teamMember.firm_id)
-        .order("created_at", { ascending: false })
-        .limit(100);
+        .order("created_at", { ascending: false });
 
       if (casesError) throw casesError;
 
@@ -60,7 +59,16 @@ export const useCasesFetchStatus = () => {
         };
       }
 
-      // Fetch latest search for each case efficiently
+      // Fetch client names separately to avoid join overhead
+      const clientIds = [...new Set(cases.map(c => c.client_id).filter(Boolean))];
+      const { data: clients } = await supabase
+        .from("clients")
+        .select("id, full_name")
+        .in("id", clientIds);
+      
+      const clientMap = new Map(clients?.map(c => [c.id, c.full_name]) || []);
+
+      // Fetch latest search for each case
       const { data: searches } = await supabase
         .from("legalkart_case_searches")
         .select("case_id, created_at, error_message, response_data")
@@ -91,7 +99,7 @@ export const useCasesFetchStatus = () => {
           case_number: c.case_number,
           created_at: c.created_at,
           client_id: c.client_id,
-          client_name: c.clients?.full_name || null,
+          client_name: c.client_id ? (clientMap.get(c.client_id) || null) : null,
           firm_id: c.firm_id,
           fetch_status: status,
           last_fetched_at: search?.created_at || null,
