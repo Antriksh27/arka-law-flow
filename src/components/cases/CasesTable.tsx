@@ -50,25 +50,21 @@ export const CasesTable: React.FC<CasesTableProps> = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      // Get user's role and firm membership
-      const { data: userProfile } = await supabase
-        .from('profiles')
-        .select(`
-          role,
-          law_firm_members(role, law_firm_id)
-        `)
-        .eq('id', user.id)
+      // Get user's role and firm membership from team_members
+      const { data: teamMember } = await supabase
+        .from('team_members')
+        .select('role, firm_id')
+        .eq('user_id', user.id)
         .single();
 
-      // Check if user is admin, lawyer, or office staff (can see all firm cases)
-      const isAdminOrLawyer = userProfile?.role === 'admin' || 
-                              userProfile?.role === 'lawyer' || 
-                              userProfile?.role === 'partner' ||
-                              userProfile?.role === 'associate' ||
-                              userProfile?.role === 'junior' ||
-                              userProfile?.role === 'office_staff';
+      console.log('Team member data:', teamMember);
 
-      console.log('Fetching cases for user:', user.id);
+      // Check if user is admin, lawyer, or office staff (can see all firm cases)
+      const isAdminOrLawyer = teamMember?.role === 'admin' || 
+                              teamMember?.role === 'lawyer' || 
+                              teamMember?.role === 'office_staff';
+
+      console.log('Fetching cases for user:', user.id, 'isAdminOrLawyer:', isAdminOrLawyer);
       let query = supabase.from('cases').select(`
         *,
         clients!client_id(full_name),
