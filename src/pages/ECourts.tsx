@@ -20,6 +20,7 @@ export const ECourts = () => {
   const [selectedCase, setSelectedCase] = useState<any>(null);
   const [showJsonDialog, setShowJsonDialog] = useState(false);
   const [isFetchingCase, setIsFetchingCase] = useState(false);
+  const [shouldCancelFetch, setShouldCancelFetch] = useState(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -90,8 +91,14 @@ export const ECourts = () => {
     if (unfetchedCases.length === 0) return;
 
     setIsFetchingCase(true);
+    setShouldCancelFetch(false);
 
     for (let i = 0; i < unfetchedCases.length; i++) {
+      if (shouldCancelFetch) {
+        toast({ title: "Fetch cancelled", description: `Stopped at ${i} of ${unfetchedCases.length}` });
+        break;
+      }
+
       const caseItem = unfetchedCases[i];
       toast({
         title: "Fetching cases...",
@@ -109,8 +116,15 @@ export const ECourts = () => {
     }
 
     setIsFetchingCase(false);
+    setShouldCancelFetch(false);
     queryClient.invalidateQueries({ queryKey: ["cases-fetch-status"] });
-    toast({ title: "Bulk fetch complete" });
+    if (!shouldCancelFetch) {
+      toast({ title: "Bulk fetch complete" });
+    }
+  };
+
+  const handleCancelFetch = () => {
+    setShouldCancelFetch(true);
   };
 
   return (
@@ -127,10 +141,17 @@ export const ECourts = () => {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-semibold">Manage Case Fetches</h2>
-          <Button onClick={handleFetchAllUnfetched} disabled={isFetchingCase || !casesData?.counts.not_fetched}>
-            {isFetchingCase ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
-            Fetch All Unfetched ({casesData?.counts.not_fetched || 0})
-          </Button>
+          <div className="flex gap-2">
+            {isFetchingCase && (
+              <Button onClick={handleCancelFetch} variant="destructive" disabled={shouldCancelFetch}>
+                {shouldCancelFetch ? "Cancelling..." : "Stop Fetch"}
+              </Button>
+            )}
+            <Button onClick={handleFetchAllUnfetched} disabled={isFetchingCase || !casesData?.counts.not_fetched}>
+              {isFetchingCase ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+              Fetch All Unfetched ({casesData?.counts.not_fetched || 0})
+            </Button>
+          </div>
         </div>
 
         <CasesFetchList onFetchCase={handleFetchCase} isFetching={isFetchingCase} />
