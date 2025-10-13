@@ -116,9 +116,6 @@ export const HearingsTimeline: React.FC<HearingsTimelineProps> = ({
                         </div>}
                     </div>
 
-                    {hearing.business_on_date && <div className="w-full p-3 bg-gray-50 rounded-lg">
-                        
-                      </div>}
                   </div>
                 </div>)}
             </div>
