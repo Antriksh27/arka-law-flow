@@ -182,6 +182,16 @@ export const CasesTable: React.FC<CasesTableProps> = ({
       const batchSize = 50;
       for (let i = 0; i < caseIds.length; i += batchSize) {
         const batch = caseIds.slice(i, i + batchSize);
+        
+        // First delete related documents
+        const { error: docsError } = await supabase
+          .from("documents")
+          .delete()
+          .in("case_id", batch);
+        
+        if (docsError) throw docsError;
+        
+        // Then delete the cases
         const { error } = await supabase
           .from("cases")
           .delete()
