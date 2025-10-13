@@ -86,10 +86,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     setLoading(true);
-    console.log('AuthContext: useEffect mounting. Subscribing to onAuthStateChange.');
+    console.log('AuthContext: useEffect mounting. Checking initial session and subscribing to onAuthStateChange.');
 
+    // Check for existing session first
+    const initializeAuth = async () => {
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      console.log('AuthContext: Initial session check:', !!currentSession);
+      
+      setSession(currentSession);
+      const currentUser = currentSession?.user ?? null;
+      setUser(currentUser);
+
+      if (currentUser) {
+        console.log(`AuthContext: User (id: ${currentUser.id}) present in initial check. Fetching firm_id and role.`);
+        await fetchFirmIdAndRole(currentUser.id);
+        initializeSessionSecurity();
+      } else {
+        setFirmId(undefined);
+        setRole(null);
+        setFirmError(null);
+      }
+      setLoading(false);
+    };
+
+    initializeAuth();
+
+    // Subscribe to auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
+      async (event, currentSession) => {
         console.log('AuthContext: onAuthStateChange event:', event, 'Session:', !!currentSession);
         setSession(currentSession);
         const currentUser = currentSession?.user ?? null;
@@ -97,17 +121,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (currentUser) {
           console.log(`AuthContext: User (id: ${currentUser.id}) present in onAuthStateChange. Fetching firm_id and role.`);
-          setTimeout(async () => {
-            await fetchFirmIdAndRole(currentUser.id);
-            // Initialize session security for authenticated users
-            initializeSessionSecurity();
-            setLoading(false);
-          }, 0);
+          await fetchFirmIdAndRole(currentUser.id);
+          initializeSessionSecurity();
         } else {
           setFirmId(undefined);
           setRole(null);
           setFirmError(null);
-          setLoading(false);
         }
       }
     );
