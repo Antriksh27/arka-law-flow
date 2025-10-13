@@ -1,9 +1,23 @@
 
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { CaseCard } from './CaseCard';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Trash2, Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface CasesGridProps {
   searchQuery: string;
@@ -18,6 +32,11 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
   typeFilter,
   assignedFilter
 }) => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [selectedCases, setSelectedCases] = useState<Set<string>>(new Set());
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  
   const { data: cases, isLoading } = useQuery({
     queryKey: ['cases', searchQuery, statusFilter, typeFilter, assignedFilter],
     queryFn: async () => {
@@ -71,6 +90,59 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
     }
   });
 
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedCases(new Set(cases?.map(c => c.id) || []));
+    } else {
+      setSelectedCases(new Set());
+    }
+  };
+
+  const handleSelectCase = (caseId: string, checked: boolean) => {
+    const newSelected = new Set(selectedCases);
+    if (checked) {
+      newSelected.add(caseId);
+    } else {
+      newSelected.delete(caseId);
+    }
+    setSelectedCases(newSelected);
+  };
+
+  const deleteCasesMutation = useMutation({
+    mutationFn: async (caseIds: string[]) => {
+      const { error } = await supabase
+        .from("cases")
+        .delete()
+        .in("id", caseIds);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cases"] });
+      toast({
+        title: "Cases deleted",
+        description: `${selectedCases.size} case(s) deleted successfully`,
+      });
+      setSelectedCases(new Set());
+      setShowDeleteDialog(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete cases",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDeleteSelected = () => {
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = () => {
+    deleteCasesMutation.mutate(Array.from(selectedCases));
+  };
+
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -90,10 +162,68 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {cases.map((caseItem) => (
-        <CaseCard key={caseItem.id} case={caseItem} />
-      ))}
-    </div>
+    <>
+      {selectedCases.size > 0 && (
+        <div className="flex items-center justify-between p-4 mb-4 bg-white rounded-2xl shadow-sm border border-gray-200">
+          <div className="flex items-center gap-4">
+            <Checkbox
+              checked={cases && cases.length > 0 && selectedCases.size === cases.length}
+              onCheckedChange={handleSelectAll}
+            />
+            <span className="text-sm text-muted-foreground">
+              {selectedCases.size} case(s) selected
+            </span>
+          </div>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleDeleteSelected}
+            disabled={deleteCasesMutation.isPending}
+          >
+            {deleteCasesMutation.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            ) : (
+              <Trash2 className="h-4 w-4 mr-2" />
+            )}
+            Delete Selected
+          </Button>
+        </div>
+      )}
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {cases.map((caseItem) => (
+          <div key={caseItem.id} className="relative">
+            <div className="absolute top-4 left-4 z-10">
+              <Checkbox
+                checked={selectedCases.has(caseItem.id)}
+                onCheckedChange={(checked) => handleSelectCase(caseItem.id, checked as boolean)}
+                className="bg-white border-2"
+              />
+            </div>
+            <CaseCard case={caseItem} />
+          </div>
+        ))}
+      </div>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Cases</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete {selectedCases.size} case(s)? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };

@@ -1,12 +1,26 @@
 
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Trash2, Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 interface CasesTableProps {
   searchQuery: string;
@@ -22,6 +36,10 @@ export const CasesTable: React.FC<CasesTableProps> = ({
 }) => {
   const navigate = useNavigate();
   const { role } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [selectedCases, setSelectedCases] = useState<Set<string>>(new Set());
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const {
     data: cases,
     isLoading
@@ -128,7 +146,11 @@ export const CasesTable: React.FC<CasesTableProps> = ({
     return type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
   
-  const handleCaseClick = (caseId: string) => {
+  const handleCaseClick = (caseId: string, e: React.MouseEvent) => {
+    // Don't navigate if clicking checkbox
+    if ((e.target as HTMLElement).closest('[role="checkbox"]')) {
+      return;
+    }
     if (role === 'office_staff') {
       navigate(`/staff/cases/${caseId}`);
     } else {
@@ -136,27 +158,115 @@ export const CasesTable: React.FC<CasesTableProps> = ({
     }
   };
 
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedCases(new Set(cases?.map(c => c.id) || []));
+    } else {
+      setSelectedCases(new Set());
+    }
+  };
+
+  const handleSelectCase = (caseId: string, checked: boolean) => {
+    const newSelected = new Set(selectedCases);
+    if (checked) {
+      newSelected.add(caseId);
+    } else {
+      newSelected.delete(caseId);
+    }
+    setSelectedCases(newSelected);
+  };
+
+  const deleteCasesMutation = useMutation({
+    mutationFn: async (caseIds: string[]) => {
+      const { error } = await supabase
+        .from("cases")
+        .delete()
+        .in("id", caseIds);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cases-table"] });
+      toast({
+        title: "Cases deleted",
+        description: `${selectedCases.size} case(s) deleted successfully`,
+      });
+      setSelectedCases(new Set());
+      setShowDeleteDialog(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete cases",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDeleteSelected = () => {
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = () => {
+    deleteCasesMutation.mutate(Array.from(selectedCases));
+  };
+
   if (isLoading) {
     return <div className="text-center py-8">Loading cases...</div>;
   }
-  return <div className="bg-white rounded-2xl shadow-sm border border-gray-200">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="bg-slate-800 text-white">Case Title</TableHead>
-            <TableHead className="bg-slate-800 text-white">Client</TableHead>
-            <TableHead className="bg-slate-800 text-white">Type</TableHead>
-            <TableHead className="bg-slate-800 text-white">Status</TableHead>
-            <TableHead className="bg-slate-800 text-white">Priority</TableHead>
-            <TableHead className="bg-slate-800 text-white">Created By</TableHead>
-            <TableHead className="bg-slate-800 text-white">Updated</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {cases?.map(caseItem => <TableRow key={caseItem.id} className="cursor-pointer hover:bg-gray-50" onClick={() => handleCaseClick(caseItem.id)}>
-              <TableCell className="font-medium">
-                {caseItem.displayTitle || caseItem.title}
-              </TableCell>
+  return (
+    <>
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200">
+        {selectedCases.size > 0 && (
+          <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
+            <div className="text-sm text-muted-foreground">
+              {selectedCases.size} case(s) selected
+            </div>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleDeleteSelected}
+              disabled={deleteCasesMutation.isPending}
+            >
+              {deleteCasesMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Trash2 className="h-4 w-4 mr-2" />
+              )}
+              Delete Selected
+            </Button>
+          </div>
+        )}
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="bg-slate-800 text-white w-12">
+                <Checkbox
+                  checked={cases && cases.length > 0 && selectedCases.size === cases.length}
+                  onCheckedChange={handleSelectAll}
+                  className="border-white"
+                />
+              </TableHead>
+              <TableHead className="bg-slate-800 text-white">Case Title</TableHead>
+              <TableHead className="bg-slate-800 text-white">Client</TableHead>
+              <TableHead className="bg-slate-800 text-white">Type</TableHead>
+              <TableHead className="bg-slate-800 text-white">Status</TableHead>
+              <TableHead className="bg-slate-800 text-white">Priority</TableHead>
+              <TableHead className="bg-slate-800 text-white">Created By</TableHead>
+              <TableHead className="bg-slate-800 text-white">Updated</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {cases?.map(caseItem => <TableRow key={caseItem.id} className="cursor-pointer hover:bg-gray-50" onClick={(e) => handleCaseClick(caseItem.id, e)}>
+                <TableCell onClick={(e) => e.stopPropagation()}>
+                  <Checkbox
+                    checked={selectedCases.has(caseItem.id)}
+                    onCheckedChange={(checked) => handleSelectCase(caseItem.id, checked as boolean)}
+                  />
+                </TableCell>
+                <TableCell className="font-medium">
+                  {caseItem.displayTitle || caseItem.title}
+                </TableCell>
               <TableCell>
                 {caseItem.client_name || 'No client assigned'}
               </TableCell>
@@ -187,5 +297,27 @@ export const CasesTable: React.FC<CasesTableProps> = ({
             </TableRow>)}
         </TableBody>
       </Table>
-    </div>;
+      </div>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Cases</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete {selectedCases.size} case(s)? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
 };
