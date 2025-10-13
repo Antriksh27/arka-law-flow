@@ -96,7 +96,7 @@ export const HearingsTimeline: React.FC<HearingsTimelineProps> = ({
                       </div>
                     </div>
 
-                    <div className="flex w-full flex-wrap items-center gap-4">
+                    <div className="flex w-full flex-col gap-2">
                       {hearing.judge && <div className="flex items-center gap-2">
                           <FileText className="w-4 h-4 text-gray-500" />
                           <span className="text-sm text-gray-600">Judge:</span>
@@ -107,6 +107,12 @@ export const HearingsTimeline: React.FC<HearingsTimelineProps> = ({
                           <MapPin className="w-4 h-4 text-gray-500" />
                           <span className="text-sm text-gray-600">Purpose:</span>
                           <span className="text-sm text-gray-900">{hearing.purpose_of_hearing}</span>
+                        </div>}
+
+                      {hearing.cause_list_type && <div className="flex items-center gap-2">
+                          <FileText className="w-4 h-4 text-gray-500" />
+                          <span className="text-sm text-gray-600">Bench Type:</span>
+                          <span className="text-sm text-gray-900">{hearing.cause_list_type}</span>
                         </div>}
                     </div>
 
