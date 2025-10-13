@@ -45,7 +45,7 @@ export const useCasesFetchStatus = () => {
       // Fetch all cases with CNR numbers - no limit
       const { data: cases, error: casesError } = await supabase
         .from("cases")
-        .select("id, case_title, cnr_number, court_name, court_type, case_number, created_at, client_id, firm_id")
+        .select("id, case_title, cnr_number, court_name, court_type, case_number, created_at, client_id, firm_id, fetch_status, last_fetched_at, fetch_message, fetched_data")
         .not("cnr_number", "is", null)
         .eq("firm_id", teamMember.firm_id)
         .order("created_at", { ascending: false });
@@ -68,28 +68,13 @@ export const useCasesFetchStatus = () => {
       
       const clientMap = new Map(clients?.map(c => [c.id, c.full_name]) || []);
 
-      // Fetch latest search for each case
-      const { data: searches } = await supabase
-        .from("legalkart_case_searches")
-        .select("case_id, created_at, error_message, response_data, status")
-        .in("case_id", cases.map(c => c.id))
-        .order("created_at", { ascending: false });
-
-      // Map latest search per case
-      const latestSearchMap = new Map();
-      searches?.forEach(s => {
-        if (!latestSearchMap.has(s.case_id)) latestSearchMap.set(s.case_id, s);
-      });
-
+      // Derive status directly from cases to avoid heavy joins
       const casesWithStatus: CaseWithFetchStatus[] = cases.map((c: any) => {
-        const search = latestSearchMap.get(c.id);
-        let status: CaseWithFetchStatus["fetch_status"] = "not_fetched";
-
-        if (search) {
-          if (search.status === "pending") status = "pending";
-          else if (search.error_message) status = "failed";
-          else if (search.response_data || search.status === "completed" || search.status === "success") status = "success";
-        }
+        const raw = (c.fetch_status || '').toLowerCase();
+        let status: CaseWithFetchStatus['fetch_status'] = 'not_fetched';
+        if (raw === 'pending') status = 'pending';
+        else if (raw === 'failed') status = 'failed';
+        else if (raw === 'success' || raw === 'completed' || c.fetched_data || c.last_fetched_at) status = 'success';
 
         return {
           id: c.id,
@@ -103,8 +88,8 @@ export const useCasesFetchStatus = () => {
           client_name: c.client_id ? (clientMap.get(c.client_id) || null) : null,
           firm_id: c.firm_id,
           fetch_status: status,
-          last_fetched_at: search?.created_at || null,
-          error_message: search?.error_message || null,
+          last_fetched_at: c.last_fetched_at || null,
+          error_message: c.fetch_message || null,
         };
       });
 
