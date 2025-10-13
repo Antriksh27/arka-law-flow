@@ -4,22 +4,21 @@ import { Calendar, User, FileText, Scale, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useDialog } from '@/hooks/use-dialog';
-
 interface HearingDetailsModalProps {
   hearing: any; // Flexible type for case_hearings data
 }
-
-export const HearingDetailsModal: React.FC<HearingDetailsModalProps> = ({ hearing }) => {
+export const HearingDetailsModal: React.FC<HearingDetailsModalProps> = ({
+  hearing
+}) => {
   const navigate = useNavigate();
-  const { closeDialog } = useDialog();
-
+  const {
+    closeDialog
+  } = useDialog();
   const handleViewCase = () => {
     closeDialog();
     navigate(`/cases/${hearing.case_id}`);
   };
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       <div className="flex items-start justify-between">
         <div>
           <h2 className="text-2xl font-semibold text-[#111827]">Hearing Details</h2>
@@ -59,25 +58,15 @@ export const HearingDetailsModal: React.FC<HearingDetailsModalProps> = ({ hearin
         </div>
       </div>
 
-      {hearing.purpose_of_hearing && (
-        <div className="p-4 rounded-xl bg-[#F9FAFB] border border-[#E5E7EB]">
+      {hearing.purpose_of_hearing && <div className="p-4 rounded-xl bg-[#F9FAFB] border border-[#E5E7EB]">
           <div className="flex items-center gap-2 mb-2">
             <FileText className="w-4 h-4 text-[#1E3A8A]" />
             <div className="text-sm font-medium text-[#6B7280]">Purpose of Hearing</div>
           </div>
           <div className="text-base text-[#111827] whitespace-pre-wrap">{hearing.purpose_of_hearing}</div>
-        </div>
-      )}
+        </div>}
 
-      {hearing.business_on_date && (
-        <div className="p-4 rounded-xl bg-[#E0E7FF] border border-[#C7D2FE]">
-          <div className="flex items-center gap-2 mb-2">
-            <CheckCircle className="w-4 h-4 text-[#1E3A8A]" />
-            <div className="text-sm font-medium text-[#1E3A8A]">Business On Date</div>
-          </div>
-          <div className="text-base text-[#111827] whitespace-pre-wrap">{hearing.business_on_date}</div>
-        </div>
-      )}
+      {hearing.business_on_date}
 
       <div className="flex items-center gap-3 pt-4 border-t border-[#E5E7EB]">
         <Button onClick={handleViewCase} className="flex-1">
@@ -87,6 +76,5 @@ export const HearingDetailsModal: React.FC<HearingDetailsModalProps> = ({ hearin
           Close
         </Button>
       </div>
-    </div>
-  );
+    </div>;
 };
