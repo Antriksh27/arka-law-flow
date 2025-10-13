@@ -171,8 +171,8 @@ export function parseIADetails(iaData: any): ParsedIADetail[] {
 export function parseECourtsData(rawData: any): ParsedCaseData {
   console.log('🤖 AI Data Parser: Starting parse...');
   
-  // Extract nested data structures
-  const caseInfo = rawData.case_info || rawData.data?.case_info || {};
+  // Extract nested data structures - support both eCourts and LegalKart formats
+  const caseInfo = rawData.case_info || rawData.data?.case_info || rawData.case_details || rawData.data?.case_details || {};
   const caseStatus = rawData.case_status || rawData.data?.case_status || {};
   const categoryInfo = rawData.category_info || rawData.data?.category_info || {};
   const iaDetails = rawData.ia_details || rawData.data?.ia_details;
@@ -195,15 +195,19 @@ export function parseECourtsData(rawData: any): ParsedCaseData {
     subCategory: categoryInfo.sub_category || null
   };
   
-  // Parse parties
+  // Parse parties - support both eCourts and LegalKart formats
   const petitioners = parsePartyList(
     rawData.petitioner_and_advocate || 
-    rawData.data?.petitioner_and_advocate
+    rawData.data?.petitioner_and_advocate ||
+    rawData.petitioner_and_respondent_details?.petitioner_and_advocate ||
+    rawData.data?.petitioner_and_respondent_details?.petitioner_and_advocate
   );
   
   const respondents = parsePartyList(
     rawData.respondent_and_advocate || 
-    rawData.data?.respondent_and_advocate
+    rawData.data?.respondent_and_advocate ||
+    rawData.petitioner_and_respondent_details?.respondent_and_advocate ||
+    rawData.data?.petitioner_and_respondent_details?.respondent_and_advocate
   );
   
   // Parse IA details

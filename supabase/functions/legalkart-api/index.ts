@@ -160,7 +160,7 @@ async function upsertCaseRelationalData(
     if (error) console.error('Error inserting documents:', error);
   }
 
-  // Insert orders - Check multiple possible paths
+  // Insert orders - Check multiple possible paths including LegalKart formats
   const orders = Array.isArray(rd?.order_details) 
     ? rd.order_details 
     : Array.isArray(rd?.data?.order_details)
@@ -173,6 +173,14 @@ async function upsertCaseRelationalData(
     ? rd.orderList
     : Array.isArray(rd?.data?.orderList)
     ? rd.data.orderList
+    : Array.isArray(rd?.final_orders)
+    ? rd.final_orders
+    : Array.isArray(rd?.data?.final_orders)
+    ? rd.data.final_orders
+    : Array.isArray(rd?.interim_orders)
+    ? rd.interim_orders
+    : Array.isArray(rd?.data?.interim_orders)
+    ? rd.data.interim_orders
     : [];
   
   console.log(`📋 Found ${orders.length} orders to insert from raw data`);
@@ -198,7 +206,7 @@ async function upsertCaseRelationalData(
     if (error) console.error('❌ Error inserting orders:', error);
     else console.log(`✅ Successfully inserted ${orders.length} orders`);
   } else {
-    console.log('⚠️ No orders found. Checked paths: rd.order_details, rd.data.order_details, rd.orders, rd.data.orders, rd.orderList, rd.data.orderList');
+    console.log('⚠️ No orders found. Checked paths: rd.order_details, rd.data.order_details, rd.orders, rd.data.orders, rd.orderList, rd.data.orderList, rd.final_orders, rd.interim_orders');
     // Fallback: derive pseudo-orders from hearings/document signals
     const hearingCandidates = Array.isArray(rd?.history_of_case_hearing) 
       ? rd.history_of_case_hearing 
@@ -249,7 +257,7 @@ async function upsertCaseRelationalData(
     }
   }
 
-  // Insert hearings - Check multiple possible paths
+  // Insert hearings - Check multiple possible paths including LegalKart formats
   const hearings = Array.isArray(rd?.history_of_case_hearing) 
     ? rd.history_of_case_hearing 
     : Array.isArray(rd?.data?.history_of_case_hearing)
@@ -258,6 +266,10 @@ async function upsertCaseRelationalData(
     ? rd.hearings
     : Array.isArray(rd?.data?.hearings)
     ? rd.data.hearings
+    : Array.isArray(rd?.case_history)
+    ? rd.case_history
+    : Array.isArray(rd?.data?.case_history)
+    ? rd.data.case_history
     : [];
   
   console.log(`📅 Found ${hearings.length} hearings to insert`);
@@ -269,7 +281,7 @@ async function upsertCaseRelationalData(
         hearing_date: normalizeDate(h.hearing_date || h.date),
         judge: h.judge || h.judge_name || null,
         cause_list_type: h.cause_list_type ?? null,
-        business_on_date: normalizeDate(h.business_on_date),
+        business_on_date: h.business_on_date || h.purpose_of_hearing || h.purpose || null,
         purpose_of_hearing: h.purpose_of_hearing || h.purpose || null,
       }))
     );
@@ -1063,15 +1075,16 @@ function mapLegalkartDataToCRM(data: any, searchType: string = 'unknown'): any {
     };
   }
 
-  // DATE INFORMATION (8 fields) - Comprehensive date parsing
-  mappedData.filing_date = parseDate(caseInfo.filing_date || data.filing_date || data.date_of_filing);
-  mappedData.registration_date = parseDate(caseInfo.registration_date || data.registration_date || data.date_of_registration);
-  mappedData.first_hearing_date = parseDate(data.first_hearing_date || data.first_listing_date);
-  mappedData.next_hearing_date = parseDate(caseStatus.next_hearing_date || data.next_hearing_date || data.next_date);
-  mappedData.listed_date = parseDate(data.listed_date || data.listing_date);
-  mappedData.disposal_date = parseDate(data.disposal_date || data.date_of_disposal);
-  mappedData.decision_date = parseDate(data.decision_date || data.judgment_date);
-  mappedData.scrutiny_date = parseDate(objections[0]?.scrutiny_date || data.scrutiny_date);
+  // DATE INFORMATION (8 fields) - Comprehensive date parsing, support LegalKart case_details
+  const caseDetails = data.case_details || data.data?.case_details || {};
+  mappedData.filing_date = parseDate(caseInfo.filing_date || caseDetails.filing_date || data.filing_date || data.date_of_filing);
+  mappedData.registration_date = parseDate(caseInfo.registration_date || caseDetails.registration_date || data.registration_date || data.date_of_registration);
+  mappedData.first_hearing_date = parseDate(caseDetails.first_hearing_date || data.first_hearing_date || data.first_listing_date);
+  mappedData.next_hearing_date = parseDate(caseStatus.next_hearing_date || caseDetails.next_hearing_date || data.next_hearing_date || data.next_date);
+  mappedData.listed_date = parseDate(caseDetails.listed_date || data.listed_date || data.listing_date);
+  mappedData.disposal_date = parseDate(caseDetails.disposal_date || data.disposal_date || data.date_of_disposal);
+  mappedData.decision_date = parseDate(caseDetails.decision_date || data.decision_date || data.judgment_date);
+  mappedData.scrutiny_date = parseDate(caseDetails.scrutiny_date || objections[0]?.scrutiny_date || data.scrutiny_date);
 
   // CATEGORY AND CLASSIFICATION (6 fields)
   mappedData.category = cleanText(categoryInfo.category || data.category || data.case_category);
@@ -1104,14 +1117,20 @@ function mapLegalkartDataToCRM(data: any, searchType: string = 'unknown'): any {
   mappedData.under_act = cleanText(data.under_act || data.act);
   mappedData.under_section = cleanText(data.under_section || data.section);
 
-  // ORDERS AND PROCEEDINGS (4 fields)
+  // ORDERS AND PROCEEDINGS (4 fields) - support LegalKart formats
   const extractedOrders = orderDetails
     .filter((order: any) => order.purpose_of_hearing && order.purpose_of_hearing !== 'Order Details')
     .map((order: any) => `${order.hearing_date}: ${order.purpose_of_hearing}`);
   
+  // Check for LegalKart final_orders and interim_orders arrays directly
+  const finalOrdersArr = Array.isArray(data.final_orders) ? data.final_orders 
+    : Array.isArray(data.data?.final_orders) ? data.data.final_orders : [];
+  const interimOrdersArr = Array.isArray(data.interim_orders) ? data.interim_orders 
+    : Array.isArray(data.data?.interim_orders) ? data.data.interim_orders : [];
+  
   mappedData.orders = extractedOrders.length > 0 ? extractedOrders : extractArrayFromString(data.orders || data.court_orders);
-  mappedData.interim_orders = extractArrayFromString(data.interim_orders);
-  mappedData.final_orders = extractArrayFromString(data.final_orders);
+  mappedData.interim_orders = interimOrdersArr.length > 0 ? interimOrdersArr : extractArrayFromString(data.interim_orders);
+  mappedData.final_orders = finalOrdersArr.length > 0 ? finalOrdersArr : extractArrayFromString(data.final_orders);
   
   // HEARING AND LISTING (6 fields)
   if (hearingHistory.length > 0) {
@@ -1124,9 +1143,13 @@ function mapLegalkartDataToCRM(data: any, searchType: string = 'unknown'): any {
 
   mappedData.hearing_notes = cleanText(data.hearing_notes || data.notes);
 
-  // Store complete hearing history
+  // Store complete hearing history - support LegalKart case_history format
+  const caseHistoryArr = Array.isArray(data.case_history) ? data.case_history 
+    : Array.isArray(data.data?.case_history) ? data.data.case_history : [];
   if (hearingHistory.length > 0) {
     mappedData.hearing_history = hearingHistory;
+  } else if (caseHistoryArr.length > 0) {
+    mappedData.hearing_history = caseHistoryArr;
   }
 
   // DOCUMENT AND PROCESS (4 fields)
