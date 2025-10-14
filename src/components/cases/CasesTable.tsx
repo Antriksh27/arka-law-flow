@@ -5,7 +5,6 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
@@ -67,8 +66,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
       console.log('Fetching cases for user:', user.id, 'isAdminOrLawyer:', isAdminOrLawyer);
       let query = supabase.from('cases').select(`
         *,
-        clients!client_id(full_name),
-        profiles!created_by(full_name)
+        clients!client_id(full_name)
       `).order('created_at', {
         ascending: false
       });
@@ -114,8 +112,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
         return {
           ...caseItem,
           displayTitle,
-          client_name: caseItem.clients?.full_name,
-          created_by_name: caseItem.profiles?.full_name
+          client_name: caseItem.clients?.full_name
         };
       }) || [];
       
@@ -248,7 +245,6 @@ export const CasesTable: React.FC<CasesTableProps> = ({
               <TableHead className="bg-slate-800 text-white">Type</TableHead>
               <TableHead className="bg-slate-800 text-white">Status</TableHead>
               <TableHead className="bg-slate-800 text-white">Priority</TableHead>
-              <TableHead className="bg-slate-800 text-white">Created By</TableHead>
               <TableHead className="bg-slate-800 text-white">Updated</TableHead>
             </TableRow>
           </TableHeader>
@@ -276,16 +272,6 @@ export const CasesTable: React.FC<CasesTableProps> = ({
               </TableCell>
               <TableCell>
                 <span className="capitalize">{caseItem.priority}</span>
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  <Avatar className="w-6 h-6">
-                    <AvatarFallback className="text-xs bg-gray-100">
-                      {caseItem.created_by_name?.split(' ').map((n: string) => n[0]).join('') || '?'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="text-sm">{caseItem.created_by_name}</span>
-                </div>
               </TableCell>
               <TableCell>
                 {format(new Date(caseItem.updated_at), 'MMM d, yyyy')}
