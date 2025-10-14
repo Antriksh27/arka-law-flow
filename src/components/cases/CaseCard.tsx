@@ -15,12 +15,16 @@ export const CaseCard: React.FC<CaseCardProps> = ({ case: caseItem }) => {
     switch (status) {
       case 'open':
         return 'bg-blue-100 text-blue-700 border-blue-200';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+      case 'disposed':
+        return 'bg-purple-100 text-purple-700 border-purple-200';
+      case 'closed':
+        return 'bg-gray-100 text-gray-700 border-gray-200';
       case 'in_court':
         return 'bg-yellow-100 text-yellow-700 border-yellow-200';
       case 'on_hold':
         return 'bg-orange-100 text-orange-700 border-orange-200';
-      case 'closed':
-        return 'bg-gray-100 text-gray-700 border-gray-200';
       default:
         return 'bg-gray-100 text-gray-700 border-gray-200';
     }

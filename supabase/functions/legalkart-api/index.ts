@@ -1120,14 +1120,18 @@ function mapLegalkartDataToCRM(data: any, searchType: string = 'unknown'): any {
   mappedData.coram = cleanText(caseStatus.coram || data.coram || data.judge_name);
   mappedData.stage = cleanText(caseStatus.stage_of_case || data.stage || data.case_stage);
 
-  // Status mapping with intelligence
+  // Status mapping based on eCourts data
+  // pending: when eCourts returns pending/active/ongoing status
+  // disposed: when eCourts returns disposed/dismissed/completed status
+  // Note: 'open' is for cases NOT connected to LegalKart (set elsewhere)
+  // Note: 'closed' is for manually closed cases (set by user action)
   if (data.status || data.case_status || caseStatus.stage_of_case) {
     const statusStr = (data.status || data.case_status || caseStatus.stage_of_case || '').toString().toLowerCase();
     const statusMapping: { [key: string]: string } = {
-      'pending': 'open', 'active': 'open', 'ongoing': 'open', 'listed': 'open',
-      'notice returnable': 'open', 'adjourned': 'open', 'admission': 'open',
-      'disposed': 'closed', 'dismissed': 'closed', 'withdrawn': 'closed', 
-      'decided': 'closed', 'completed': 'closed', 'settled': 'closed'
+      'pending': 'pending', 'active': 'pending', 'ongoing': 'pending', 'listed': 'pending',
+      'notice returnable': 'pending', 'adjourned': 'pending', 'admission': 'pending',
+      'disposed': 'disposed', 'dismissed': 'disposed', 'withdrawn': 'disposed', 
+      'decided': 'disposed', 'completed': 'disposed', 'settled': 'disposed'
     };
     
     for (const [key, value] of Object.entries(statusMapping)) {
@@ -1136,7 +1140,8 @@ function mapLegalkartDataToCRM(data: any, searchType: string = 'unknown'): any {
         break;
       }
     }
-    if (!mappedData.status) mappedData.status = 'open';
+    // Default to 'pending' if we have LegalKart data but couldn't map the status
+    if (!mappedData.status) mappedData.status = 'pending';
   }
 
   // PARTY INFORMATION (8 fields) - Enhanced parsing from Legalkart format
