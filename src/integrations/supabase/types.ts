@@ -946,7 +946,6 @@ export type Database = {
           sub_category: string | null
           tags: string[] | null
           team_name: string | null
-          title: string
           under_act: string | null
           under_section: string | null
           updated_at: string
@@ -1035,7 +1034,6 @@ export type Database = {
           sub_category?: string | null
           tags?: string[] | null
           team_name?: string | null
-          title: string
           under_act?: string | null
           under_section?: string | null
           updated_at?: string
@@ -1124,7 +1122,6 @@ export type Database = {
           sub_category?: string | null
           tags?: string[] | null
           team_name?: string | null
-          title?: string
           under_act?: string | null
           under_section?: string | null
           updated_at?: string
@@ -4163,7 +4160,13 @@ export type Database = {
       appointment_type: "in-person" | "call" | "video-call" | "other"
       case_priority_enum: "low" | "medium" | "high"
       case_stage: "new" | "hearing" | "judgment" | "closed"
-      case_status_enum: "open" | "in_court" | "on_hold" | "closed"
+      case_status_enum:
+        | "open"
+        | "in_court"
+        | "on_hold"
+        | "closed"
+        | "pending"
+        | "disposed"
       case_type_enum:
         | "civil"
         | "criminal"
@@ -4369,7 +4372,14 @@ export const Constants = {
       appointment_type: ["in-person", "call", "video-call", "other"],
       case_priority_enum: ["low", "medium", "high"],
       case_stage: ["new", "hearing", "judgment", "closed"],
-      case_status_enum: ["open", "in_court", "on_hold", "closed"],
+      case_status_enum: [
+        "open",
+        "in_court",
+        "on_hold",
+        "closed",
+        "pending",
+        "disposed",
+      ],
       case_type_enum: [
         "civil",
         "criminal",
