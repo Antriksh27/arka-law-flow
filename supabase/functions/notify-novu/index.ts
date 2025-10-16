@@ -42,6 +42,24 @@ serve(async (req) => {
 
     console.log('Sending notification to Novu:', { subscriberId, message: message.substring(0, 50) });
 
+    // First, ensure subscriber exists in Novu
+    try {
+      await fetch(`https://api.novu.co/v1/subscribers`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `ApiKey ${novuApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          subscriberId: subscriberId,
+        }),
+      });
+      console.log('Subscriber registered/updated in Novu');
+    } catch (subError) {
+      console.log('Subscriber may already exist:', subError);
+    }
+
+    // Trigger the notification
     const response = await fetch('https://api.novu.co/v1/events/trigger', {
       method: 'POST',
       headers: {
@@ -49,25 +67,27 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        name: 'in-app-notification',
+        name: 'in-app',
         to: {
           subscriberId: subscriberId,
         },
         payload: {
-          subject: message,
-          body: message,
-          data: {
-            table,
-            eventType,
-            recordId: record.id,
-            timestamp: new Date().toISOString(),
-          },
+          message: message,
+          table: table,
+          eventType: eventType,
+          recordId: record.id,
+          timestamp: new Date().toISOString(),
         },
       }),
     });
 
     const data = await response.json();
-    console.log('Novu response:', data);
+    console.log('Novu trigger response:', data);
+
+    if (!response.ok) {
+      console.error('Novu API error:', data);
+      throw new Error(`Novu API error: ${JSON.stringify(data)}`);
+    }
 
     return new Response(
       JSON.stringify({ status: 'ok', data }),

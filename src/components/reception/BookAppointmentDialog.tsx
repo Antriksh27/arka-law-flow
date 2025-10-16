@@ -14,7 +14,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Plus, Check, ChevronsUpDown } from 'lucide-react';
-import { sendAppointmentNotification } from '@/lib/appointmentNotifications';
 import { SmartBookingCalendar } from '@/components/appointments/SmartBookingCalendar';
 interface BookAppointmentDialogProps {
   open: boolean;
@@ -247,34 +246,13 @@ const BookAppointmentDialog = ({
         clientName: data.client_name
       };
     },
-    onSuccess: async result => {
+    onSuccess: result => {
       queryClient.invalidateQueries({
         queryKey: ['reception-appointments']
       });
       queryClient.invalidateQueries({
         queryKey: ['reception-today-appointments']
       });
-
-      // Send notification for new appointment
-      if (result?.appointment?.lawyer_id) {
-        try {
-          await sendAppointmentNotification({
-            type: 'created',
-            appointment_id: result.appointment.id,
-            lawyer_id: result.appointment.lawyer_id,
-            title: 'New Appointment Scheduled',
-            message: `New appointment scheduled with ${result.clientName} on ${result.appointment.appointment_date} at ${result.appointment.appointment_time?.slice(0, 5) || 'N/A'}`,
-            metadata: {
-              client_name: result.clientName,
-              appointment_date: result.appointment.appointment_date,
-              appointment_time: result.appointment.appointment_time,
-              title: result.appointment.title
-            }
-          });
-        } catch (error) {
-          console.error('Failed to send new appointment notification:', error);
-        }
-      }
       toast({
         title: "Success",
         description: "Appointment booked successfully!"

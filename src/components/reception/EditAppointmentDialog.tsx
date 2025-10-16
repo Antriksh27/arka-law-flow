@@ -22,7 +22,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { sendAppointmentNotification } from '@/lib/appointmentNotifications';
 
 interface EditAppointmentDialogProps {
   open: boolean;
@@ -105,33 +104,8 @@ const EditAppointmentDialog = ({ open, onOpenChange, appointment }: EditAppointm
               .single();
             clientName = client?.full_name || 'Client';
           }
-
-          const statusMessages = {
-            upcoming: 'Appointment scheduled',
-            arrived: 'Client has arrived',
-            'in-progress': 'Appointment in progress',
-            completed: 'Appointment completed',
-            cancelled: 'Appointment cancelled',
-            rescheduled: 'Appointment rescheduled',
-            late: 'Client is late'
-          };
-
-          await sendAppointmentNotification({
-            type: 'status_changed',
-            appointment_id: appointment.id,
-            lawyer_id: appointment.lawyer_id,
-            title: `Appointment Status Updated`,
-            message: `${clientName}'s appointment status changed to ${updatedData.status}. ${statusMessages[updatedData.status as keyof typeof statusMessages] || ''}`,
-            metadata: { 
-              old_status: appointment.status,
-              new_status: updatedData.status,
-              appointment_date: updatedData.appointment_date,
-              appointment_time: updatedData.appointment_time,
-              client_name: clientName
-            }
-          });
         } catch (error) {
-          console.error('Failed to send status change notification:', error);
+          console.error('Failed to update appointment:', error);
         }
       }
       
