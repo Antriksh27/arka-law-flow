@@ -19,23 +19,23 @@ export default function NovuNotificationInbox() {
         {...(socketUrl ? { socketUrl } : {})}
         appearance={{
           variables: {
-            colorPrimary: 'rgb(37, 99, 235)',
-            colorPrimaryForeground: 'rgb(255, 255, 255)',
-            colorSecondary: 'rgb(219, 234, 254)',
-            colorSecondaryForeground: 'rgb(17, 24, 39)',
-            colorCounter: 'rgb(37, 99, 235)',
-            colorCounterForeground: 'rgb(255, 255, 255)',
-            colorBackground: 'rgb(239, 246, 255)',
-            colorForeground: 'rgb(17, 24, 39)',
-            colorNeutral: 'rgb(191, 219, 254)',
+            colorPrimary: 'hsl(37 99% 67%)',
+            colorPrimaryForeground: 'hsl(0 0% 100%)',
+            colorSecondary: 'hsl(219 100% 93%)',
+            colorSecondaryForeground: 'hsl(17 24% 11%)',
+            colorCounter: 'hsl(37 99% 67%)',
+            colorCounterForeground: 'hsl(0 0% 100%)',
+            colorBackground: 'hsl(239 100% 98%)',
+            colorForeground: 'hsl(17 24% 11%)',
+            colorNeutral: 'hsl(191 100% 88%)',
             fontSize: '14px',
           },
           elements: {
             bellIcon: {
-              color: 'rgb(255, 255, 255)',
+              color: 'hsl(0 0% 100%)',
             },
             notificationList: {
-              backgroundColor: 'rgb(255, 255, 255)',
+              backgroundColor: 'hsl(0 0% 100%)',
             },
           },
         }}
