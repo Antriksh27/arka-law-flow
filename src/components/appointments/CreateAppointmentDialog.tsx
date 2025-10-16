@@ -27,6 +27,7 @@ import { toast } from '@/hooks/use-toast';
 import { SmartBookingCalendar } from '@/components/appointments/SmartBookingCalendar';
 import { ClientSelector } from '@/components/appointments/ClientSelector';
 import TimeUtils from '@/lib/timeUtils';
+import { sendAppointmentNotification } from '@/lib/appointmentNotifications';
 
 interface Client {
   id: string;
@@ -232,11 +233,35 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
         })
       };
 
-      const { error } = await supabase
+      const { data: inserted, error } = await supabase
         .from('appointments')
-        .insert([appointmentData]);
+        .insert([appointmentData])
+        .select('id, appointment_date, appointment_time')
+        .single();
 
       if (error) throw error;
+
+      // Try to send a notification to the assigned lawyer
+      try {
+        const displayName = isClient
+          ? (clients.find(c => c.id === formData.client_id)?.full_name || 'Client')
+          : (contactName || 'Client');
+
+        await sendAppointmentNotification({
+          type: 'created',
+          appointment_id: inserted.id,
+          lawyer_id: formData.lawyer_id,
+          title: 'New Appointment Scheduled',
+          message: `New appointment scheduled with ${displayName} on ${inserted.appointment_date} at ${(inserted.appointment_time || '').slice(0, 5) || 'N/A'}`,
+          metadata: {
+            client_name: displayName,
+            appointment_date: inserted.appointment_date,
+            appointment_time: inserted.appointment_time
+          }
+        });
+      } catch (notifyError) {
+        console.error('Failed to send appointment notification:', notifyError);
+      }
 
       toast({
         title: "Success",
