@@ -170,7 +170,7 @@ export default function CaseDetailEnhanced() {
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1">
                 <h1 className="text-2xl font-semibold text-gray-900 mb-2">
-                  {caseData.title || caseData.case_title || `${caseData.petitioner || 'Petitioner'} vs ${caseData.respondent || 'Respondent'}`}
+                  {caseData.case_title || `${caseData.petitioner || 'Petitioner'} vs ${caseData.respondent || 'Respondent'}`}
                 </h1>
                 <div className="space-y-2">
                   <div className="flex flex-wrap gap-4 text-sm text-gray-600">

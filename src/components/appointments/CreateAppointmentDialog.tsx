@@ -35,7 +35,7 @@ interface Client {
 
 interface Case {
   id: string;
-  title: string;
+  case_title: string;
   case_number: string;
 }
 
@@ -107,13 +107,13 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
   const fetchCases = async (clientId?: string) => {
     let query = supabase
       .from('cases')
-      .select('id, title, case_number');
+      .select('id, case_title, case_number');
     
     if (clientId) {
       query = query.eq('client_id', clientId);
     }
     
-    const { data } = await query.order('title');
+    const { data } = await query.order('case_title');
     setCases(data || []);
   };
 
@@ -181,7 +181,7 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
     }
     
     if (case_) {
-      title = `${title} - ${case_.title}`;
+      title = `${title} - ${case_.case_title}`;
     }
     
     return title;
@@ -376,7 +376,7 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
                 <SelectContent className="bg-white border-gray-300">
                   {cases.map((case_) => (
                     <SelectItem key={case_.id} value={case_.id} className="text-gray-900">
-                      {case_.title} ({case_.case_number})
+                      {case_.case_title} ({case_.case_number})
                     </SelectItem>
                   ))}
                 </SelectContent>

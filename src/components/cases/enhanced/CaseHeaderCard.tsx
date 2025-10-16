@@ -16,7 +16,7 @@ export const CaseHeaderCard = ({ caseData }: CaseHeaderCardProps) => {
           <div>
             <div className="text-sm text-[#6B7280] mb-1">Case Name</div>
             <div className="text-base font-medium text-[#111827]">
-              {caseData.case_title || caseData.title || 'N/A'}
+              {caseData.case_title || 'N/A'}
             </div>
           </div>
           

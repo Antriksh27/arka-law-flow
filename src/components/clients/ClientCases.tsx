@@ -82,7 +82,7 @@ export const ClientCases: React.FC<ClientCasesProps> = ({ clientId }) => {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <h3 className="font-medium text-gray-900 mb-2">
-                      {case_item.title?.replace(/\bVersus\b/g, 'Vs')}
+                      {case_item.case_title?.replace(/\bVersus\b/g, 'Vs')}
                     </h3>
                     <div className="flex items-center gap-4 text-sm text-gray-500">
                       <Badge 

@@ -62,7 +62,7 @@ interface Contact {
 
 interface Case {
   id: string;
-  title: string;
+  case_title: string;
   case_number: string;
 }
 
@@ -102,8 +102,8 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
   const fetchCases = async () => {
     const { data } = await supabase
       .from('cases')
-      .select('id, title, case_number')
-      .order('title');
+      .select('id, case_title, case_number')
+      .order('case_title');
     setCases(data || []);
   };
 
@@ -302,7 +302,7 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
                 <SelectContent className="bg-white border-gray-300">
                   {cases.map((case_) => (
                     <SelectItem key={case_.id} value={case_.id} className="text-gray-900">
-                      {case_.title} ({case_.case_number})
+                      {case_.case_title} ({case_.case_number})
                     </SelectItem>
                   ))}
                 </SelectContent>

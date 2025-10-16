@@ -191,7 +191,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
     queryFn: async () => {
       const { data, error } = await supabase
         .from('cases')
-        .select('id, title, client_id')
+        .select('id, case_title, client_id')
         .eq('status', 'open')
         .order('title');
       if (error) throw error;
@@ -261,7 +261,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
             }
             
             if (selectedCaseId && selectedCaseId !== 'no-case' && selectedCase) {
-              caseName = selectedCase.title;
+              caseName = selectedCase.case_title;
             }
             
             const category = data.document_category ? categoryLabels[data.document_category as keyof typeof categoryLabels] : 'Others';
@@ -634,7 +634,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                     })
                     .map(case_item => (
                       <SelectItem key={case_item.id} value={case_item.id} className="hover:bg-gray-50">
-                        {case_item.title}
+                        {case_item.case_title}
                       </SelectItem>
                     ))}
                 </SelectContent>

@@ -22,7 +22,7 @@ export const RelatedMattersTab: React.FC<RelatedMattersTabProps> = ({ caseId }) 
 
   // Helper function to get display title exactly like Cases list
   const getDisplayTitle = (caseData: any) => {
-    let displayTitle = caseData.case_title || caseData.title || '';
+    let displayTitle = caseData.case_title || '';
 
     if (caseData.petitioner && caseData.respondent) {
       // Match CasesTable logic: strip advocate info and use "Petitioner Vs Respondent"
@@ -41,7 +41,7 @@ export const RelatedMattersTab: React.FC<RelatedMattersTabProps> = ({ caseId }) 
       // Fetch relations where this case is the primary case
       const { data: forwardRelations, error: forwardError } = await supabase
         .from('case_relations')
-        .select('id, related_case_id, related_case:cases!case_relations_related_case_id_fkey(id, case_title, title, case_number, status, petitioner, respondent, vs)')
+        .select('id, related_case_id, related_case:cases!case_relations_related_case_id_fkey(id, case_title, case_number, status, petitioner, respondent, vs)')
         .eq('case_id', caseId);
       
       if (forwardError) throw forwardError;
@@ -49,7 +49,7 @@ export const RelatedMattersTab: React.FC<RelatedMattersTabProps> = ({ caseId }) 
       // Fetch relations where this case is the related case (reverse direction)
       const { data: reverseRelations, error: reverseError } = await supabase
         .from('case_relations')
-        .select('id, case_id, related_case:cases!case_relations_case_id_fkey(id, case_title, title, case_number, status, petitioner, respondent, vs)')
+        .select('id, case_id, related_case:cases!case_relations_case_id_fkey(id, case_title, case_number, status, petitioner, respondent, vs)')
         .eq('related_case_id', caseId);
       
       if (reverseError) throw reverseError;
@@ -90,7 +90,7 @@ export const RelatedMattersTab: React.FC<RelatedMattersTabProps> = ({ caseId }) 
 
       const { data, error } = await supabase
         .from('cases')
-        .select('id, case_title, title, case_number, petitioner, respondent, vs')
+        .select('id, case_title, case_number, petitioner, respondent, vs')
         .eq('firm_id', firmData.firm_id)
         .neq('id', caseId)
         .order('case_title');

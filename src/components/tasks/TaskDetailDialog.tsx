@@ -31,7 +31,7 @@ export const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
           *,
           assigned_user:profiles!tasks_assigned_to_fkey(full_name),
           creator:profiles!tasks_created_by_fkey(full_name),
-          case:cases!tasks_case_id_fkey(title),
+          case:cases!tasks_case_id_fkey(case_title),
           client:clients!tasks_client_id_fkey(full_name)
         `)
         .eq('id', taskId)
@@ -224,7 +224,7 @@ export const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                   <div className="flex items-center gap-2 bg-blue-50 rounded-lg p-3 border border-blue-200">
                     <FileText className="w-4 h-4 text-blue-600" />
                     <span className="text-blue-700 font-medium">Case:</span>
-                    <span className="text-blue-600">{taskData.case.title}</span>
+                    <span className="text-blue-600">{taskData.case.case_title}</span>
                   </div>
                 )}
                 {taskData.client && (

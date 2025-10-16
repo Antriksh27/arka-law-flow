@@ -79,7 +79,7 @@ export const EditNoteDialog: React.FC<EditNoteDialogProps> = ({
       const {
         data,
         error
-      } = await supabase.from('cases').select('id, title').eq('status', 'open').order('title');
+      } = await supabase.from('cases').select('id, case_title').eq('status', 'open').order('case_title');
       if (error) throw error;
       return data || [];
     }
@@ -221,7 +221,7 @@ export const EditNoteDialog: React.FC<EditNoteDialogProps> = ({
               <SelectContent className="bg-white border border-gray-200 shadow-lg max-h-60">
                 <SelectItem value="no-case">No case</SelectItem>
                 {cases.map(caseItem => <SelectItem key={caseItem.id} value={caseItem.id}>
-                    {caseItem.title}
+                    {caseItem.case_title}
                   </SelectItem>)}
               </SelectContent>
             </Select>

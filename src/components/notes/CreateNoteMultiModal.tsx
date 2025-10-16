@@ -71,7 +71,7 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
     queryFn: async () => {
       const { data, error } = await supabase
         .from('cases')
-        .select('id, title')
+        .select('id, case_title')
         .eq('status', 'open')
         .order('title');
       
@@ -409,7 +409,7 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
                 <SelectItem value="no-case">No case</SelectItem>
                 {cases.map((caseItem) => (
                   <SelectItem key={caseItem.id} value={caseItem.id}>
-                    {caseItem.title}
+                    {caseItem.case_title}
                   </SelectItem>
                 ))}
               </SelectContent>

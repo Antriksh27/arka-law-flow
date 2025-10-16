@@ -63,7 +63,7 @@ export const NotesHeader: React.FC<NotesHeaderProps> = ({
     queryFn: async () => {
       const { data, error } = await supabase
         .from('cases')
-        .select('id, title')
+        .select('id, case_title')
         .eq('status', 'open')
         .order('title');
       
@@ -148,7 +148,7 @@ export const NotesHeader: React.FC<NotesHeaderProps> = ({
               <SelectItem value="all-cases">All Cases</SelectItem>
               {cases.map(caseItem => (
                 <SelectItem key={caseItem.id} value={caseItem.id}>
-                  {caseItem.title}
+                  {caseItem.case_title}
                 </SelectItem>
               ))}
             </SelectContent>

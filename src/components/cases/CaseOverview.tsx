@@ -143,7 +143,7 @@ export const CaseOverview: React.FC<CaseOverviewProps> = ({ caseId }) => {
             <div className="space-y-4">
             <p className="text-foreground">
               This is an AI-generated summary of the case based on available information. 
-              The case "{caseData.title}" is currently in {caseData.status} status and was filed on{' '}
+              The case "{caseData.case_title}" is currently in {caseData.status} status and was filed on{' '}
               {caseData.filing_date ? new Date(caseData.filing_date).toLocaleDateString() : 'Unknown date'}.
             </p>
             <div className="flex items-center gap-2">
@@ -215,7 +215,7 @@ export const CaseOverview: React.FC<CaseOverviewProps> = ({ caseId }) => {
             <div className="space-y-4">
               <div>
                 <p className="text-sm text-muted">Case Title</p>
-                <p className="font-medium">{caseData.title}</p>
+                <p className="font-medium">{caseData.case_title}</p>
               </div>
               <div>
                 <p className="text-sm text-muted">Client</p>

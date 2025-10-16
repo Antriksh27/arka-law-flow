@@ -73,7 +73,7 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
   // All fields are now directly in the cases table
   const {
     cnr_number,
-    title,
+    case_case_title,
     filing_number,
     registration_number,
     filing_date,

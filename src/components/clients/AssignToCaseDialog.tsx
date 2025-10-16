@@ -33,7 +33,7 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
         .from('cases')
         .select(`
           id,
-          title,
+          case_title,
           status,
           case_type,
           created_at,
@@ -50,7 +50,7 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
 
   // Filter cases based on search query
   const filteredCases = cases.filter(case_item =>
-    case_item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    case_item.case_title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     case_item.case_type.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (case_item.clients?.full_name || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -184,7 +184,7 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
                               <div className="flex items-start justify-between">
                                 <div className="flex-1">
                                   <h3 className="font-medium text-gray-900 mb-2">
-                                    {case_item.title}
+                                    {case_item.case_title}
                                   </h3>
                                   <div className="flex items-center gap-4 text-sm text-gray-500">
                                     <Badge

@@ -333,7 +333,7 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({
             <div className="p-4 rounded-lg space-y-2 bg-sky-100">
               <div>
                 <Label className="text-xs text-muted-foreground">Case</Label>
-                <p className="text-sm font-medium">{caseData?.title || 'Loading...'}</p>
+                <p className="text-sm font-medium">{caseData?.case_title || 'Loading...'}</p>
               </div>
               <div>
                 <Label className="text-xs text-muted-foreground">Client</Label>

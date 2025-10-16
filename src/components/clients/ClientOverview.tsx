@@ -49,7 +49,7 @@ export const ClientOverview: React.FC<ClientOverviewProps> = ({
           activity_type,
           description,
           created_at,
-          cases!inner(title, case_number)
+          cases!inner(case_title, case_number)
         `).eq('cases.client_id', clientId).order('created_at', {
         ascending: false
       }).limit(5);
@@ -122,7 +122,7 @@ export const ClientOverview: React.FC<ClientOverviewProps> = ({
                 <div className="flex-1">
                   <div className="font-medium text-gray-900">{activity.description}</div>
                   <div className="text-sm text-gray-600">
-                    Case: {activity.cases?.case_number} - {activity.cases?.title}
+                    Case: {activity.cases?.case_number} - {activity.cases?.case_title}
                   </div>
                 </div>
                 <div className="flex items-center gap-3">

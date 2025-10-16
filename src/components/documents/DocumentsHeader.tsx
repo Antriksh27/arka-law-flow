@@ -39,7 +39,7 @@ export const DocumentsHeader: React.FC<DocumentsHeaderProps> = ({
     queryFn: async () => {
       const { data, error } = await supabase
         .from('cases')
-        .select('id, title')
+        .select('id, case_title')
         .order('title');
       if (error) throw error;
       return data || [];
@@ -192,7 +192,7 @@ export const DocumentsHeader: React.FC<DocumentsHeaderProps> = ({
                 <SelectItem value="all">All Cases</SelectItem>
                 {cases.map((case_item) => (
                   <SelectItem key={case_item.id} value={case_item.id}>
-                    {case_item.title}
+                    {case_item.case_title}
                   </SelectItem>
                 ))}
               </SelectContent>

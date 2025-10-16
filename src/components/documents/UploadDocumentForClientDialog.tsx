@@ -161,7 +161,7 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
     queryFn: async () => {
       const { data, error } = await supabase
         .from('cases')
-        .select('id, title')
+        .select('id, case_title')
         .eq('client_id', clientId)
         .eq('status', 'open')
         .order('title');
@@ -207,7 +207,7 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
 
         const selectedCase = cases.find(c => c.id === selectedCaseId);
         const clientName = client?.full_name || 'Unknown Client';
-        const caseName = (selectedCaseId && selectedCaseId !== 'no-case' && selectedCase) ? selectedCase.title : 'General Documents';
+        const caseName = (selectedCaseId && selectedCaseId !== 'no-case' && selectedCase) ? selectedCase.case_title : 'General Documents';
         const category = data.document_category ? categoryLabels[data.document_category as keyof typeof categoryLabels] : 'Others';
         const docType = data.document_type || data.custom_document_type || 'Unspecified';
         
@@ -449,7 +449,7 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
                 <SelectItem value="no-case" className="hover:bg-gray-50">No Case (General Documents)</SelectItem>
                 {cases.map(case_item => (
                   <SelectItem key={case_item.id} value={case_item.id} className="hover:bg-gray-50">
-                    {case_item.title}
+                    {case_item.case_title}
                   </SelectItem>
                 ))}
               </SelectContent>

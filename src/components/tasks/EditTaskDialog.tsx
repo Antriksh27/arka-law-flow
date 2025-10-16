@@ -132,7 +132,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
     queryFn: async () => {
       const { data, error } = await supabase
         .from('cases')
-        .select('id, title')
+        .select('id, case_title')
         .eq('status', 'open')
         .order('title');
       if (error) throw error;
@@ -276,7 +276,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
                 <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
                   {cases.map((caseItem) => (
                     <SelectItem key={caseItem.id} value={caseItem.id} className="hover:bg-gray-50">
-                      {caseItem.title}
+                      {caseItem.case_title}
                     </SelectItem>
                   ))}
                 </SelectContent>

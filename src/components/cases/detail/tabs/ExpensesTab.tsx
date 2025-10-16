@@ -182,7 +182,7 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({
                 </div>
                 {caseData?.clients && <div className="text-sm text-muted-foreground p-3 rounded-lg bg-teal-50">
                     <p><strong>Linked to:</strong></p>
-                    <p>Title: {caseData.title}</p>
+                    <p>Title: {caseData.case_title}</p>
                     <p>Client: {caseData.clients.full_name}</p>
                   </div>}
                 <div className="flex gap-2 pt-4">

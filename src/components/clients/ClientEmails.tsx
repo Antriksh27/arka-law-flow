@@ -17,7 +17,7 @@ export const ClientEmails: React.FC<ClientEmailsProps> = ({ clientId }) => {
       // First fetch all case ids for this client
       const { data: cases, error: caseError } = await supabase
         .from('cases')
-        .select('id, title')
+        .select('id, case_title')
         .eq('client_id', clientId);
 
       if (caseError) throw caseError;

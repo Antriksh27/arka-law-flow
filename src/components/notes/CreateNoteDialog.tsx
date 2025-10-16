@@ -65,7 +65,7 @@ export const CreateNoteDialog: React.FC<CreateNoteDialogProps> = ({
     queryFn: async () => {
       const { data, error } = await supabase
         .from('cases')
-        .select('id, title')
+        .select('id, case_title')
         .eq('status', 'open')
         .order('title');
       
@@ -228,7 +228,7 @@ export const CreateNoteDialog: React.FC<CreateNoteDialogProps> = ({
                 <SelectItem value="none">No case</SelectItem>
                 {cases.map((caseItem) => (
                   <SelectItem key={caseItem.id} value={caseItem.id}>
-                    {caseItem.title}
+                    {caseItem.case_title}
                   </SelectItem>
                 ))}
               </SelectContent>

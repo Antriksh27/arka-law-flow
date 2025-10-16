@@ -27,7 +27,7 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
   const navigate = useNavigate();
 
   // Get case title - prefer VS format
-  const caseTitle = caseData.vs || caseData.title || caseData.case_title || 'Untitled Case';
+  const caseTitle = caseData.vs || caseData.case_title || 'Untitled Case';
 
   const deleteCase = useMutation({
     mutationFn: async () => {

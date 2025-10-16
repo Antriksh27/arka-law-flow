@@ -174,7 +174,7 @@ const Tasks = () => {
 
       {task.case && (
         <div className="text-xs text-blue-600 mb-2">
-          Case: {task.case.title}
+          Case: {task.case.case_title}
         </div>
       )}
 
