@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { NovuProvider } from '@novu/react';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { DialogProvider } from './hooks/use-dialog';
 import RoleBasedRouter from './components/routing/RoleBasedRouter';
@@ -12,6 +13,7 @@ import { BookRedirect } from './pages/BookRedirect';
 import CaseDetailEnhanced from './pages/CaseDetailEnhanced';
 import ChatbotDemo from './pages/ChatbotDemo';
 import ZohoCallback from './pages/ZohoCallback';
+import { useAuth } from './contexts/AuthContext';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,13 +26,21 @@ const queryClient = new QueryClient({
 });
 const BUILD_INFO = new Date().toISOString();
 console.log('App build:', BUILD_INFO);
-function App() {
+
+function AppContent() {
+  const { user } = useAuth();
+  const applicationIdentifier = import.meta.env.VITE_NOVU_APPLICATION_IDENTIFIER;
+
   return (
-    <div className="min-h-screen bg-gray-50" data-build={BUILD_INFO}>
-      <Router>
-        <QueryClientProvider client={queryClient}>
-          <DialogProvider>
-            <Routes>
+    <NovuProvider
+      subscriberId={user?.id || 'anonymous'}
+      applicationIdentifier={applicationIdentifier}
+    >
+      <div className="min-h-screen bg-gray-50" data-build={BUILD_INFO}>
+        <Router>
+          <QueryClientProvider client={queryClient}>
+            <DialogProvider>
+              <Routes>
               {/* Public booking routes - completely public, no authentication */}
               <Route path="/b/:code" element={<BookRedirect />} />
               <Route path="/bk/:compact" element={<BookRedirect />} />
@@ -59,13 +69,18 @@ function App() {
                   <RoleBasedRouter />
                 </ProtectedRoute>
               } />
-            </Routes>
-            <Toaster />
-          </DialogProvider>
-        </QueryClientProvider>
-      </Router>
-    </div>
+              </Routes>
+              <Toaster />
+            </DialogProvider>
+          </QueryClientProvider>
+        </Router>
+      </div>
+    </NovuProvider>
   );
+}
+
+function App() {
+  return <AppContent />;
 }
 
 export default App;
