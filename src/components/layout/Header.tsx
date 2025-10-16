@@ -3,9 +3,8 @@ import { Bell, User, LogOut, TestTube } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import NotificationInbox from '@/components/notifications/NotificationInbox';
+import NovuNotificationInbox from '@/components/notifications/NovuNotificationInbox';
 import { NotificationSettings } from '@/components/notifications/NotificationSettings';
-import { useNotifications } from '@/hooks/useNotifications';
 import { sendTestNotification } from '@/utils/testNotification';
 const Header = () => {
   const { user, signOut } = useAuth();
@@ -32,7 +31,7 @@ const Header = () => {
         <div className="flex items-center gap-3">
           <NotificationSettings />
           
-          <NotificationInbox userId={user?.id} />
+          <NovuNotificationInbox />
           
           {/* User Profile Dropdown */}
           <DropdownMenu>

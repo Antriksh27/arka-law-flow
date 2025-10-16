@@ -1,28 +1,20 @@
-import { useEffect, useState } from "react";
 import { Inbox } from "@novu/react";
 import { useAuth } from "@/contexts/AuthContext";
 
-export default function NotificationInbox({ userId }) {
+export default function NovuNotificationInbox() {
   const { user } = useAuth();
-  const [subscriberId, setSubscriberId] = useState(userId || null);
 
   const applicationIdentifier = import.meta.env.VITE_NOVU_APPLICATION_IDENTIFIER;
   const backendUrl = import.meta.env.VITE_NOVU_BACKEND_URL;
   const socketUrl = import.meta.env.VITE_NOVU_SOCKET_URL;
 
-  useEffect(() => {
-    if (user?.id) {
-      setSubscriberId(user.id);
-    }
-  }, [user]);
-
-  if (!applicationIdentifier || !subscriberId) return null;
+  if (!applicationIdentifier || !user?.id) return null;
 
   return (
-    <div className="relative z-50" style={{ opacity: 1 }}>
+    <div className="relative z-50">
       <Inbox
         applicationIdentifier={applicationIdentifier}
-        subscriberId={subscriberId}
+        subscriberId={user.id}
         {...(backendUrl ? { backendUrl } : {})}
         {...(socketUrl ? { socketUrl } : {})}
         appearance={{
@@ -33,7 +25,7 @@ export default function NotificationInbox({ userId }) {
             colorSecondaryForeground: 'rgb(17, 24, 39)',
             colorCounter: 'rgb(37, 99, 235)',
             colorCounterForeground: 'rgb(255, 255, 255)',
-            colorBackground: 'rgb(255, 255, 255)',
+            colorBackground: 'rgb(239, 246, 255)',
             colorForeground: 'rgb(17, 24, 39)',
             colorNeutral: 'rgb(191, 219, 254)',
             fontSize: '14px',
