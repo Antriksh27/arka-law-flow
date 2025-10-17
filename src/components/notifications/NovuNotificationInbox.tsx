@@ -54,7 +54,7 @@ export default function NovuNotificationInbox() {
     initializeNovu();
   }, [user?.id, user?.email, user?.user_metadata]);
 
-  if (!applicationIdentifier || !user?.id || !subscriberHash) {
+  if (!applicationIdentifier || !user?.id) {
     return null;
   }
 
@@ -63,7 +63,7 @@ export default function NovuNotificationInbox() {
       <Inbox
         applicationIdentifier={applicationIdentifier}
         subscriberId={user.id}
-        subscriberHash={subscriberHash}
+        subscriberHash={subscriberHash ?? undefined}
         appearance={{
           variables: {
             colorPrimary: '#1E3A8A',
