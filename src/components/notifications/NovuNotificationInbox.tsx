@@ -1,12 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Inbox } from "@novu/react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function NovuNotificationInbox() {
   const { user } = useAuth();
-  const [isSubscriberReady, setIsSubscriberReady] = useState(false);
-
   const applicationIdentifier = import.meta.env.VITE_NOVU_APPLICATION_IDENTIFIER;
 
   useEffect(() => {
@@ -26,21 +24,20 @@ export default function NovuNotificationInbox() {
           }
         });
 
-        if (error) {
-          console.error('Error registering subscriber:', error);
+        if (error || data?.status === 'error') {
+          console.error('❌ Novu subscriber registration failed:', error || data);
         } else {
-          console.log('Subscriber registered successfully:', data);
-          setIsSubscriberReady(true);
+          console.log('✅ Novu subscriber registered successfully:', data);
         }
       } catch (err) {
-        console.error('Failed to register subscriber:', err);
+        console.error('❌ Failed to register Novu subscriber:', err);
       }
     };
 
     registerSubscriber();
   }, [user?.id, user?.email, user?.user_metadata]);
 
-  if (!applicationIdentifier || !user?.id || !isSubscriberReady) {
+  if (!applicationIdentifier || !user?.id) {
     return null;
   }
 
@@ -51,23 +48,23 @@ export default function NovuNotificationInbox() {
         subscriberId={user.id}
         appearance={{
           variables: {
-            colorPrimary: 'hsl(37 99% 67%)',
-            colorPrimaryForeground: 'hsl(0 0% 100%)',
-            colorSecondary: 'hsl(219 100% 93%)',
-            colorSecondaryForeground: 'hsl(17 24% 11%)',
-            colorCounter: 'hsl(37 99% 67%)',
-            colorCounterForeground: 'hsl(0 0% 100%)',
-            colorBackground: 'hsl(239 100% 98%)',
-            colorForeground: 'hsl(17 24% 11%)',
-            colorNeutral: 'hsl(191 100% 88%)',
+            colorPrimary: '#1E3A8A',
+            colorPrimaryForeground: '#FFFFFF',
+            colorSecondary: '#E0E7FF',
+            colorSecondaryForeground: '#111827',
+            colorCounter: '#1E3A8A',
+            colorCounterForeground: '#FFFFFF',
+            colorBackground: '#F9FAFB',
+            colorForeground: '#111827',
+            colorNeutral: '#E5E7EB',
             fontSize: '14px',
           },
           elements: {
             bellIcon: {
-              color: 'hsl(0 0% 100%)',
+              color: '#FFFFFF',
             },
             notificationList: {
-              backgroundColor: 'hsl(0 0% 100%)',
+              backgroundColor: '#FFFFFF',
             },
           },
         }}

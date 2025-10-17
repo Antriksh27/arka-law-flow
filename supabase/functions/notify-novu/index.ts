@@ -44,8 +44,16 @@ serve(async (req) => {
       });
 
       const data = await response.json();
+      
+      if (!response.ok) {
+        console.log("❌ Subscriber registration failed:", data);
+        return new Response(JSON.stringify({ status: "error", data }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      
       console.log("✅ Subscriber registered:", data);
-
       return new Response(JSON.stringify({ status: "ok", data }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -95,8 +103,16 @@ serve(async (req) => {
     });
 
     const data = await response.json();
+    
+    if (!response.ok) {
+      console.log("❌ Novu event trigger failed:", data);
+      return new Response(JSON.stringify({ status: "error", data }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    
     console.log("✅ Novu API response:", data);
-
     return new Response(JSON.stringify({ status: "ok", data }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
