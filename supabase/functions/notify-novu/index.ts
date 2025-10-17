@@ -19,6 +19,82 @@ serve(async (req) => {
     const body = await req.json();
     console.log("📩 Incoming request:", JSON.stringify(body).substring(0, 200));
 
+    // Handle subscriber hash generation for authenticated Inbox
+    if (body.action === 'get_subscriber_hash') {
+      const subscriberId = body.subscriberId;
+      if (!subscriberId) {
+        return new Response(JSON.stringify({ status: "error", message: "subscriberId required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const hmacSecret = Deno.env.get("NOVU_HMAC_SECRET") || novuApiKey;
+      const encoder = new TextEncoder();
+      const key = await crypto.subtle.importKey(
+        "raw",
+        encoder.encode(hmacSecret),
+        { name: "HMAC", hash: "SHA-256" },
+        false,
+        ["sign"]
+      );
+      const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(subscriberId));
+      const subscriberHash = Array.from(new Uint8Array(signature))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+
+      console.log("✅ Generated subscriber hash for:", subscriberId);
+      return new Response(JSON.stringify({ status: "ok", subscriberHash }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Handle test notification trigger
+    if (body.action === 'trigger_test') {
+      const subscriberId = body.subscriberId;
+      if (!subscriberId) {
+        return new Response(JSON.stringify({ status: "error", message: "subscriberId required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      console.log("🧪 Sending test notification to:", subscriberId);
+      const response = await fetch("https://api.novu.co/v1/events/trigger", {
+        method: "POST",
+        headers: {
+          Authorization: `ApiKey ${novuApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: "in-app",
+          to: { subscriberId },
+          payload: {
+            subject: "Test Notification",
+            body: "This is a test notification from HRU Legal CMS",
+            data: {
+              timestamp: new Date().toISOString(),
+              test: true,
+            },
+          },
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        console.log("❌ Test notification failed:", data);
+        return new Response(JSON.stringify({ status: "error", data }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      console.log("✅ Test notification sent:", data);
+      return new Response(JSON.stringify({ status: "ok", data }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Handle subscriber registration
     if (body.action === 'register_subscriber') {
       console.log("Registering subscriber:", body.subscriberId);
