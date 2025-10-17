@@ -17,7 +17,33 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    console.log("📩 Incoming Supabase payload:", body);
+    console.log("📩 Incoming request:", body);
+
+    // Handle subscriber registration
+    if (body.action === 'register_subscriber') {
+      console.log("Registering subscriber:", body.subscriberId);
+      
+      const response = await fetch("https://api.novu.co/v1/subscribers", {
+        method: "POST",
+        headers: {
+          Authorization: `ApiKey ${novuApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          subscriberId: body.subscriberId,
+          email: body.email,
+          firstName: body.firstName,
+          lastName: body.lastName,
+        }),
+      });
+
+      const data = await response.json();
+      console.log("✅ Subscriber registered:", data);
+
+      return new Response(JSON.stringify({ status: "ok", data }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const { table, eventType, record } = body;
     const message = constructMessage(table, eventType, record);
