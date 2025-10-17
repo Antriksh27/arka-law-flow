@@ -3,7 +3,6 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import ReceptionistSidebar from './ReceptionistSidebar';
 import Header from './Header';
-import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications';
 
 interface ReceptionistLayoutProps {
   children: React.ReactNode;
@@ -11,9 +10,6 @@ interface ReceptionistLayoutProps {
 
 const ReceptionistLayout = ({ children }: ReceptionistLayoutProps) => {
   const { user, role, loading } = useAuth();
-  
-  // Initialize real-time notifications
-  useRealtimeNotifications();
 
   if (loading) {
     return (

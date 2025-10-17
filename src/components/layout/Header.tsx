@@ -1,4 +1,3 @@
-import React from 'react';
 import { User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';

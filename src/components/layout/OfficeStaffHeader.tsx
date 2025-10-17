@@ -1,16 +1,12 @@
-import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Bell, Settings, User, LogOut } from 'lucide-react';
+import { Settings, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { NotificationPanel } from '@/components/notifications/NotificationPanel';
-import { useNotifications } from '@/hooks/useNotifications';
+import NovuNotificationInbox from '@/components/notifications/NovuNotificationInbox';
 
 const OfficeStaffHeader = () => {
   const { user, signOut } = useAuth();
-  const { unreadCount } = useNotifications();
-  const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
   const location = useLocation();
 
   const navItems = [
@@ -44,25 +40,7 @@ const OfficeStaffHeader = () => {
           
           {/* Right Side Actions */}
           <div className="flex items-center gap-3">
-            <div className="relative">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="focus:ring-[#111827] relative bg-slate-200 hover:bg-slate-100 text-slate-900"
-                onClick={() => setIsNotificationPanelOpen(!isNotificationPanelOpen)}
-              >
-                <Bell className="w-5 h-5" />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium">
-                    {unreadCount > 99 ? '99+' : unreadCount}
-                  </span>
-                )}
-              </Button>
-              <NotificationPanel 
-                isOpen={isNotificationPanelOpen}
-                onClose={() => setIsNotificationPanelOpen(false)}
-              />
-            </div>
+            <NovuNotificationInbox />
             <Button variant="ghost" size="icon" className="focus:ring-[#111827] bg-slate-50 text-slate-900">
               <Settings className="w-5 h-5" />
             </Button>

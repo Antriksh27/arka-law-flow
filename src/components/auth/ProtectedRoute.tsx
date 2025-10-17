@@ -1,8 +1,6 @@
-
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
-import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -10,9 +8,6 @@ interface ProtectedRouteProps {
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { user, loading } = useAuth();
-  
-  // Set up real-time notifications for authenticated users
-  useRealtimeNotifications();
 
   if (loading) {
     return (

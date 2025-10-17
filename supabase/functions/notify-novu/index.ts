@@ -17,7 +17,7 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    console.log("📩 Incoming request:", body);
+    console.log("📩 Incoming request:", JSON.stringify(body).substring(0, 200));
 
     // Handle subscriber registration
     if (body.action === 'register_subscriber') {
@@ -45,7 +45,15 @@ serve(async (req) => {
       });
     }
 
+    // Handle notification triggers from DB
     const { table, eventType, record } = body;
+    
+    if (!table || !eventType || !record) {
+      console.warn("⚠️ Invalid payload structure:", { table, eventType, record: !!record });
+      return new Response(JSON.stringify({ status: "skipped", reason: "Invalid payload" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     const message = constructMessage(table, eventType, record);
     const subscriberId = determineSubscriberId(table, record);
 
