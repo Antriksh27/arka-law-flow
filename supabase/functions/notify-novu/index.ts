@@ -34,6 +34,12 @@ serve(async (req) => {
           email: body.email,
           firstName: body.firstName,
           lastName: body.lastName,
+          channels: [
+            {
+              providerId: "in_app",
+              credentials: {},
+            }
+          ],
         }),
       });
 
