@@ -31,6 +31,14 @@ export default function NovuNotificationInbox() {
           console.error('❌ Novu subscriber registration failed:', registerError || registerData);
         } else {
           console.log('✅ Novu subscriber registered:', registerData);
+          const { data: triggerData, error: triggerError } = await supabase.functions.invoke('notify-novu', {
+            body: { action: 'trigger_test', subscriberId: user.id }
+          });
+          if (triggerError || triggerData?.status === 'error') {
+            console.error('❌ Novu test notification failed:', triggerError || triggerData);
+          } else {
+            console.log('✅ Novu test notification sent:', triggerData);
+          }
         }
       } catch (err) {
         console.error('❌ Failed to initialize Novu:', err);
@@ -51,24 +59,20 @@ export default function NovuNotificationInbox() {
         subscriberId={user.id}
         appearance={{
           variables: {
-            colorPrimary: '#1E3A8A',
-            colorPrimaryForeground: '#FFFFFF',
-            colorSecondary: '#E0E7FF',
-            colorSecondaryForeground: '#111827',
-            colorCounter: '#1E3A8A',
-            colorCounterForeground: '#FFFFFF',
-            colorBackground: '#F9FAFB',
-            colorForeground: '#111827',
-            colorNeutral: '#E5E7EB',
+            colorPrimary: 'hsl(var(--primary))',
+            colorPrimaryForeground: 'hsl(var(--primary-foreground))',
+            colorSecondary: 'hsl(var(--secondary))',
+            colorSecondaryForeground: 'hsl(var(--secondary-foreground))',
+            colorCounter: 'hsl(var(--primary))',
+            colorCounterForeground: 'hsl(var(--primary-foreground))',
+            colorBackground: 'hsl(var(--background))',
+            colorForeground: 'hsl(var(--foreground))',
+            colorNeutral: 'hsl(var(--border))',
             fontSize: '14px',
           },
           elements: {
-            bellIcon: {
-              color: '#FFFFFF',
-            },
-            notificationList: {
-              backgroundColor: '#FFFFFF',
-            },
+            bellIcon: { color: 'hsl(var(--primary-foreground))' },
+            notificationList: { backgroundColor: 'hsl(var(--card))' },
           },
         }}
       />

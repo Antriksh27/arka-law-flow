@@ -94,29 +94,27 @@ export default function TestProductionNovu() {
         <p className="text-sm font-medium mb-2">Production Inbox (App ID: {prodAppId || 'not set'}):</p>
         {user?.id && prodAppId ? (
           <div className="relative">
-            <Inbox
-              applicationIdentifier={prodAppId}
-              subscriberId={user.id}
-              appearance={{
-                variables: {
-                  colorPrimary: '#1E3A8A',
-                  colorPrimaryForeground: '#FFFFFF',
-                  colorSecondary: '#E0E7FF',
-                  colorSecondaryForeground: '#111827',
-                  colorCounter: '#1E3A8A',
-                  colorCounterForeground: '#FFFFFF',
-                  colorBackground: '#F9FAFB',
-                  colorForeground: '#111827',
-                  colorNeutral: '#E5E7EB',
-                  fontSize: '14px',
-                },
-                elements: {
-                  bellIcon: {
-                    color: '#1E3A8A',
-                  },
-                },
-              }}
-            />
+          <Inbox
+            applicationIdentifier={prodAppId}
+            subscriberId={user.id}
+            appearance={{
+              variables: {
+                colorPrimary: 'hsl(var(--primary))',
+                colorPrimaryForeground: 'hsl(var(--primary-foreground))',
+                colorSecondary: 'hsl(var(--secondary))',
+                colorSecondaryForeground: 'hsl(var(--secondary-foreground))',
+                colorCounter: 'hsl(var(--primary))',
+                colorCounterForeground: 'hsl(var(--primary-foreground))',
+                colorBackground: 'hsl(var(--background))',
+                colorForeground: 'hsl(var(--foreground))',
+                colorNeutral: 'hsl(var(--border))',
+                fontSize: '14px',
+              },
+              elements: {
+                bellIcon: { color: 'hsl(var(--primary))' },
+              },
+            }}
+          />
           </div>
         ) : (
           <div className="p-3 bg-muted rounded-md text-sm">
