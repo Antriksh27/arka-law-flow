@@ -91,32 +91,38 @@ export default function TestProductionNovu() {
       </div>
 
       <div className="border-t pt-4">
-        <p className="text-sm font-medium mb-2">Production Inbox (App ID: {prodAppId}):</p>
-        <div className="relative">
-          <Inbox
-            applicationIdentifier={prodAppId}
-            subscriberId={user?.id || ""}
-            appearance={{
-              variables: {
-                colorPrimary: '#1E3A8A',
-                colorPrimaryForeground: '#FFFFFF',
-                colorSecondary: '#E0E7FF',
-                colorSecondaryForeground: '#111827',
-                colorCounter: '#1E3A8A',
-                colorCounterForeground: '#FFFFFF',
-                colorBackground: '#F9FAFB',
-                colorForeground: '#111827',
-                colorNeutral: '#E5E7EB',
-                fontSize: '14px',
-              },
-              elements: {
-                bellIcon: {
-                  color: '#1E3A8A',
+        <p className="text-sm font-medium mb-2">Production Inbox (App ID: {prodAppId || 'not set'}):</p>
+        {user?.id && prodAppId ? (
+          <div className="relative">
+            <Inbox
+              applicationIdentifier={prodAppId}
+              subscriberId={user.id}
+              appearance={{
+                variables: {
+                  colorPrimary: '#1E3A8A',
+                  colorPrimaryForeground: '#FFFFFF',
+                  colorSecondary: '#E0E7FF',
+                  colorSecondaryForeground: '#111827',
+                  colorCounter: '#1E3A8A',
+                  colorCounterForeground: '#FFFFFF',
+                  colorBackground: '#F9FAFB',
+                  colorForeground: '#111827',
+                  colorNeutral: '#E5E7EB',
+                  fontSize: '14px',
                 },
-              },
-            }}
-          />
-        </div>
+                elements: {
+                  bellIcon: {
+                    color: '#1E3A8A',
+                  },
+                },
+              }}
+            />
+          </div>
+        ) : (
+          <div className="p-3 bg-muted rounded-md text-sm">
+            Set VITE_NOVU_APPLICATION_IDENTIFIER_PROD to render the production inbox.
+          </div>
+        )}
       </div>
     </Card>
   );

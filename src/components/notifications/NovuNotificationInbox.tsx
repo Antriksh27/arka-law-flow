@@ -5,10 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 
 export default function NovuNotificationInbox() {
   const { user } = useAuth();
-  const isDevelopment = import.meta.env.DEV;
-  const applicationIdentifier = isDevelopment 
-    ? import.meta.env.VITE_NOVU_APPLICATION_IDENTIFIER_DEV 
-    : import.meta.env.VITE_NOVU_APPLICATION_IDENTIFIER_PROD;
+  const applicationIdentifier =
+    import.meta.env.VITE_NOVU_APPLICATION_IDENTIFIER_PROD ||
+    import.meta.env.VITE_NOVU_APPLICATION_IDENTIFIER_DEV;
 
   useEffect(() => {
     if (!user?.id) return;
