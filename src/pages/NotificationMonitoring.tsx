@@ -1,5 +1,6 @@
 import React from 'react';
 import { NotificationAnalytics } from '@/components/notifications/NotificationAnalytics';
+import TestProductionNovu from '@/components/notifications/TestProductionNovu';
 
 const NotificationMonitoring = () => {
   return (
@@ -10,6 +11,8 @@ const NotificationMonitoring = () => {
           Monitor notification delivery, engagement, and system health
         </p>
       </div>
+      
+      <TestProductionNovu />
       
       <NotificationAnalytics />
     </div>
