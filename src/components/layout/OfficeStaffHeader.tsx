@@ -3,7 +3,7 @@ import { Settings, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import NovuNotificationInbox from '@/components/notifications/NovuNotificationInbox';
+import NotificationInbox from '@/components/notifications/NotificationInbox';
 
 const OfficeStaffHeader = () => {
   const { user, signOut } = useAuth();
@@ -40,7 +40,7 @@ const OfficeStaffHeader = () => {
           
           {/* Right Side Actions */}
           <div className="flex items-center gap-3">
-            <NovuNotificationInbox />
+            <NotificationInbox />
             <Button variant="ghost" size="icon" className="focus:ring-[#111827] bg-slate-50 text-slate-900">
               <Settings className="w-5 h-5" />
             </Button>
