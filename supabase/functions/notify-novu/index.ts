@@ -17,7 +17,7 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    console.log("📩 Incoming request:", JSON.stringify(body).substring(0, 200));
+    console.log("Received notification request:", JSON.stringify(body, null, 2));
 
     // Handle subscriber hash generation for authenticated Inbox
     if (body.action === 'get_subscriber_hash') {
@@ -144,8 +144,11 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    
+    console.log("Processing database event:", { table, eventType, record });
     const message = constructMessage(table, eventType, record);
     const subscriberId = determineSubscriberId(table, record);
+    console.log("Determined subscriber ID:", subscriberId);
 
     if (!subscriberId) {
       console.warn("⚠️ No subscriber ID found — skipping notification");

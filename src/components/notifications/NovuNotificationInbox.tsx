@@ -27,10 +27,25 @@ export default function NovuNotificationInbox() {
           }
         });
 
-        if (registerError || registerData?.status === 'error') {
-          console.error('❌ Novu subscriber registration failed:', registerError || registerData);
+        if (registerError) {
+          console.error('❌ Novu subscriber registration failed:', registerError);
+        } else if (registerData?.status === 'error') {
+          console.error('❌ Novu subscriber registration failed:', registerData);
         } else {
           console.log('✅ Novu subscriber registered:', registerData);
+          
+          // Get subscriber hash for authenticated Inbox
+          const { data: hashData, error: hashError } = await supabase.functions.invoke('notify-novu', {
+            body: { action: 'get_subscriber_hash', subscriberId: user.id }
+          });
+          
+          if (hashError || hashData?.status === 'error') {
+            console.error('❌ Failed to get subscriber hash:', hashError || hashData);
+          } else {
+            console.log('✅ Subscriber hash retrieved:', hashData);
+          }
+          
+          // Send test notification
           const { data: triggerData, error: triggerError } = await supabase.functions.invoke('notify-novu', {
             body: { action: 'trigger_test', subscriberId: user.id }
           });
