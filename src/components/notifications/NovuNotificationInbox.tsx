@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export default function NovuNotificationInbox() {
   const { user } = useAuth();
-  const applicationIdentifier = import.meta.env.VITE_NOVU_APPLICATION_IDENTIFIER_DEV;
+  const applicationIdentifier = import.meta.env.VITE_NOVU_APPLICATION_IDENTIFIER;
 
   if (!applicationIdentifier || !user?.id) {
     return null;
