@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 export default function TestProductionNovu() {
   const { user } = useAuth();
   const [testResult, setTestResult] = useState<string>("");
-  const prodAppId = import.meta.env.VITE_NOVU_APPLICATION_IDENTIFIER_PROD;
+  const prodAppId = import.meta.env.VITE_NOVU_APPLICATION_IDENTIFIER_DEV;
 
   useEffect(() => {
     if (user?.id && prodAppId) {
