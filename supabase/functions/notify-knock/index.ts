@@ -30,7 +30,14 @@ serve(async (req) => {
       );
     }
 
-    console.log(`🔔 Sending Knock notification to user: ${notification.recipientId}`);
+    console.log(`🔔 Sending Knock notification`, {
+      recipientId: notification.recipientId,
+      title: notification.title,
+      message: notification.message,
+      workflow: 'notify-user',
+      table,
+      eventType
+    });
 
     const response = await fetch('https://api.knock.app/v1/workflows/notify-user/trigger', {
       method: 'POST',
@@ -60,7 +67,11 @@ serve(async (req) => {
       throw new Error(data.message || 'Failed to trigger Knock notification');
     }
 
-    console.log('✅ Knock notification sent successfully');
+    console.log('✅ Knock notification sent successfully', {
+      workflowRunId: data.workflow_run_id,
+      recipients: data.recipients,
+      recipientId: notification.recipientId
+    });
     return new Response(
       JSON.stringify({ success: true, data }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
