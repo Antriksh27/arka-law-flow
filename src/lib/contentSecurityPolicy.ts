@@ -37,11 +37,10 @@ export const CSP_DIRECTIVES = {
     "https://www.googleapis.com",
     "https://*.cometchat.io",
     "wss://*.cometchat.io",
-    // Stream Chat (WebSocket + REST)
     "https://*.stream-io-api.com",
     "wss://*.stream-io-api.com",
-    // Novu In-App Inbox API
-    "https://api.novu.co"
+    "https://api.knock.app",
+    "wss://api.knock.app"
   ],
   'object-src': ["'none'"],
   'frame-src': ["'self'", 'blob:', 'data:', 'https:'],

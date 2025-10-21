@@ -22,6 +22,6 @@ export default defineConfig(({ mode }) => ({
   },
   optimizeDeps: {
     exclude: [],
-    include: ['@novu/react', 'react', 'react-dom'],
+    include: ['@knocklabs/react', 'react', 'react-dom'],
   },
 }));

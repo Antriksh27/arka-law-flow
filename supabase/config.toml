@@ -55,5 +55,5 @@ verify_jwt = true
 [functions.zoho-books-sync-clients]
 verify_jwt = true
 
-[functions.notify-novu]
+[functions.notify-knock]
 verify_jwt = false
