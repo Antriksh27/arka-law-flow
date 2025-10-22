@@ -93,7 +93,7 @@ function buildNotification(table: string, eventType: string, record: any) {
         return {
           recipientId: record.lawyer_id || record.created_by,
           title: 'New Appointment Scheduled',
-          message: `Appointment with ${record.client_name || 'client'} on ${record.appointment_date}`,
+          message: `Appointment scheduled for ${record.appointment_date}`,
           actionUrl: `/appointments`,
         };
       }
