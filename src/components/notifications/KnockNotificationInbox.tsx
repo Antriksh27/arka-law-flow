@@ -1,8 +1,7 @@
 import { KnockProvider, KnockFeedProvider, NotificationIconButton, NotificationFeedPopover } from '@knocklabs/react';
 import '@knocklabs/react/dist/index.css';
 import { useAuth } from '@/contexts/AuthContext';
-import { useState, useRef, useEffect } from 'react';
-import Knock from '@knocklabs/client';
+import { useState, useRef } from 'react';
 
 export default function KnockNotificationInbox() {
   const { user } = useAuth();
@@ -12,19 +11,6 @@ export default function KnockNotificationInbox() {
   const apiKey = import.meta.env.VITE_KNOCK_PUBLIC_API_KEY;
   const feedId = import.meta.env.VITE_KNOCK_FEED_ID || 'default';
 
-  useEffect(() => {
-    if (apiKey && user?.id) {
-      const knockClient = new Knock(apiKey);
-      knockClient.authenticate(user.id);
-      console.log('🔔 Knock user authenticated:', {
-        userId: user.id,
-        email: user.email,
-        feedId,
-        apiKeyPrefix: apiKey.substring(0, 10)
-      });
-    }
-  }, [apiKey, user?.id, user?.email, feedId]);
-
   if (!apiKey) {
     console.error('❌ VITE_KNOCK_PUBLIC_API_KEY not configured');
     return null;
@@ -33,6 +19,10 @@ export default function KnockNotificationInbox() {
   if (!user?.id) {
     console.warn('⚠️ No user ID available for Knock');
     return null;
+  }
+
+  if (!feedId || feedId === 'default') {
+    console.warn('⚠️ Knock feed ID looks like a placeholder ("default"). Please set VITE_KNOCK_FEED_ID to your In-app feed channel ID.');
   }
 
   return (
