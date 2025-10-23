@@ -1,191 +1,143 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const knockApiKey = Deno.env.get("KNOCK_API_KEY");
-    if (!knockApiKey) {
-      console.error("❌ KNOCK_API_KEY not configured");
-      throw new Error("KNOCK_API_KEY not configured");
+    const KNOCK_API_KEY = Deno.env.get("KNOCK_API_KEY");
+    if (!KNOCK_API_KEY) throw new Error("KNOCK_API_KEY not configured");
+
+    const body = await req.json();
+    const { table, eventType, record } = body;
+
+    console.log("Incoming DB event:", { table, eventType });
+
+    const subscriberId = determineSubscriberId(table, record);
+    if (!subscriberId) {
+      console.warn("No subscriber ID found, skipping notification");
+      return jsonResponse({ status: "skipped", reason: "No subscriber ID" });
     }
 
-    const { table, eventType, record } = await req.json();
-    console.log(`📬 Notification trigger: ${eventType} on ${table}`, { recordId: record?.id });
+    const { subject, body: messageBody, data } = constructMessageAndPayload(table, eventType, record);
 
-    const notification = buildNotification(table, eventType, record);
-    
-    if (!notification) {
-      console.log(`ℹ️ No notification needed for ${eventType} on ${table}`);
-      return new Response(
-        JSON.stringify({ message: 'No notification needed for this event' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
-      );
-    }
+    // Choose workflow dynamically (or keep one universal workflow)
+    const workflowKey = "new-appointment-notification"; // ✅ your Knock workflow slug
 
-    console.log(`🔔 Sending Knock notification`, {
-      recipientId: notification.recipientId,
-      title: notification.title,
-      message: notification.message,
-      workflow: 'notify-user',
-      table,
-      eventType
-    });
+    console.log("Sending notification:", { subscriberId, subject });
 
-    const response = await fetch('https://api.knock.app/v1/workflows/notify-user/trigger', {
-      method: 'POST',
+    const response = await fetch(`https://api.knock.app/v1/workflows/${workflowKey}/trigger`, {
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${knockApiKey}`,
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${KNOCK_API_KEY}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        recipients: [notification.recipientId],
+        recipients: [subscriberId],
         data: {
-          title: notification.title,
-          message: notification.message,
-          actionUrl: notification.actionUrl,
-          metadata: {
-            table,
-            eventType,
-            recordId: record.id,
-          },
+          subject,
+          body: messageBody,
+          ...data,
         },
       }),
     });
 
-    const data = await response.json();
+    const result = await response.json();
+    console.log("Knock response:", result);
 
-    if (!response.ok) {
-      console.error('❌ Knock API error:', data);
-      throw new Error(data.message || 'Failed to trigger Knock notification');
-    }
-
-    console.log('✅ Knock notification sent successfully', {
-      workflowRunId: data.workflow_run_id,
-      recipients: data.recipients,
-      recipientId: notification.recipientId
-    });
-    return new Response(
-      JSON.stringify({ success: true, data }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-
-  } catch (error) {
-    console.error('❌ Error in notify-knock function:', error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return jsonResponse({ status: "ok", result });
+  } catch (err) {
+    console.error("Error in notify-knock:", err);
+    return jsonResponse({ error: err.message }, 500);
   }
 });
 
-function buildNotification(table: string, eventType: string, record: any) {
+function jsonResponse(data, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+// 🧠 Builds dynamic subject, body & data payload
+function constructMessageAndPayload(table, eventType, record) {
+  let subject = "";
+  let body = "";
+  let data = {};
+
   switch (table) {
-    case 'appointments':
-      if (eventType === 'INSERT') {
-        return {
-          recipientId: record.lawyer_id || record.created_by,
-          title: 'New Appointment Scheduled',
-          message: `Appointment scheduled for ${record.appointment_date}`,
-          actionUrl: `/appointments`,
-        };
-      }
-      if (eventType === 'UPDATE' && record.status) {
-        return {
-          recipientId: record.lawyer_id || record.created_by,
-          title: 'Appointment Updated',
-          message: `Appointment status changed to ${record.status}`,
-          actionUrl: `/appointments`,
-        };
-      }
-      break;
+    case "appointments": {
+      const clientName = record.client_name || "a client";
+      const caseTitle = record.case_title || "a case";
+      const date = record.appointment_date ? new Date(record.appointment_date).toLocaleDateString() : "upcoming";
+      const time = record.appointment_time || "unspecified time";
 
-    case 'cases':
-      if (eventType === 'INSERT') {
-        return {
-          recipientId: record.assigned_lawyer_id || record.created_by,
-          title: 'New Case Created',
-          message: `Case "${record.case_title}" has been created`,
-          actionUrl: `/cases/${record.id}`,
-        };
-      }
-      if (eventType === 'UPDATE' && record.status) {
-        return {
-          recipientId: record.assigned_lawyer_id || record.created_by,
-          title: 'Case Status Updated',
-          message: `Case "${record.case_title}" status changed to ${record.status}`,
-          actionUrl: `/cases/${record.id}`,
-        };
-      }
+      subject = `New appointment with ${clientName}`;
+      body = `📅 You have a new appointment for **${caseTitle}** on **${date}** at **${time}**.`;
+      data = { clientName, caseTitle, date, time };
       break;
+    }
 
-    case 'hearings':
-      if (eventType === 'INSERT') {
-        return {
-          recipientId: record.lawyer_id || record.created_by,
-          title: 'New Hearing Scheduled',
-          message: `Hearing on ${record.hearing_date} at ${record.court_name}`,
-          actionUrl: `/hearings`,
-        };
-      }
-      if (eventType === 'UPDATE' && record.hearing_date) {
-        return {
-          recipientId: record.lawyer_id || record.created_by,
-          title: 'Hearing Rescheduled',
-          message: `Hearing rescheduled to ${record.hearing_date}`,
-          actionUrl: `/hearings`,
-        };
-      }
+    case "cases": {
+      subject = `Case ${eventType === "INSERT" ? "created" : "updated"}: ${record.case_title || "Untitled Case"}`;
+      body = `Case **${record.case_title || "Untitled"}** (${record.case_number || "no number"}) was ${eventType.toLowerCase()}.`;
+      data = { caseTitle: record.case_title, caseNumber: record.case_number, eventType };
       break;
+    }
 
-    case 'tasks':
-      if (eventType === 'INSERT' && record.assigned_to) {
-        return {
-          recipientId: record.assigned_to,
-          title: 'New Task Assigned',
-          message: `Task: ${record.title}`,
-          actionUrl: `/tasks`,
-        };
-      }
-      if (eventType === 'UPDATE' && record.status === 'completed') {
-        return {
-          recipientId: record.created_by,
-          title: 'Task Completed',
-          message: `Task "${record.title}" has been completed`,
-          actionUrl: `/tasks`,
-        };
-      }
+    case "tasks": {
+      subject = `Task ${eventType === "INSERT" ? "assigned" : "updated"}: ${record.title}`;
+      body = `Task **${record.title || "Untitled"}** is now **${record.status || "pending"}**.`;
+      data = { title: record.title, status: record.status, dueDate: record.due_date };
       break;
+    }
 
-    case 'documents':
-      if (eventType === 'INSERT' && record.case_id) {
-        return {
-          recipientId: record.uploaded_by || record.uploaded_by_user_id,
-          title: 'Document Uploaded',
-          message: `Document "${record.file_name}" uploaded successfully`,
-          actionUrl: `/documents`,
-        };
-      }
+    case "hearings": {
+      const hearingDate = record.hearing_date ? new Date(record.hearing_date).toLocaleDateString() : "upcoming";
+      subject = `Hearing scheduled for ${hearingDate}`;
+      body = `A new hearing for **${record.case_title || "a case"}** is scheduled on **${hearingDate}**.`;
+      data = { hearingDate, caseTitle: record.case_title };
       break;
+    }
 
-    case 'messages':
-      if (eventType === 'INSERT' && record.recipient_id) {
-        return {
-          recipientId: record.recipient_id,
-          title: 'New Message',
-          message: record.content?.substring(0, 100) || 'You have a new message',
-          actionUrl: `/messages`,
-        };
-      }
+    case "documents": {
+      subject = `New document uploaded: ${record.file_name || "Unnamed file"}`;
+      body = `📄 Document **${record.file_name || "Untitled"}** has been uploaded.`;
+      data = { fileName: record.file_name, uploadedBy: record.uploaded_by };
       break;
+    }
+
+    case "clients": {
+      subject = `New client added: ${record.full_name || "Unnamed Client"}`;
+      body = `👤 Client **${record.full_name || "Unnamed"}** was added to the system.`;
+      data = { clientName: record.full_name, contact: record.email || record.phone };
+      break;
+    }
+
+    default: {
+      subject = `Update in ${table}`;
+      body = `A record in **${table}** was ${eventType.toLowerCase()}.`;
+      data = { table, eventType };
+    }
   }
 
-  return null;
+  return { subject, body, data };
+}
+
+// 🔍 Finds the correct Knock user recipient
+function determineSubscriberId(table, record) {
+  return (
+    record.user_id ||
+    record.assigned_to ||
+    record.created_by ||
+    record.lawyer_id ||
+    (Array.isArray(record.assigned_users) && record.assigned_users[0]) ||
+    null
+  );
 }
