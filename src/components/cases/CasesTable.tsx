@@ -39,11 +39,14 @@ export const CasesTable: React.FC<CasesTableProps> = ({
   const queryClient = useQueryClient();
   const [selectedCases, setSelectedCases] = useState<Set<string>>(new Set());
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [page, setPage] = useState(1);
+  const pageSize = 50;
+  
   const {
     data: cases,
     isLoading
   } = useQuery({
-    queryKey: ['cases-table', searchQuery, statusFilter, typeFilter, assignedFilter],
+    queryKey: ['cases-table', searchQuery, statusFilter, typeFilter, assignedFilter, page],
     queryFn: async () => {
       // Get current user info
       const { data: { user } } = await supabase.auth.getUser();
@@ -64,12 +67,28 @@ export const CasesTable: React.FC<CasesTableProps> = ({
                               teamMember?.role === 'office_staff';
 
       console.log('Fetching cases for user:', user.id, 'isAdminOrLawyer:', isAdminOrLawyer);
+      
+      const startIndex = (page - 1) * pageSize;
+      const endIndex = startIndex + pageSize - 1;
+      
       let query = supabase.from('cases').select(`
-        *,
+        id,
+        case_title,
+        title,
+        petitioner,
+        respondent,
+        case_type,
+        status,
+        priority,
+        created_at,
+        updated_at,
+        client_id,
+        assigned_to,
+        assigned_users,
         clients!client_id(full_name)
-      `).order('created_at', {
-        ascending: false
-      });
+      `, { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(startIndex, endIndex);
 
       // Apply role-based filtering
       if (!isAdminOrLawyer) {
@@ -211,6 +230,9 @@ export const CasesTable: React.FC<CasesTableProps> = ({
   if (isLoading) {
     return <div className="text-center py-8">Loading cases...</div>;
   }
+
+  const totalPages = cases ? Math.ceil((cases.length || 0) / pageSize) : 0;
+
   return (
     <>
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200">
@@ -283,6 +305,32 @@ export const CasesTable: React.FC<CasesTableProps> = ({
             </TableRow>)}
         </TableBody>
       </Table>
+      
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200">
+          <div className="text-sm text-muted-foreground">
+            Page {page} of {totalPages}
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
       </div>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
