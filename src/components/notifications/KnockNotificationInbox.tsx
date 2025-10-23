@@ -29,10 +29,12 @@ export default function KnockNotificationInbox() {
     <KnockProvider apiKey={apiKey} userId={user.id}>
       <KnockFeedProvider feedId={feedId}>
         <div className="relative">
-          <NotificationIconButton
-            ref={notifButtonRef}
-            onClick={() => setIsVisible(!isVisible)}
-          />
+          <div className="bg-gray-50 hover:bg-gray-200 text-gray-900 rounded-lg p-2 transition-colors">
+            <NotificationIconButton
+              ref={notifButtonRef}
+              onClick={() => setIsVisible(!isVisible)}
+            />
+          </div>
           <NotificationFeedPopover
             buttonRef={notifButtonRef}
             isVisible={isVisible}
