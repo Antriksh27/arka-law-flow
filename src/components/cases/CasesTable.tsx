@@ -43,7 +43,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
   const pageSize = 50;
   
   const {
-    data: cases,
+    data: queryResult,
     isLoading
   } = useQuery({
     queryKey: ['cases-table', searchQuery, statusFilter, typeFilter, assignedFilter, page],
@@ -106,13 +106,14 @@ export const CasesTable: React.FC<CasesTableProps> = ({
       }
       const {
         data,
-        error
+        error,
+        count
       } = await query;
       if (error) {
         console.error('Query result:', { data, error });
         throw error;
       }
-      console.log('Cases query result:', { data, error });
+      console.log('Cases query result:', { data, error, count });
       
       // Transform the data to match the expected structure
       const transformedData = data?.map((caseItem: any) => {
@@ -134,7 +135,10 @@ export const CasesTable: React.FC<CasesTableProps> = ({
       
       console.log('Transformed cases:', transformedData);
       
-      return transformedData;
+      return {
+        cases: transformedData,
+        totalCount: count || 0
+      };
     }
   });
   const getStatusColor = (status: string) => {
@@ -170,6 +174,9 @@ export const CasesTable: React.FC<CasesTableProps> = ({
       navigate(`/cases/${caseId}`);
     }
   };
+
+  const cases = queryResult?.cases || [];
+  const totalCount = queryResult?.totalCount || 0;
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -228,7 +235,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
     return <div className="text-center py-8">Loading cases...</div>;
   }
 
-  const totalPages = cases ? Math.ceil((cases.length || 0) / pageSize) : 0;
+  const totalPages = Math.ceil(totalCount / pageSize);
 
   return (
     <>
