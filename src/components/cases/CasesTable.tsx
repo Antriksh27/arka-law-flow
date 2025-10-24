@@ -18,18 +18,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Trash2, Loader2 } from 'lucide-react';
+import { Trash2, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationPrevious,
-  PaginationNext,
-  PaginationEllipsis,
-} from '@/components/ui/pagination';
 interface CasesTableProps {
   searchQuery: string;
   statusFilter: string;
@@ -320,20 +311,31 @@ export const CasesTable: React.FC<CasesTableProps> = ({
       </Table>
       
       {totalPages > 1 && (
-        <div className="px-4 py-3 border-t border-gray-200">
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious 
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (page > 1) setPage(p => p - 1);
-                  }}
-                  className={page === 1 ? 'pointer-events-none opacity-50' : ''}
-                />
-              </PaginationItem>
-              
+        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200">
+          <div className="text-sm text-muted-foreground">
+            Page {page} of {totalPages} (Total: {totalCount} cases)
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(1)}
+              disabled={page === 1}
+              className="hidden sm:flex"
+            >
+              First
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(p => p - 1)}
+              disabled={page === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              <span className="hidden sm:inline ml-1">Previous</span>
+            </Button>
+            
+            <div className="flex items-center gap-1">
               {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
                 let pageNum: number;
                 if (totalPages <= 5) {
@@ -347,39 +349,38 @@ export const CasesTable: React.FC<CasesTableProps> = ({
                 }
                 
                 return (
-                  <PaginationItem key={pageNum}>
-                    <PaginationLink
-                      href="#"
-                      isActive={page === pageNum}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setPage(pageNum);
-                      }}
-                    >
-                      {pageNum}
-                    </PaginationLink>
-                  </PaginationItem>
+                  <Button
+                    key={pageNum}
+                    variant={page === pageNum ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setPage(pageNum)}
+                    className="min-w-[32px]"
+                  >
+                    {pageNum}
+                  </Button>
                 );
               })}
-              
-              {totalPages > 5 && page < totalPages - 2 && (
-                <PaginationItem>
-                  <PaginationEllipsis />
-                </PaginationItem>
-              )}
-              
-              <PaginationItem>
-                <PaginationNext 
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (page < totalPages) setPage(p => p + 1);
-                  }}
-                  className={page === totalPages ? 'pointer-events-none opacity-50' : ''}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
+            </div>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(p => p + 1)}
+              disabled={page === totalPages}
+            >
+              <span className="hidden sm:inline mr-1">Next</span>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(totalPages)}
+              disabled={page === totalPages}
+              className="hidden sm:flex"
+            >
+              Last
+            </Button>
+          </div>
         </div>
       )}
       </div>
