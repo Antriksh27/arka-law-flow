@@ -74,7 +74,6 @@ export const CasesTable: React.FC<CasesTableProps> = ({
       let query = supabase.from('cases').select(`
         id,
         case_title,
-        title,
         petitioner,
         respondent,
         case_type,
@@ -97,7 +96,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
       }
 
       if (searchQuery) {
-        query = query.or(`case_title.ilike.%${searchQuery}%,title.ilike.%${searchQuery}%,petitioner.ilike.%${searchQuery}%,respondent.ilike.%${searchQuery}%,vs.ilike.%${searchQuery}%,case_number.ilike.%${searchQuery}%,cnr_number.ilike.%${searchQuery}%,filing_number.ilike.%${searchQuery}%`);
+        query = query.or(`case_title.ilike.%${searchQuery}%,petitioner.ilike.%${searchQuery}%,respondent.ilike.%${searchQuery}%,case_number.ilike.%${searchQuery}%,cnr_number.ilike.%${searchQuery}%,filing_number.ilike.%${searchQuery}%`);
       }
       if (statusFilter !== 'all') {
         query = query.eq('status', statusFilter as any);
@@ -117,12 +116,10 @@ export const CasesTable: React.FC<CasesTableProps> = ({
       
       // Transform the data to match the expected structure
       const transformedData = data?.map((caseItem: any) => {
-        // Use the title field as the Case Title
-        // If petitioner/respondent exist, we can generate "Petitioner Vs Respondent" format
-        let displayTitle = caseItem.title;
+        // Prefer the case_title field; fallback to generated "Petitioner Vs Respondent"
+        let displayTitle = caseItem.case_title;
         
         if (!displayTitle && caseItem.petitioner && caseItem.respondent) {
-          // Fallback: Generate from petitioner/respondent if title is missing
           const cleanPetitioner = caseItem.petitioner.replace(/\s*Advocate[:\s].*/gi, '').trim();
           const cleanRespondent = caseItem.respondent.replace(/\s*Advocate[:\s].*/gi, '').trim();
           displayTitle = `${cleanPetitioner} Vs ${cleanRespondent}`;
@@ -283,7 +280,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
                   />
                 </TableCell>
                 <TableCell className="font-medium">
-                  {caseItem.displayTitle || caseItem.title}
+                  {caseItem.displayTitle || caseItem.case_title}
                 </TableCell>
               <TableCell>
                 {caseItem.client_name || 'No client assigned'}
