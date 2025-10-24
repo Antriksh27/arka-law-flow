@@ -88,39 +88,67 @@ export const ECourts = () => {
   };
 
   const handleFetchAllUnfetched = async () => {
-    const unfetchedCases = casesData?.cases.filter((c) => c.fetch_status === "not_fetched") || [];
-    if (unfetchedCases.length === 0) return;
-
+    if (!firmId) return;
+    
     setIsFetchingCase(true);
     setShouldCancelFetch(false);
 
-    for (let i = 0; i < unfetchedCases.length; i++) {
-      if (shouldCancelFetch) {
-        toast({ title: "Fetch cancelled", description: `Stopped at ${i} of ${unfetchedCases.length}` });
-        break;
+    try {
+      // Fetch ALL unfetched cases from database, not just current page
+      const { data: allUnfetchedCases, error } = await supabase
+        .from("cases")
+        .select("id, case_title, cnr_number, court_type, firm_id")
+        .not("cnr_number", "is", null)
+        .eq("firm_id", firmId)
+        .or("fetch_status.is.null,fetch_status.eq.not_fetched")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      if (!allUnfetchedCases || allUnfetchedCases.length === 0) {
+        toast({ title: "No unfetched cases", description: "All cases have been fetched" });
+        setIsFetchingCase(false);
+        return;
       }
 
-      const caseItem = unfetchedCases[i];
-      toast({
-        title: "Fetching cases...",
-        description: `Processing ${i + 1} of ${unfetchedCases.length}`,
-      });
+      let processed = 0;
+      for (let i = 0; i < allUnfetchedCases.length; i++) {
+        if (shouldCancelFetch) {
+          toast({ title: "Fetch cancelled", description: `Stopped at ${processed} of ${allUnfetchedCases.length}` });
+          break;
+        }
 
-      try {
-        const searchType = mapCourtTypeToSearchType(caseItem.court_type || "");
-        await supabase.functions.invoke("legalkart-api", {
-          body: { action: "search", cnr: caseItem.cnr_number, searchType, caseId: caseItem.id, firmId: caseItem.firm_id },
+        const caseItem = allUnfetchedCases[i];
+        toast({
+          title: "Fetching cases...",
+          description: `Processing ${i + 1} of ${allUnfetchedCases.length}`,
         });
-      } catch (error) {}
 
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-    }
+        try {
+          const searchType = mapCourtTypeToSearchType(caseItem.court_type || "");
+          await supabase.functions.invoke("legalkart-api", {
+            body: { action: "search", cnr: caseItem.cnr_number, searchType, caseId: caseItem.id, firmId: caseItem.firm_id },
+          });
+          processed++;
+        } catch (error) {
+          console.error(`Failed to fetch case ${caseItem.id}:`, error);
+        }
 
-    setIsFetchingCase(false);
-    setShouldCancelFetch(false);
-    queryClient.invalidateQueries({ queryKey: ["cases-fetch-status"] });
-    if (!shouldCancelFetch) {
-      toast({ title: "Bulk fetch complete" });
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["cases-fetch-status"] });
+      if (!shouldCancelFetch) {
+        toast({ title: "Bulk fetch complete", description: `Processed ${processed} of ${allUnfetchedCases.length} cases` });
+      }
+    } catch (error: any) {
+      toast({ 
+        title: "Error fetching cases", 
+        description: error.message,
+        variant: "destructive" 
+      });
+    } finally {
+      setIsFetchingCase(false);
+      setShouldCancelFetch(false);
     }
   };
 
