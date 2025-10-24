@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Plus, Search, MoreHorizontal, Eye, Upload, ArrowUpDown } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, Eye, Upload, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -42,64 +42,81 @@ export const ClientList = () => {
   const [showBulkImportDialog, setShowBulkImportDialog] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [viewingClient, setViewingClient] = useState<Client | null>(null);
+  const [page, setPage] = useState(1);
+  const pageSize = 50;
 
   const { toast } = useToast();
   const navigate = useNavigate();
   const { role } = useAuth();
 
   const {
-    data: rawClients = [],
+    data: queryResult,
     isLoading,
     error,
     refetch
   } = useQuery({
-    queryKey: ['clients', searchTerm, statusFilter],
+    queryKey: ['clients', searchTerm, statusFilter, page],
     queryFn: async () => {
       console.log('Fetching clients...');
       try {
-        // First try to get from client_stats view, if that fails, get from clients table
-        let { data, error } = await supabase
+        const startIndex = (page - 1) * pageSize;
+        const endIndex = startIndex + pageSize - 1;
+
+        // First try to get from client_stats view with pagination
+        let { data, error, count } = await supabase
           .from('client_stats')
-          .select('*')
-          .order('created_at', { ascending: false });
+          .select('*', { count: 'exact' })
+          .order('created_at', { ascending: false })
+          .range(startIndex, endIndex);
 
         if (error) {
           console.log('client_stats view failed, trying clients table:', error);
-          // Fallback to clients table
-          const { data: clientData, error: clientError } = await supabase
+          // Fallback to clients table with pagination
+          const result = await supabase
             .from('clients')
-            .select('*')
-            .order('created_at', { ascending: false });
+            .select('*', { count: 'exact' })
+            .order('created_at', { ascending: false })
+            .range(startIndex, endIndex);
           
-          if (clientError) throw clientError;
+          if (result.error) throw result.error;
           
           // Transform to match expected interface
-          data = clientData?.map(client => ({
+          data = result.data?.map(client => ({
             ...client,
             active_case_count: 0,
             assigned_lawyer_name: null
           })) || [];
+          count = result.count;
         }
 
+        // Apply client-side filters after pagination
+        let filteredData = data || [];
+        
         if (searchTerm) {
-          data = data?.filter(client => 
+          filteredData = filteredData.filter(client => 
             client.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             client.email?.toLowerCase().includes(searchTerm.toLowerCase())
-          ) || [];
+          );
         }
         
         if (statusFilter !== 'all') {
-          data = data?.filter(client => client.status === statusFilter) || [];
+          filteredData = filteredData.filter(client => client.status === statusFilter);
         }
 
-        console.log('Fetched clients:', data);
-        return data as Client[];
+        console.log('Fetched clients:', filteredData);
+        return {
+          clients: filteredData as Client[],
+          totalCount: count || 0
+        };
       } catch (err) {
         console.error('Error fetching clients:', err);
         throw err;
       }
     }
   });
+
+  const rawClients = queryResult?.clients || [];
+  const totalCount = queryResult?.totalCount || 0;
 
   // Sort clients based on current sort field and direction
   const clients = useMemo(() => {
@@ -389,6 +406,82 @@ export const ClientList = () => {
               ))}
             </TableBody>
           </Table>
+        )}
+        
+        {/* Pagination */}
+        {!isLoading && Math.ceil(totalCount / pageSize) > 1 && (
+          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200">
+            <div className="text-sm text-muted-foreground">
+              Page {page} of {Math.ceil(totalCount / pageSize)} (Total: {totalCount} clients)
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage(1)}
+                disabled={page === 1}
+                className="hidden sm:flex"
+              >
+                First
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage(p => p - 1)}
+                disabled={page === 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                <span className="hidden sm:inline ml-1">Previous</span>
+              </Button>
+              
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(Math.ceil(totalCount / pageSize), 5) }, (_, i) => {
+                  const totalPages = Math.ceil(totalCount / pageSize);
+                  let pageNum: number;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (page <= 3) {
+                    pageNum = i + 1;
+                  } else if (page >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = page - 2 + i;
+                  }
+                  
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={page === pageNum ? "default" : "ghost"}
+                      size="sm"
+                      onClick={() => setPage(pageNum)}
+                      className="min-w-[32px]"
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
+              </div>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage(p => p + 1)}
+                disabled={page === Math.ceil(totalCount / pageSize)}
+              >
+                <span className="hidden sm:inline mr-1">Next</span>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage(Math.ceil(totalCount / pageSize))}
+                disabled={page === Math.ceil(totalCount / pageSize)}
+                className="hidden sm:flex"
+              >
+                Last
+              </Button>
+            </div>
+          </div>
         )}
       </div>
 

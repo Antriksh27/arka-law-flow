@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, Mail, Phone, Building, MapPin, UserPlus, Edit, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Mail, Phone, Building, MapPin, UserPlus, Edit, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,6 +25,10 @@ interface ContactsTableProps {
   onConvertToClient: (contact: any) => void;
   onDeleteContact: (contact: any) => void;
   onViewContact?: (contact: any) => void;
+  totalCount?: number;
+  page?: number;
+  pageSize?: number;
+  onPageChange?: (page: number) => void;
 }
 
 export const ContactsTable = ({ 
@@ -33,7 +37,11 @@ export const ContactsTable = ({
   onEditContact, 
   onConvertToClient, 
   onDeleteContact,
-  onViewContact 
+  onViewContact,
+  totalCount = 0,
+  page = 1,
+  pageSize = 50,
+  onPageChange
 }: ContactsTableProps) => {
   if (isLoading) {
     return (
@@ -181,6 +189,82 @@ export const ContactsTable = ({
           ))}
         </TableBody>
       </Table>
+      
+      {/* Pagination */}
+      {onPageChange && Math.ceil(totalCount / pageSize) > 1 && (
+        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200">
+          <div className="text-sm text-muted-foreground">
+            Page {page} of {Math.ceil(totalCount / pageSize)} (Total: {totalCount} contacts)
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange(1)}
+              disabled={page === 1}
+              className="hidden sm:flex"
+            >
+              First
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange(page - 1)}
+              disabled={page === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              <span className="hidden sm:inline ml-1">Previous</span>
+            </Button>
+            
+            <div className="flex items-center gap-1">
+              {Array.from({ length: Math.min(Math.ceil(totalCount / pageSize), 5) }, (_, i) => {
+                const totalPages = Math.ceil(totalCount / pageSize);
+                let pageNum: number;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (page <= 3) {
+                  pageNum = i + 1;
+                } else if (page >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  pageNum = page - 2 + i;
+                }
+                
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={page === pageNum ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => onPageChange(pageNum)}
+                    className="min-w-[32px]"
+                  >
+                    {pageNum}
+                  </Button>
+                );
+              })}
+            </div>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange(page + 1)}
+              disabled={page === Math.ceil(totalCount / pageSize)}
+            >
+              <span className="hidden sm:inline mr-1">Next</span>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange(Math.ceil(totalCount / pageSize))}
+              disabled={page === Math.ceil(totalCount / pageSize)}
+              className="hidden sm:flex"
+            >
+              Last
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

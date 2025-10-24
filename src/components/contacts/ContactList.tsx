@@ -23,31 +23,43 @@ export const ContactList = () => {
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [selectedContact, setSelectedContact] = useState<any>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
+  const [page, setPage] = useState(1);
+  const pageSize = 50;
 
-  const { data: contacts = [], isLoading } = useQuery({
-    queryKey: ['contacts', firmId, searchTerm],
+  const { data: queryResult, isLoading } = useQuery({
+    queryKey: ['contacts', firmId, searchTerm, page],
     queryFn: async () => {
-      if (!firmId) return [];
+      if (!firmId) return { contacts: [], totalCount: 0 };
+      
+      const startIndex = (page - 1) * pageSize;
+      const endIndex = startIndex + pageSize - 1;
       
       let query = supabase
         .from('contacts')
-        .select('*')
+        .select('*', { count: 'exact' })
         .eq('firm_id', firmId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(startIndex, endIndex);
 
       if (searchTerm) {
         query = query.or(`name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%,organization.ilike.%${searchTerm}%`);
       }
 
-      const { data, error } = await query;
+      const { data, error, count } = await query;
       if (error) {
         console.error('Error fetching contacts:', error);
         throw error;
       }
-      return data || [];
+      return {
+        contacts: data || [],
+        totalCount: count || 0
+      };
     },
     enabled: !!firmId,
   });
+
+  const contacts = queryResult?.contacts || [];
+  const totalCount = queryResult?.totalCount || 0;
 
   const handleAddContact = () => {
     setShowAddDialog(true);
@@ -103,6 +115,10 @@ export const ContactList = () => {
                 onConvertToClient={handleConvertToClient}
                 onDeleteContact={handleDeleteContact}
                 onViewContact={handleViewContact}
+                totalCount={totalCount}
+                page={page}
+                pageSize={pageSize}
+                onPageChange={setPage}
               />
             ) : (
               <div className="p-6">
@@ -134,6 +150,10 @@ export const ContactList = () => {
                 onConvertToClient={handleConvertToClient}
                 onDeleteContact={handleDeleteContact}
                 onViewContact={handleViewContact}
+                totalCount={totalCount}
+                page={page}
+                pageSize={pageSize}
+                onPageChange={setPage}
               />
             ) : (
               <div className="p-6">
