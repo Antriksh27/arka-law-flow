@@ -257,8 +257,12 @@ async function upsertCaseRelationalData(
     }
   }
 
-  // Insert hearings - Check multiple possible paths including LegalKart formats
-  const hearings = Array.isArray(rd?.history_of_case_hearing) 
+  // Insert hearings - Check multiple possible paths including district court case_history
+  const hearings = Array.isArray(rd?.case_history) 
+    ? rd.case_history 
+    : Array.isArray(rd?.data?.case_history)
+    ? rd.data.case_history
+    : Array.isArray(rd?.history_of_case_hearing) 
     ? rd.history_of_case_hearing 
     : Array.isArray(rd?.data?.history_of_case_hearing)
     ? rd.data.history_of_case_hearing
@@ -266,10 +270,6 @@ async function upsertCaseRelationalData(
     ? rd.hearings
     : Array.isArray(rd?.data?.hearings)
     ? rd.data.hearings
-    : Array.isArray(rd?.case_history)
-    ? rd.case_history
-    : Array.isArray(rd?.data?.case_history)
-    ? rd.data.case_history
     : [];
   
   console.log(`📅 Found ${hearings.length} hearings to insert`);
@@ -630,7 +630,7 @@ serve(async (req) => {
             order_link: o.order_link || o.pdf_url || o.pdf_link || null
           }));
           
-          // Prepare history array
+          // Prepare history array - District courts use case_history
           const history = Array.isArray(rd?.case_history) 
             ? rd.case_history 
             : Array.isArray(rd?.history_of_case_hearing)
@@ -643,9 +643,9 @@ serve(async (req) => {
             business_on_date: h.business_on_date ?? null
           }));
           
-          // Prepare case data object
+          // Prepare case data object - Support district court case_details and case_status_details
           const caseDetails = rd.case_details || rd.case_info || {};
-          const caseStatus = rd.case_status || {};
+          const caseStatus = rd.case_status_details || rd.case_status || {};
           const categoryInfo = rd.category_info || {};
           const caseDataForRpc = {
             filing_number: caseDetails.filing_number || rd.filing_number || null,
@@ -653,19 +653,19 @@ serve(async (req) => {
             registration_number: caseDetails.registration_number || rd.registration_number || null,
             registration_date: normDate(caseDetails.registration_date || rd.registration_date),
             cnr_number: mappedData.cnr_number || normalizedCnr,
-            case_type: mappedData.case_type || 'civil',
-            case_status: caseStatus.stage_of_case || rd.case_status || 'Active',
-            stage_of_case: caseStatus.stage_of_case || mappedData.stage || null,
+            case_type: caseDetails.case_type || mappedData.case_type || 'civil',
+            case_status: caseStatus.case_stage || caseStatus.stage_of_case || rd.case_status || 'Active',
+            stage_of_case: caseStatus.case_stage || caseStatus.stage_of_case || mappedData.stage || null,
             next_hearing_date: normDate(caseStatus.next_hearing_date || rd.next_hearing_date),
-            coram: caseStatus.coram || rd.coram || null,
+            coram: caseStatus.court_number_and_judge || caseStatus.coram || rd.coram || null,
             bench_type: caseStatus.bench_type || rd.bench_type || null,
             judicial_branch: caseStatus.judicial_branch || rd.judicial_branch || null,
             state: caseStatus.state || rd.state || null,
             district: caseStatus.district || rd.district || null,
             category: categoryInfo.category || rd.category || null,
             sub_category: categoryInfo.sub_category || rd.sub_category || null,
-            petitioner_and_advocate: rd.petitioner_and_advocate || null,
-            respondent_and_advocate: rd.respondent_and_advocate || null,
+            petitioner_and_advocate: rd.petitioner_and_respondent_details?.petitioner_and_advocate || rd.petitioner_and_advocate || null,
+            respondent_and_advocate: rd.petitioner_and_respondent_details?.respondent_and_advocate || rd.respondent_and_advocate || null,
             acts: mappedData.acts || []
           };
           
@@ -1089,14 +1089,17 @@ function mapLegalkartDataToCRM(data: any, searchType: string = 'unknown'): any {
   };
 
   // Extract data from nested Legalkart response structure
-  const caseInfo = data.data?.case_info || data.case_info || {};
-  const caseStatus = data.data?.case_status || data.case_status || {};
-  const categoryInfo = data.data?.category_info || data.category_info || {};
-  const hearingHistory = data.data?.history_of_case_hearing || data.history_of_case_hearing || [];
-  const orderDetails = data.data?.order_details || data.order_details || [];
-  const documents = data.data?.documents || data.documents || [];
-  const objections = data.data?.objections || data.objections || [];
-  const iaDetails = data.data?.ia_details || data.ia_details || [];
+  // District courts use data.case_details, data.case_status_details, etc.
+  const rd = data.data ?? data ?? {};
+  const caseInfo = rd.case_info || rd.case_details || {};
+  const caseStatus = rd.case_status || rd.case_status_details || {};
+  const categoryInfo = rd.category_info || {};
+  const hearingHistory = rd.history_of_case_hearing || rd.case_history || [];
+  const orderDetails = rd.order_details || [];
+  const documents = rd.documents || [];
+  const objections = rd.objections || [];
+  const iaDetails = rd.ia_details || [];
+  const actsAndSections = rd.acts_and_sections_details || [];
 
   // BASIC CASE INFORMATION (15 fields)
   mappedData.cnr_number = cleanText(caseInfo.cnr_number || data.data?.cnr_number || data.cnr_number || data.cnr || data.CNR);
@@ -1208,11 +1211,11 @@ function mapLegalkartDataToCRM(data: any, searchType: string = 'unknown'): any {
     };
   }
 
-  // DATE INFORMATION (8 fields) - Comprehensive date parsing, support LegalKart case_details
-  const caseDetails = data.case_details || data.data?.case_details || {};
+  // DATE INFORMATION (8 fields) - Comprehensive date parsing, support LegalKart case_details and case_status_details
+  const caseDetails = rd.case_details || {};
   mappedData.filing_date = parseDate(caseInfo.filing_date || caseDetails.filing_date || data.filing_date || data.date_of_filing);
   mappedData.registration_date = parseDate(caseInfo.registration_date || caseDetails.registration_date || data.registration_date || data.date_of_registration);
-  mappedData.first_hearing_date = parseDate(caseDetails.first_hearing_date || data.first_hearing_date || data.first_listing_date);
+  mappedData.first_hearing_date = parseDate(caseStatus.first_hearing_date || caseDetails.first_hearing_date || data.first_hearing_date || data.first_listing_date);
   mappedData.next_hearing_date = parseDate(caseStatus.next_hearing_date || caseDetails.next_hearing_date || data.next_hearing_date || data.next_date);
   mappedData.listed_date = parseDate(caseDetails.listed_date || data.listed_date || data.listing_date);
   mappedData.disposal_date = parseDate(caseDetails.disposal_date || data.disposal_date || data.date_of_disposal);
@@ -1227,19 +1230,28 @@ function mapLegalkartDataToCRM(data: any, searchType: string = 'unknown'): any {
   mappedData.business_type = cleanText(data.business_type);
   mappedData.matter_type = cleanText(data.matter_type || data.nature_of_case);
 
-  // Case type intelligent mapping from category
-  if (categoryInfo.category || data.case_type) {
-    const categoryStr = (categoryInfo.category || data.case_type || '').toString().toLowerCase();
+  // Case type intelligent mapping from category or case_details
+  const caseTypeField = caseDetails.case_type || categoryInfo.category || data.case_type;
+  if (caseTypeField) {
+    const categoryStr = caseTypeField.toString().toLowerCase();
     if (categoryStr.includes('criminal')) mappedData.case_type = 'criminal';
     else if (categoryStr.includes('civil')) mappedData.case_type = 'civil';
     else if (categoryStr.includes('commercial')) mappedData.case_type = 'commercial';
-    else if (categoryStr.includes('family')) mappedData.case_type = 'family';
+    else if (categoryStr.includes('family') || categoryStr.includes('fsuit')) mappedData.case_type = 'family';
     else mappedData.case_type = 'civil';
   }
 
-  // LEGAL FRAMEWORK (5 fields) - Extract from category info
+  // LEGAL FRAMEWORK (5 fields) - Extract from category info or acts_and_sections_details
   const extractedActs: string[] = [];
   const extractedSections: string[] = [];
+  
+  // District courts provide acts_and_sections_details array
+  if (actsAndSections && Array.isArray(actsAndSections) && actsAndSections.length > 0) {
+    actsAndSections.forEach((item: any) => {
+      if (item.under_act) extractedActs.push(cleanText(item.under_act)!);
+      if (item.under_section) extractedSections.push(cleanText(item.under_section)!);
+    });
+  }
   
   if (categoryInfo.category?.includes('BHARATIYA NAGARIK SURAKSHA SANHITA')) {
     extractedActs.push('Bharatiya Nagarik Suraksha Sanhita, 2023');
@@ -1247,8 +1259,8 @@ function mapLegalkartDataToCRM(data: any, searchType: string = 'unknown'): any {
   
   mappedData.acts = extractedActs.length > 0 ? extractedActs : extractArrayFromString(data.acts || data.under_acts);
   mappedData.sections = extractedSections.length > 0 ? extractedSections : extractArrayFromString(data.sections || data.under_sections);
-  mappedData.under_act = cleanText(data.under_act || data.act);
-  mappedData.under_section = cleanText(data.under_section || data.section);
+  mappedData.under_act = extractedActs.length > 0 ? extractedActs[0] : cleanText(data.under_act || data.act);
+  mappedData.under_section = extractedSections.length > 0 ? extractedSections.join(', ') : cleanText(data.under_section || data.section);
 
   // ORDERS AND PROCEEDINGS (4 fields) - support LegalKart formats
   const extractedOrders = orderDetails
@@ -1276,13 +1288,9 @@ function mapLegalkartDataToCRM(data: any, searchType: string = 'unknown'): any {
 
   mappedData.hearing_notes = cleanText(data.hearing_notes || data.notes);
 
-  // Store complete hearing history - support LegalKart case_history format
-  const caseHistoryArr = Array.isArray(data.case_history) ? data.case_history 
-    : Array.isArray(data.data?.case_history) ? data.data.case_history : [];
+  // Store complete hearing history - support LegalKart case_history format (district courts)
   if (hearingHistory.length > 0) {
     mappedData.hearing_history = hearingHistory;
-  } else if (caseHistoryArr.length > 0) {
-    mappedData.hearing_history = caseHistoryArr;
   }
 
   // DOCUMENT AND PROCESS (4 fields)

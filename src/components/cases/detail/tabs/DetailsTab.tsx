@@ -90,11 +90,20 @@ export const DetailsTab: React.FC<DetailsTabProps> = ({
                 label: 'CNR Number',
                 value: legalkartData?.cnr_number || caseData?.cnr_number
               }, {
+                label: 'Case Type',
+                value: legalkartData?.case_type || caseData?.case_type
+              }, {
                 label: 'Stage of Case',
                 value: legalkartData?.stage_of_case || caseData?.stage
               }, {
+                label: 'First Hearing Date',
+                value: formatDate(legalkartData?.first_hearing_date || caseData?.first_hearing_date)
+              }, {
                 label: 'Next Hearing Date',
                 value: formatDate(legalkartData?.next_hearing_date || caseData?.next_hearing_date)
+              }, {
+                label: 'Court Number & Judge',
+                value: legalkartData?.court_number_and_judge
               }, {
                 label: 'Coram',
                 value: legalkartData?.coram || caseData?.coram
@@ -124,6 +133,29 @@ export const DetailsTab: React.FC<DetailsTabProps> = ({
                     <p className="text-sm font-medium text-gray-900">{item.value}</p>
                   </div>)}
               </div>
+              
+              {/* Acts and Sections - District Court Specific */}
+              {caseData?.fetched_data?.data?.acts_and_sections_details && 
+               Array.isArray(caseData.fetched_data.data.acts_and_sections_details) && 
+               caseData.fetched_data.data.acts_and_sections_details.length > 0 && (
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
+                    Acts & Sections
+                  </h4>
+                  <div className="space-y-2">
+                    {caseData.fetched_data.data.acts_and_sections_details.map((act: any, index: number) => (
+                      <div key={index} className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        {act.under_act && (
+                          <p className="text-sm font-medium text-gray-900">{act.under_act}</p>
+                        )}
+                        {act.under_section && (
+                          <p className="text-xs text-gray-600 mt-1">Section: {act.under_section}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </CollapsibleContent>
         </Card>

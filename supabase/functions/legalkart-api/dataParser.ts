@@ -11,6 +11,7 @@ export interface ParsedCase {
   cnrNumber: string | null;
   stageOfCase: string | null;
   nextHearingDate: string | null;
+  firstHearingDate: string | null;
   coram: string | null;
   benchType: string | null;
   judicialBranch: string | null;
@@ -18,6 +19,8 @@ export interface ParsedCase {
   district: string | null;
   category: string | null;
   subCategory: string | null;
+  caseType: string | null;
+  courtNumberAndJudge: string | null;
 }
 
 export interface ParsedParty {
@@ -33,11 +36,17 @@ export interface ParsedIADetail {
   iaStatus: string | null;
 }
 
+export interface ParsedActsAndSections {
+  underAct: string | null;
+  underSection: string | null;
+}
+
 export interface ParsedCaseData {
   case: ParsedCase;
   petitioners: ParsedParty[];
   respondents: ParsedParty[];
   iaDetails: ParsedIADetail[];
+  actsAndSections: ParsedActsAndSections[];
 }
 
 /**
@@ -165,6 +174,20 @@ export function parseIADetails(iaData: any): ParsedIADetail[] {
 }
 
 /**
+ * Parse Acts and Sections from district court data
+ */
+export function parseActsAndSections(actsData: any): ParsedActsAndSections[] {
+  if (!actsData) return [];
+  
+  const actsArray = Array.isArray(actsData) ? actsData : [actsData];
+  
+  return actsArray.map(act => ({
+    underAct: act.under_act || act.act || null,
+    underSection: act.under_section || act.section || null
+  })).filter(act => act.underAct || act.underSection);
+}
+
+/**
  * Main parser function
  * Transforms raw E-Courts API JSON into standardized structure
  */
@@ -172,58 +195,70 @@ export function parseECourtsData(rawData: any): ParsedCaseData {
   console.log('🤖 AI Data Parser: Starting parse...');
   
   // Extract nested data structures - support both eCourts and LegalKart formats
-  const caseInfo = rawData.case_info || rawData.data?.case_info || rawData.case_details || rawData.data?.case_details || {};
-  const caseStatus = rawData.case_status || rawData.data?.case_status || {};
-  const categoryInfo = rawData.category_info || rawData.data?.category_info || {};
-  const iaDetails = rawData.ia_details || rawData.data?.ia_details;
+  // District courts use data.case_details, data.case_status_details, etc.
+  const rd = rawData?.data ?? rawData ?? {};
+  const caseInfo = rd.case_info || rd.case_details || rawData.case_info || rawData.case_details || {};
+  const caseStatus = rd.case_status || rd.case_status_details || rawData.case_status || rawData.case_status_details || {};
+  const categoryInfo = rd.category_info || rawData.category_info || {};
+  const iaDetails = rd.ia_details || rawData.ia_details;
+  const actsAndSectionsData = rd.acts_and_sections_details || rawData.acts_and_sections_details;
   
-  // Parse case information
+  // Parse case information with district court specific fields
   const parsedCase: ParsedCase = {
-    filingNumber: caseInfo.filing_number || null,
-    registrationNumber: caseInfo.registration_number || null,
-    filingDate: parseDate(caseInfo.filing_date),
-    registrationDate: parseDate(caseInfo.registration_date),
-    cnrNumber: caseInfo.cnr_number || rawData.cnr_number || null,
-    stageOfCase: caseInfo.stage_of_case || caseStatus.stage_of_case || null,
-    nextHearingDate: parseDate(caseInfo.next_hearing_date || caseStatus.next_hearing_date),
-    coram: caseInfo.coram || caseStatus.coram || null,
-    benchType: caseInfo.bench_type || caseStatus.bench_type || null,
-    judicialBranch: caseInfo.judicial_branch || caseStatus.judicial_branch || null,
-    state: caseInfo.state || caseStatus.state || null,
-    district: caseInfo.district || caseStatus.district || null,
-    category: categoryInfo.category || null,
-    subCategory: categoryInfo.sub_category || null
+    filingNumber: caseInfo.filing_number || rd.filing_number || null,
+    registrationNumber: caseInfo.registration_number || rd.registration_number || null,
+    filingDate: parseDate(caseInfo.filing_date || rd.filing_date),
+    registrationDate: parseDate(caseInfo.registration_date || rd.registration_date),
+    cnrNumber: caseInfo.cnr_number || rd.cnr_number || rawData.cnr_number || null,
+    stageOfCase: caseStatus.case_stage || caseStatus.stage_of_case || caseInfo.stage_of_case || null,
+    nextHearingDate: parseDate(caseStatus.next_hearing_date || caseInfo.next_hearing_date || rd.next_hearing_date),
+    firstHearingDate: parseDate(caseStatus.first_hearing_date || caseInfo.first_hearing_date || rd.first_hearing_date),
+    coram: caseStatus.coram || caseInfo.coram || rd.coram || null,
+    benchType: caseStatus.bench_type || caseInfo.bench_type || rd.bench_type || null,
+    judicialBranch: caseStatus.judicial_branch || caseInfo.judicial_branch || rd.judicial_branch || null,
+    state: caseStatus.state || caseInfo.state || rd.state || null,
+    district: caseStatus.district || caseInfo.district || rd.district || null,
+    category: categoryInfo.category || rd.category || null,
+    subCategory: categoryInfo.sub_category || rd.sub_category || null,
+    caseType: caseInfo.case_type || rd.case_type || null,
+    courtNumberAndJudge: caseStatus.court_number_and_judge || null
   };
   
   // Parse parties - support both eCourts and LegalKart formats
+  // District courts use data.petitioner_and_respondent_details
+  const petitionerAndRespondentDetails = rd.petitioner_and_respondent_details || rawData.petitioner_and_respondent_details || {};
+  
   const petitioners = parsePartyList(
-    rawData.petitioner_and_advocate || 
-    rawData.data?.petitioner_and_advocate ||
-    rawData.petitioner_and_respondent_details?.petitioner_and_advocate ||
-    rawData.data?.petitioner_and_respondent_details?.petitioner_and_advocate
+    petitionerAndRespondentDetails.petitioner_and_advocate ||
+    rd.petitioner_and_advocate || 
+    rawData.petitioner_and_advocate
   );
   
   const respondents = parsePartyList(
-    rawData.respondent_and_advocate || 
-    rawData.data?.respondent_and_advocate ||
-    rawData.petitioner_and_respondent_details?.respondent_and_advocate ||
-    rawData.data?.petitioner_and_respondent_details?.respondent_and_advocate
+    petitionerAndRespondentDetails.respondent_and_advocate ||
+    rd.respondent_and_advocate || 
+    rawData.respondent_and_advocate
   );
   
   // Parse IA details
   const parsedIADetails = parseIADetails(iaDetails);
   
+  // Parse acts and sections
+  const parsedActsAndSections = parseActsAndSections(actsAndSectionsData);
+  
   const result: ParsedCaseData = {
     case: parsedCase,
     petitioners,
     respondents,
-    iaDetails: parsedIADetails.length > 0 ? parsedIADetails : []
+    iaDetails: parsedIADetails.length > 0 ? parsedIADetails : [],
+    actsAndSections: parsedActsAndSections
   };
   
   console.log('✅ AI Data Parser: Parse complete');
   console.log(`   - Petitioners: ${petitioners.length}`);
   console.log(`   - Respondents: ${respondents.length}`);
   console.log(`   - IA Details: ${parsedIADetails.length}`);
+  console.log(`   - Acts & Sections: ${parsedActsAndSections.length}`);
   
   return result;
 }
