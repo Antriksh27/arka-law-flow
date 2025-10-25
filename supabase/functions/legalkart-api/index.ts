@@ -564,6 +564,18 @@ serve(async (req) => {
       if (searchResult.success && effectiveCaseId && searchResult.data) {
         const mappedData = mapLegalkartDataToCRM(searchResult.data, searchType);
         
+        // Log the mapped data fields for debugging
+        console.log('📊 Mapped Data Summary:');
+        console.log('  - Filing Date:', mappedData.filing_date);
+        console.log('  - Registration Date:', mappedData.registration_date);
+        console.log('  - First Hearing Date:', mappedData.first_hearing_date);
+        console.log('  - Next Hearing Date:', mappedData.next_hearing_date);
+        console.log('  - Registration Number:', mappedData.registration_number);
+        console.log('  - Filing Number:', mappedData.filing_number);
+        console.log('  - Case Type:', mappedData.case_type);
+        console.log('  - Court Name:', mappedData.court_name);
+        console.log('  - Stage:', mappedData.stage);
+        
         // Update main cases table
         const { error: caseUpdateError } = await supabase
           .from('cases')
@@ -576,6 +588,8 @@ serve(async (req) => {
 
         if (caseUpdateError) {
           console.error('Error updating case with fetched data:', caseUpdateError);
+        } else {
+          console.log('✅ Successfully updated case with all mapped fields');
         }
 
         // Upsert relational data using helper function
@@ -1102,26 +1116,74 @@ function mapLegalkartDataToCRM(data: any, searchType: string = 'unknown'): any {
   const actsAndSections = rd.acts_and_sections_details || [];
 
   // BASIC CASE INFORMATION (15 fields)
-  mappedData.cnr_number = cleanText(caseInfo.cnr_number || data.data?.cnr_number || data.cnr_number || data.cnr || data.CNR);
-  mappedData.case_number = cleanText(caseInfo.filing_number || data.data?.filing_number || data.case_number || data.filing_number || data.case_no);
-  mappedData.filing_number = cleanText(caseInfo.filing_number || data.data?.filing_number || data.filing_number || data.filing_no);
-  mappedData.registration_number = cleanText(caseInfo.registration_number || data.data?.registration_number || data.registration_number || data.reg_no);
-  mappedData.docket_number = cleanText(data.data?.docket_number || data.docket_number || data.docket_no);
+  // District courts use data.case_details for basic info
+  mappedData.cnr_number = cleanText(
+    caseDetails.cnr_number || 
+    caseInfo.cnr_number || 
+    rd.cnr_number || 
+    data.cnr_number || 
+    data.cnr || 
+    data.CNR
+  );
+  mappedData.case_number = cleanText(
+    caseDetails.filing_number || 
+    caseInfo.filing_number || 
+    rd.filing_number || 
+    data.case_number || 
+    data.filing_number || 
+    data.case_no
+  );
+  mappedData.filing_number = cleanText(
+    caseDetails.filing_number || 
+    caseInfo.filing_number || 
+    rd.filing_number || 
+    data.filing_number || 
+    data.filing_no
+  );
+  mappedData.registration_number = cleanText(
+    caseDetails.registration_number || 
+    caseInfo.registration_number || 
+    rd.registration_number || 
+    data.registration_number || 
+    data.reg_no
+  );
+  mappedData.docket_number = cleanText(data.docket_number || data.docket_no);
 
   mappedData.description = cleanText(data.description || data.case_summary || data.nature_of_case);
   mappedData.case_summary = cleanText(data.case_summary || data.summary);
 
   // COURT AND STATUS INFORMATION (12 fields)
-  mappedData.court = cleanText(caseStatus.court || data.court || data.court_name);
-  mappedData.court_name = cleanText(caseStatus.court || data.court_name || data.court);
+  // District courts use court_heading for court name
+  mappedData.court = cleanText(
+    rd.court_heading || 
+    caseStatus.court || 
+    data.court || 
+    data.court_name
+  );
+  mappedData.court_name = cleanText(
+    rd.court_heading || 
+    caseStatus.court || 
+    data.court_name || 
+    data.court
+  );
   mappedData.court_type = cleanText(data.court_type || searchType.replace('_', ' '));
   mappedData.district = cleanText(caseStatus.district || data.district || data.district_name);
   mappedData.state = cleanText(caseStatus.state || data.state || data.state_name);
   mappedData.judicial_branch = cleanText(caseStatus.judicial_branch || data.judicial_branch);
   mappedData.bench_type = cleanText(caseStatus.bench_type || data.bench_type);
   mappedData.court_complex = cleanText(data.court_complex);
-  mappedData.coram = cleanText(caseStatus.coram || data.coram || data.judge_name);
-  mappedData.stage = cleanText(caseStatus.stage_of_case || data.stage || data.case_stage);
+  mappedData.coram = cleanText(
+    caseStatus.court_number_and_judge || 
+    caseStatus.coram || 
+    data.coram || 
+    data.judge_name
+  );
+  mappedData.stage = cleanText(
+    caseStatus.case_stage || 
+    caseStatus.stage_of_case || 
+    data.stage || 
+    data.case_stage
+  );
 
   // Status mapping based on eCourts data
   // pending: when eCourts returns pending/active/ongoing status
@@ -1148,6 +1210,9 @@ function mapLegalkartDataToCRM(data: any, searchType: string = 'unknown'): any {
   }
 
   // PARTY INFORMATION (8 fields) - Enhanced parsing from Legalkart format
+  // District courts use data.petitioner_and_respondent_details
+  const petitionerAndRespondentDetails = rd.petitioner_and_respondent_details || {};
+  
   // First extract the first party from strings that may contain multiple parties
   const extractFirstParty = (partyStr: string): string => {
     if (!partyStr) return '';
@@ -1156,8 +1221,14 @@ function mapLegalkartDataToCRM(data: any, searchType: string = 'unknown'): any {
     return firstPartyMatch ? firstPartyMatch[1] : partyStr;
   };
   
-  const petitionerStr = data.data?.petitioner_and_advocate || data.petitioner_and_advocate || '';
-  const respondentStr = data.data?.respondent_and_advocate || data.respondent_and_advocate || '';
+  const petitionerStr = petitionerAndRespondentDetails.petitioner_and_advocate || 
+                        rd.petitioner_and_advocate || 
+                        data.petitioner_and_advocate || 
+                        '';
+  const respondentStr = petitionerAndRespondentDetails.respondent_and_advocate || 
+                        rd.respondent_and_advocate || 
+                        data.respondent_and_advocate || 
+                        '';
   
   const petitionerInfo = parsePartyInfo(extractFirstParty(petitionerStr));
   const respondentInfo = parsePartyInfo(extractFirstParty(respondentStr));
@@ -1206,21 +1277,61 @@ function mapLegalkartDataToCRM(data: any, searchType: string = 'unknown'): any {
       respondent: mappedData.respondent,
       petitioner_advocate: mappedData.petitioner_advocate,
       respondent_advocate: mappedData.respondent_advocate,
-      raw_petitioner_string: data.data?.petitioner_and_advocate,
-      raw_respondent_string: data.data?.respondent_and_advocate
+      raw_petitioner_string: petitionerAndRespondentDetails.petitioner_and_advocate || rd.petitioner_and_advocate || data.petitioner_and_advocate,
+      raw_respondent_string: petitionerAndRespondentDetails.respondent_and_advocate || rd.respondent_and_advocate || data.respondent_and_advocate
     };
   }
 
-  // DATE INFORMATION (8 fields) - Comprehensive date parsing, support LegalKart case_details and case_status_details
+  // DATE INFORMATION (8 fields) - Comprehensive date parsing, support district court case_details and case_status_details
   const caseDetails = rd.case_details || {};
-  mappedData.filing_date = parseDate(caseInfo.filing_date || caseDetails.filing_date || data.filing_date || data.date_of_filing);
-  mappedData.registration_date = parseDate(caseInfo.registration_date || caseDetails.registration_date || data.registration_date || data.date_of_registration);
-  mappedData.first_hearing_date = parseDate(caseStatus.first_hearing_date || caseDetails.first_hearing_date || data.first_hearing_date || data.first_listing_date);
-  mappedData.next_hearing_date = parseDate(caseStatus.next_hearing_date || caseDetails.next_hearing_date || data.next_hearing_date || data.next_date);
-  mappedData.listed_date = parseDate(caseDetails.listed_date || data.listed_date || data.listing_date);
-  mappedData.disposal_date = parseDate(caseDetails.disposal_date || data.disposal_date || data.date_of_disposal);
-  mappedData.decision_date = parseDate(caseDetails.decision_date || data.decision_date || data.judgment_date);
-  mappedData.scrutiny_date = parseDate(caseDetails.scrutiny_date || objections[0]?.scrutiny_date || data.scrutiny_date);
+  const caseStatusDetails = rd.case_status_details || {};
+  
+  mappedData.filing_date = parseDate(
+    caseDetails.filing_date || 
+    caseInfo.filing_date || 
+    data.filing_date || 
+    data.date_of_filing
+  );
+  mappedData.registration_date = parseDate(
+    caseDetails.registration_date || 
+    caseInfo.registration_date || 
+    data.registration_date || 
+    data.date_of_registration
+  );
+  mappedData.first_hearing_date = parseDate(
+    caseStatusDetails.first_hearing_date || 
+    caseStatus.first_hearing_date || 
+    caseDetails.first_hearing_date || 
+    data.first_hearing_date || 
+    data.first_listing_date
+  );
+  mappedData.next_hearing_date = parseDate(
+    caseStatusDetails.next_hearing_date || 
+    caseStatus.next_hearing_date || 
+    caseDetails.next_hearing_date || 
+    data.next_hearing_date || 
+    data.next_date
+  );
+  mappedData.listed_date = parseDate(
+    caseDetails.listed_date || 
+    data.listed_date || 
+    data.listing_date
+  );
+  mappedData.disposal_date = parseDate(
+    caseDetails.disposal_date || 
+    data.disposal_date || 
+    data.date_of_disposal
+  );
+  mappedData.decision_date = parseDate(
+    caseDetails.decision_date || 
+    data.decision_date || 
+    data.judgment_date
+  );
+  mappedData.scrutiny_date = parseDate(
+    caseDetails.scrutiny_date || 
+    objections[0]?.scrutiny_date || 
+    data.scrutiny_date
+  );
 
   // CATEGORY AND CLASSIFICATION (6 fields)
   mappedData.category = cleanText(categoryInfo.category || data.category || data.case_category);
