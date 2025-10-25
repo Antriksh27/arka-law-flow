@@ -70,10 +70,26 @@ export const ECourts = () => {
 
       if (response.error) throw response.error;
 
-      toast({
-        title: "Fetch successful",
-        description: `Case details fetched successfully`,
-      });
+      // Check the actual response data for success/failure
+      const responseData = response.data;
+      
+      if (responseData?.status === 'failed' || responseData?.error) {
+        toast({
+          title: "Fetch failed",
+          description: responseData?.error || responseData?.message || "Failed to fetch case details from API",
+          variant: "destructive",
+        });
+      } else if (responseData?.status === 'success' || responseData?.data) {
+        toast({
+          title: "✓ Fetch successful",
+          description: `Case details fetched successfully for ${cnrNumber}`,
+        });
+      } else {
+        toast({
+          title: "Fetch completed",
+          description: "Case fetch processed. Check status for details.",
+        });
+      }
 
       queryClient.invalidateQueries({ queryKey: ["cases-fetch-status"] });
     } catch (error: any) {
@@ -111,26 +127,41 @@ export const ECourts = () => {
       }
 
       let processed = 0;
+      let succeeded = 0;
+      let failed = 0;
+      
       for (let i = 0; i < allUnfetchedCases.length; i++) {
         if (shouldCancelFetch) {
-          toast({ title: "Fetch cancelled", description: `Stopped at ${processed} of ${allUnfetchedCases.length}` });
+          toast({ 
+            title: "Fetch cancelled", 
+            description: `Stopped at ${i} of ${allUnfetchedCases.length}. Success: ${succeeded}, Failed: ${failed}` 
+          });
           break;
         }
 
         const caseItem = allUnfetchedCases[i];
         toast({
           title: "Fetching cases...",
-          description: `Processing ${i + 1} of ${allUnfetchedCases.length}`,
+          description: `Processing ${i + 1} of ${allUnfetchedCases.length} | Success: ${succeeded} | Failed: ${failed}`,
         });
 
         try {
           const searchType = mapCourtTypeToSearchType(caseItem.court_type || "");
-          await supabase.functions.invoke("legalkart-api", {
+          const response = await supabase.functions.invoke("legalkart-api", {
             body: { action: "search", cnr: caseItem.cnr_number, searchType, caseId: caseItem.id, firmId: caseItem.firm_id },
           });
+          
+          // Check if the fetch actually succeeded
+          if (response.data?.status === 'success' || response.data?.data) {
+            succeeded++;
+          } else {
+            failed++;
+          }
           processed++;
         } catch (error) {
           console.error(`Failed to fetch case ${caseItem.id}:`, error);
+          failed++;
+          processed++;
         }
 
         await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -138,7 +169,10 @@ export const ECourts = () => {
 
       queryClient.invalidateQueries({ queryKey: ["cases-fetch-status"] });
       if (!shouldCancelFetch) {
-        toast({ title: "Bulk fetch complete", description: `Processed ${processed} of ${allUnfetchedCases.length} cases` });
+        toast({ 
+          title: "✓ Bulk fetch complete", 
+          description: `Processed ${processed} of ${allUnfetchedCases.length} cases. Success: ${succeeded}, Failed: ${failed}` 
+        });
       }
     } catch (error: any) {
       toast({ 
@@ -163,24 +197,38 @@ export const ECourts = () => {
     setIsFetchingCase(true);
     setShouldCancelFetch(false);
 
+    let succeeded = 0;
+    let failed = 0;
+
     for (let i = 0; i < selectedCasesList.length; i++) {
       if (shouldCancelFetch) {
-        toast({ title: "Fetch cancelled", description: `Stopped at ${i} of ${selectedCasesList.length}` });
+        toast({ 
+          title: "Fetch cancelled", 
+          description: `Stopped at ${i} of ${selectedCasesList.length}. Success: ${succeeded}, Failed: ${failed}` 
+        });
         break;
       }
 
       const caseItem = selectedCasesList[i];
       toast({
         title: "Fetching selected cases...",
-        description: `Processing ${i + 1} of ${selectedCasesList.length}`,
+        description: `Processing ${i + 1} of ${selectedCasesList.length} | Success: ${succeeded} | Failed: ${failed}`,
       });
 
       try {
         const searchType = mapCourtTypeToSearchType(caseItem.court_type || "");
-        await supabase.functions.invoke("legalkart-api", {
+        const response = await supabase.functions.invoke("legalkart-api", {
           body: { action: "search", cnr: caseItem.cnr_number, searchType, caseId: caseItem.id, firmId: caseItem.firm_id },
         });
-      } catch (error) {}
+        
+        if (response.data?.status === 'success' || response.data?.data) {
+          succeeded++;
+        } else {
+          failed++;
+        }
+      } catch (error) {
+        failed++;
+      }
 
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
@@ -190,7 +238,10 @@ export const ECourts = () => {
     setSelectedCases(new Set());
     queryClient.invalidateQueries({ queryKey: ["cases-fetch-status"] });
     if (!shouldCancelFetch) {
-      toast({ title: "Selected cases fetch complete" });
+      toast({ 
+        title: "✓ Selected cases fetch complete",
+        description: `Success: ${succeeded}, Failed: ${failed}`
+      });
     }
   };
 
