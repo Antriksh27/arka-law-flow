@@ -49,7 +49,7 @@ export const useCasesFetchStatus = (page: number = 1, pageSize: number = 100) =>
         .not("cnr_number", "is", null)
         .eq("firm_id", teamMember.firm_id);
 
-      // Get counts for each status
+      // Get counts for each status - mutually exclusive
       const { count: notFetchedCount } = await supabase
         .from("cases")
         .select("*", { count: 'exact', head: true })
@@ -62,7 +62,7 @@ export const useCasesFetchStatus = (page: number = 1, pageSize: number = 100) =>
         .select("*", { count: 'exact', head: true })
         .not("cnr_number", "is", null)
         .eq("firm_id", teamMember.firm_id)
-        .or("fetch_status.eq.success,fetch_status.eq.completed,last_fetched_at.not.is.null");
+        .or("fetch_status.eq.success,fetch_status.eq.completed");
 
       const { count: failedCount } = await supabase
         .from("cases")
@@ -118,7 +118,7 @@ export const useCasesFetchStatus = (page: number = 1, pageSize: number = 100) =>
         let status: CaseWithFetchStatus['fetch_status'] = 'not_fetched';
         if (raw === 'pending') status = 'pending';
         else if (raw === 'failed') status = 'failed';
-        else if (raw === 'success' || raw === 'completed' || c.fetched_data || c.last_fetched_at) status = 'success';
+        else if (raw === 'success' || raw === 'completed') status = 'success';
 
         return {
           id: c.id,
