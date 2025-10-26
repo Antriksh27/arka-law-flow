@@ -576,16 +576,42 @@ serve(async (req) => {
         console.log('  - Court Name:', mappedData.court_name);
         console.log('  - Stage:', mappedData.stage);
         
+        // Valid case table columns - only include these in the update
+        const validCaseFields = [
+          'case_title', 'case_number', 'case_type', 'status', 'priority', 'stage',
+          'cnr_number', 'filing_number', 'registration_number', 'docket_number',
+          'filing_date', 'registration_date', 'first_hearing_date', 'next_hearing_date',
+          'listed_date', 'disposal_date', 'decision_date', 'scrutiny_date',
+          'court', 'court_name', 'court_type', 'court_complex', 'district', 'state',
+          'judicial_branch', 'bench_type', 'coram',
+          'petitioner', 'petitioner_advocate', 'respondent', 'respondent_advocate',
+          'acts', 'sections', 'under_act', 'under_section',
+          'category', 'sub_category', 'case_sub_type', 'business_type', 'matter_type',
+          'description', 'case_summary', 'vs',
+          'fir_number', 'police_station', 'police_district', 'complaint_date',
+          'filing_party', 'cause_list_type', 'purpose_of_hearing',
+          'urgent_listing', 'listing_reason', 'interim_orders', 'final_orders'
+        ];
+        
+        // Filter mappedData to only include valid fields
+        const caseUpdate: any = { 
+          last_fetched_at: new Date().toISOString(),
+          fetched_data: searchResult.data,
+          fetch_status: 'success',
+          fetch_message: `Successfully fetched from ${searchType} on ${new Date().toISOString()}`,
+        };
+        
+        // Add only valid fields from mappedData
+        for (const field of validCaseFields) {
+          if (mappedData[field] !== undefined) {
+            caseUpdate[field] = mappedData[field];
+          }
+        }
+        
         // Update main cases table
         const { error: caseUpdateError } = await supabase
           .from('cases')
-          .update({
-            ...mappedData,
-            last_fetched_at: new Date().toISOString(),
-            fetched_data: searchResult.data,
-            fetch_status: 'success',
-            fetch_message: `Successfully fetched from ${searchType} on ${new Date().toISOString()}`,
-          })
+          .update(caseUpdate)
           .eq('id', effectiveCaseId);
 
         if (caseUpdateError) {
