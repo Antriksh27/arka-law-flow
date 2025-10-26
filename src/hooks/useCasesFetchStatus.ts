@@ -50,19 +50,22 @@ export const useCasesFetchStatus = (page: number = 1, pageSize: number = 100) =>
         .eq("firm_id", teamMember.firm_id);
 
       // Get counts for each status - mutually exclusive
+      // Not fetched: null or 'not_fetched' status AND no fetched data
       const { count: notFetchedCount } = await supabase
         .from("cases")
         .select("*", { count: 'exact', head: true })
         .not("cnr_number", "is", null)
         .eq("firm_id", teamMember.firm_id)
-        .or("fetch_status.is.null,fetch_status.eq.not_fetched");
+        .or("fetch_status.is.null,fetch_status.eq.not_fetched")
+        .is("last_fetched_at", null);
 
+      // Success: has success/completed status OR has fetched data indicators
       const { count: successCount } = await supabase
         .from("cases")
         .select("*", { count: 'exact', head: true })
         .not("cnr_number", "is", null)
         .eq("firm_id", teamMember.firm_id)
-        .or("fetch_status.eq.success,fetch_status.eq.completed");
+        .or("fetch_status.eq.success,fetch_status.eq.completed,last_fetched_at.not.is.null,petitioner_advocate.not.is.null,respondent_advocate.not.is.null");
 
       const { count: failedCount } = await supabase
         .from("cases")
@@ -82,7 +85,7 @@ export const useCasesFetchStatus = (page: number = 1, pageSize: number = 100) =>
       const offset = (page - 1) * pageSize;
       const { data: cases, error: casesError } = await supabase
         .from("cases")
-        .select("id, case_title, cnr_number, court_name, court_type, case_number, created_at, client_id, firm_id, fetch_status, last_fetched_at, fetch_message, fetched_data")
+        .select("id, case_title, cnr_number, court_name, court_type, case_number, created_at, client_id, firm_id, fetch_status, last_fetched_at, fetch_message, fetched_data, petitioner_advocate, respondent_advocate")
         .not("cnr_number", "is", null)
         .eq("firm_id", teamMember.firm_id)
         .order("created_at", { ascending: false })
@@ -116,9 +119,26 @@ export const useCasesFetchStatus = (page: number = 1, pageSize: number = 100) =>
       const casesWithStatus: CaseWithFetchStatus[] = cases.map((c: any) => {
         const raw = (c.fetch_status || '').toLowerCase();
         let status: CaseWithFetchStatus['fetch_status'] = 'not_fetched';
-        if (raw === 'pending') status = 'pending';
-        else if (raw === 'failed') status = 'failed';
-        else if (raw === 'success' || raw === 'completed') status = 'success';
+        
+        // Priority order: pending > failed > success > not_fetched
+        if (raw === 'pending') {
+          status = 'pending';
+        } else if (raw === 'failed') {
+          status = 'failed';
+        } else if (
+          raw === 'success' || 
+          raw === 'completed' || 
+          c.fetched_data || 
+          c.last_fetched_at ||
+          c.petitioner_advocate ||
+          c.respondent_advocate
+        ) {
+          // Consider it a success if:
+          // 1. Explicitly marked as success/completed
+          // 2. Has fetched_data or last_fetched_at
+          // 3. Has advocate data (indicating successful fetch)
+          status = 'success';
+        }
 
         return {
           id: c.id,
