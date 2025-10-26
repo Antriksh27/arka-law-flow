@@ -1105,7 +1105,8 @@ function mapLegalkartDataToCRM(data: any, searchType: string = 'unknown'): any {
   // Extract data from nested Legalkart response structure
   // District courts use data.case_details, data.case_status_details, etc.
   const rd = data.data ?? data ?? {};
-  const caseInfo = rd.case_info || rd.case_details || {};
+  const caseDetails = rd.case_details || rd.case_info || {};
+  const caseInfo = caseDetails; // Alias for backward compatibility
   const caseStatus = rd.case_status || rd.case_status_details || {};
   const categoryInfo = rd.category_info || {};
   const hearingHistory = rd.history_of_case_hearing || rd.case_history || [];
@@ -1283,7 +1284,6 @@ function mapLegalkartDataToCRM(data: any, searchType: string = 'unknown'): any {
   }
 
   // DATE INFORMATION (8 fields) - Comprehensive date parsing, support district court case_details and case_status_details
-  const caseDetails = rd.case_details || {};
   const caseStatusDetails = rd.case_status_details || {};
   
   mappedData.filing_date = parseDate(
