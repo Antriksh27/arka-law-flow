@@ -583,6 +583,8 @@ serve(async (req) => {
             ...mappedData,
             last_fetched_at: new Date().toISOString(),
             fetched_data: searchResult.data,
+            fetch_status: 'success',
+            fetch_message: `Successfully fetched from ${searchType} on ${new Date().toISOString()}`,
           })
           .eq('id', effectiveCaseId);
 
@@ -661,13 +663,22 @@ serve(async (req) => {
           const caseDetails = rd.case_details || rd.case_info || {};
           const caseStatus = rd.case_status_details || rd.case_status || {};
           const categoryInfo = rd.category_info || {};
+          
+          // Normalize case_type to valid enum values: civil, criminal, family, other
+          let normalizedCaseType = 'civil';
+          const rawCaseType = (caseDetails.case_type || mappedData.case_type || '').toString().toLowerCase();
+          if (rawCaseType.includes('criminal')) normalizedCaseType = 'criminal';
+          else if (rawCaseType.includes('family')) normalizedCaseType = 'family';
+          else if (rawCaseType.includes('civil') || rawCaseType.includes('commercial')) normalizedCaseType = 'civil';
+          else if (rawCaseType) normalizedCaseType = 'other';
+          
           const caseDataForRpc = {
             filing_number: caseDetails.filing_number || rd.filing_number || null,
             filing_date: normDate(caseDetails.filing_date || rd.filing_date),
             registration_number: caseDetails.registration_number || rd.registration_number || null,
             registration_date: normDate(caseDetails.registration_date || rd.registration_date),
             cnr_number: mappedData.cnr_number || normalizedCnr,
-            case_type: caseDetails.case_type || mappedData.case_type || 'civil',
+            case_type: normalizedCaseType,
             case_status: caseStatus.case_stage || caseStatus.stage_of_case || rd.case_status || 'Active',
             stage_of_case: caseStatus.case_stage || caseStatus.stage_of_case || mappedData.stage || null,
             next_hearing_date: normDate(caseStatus.next_hearing_date || rd.next_hearing_date),
@@ -712,8 +723,21 @@ serve(async (req) => {
           console.error('Failed to upsert case relational data:', upsertErr);
         }
       } else if (!searchResult.success && effectiveCaseId) {
-        // Search failed - try using existing fetched_data if available
-        console.log('⚠️ External search failed, checking for existing fetched_data...');
+        // Search failed - mark case as failed with error message
+        console.log('⚠️ External search failed, updating case status...');
+        
+        const errorMessage = searchResult.error || 'Data not found in eCourts/LegalKart API';
+        
+        await supabase
+          .from('cases')
+          .update({
+            fetch_status: 'failed',
+            fetch_message: errorMessage,
+            last_fetched_at: new Date().toISOString(),
+          })
+          .eq('id', effectiveCaseId);
+        
+        // Try using existing fetched_data if available
         const { data: existingCase } = await supabase
           .from('cases')
           .select('fetched_data')
@@ -1342,14 +1366,14 @@ function mapLegalkartDataToCRM(data: any, searchType: string = 'unknown'): any {
   mappedData.matter_type = cleanText(data.matter_type || data.nature_of_case);
 
   // Case type intelligent mapping from category or case_details
+  // Note: Database enum supports: civil, criminal, family, other
   const caseTypeField = caseDetails.case_type || categoryInfo.category || data.case_type;
   if (caseTypeField) {
     const categoryStr = caseTypeField.toString().toLowerCase();
     if (categoryStr.includes('criminal')) mappedData.case_type = 'criminal';
-    else if (categoryStr.includes('civil')) mappedData.case_type = 'civil';
-    else if (categoryStr.includes('commercial')) mappedData.case_type = 'commercial';
     else if (categoryStr.includes('family') || categoryStr.includes('fsuit')) mappedData.case_type = 'family';
-    else mappedData.case_type = 'civil';
+    else if (categoryStr.includes('civil') || categoryStr.includes('commercial')) mappedData.case_type = 'civil';
+    else mappedData.case_type = 'other';
   }
 
   // LEGAL FRAMEWORK (5 fields) - Extract from category info or acts_and_sections_details
