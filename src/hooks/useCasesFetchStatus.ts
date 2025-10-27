@@ -53,7 +53,7 @@ export const useCasesFetchStatus = (page: number = 1, pageSize: number = 100) =>
       // Not fetched: null or 'not_fetched' status AND no fetched data
       const { count: notFetchedCount } = await supabase
         .from("cases")
-        .select("*", { count: 'exact', head: true })
+        .select("id", { count: 'exact', head: true })
         .not("cnr_number", "is", null)
         .eq("firm_id", teamMember.firm_id)
         .or("fetch_status.is.null,fetch_status.eq.not_fetched")
@@ -62,21 +62,21 @@ export const useCasesFetchStatus = (page: number = 1, pageSize: number = 100) =>
       // Success: has success/completed status OR has fetched data indicators
       const { count: successCount } = await supabase
         .from("cases")
-        .select("*", { count: 'exact', head: true })
+        .select("id", { count: 'exact', head: true })
         .not("cnr_number", "is", null)
         .eq("firm_id", teamMember.firm_id)
         .or("fetch_status.eq.success,fetch_status.eq.completed,last_fetched_at.not.is.null,petitioner_advocate.not.is.null,respondent_advocate.not.is.null");
 
       const { count: failedCount } = await supabase
         .from("cases")
-        .select("*", { count: 'exact', head: true })
+        .select("id", { count: 'exact', head: true })
         .not("cnr_number", "is", null)
         .eq("firm_id", teamMember.firm_id)
         .eq("fetch_status", "failed");
 
       const { count: pendingCount } = await supabase
         .from("cases")
-        .select("*", { count: 'exact', head: true })
+        .select("id", { count: 'exact', head: true })
         .not("cnr_number", "is", null)
         .eq("firm_id", teamMember.firm_id)
         .eq("fetch_status", "pending");
