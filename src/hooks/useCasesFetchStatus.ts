@@ -49,30 +49,36 @@ export const useCasesFetchStatus = (page: number = 1, pageSize: number = 100) =>
         .not("cnr_number", "is", null)
         .eq("firm_id", teamMember.firm_id);
 
-      // Get counts for each status - mutually exclusive
-      // Not fetched: null or 'not_fetched' status AND no fetched data
+      // Get counts for each status - mutually exclusive and data-first
+      // Not fetched: never attempted OR no data exists
       const { count: notFetchedCount } = await supabase
         .from("cases")
         .select("id", { count: 'exact', head: true })
         .not("cnr_number", "is", null)
         .eq("firm_id", teamMember.firm_id)
-        .or("fetch_status.is.null,fetch_status.eq.not_fetched")
-        .is("last_fetched_at", null);
+        .is("last_fetched_at", null)
+        .is("petitioner_advocate", null)
+        .is("respondent_advocate", null)
+        .is("fetched_data", null);
 
-      // Success: has success/completed status OR has fetched data indicators
+      // Success: has any fetched data OR marked as success/completed
       const { count: successCount } = await supabase
         .from("cases")
         .select("id", { count: 'exact', head: true })
         .not("cnr_number", "is", null)
         .eq("firm_id", teamMember.firm_id)
-        .or("fetch_status.eq.success,fetch_status.eq.completed,last_fetched_at.not.is.null,petitioner_advocate.not.is.null,respondent_advocate.not.is.null");
+        .or("fetch_status.eq.success,fetch_status.eq.completed,petitioner_advocate.not.is.null,respondent_advocate.not.is.null,fetched_data.not.is.null");
 
+      // Failed: marked as failed AND no data exists
       const { count: failedCount } = await supabase
         .from("cases")
         .select("id", { count: 'exact', head: true })
         .not("cnr_number", "is", null)
         .eq("firm_id", teamMember.firm_id)
-        .eq("fetch_status", "failed");
+        .eq("fetch_status", "failed")
+        .is("petitioner_advocate", null)
+        .is("respondent_advocate", null)
+        .is("fetched_data", null);
 
       const { count: pendingCount } = await supabase
         .from("cases")
@@ -115,29 +121,21 @@ export const useCasesFetchStatus = (page: number = 1, pageSize: number = 100) =>
       
       const clientMap = new Map(clients?.map(c => [c.id, c.full_name]) || []);
 
-      // Derive status directly from cases to avoid heavy joins
+      // Derive status directly from cases - data presence wins
       const casesWithStatus: CaseWithFetchStatus[] = cases.map((c: any) => {
         const raw = (c.fetch_status || '').toLowerCase();
+        const hasData = Boolean(c.petitioner_advocate || c.respondent_advocate || c.fetched_data);
         let status: CaseWithFetchStatus['fetch_status'] = 'not_fetched';
         
-        // Priority order: pending > failed > success > not_fetched
+        // Priority order: pending > success (data-first) > failed > not_fetched
         if (raw === 'pending') {
           status = 'pending';
-        } else if (raw === 'failed') {
-          status = 'failed';
-        } else if (
-          raw === 'success' || 
-          raw === 'completed' || 
-          c.fetched_data || 
-          c.last_fetched_at ||
-          c.petitioner_advocate ||
-          c.respondent_advocate
-        ) {
-          // Consider it a success if:
-          // 1. Explicitly marked as success/completed
-          // 2. Has fetched_data or last_fetched_at
-          // 3. Has advocate data (indicating successful fetch)
+        } else if (hasData || raw === 'success' || raw === 'completed') {
+          // Data presence always means success, even if status says failed
           status = 'success';
+        } else if (raw === 'failed') {
+          // Only failed if explicitly marked AND no data
+          status = 'failed';
         }
 
         return {

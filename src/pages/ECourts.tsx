@@ -193,13 +193,16 @@ export const ECourts = () => {
     setShouldCancelFetch(false);
 
     try {
-      // Fetch ALL failed cases from database
+      // Fetch ALL failed cases from database (failed status AND no data)
       const { data: allFailedCases, error } = await supabase
         .from("cases")
         .select("id, case_title, cnr_number, court_type, firm_id")
         .not("cnr_number", "is", null)
         .eq("firm_id", firmId)
         .eq("fetch_status", "failed")
+        .is("petitioner_advocate", null)
+        .is("respondent_advocate", null)
+        .is("fetched_data", null)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
