@@ -186,6 +186,89 @@ export const ECourts = () => {
     }
   };
 
+  const handleFetchAllFailed = async () => {
+    if (!firmId) return;
+    
+    setIsFetchingCase(true);
+    setShouldCancelFetch(false);
+
+    try {
+      // Fetch ALL failed cases from database
+      const { data: allFailedCases, error } = await supabase
+        .from("cases")
+        .select("id, case_title, cnr_number, court_type, firm_id")
+        .not("cnr_number", "is", null)
+        .eq("firm_id", firmId)
+        .eq("fetch_status", "failed")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      if (!allFailedCases || allFailedCases.length === 0) {
+        toast({ title: "No failed cases", description: "No cases with failed status found" });
+        setIsFetchingCase(false);
+        return;
+      }
+
+      let processed = 0;
+      let succeeded = 0;
+      let failed = 0;
+      
+      for (let i = 0; i < allFailedCases.length; i++) {
+        if (shouldCancelFetch) {
+          toast({ 
+            title: "Fetch cancelled", 
+            description: `Stopped at ${i} of ${allFailedCases.length}. Success: ${succeeded}, Failed: ${failed}` 
+          });
+          break;
+        }
+
+        const caseItem = allFailedCases[i];
+        toast({
+          title: "Re-fetching failed cases...",
+          description: `Processing ${i + 1} of ${allFailedCases.length} | Success: ${succeeded} | Failed: ${failed}`,
+        });
+
+        try {
+          const searchType = mapCourtTypeToSearchType(caseItem.court_type || "");
+          const response = await supabase.functions.invoke("legalkart-api", {
+            body: { action: "search", cnr: caseItem.cnr_number, searchType, caseId: caseItem.id, firmId: caseItem.firm_id },
+          });
+          
+          // Check if the fetch actually succeeded
+          if (response.data?.status === 'success' || response.data?.data) {
+            succeeded++;
+          } else {
+            failed++;
+          }
+          processed++;
+        } catch (error) {
+          console.error(`Failed to fetch case ${caseItem.id}:`, error);
+          failed++;
+          processed++;
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["cases-fetch-status"] });
+      if (!shouldCancelFetch) {
+        toast({ 
+          title: "✓ Re-fetch complete", 
+          description: `Processed ${processed} of ${allFailedCases.length} cases. Success: ${succeeded}, Failed: ${failed}` 
+        });
+      }
+    } catch (error: any) {
+      toast({ 
+        title: "Error re-fetching cases", 
+        description: error.message,
+        variant: "destructive" 
+      });
+    } finally {
+      setIsFetchingCase(false);
+      setShouldCancelFetch(false);
+    }
+  };
+
   const handleCancelFetch = () => {
     setShouldCancelFetch(true);
   };
@@ -274,6 +357,10 @@ export const ECourts = () => {
             <Button onClick={handleFetchAllUnfetched} disabled={isFetchingCase || !casesData?.counts.not_fetched}>
               {isFetchingCase ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
               Fetch All Unfetched ({casesData?.counts.not_fetched || 0})
+            </Button>
+            <Button onClick={handleFetchAllFailed} disabled={isFetchingCase || !casesData?.counts.failed} variant="outline">
+              {isFetchingCase ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+              Re-fetch Failed ({casesData?.counts.failed || 0})
             </Button>
           </div>
         </div>
