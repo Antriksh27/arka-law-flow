@@ -25,9 +25,9 @@ export interface StatusCounts {
   total: number;
 }
 
-export const useCasesFetchStatus = (page: number = 1, pageSize: number = 100) => {
+export const useCasesFetchStatus = (page: number = 1, pageSize: number = 100, statusFilter: 'all' | 'not_fetched' | 'success' | 'failed' | 'pending' = 'all') => {
   return useQuery({
-    queryKey: ["cases-fetch-status", page, pageSize],
+    queryKey: ["cases-fetch-status", page, pageSize, statusFilter],
     queryFn: async () => {
       // Get current user's firm
       const { data: { user } } = await supabase.auth.getUser();
@@ -59,7 +59,8 @@ export const useCasesFetchStatus = (page: number = 1, pageSize: number = 100) =>
         .is("last_fetched_at", null)
         .is("petitioner_advocate", null)
         .is("respondent_advocate", null)
-        .is("fetched_data", null);
+        .is("fetched_data", null)
+        .or("fetch_status.is.null,fetch_status.eq.not_fetched");
 
       // Success: has any fetched data OR marked as success/completed
       const { count: successCount } = await supabase
@@ -87,13 +88,68 @@ export const useCasesFetchStatus = (page: number = 1, pageSize: number = 100) =>
         .eq("firm_id", teamMember.firm_id)
         .eq("fetch_status", "pending");
 
-      // Fetch paginated cases with CNR numbers
+      // Fetch paginated cases with optional server-side status filtering
       const offset = (page - 1) * pageSize;
-      const { data: cases, error: casesError } = await supabase
+
+      // Compute filtered total when a status filter is applied
+      let filteredTotal = totalCount || 0;
+      if (statusFilter !== 'all') {
+        let countQuery = supabase
+          .from("cases")
+          .select("id", { count: 'exact', head: true })
+          .not("cnr_number", "is", null)
+          .eq("firm_id", teamMember.firm_id);
+        if (statusFilter === 'not_fetched') {
+          countQuery = countQuery
+            .is("last_fetched_at", null)
+            .is("petitioner_advocate", null)
+            .is("respondent_advocate", null)
+            .is("fetched_data", null)
+            .or("fetch_status.is.null,fetch_status.eq.not_fetched");
+        } else if (statusFilter === 'success') {
+          countQuery = countQuery
+            .or("fetch_status.eq.success,fetch_status.eq.completed,petitioner_advocate.not.is.null,respondent_advocate.not.is.null,fetched_data.not.is.null");
+        } else if (statusFilter === 'failed') {
+          countQuery = countQuery
+            .eq("fetch_status", "failed")
+            .is("petitioner_advocate", null)
+            .is("respondent_advocate", null)
+            .is("fetched_data", null);
+        } else if (statusFilter === 'pending') {
+          countQuery = countQuery.eq("fetch_status", "pending");
+        }
+        const { count: fCount } = await countQuery;
+        filteredTotal = fCount || 0;
+      }
+
+      // Build cases query
+      let casesQuery = supabase
         .from("cases")
         .select("id, case_title, cnr_number, court_name, court_type, case_number, created_at, client_id, firm_id, fetch_status, last_fetched_at, fetch_message, fetched_data, petitioner_advocate, respondent_advocate")
         .not("cnr_number", "is", null)
-        .eq("firm_id", teamMember.firm_id)
+        .eq("firm_id", teamMember.firm_id);
+
+      if (statusFilter === 'not_fetched') {
+        casesQuery = casesQuery
+          .is("last_fetched_at", null)
+          .is("petitioner_advocate", null)
+          .is("respondent_advocate", null)
+          .is("fetched_data", null)
+          .or("fetch_status.is.null,fetch_status.eq.not_fetched");
+      } else if (statusFilter === 'success') {
+        casesQuery = casesQuery
+          .or("fetch_status.eq.success,fetch_status.eq.completed,petitioner_advocate.not.is.null,respondent_advocate.not.is.null,fetched_data.not.is.null");
+      } else if (statusFilter === 'failed') {
+        casesQuery = casesQuery
+          .eq("fetch_status", "failed")
+          .is("petitioner_advocate", null)
+          .is("respondent_advocate", null)
+          .is("fetched_data", null);
+      } else if (statusFilter === 'pending') {
+        casesQuery = casesQuery.eq("fetch_status", "pending");
+      }
+
+      const { data: cases, error: casesError } = await casesQuery
         .order("created_at", { ascending: false })
         .range(offset, offset + pageSize - 1);
 
@@ -102,12 +158,12 @@ export const useCasesFetchStatus = (page: number = 1, pageSize: number = 100) =>
       if (!cases || cases.length === 0) {
         return {
           cases: [],
-          counts: { not_fetched: 0, success: 0, failed: 0, pending: 0, total: totalCount || 0 },
+          counts: { not_fetched: notFetchedCount || 0, success: successCount || 0, failed: failedCount || 0, pending: pendingCount || 0, total: totalCount || 0 },
           pagination: {
             page,
             pageSize,
-            totalPages: Math.ceil((totalCount || 0) / pageSize),
-            totalCount: totalCount || 0
+            totalPages: Math.ceil((filteredTotal || 0) / pageSize),
+            totalCount: filteredTotal || 0
           }
         };
       }
@@ -169,8 +225,8 @@ export const useCasesFetchStatus = (page: number = 1, pageSize: number = 100) =>
         pagination: {
           page,
           pageSize,
-          totalPages: Math.ceil((totalCount || 0) / pageSize),
-          totalCount: totalCount || 0
+          totalPages: Math.ceil((filteredTotal || 0) / pageSize),
+          totalCount: filteredTotal || 0
         }
       };
     },

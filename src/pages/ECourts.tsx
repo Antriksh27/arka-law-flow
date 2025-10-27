@@ -116,6 +116,10 @@ export const ECourts = () => {
         .select("id, case_title, cnr_number, court_type, firm_id")
         .not("cnr_number", "is", null)
         .eq("firm_id", firmId)
+        .is("last_fetched_at", null)
+        .is("petitioner_advocate", null)
+        .is("respondent_advocate", null)
+        .is("fetched_data", null)
         .or("fetch_status.is.null,fetch_status.eq.not_fetched")
         .order("created_at", { ascending: false });
 

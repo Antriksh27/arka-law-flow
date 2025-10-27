@@ -47,8 +47,8 @@ interface CasesFetchListProps {
 
 export const CasesFetchList = ({ onFetchCase, isFetching, selectedCases, onSelectedCasesChange }: CasesFetchListProps) => {
   const [page, setPage] = useState(1);
-  const { data, isLoading } = useCasesFetchStatus(page, 100);
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<'all' | 'not_fetched' | 'success' | 'failed' | 'pending'>('all');
+  const { data, isLoading } = useCasesFetchStatus(page, 100, statusFilter);
   const [courtFilter, setCourtFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [historyCase, setHistoryCase] = useState<CaseWithFetchStatus | null>(null);
@@ -282,7 +282,7 @@ export const CasesFetchList = ({ onFetchCase, isFetching, selectedCases, onSelec
                 />
               </div>
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as 'all' | 'not_fetched' | 'success' | 'failed' | 'pending')}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
