@@ -50,13 +50,16 @@ export const useCasesFetchStatus = (page: number = 1, pageSize: number = 100, st
         .eq("firm_id", teamMember.firm_id);
 
       // Get counts for each status - mutually exclusive and data-first
-      // Not fetched: NEVER attempted (no search history rows)
+      // Not fetched: no data AND status null/not_fetched (excludes failed/pending)
       const { count: notFetchedCount } = await supabase
         .from("cases")
-        .select("id, legalkart_case_searches!left(id)", { count: 'exact', head: true })
+        .select("id", { count: 'exact', head: true })
         .not("cnr_number", "is", null)
         .eq("firm_id", teamMember.firm_id)
-        .is("legalkart_case_searches.id", null);
+        .is("petitioner_advocate", null)
+        .is("respondent_advocate", null)
+        .is("fetched_data", null)
+        .or("fetch_status.is.null,fetch_status.eq.not_fetched");
 
       // Success: has any fetched data OR marked as success/completed
       const { count: successCount } = await supabase
@@ -84,6 +87,12 @@ export const useCasesFetchStatus = (page: number = 1, pageSize: number = 100, st
         .eq("firm_id", teamMember.firm_id)
         .eq("fetch_status", "pending");
 
+      // Derive not-fetched to guarantee mutual exclusivity
+      const derivedNotFetched = Math.max(
+        0,
+        (totalCount || 0) - (successCount || 0) - (failedCount || 0) - (pendingCount || 0)
+      );
+
       // Fetch paginated cases with optional server-side status filtering
       const offset = (page - 1) * pageSize;
 
@@ -91,7 +100,7 @@ export const useCasesFetchStatus = (page: number = 1, pageSize: number = 100, st
       let filteredTotal = totalCount || 0;
       if (statusFilter !== 'all') {
         if (statusFilter === 'not_fetched') {
-          filteredTotal = notFetchedCount || 0;
+          filteredTotal = derivedNotFetched || 0;
         } else if (statusFilter === 'success') {
           filteredTotal = successCount || 0;
         } else if (statusFilter === 'failed') {
@@ -104,14 +113,16 @@ export const useCasesFetchStatus = (page: number = 1, pageSize: number = 100, st
       // Build cases query
       let casesQuery = supabase
         .from("cases")
-        .select("id, case_title, cnr_number, court_name, court_type, case_number, created_at, client_id, firm_id, fetch_status, last_fetched_at, fetch_message, fetched_data, petitioner_advocate, respondent_advocate, legalkart_case_searches!left(id)")
+        .select("id, case_title, cnr_number, court_name, court_type, case_number, created_at, client_id, firm_id, fetch_status, last_fetched_at, fetch_message, fetched_data, petitioner_advocate, respondent_advocate")
         .not("cnr_number", "is", null)
         .eq("firm_id", teamMember.firm_id);
 
       if (statusFilter === 'not_fetched') {
-        // Never attempted: no related search history rows
         casesQuery = casesQuery
-          .is("legalkart_case_searches.id", null);
+          .is("petitioner_advocate", null)
+          .is("respondent_advocate", null)
+          .is("fetched_data", null)
+          .or("fetch_status.is.null,fetch_status.eq.not_fetched");
       } else if (statusFilter === 'success') {
         casesQuery = casesQuery
           .or("fetch_status.eq.success,fetch_status.eq.completed,petitioner_advocate.not.is.null,respondent_advocate.not.is.null,fetched_data.not.is.null");
@@ -134,7 +145,7 @@ export const useCasesFetchStatus = (page: number = 1, pageSize: number = 100, st
       if (!cases || cases.length === 0) {
         return {
           cases: [],
-          counts: { not_fetched: notFetchedCount || 0, success: successCount || 0, failed: failedCount || 0, pending: pendingCount || 0, total: totalCount || 0 },
+          counts: { not_fetched: derivedNotFetched || 0, success: successCount || 0, failed: failedCount || 0, pending: pendingCount || 0, total: totalCount || 0 },
           pagination: {
             page,
             pageSize,
@@ -188,7 +199,7 @@ export const useCasesFetchStatus = (page: number = 1, pageSize: number = 100, st
       });
 
       const counts: StatusCounts = {
-        not_fetched: notFetchedCount || 0,
+        not_fetched: derivedNotFetched || 0,
         success: successCount || 0,
         failed: failedCount || 0,
         pending: pendingCount || 0,
