@@ -111,16 +111,13 @@ export const ECourts = () => {
 
     try {
       // Fetch ALL unfetched cases from database, not just current page
+      // Definition: cases never attempted (no search history rows)
       const { data: allUnfetchedCases, error } = await supabase
         .from("cases")
-        .select("id, case_title, cnr_number, court_type, firm_id")
+        .select("id, case_title, cnr_number, court_type, firm_id, legalkart_case_searches!left(id)")
         .not("cnr_number", "is", null)
         .eq("firm_id", firmId)
-        .is("last_fetched_at", null)
-        .is("petitioner_advocate", null)
-        .is("respondent_advocate", null)
-        .is("fetched_data", null)
-        .or("fetch_status.is.null,fetch_status.eq.not_fetched")
+        .is("legalkart_case_searches.id", null)
         .order("created_at", { ascending: false });
 
       if (error) throw error;

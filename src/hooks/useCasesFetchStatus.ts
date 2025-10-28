@@ -50,17 +50,13 @@ export const useCasesFetchStatus = (page: number = 1, pageSize: number = 100, st
         .eq("firm_id", teamMember.firm_id);
 
       // Get counts for each status - mutually exclusive and data-first
-      // Not fetched: never attempted OR no data exists
+      // Not fetched: NEVER attempted (no search history rows)
       const { count: notFetchedCount } = await supabase
         .from("cases")
-        .select("id", { count: 'exact', head: true })
+        .select("id, legalkart_case_searches!left(id)", { count: 'exact', head: true })
         .not("cnr_number", "is", null)
         .eq("firm_id", teamMember.firm_id)
-        .is("last_fetched_at", null)
-        .is("petitioner_advocate", null)
-        .is("respondent_advocate", null)
-        .is("fetched_data", null)
-        .or("fetch_status.is.null,fetch_status.eq.not_fetched");
+        .is("legalkart_case_searches.id", null);
 
       // Success: has any fetched data OR marked as success/completed
       const { count: successCount } = await supabase
@@ -94,48 +90,28 @@ export const useCasesFetchStatus = (page: number = 1, pageSize: number = 100, st
       // Compute filtered total when a status filter is applied
       let filteredTotal = totalCount || 0;
       if (statusFilter !== 'all') {
-        let countQuery = supabase
-          .from("cases")
-          .select("id", { count: 'exact', head: true })
-          .not("cnr_number", "is", null)
-          .eq("firm_id", teamMember.firm_id);
         if (statusFilter === 'not_fetched') {
-          countQuery = countQuery
-            .is("last_fetched_at", null)
-            .is("petitioner_advocate", null)
-            .is("respondent_advocate", null)
-            .is("fetched_data", null)
-            .or("fetch_status.is.null,fetch_status.eq.not_fetched");
+          filteredTotal = notFetchedCount || 0;
         } else if (statusFilter === 'success') {
-          countQuery = countQuery
-            .or("fetch_status.eq.success,fetch_status.eq.completed,petitioner_advocate.not.is.null,respondent_advocate.not.is.null,fetched_data.not.is.null");
+          filteredTotal = successCount || 0;
         } else if (statusFilter === 'failed') {
-          countQuery = countQuery
-            .eq("fetch_status", "failed")
-            .is("petitioner_advocate", null)
-            .is("respondent_advocate", null)
-            .is("fetched_data", null);
+          filteredTotal = failedCount || 0;
         } else if (statusFilter === 'pending') {
-          countQuery = countQuery.eq("fetch_status", "pending");
+          filteredTotal = pendingCount || 0;
         }
-        const { count: fCount } = await countQuery;
-        filteredTotal = fCount || 0;
       }
 
       // Build cases query
       let casesQuery = supabase
         .from("cases")
-        .select("id, case_title, cnr_number, court_name, court_type, case_number, created_at, client_id, firm_id, fetch_status, last_fetched_at, fetch_message, fetched_data, petitioner_advocate, respondent_advocate")
+        .select("id, case_title, cnr_number, court_name, court_type, case_number, created_at, client_id, firm_id, fetch_status, last_fetched_at, fetch_message, fetched_data, petitioner_advocate, respondent_advocate, legalkart_case_searches!left(id)")
         .not("cnr_number", "is", null)
         .eq("firm_id", teamMember.firm_id);
 
       if (statusFilter === 'not_fetched') {
+        // Never attempted: no related search history rows
         casesQuery = casesQuery
-          .is("last_fetched_at", null)
-          .is("petitioner_advocate", null)
-          .is("respondent_advocate", null)
-          .is("fetched_data", null)
-          .or("fetch_status.is.null,fetch_status.eq.not_fetched");
+          .is("legalkart_case_searches.id", null);
       } else if (statusFilter === 'success') {
         casesQuery = casesQuery
           .or("fetch_status.eq.success,fetch_status.eq.completed,petitioner_advocate.not.is.null,respondent_advocate.not.is.null,fetched_data.not.is.null");
