@@ -297,25 +297,6 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
           </div>
 
           <div>
-            <Label htmlFor="assigned_lawyer_id">Assigned Lawyer</Label>
-            <Select
-              value={watch('assigned_lawyer_id') || ''}
-              onValueChange={(value) => setValue('assigned_lawyer_id', value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a lawyer..." />
-              </SelectTrigger>
-              <SelectContent>
-                {lawyers.map((lawyer) => (
-                  <SelectItem key={lawyer.id} value={lawyer.id}>
-                    {lawyer.full_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
             <Label htmlFor="address">Address</Label>
             <Input
               id="address"
@@ -373,25 +354,33 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="city">City</Label>
-              <Input
-                id="city"
-                {...register('city')}
-                placeholder="City"
-              />
-            </div>
+          <div>
+            <Label htmlFor="pincode">PIN Code</Label>
+            <Input
+              id="pincode"
+              {...register('address')}
+              placeholder="PIN Code"
+              maxLength={6}
+            />
+          </div>
 
-            <div>
-              <Label htmlFor="pincode">PIN Code</Label>
-              <Input
-                id="pincode"
-                {...register('address')}
-                placeholder="PIN Code"
-                maxLength={6}
-              />
-            </div>
+          <div>
+            <Label htmlFor="assigned_lawyer_id">Assigned Lawyer</Label>
+            <Select
+              value={watch('assigned_lawyer_id') || ''}
+              onValueChange={(value) => setValue('assigned_lawyer_id', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a lawyer..." />
+              </SelectTrigger>
+              <SelectContent>
+                {lawyers.map((lawyer) => (
+                  <SelectItem key={lawyer.id} value={lawyer.id}>
+                    {lawyer.full_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
