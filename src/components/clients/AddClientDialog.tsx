@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -227,127 +228,261 @@ export const AddClientDialog: React.FC<AddClientDialogProps> = ({
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 flex-1 overflow-y-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-6">
+            {/* Client Type Selection */}
             <div>
-              <Label htmlFor="full_name">Full Name *</Label>
-              <Input 
-                id="full_name" 
-                {...register('full_name', { required: 'Full name is required' })} 
-                className="mt-2"
-              />
-              {errors.full_name && <p className="text-sm text-red-600 mt-1">{errors.full_name.message}</p>}
-            </div>
-
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input 
-                id="email" 
-                type="email" 
-                {...register('email')} 
-                className="mt-2"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="phone">Phone</Label>
-              <Input 
-                id="phone" 
-                {...register('phone')} 
-                className="mt-2"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="type">Type</Label>
-              <select 
-                id="type" 
-                {...register('type')} 
-                className="w-full px-3 py-2 mt-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              <Label>Client Type *</Label>
+              <RadioGroup
+                value={watch('type') || 'Individual'}
+                onValueChange={(value) => setValue('type', value as 'Individual' | 'Corporate')}
+                className="flex gap-4 mt-2"
               >
-                <option value="Individual">Individual</option>
-                <option value="Corporate">Corporate</option>
-              </select>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="Individual" id="individual" />
+                  <Label htmlFor="individual" className="font-normal cursor-pointer">Individual</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="Corporate" id="corporate" />
+                  <Label htmlFor="corporate" className="font-normal cursor-pointer">Organization</Label>
+                </div>
+              </RadioGroup>
             </div>
 
-            <div>
-              <Label htmlFor="organization">Company Name</Label>
-              <Input 
-                id="organization" 
-                {...register('organization')} 
-                className="mt-2"
-                placeholder="Company/Organization name"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <Label htmlFor="full_name">
+                  {watch('type') === 'Corporate' ? 'Contact Person Name' : 'Full Name'} *
+                </Label>
+                <Input 
+                  id="full_name" 
+                  {...register('full_name', { required: 'Full name is required' })} 
+                  className="mt-2"
+                />
+                {errors.full_name && <p className="text-sm text-red-600 mt-1">{errors.full_name.message}</p>}
+              </div>
+
+              {watch('type') === 'Corporate' && (
+                <div>
+                  <Label htmlFor="organization">Organization Name *</Label>
+                  <Input 
+                    id="organization" 
+                    {...register('organization', { 
+                      required: watch('type') === 'Corporate' ? 'Organization name is required' : false 
+                    })} 
+                    className="mt-2"
+                    placeholder="Company/Organization name"
+                  />
+                  {errors.organization && <p className="text-sm text-red-600 mt-1">{errors.organization.message}</p>}
+                </div>
+              )}
+
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input 
+                  id="email" 
+                  type="email" 
+                  {...register('email')} 
+                  className="mt-2"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="phone">Phone *</Label>
+                <Input 
+                  id="phone" 
+                  {...register('phone', { required: 'Phone is required' })} 
+                  className="mt-2"
+                />
+                {errors.phone && <p className="text-sm text-red-600 mt-1">{errors.phone.message}</p>}
+              </div>
+
+              <div>
+                <Label htmlFor="status">Status</Label>
+                <Select
+                  value={watch('status') || 'lead'}
+                  onValueChange={(value: any) => setValue('status', value)}
+                >
+                  <SelectTrigger className="mt-2">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="new">New</SelectItem>
+                    <SelectItem value="lead">Lead</SelectItem>
+                    <SelectItem value="prospect">Prospect</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
-            <div>
-              <Label htmlFor="aadhaar_no">Aadhaar Number</Label>
-              <Input 
-                id="aadhaar_no" 
-                {...register('aadhaar_no')} 
-                className="mt-2"
-                placeholder="12-digit Aadhaar number"
-              />
+            {/* Address Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <Label htmlFor="address">Address</Label>
+                <Input 
+                  id="address" 
+                  {...register('address')} 
+                  className="mt-2"
+                  placeholder="Street address"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="state">State</Label>
+                <Select
+                  value={selectedStateId}
+                  onValueChange={(value) => {
+                    setSelectedStateId(value);
+                    setValue('district', '');
+                    const stateName = states.find(s => s.id === value)?.name;
+                    setValue('state', stateName || '');
+                  }}
+                >
+                  <SelectTrigger className="mt-2">
+                    <SelectValue placeholder="Select state..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {states.map((state) => (
+                      <SelectItem key={state.id} value={state.id}>
+                        {state.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="district">District</Label>
+                {showAddDistrict ? (
+                  <div className="space-y-2 mt-2">
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Enter new district name"
+                        value={newDistrictName}
+                        onChange={(e) => setNewDistrictName(e.target.value)}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddDistrict();
+                          }
+                        }}
+                      />
+                      <Button 
+                        type="button" 
+                        onClick={handleAddDistrict}
+                        size="sm"
+                      >
+                        Add
+                      </Button>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={() => {
+                          setShowAddDistrict(false);
+                          setNewDistrictName('');
+                        }}
+                        size="sm"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <Select
+                    value={watch('district') || ''}
+                    onValueChange={(value) => {
+                      if (value === 'add_new') {
+                        setShowAddDistrict(true);
+                      } else {
+                        setValue('district', value);
+                      }
+                    }}
+                    disabled={!selectedStateId}
+                  >
+                    <SelectTrigger className="mt-2">
+                      <SelectValue placeholder={!selectedStateId ? "Select state first" : "Select district..."} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {districts.map((district) => (
+                        <SelectItem key={district.id} value={district.name}>
+                          {district.name}
+                        </SelectItem>
+                      ))}
+                      {selectedStateId && (
+                        <SelectItem value="add_new" className="border-t">
+                          <div className="flex items-center gap-2">
+                            <Plus className="h-4 w-4" />
+                            Add New District
+                          </div>
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="aadhaar_no">PIN Code</Label>
+                <Input 
+                  id="aadhaar_no" 
+                  {...register('aadhaar_no')} 
+                  className="mt-2"
+                  placeholder="PIN Code"
+                  maxLength={6}
+                />
+              </div>
             </div>
 
-            <div>
-              <Label htmlFor="status">Status</Label>
-              <select 
-                id="status" 
-                {...register('status')} 
-                className="w-full px-3 py-2 mt-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="new">New</option>
-                <option value="lead">Lead</option>
-                <option value="prospect">Prospect</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <Label htmlFor="assigned_lawyer_id">Assigned Lawyer</Label>
+                <Select
+                  value={watch('assigned_lawyer_id') || ''}
+                  onValueChange={(value) => setValue('assigned_lawyer_id', value)}
+                >
+                  <SelectTrigger className="mt-2">
+                    <SelectValue placeholder="Select a lawyer..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {lawyers.map((lawyer) => (
+                      <SelectItem key={lawyer.id} value={lawyer.id}>
+                        {lawyer.full_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div>
-              <Label htmlFor="assigned_lawyer_id">Assign Lawyer</Label>
-              <select 
-                id="assigned_lawyer_id" 
-                {...register('assigned_lawyer_id')} 
-                className="w-full px-3 py-2 mt-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Select a lawyer...</option>
-                {lawyers.map(lawyer => (
-                  <option key={lawyer.id} value={lawyer.id}>
-                    {lawyer.full_name}
-                  </option>
-                ))}
-              </select>
-            </div>
+              <div>
+                <Label htmlFor="source">Source</Label>
+                <Input 
+                  id="source" 
+                  {...register('source')} 
+                  className="mt-2"
+                  placeholder="How they found us"
+                />
+              </div>
 
-            <div>
-              <Label htmlFor="source">Source</Label>
-              <Input 
-                id="source" 
-                {...register('source')} 
-                className="mt-2"
-                placeholder="How they found us"
-              />
-            </div>
+              <div>
+                <Label htmlFor="referred_by_name">Reference Name</Label>
+                <Input 
+                  id="referred_by_name" 
+                  {...register('referred_by_name')} 
+                  className="mt-2"
+                  placeholder="Name of person who referred"
+                />
+              </div>
 
-            <div>
-              <Label htmlFor="referred_by_name">Referred By Name</Label>
-              <Input 
-                id="referred_by_name" 
-                {...register('referred_by_name')} 
-                className="mt-2"
-                placeholder="Name of referrer"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="referred_by_phone">Referred By Phone</Label>
-              <Input 
-                id="referred_by_phone" 
-                {...register('referred_by_phone')} 
-                className="mt-2"
-                placeholder="Phone of referrer"
-              />
+              <div>
+                <Label htmlFor="referred_by_phone">Reference Contact</Label>
+                <Input 
+                  id="referred_by_phone" 
+                  {...register('referred_by_phone')} 
+                  className="mt-2"
+                  placeholder="Contact number of referrer"
+                />
+              </div>
             </div>
           </div>
 
@@ -362,7 +497,7 @@ export const AddClientDialog: React.FC<AddClientDialogProps> = ({
                     id="designation" 
                     {...register('designation')} 
                     className="mt-2"
-                    placeholder="Your designation in the company"
+                    placeholder="Designation in company"
                   />
                 </div>
 
@@ -399,122 +534,6 @@ export const AddClientDialog: React.FC<AddClientDialogProps> = ({
               </div>
             </div>
           )}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <Label htmlFor="address">Address</Label>
-              <Input 
-                id="address" 
-                {...register('address')} 
-                className="mt-2"
-                placeholder="Street address"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="city">City</Label>
-              <Input 
-                id="city" 
-                {...register('city')} 
-                className="mt-2"
-                placeholder="City"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="state">State</Label>
-              <select
-                id="state"
-                {...register('state')}
-                onChange={(e) => {
-                  const selectedState = states.find(s => s.name === e.target.value);
-                  if (selectedState) {
-                    setValue('state', e.target.value);
-                    setSelectedStateId(selectedState.id);
-                    setValue('district', ''); // Reset district when state changes
-                  }
-                }}
-                className="w-full px-3 py-2 mt-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Select state</option>
-                {states.map((state) => (
-                  <option key={state.id} value={state.name}>
-                    {state.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <Label htmlFor="district">District</Label>
-              {showAddDistrict ? (
-                <div className="space-y-2 mt-2">
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Enter new district name"
-                      value={newDistrictName}
-                      onChange={(e) => setNewDistrictName(e.target.value)}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          handleAddDistrict();
-                        }
-                      }}
-                    />
-                    <Button 
-                      type="button" 
-                      onClick={handleAddDistrict}
-                      size="sm"
-                    >
-                      Add
-                    </Button>
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      onClick={() => {
-                        setShowAddDistrict(false);
-                        setNewDistrictName('');
-                      }}
-                      size="sm"
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="mt-2">
-                  <select
-                    id="district"
-                    {...register('district')}
-                    disabled={!selectedStateId}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-                  >
-                    <option value="">{!selectedStateId ? "Select state first" : "Select district"}</option>
-                    {districts.map((district) => (
-                      <option key={district.id} value={district.name}>
-                        {district.name}
-                      </option>
-                    ))}
-                    {selectedStateId && (
-                      <option value="add_new">+ Add New District</option>
-                    )}
-                  </select>
-                  {selectedStateId && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowAddDistrict(true)}
-                      className="mt-2 flex items-center gap-2"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Add New District
-                    </Button>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
 
           <div>
             <Label htmlFor="notes">Notes</Label>
