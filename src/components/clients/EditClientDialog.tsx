@@ -25,6 +25,8 @@ interface Client {
   state?: string;
   district?: string;
   city?: string;
+  referred_by_name?: string;
+  referred_by_phone?: string;
 }
 
 interface EditClientDialogProps {
@@ -47,6 +49,8 @@ interface ClientFormData {
   state?: string;
   district?: string;
   city?: string;
+  referred_by_name?: string;
+  referred_by_phone?: string;
 }
 
 export const EditClientDialog: React.FC<EditClientDialogProps> = ({
@@ -145,6 +149,8 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
         state: client.state || '',
         district: client.district || '',
         city: client.city || '',
+        referred_by_name: client.referred_by_name || '',
+        referred_by_phone: client.referred_by_phone || '',
       });
 
       // Find and set state ID if state name exists
@@ -381,6 +387,24 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="referred_by_name">Reference Name</Label>
+            <Input
+              id="referred_by_name"
+              {...register('referred_by_name')}
+              placeholder="Name of person who referred"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="referred_by_phone">Reference Contact</Label>
+            <Input
+              id="referred_by_phone"
+              {...register('referred_by_phone')}
+              placeholder="Contact number of referrer"
+            />
           </div>
 
           <div>
