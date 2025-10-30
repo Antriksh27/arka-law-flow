@@ -2,7 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { startOfWeek, endOfWeek, format, formatDistanceToNow } from 'date-fns';
+import { startOfWeek, endOfWeek, startOfDay, endOfDay, format, formatDistanceToNow } from 'date-fns';
 
 const getFirmId = async (userId: string) => {
   const { data, error } = await supabase
@@ -17,10 +17,27 @@ const getFirmId = async (userId: string) => {
   return data.firm_id;
 };
 
-const fetchDashboardData = async (firmId: string, userId: string) => {
+const fetchDashboardData = async (firmId: string, userId: string, role: string) => {
   const today = new Date();
+  const startOfToday = startOfDay(today);
+  const endOfToday = endOfDay(today);
   const startOfThisWeek = startOfWeek(today, { weekStartsOn: 1 });
   const endOfThisWeek = endOfWeek(today, { weekStartsOn: 1 });
+
+  // Build role-based queries
+  let appointmentsQuery = supabase.from('appointments').select('*', { count: 'exact', head: false }).eq('firm_id', firmId);
+  let hearingsQuery = supabase.from('hearings').select('*').eq('firm_id', firmId);
+  let casesQuery = supabase.from('cases').select('*').eq('firm_id', firmId);
+  
+  // Apply role-based filtering
+  if (role === 'lawyer' || role === 'partner' || role === 'associate') {
+    appointmentsQuery = appointmentsQuery.eq('lawyer_id', userId);
+    casesQuery = casesQuery.eq('created_by', userId);
+  } else if (role === 'junior' || role === 'paralegal') {
+    // Juniors see assigned cases/tasks
+    casesQuery = casesQuery.contains('assigned_users', [userId]);
+  }
+  // Admin and office_staff see all
 
   const [
     { count: activeCasesCount },
@@ -35,6 +52,11 @@ const fetchDashboardData = async (firmId: string, userId: string) => {
     { data: caseIdsInFirm },
     { data: revenueData },
     { data: recentDocuments },
+    { data: todayAppointments },
+    { data: upcomingHearings },
+    { data: recentClients },
+    { data: recentContacts },
+    { data: caseHighlights },
   ] = await Promise.all([
     supabase.from('cases').select('*', { count: 'exact', head: true }).eq('firm_id', firmId).eq('status', 'open'),
     supabase.from('hearings').select('*', { count: 'exact', head: true }).eq('firm_id', firmId).gte('hearing_date', today.toISOString()),
@@ -48,6 +70,11 @@ const fetchDashboardData = async (firmId: string, userId: string) => {
     supabase.from('cases').select('id').eq('firm_id', firmId),
     supabase.from('invoices').select('status, total_amount').eq('firm_id', firmId),
     supabase.from('documents').select('file_name, file_type, uploaded_at').eq('firm_id', firmId).order('uploaded_at', { ascending: false }).limit(2),
+    supabase.from('appointments').select('id, start_time, status, clients(full_name)').eq('firm_id', firmId).gte('start_time', startOfToday.toISOString()).lte('start_time', endOfToday.toISOString()).order('start_time', { ascending: true }).limit(5),
+    supabase.from('hearings').select('id, hearing_date, court_name, cases(case_title)').eq('firm_id', firmId).gte('hearing_date', today.toISOString()).order('hearing_date', { ascending: true }).limit(5),
+    supabase.from('clients').select('id, full_name, email, phone, status, created_at').eq('firm_id', firmId).order('created_at', { ascending: false }).limit(5),
+    supabase.from('contacts').select('id, name, phone, last_visited_at').eq('firm_id', firmId).order('last_visited_at', { ascending: false, nullsFirst: false }).limit(5),
+    supabase.from('cases').select('id, case_title, case_number, status, hearings(hearing_date)').eq('firm_id', firmId).eq('status', 'open').order('created_at', { ascending: false }).limit(5),
   ]);
 
   const caseIds = (caseIdsInFirm || []).map(c => c.id);
@@ -84,7 +111,67 @@ const fetchDashboardData = async (firmId: string, userId: string) => {
     }
   });
 
+  // Calculate case counts for clients
+  const clientsWithCaseCount = await Promise.all(
+    (recentClients || []).map(async (client) => {
+      const { count } = await supabase.from('cases').select('*', { count: 'exact', head: true }).eq('client_id', client.id);
+      return { ...client, case_count: count || 0 };
+    })
+  );
+
+  // Get next hearing dates for case highlights
+  const casesWithNextHearing = (caseHighlights || []).map(c => ({
+    ...c,
+    next_hearing_date: c.hearings?.[0]?.hearing_date || null,
+  }));
+
+  // Format today's appointments
+  const formattedTodayAppointments = (todayAppointments || []).map(a => ({
+    id: a.id,
+    start_time: a.start_time,
+    client_name: a.clients?.full_name || 'Unknown Client',
+    meeting_type: 'in-person',
+    status: a.status || 'scheduled',
+  }));
+
+  // Format upcoming hearings
+  const formattedUpcomingHearings = (upcomingHearings || []).map(h => ({
+    id: h.id,
+    hearing_date: h.hearing_date,
+    court_name: h.court_name,
+    case_title: h.cases?.case_title || 'Unknown Case',
+  }));
+
+  // Build timeline events for today
+  const timelineEvents = [
+    ...(formattedTodayAppointments || []).map(a => ({
+      id: a.id,
+      type: 'appointment' as const,
+      title: `Appointment with ${a.client_name}`,
+      time: a.start_time,
+      location: a.meeting_type,
+    })),
+    ...(formattedUpcomingHearings || []).filter(h => {
+      const hearingDate = new Date(h.hearing_date);
+      return hearingDate >= startOfToday && hearingDate <= endOfToday;
+    }).map(h => ({
+      id: h.id,
+      type: 'hearing' as const,
+      title: h.case_title,
+      time: h.hearing_date,
+      location: h.court_name,
+    })),
+    ...(myTasks || []).filter(t => t.due_date).map(t => ({
+      id: t.title,
+      type: 'task' as const,
+      title: t.title,
+      time: t.due_date!,
+      location: undefined,
+    })),
+  ];
+
   return {
+    role,
     metrics: {
       activeCases: activeCasesCount || 0,
       hearings: hearingsCount || 0,
@@ -102,11 +189,17 @@ const fetchDashboardData = async (firmId: string, userId: string) => {
     })),
     revenue,
     recentDocuments: (recentDocuments || []).map(d => ({ name: d.file_name, icon: '📄' })),
+    todayAppointments: formattedTodayAppointments,
+    upcomingHearings: formattedUpcomingHearings,
+    recentClients: clientsWithCaseCount,
+    recentContacts: recentContacts || [],
+    caseHighlights: casesWithNextHearing,
+    timelineEvents,
   };
 };
 
 export const useDashboardData = () => {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   
   const { data: firmId, isLoading: isLoadingFirmId, error: firmIdError, isError: isFirmIdError } = useQuery({
     queryKey: ['firmId', user?.id],
@@ -115,9 +208,9 @@ export const useDashboardData = () => {
   });
   
   const queryResult = useQuery({
-    queryKey: ['dashboardData', firmId],
-    queryFn: () => fetchDashboardData(firmId!, user!.id),
-    enabled: !!firmId && !!user && !isFirmIdError,
+    queryKey: ['dashboardData', firmId, role],
+    queryFn: () => fetchDashboardData(firmId!, user!.id, role || 'admin'),
+    enabled: !!firmId && !!user && !isFirmIdError && !!role,
   });
 
   return {
