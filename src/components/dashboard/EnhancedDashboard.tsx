@@ -18,49 +18,58 @@ import { CaseHighlightsCard } from './CaseHighlightsCard';
 import { ChatWidget } from './ChatWidget';
 import { DailyTimeline } from './DailyTimeline';
 import { LegalNewsFeed } from './LegalNewsFeed';
-
 const EnhancedDashboard = () => {
-  const { user } = useAuth();
-  const { data, isLoading, isError, error } = useDashboardData();
+  const {
+    user
+  } = useAuth();
+  const {
+    data,
+    isLoading,
+    isError,
+    error
+  } = useDashboardData();
   const [timeFilter, setTimeFilter] = useState('today');
-
-  const dashboardMetrics = data ? [
-    { number: data.metrics.activeCases, label: 'Active Cases' },
-    { number: data.metrics.hearings, label: 'Hearings' },
-    { number: data.metrics.appointments, label: 'Appointments' },
-    { number: data.metrics.tasks, label: 'Tasks' },
-  ] : [];
-
+  const dashboardMetrics = data ? [{
+    number: data.metrics.activeCases,
+    label: 'Active Cases'
+  }, {
+    number: data.metrics.hearings,
+    label: 'Hearings'
+  }, {
+    number: data.metrics.appointments,
+    label: 'Appointments'
+  }, {
+    number: data.metrics.tasks,
+    label: 'Tasks'
+  }] : [];
   const weekSchedule = useMemo(() => {
     const today = new Date();
-    const startOfThisWeek = startOfWeek(today, { weekStartsOn: 1 });
-    return Array.from({ length: 7 }).map((_, i) => {
+    const startOfThisWeek = startOfWeek(today, {
+      weekStartsOn: 1
+    });
+    return Array.from({
+      length: 7
+    }).map((_, i) => {
       const date = addDays(startOfThisWeek, i);
       const dateString = format(date, 'yyyy-MM-dd');
       return {
         day: format(date, 'EEE'),
         date: format(date, 'd'),
         isCurrentDay: isToday(date),
-        eventCount: data?.schedule[dateString] || 0,
+        eventCount: data?.schedule[dateString] || 0
       };
     });
   }, [data]);
-
   if (isError) {
-    return (
-      <div className="p-6 bg-background min-h-screen">
+    return <div className="p-6 bg-background min-h-screen">
         <Alert variant="destructive">
           <AlertTitle>Error loading dashboard</AlertTitle>
           <AlertDescription>Please try refreshing the page.</AlertDescription>
         </Alert>
-      </div>
-    );
+      </div>;
   }
-
   const userRole = data?.role || 'admin';
-
-  return (
-    <div className="p-6 bg-background min-h-screen">
+  return <div className="p-6 bg-background min-h-screen">
       {/* Header with Search */}
       <div className="mb-6 space-y-4">
         <div className="flex items-center justify-between">
@@ -85,31 +94,16 @@ const EnhancedDashboard = () => {
 
       {/* Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {isLoading ? (
-          Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24" />)
-        ) : (
-          dashboardMetrics.map((metric, i) => (
-            <Card key={i} className="p-4">
+        {isLoading ? Array.from({
+        length: 4
+      }).map((_, i) => <Skeleton key={i} className="h-24" />) : dashboardMetrics.map((metric, i) => <Card key={i} className="p-4">
               <div className="text-3xl font-bold">{metric.number}</div>
               <p className="text-sm text-muted-foreground">{metric.label}</p>
-            </Card>
-          ))
-        )}
+            </Card>)}
       </div>
 
       {/* Week Schedule */}
-      <Card className="mb-8 p-6">
-        <h3 className="text-lg font-medium mb-4">This Week's Schedule</h3>
-        <div className="grid grid-cols-7 gap-2">
-          {weekSchedule.map((day, i) => (
-            <div key={i} className={cn("p-4 rounded-lg border text-center", day.isCurrentDay && "bg-primary/10 border-primary")}>
-              <div className="text-xs font-medium">{day.day}</div>
-              <div className="text-2xl font-bold">{day.date}</div>
-              {day.eventCount > 0 && <div className="text-xs mt-1">{day.eventCount} events</div>}
-            </div>
-          ))}
-        </div>
-      </Card>
+      
 
       {/* Main Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -122,8 +116,6 @@ const EnhancedDashboard = () => {
         <DailyTimeline events={data?.timelineEvents || []} isLoading={isLoading} />
         <LegalNewsFeed />
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default EnhancedDashboard;
