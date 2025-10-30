@@ -17,7 +17,7 @@ export const ChatWidget = () => {
             <MessageSquare className="w-5 h-5 text-primary" />
             Team Chat
           </CardTitle>
-          <Button variant="link" size="sm" className="text-primary" onClick={() => navigate('/messages')}>
+          <Button variant="link" size="sm" className="text-primary" onClick={() => navigate('/chat')}>
             Open Chat
           </Button>
         </div>
@@ -48,7 +48,7 @@ export const ChatWidget = () => {
             <Button 
               variant="outline" 
               className="w-full"
-              onClick={() => navigate('/messages')}
+              onClick={() => navigate('/chat')}
             >
               <MessageSquare className="w-4 h-4 mr-2" />
               Start Conversation

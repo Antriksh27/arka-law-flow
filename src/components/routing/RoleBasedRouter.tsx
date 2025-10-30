@@ -18,7 +18,6 @@ import Documents from '@/pages/Documents';
 import Notes from '@/pages/Notes';
 import Invoices from '@/pages/Invoices';
 import Team from '@/pages/Team';
-import Messages from '@/pages/Messages';
 import Instructions from '@/pages/Instructions';
 import Availability from '@/pages/Availability';
 import ECourts from '@/pages/ECourts';
@@ -119,7 +118,6 @@ const RoleBasedRouter = () => {
         <Route path="/hearings" element={<Hearings />} />
         <Route path="/documents" element={<Documents />} />
         <Route path="/notes" element={<Notes />} />
-        <Route path="/messages" element={<Messages />} />
         <Route path="/instructions" element={<Instructions />} />
         <Route path="/availability" element={<Availability />} />
         <Route path="/chat" element={<ModernMessenger />} />
@@ -149,7 +147,6 @@ const RoleBasedRouter = () => {
         <Route path="/hearings" element={<Hearings />} />
         <Route path="/documents" element={<Documents />} />
         <Route path="/notes" element={<Notes />} />
-        <Route path="/messages" element={<Messages />} />
         <Route path="/instructions" element={<Instructions />} />
         <Route path="/invoices" element={<Invoices />} />
         <Route path="/availability" element={<Availability />} />

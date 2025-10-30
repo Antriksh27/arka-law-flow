@@ -30,7 +30,6 @@ const getNavigationForRole = (role: string | null) => {
     { name: 'Tasks', href: '/tasks', icon: File },
     { name: 'Instructions', href: '/instructions', icon: ClipboardList },
     { name: 'Notes', href: '/notes', icon: File },
-    { name: 'Messages', href: '/messages', icon: MessageSquare },
     { name: 'Documents', href: '/documents', icon: Folder },
   ];
 
