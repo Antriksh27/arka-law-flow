@@ -220,7 +220,6 @@ const fetchDashboardData = async (firmId: string, userId: string, role: string) 
         ).length,
       };
     }),
-    role,
   };
 };
 
