@@ -1,0 +1,78 @@
+import { Plus, Calendar, UserPlus, Upload } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { AddCaseDialog } from '@/components/cases/AddCaseDialog';
+import { AddClientDialog } from '@/components/clients/AddClientDialog';
+import { CreateAppointmentDialog } from '@/components/appointments/CreateAppointmentDialog';
+
+export const QuickActions = () => {
+  const navigate = useNavigate();
+  const [showCaseDialog, setShowCaseDialog] = useState(false);
+  const [showClientDialog, setShowClientDialog] = useState(false);
+  const [showAppointmentDialog, setShowAppointmentDialog] = useState(false);
+
+  const actions = [
+    {
+      icon: Plus,
+      label: 'Add Case',
+      onClick: () => setShowCaseDialog(true),
+    },
+    {
+      icon: Calendar,
+      label: 'Schedule',
+      onClick: () => setShowAppointmentDialog(true),
+    },
+    {
+      icon: UserPlus,
+      label: 'Add Client',
+      onClick: () => setShowClientDialog(true),
+    },
+    {
+      icon: Upload,
+      label: 'Upload',
+      onClick: () => navigate('/documents'),
+    },
+  ];
+
+  return (
+    <>
+      <Card className="p-6 mb-6">
+        <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
+        
+        <div className="grid grid-cols-2 gap-3">
+          {actions.map((action, index) => (
+            <button
+              key={index}
+              onClick={action.onClick}
+              className="flex flex-col items-center justify-center p-4 rounded-lg border border-gray-200 hover:border-primary hover:bg-gray-50 transition-all group"
+            >
+              <div className="w-12 h-12 rounded-lg bg-gray-100 group-hover:bg-primary/10 flex items-center justify-center mb-2 transition-colors">
+                <action.icon className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
+              </div>
+              <span className="text-xs font-medium">{action.label}</span>
+            </button>
+          ))}
+        </div>
+      </Card>
+
+      {showCaseDialog && (
+        <AddCaseDialog 
+          open={showCaseDialog} 
+          onClose={() => setShowCaseDialog(false)} 
+        />
+      )}
+      {showClientDialog && (
+        <AddClientDialog 
+          open={showClientDialog} 
+          onOpenChange={setShowClientDialog}
+          onSuccess={() => setShowClientDialog(false)} 
+        />
+      )}
+      {showAppointmentDialog && (
+        <CreateAppointmentDialog />
+      )}
+    </>
+  );
+};

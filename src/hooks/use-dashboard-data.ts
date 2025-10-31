@@ -2,7 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { startOfWeek, endOfWeek, startOfDay, endOfDay, format, formatDistanceToNow } from 'date-fns';
+import { startOfWeek, endOfWeek, startOfDay, endOfDay, format, formatDistanceToNow, addDays } from 'date-fns';
 
 const getFirmId = async (userId: string) => {
   const { data, error } = await supabase
@@ -188,13 +188,39 @@ const fetchDashboardData = async (firmId: string, userId: string, role: string) 
       time: `${formatDistanceToNow(new Date(a.created_at))} ago`
     })),
     revenue,
-    recentDocuments: (recentDocuments || []).map(d => ({ name: d.file_name, icon: '📄' })),
+    recentDocuments: (recentDocuments || []).map((d, index) => ({
+      id: `doc-${index}`,
+      name: d.file_name,
+      file_name: d.file_name,
+      created_at: d.uploaded_at,
+      uploaded_at: d.uploaded_at,
+      file_type: d.file_type,
+      icon: '📄' 
+    })),
     todayAppointments: formattedTodayAppointments,
     upcomingHearings: formattedUpcomingHearings,
     recentClients: clientsWithCaseCount,
     recentContacts: recentContacts || [],
     caseHighlights: casesWithNextHearing,
     timelineEvents,
+    weekEvents: Array.from({ length: 7 }).map((_, i) => {
+      const date = addDays(startOfWeek(new Date(), { weekStartsOn: 1 }), i);
+      const dateStr = format(date, 'yyyy-MM-dd');
+      
+      return {
+        date: dateStr,
+        hearings: (weeklyHearings || []).filter(h => 
+          format(new Date(h.hearing_date), 'yyyy-MM-dd') === dateStr
+        ).length,
+        appointments: (weeklyAppointments || []).filter(a => 
+          format(new Date(a.start_time), 'yyyy-MM-dd') === dateStr
+        ).length,
+        tasks: (myTasks || []).filter(t => 
+          t.due_date && format(new Date(t.due_date), 'yyyy-MM-dd') === dateStr
+        ).length,
+      };
+    }),
+    role,
   };
 };
 

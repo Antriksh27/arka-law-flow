@@ -1,9 +1,9 @@
 
 import React from 'react';
-import EnhancedDashboard from '../components/dashboard/EnhancedDashboard';
+import WorkspaceDashboard from '../components/dashboard/WorkspaceDashboard';
 
 const Index = () => {
-  return <EnhancedDashboard />;
+  return <WorkspaceDashboard />;
 };
 
 export default Index;
