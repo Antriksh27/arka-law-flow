@@ -11,6 +11,7 @@ import { UpcomingWeek } from './workspace/UpcomingWeek';
 import { QuickActions } from './workspace/QuickActions';
 import { LegalUpdates } from './workspace/LegalUpdates';
 import { GlobalSearch } from './GlobalSearch';
+import { MyTasks } from './workspace/MyTasks';
 
 const WorkspaceDashboard = () => {
   const { user } = useAuth();
@@ -23,7 +24,7 @@ const WorkspaceDashboard = () => {
     return 'Good Evening';
   };
 
-  const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
+  const userName = user?.user_metadata?.full_name || user?.email || 'User';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -74,8 +75,13 @@ const WorkspaceDashboard = () => {
               }))} 
               isLoading={isLoading}
             />
+
+            <MyTasks 
+              tasks={data?.myTasks || []} 
+              isLoading={isLoading}
+            />
             
-            <MyActiveCases 
+            <MyActiveCases
               cases={(data?.caseHighlights || []).map(c => ({
                 ...c,
                 client_name: (c as any).client?.full_name || 'Unknown Client',
@@ -95,21 +101,6 @@ const WorkspaceDashboard = () => {
             />
             
             <RecentChats 
-              chats={[
-                {
-                  id: '1',
-                  name: 'Smith v. Jones Team',
-                  message: 'Michael: Updated the discovery docs',
-                  time: '10m ago',
-                  unread: true,
-                },
-                {
-                  id: '2',
-                  name: 'Sarah Chen',
-                  message: 'Can you review the contract edits?',
-                  time: '1h ago',
-                },
-              ]} 
               isLoading={isLoading}
             />
           </div>

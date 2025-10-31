@@ -41,10 +41,10 @@ export const UpcomingWeek = ({ events, isLoading }: UpcomingWeekProps) => {
 
   const getColorBars = (data: { hearings: number; appointments: number; tasks: number }) => {
     const bars = [];
-    if (data.hearings > 0) bars.push(<div key="hearing" className="h-full bg-red-500 rounded" style={{ width: '4px' }} />);
-    if (data.appointments > 0) bars.push(<div key="appt" className="h-full bg-blue-500 rounded" style={{ width: '4px' }} />);
-    if (data.tasks > 0) bars.push(<div key="task" className="h-full bg-green-500 rounded" style={{ width: '4px' }} />);
-    return bars;
+    if (data.hearings > 0) bars.push(<div key="hearing" className="w-1 h-full bg-red-500 rounded" />);
+    if (data.appointments > 0) bars.push(<div key="appt" className="w-1 h-full bg-blue-500 rounded" />);
+    if (data.tasks > 0) bars.push(<div key="task" className="w-1 h-full bg-green-500 rounded" />);
+    return bars.length > 0 ? bars : <div className="w-1 h-full bg-gray-200 rounded" />;
   };
 
   return (
