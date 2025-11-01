@@ -45,17 +45,17 @@ const fetchDashboardData = async (firmId: string, userId: string, role: string) 
   ] = await Promise.all([
     supabase.from('cases').select('*', { count: 'exact', head: true }).eq('firm_id', firmId).eq('status', 'open'),
     supabase.from('case_hearings').select('*, cases!inner(firm_id)', { count: 'exact', head: true }).eq('cases.firm_id', firmId).gte('hearing_date', today.toISOString()),
-    supabase.from('appointments').select('*', { count: 'exact', head: true }).eq('firm_id', firmId).gte('start_time', today.toISOString()),
+    supabase.from('appointments').select('*', { count: 'exact', head: true }).eq('firm_id', firmId).gte('appointment_date', format(today, 'yyyy-MM-dd')),
     supabase.from('tasks').select('*', { count: 'exact', head: true }).eq('firm_id', firmId).neq('status', 'completed'),
     supabase.from('case_hearings').select('hearing_date, cases!inner(firm_id)').eq('cases.firm_id', firmId).gte('hearing_date', startOfThisWeek.toISOString()).lte('hearing_date', endOfThisWeek.toISOString()),
-    supabase.from('appointments').select('start_time').eq('firm_id', firmId).gte('start_time', startOfThisWeek.toISOString()).lte('start_time', endOfThisWeek.toISOString()),
+    supabase.from('appointments').select('appointment_date').eq('firm_id', firmId).gte('appointment_date', format(startOfThisWeek, 'yyyy-MM-dd')).lte('appointment_date', format(endOfThisWeek, 'yyyy-MM-dd')),
     supabase.from('tasks').select('title, priority, due_date').eq('assigned_to', userId).neq('status', 'completed').order('due_date', { ascending: true }).limit(3),
     supabase.from('notes_v2').select('title, content, updated_at').eq('created_by', userId).order('updated_at', { ascending: false }).limit(2),
     supabase.from('team_members').select('full_name, role').eq('firm_id', firmId).limit(5),
     supabase.from('cases').select('id').eq('firm_id', firmId),
     supabase.from('invoices').select('status, total_amount').eq('firm_id', firmId),
     supabase.from('documents').select('file_name, file_type, uploaded_at, id').eq('firm_id', firmId).order('uploaded_at', { ascending: false }).limit(2),
-    supabase.from('appointments').select('id, start_time, status, clients(full_name)').eq('firm_id', firmId).gte('start_time', startOfToday.toISOString()).lte('start_time', endOfToday.toISOString()).order('start_time', { ascending: true }).limit(50),
+    supabase.from('appointments').select('id, appointment_date, appointment_time, status, title, clients(full_name)').eq('firm_id', firmId).eq('appointment_date', format(today, 'yyyy-MM-dd')).order('appointment_time', { ascending: true }).limit(50),
     supabase.from('case_hearings').select('id, hearing_date, judge, cases!inner(case_title, firm_id)').eq('cases.firm_id', firmId).gte('hearing_date', format(startOfToday, 'yyyy-MM-dd')).lte('hearing_date', format(endOfToday, 'yyyy-MM-dd')).order('hearing_date', { ascending: true }).limit(50),
     supabase.from('clients').select('id, full_name, email, phone, status, created_at').eq('firm_id', firmId).order('created_at', { ascending: false }).limit(5),
     supabase.from('contacts').select('id, name, phone, last_visited_at').eq('firm_id', firmId).order('last_visited_at', { ascending: false, nullsFirst: false }).limit(5),
@@ -90,8 +90,8 @@ const fetchDashboardData = async (firmId: string, userId: string, role: string) 
     }
   });
   (weeklyAppointments || []).forEach(a => {
-    if (a.start_time) {
-      const date = format(new Date(a.start_time), 'yyyy-MM-dd');
+    if (a.appointment_date) {
+      const date = format(new Date(a.appointment_date), 'yyyy-MM-dd');
       eventsByDate[date] = (eventsByDate[date] || 0) + 1;
     }
   });
@@ -113,10 +113,13 @@ const fetchDashboardData = async (firmId: string, userId: string, role: string) 
   // Format today's appointments
   const formattedTodayAppointments = (todayAppointments || []).map(a => ({
     id: a.id,
-    start_time: a.start_time,
-    client_name: a.clients?.full_name || 'Unknown Client',
+    appointment_date: a.appointment_date,
+    appointment_time: a.appointment_time,
+    start_time: a.appointment_date && a.appointment_time ? `${a.appointment_date}T${a.appointment_time}` : a.appointment_date,
+    client_name: a.clients?.full_name || (a.title ? a.title.replace(/^Appointment with\s+/, '') : 'Unknown Client'),
     meeting_type: 'Meeting',
-    status: a.status || 'scheduled',
+    status: a.status || 'upcoming',
+    title: a.title,
   }));
 
   // Format upcoming hearings
@@ -209,7 +212,7 @@ const fetchDashboardData = async (firmId: string, userId: string, role: string) 
           format(new Date(h.hearing_date), 'yyyy-MM-dd') === dateStr
         ).length,
         appointments: (weeklyAppointments || []).filter(a => 
-          format(new Date(a.start_time), 'yyyy-MM-dd') === dateStr
+          format(new Date(a.appointment_date), 'yyyy-MM-dd') === dateStr
         ).length,
         tasks: (myTasks || []).filter(t => 
           t.due_date && format(new Date(t.due_date), 'yyyy-MM-dd') === dateStr
