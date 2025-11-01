@@ -55,7 +55,7 @@ const fetchDashboardData = async (firmId: string, userId: string, role: string) 
     supabase.from('cases').select('id').eq('firm_id', firmId),
     supabase.from('invoices').select('status, total_amount').eq('firm_id', firmId),
     supabase.from('documents').select('file_name, file_type, uploaded_at, id').eq('firm_id', firmId).order('uploaded_at', { ascending: false }).limit(2),
-    supabase.from('appointments').select('id, start_time, status, clients(full_name)').eq('firm_id', firmId).gte('start_time', format(startOfToday, 'yyyy-MM-dd')).lte('start_time', format(endOfToday, 'yyyy-MM-dd')).order('start_time', { ascending: true }).limit(50),
+    supabase.from('appointments').select('id, start_time, status, clients(full_name)').eq('firm_id', firmId).gte('start_time', startOfToday.toISOString()).lte('start_time', endOfToday.toISOString()).order('start_time', { ascending: true }).limit(50),
     supabase.from('case_hearings').select('id, hearing_date, judge, cases!inner(case_title, firm_id)').eq('cases.firm_id', firmId).gte('hearing_date', format(startOfToday, 'yyyy-MM-dd')).lte('hearing_date', format(endOfToday, 'yyyy-MM-dd')).order('hearing_date', { ascending: true }).limit(50),
     supabase.from('clients').select('id, full_name, email, phone, status, created_at').eq('firm_id', firmId).order('created_at', { ascending: false }).limit(5),
     supabase.from('contacts').select('id, name, phone, last_visited_at').eq('firm_id', firmId).order('last_visited_at', { ascending: false, nullsFirst: false }).limit(5),
