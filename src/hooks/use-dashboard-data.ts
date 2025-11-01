@@ -24,21 +24,6 @@ const fetchDashboardData = async (firmId: string, userId: string, role: string) 
   const startOfThisWeek = startOfWeek(today, { weekStartsOn: 1 });
   const endOfThisWeek = endOfWeek(today, { weekStartsOn: 1 });
 
-  // Build role-based queries
-  let appointmentsQuery = supabase.from('appointments').select('*', { count: 'exact', head: false }).eq('firm_id', firmId);
-  let hearingsQuery = supabase.from('hearings').select('*').eq('firm_id', firmId);
-  let casesQuery = supabase.from('cases').select('*').eq('firm_id', firmId);
-  
-  // Apply role-based filtering
-  if (role === 'lawyer' || role === 'partner' || role === 'associate') {
-    appointmentsQuery = appointmentsQuery.eq('lawyer_id', userId);
-    casesQuery = casesQuery.eq('created_by', userId);
-  } else if (role === 'junior' || role === 'paralegal') {
-    // Juniors see assigned cases/tasks
-    casesQuery = casesQuery.contains('assigned_users', [userId]);
-  }
-  // Admin and office_staff see all
-
   const [
     { count: activeCasesCount },
     { count: hearingsCount },
@@ -59,22 +44,22 @@ const fetchDashboardData = async (firmId: string, userId: string, role: string) 
     { data: caseHighlights },
   ] = await Promise.all([
     supabase.from('cases').select('*', { count: 'exact', head: true }).eq('firm_id', firmId).eq('status', 'open'),
-    supabase.from('hearings').select('*', { count: 'exact', head: true }).eq('firm_id', firmId).gte('hearing_date', today.toISOString()),
+    supabase.from('case_hearings').select('*, cases!inner(firm_id)', { count: 'exact', head: true }).eq('cases.firm_id', firmId).gte('hearing_date', today.toISOString()),
     supabase.from('appointments').select('*', { count: 'exact', head: true }).eq('firm_id', firmId).gte('start_time', today.toISOString()),
     supabase.from('tasks').select('*', { count: 'exact', head: true }).eq('firm_id', firmId).neq('status', 'completed'),
-    supabase.from('hearings').select('hearing_date').eq('firm_id', firmId).gte('hearing_date', startOfThisWeek.toISOString()).lte('hearing_date', endOfThisWeek.toISOString()),
+    supabase.from('case_hearings').select('hearing_date, cases!inner(firm_id)').eq('cases.firm_id', firmId).gte('hearing_date', startOfThisWeek.toISOString()).lte('hearing_date', endOfThisWeek.toISOString()),
     supabase.from('appointments').select('start_time').eq('firm_id', firmId).gte('start_time', startOfThisWeek.toISOString()).lte('start_time', endOfThisWeek.toISOString()),
     supabase.from('tasks').select('title, priority, due_date').eq('assigned_to', userId).neq('status', 'completed').order('due_date', { ascending: true }).limit(3),
     supabase.from('notes_v2').select('title, content, updated_at').eq('created_by', userId).order('updated_at', { ascending: false }).limit(2),
     supabase.from('team_members').select('full_name, role').eq('firm_id', firmId).limit(5),
     supabase.from('cases').select('id').eq('firm_id', firmId),
     supabase.from('invoices').select('status, total_amount').eq('firm_id', firmId),
-    supabase.from('documents').select('file_name, file_type, uploaded_at').eq('firm_id', firmId).order('uploaded_at', { ascending: false }).limit(2),
+    supabase.from('documents').select('file_name, file_type, uploaded_at, id').eq('firm_id', firmId).order('uploaded_at', { ascending: false }).limit(2),
     supabase.from('appointments').select('id, start_time, status, clients(full_name)').eq('firm_id', firmId).gte('start_time', startOfToday.toISOString()).lte('start_time', endOfToday.toISOString()).order('start_time', { ascending: true }).limit(5),
-    supabase.from('hearings').select('id, hearing_date, court_name, cases(case_title)').eq('firm_id', firmId).gte('hearing_date', today.toISOString()).order('hearing_date', { ascending: true }).limit(5),
+    supabase.from('case_hearings').select('id, hearing_date, judge, cases!inner(case_title, firm_id)').eq('cases.firm_id', firmId).gte('hearing_date', format(startOfToday, 'yyyy-MM-dd')).lte('hearing_date', format(endOfToday, 'yyyy-MM-dd')).order('hearing_date', { ascending: true }).limit(50),
     supabase.from('clients').select('id, full_name, email, phone, status, created_at').eq('firm_id', firmId).order('created_at', { ascending: false }).limit(5),
     supabase.from('contacts').select('id, name, phone, last_visited_at').eq('firm_id', firmId).order('last_visited_at', { ascending: false, nullsFirst: false }).limit(5),
-    supabase.from('cases').select('id, case_title, case_number, status, hearings(hearing_date)').eq('firm_id', firmId).eq('status', 'open').order('created_at', { ascending: false }).limit(5),
+    supabase.from('cases').select('id, case_title, case_number, status, case_hearings(hearing_date)').eq('firm_id', firmId).eq('status', 'open').order('created_at', { ascending: false }).limit(5),
   ]);
 
   const caseIds = (caseIdsInFirm || []).map(c => c.id);
@@ -122,7 +107,7 @@ const fetchDashboardData = async (firmId: string, userId: string, role: string) 
   // Get next hearing dates for case highlights
   const casesWithNextHearing = (caseHighlights || []).map(c => ({
     ...c,
-    next_hearing_date: c.hearings?.[0]?.hearing_date || null,
+    next_hearing_date: c.case_hearings?.[0]?.hearing_date || null,
   }));
 
   // Format today's appointments
@@ -138,7 +123,7 @@ const fetchDashboardData = async (firmId: string, userId: string, role: string) 
   const formattedUpcomingHearings = (upcomingHearings || []).map(h => ({
     id: h.id,
     hearing_date: h.hearing_date,
-    court_name: h.court_name,
+    court_name: h.judge || 'Court',
     case_title: h.cases?.case_title || 'Unknown Case',
   }));
 
