@@ -52,14 +52,7 @@ const WorkspaceDashboard = () => {
           {/* Left Column - Today's Flow */}
           <div className="lg:col-span-3">
             <TodayFlow 
-              events={(data?.timelineEvents || []).map(event => ({
-                ...event,
-                subtitle: event.type === 'appointment' 
-                  ? `${(event as any).client_name || 'Client Meeting'} • ${(event as any).meeting_type || 'Meeting'}`
-                  : event.type === 'hearing'
-                  ? `${(event as any).case_title || 'Court Hearing'} • ${(event as any).court_name || 'Court'}`
-                  : (event as any).description || 'Task',
-              }))} 
+              events={data?.timelineEvents || []} 
               isLoading={isLoading}
             />
           </div>
@@ -109,9 +102,9 @@ const WorkspaceDashboard = () => {
           <div className="lg:col-span-3">
             <TodaysSummary 
               summary={{
-                hearings: data?.metrics.hearings || 0,
-                meetings: data?.metrics.appointments || 0,
-                tasks: data?.metrics.tasks || 0,
+                hearings: (data?.timelineEvents || []).filter(e => e.type === 'hearing').length,
+                meetings: (data?.timelineEvents || []).filter(e => e.type === 'appointment').length,
+                tasks: (data?.timelineEvents || []).filter(e => e.type === 'task').length,
               }}
               isLoading={isLoading}
             />

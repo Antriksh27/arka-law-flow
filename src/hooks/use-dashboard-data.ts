@@ -148,8 +148,11 @@ const fetchDashboardData = async (firmId: string, userId: string, role: string) 
       id: a.id,
       type: 'appointment' as const,
       title: `Appointment with ${a.client_name}`,
-      time: a.start_time,
-      location: a.meeting_type,
+      subtitle: `${a.client_name} • ${a.meeting_type}`,
+      time: format(new Date(a.start_time), 'h:mm a'),
+      badge: a.status,
+      client_name: a.client_name,
+      meeting_type: a.meeting_type,
     })),
     ...(formattedUpcomingHearings || []).filter(h => {
       const hearingDate = new Date(h.hearing_date);
@@ -158,17 +161,25 @@ const fetchDashboardData = async (firmId: string, userId: string, role: string) 
       id: h.id,
       type: 'hearing' as const,
       title: h.case_title,
-      time: h.hearing_date,
-      location: h.court_name,
+      subtitle: `${h.case_title} • ${h.court_name}`,
+      time: format(new Date(h.hearing_date), 'h:mm a'),
+      court_name: h.court_name,
+      case_title: h.case_title,
     })),
-    ...(myTasks || []).filter(t => t.due_date).map(t => ({
+    ...(myTasks || []).filter(t => t.due_date && new Date(t.due_date) >= startOfToday && new Date(t.due_date) <= endOfToday).map(t => ({
       id: t.title,
       type: 'task' as const,
       title: t.title,
-      time: t.due_date!,
-      location: undefined,
+      subtitle: t.title,
+      time: format(new Date(t.due_date!), 'h:mm a'),
+      description: t.title,
     })),
-  ];
+  ].sort((a, b) => {
+    // Sort by time
+    const timeA = a.time;
+    const timeB = b.time;
+    return timeA.localeCompare(timeB);
+  });
 
   return {
     role,
