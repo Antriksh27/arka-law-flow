@@ -24,7 +24,7 @@ const WorkspaceDashboard = () => {
     return 'Good Evening';
   };
 
-  const userName = user?.user_metadata?.full_name || user?.email || 'User';
+  const userName = data?.userProfile?.full_name || user?.user_metadata?.full_name || 'User';
 
   return (
     <div className="min-h-screen bg-gray-50">
