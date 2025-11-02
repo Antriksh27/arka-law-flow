@@ -2,7 +2,20 @@ import { Plus, X } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
-import { CreateNoteDialog } from '@/components/notes/CreateNoteDialog';
+import { CreateNoteMultiModal } from '@/components/notes/CreateNoteMultiModal';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 interface Note {
   id: string;
   title: string;
@@ -19,6 +32,36 @@ export const PinnedNotes = ({
   isLoading
 }: PinnedNotesProps) => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [noteToDelete, setNoteToDelete] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+
+  const handleDeleteNote = async () => {
+    if (!noteToDelete) return;
+
+    try {
+      const { error } = await supabase
+        .from('notes_v2')
+        .delete()
+        .eq('id', noteToDelete);
+
+      if (error) throw error;
+
+      toast({
+        title: "Note deleted",
+        description: "The note has been removed successfully.",
+      });
+
+      queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
+      setNoteToDelete(null);
+    } catch (error) {
+      console.error('Error deleting note:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete the note. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
   if (isLoading) {
     return <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
@@ -56,7 +99,10 @@ export const PinnedNotes = ({
             </Button>
           </Card> : <div className="grid grid-cols-2 gap-4">
             {notes.slice(0, 4).map((note, index) => <Card key={note.id} className={`p-4 border-2 ${getNoteColor(index)} relative group cursor-pointer hover:shadow-md transition-shadow`}>
-                <button className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button 
+                  onClick={() => setNoteToDelete(note.id)}
+                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
                   <X className="w-4 h-4 text-muted-foreground hover:text-foreground" />
                 </button>
                 <h3 className="font-medium text-sm mb-2 pr-6">{note.title}</h3>
@@ -70,6 +116,24 @@ export const PinnedNotes = ({
           </div>}
       </div>
 
-      {showCreateDialog && <CreateNoteDialog open={showCreateDialog} onClose={() => setShowCreateDialog(false)} />}
+      <CreateNoteMultiModal
+        open={showCreateDialog}
+        onClose={() => setShowCreateDialog(false)}
+      />
+
+      <AlertDialog open={!!noteToDelete} onOpenChange={(open) => !open && setNoteToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Note</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this note? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteNote}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>;
 };
