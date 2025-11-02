@@ -43,7 +43,7 @@ export const PinnedNotes = ({
             <span className="text-xl">📌</span>
             <h2 className="text-xl font-semibold">Pinned Notes</h2>
           </div>
-          <Button size="sm" onClick={() => setShowCreateDialog(true)} className="text-slate-900 bg-slate-900 hover:bg-slate-800">
+          <Button size="sm" onClick={() => setShowCreateDialog(true)} className="bg-slate-900 hover:bg-slate-800 text-slate-50">
             + Add Note
           </Button>
         </div>

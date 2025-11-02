@@ -6,7 +6,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useState } from 'react';
 import { CreateTaskDialog } from '@/components/tasks/CreateTaskDialog';
 import { format } from 'date-fns';
-
 interface Task {
   id?: string;
   title: string;
@@ -14,18 +13,17 @@ interface Task {
   priority: 'low' | 'medium' | 'high';
   status?: string;
 }
-
 interface MyTasksProps {
   tasks: Task[];
   isLoading?: boolean;
 }
-
-export const MyTasks = ({ tasks, isLoading }: MyTasksProps) => {
+export const MyTasks = ({
+  tasks,
+  isLoading
+}: MyTasksProps) => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-
   if (isLoading) {
-    return (
-      <div className="mb-6">
+    return <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <span className="text-xl">✓</span>
@@ -33,14 +31,10 @@ export const MyTasks = ({ tasks, isLoading }: MyTasksProps) => {
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
-          {[1, 2].map((i) => (
-            <div key={i} className="h-32 bg-gray-100 rounded-lg animate-pulse" />
-          ))}
+          {[1, 2].map(i => <div key={i} className="h-32 bg-gray-100 rounded-lg animate-pulse" />)}
         </div>
-      </div>
-    );
+      </div>;
   }
-
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
@@ -53,7 +47,6 @@ export const MyTasks = ({ tasks, isLoading }: MyTasksProps) => {
         return 'bg-gray-50 border-gray-200';
     }
   };
-
   const getPriorityBadge = (priority: string) => {
     switch (priority) {
       case 'high':
@@ -66,40 +59,27 @@ export const MyTasks = ({ tasks, isLoading }: MyTasksProps) => {
         return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
-
-  return (
-    <>
+  return <>
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <span className="text-xl">✓</span>
             <h2 className="text-xl font-semibold">My Tasks</h2>
           </div>
-          <Button
-            size="sm"
-            onClick={() => setShowCreateDialog(true)}
-            className="bg-[#8B7355] hover:bg-[#725D45]"
-          >
+          <Button size="sm" onClick={() => setShowCreateDialog(true)} className="bg-slate-900 hover:bg-slate-800">
             + Add Task
           </Button>
         </div>
 
-        {tasks.length === 0 ? (
-          <Card className="p-8 text-center border-dashed">
+        {tasks.length === 0 ? <Card className="p-8 text-center border-dashed">
             <CheckCircle2 className="w-12 h-12 text-gray-300 mx-auto mb-3" />
             <p className="text-sm text-muted-foreground mb-3">No tasks yet</p>
             <Button size="sm" variant="outline" onClick={() => setShowCreateDialog(true)}>
               <Plus className="w-4 h-4 mr-2" />
               Create your first task
             </Button>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-2 gap-4">
-            {tasks.slice(0, 4).map((task, index) => (
-              <Card
-                key={task.id || index}
-                className={`p-4 border-2 ${getPriorityColor(task.priority)} relative group cursor-pointer hover:shadow-md transition-shadow`}
-              >
+          </Card> : <div className="grid grid-cols-2 gap-4">
+            {tasks.slice(0, 4).map((task, index) => <Card key={task.id || index} className={`p-4 border-2 ${getPriorityColor(task.priority)} relative group cursor-pointer hover:shadow-md transition-shadow`}>
                 <div className="flex items-start gap-3">
                   <Checkbox className="mt-1" />
                   <div className="flex-1 min-w-0">
@@ -109,25 +89,15 @@ export const MyTasks = ({ tasks, isLoading }: MyTasksProps) => {
                         {task.priority}
                       </Badge>
                     </div>
-                    {task.due_date && (
-                      <p className="text-xs text-muted-foreground">
+                    {task.due_date && <p className="text-xs text-muted-foreground">
                         Due: {format(new Date(task.due_date), 'MMM d, yyyy')}
-                      </p>
-                    )}
+                      </p>}
                   </div>
                 </div>
-              </Card>
-            ))}
-          </div>
-        )}
+              </Card>)}
+          </div>}
       </div>
 
-      {showCreateDialog && (
-        <CreateTaskDialog 
-          open={showCreateDialog} 
-          onClose={() => setShowCreateDialog(false)} 
-        />
-      )}
-    </>
-  );
+      {showCreateDialog && <CreateTaskDialog open={showCreateDialog} onClose={() => setShowCreateDialog(false)} />}
+    </>;
 };

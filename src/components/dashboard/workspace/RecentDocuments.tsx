@@ -2,7 +2,6 @@ import { FileText, Download } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { formatDistanceToNow } from 'date-fns';
-
 interface Document {
   id: string;
   file_name: string;
@@ -10,16 +9,16 @@ interface Document {
   uploaded_at: string;
   file_type?: string;
 }
-
 interface RecentDocumentsProps {
   documents: Document[];
   isLoading?: boolean;
 }
-
-export const RecentDocuments = ({ documents, isLoading }: RecentDocumentsProps) => {
+export const RecentDocuments = ({
+  documents,
+  isLoading
+}: RecentDocumentsProps) => {
   if (isLoading) {
-    return (
-      <div className="mb-6">
+    return <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <span className="text-xl">📁</span>
@@ -27,14 +26,10 @@ export const RecentDocuments = ({ documents, isLoading }: RecentDocumentsProps) 
           </div>
         </div>
         <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse" />
-          ))}
+          {[1, 2, 3].map(i => <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse" />)}
         </div>
-      </div>
-    );
+      </div>;
   }
-
   const getFileIcon = (fileName: string) => {
     if (fileName.endsWith('.pdf')) {
       return <FileText className="w-8 h-8 text-red-500" />;
@@ -44,47 +39,37 @@ export const RecentDocuments = ({ documents, isLoading }: RecentDocumentsProps) 
       return <FileText className="w-8 h-8 text-green-500" />;
     }
   };
-
-  return (
-    <div className="mb-6">
+  return <div className="mb-6">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <span className="text-xl">📁</span>
           <h2 className="text-xl font-semibold">Recent Documents</h2>
         </div>
-        <Button
-          size="sm"
-          className="bg-[#8B7355] hover:bg-[#725D45]"
-        >
+        <Button size="sm" className="bg-slate-900 hover:bg-slate-800">
           + Upload New
         </Button>
       </div>
 
-      {documents.length === 0 ? (
-        <Card className="p-8 text-center border-dashed">
+      {documents.length === 0 ? <Card className="p-8 text-center border-dashed">
           <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
           <p className="text-sm text-muted-foreground">No recent documents</p>
-        </Card>
-      ) : (
-        <div className="space-y-3">
-          {documents.slice(0, 3).map((doc) => (
-            <Card key={doc.id} className="p-4 hover:shadow-md transition-shadow">
+        </Card> : <div className="space-y-3">
+          {documents.slice(0, 3).map(doc => <Card key={doc.id} className="p-4 hover:shadow-md transition-shadow">
               <div className="flex items-center gap-3">
                 {getFileIcon(doc.file_name)}
                 <div className="flex-1 min-w-0">
                   <h3 className="font-medium text-sm truncate">{doc.file_name}</h3>
                   <p className="text-xs text-muted-foreground">
-                    {doc.case_title} • Uploaded {formatDistanceToNow(new Date(doc.uploaded_at), { addSuffix: true })}
+                    {doc.case_title} • Uploaded {formatDistanceToNow(new Date(doc.uploaded_at), {
+                addSuffix: true
+              })}
                   </p>
                 </div>
                 <button className="text-muted-foreground hover:text-foreground">
                   <Download className="w-4 h-4" />
                 </button>
               </div>
-            </Card>
-          ))}
-        </div>
-      )}
-    </div>
-  );
+            </Card>)}
+        </div>}
+    </div>;
 };
