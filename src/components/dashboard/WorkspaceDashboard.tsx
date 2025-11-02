@@ -34,7 +34,7 @@ const WorkspaceDashboard = () => {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-2xl font-semibold">
-                {getGreeting()}, {userName} 👋
+                {getGreeting()}, {userName}
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
                 {format(new Date(), "EEEE, MMMM d, yyyy • h:mm a")}
