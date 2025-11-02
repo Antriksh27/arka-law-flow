@@ -57,3 +57,6 @@ verify_jwt = true
 
 [functions.notify-knock]
 verify_jwt = false
+
+[functions.fetch-legal-news]
+verify_jwt = false

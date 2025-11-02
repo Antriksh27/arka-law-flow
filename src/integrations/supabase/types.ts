@@ -18,7 +18,7 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           request_count: number | null
           user_id: string | null
           window_start: string | null
@@ -26,7 +26,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           request_count?: number | null
           user_id?: string | null
           window_start?: string | null
@@ -34,7 +34,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           request_count?: number | null
           user_id?: string | null
           window_start?: string | null
@@ -2471,6 +2471,36 @@ export type Database = {
           },
         ]
       }
+      legal_news: {
+        Row: {
+          created_at: string
+          id: string
+          published_at: string
+          source: string
+          title: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          published_at: string
+          source: string
+          title: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          published_at?: string
+          source?: string
+          title?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
       legalkart_case_searches: {
         Row: {
           case_id: string | null
@@ -3745,10 +3775,7 @@ export type Database = {
         Args: { assignee_id: string; assigner_id: string }
         Returns: boolean
       }
-      can_cancel_invoice: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
+      can_cancel_invoice: { Args: { user_id: string }; Returns: boolean }
       can_edit_task: {
         Args: { task_id: string; user_id: string }
         Returns: boolean
@@ -3765,10 +3792,7 @@ export type Database = {
         Args: { p_user_id?: string }
         Returns: boolean
       }
-      check_if_super_admin: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
+      check_if_super_admin: { Args: { user_id: string }; Returns: boolean }
       check_user_in_firm: {
         Args: { firm_id: string; user_id: string }
         Returns: boolean
@@ -3779,38 +3803,38 @@ export type Database = {
           available: boolean
         }[]
       }
-      cleanup_old_sync_queue_items: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      client_has_case_access: {
-        Args: { case_id: string }
-        Returns: boolean
-      }
-      create_law_firm_with_admin: {
-        Args:
-          | {
+      cleanup_old_sync_queue_items: { Args: never; Returns: undefined }
+      client_has_case_access: { Args: { case_id: string }; Returns: boolean }
+      create_law_firm_with_admin:
+        | {
+            Args: {
+              admin_email: string
+              admin_full_name: string
+              firm_address: string
+              firm_name: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
               admin_email: string
               admin_full_name: string
               admin_password: string
               firm_address: string
               firm_name: string
             }
-          | {
+            Returns: string
+          }
+        | {
+            Args: {
               admin_email: string
               admin_full_name: string
               created_by?: string
               firm_address: string
               firm_name: string
             }
-          | {
-              admin_email: string
-              admin_full_name: string
-              firm_address: string
-              firm_name: string
-            }
-        Returns: string
-      }
+            Returns: string
+          }
       create_private_thread: {
         Args: { p_other_user_id: string }
         Returns: string
@@ -3824,23 +3848,17 @@ export type Database = {
         Returns: undefined
       }
       get_all_lawyers_and_admin: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           full_name: string
           id: string
           role: string
         }[]
       }
-      get_current_user_firm_id: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_current_user_firm_id_secure: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      get_current_user_firm_id: { Args: never; Returns: string }
+      get_current_user_firm_id_secure: { Args: never; Returns: string }
       get_current_user_profile: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           email: string
           full_name: string
@@ -3852,12 +3870,9 @@ export type Database = {
         Args: { p_firm_id: string }
         Returns: string
       }
-      get_current_user_role_secure: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      get_current_user_role_secure: { Args: never; Returns: string }
       get_firm_members_for_chat: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           email: string
           full_name: string
@@ -3866,7 +3881,7 @@ export type Database = {
         }[]
       }
       get_lawyers_and_juniors: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           email: string
           full_name: string
@@ -3900,7 +3915,7 @@ export type Database = {
         }[]
       }
       get_security_metrics: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           metric: string
           timeframe: string
@@ -3908,7 +3923,7 @@ export type Database = {
         }[]
       }
       get_security_summary: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           last_updated: string
           metric_name: string
@@ -3916,10 +3931,7 @@ export type Database = {
           risk_level: string
         }[]
       }
-      get_system_timestamp: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      get_system_timestamp: { Args: never; Returns: string }
       get_top_notification_recipients: {
         Args: { p_firm_id: string; p_limit?: number }
         Returns: {
@@ -3930,18 +3942,9 @@ export type Database = {
           user_id: string
         }[]
       }
-      get_user_firm_id_from_team: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_user_firms: {
-        Args: { user_id: string }
-        Returns: string[]
-      }
-      get_user_id_by_email: {
-        Args: { user_email: string }
-        Returns: string
-      }
+      get_user_firm_id_from_team: { Args: never; Returns: string }
+      get_user_firms: { Args: { user_id: string }; Returns: string[] }
+      get_user_id_by_email: { Args: { user_email: string }; Returns: string }
       get_user_profile: {
         Args: { user_id: string }
         Returns: {
@@ -3972,58 +3975,22 @@ export type Database = {
           website: string
         }[]
       }
-      get_user_role: {
-        Args: { user_id: string }
-        Returns: string
-      }
-      get_user_team_role_secure: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      has_admin_access: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      has_case_access: {
-        Args: { case_id: string }
-        Returns: boolean
-      }
-      is_admin: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
-      is_admin_or_lawyer: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_assigned_to_hearing: {
-        Args: { hearing_id: string }
-        Returns: boolean
-      }
-      is_current_user_active_member: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_current_user_admin_in_firm: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_current_user_admin_safe: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_lawyer: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
+      get_user_role: { Args: { user_id: string }; Returns: string }
+      get_user_team_role_secure: { Args: never; Returns: string }
+      has_admin_access: { Args: never; Returns: boolean }
+      has_case_access: { Args: { case_id: string }; Returns: boolean }
+      is_admin: { Args: { user_id: string }; Returns: boolean }
+      is_admin_or_lawyer: { Args: never; Returns: boolean }
+      is_assigned_to_hearing: { Args: { hearing_id: string }; Returns: boolean }
+      is_current_user_active_member: { Args: never; Returns: boolean }
+      is_current_user_admin_in_firm: { Args: never; Returns: boolean }
+      is_current_user_admin_safe: { Args: never; Returns: boolean }
+      is_lawyer: { Args: { user_id: string }; Returns: boolean }
       is_participant: {
         Args: { p_thread_id: string; p_user_id: string }
         Returns: boolean
       }
-      is_super_admin: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
+      is_super_admin: { Args: { user_id: string }; Returns: boolean }
       is_task_creator: {
         Args: { task_id: string; user_id: string }
         Returns: boolean
@@ -4032,42 +3999,25 @@ export type Database = {
         Args: { input_timestamp: string }
         Returns: string
       }
-      process_google_calendar_sync_queue: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      process_google_calendar_sync_queue: { Args: never; Returns: undefined }
       process_sync_queue_manually: {
         Args: { user_id_param?: string }
         Returns: Json
       }
       security_health_check: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           check_name: string
           details: string
           status: string
         }[]
       }
-      send_appointment_reminders: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      send_hearing_reminders: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      send_task_reminders: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      set_super_admin_role: {
-        Args: { user_id: string }
-        Returns: undefined
-      }
-      trigger_sync_queue_processing: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      send_appointment_reminders: { Args: never; Returns: undefined }
+      send_hearing_reminders: { Args: never; Returns: undefined }
+      send_task_reminders: { Args: never; Returns: undefined }
+      set_super_admin_role: { Args: { user_id: string }; Returns: undefined }
+      trigger_legal_news_fetch: { Args: never; Returns: undefined }
+      trigger_sync_queue_processing: { Args: never; Returns: Json }
       update_law_firm_license_count: {
         Args: { firm_id: string; new_license_count: number }
         Returns: undefined
@@ -4110,9 +4060,22 @@ export type Database = {
         }
         Returns: undefined
       }
-      upsert_legalkart_case_data: {
-        Args:
-          | {
+      upsert_legalkart_case_data:
+        | {
+            Args: {
+              p_case_data?: Json
+              p_case_id?: string
+              p_cnr_number: string
+              p_documents?: Json
+              p_firm_id: string
+              p_history?: Json
+              p_objections?: Json
+              p_orders?: Json
+            }
+            Returns: string
+          }
+        | {
+            Args: {
               p_case_data?: Json
               p_case_id?: string
               p_cnr_number: string
@@ -4125,18 +4088,8 @@ export type Database = {
               p_petitioners?: Json
               p_respondents?: Json
             }
-          | {
-              p_case_data?: Json
-              p_case_id?: string
-              p_cnr_number: string
-              p_documents?: Json
-              p_firm_id: string
-              p_history?: Json
-              p_objections?: Json
-              p_orders?: Json
-            }
-        Returns: string
-      }
+            Returns: string
+          }
       user_has_case_access: {
         Args: { case_id: string; user_id: string }
         Returns: boolean
@@ -4146,7 +4099,7 @@ export type Database = {
         Returns: boolean
       }
       validate_security_setup: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           check_name: string
           details: string

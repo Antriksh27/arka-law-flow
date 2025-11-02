@@ -26,6 +26,7 @@ const fetchDashboardData = async (firmId: string, userId: string, role: string) 
 
   const [
     { data: userProfile },
+    { data: legalNews },
     { count: activeCasesCount },
     { count: hearingsCount },
     { count: appointmentsCount },
@@ -45,6 +46,7 @@ const fetchDashboardData = async (firmId: string, userId: string, role: string) 
     { data: caseHighlights },
   ] = await Promise.all([
     supabase.from('team_members').select('full_name').eq('user_id', userId).single(),
+    supabase.from('legal_news').select('title, url, source, published_at').order('published_at', { ascending: false }).limit(5),
     supabase.from('cases').select('*', { count: 'exact', head: true }).eq('firm_id', firmId).eq('status', 'open'),
     supabase.from('case_hearings').select('*, cases!inner(firm_id)', { count: 'exact', head: true }).eq('cases.firm_id', firmId).gte('hearing_date', today.toISOString()),
     supabase.from('appointments').select('*', { count: 'exact', head: true }).eq('firm_id', firmId).gte('appointment_date', format(today, 'yyyy-MM-dd')),
@@ -173,6 +175,12 @@ const fetchDashboardData = async (firmId: string, userId: string, role: string) 
 
   return {
     userProfile: userProfile || null,
+    legalNews: (legalNews || []).map(news => ({
+      title: news.title,
+      url: news.url,
+      source: news.source,
+      time: formatDistanceToNow(new Date(news.published_at)) + ' ago'
+    })),
     role,
     metrics: {
       activeCases: activeCasesCount || 0,

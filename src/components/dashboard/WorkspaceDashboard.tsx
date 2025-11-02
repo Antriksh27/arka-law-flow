@@ -117,26 +117,7 @@ const WorkspaceDashboard = () => {
             <QuickActions />
             
             <LegalUpdates 
-              news={[
-                {
-                  title: 'Supreme Court Ruling on Corporate Liability',
-                  source: 'Bar & Bench',
-                  time: '2 hours ago',
-                  url: 'https://www.barandbench.com/news/supreme-court',
-                },
-                {
-                  title: 'New Amendment to Estate Planning Laws',
-                  source: 'LiveLaw',
-                  time: '5 hours ago',
-                  url: 'https://www.livelaw.in/top-stories',
-                },
-                {
-                  title: 'District Court Issues Guidelines on Discovery',
-                  source: 'Bar & Bench',
-                  time: 'Yesterday',
-                  url: 'https://www.barandbench.com/news/litigation',
-                },
-              ]}
+              news={data?.legalNews || []}
               isLoading={isLoading}
             />
           </div>
