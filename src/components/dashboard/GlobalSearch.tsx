@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
-import { Search, FileText, Users, Briefcase, CheckSquare, Loader2 } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Search, FileText, Users, Briefcase, CheckSquare, Loader2, X } from 'lucide-react';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { Input } from '@/components/ui/input';
 
 export const GlobalSearch = () => {
   const [open, setOpen] = useState(false);
@@ -13,15 +14,19 @@ export const GlobalSearch = () => {
   const [results, setResults] = useState<any>({ clients: [], cases: [], contacts: [], tasks: [] });
   const navigate = useNavigate();
   const { firmId } = useAuth();
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const searchAllModules = async () => {
       if (!query || query.length < 2 || !firmId) {
         setResults({ clients: [], cases: [], contacts: [], tasks: [] });
+        if (query.length === 0) setOpen(false);
         return;
       }
 
       setLoading(true);
+      setOpen(true); // Auto-open when user types
+      
       try {
         const [clientsRes, casesRes, contactsRes, tasksRes] = await Promise.all([
           supabase.from('clients').select('id, full_name, email').eq('firm_id', firmId).ilike('full_name', `%${query}%`).limit(5),
@@ -50,90 +55,140 @@ export const GlobalSearch = () => {
   const handleSelect = (type: string, id: string) => {
     setOpen(false);
     setQuery('');
-    if (type === 'client') navigate(`/clients/${id}`);
+    if (type === 'client') navigate(`/client-info/${id}`);
     if (type === 'case') navigate(`/cases/${id}`);
     if (type === 'contact') navigate(`/contacts`);
     if (type === 'task') navigate(`/tasks`);
   };
 
+  const clearSearch = () => {
+    setQuery('');
+    setResults({ clients: [], cases: [], contacts: [], tasks: [] });
+    setOpen(false);
+  };
+
   const totalResults = results.clients.length + results.cases.length + results.contacts.length + results.tasks.length;
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button className="w-full max-w-2xl flex items-center gap-3 px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm hover:border-primary transition-colors">
-          <Search className="w-5 h-5 text-gray-400" />
-          <span className="text-sm text-gray-500">Search clients, cases, contacts, tasks...</span>
-        </button>
-      </PopoverTrigger>
-      <PopoverContent className="w-[600px] p-0" align="start">
-        <Command>
-          <CommandInput 
-            placeholder="Type to search..." 
-            value={query}
-            onValueChange={setQuery}
-          />
-          <CommandList>
-            {loading && (
-              <div className="flex items-center justify-center py-6">
-                <Loader2 className="w-5 h-5 animate-spin text-primary" />
+    <div className="w-full max-w-2xl relative">
+      <div className="relative">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <Input
+          ref={inputRef}
+          type="text"
+          placeholder="Search clients, cases, contacts, tasks..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onFocus={() => query.length >= 2 && setOpen(true)}
+          className="w-full pl-12 pr-10 py-3 bg-white border-gray-200 rounded-xl shadow-sm hover:border-primary focus:border-primary transition-colors"
+        />
+        {query && (
+          <button
+            onClick={clearSearch}
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
+        {loading && (
+          <div className="absolute right-12 top-1/2 -translate-y-1/2">
+            <Loader2 className="w-4 h-4 animate-spin text-primary" />
+          </div>
+        )}
+      </div>
+
+      {open && query.length >= 2 && (
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-96 overflow-y-auto">
+          {!loading && totalResults === 0 && (
+            <div className="px-4 py-8 text-center text-sm text-muted-foreground">
+              No results found for "{query}"
+            </div>
+          )}
+
+          {results.clients.length > 0 && (
+            <div className="p-2">
+              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase">
+                Clients
               </div>
-            )}
-            {!loading && query && totalResults === 0 && (
-              <CommandEmpty>No results found.</CommandEmpty>
-            )}
-            {results.clients.length > 0 && (
-              <CommandGroup heading="Clients">
-                {results.clients.map((client: any) => (
-                  <CommandItem key={client.id} onSelect={() => handleSelect('client', client.id)}>
-                    <Users className="w-4 h-4 mr-2 text-primary" />
-                    <div>
-                      <div className="font-medium">{client.full_name}</div>
-                      <div className="text-xs text-muted-foreground">{client.email}</div>
-                    </div>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            )}
-            {results.cases.length > 0 && (
-              <CommandGroup heading="Cases">
-                {results.cases.map((caseItem: any) => (
-                  <CommandItem key={caseItem.id} onSelect={() => handleSelect('case', caseItem.id)}>
-                    <Briefcase className="w-4 h-4 mr-2 text-primary" />
-                    <div>
-                      <div className="font-medium">{caseItem.case_title}</div>
-                      <div className="text-xs text-muted-foreground">{caseItem.case_number}</div>
-                    </div>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            )}
-            {results.contacts.length > 0 && (
-              <CommandGroup heading="Contacts">
-                {results.contacts.map((contact: any) => (
-                  <CommandItem key={contact.id} onSelect={() => handleSelect('contact', contact.id)}>
-                    <Users className="w-4 h-4 mr-2 text-primary" />
-                    <div>
-                      <div className="font-medium">{contact.name}</div>
-                      <div className="text-xs text-muted-foreground">{contact.phone}</div>
-                    </div>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            )}
-            {results.tasks.length > 0 && (
-              <CommandGroup heading="Tasks">
-                {results.tasks.map((task: any) => (
-                  <CommandItem key={task.id} onSelect={() => handleSelect('task', task.id)}>
-                    <CheckSquare className="w-4 h-4 mr-2 text-primary" />
-                    <div className="font-medium">{task.title}</div>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            )}
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
+              {results.clients.map((client: any) => (
+                <button
+                  key={client.id}
+                  onClick={() => handleSelect('client', client.id)}
+                  className="w-full flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 text-left transition-colors"
+                >
+                  <Users className="w-4 h-4 mt-0.5 text-primary flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-sm truncate">{client.full_name}</div>
+                    <div className="text-xs text-muted-foreground truncate">{client.email}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {results.cases.length > 0 && (
+            <div className="p-2 border-t border-gray-100">
+              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase">
+                Cases
+              </div>
+              {results.cases.map((caseItem: any) => (
+                <button
+                  key={caseItem.id}
+                  onClick={() => handleSelect('case', caseItem.id)}
+                  className="w-full flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 text-left transition-colors"
+                >
+                  <Briefcase className="w-4 h-4 mt-0.5 text-primary flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-sm truncate">{caseItem.case_title}</div>
+                    <div className="text-xs text-muted-foreground truncate">{caseItem.case_number}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {results.contacts.length > 0 && (
+            <div className="p-2 border-t border-gray-100">
+              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase">
+                Contacts
+              </div>
+              {results.contacts.map((contact: any) => (
+                <button
+                  key={contact.id}
+                  onClick={() => handleSelect('contact', contact.id)}
+                  className="w-full flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 text-left transition-colors"
+                >
+                  <Users className="w-4 h-4 mt-0.5 text-primary flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-sm truncate">{contact.name}</div>
+                    <div className="text-xs text-muted-foreground truncate">{contact.phone}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {results.tasks.length > 0 && (
+            <div className="p-2 border-t border-gray-100">
+              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase">
+                Tasks
+              </div>
+              {results.tasks.map((task: any) => (
+                <button
+                  key={task.id}
+                  onClick={() => handleSelect('task', task.id)}
+                  className="w-full flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 text-left transition-colors"
+                >
+                  <CheckSquare className="w-4 h-4 mt-0.5 text-primary flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-sm truncate">{task.title}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 };
