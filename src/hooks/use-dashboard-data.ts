@@ -153,7 +153,7 @@ const fetchDashboardData = async (firmId: string, userId: string, role: string) 
       id: h.id,
       type: 'hearing' as const,
       title: h.case_title,
-      subtitle: `${h.case_title} • ${h.court_name}`,
+      subtitle: h.court_name,
       time: format(new Date(h.hearing_date), 'h:mm a'),
       court_name: h.court_name,
       case_title: h.case_title,
