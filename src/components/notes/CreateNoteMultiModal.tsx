@@ -18,6 +18,7 @@ interface CreateNoteMultiModalProps {
   open: boolean;
   onClose: () => void;
   caseId?: string;
+  isPinned?: boolean;
 }
 
 interface NoteFormData {
@@ -32,7 +33,8 @@ interface NoteFormData {
 export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
   open,
   onClose,
-  caseId
+  caseId,
+  isPinned = false
 }) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -115,7 +117,8 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
         color: data.color,
         tags: data.tags,
         drawing_data: drawingData,
-        audio_data: audioDataUrl
+        audio_data: audioDataUrl,
+        is_pinned: isPinned
       };
 
       console.log('Saving note with data:', noteData);
@@ -126,6 +129,7 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notes'] });
       queryClient.invalidateQueries({ queryKey: ['case-notes'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
       toast({ title: "Note created successfully" });
       handleReset();
       onClose();

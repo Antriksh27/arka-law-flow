@@ -60,11 +60,12 @@ const WorkspaceDashboard = () => {
           {/* Center Column - My Workspace */}
           <div className="lg:col-span-6">
             <PinnedNotes 
-              notes={(data?.myNotes || []).map((n, index) => ({
-                id: `note-${index}`,
+              notes={(data?.myNotes || []).map((n) => ({
+                id: n.id,
                 title: n.title || '',
                 content: n.content || '',
-                created_at: n.updated_at || new Date().toISOString(),
+                created_at: n.created_at || new Date().toISOString(),
+                color: n.color || undefined,
               }))} 
               isLoading={isLoading}
             />

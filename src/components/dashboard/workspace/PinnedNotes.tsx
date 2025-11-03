@@ -119,6 +119,7 @@ export const PinnedNotes = ({
       <CreateNoteMultiModal
         open={showCreateDialog}
         onClose={() => setShowCreateDialog(false)}
+        isPinned={true}
       />
 
       <AlertDialog open={!!noteToDelete} onOpenChange={(open) => !open && setNoteToDelete(null)}>

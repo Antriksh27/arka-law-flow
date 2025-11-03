@@ -54,7 +54,7 @@ const fetchDashboardData = async (firmId: string, userId: string, role: string) 
     supabase.from('case_hearings').select('hearing_date, cases!inner(firm_id)').eq('cases.firm_id', firmId).gte('hearing_date', startOfThisWeek.toISOString()).lte('hearing_date', endOfThisWeek.toISOString()),
     supabase.from('appointments').select('appointment_date').eq('firm_id', firmId).gte('appointment_date', format(startOfThisWeek, 'yyyy-MM-dd')).lte('appointment_date', format(endOfThisWeek, 'yyyy-MM-dd')),
     supabase.from('tasks').select('title, priority, due_date').eq('assigned_to', userId).neq('status', 'completed').order('due_date', { ascending: true }).limit(3),
-    supabase.from('notes_v2').select('title, content, updated_at').eq('created_by', userId).order('updated_at', { ascending: false }).limit(2),
+    supabase.from('notes_v2').select('id, title, content, created_at, color').eq('created_by', userId).eq('is_pinned', true).order('updated_at', { ascending: false }).limit(4),
     supabase.from('team_members').select('full_name, role').eq('firm_id', firmId).limit(5),
     supabase.from('cases').select('id').eq('firm_id', firmId),
     supabase.from('invoices').select('status, total_amount').eq('firm_id', firmId),
@@ -190,7 +190,7 @@ const fetchDashboardData = async (firmId: string, userId: string, role: string) 
     },
     schedule: eventsByDate,
     myTasks: myTasks || [],
-    myNotes: myNotes ? myNotes.map(n => ({...n, title: n.title, subtitle: n.content, date: `Updated ${formatDistanceToNow(new Date(n.updated_at))} ago`})) : [],
+    myNotes: myNotes || [],
     teamMembers: (teamMembers || []).map(m => ({ name: m.full_name, role: m.role, avatar: (m.full_name || ' ').split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase()})),
     recentActivity: (recentActivityData || []).map(a => ({
       title: a.description,
@@ -243,7 +243,7 @@ export const useDashboardData = () => {
   });
   
   const queryResult = useQuery({
-    queryKey: ['dashboardData', firmId, role],
+    queryKey: ['dashboard-data', firmId, role],
     queryFn: () => fetchDashboardData(firmId!, user!.id, role || 'admin'),
     enabled: !!firmId && !!user && !isFirmIdError && !!role,
   });
