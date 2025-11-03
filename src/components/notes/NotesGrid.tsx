@@ -36,7 +36,7 @@ export const NotesGrid: React.FC<NotesGridProps> = ({
         .select(`
           *,
           profiles!notes_v2_created_by_fkey(full_name),
-          cases(title)
+          cases(case_title)
         `)
         .order('is_pinned', { ascending: false })
         .order('updated_at', { ascending: false });
