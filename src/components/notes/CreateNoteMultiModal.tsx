@@ -87,6 +87,11 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
       const user = await supabase.auth.getUser();
       if (!user.data.user) throw new Error('Not authenticated');
 
+      // Get firm id for RLS visibility
+      const { data: firmIdData, error: firmErr } = await supabase.rpc('get_current_user_firm_id');
+      if (firmErr) throw firmErr;
+      const firm_id = firmIdData as string | null;
+
       let finalContent = data.content || '';
 
       // Convert audio blob to base64 if available
@@ -118,7 +123,9 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
         tags: data.tags,
         drawing_data: drawingData,
         audio_data: audioDataUrl,
-        is_pinned: isPinned
+        is_pinned: isPinned,
+        firm_id: firm_id,
+        created_by: user.data.user.id,
       };
 
       console.log('Saving note with data:', noteData);
