@@ -41,6 +41,7 @@ export const DeleteTaskDialog: React.FC<DeleteTaskDialogProps> = ({
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['case-tasks'] });
       queryClient.invalidateQueries({ queryKey: ['client-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
       toast({
         title: "Task deleted successfully",
         description: `"${taskTitle}" has been permanently deleted.`

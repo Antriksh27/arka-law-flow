@@ -61,7 +61,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
           *,
           assigned_user:profiles!tasks_assigned_to_fkey(full_name),
           creator:profiles!tasks_created_by_fkey(full_name),
-          case:cases!tasks_case_id_fkey(title),
+          case:cases!tasks_case_id_fkey(case_title),
           client:clients!tasks_client_id_fkey(full_name)
         `)
         .eq('id', taskId)
@@ -134,7 +134,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
         .from('cases')
         .select('id, case_title')
         .eq('status', 'open')
-        .order('title');
+        .order('case_title');
       if (error) throw error;
       return data || [];
     },
@@ -182,6 +182,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
       queryClient.invalidateQueries({ queryKey: ['task', taskId] });
       queryClient.invalidateQueries({ queryKey: ['case-tasks'] });
       queryClient.invalidateQueries({ queryKey: ['client-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
       toast({ title: "Task updated successfully" });
       onClose();
     },

@@ -39,7 +39,7 @@ const Tasks = () => {
           *,
           assigned_user:profiles!tasks_assigned_to_fkey(full_name),
           creator:profiles!tasks_created_by_fkey(full_name),
-          case:cases!tasks_case_id_fkey(title),
+          case:cases!tasks_case_id_fkey(case_title),
           client:clients!tasks_client_id_fkey(full_name)
         `)
         .order('created_at', { ascending: false });
@@ -94,6 +94,7 @@ const Tasks = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
       toast({ title: "Task updated successfully" });
     },
     onError: () => {

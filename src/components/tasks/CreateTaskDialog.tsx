@@ -109,7 +109,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
         .from('cases')
         .select('id, case_title')
         .eq('status', 'open')
-        .order('title');
+        .order('case_title');
       if (error) throw error;
       return data || [];
     },
@@ -156,6 +156,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['case-tasks'] });
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
       if (clientId) {
         queryClient.invalidateQueries({ queryKey: ['client-tasks', clientId] });
       }

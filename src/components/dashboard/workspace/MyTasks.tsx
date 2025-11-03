@@ -5,6 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState } from 'react';
 import { CreateTaskDialog } from '@/components/tasks/CreateTaskDialog';
+import { TaskDetailDialog } from '@/components/tasks/TaskDetailDialog';
+import { EditTaskDialog } from '@/components/tasks/EditTaskDialog';
+import { DeleteTaskDialog } from '@/components/tasks/DeleteTaskDialog';
 import { format } from 'date-fns';
 interface Task {
   id?: string;
@@ -22,6 +25,27 @@ export const MyTasks = ({
   isLoading
 }: MyTasksProps) => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [selectedTaskId, setSelectedTaskId] = useState<string>('');
+  const [selectedTaskTitle, setSelectedTaskTitle] = useState<string>('');
+
+  const handleViewTask = (taskId: string) => {
+    setSelectedTaskId(taskId);
+    setShowDetailDialog(true);
+  };
+
+  const handleEditTask = (taskId: string) => {
+    setSelectedTaskId(taskId);
+    setShowEditDialog(true);
+  };
+
+  const handleDeleteTask = (taskId: string, taskTitle: string) => {
+    setSelectedTaskId(taskId);
+    setSelectedTaskTitle(taskTitle);
+    setShowDeleteDialog(true);
+  };
   if (isLoading) {
     return <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
@@ -79,9 +103,13 @@ export const MyTasks = ({
               Create your first task
             </Button>
           </Card> : <div className="grid grid-cols-2 gap-4">
-            {tasks.slice(0, 4).map((task, index) => <Card key={task.id || index} className={`p-4 border-2 ${getPriorityColor(task.priority)} relative group cursor-pointer hover:shadow-md transition-shadow`}>
+            {tasks.slice(0, 4).map((task, index) => <Card 
+                key={task.id || index} 
+                className={`p-4 border-2 ${getPriorityColor(task.priority)} relative group cursor-pointer hover:shadow-md transition-shadow`}
+                onClick={() => task.id && handleViewTask(task.id)}
+              >
                 <div className="flex items-start gap-3">
-                  <Checkbox className="mt-1" />
+                  <Checkbox className="mt-1" onClick={(e) => e.stopPropagation()} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-medium text-sm flex-1">{task.title}</h3>
@@ -98,6 +126,30 @@ export const MyTasks = ({
           </div>}
       </div>
 
-      {showCreateDialog && <CreateTaskDialog open={showCreateDialog} onClose={() => setShowCreateDialog(false)} />}
+      <CreateTaskDialog open={showCreateDialog} onClose={() => setShowCreateDialog(false)} />
+      
+      <TaskDetailDialog 
+        open={showDetailDialog} 
+        onClose={() => setShowDetailDialog(false)}
+        taskId={selectedTaskId}
+        onEdit={handleEditTask}
+        onDelete={(taskId) => {
+          const task = tasks.find(t => t.id === taskId);
+          handleDeleteTask(taskId, task?.title || 'Unknown Task');
+        }}
+      />
+      
+      <EditTaskDialog 
+        open={showEditDialog} 
+        onClose={() => setShowEditDialog(false)}
+        taskId={selectedTaskId}
+      />
+      
+      <DeleteTaskDialog 
+        open={showDeleteDialog} 
+        onClose={() => setShowDeleteDialog(false)}
+        taskId={selectedTaskId}
+        taskTitle={selectedTaskTitle}
+      />
     </>;
 };
