@@ -105,7 +105,29 @@ export const ChatDropdown = () => {
       .slice(0, 2);
   };
 
-  const handleChatClick = () => {
+  const markAsRead = async (chat: Chat) => {
+    try {
+      // Extract user ID from conversation ID
+      const conversationParts = chat.id.split('_');
+      const otherUserId = conversationParts[0];
+      
+      await CometChat.markAsRead(chat.id, otherUserId, 'user');
+      console.log('Marked as read:', chat.id);
+      
+      // Refresh chat list to update unread counts
+      fetchRecentChats();
+    } catch (error) {
+      console.error('Error marking as read:', error);
+    }
+  };
+
+  const handleChatClick = async (chat: Chat) => {
+    await markAsRead(chat);
+    setOpen(false);
+    navigate('/chat');
+  };
+
+  const handleViewAll = () => {
     setOpen(false);
     navigate('/chat');
   };
@@ -133,7 +155,7 @@ export const ChatDropdown = () => {
             variant="ghost"
             size="sm"
             className="h-auto p-0 text-xs text-primary hover:text-primary/80"
-            onClick={handleChatClick}
+            onClick={handleViewAll}
           >
             View All
           </Button>
@@ -156,7 +178,7 @@ export const ChatDropdown = () => {
                 <div
                   key={chat.id}
                   className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-                  onClick={handleChatClick}
+                  onClick={() => handleChatClick(chat)}
                 >
                   <Avatar className="w-10 h-10 flex-shrink-0">
                     <AvatarFallback className="bg-primary text-primary-foreground text-xs">
