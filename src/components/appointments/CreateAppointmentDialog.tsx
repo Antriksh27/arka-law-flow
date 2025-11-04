@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Dialog,
-  DialogContent,
   DialogHeader,
   DialogTitle,
 } from '../ui/dialog';
@@ -270,151 +268,149 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
   };
 
   return (
-    <Dialog open onOpenChange={closeDialog}>
-      <DialogContent className="max-w-2xl max-h-[90vh] bg-white border-gray-200 overflow-hidden">
-        <DialogHeader className="pb-4">
-          <DialogTitle className="text-xl font-semibold text-gray-900">Create New Appointment</DialogTitle>
-        </DialogHeader>
-        
-        <div className="overflow-y-auto px-1 max-h-[calc(90vh-120px)]">
-          <form onSubmit={handleSubmit} className="space-y-4 pr-3">
-            {/* Availability-based selection bound to selected lawyer */}
-            <SmartBookingCalendar
-              selectedLawyer={formData.lawyer_id || null}
-              selectedDate={typeof formData.appointment_date === 'string' ? new Date(formData.appointment_date) : formData.appointment_date}
-              selectedTime={formData.appointment_time}
-              hideLawyerPicker
-              onTimeSlotSelect={(date, time, duration) => {
-                handleInputChange('appointment_date', date);
-                handleInputChange('appointment_time', time);
-                handleInputChange('duration_minutes', duration);
-              }}
-            />
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="duration_minutes" className="text-sm font-medium text-gray-900">Duration (minutes)</Label>
-                <Select
-                  value={formData.duration_minutes.toString()}
-                  onValueChange={(value) => handleInputChange('duration_minutes', parseInt(value))}
-                >
-                  <SelectTrigger className="bg-white border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border-gray-300">
-                    <SelectItem value="30" className="text-gray-900">30 minutes</SelectItem>
-                    <SelectItem value="60" className="text-gray-900">1 hour</SelectItem>
-                    <SelectItem value="90" className="text-gray-900">1.5 hours</SelectItem>
-                    <SelectItem value="120" className="text-gray-900">2 hours</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="type" className="text-sm font-medium text-gray-900">Type</Label>
-                <Select
-                  value={formData.type}
-                  onValueChange={(value) => handleInputChange('type', value as 'in-person' | 'other' | 'call' | 'video-call')}
-                >
-                  <SelectTrigger className="bg-white border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border-gray-300">
-                    <SelectItem value="in-person" className="text-gray-900">In-Person Meeting</SelectItem>
-                    <SelectItem value="video-call" className="text-gray-900">Video Call</SelectItem>
-                    <SelectItem value="call" className="text-gray-900">Phone Call</SelectItem>
-                    <SelectItem value="other" className="text-gray-900">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="client_id" className="text-sm font-medium text-gray-900">Client/Contact</Label>
-                <ClientSelector
-                  value={formData.client_id}
-                  onValueChange={(value) => handleInputChange('client_id', value)}
-                  placeholder="Select or add client/contact..."
-                  onClientAdded={(clientId) => {
-                    // Auto-select the newly created client while preserving date/time
-                    handleInputChange('client_id', clientId);
-                  }}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="lawyer_id" className="text-sm font-medium text-gray-900">Assigned To *</Label>
-                <Select
-                  value={formData.lawyer_id}
-                  onValueChange={(value) => handleInputChange('lawyer_id', value)}
-                  required
-                >
-                  <SelectTrigger className="bg-white border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500">
-                    <SelectValue placeholder="Select user" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border-gray-300">
-                    {users.map((user) => (
-                      <SelectItem key={user.id} value={user.id} className="text-gray-900">
-                        {user.full_name} ({user.role})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
+    <>
+      <DialogHeader className="pb-4">
+        <DialogTitle className="text-xl font-semibold text-gray-900">Create New Appointment</DialogTitle>
+      </DialogHeader>
+      
+      <div className="overflow-y-auto px-1 max-h-[calc(90vh-120px)]">
+        <form onSubmit={handleSubmit} className="space-y-4 pr-3">
+          {/* Availability-based selection bound to selected lawyer */}
+          <SmartBookingCalendar
+            selectedLawyer={formData.lawyer_id || null}
+            selectedDate={typeof formData.appointment_date === 'string' ? new Date(formData.appointment_date) : formData.appointment_date}
+            selectedTime={formData.appointment_time}
+            hideLawyerPicker
+            onTimeSlotSelect={(date, time, duration) => {
+              handleInputChange('appointment_date', date);
+              handleInputChange('appointment_time', time);
+              handleInputChange('duration_minutes', duration);
+            }}
+          />
+          
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="case_id" className="text-sm font-medium text-gray-900">Related Case (Optional)</Label>
+              <Label htmlFor="duration_minutes" className="text-sm font-medium text-gray-900">Duration (minutes)</Label>
               <Select
-                value={formData.case_id}
-                onValueChange={(value) => handleInputChange('case_id', value)}
+                value={formData.duration_minutes.toString()}
+                onValueChange={(value) => handleInputChange('duration_minutes', parseInt(value))}
               >
                 <SelectTrigger className="bg-white border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500">
-                  <SelectValue placeholder="Select case" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-white border-gray-300">
-                  {cases.map((case_) => (
-                    <SelectItem key={case_.id} value={case_.id} className="text-gray-900">
-                      {case_.case_title} ({case_.case_number})
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="30" className="text-gray-900">30 minutes</SelectItem>
+                  <SelectItem value="60" className="text-gray-900">1 hour</SelectItem>
+                  <SelectItem value="90" className="text-gray-900">1.5 hours</SelectItem>
+                  <SelectItem value="120" className="text-gray-900">2 hours</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="notes" className="text-sm font-medium text-gray-900">Notes</Label>
-              <Textarea
-                id="notes"
-                value={formData.notes}
-                onChange={(e) => handleInputChange('notes', e.target.value)}
-                placeholder="Additional notes or agenda items..."
-                rows={3}
-                className="bg-white border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500 resize-none"
+              <Label htmlFor="type" className="text-sm font-medium text-gray-900">Type</Label>
+              <Select
+                value={formData.type}
+                onValueChange={(value) => handleInputChange('type', value as 'in-person' | 'other' | 'call' | 'video-call')}
+              >
+                <SelectTrigger className="bg-white border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-white border-gray-300">
+                  <SelectItem value="in-person" className="text-gray-900">In-Person Meeting</SelectItem>
+                  <SelectItem value="video-call" className="text-gray-900">Video Call</SelectItem>
+                  <SelectItem value="call" className="text-gray-900">Phone Call</SelectItem>
+                  <SelectItem value="other" className="text-gray-900">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="client_id" className="text-sm font-medium text-gray-900">Client/Contact</Label>
+              <ClientSelector
+                value={formData.client_id}
+                onValueChange={(value) => handleInputChange('client_id', value)}
+                placeholder="Select or add client/contact..."
+                onClientAdded={(clientId) => {
+                  // Auto-select the newly created client while preserving date/time
+                  handleInputChange('client_id', clientId);
+                }}
               />
             </div>
-
-            <div className="flex justify-end gap-3 pt-4 sticky bottom-0 bg-white border-t border-gray-200 pb-2">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={closeDialog} 
-                className="bg-white border-gray-300 text-gray-900 hover:bg-gray-50"
+            
+            <div className="space-y-2">
+              <Label htmlFor="lawyer_id" className="text-sm font-medium text-gray-900">Assigned To *</Label>
+              <Select
+                value={formData.lawyer_id}
+                onValueChange={(value) => handleInputChange('lawyer_id', value)}
+                required
               >
-                Cancel
-              </Button>
-              <Button 
-                type="submit" 
-                className="bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
-                disabled={loading || !isFormValid()}
-              >
-                {loading ? 'Creating...' : 'Create Appointment'}
-              </Button>
+                <SelectTrigger className="bg-white border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500">
+                  <SelectValue placeholder="Select user" />
+                </SelectTrigger>
+                <SelectContent className="bg-white border-gray-300">
+                  {users.map((user) => (
+                    <SelectItem key={user.id} value={user.id} className="text-gray-900">
+                      {user.full_name} ({user.role})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          </form>
-        </div>
-      </DialogContent>
-    </Dialog>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="case_id" className="text-sm font-medium text-gray-900">Related Case (Optional)</Label>
+            <Select
+              value={formData.case_id}
+              onValueChange={(value) => handleInputChange('case_id', value)}
+            >
+              <SelectTrigger className="bg-white border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500">
+                <SelectValue placeholder="Select case" />
+              </SelectTrigger>
+              <SelectContent className="bg-white border-gray-300">
+                {cases.map((case_) => (
+                  <SelectItem key={case_.id} value={case_.id} className="text-gray-900">
+                    {case_.case_title} ({case_.case_number})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="notes" className="text-sm font-medium text-gray-900">Notes</Label>
+            <Textarea
+              id="notes"
+              value={formData.notes}
+              onChange={(e) => handleInputChange('notes', e.target.value)}
+              placeholder="Additional notes or agenda items..."
+              rows={3}
+              className="bg-white border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500 resize-none"
+            />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 sticky bottom-0 bg-white border-t border-gray-200 pb-2">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={closeDialog} 
+              className="bg-white border-gray-300 text-gray-900 hover:bg-gray-50"
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              className="bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
+              disabled={loading || !isFormValid()}
+            >
+              {loading ? 'Creating...' : 'Create Appointment'}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </>
   );
 };
