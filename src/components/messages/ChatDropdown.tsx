@@ -25,51 +25,75 @@ export const ChatDropdown = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [open, setOpen] = useState(false);
 
+  const fetchRecentChats = async () => {
+    if (!isCometChatReady) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const limit = 5;
+      const conversationsRequest = new CometChat.ConversationsRequestBuilder()
+        .setLimit(limit)
+        .build();
+      const conversationList = await conversationsRequest.fetchNext();
+
+      let totalUnread = 0;
+      const formattedChats: Chat[] = conversationList.map((conversation: any) => {
+        const conversationWith = conversation.getConversationWith();
+        const lastMessage = conversation.getLastMessage();
+        const unreadCount = conversation.getUnreadMessageCount();
+        totalUnread += unreadCount;
+
+        return {
+          id: conversation.getConversationId(),
+          name: conversationWith.getName(),
+          message: lastMessage?.getText() || 'No messages yet',
+          time: lastMessage
+            ? formatDistanceToNow(new Date(lastMessage.getSentAt() * 1000), {
+                addSuffix: true,
+              })
+            : 'Just now',
+          unread: unreadCount > 0,
+        };
+      });
+
+      setChats(formattedChats);
+      setUnreadCount(totalUnread);
+    } catch (error) {
+      console.error('Error fetching chats:', error);
+      setChats([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchRecentChats = async () => {
-      if (!isCometChatReady) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const limit = 5;
-        const conversationsRequest = new CometChat.ConversationsRequestBuilder()
-          .setLimit(limit)
-          .build();
-        const conversationList = await conversationsRequest.fetchNext();
-
-        let totalUnread = 0;
-        const formattedChats: Chat[] = conversationList.map((conversation: any) => {
-          const conversationWith = conversation.getConversationWith();
-          const lastMessage = conversation.getLastMessage();
-          const unreadCount = conversation.getUnreadMessageCount();
-          totalUnread += unreadCount;
-
-          return {
-            id: conversation.getConversationId(),
-            name: conversationWith.getName(),
-            message: lastMessage?.getText() || 'No messages yet',
-            time: lastMessage
-              ? formatDistanceToNow(new Date(lastMessage.getSentAt() * 1000), {
-                  addSuffix: true,
-                })
-              : 'Just now',
-            unread: unreadCount > 0,
-          };
-        });
-
-        setChats(formattedChats);
-        setUnreadCount(totalUnread);
-      } catch (error) {
-        console.error('Error fetching chats:', error);
-        setChats([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchRecentChats();
+  }, [isCometChatReady]);
+
+  // Real-time message listener
+  useEffect(() => {
+    if (!isCometChatReady) return;
+
+    const listenerID = 'chat_dropdown_listener';
+
+    const messageListener = new CometChat.MessageListener({
+      onTextMessageReceived: (message: CometChat.TextMessage) => {
+        console.log('New message received in dropdown:', message);
+        fetchRecentChats();
+      },
+      onMediaMessageReceived: (message: CometChat.MediaMessage) => {
+        console.log('New media message received in dropdown:', message);
+        fetchRecentChats();
+      },
+    });
+
+    CometChat.addMessageListener(listenerID, messageListener);
+
+    return () => {
+      CometChat.removeMessageListener(listenerID);
+    };
   }, [isCometChatReady]);
 
   const getInitials = (name: string) => {
