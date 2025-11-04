@@ -30,17 +30,14 @@ export const MyTasks = ({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<string>('');
   const [selectedTaskTitle, setSelectedTaskTitle] = useState<string>('');
-
   const handleViewTask = (taskId: string) => {
     setSelectedTaskId(taskId);
     setShowDetailDialog(true);
   };
-
   const handleEditTask = (taskId: string) => {
     setSelectedTaskId(taskId);
     setShowEditDialog(true);
   };
-
   const handleDeleteTask = (taskId: string, taskTitle: string) => {
     setSelectedTaskId(taskId);
     setSelectedTaskTitle(taskTitle);
@@ -87,7 +84,7 @@ export const MyTasks = ({
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <span className="text-xl">✓</span>
+            
             <h2 className="text-xl font-semibold">My Tasks</h2>
           </div>
           <Button size="sm" onClick={() => setShowCreateDialog(true)} className="bg-slate-900 hover:bg-slate-800">
@@ -103,13 +100,9 @@ export const MyTasks = ({
               Create your first task
             </Button>
           </Card> : <div className="grid grid-cols-2 gap-4">
-            {tasks.slice(0, 4).map((task, index) => <Card 
-                key={task.id || index} 
-                className={`p-4 border-2 ${getPriorityColor(task.priority)} relative group cursor-pointer hover:shadow-md transition-shadow`}
-                onClick={() => task.id && handleViewTask(task.id)}
-              >
+            {tasks.slice(0, 4).map((task, index) => <Card key={task.id || index} className={`p-4 border-2 ${getPriorityColor(task.priority)} relative group cursor-pointer hover:shadow-md transition-shadow`} onClick={() => task.id && handleViewTask(task.id)}>
                 <div className="flex items-start gap-3">
-                  <Checkbox className="mt-1" onClick={(e) => e.stopPropagation()} />
+                  <Checkbox className="mt-1" onClick={e => e.stopPropagation()} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-medium text-sm flex-1">{task.title}</h3>
@@ -128,28 +121,13 @@ export const MyTasks = ({
 
       <CreateTaskDialog open={showCreateDialog} onClose={() => setShowCreateDialog(false)} />
       
-      <TaskDetailDialog 
-        open={showDetailDialog} 
-        onClose={() => setShowDetailDialog(false)}
-        taskId={selectedTaskId}
-        onEdit={handleEditTask}
-        onDelete={(taskId) => {
-          const task = tasks.find(t => t.id === taskId);
-          handleDeleteTask(taskId, task?.title || 'Unknown Task');
-        }}
-      />
+      <TaskDetailDialog open={showDetailDialog} onClose={() => setShowDetailDialog(false)} taskId={selectedTaskId} onEdit={handleEditTask} onDelete={taskId => {
+      const task = tasks.find(t => t.id === taskId);
+      handleDeleteTask(taskId, task?.title || 'Unknown Task');
+    }} />
       
-      <EditTaskDialog 
-        open={showEditDialog} 
-        onClose={() => setShowEditDialog(false)}
-        taskId={selectedTaskId}
-      />
+      <EditTaskDialog open={showEditDialog} onClose={() => setShowEditDialog(false)} taskId={selectedTaskId} />
       
-      <DeleteTaskDialog 
-        open={showDeleteDialog} 
-        onClose={() => setShowDeleteDialog(false)}
-        taskId={selectedTaskId}
-        taskTitle={selectedTaskTitle}
-      />
+      <DeleteTaskDialog open={showDeleteDialog} onClose={() => setShowDeleteDialog(false)} taskId={selectedTaskId} taskTitle={selectedTaskTitle} />
     </>;
 };

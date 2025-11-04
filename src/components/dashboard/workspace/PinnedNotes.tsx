@@ -6,16 +6,7 @@ import { CreateNoteMultiModal } from '@/components/notes/CreateNoteMultiModal';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 interface Note {
   id: string;
   title: string;
@@ -34,31 +25,27 @@ export const PinnedNotes = ({
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [noteToDelete, setNoteToDelete] = useState<string | null>(null);
   const queryClient = useQueryClient();
-
   const handleDeleteNote = async () => {
     if (!noteToDelete) return;
-
     try {
-      const { error } = await supabase
-        .from('notes_v2')
-        .delete()
-        .eq('id', noteToDelete);
-
+      const {
+        error
+      } = await supabase.from('notes_v2').delete().eq('id', noteToDelete);
       if (error) throw error;
-
       toast({
         title: "Note deleted",
-        description: "The note has been removed successfully.",
+        description: "The note has been removed successfully."
       });
-
-      queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
+      queryClient.invalidateQueries({
+        queryKey: ['dashboard-data']
+      });
       setNoteToDelete(null);
     } catch (error) {
       console.error('Error deleting note:', error);
       toast({
         title: "Error",
         description: "Failed to delete the note. Please try again.",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
@@ -83,7 +70,7 @@ export const PinnedNotes = ({
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <span className="text-xl">📌</span>
+            
             <h2 className="text-xl font-semibold">Pinned Notes</h2>
           </div>
           <Button size="sm" onClick={() => setShowCreateDialog(true)} className="bg-slate-900 hover:bg-slate-800 text-slate-50">
@@ -99,10 +86,7 @@ export const PinnedNotes = ({
             </Button>
           </Card> : <div className="grid grid-cols-2 gap-4">
             {notes.slice(0, 4).map((note, index) => <Card key={note.id} className={`p-4 border-2 ${getNoteColor(index)} relative group cursor-pointer hover:shadow-md transition-shadow`}>
-                <button 
-                  onClick={() => setNoteToDelete(note.id)}
-                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                >
+                <button onClick={() => setNoteToDelete(note.id)} className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <X className="w-4 h-4 text-muted-foreground hover:text-foreground" />
                 </button>
                 <h3 className="font-medium text-sm mb-2 pr-6">{note.title}</h3>
@@ -116,13 +100,9 @@ export const PinnedNotes = ({
           </div>}
       </div>
 
-      <CreateNoteMultiModal
-        open={showCreateDialog}
-        onClose={() => setShowCreateDialog(false)}
-        isPinned={true}
-      />
+      <CreateNoteMultiModal open={showCreateDialog} onClose={() => setShowCreateDialog(false)} isPinned={true} />
 
-      <AlertDialog open={!!noteToDelete} onOpenChange={(open) => !open && setNoteToDelete(null)}>
+      <AlertDialog open={!!noteToDelete} onOpenChange={open => !open && setNoteToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Note</AlertDialogTitle>

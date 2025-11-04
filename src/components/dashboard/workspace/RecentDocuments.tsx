@@ -42,7 +42,7 @@ export const RecentDocuments = ({
   return <div className="mb-6">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <span className="text-xl">📁</span>
+          
           <h2 className="text-xl font-semibold">Recent Documents</h2>
         </div>
         <Button size="sm" className="bg-slate-900 hover:bg-slate-800">
