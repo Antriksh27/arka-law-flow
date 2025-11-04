@@ -59,6 +59,14 @@ const WorkspaceDashboard = () => {
 
           {/* Center Column - My Workspace */}
           <div className="lg:col-span-6">
+            <MyActiveCases
+              cases={(data?.caseHighlights || []).map(c => ({
+                ...c,
+                client_name: (c as any).client?.full_name || 'Unknown Client',
+              }))} 
+              isLoading={isLoading}
+            />
+
             <PinnedNotes 
               notes={(data?.myNotes || []).map((n) => ({
                 id: n.id,
@@ -72,14 +80,6 @@ const WorkspaceDashboard = () => {
 
             <MyTasks 
               tasks={data?.myTasks || []} 
-              isLoading={isLoading}
-            />
-            
-            <MyActiveCases
-              cases={(data?.caseHighlights || []).map(c => ({
-                ...c,
-                client_name: (c as any).client?.full_name || 'Unknown Client',
-              }))} 
               isLoading={isLoading}
             />
             
