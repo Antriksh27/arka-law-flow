@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import KnockNotificationInbox from '@/components/notifications/KnockNotificationInbox';
+import { ChatDropdown } from '@/components/messages/ChatDropdown';
 const Header = () => {
   const { user, signOut } = useAuth();
   return <header className="border-b border-[#E5E7EB] px-8 py-4 bg-slate-900">
@@ -13,6 +14,7 @@ const Header = () => {
         </div>
         {/* Right Side Actions */}
         <div className="flex items-center gap-3">
+          <ChatDropdown />
           <KnockNotificationInbox />
           
           {/* User Profile Dropdown */}
