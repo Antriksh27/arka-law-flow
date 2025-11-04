@@ -15,6 +15,8 @@ interface Chat {
   message: string;
   time: string;
   unread?: boolean;
+  lastMessageId?: string;
+  lastMessageSenderId?: string;
 }
 
 export const ChatDropdown = () => {
@@ -55,6 +57,8 @@ export const ChatDropdown = () => {
               })
             : 'Just now',
           unread: unreadCount > 0,
+          lastMessageId: lastMessage?.getId(),
+          lastMessageSenderId: lastMessage?.getSender()?.getUid(),
         };
       });
 
@@ -106,16 +110,24 @@ export const ChatDropdown = () => {
   };
 
   const markAsRead = async (chat: Chat) => {
+    if (!isCometChatReady || !chat.lastMessageId || !chat.lastMessageSenderId) return;
+    
     try {
-      // Extract user ID from conversation ID
-      const conversationParts = chat.id.split('_');
-      const otherUserId = conversationParts[0];
+      const currentUser = await CometChat.getLoggedinUser();
+      if (!currentUser) return;
+
+      // Mark the message as read with all required parameters
+      await CometChat.markAsRead(
+        chat.lastMessageId, 
+        chat.lastMessageSenderId, 
+        'user', 
+        currentUser.getUid()
+      );
       
-      await CometChat.markAsRead(chat.id, otherUserId, 'user');
-      console.log('Marked as read:', chat.id);
+      console.log('Marked as read - Message ID:', chat.lastMessageId);
       
       // Refresh chat list to update unread counts
-      fetchRecentChats();
+      setTimeout(() => fetchRecentChats(), 500);
     } catch (error) {
       console.error('Error marking as read:', error);
     }
