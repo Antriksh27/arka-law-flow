@@ -6,12 +6,13 @@ import { useState } from 'react';
 import { AddCaseDialog } from '@/components/cases/AddCaseDialog';
 import { AddClientDialog } from '@/components/clients/AddClientDialog';
 import { CreateAppointmentDialog } from '@/components/appointments/CreateAppointmentDialog';
+import { useDialog } from '@/hooks/use-dialog';
 
 export const QuickActions = () => {
   const navigate = useNavigate();
+  const { openDialog } = useDialog();
   const [showCaseDialog, setShowCaseDialog] = useState(false);
   const [showClientDialog, setShowClientDialog] = useState(false);
-  const [showAppointmentDialog, setShowAppointmentDialog] = useState(false);
 
   const actions = [
     {
@@ -22,7 +23,7 @@ export const QuickActions = () => {
     {
       icon: Calendar,
       label: 'Schedule',
-      onClick: () => setShowAppointmentDialog(true),
+      onClick: () => openDialog(<CreateAppointmentDialog />),
     },
     {
       icon: UserPlus,
@@ -69,9 +70,6 @@ export const QuickActions = () => {
           onOpenChange={setShowClientDialog}
           onSuccess={() => setShowClientDialog(false)} 
         />
-      )}
-      {showAppointmentDialog && (
-        <CreateAppointmentDialog />
       )}
     </>
   );
