@@ -1,8 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import {
-  DialogHeader,
-  DialogTitle,
-} from '../ui/dialog';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -269,9 +265,9 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
 
   return (
     <>
-      <DialogHeader className="pb-4">
-        <DialogTitle className="text-xl font-semibold text-gray-900">Create New Appointment</DialogTitle>
-      </DialogHeader>
+      <div className="pb-4">
+        <h2 className="text-xl font-semibold text-gray-900">Create New Appointment</h2>
+      </div>
       
       <div className="overflow-y-auto px-1 max-h-[calc(90vh-120px)]">
         <form onSubmit={handleSubmit} className="space-y-4 pr-3">
