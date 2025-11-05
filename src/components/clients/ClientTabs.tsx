@@ -1,6 +1,9 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { ClientOverview } from './ClientOverview';
 import { ClientInformation } from './ClientInformation';
 import { ClientCases } from './ClientCases';
@@ -10,6 +13,9 @@ import { ClientNotes } from './ClientNotes';
 import { ClientTasks } from './ClientTasks';
 import { ClientBilling } from './ClientBilling';
 import { ClientEmails } from './ClientEmails';
+import { ClientTimeline } from './ClientTimeline';
+import { ClientQuickActions } from './ClientQuickActions';
+import { EditClientDialog } from './EditClientDialog';
 import { 
   BarChart3, 
   CheckSquare, 
@@ -19,24 +25,46 @@ import {
   StickyNote, 
   FileText, 
   Mail,
-  User
+  User,
+  Clock,
+  Edit
 } from 'lucide-react';
 
 interface ClientTabsProps {
   clientId: string;
+  client: any;
   activeTab: string;
   onTabChange: (tab: string) => void;
+  onUpdate: () => void;
 }
 
 export const ClientTabs: React.FC<ClientTabsProps> = ({ 
   clientId, 
+  client,
   activeTab, 
-  onTabChange 
+  onTabChange,
+  onUpdate
 }) => {
-  // Arrange tab modules in the same style/order as in case detail page where applicable
+  const [showEditDialog, setShowEditDialog] = useState(false);
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active':
+        return 'bg-green-100 text-green-700 border-green-200';
+      case 'inactive':
+        return 'bg-gray-100 text-gray-700 border-gray-200';
+      case 'lead':
+        return 'bg-blue-100 text-blue-700 border-blue-200';
+      case 'prospect':
+        return 'bg-purple-100 text-purple-700 border-purple-200';
+      default:
+        return 'bg-gray-100 text-gray-700 border-gray-200';
+    }
+  };
+
   const tabs = [
-    { value: 'overview-stats', label: 'Overview', icon: BarChart3 },
-    { value: 'client-information', label: 'Client Information', icon: User },
+    { value: 'overview', label: 'Overview', icon: BarChart3 },
+    { value: 'information', label: 'Information', icon: User },
     { value: 'cases', label: 'Cases', icon: Briefcase },
     { value: 'appointments', label: 'Appointments', icon: Calendar },
     { value: 'documents', label: 'Documents', icon: FileText },
@@ -44,13 +72,96 @@ export const ClientTabs: React.FC<ClientTabsProps> = ({
     { value: 'notes', label: 'Notes', icon: StickyNote },
     { value: 'billing', label: 'Billing', icon: DollarSign },
     { value: 'emails', label: 'Emails', icon: Mail },
+    { value: 'timeline', label: 'Timeline', icon: Clock },
   ];
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm">
+    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm m-8">
       <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
-        {/* Tab Triggers - align style and order to match Case Detail Tabs' placement */}
-        <TabsList className="w-full bg-white border-b border-gray-200 rounded-t-2xl h-auto p-0">
+        {/* Header section integrated with tabs - matching CaseDetailEnhanced pattern */}
+        <div className="p-6 pb-0">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center gap-4 flex-1">
+              <Avatar className="w-16 h-16">
+                <AvatarFallback className="bg-gray-100 text-gray-600 text-lg font-medium">
+                  {client.full_name.split(' ').map((n: string) => n[0]).join('')}
+                </AvatarFallback>
+              </Avatar>
+              
+              <div className="flex-1">
+                <h1 className="text-2xl font-semibold text-gray-900 mb-2">
+                  {client.full_name}
+                </h1>
+                <div className="space-y-2">
+                  <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                    {client.email && (
+                      <div>
+                        <span className="font-medium">Email:</span> {client.email}
+                      </div>
+                    )}
+                    {client.phone && (
+                      <div>
+                        <span className="font-medium">Phone:</span> {client.phone}
+                      </div>
+                    )}
+                    {client.type && (
+                      <div>
+                        <span className="font-medium">Type:</span> {client.type}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-4 text-sm text-gray-600 items-center">
+                    {client.organization && (
+                      <div>
+                        <span className="font-medium">Organization:</span> {client.organization}
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">Status:</span>
+                      <Badge className={`${getStatusColor(client.status)} rounded-full px-3 py-1 text-xs`}>
+                        {client.status === 'active' ? 'Active' : client.status}
+                      </Badge>
+                    </div>
+                    {client.client_portal_enabled && (
+                      <Badge variant="outline" className="text-xs">
+                        Portal Enabled
+                      </Badge>
+                    )}
+                  </div>
+                  {(client.referred_by_name || client.source) && (
+                    <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                      {client.referred_by_name && (
+                        <div>
+                          <span className="font-medium">Referred By:</span> {client.referred_by_name}
+                        </div>
+                      )}
+                      {client.source && (
+                        <div>
+                          <span className="font-medium">Source:</span> {client.source}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => setShowEditDialog(true)}>
+                <Edit className="w-4 h-4 mr-2" />
+                Edit
+              </Button>
+              <ClientQuickActions 
+                clientId={client.id} 
+                clientName={client.full_name} 
+                onAction={onUpdate} 
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Tabs List - matching case details styling */}
+        <TabsList className="w-full bg-white border-b border-gray-200 h-auto p-0">
           <div className="flex flex-wrap sm:flex-nowrap overflow-x-auto">
             {tabs.map((tab) => {
               const IconComponent = tab.icon;
@@ -67,12 +178,13 @@ export const ClientTabs: React.FC<ClientTabsProps> = ({
             })}
           </div>
         </TabsList>
-        {/* Tab Content - consistent padding, layout, card styling */}
+
+        {/* Tab Content */}
         <div className="p-6">
-          <TabsContent value="overview-stats" className="m-0">
+          <TabsContent value="overview" className="m-0">
             <ClientOverview clientId={clientId} />
           </TabsContent>
-          <TabsContent value="client-information" className="m-0">
+          <TabsContent value="information" className="m-0">
             <ClientInformation clientId={clientId} />
           </TabsContent>
           <TabsContent value="cases" className="m-0">
@@ -96,8 +208,21 @@ export const ClientTabs: React.FC<ClientTabsProps> = ({
           <TabsContent value="emails" className="m-0">
             <ClientEmails clientId={clientId} />
           </TabsContent>
+          <TabsContent value="timeline" className="m-0">
+            <ClientTimeline clientId={clientId} />
+          </TabsContent>
         </div>
       </Tabs>
+
+      {/* Edit Dialog */}
+      {showEditDialog && (
+        <EditClientDialog 
+          open={showEditDialog} 
+          onOpenChange={setShowEditDialog} 
+          client={client} 
+          onSuccess={onUpdate} 
+        />
+      )}
     </div>
   );
 };

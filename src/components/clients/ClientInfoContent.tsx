@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ClientHeader } from './ClientHeader';
-import { ClientInfoSidebar } from './ClientInfoSidebar';
 import { ClientTabs } from './ClientTabs';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -101,23 +99,16 @@ export const ClientInfoContent: React.FC<ClientInfoContentProps> = ({
     hasReferredBy: !!client.referred_by_name 
   });
 
-  return <div className="min-h-[calc(100vh-64px)] bg-gray-50">
-      <div className="max-w-7xl mx-auto">
-        {/* Client Header */}
-        <ClientHeader client={client} onUpdate={refetch} />
-        
-        {/* Main Content */}
-        <div className="flex gap-6 px-6 pb-6 py-[17px]">
-          {/* Left Sidebar */}
-          <div className="w-80 flex-shrink-0">
-            <ClientInfoSidebar client={client} onUpdate={refetch} />
-          </div>
-
-          {/* Right Content */}
-          <div className="flex-1">
-            <ClientTabs clientId={clientId} activeTab={activeTab} onTabChange={setActiveTab} />
-          </div>
-        </div>
-      </div>
-    </div>;
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Single unified container - matching CaseDetailEnhanced pattern */}
+      <ClientTabs 
+        clientId={clientId} 
+        client={client}
+        activeTab={activeTab} 
+        onTabChange={setActiveTab}
+        onUpdate={refetch}
+      />
+    </div>
+  );
 };

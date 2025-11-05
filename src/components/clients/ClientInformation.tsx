@@ -2,318 +2,259 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { 
-  User, 
-  Mail, 
-  Phone, 
-  MapPin, 
-  Building2, 
-  Calendar,
-  UserCheck,
-  FileText,
-  Globe,
-  CheckSquare
+  User, Mail, Phone, MapPin, Building, Briefcase, 
+  Users, Calendar, FileText, UserCheck, CreditCard,
+  Shield, Globe
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { Loader2 } from 'lucide-react';
 
 interface ClientInformationProps {
   clientId: string;
 }
 
-export const ClientInformation: React.FC<ClientInformationProps> = ({
-  clientId
-}) => {
+export const ClientInformation: React.FC<ClientInformationProps> = ({ clientId }) => {
   const { data: client, isLoading } = useQuery({
-    queryKey: ['client-information', clientId],
+    queryKey: ['client-full-info', clientId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('clients')
-        .select(`
-          *,
-          profiles:assigned_lawyer_id(full_name, email)
-        `)
+        .select('*')
         .eq('id', clientId)
         .single();
-
+      
       if (error) throw error;
       return data;
     }
   });
 
+  // Fetch assigned lawyers
+  const { data: assignedLawyers = [] } = useQuery({
+    queryKey: ['client-assigned-lawyers', clientId],
+    queryFn: async () => {
+      const { data: assignments } = await supabase
+        .from('client_lawyer_assignments')
+        .select(`
+          id,
+          lawyer_id,
+          assigned_at,
+          profiles:lawyer_id (
+            id,
+            full_name,
+            profile_pic
+          )
+        `)
+        .eq('client_id', clientId);
+      
+      return assignments || [];
+    }
+  });
+
   if (isLoading) {
-    return <div className="animate-pulse space-y-4">
-      <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-      <div className="h-20 bg-gray-200 rounded"></div>
-    </div>;
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      </div>
+    );
   }
 
   if (!client) {
-    return <div className="text-center py-8 text-gray-500">
-      Client information not found
-    </div>;
+    return (
+      <div className="text-center py-12 text-gray-500">
+        Client information not found
+      </div>
+    );
   }
 
-  const personalInfo = [
-    { label: 'Full Name', value: client.full_name, icon: User },
-    { label: 'Email', value: client.email, icon: Mail },
-    { label: 'Phone', value: client.phone, icon: Phone },
-    { label: 'Aadhaar Number', value: client.aadhaar_no, icon: FileText },
-    { label: 'Client Type', value: client.type, icon: User }
-  ];
-
-  const addressInfo = [
-    { label: 'Address', value: client.address },
-    { label: 'City', value: client.city },
-    { label: 'State', value: client.state },
-    { label: 'District', value: client.district }
-  ];
-
-  const companyInfo = [
-    { label: 'Company Name', value: client.organization, icon: Building2 },
-    { label: 'Designation', value: client.designation, icon: User },
-    { label: 'Company Email', value: client.company_email, icon: Mail },
-    { label: 'Company Phone', value: client.company_phone, icon: Phone },
-    { label: 'Company Address', value: client.company_address, icon: MapPin }
-  ];
-
-  const professionalInfo = [
-    { label: 'Status', value: client.status },
-    { label: 'Assign Lawyer', value: client.profiles?.full_name },
-    { label: 'Case Reference', value: client.case_ref },
-    { label: 'Appointment Date', value: client.appointment_date ? new Date(client.appointment_date).toLocaleDateString() : null },
-    { label: 'Source', value: client.source },
-    { label: 'Total Billed Amount', value: client.total_billed_amount ? `₹${client.total_billed_amount}` : null }
-  ];
-
-  const referralInfo = [
-    { label: 'Referred By', value: client.referred_by_name },
-    { label: 'Referral Phone', value: client.referred_by_phone }
-  ];
-
-  const servicesInfo = [
-    { label: 'Services', value: client.services ? client.services.join(', ') : null }
-  ];
-
-  const InfoSection = ({ title, items, icon: SectionIcon }: any) => (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          {SectionIcon && <SectionIcon className="w-5 h-5" />}
-          {title}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {items.map((item: any, index: number) => {
-          const IconComponent = item.icon;
-          return item.value ? (
-            <div key={index} className="flex items-center gap-3">
-              {IconComponent && <IconComponent className="w-4 h-4 text-gray-500 flex-shrink-0" />}
-              <div className="flex-1">
-                <span className="text-sm text-gray-600">{item.label}:</span>
-                <span className="ml-2 text-sm font-medium text-gray-900">{item.value}</span>
-              </div>
-            </div>
-          ) : null;
-        })}
-      </CardContent>
-    </Card>
-  );
+  const InfoRow = ({ icon: Icon, label, value }: { icon: any; label: string; value: string | null | undefined }) => {
+    if (!value) return null;
+    return (
+      <div className="flex items-start gap-3">
+        <Icon className="w-4 h-4 text-gray-400 mt-0.5" />
+        <div className="flex-1">
+          <span className="text-sm text-gray-600">{label}: </span>
+          <span className="text-sm font-medium text-gray-900">{value}</span>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-gray-900">Client Information</h2>
-        <div className="flex items-center gap-2">
-          <Badge 
-            variant={client.status === 'active' ? 'default' : 'outline'}
-            className="capitalize"
-          >
-            {client.status}
-          </Badge>
-          {client.client_portal_enabled && (
-            <Badge variant="success" className="capitalize">
-              Portal Enabled
-            </Badge>
+      {/* Personal Details */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <User className="w-5 h-5 text-blue-600" />
+            <CardTitle>Personal Details</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <InfoRow icon={User} label="Full Name" value={client.full_name} />
+          <InfoRow icon={Mail} label="Email" value={client.email} />
+          <InfoRow icon={Phone} label="Phone" value={client.phone} />
+          <InfoRow icon={CreditCard} label="Aadhaar Number" value={client.aadhaar_no} />
+          
+          {client.status && (
+            <div className="flex items-start gap-3">
+              <Shield className="w-4 h-4 text-gray-400 mt-0.5" />
+              <div className="flex-1">
+                <span className="text-sm text-gray-600">Status: </span>
+                <Badge className={
+                  client.status === 'active' 
+                    ? 'bg-green-100 text-green-700 border-green-200' 
+                    : 'bg-gray-100 text-gray-700 border-gray-200'
+                }>
+                  {client.status}
+                </Badge>
+              </div>
+            </div>
           )}
-        </div>
-      </div>
-
-      {/* Information Sections */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Personal Information */}
-        <InfoSection 
-          title="Personal Information" 
-          items={personalInfo}
-          icon={User}
-        />
-
-        {/* Business Information */}
-        {(client.organization || client.designation || client.company_email || client.company_phone || client.company_address) && (
-          <InfoSection 
-            title="Business Information" 
-            items={companyInfo}
-            icon={Building2}
-          />
-        )}
-
-        {/* Services Information */}
-        {client.services && client.services.length > 0 && (
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <CheckSquare className="w-5 h-5" />
-                Services
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2">
-                {client.services.map((service, index) => (
-                  <Badge key={index} variant="outline" className="text-sm">
-                    {service}
-                  </Badge>
-                ))}
+          
+          {client.client_portal_enabled !== null && (
+            <div className="flex items-start gap-3">
+              <Globe className="w-4 h-4 text-gray-400 mt-0.5" />
+              <div className="flex-1">
+                <span className="text-sm text-gray-600">Client Portal: </span>
+                <Badge variant={client.client_portal_enabled ? 'default' : 'outline'}>
+                  {client.client_portal_enabled ? 'Enabled' : 'Disabled'}
+                </Badge>
               </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Address Information */}
-        {(client.address || client.city || client.state || client.district) && (
-          <Card className="lg:col-span-2">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <MapPin className="w-5 h-5" />
-                Address Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-sm">
-                <span className="text-gray-600">Complete Address:</span>
-                <p className="text-sm font-medium text-gray-900 mt-1 leading-relaxed">
-                  {[
-                    client.address,
-                    client.city,
-                    client.district,
-                    client.state
-                  ].filter(Boolean).join(', ') || 'No address information available'}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Professional Information */}
-        <Card className="lg:col-span-2">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <FileText className="w-5 h-5" />
-              Professional Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {professionalInfo.map((item, index) => 
-                item.value ? (
-                  <div key={index}>
-                    <span className="text-sm text-gray-600">{item.label}:</span>
-                    <p className="text-sm font-medium text-gray-900">{item.value}</p>
-                  </div>
-                ) : null
-              )}
             </div>
-          </CardContent>
-        </Card>
+          )}
+        </CardContent>
+      </Card>
 
-        {/* Referral Information */}
-        {(client.referred_by_name || client.referred_by_phone) && (
-          <Card className="lg:col-span-2">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <UserCheck className="w-5 h-5" />
-                Referral Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {referralInfo.map((item, index) => 
-                  item.value ? (
-                    <div key={index}>
-                      <span className="text-sm text-gray-600">{item.label}:</span>
-                      <p className="text-sm font-medium text-gray-900">{item.value}</p>
-                    </div>
-                  ) : null
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-
-      {/* Additional Information */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Client Portal Status */}
+      {/* Address Information */}
+      {(client.address || client.city || client.district || client.state) && (
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Globe className="w-5 h-5" />
-              Client Portal
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+          <CardHeader>
             <div className="flex items-center gap-2">
-              <Badge 
-                variant={client.client_portal_enabled ? 'success' : 'outline'}
-                className="capitalize"
-              >
-                {client.client_portal_enabled ? 'Enabled' : 'Disabled'}
-              </Badge>
-              {client.client_portal_enabled && (
-                <span className="text-sm text-gray-600">Client has portal access</span>
-              )}
+              <MapPin className="w-5 h-5 text-blue-600" />
+              <CardTitle>Address Information</CardTitle>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Account Information */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Calendar className="w-5 h-5" />
-              Account Information
-            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <div>
-              <span className="text-sm text-gray-600">Client Since:</span>
-              <p className="text-sm font-medium text-gray-900">
-                {new Date(client.created_at).toLocaleDateString()}
-              </p>
-            </div>
-            {client.total_billed_amount && client.total_billed_amount > 0 && (
-              <div>
-                <span className="text-sm text-gray-600">Total Billed:</span>
-                <p className="text-sm font-medium text-gray-900">
-                  ₹{Number(client.total_billed_amount).toLocaleString()}
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Additional Notes */}
-      {client.notes && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Notes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-700 whitespace-pre-wrap">{client.notes}</p>
+          <CardContent className="space-y-4">
+            <InfoRow icon={MapPin} label="Address" value={client.address} />
+            <InfoRow icon={MapPin} label="City" value={client.city} />
+            <InfoRow icon={MapPin} label="District" value={client.district} />
+            <InfoRow icon={MapPin} label="State" value={client.state} />
           </CardContent>
         </Card>
       )}
+
+      {/* Professional Details */}
+      {(client.type || client.organization || client.designation || client.company_address || client.company_phone || client.company_email) && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Building className="w-5 h-5 text-blue-600" />
+              <CardTitle>Professional Details</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <InfoRow icon={UserCheck} label="Type" value={client.type} />
+            <InfoRow icon={Building} label="Organization" value={client.organization} />
+            <InfoRow icon={Briefcase} label="Designation" value={client.designation} />
+            <InfoRow icon={MapPin} label="Company Address" value={client.company_address} />
+            <InfoRow icon={Phone} label="Company Phone" value={client.company_phone} />
+            <InfoRow icon={Mail} label="Company Email" value={client.company_email} />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Reference & Source */}
+      {(client.source || client.referred_by_name || client.referred_by_phone || client.case_ref) && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-blue-600" />
+              <CardTitle>Reference & Source</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <InfoRow icon={Globe} label="Source" value={client.source} />
+            <InfoRow icon={Users} label="Referred By" value={client.referred_by_name} />
+            <InfoRow icon={Phone} label="Reference Phone" value={client.referred_by_phone} />
+            <InfoRow icon={FileText} label="Case Reference" value={client.case_ref} />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Services */}
+      {client.services && client.services.length > 0 && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Briefcase className="w-5 h-5 text-blue-600" />
+              <CardTitle>Services</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {client.services.map((service: string, index: number) => (
+                <Badge key={index} variant="outline" className="text-sm">
+                  {service}
+                </Badge>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Assigned Lawyers */}
+      {assignedLawyers.length > 0 && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-blue-600" />
+              <CardTitle>Assigned Lawyers</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {assignedLawyers.map((assignment: any) => (
+              <div key={assignment.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <User className="w-4 h-4 text-gray-400" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-900">
+                    {assignment.profiles?.full_name || 'Unknown'}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Assigned on {new Date(assignment.assigned_at).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Account Details */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-blue-600" />
+            <CardTitle>Account Details</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {client.appointment_date && (
+            <InfoRow 
+              icon={Calendar} 
+              label="Appointment Date" 
+              value={new Date(client.appointment_date).toLocaleDateString()}
+            />
+          )}
+          {client.created_at && (
+            <InfoRow 
+              icon={Calendar} 
+              label="Created Date" 
+              value={new Date(client.created_at).toLocaleDateString()}
+            />
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
