@@ -2,40 +2,39 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
-  User, Mail, Phone, MapPin, Building, Briefcase, 
-  Users, Calendar, FileText, UserCheck, CreditCard,
-  Shield, Globe, DollarSign
-} from 'lucide-react';
+import { User, Mail, Phone, MapPin, Building, Briefcase, Users, Calendar, FileText, UserCheck, CreditCard, Shield, Globe, DollarSign } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
-
 interface ClientInformationProps {
   clientId: string;
 }
-
-export const ClientInformation: React.FC<ClientInformationProps> = ({ clientId }) => {
-  const { data: client, isLoading } = useQuery({
+export const ClientInformation: React.FC<ClientInformationProps> = ({
+  clientId
+}) => {
+  const {
+    data: client,
+    isLoading
+  } = useQuery({
     queryKey: ['client-full-info', clientId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('clients')
-        .select('*')
-        .eq('id', clientId)
-        .single();
-      
+      const {
+        data,
+        error
+      } = await supabase.from('clients').select('*').eq('id', clientId).single();
       if (error) throw error;
       return data;
     }
   });
 
   // Fetch assigned lawyers
-  const { data: assignedLawyers = [] } = useQuery({
+  const {
+    data: assignedLawyers = []
+  } = useQuery({
     queryKey: ['client-assigned-lawyers', clientId],
     queryFn: async () => {
-      const { data: assignments } = await supabase
-        .from('client_lawyer_assignments')
-        .select(`
+      const {
+        data: assignments
+      } = await supabase.from('client_lawyer_assignments').select(`
           id,
           lawyer_id,
           assigned_at,
@@ -44,32 +43,30 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({ clientId }
             full_name,
             profile_pic
           )
-        `)
-        .eq('client_id', clientId);
-      
+        `).eq('client_id', clientId);
       return assignments || [];
     }
   });
-
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
+    return <div className="flex items-center justify-center py-12">
         <Loader2 className="w-6 h-6 animate-spin text-primary" />
-      </div>
-    );
+      </div>;
   }
-
   if (!client) {
-    return (
-      <div className="text-center py-12 text-gray-500">
+    return <div className="text-center py-12 text-gray-500">
         Client information not found
-      </div>
-    );
+      </div>;
   }
-
-  const InfoRow = ({ icon: Icon, label, value }: { icon: any; label: string; value: string | null | undefined }) => {
-    return (
-      <div className="flex items-start gap-3">
+  const InfoRow = ({
+    icon: Icon,
+    label,
+    value
+  }: {
+    icon: any;
+    label: string;
+    value: string | null | undefined;
+  }) => {
+    return <div className="flex items-start gap-3">
         <Icon className="w-4 h-4 text-gray-400 mt-0.5" />
         <div className="flex-1">
           <span className="text-sm text-gray-600">{label}: </span>
@@ -77,12 +74,9 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({ clientId }
             {value || 'Not provided'}
           </span>
         </div>
-      </div>
-    );
+      </div>;
   };
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       {/* Personal Details */}
       <Card>
         <CardHeader>
@@ -102,15 +96,7 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({ clientId }
             <Shield className="w-4 h-4 text-gray-400 mt-0.5" />
             <div className="flex-1">
               <span className="text-sm text-gray-600">Status: </span>
-              <Badge className={
-                client.status === 'active' 
-                  ? 'bg-green-100 text-green-700 border-green-200' 
-                  : client.status === 'inactive'
-                  ? 'bg-gray-100 text-gray-700 border-gray-200'
-                  : client.status === 'lead'
-                  ? 'bg-blue-100 text-blue-700 border-blue-200'
-                  : 'bg-purple-100 text-purple-700 border-purple-200'
-              }>
+              <Badge className={client.status === 'active' ? 'bg-green-100 text-green-700 border-green-200' : client.status === 'inactive' ? 'bg-gray-100 text-gray-700 border-gray-200' : client.status === 'lead' ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-purple-100 text-purple-700 border-purple-200'}>
                 {client.status || 'Not set'}
               </Badge>
             </div>
@@ -178,44 +164,10 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({ clientId }
       </Card>
 
       {/* Additional Notes */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <FileText className="w-5 h-5 text-blue-600" />
-            <CardTitle>Notes</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {client.notes ? (
-            <p className="text-sm text-gray-900 whitespace-pre-wrap">{client.notes}</p>
-          ) : (
-            <p className="text-sm italic text-gray-400">No notes added</p>
-          )}
-        </CardContent>
-      </Card>
+      
 
       {/* Services */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Briefcase className="w-5 h-5 text-blue-600" />
-            <CardTitle>Services Required</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {client.services && client.services.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {client.services.map((service: string, index: number) => (
-                <Badge key={index} variant="outline" className="text-sm">
-                  {service}
-                </Badge>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm italic text-gray-400">No services specified</p>
-          )}
-        </CardContent>
-      </Card>
+      
 
       {/* Assigned Lawyers */}
       <Card>
@@ -226,9 +178,7 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({ clientId }
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
-          {assignedLawyers.length > 0 ? (
-            assignedLawyers.map((assignment: any) => (
-              <div key={assignment.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+          {assignedLawyers.length > 0 ? assignedLawyers.map((assignment: any) => <div key={assignment.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                 <User className="w-4 h-4 text-gray-400" />
                 <div className="flex-1">
                   <p className="text-sm font-medium text-gray-900">
@@ -238,34 +188,12 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({ clientId }
                     Assigned on {new Date(assignment.assigned_at).toLocaleDateString()}
                   </p>
                 </div>
-              </div>
-            ))
-          ) : (
-            <p className="text-sm italic text-gray-400">No lawyers assigned yet</p>
-          )}
+              </div>) : <p className="text-sm italic text-gray-400">No lawyers assigned yet</p>}
         </CardContent>
       </Card>
 
       {/* Financial Details */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <DollarSign className="w-5 h-5 text-blue-600" />
-            <CardTitle>Financial Information</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-start gap-3">
-            <DollarSign className="w-4 h-4 text-gray-400 mt-0.5" />
-            <div className="flex-1">
-              <span className="text-sm text-gray-600">Total Billed Amount: </span>
-              <span className="text-sm font-medium text-gray-900">
-                ₹{client.total_billed_amount ? Number(client.total_billed_amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
-              </span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      
 
       {/* Account Details */}
       <Card>
@@ -276,18 +204,9 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({ clientId }
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <InfoRow 
-            icon={Calendar} 
-            label="Appointment Date" 
-            value={client.appointment_date ? new Date(client.appointment_date).toLocaleDateString() : null}
-          />
-          <InfoRow 
-            icon={Calendar} 
-            label="Created Date" 
-            value={client.created_at ? new Date(client.created_at).toLocaleDateString() : null}
-          />
+          <InfoRow icon={Calendar} label="Appointment Date" value={client.appointment_date ? new Date(client.appointment_date).toLocaleDateString() : null} />
+          <InfoRow icon={Calendar} label="Created Date" value={client.created_at ? new Date(client.created_at).toLocaleDateString() : null} />
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 };
