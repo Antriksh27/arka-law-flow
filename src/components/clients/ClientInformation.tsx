@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { 
   User, Mail, Phone, MapPin, Building, Briefcase, 
   Users, Calendar, FileText, UserCheck, CreditCard,
-  Shield, Globe
+  Shield, Globe, DollarSign
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
@@ -68,13 +68,14 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({ clientId }
   }
 
   const InfoRow = ({ icon: Icon, label, value }: { icon: any; label: string; value: string | null | undefined }) => {
-    if (!value) return null;
     return (
       <div className="flex items-start gap-3">
         <Icon className="w-4 h-4 text-gray-400 mt-0.5" />
         <div className="flex-1">
           <span className="text-sm text-gray-600">{label}: </span>
-          <span className="text-sm font-medium text-gray-900">{value}</span>
+          <span className={`text-sm ${value ? 'font-medium text-gray-900' : 'italic text-gray-400'}`}>
+            {value || 'Not provided'}
+          </span>
         </div>
       </div>
     );
@@ -95,103 +96,114 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({ clientId }
           <InfoRow icon={Mail} label="Email" value={client.email} />
           <InfoRow icon={Phone} label="Phone" value={client.phone} />
           <InfoRow icon={CreditCard} label="Aadhaar Number" value={client.aadhaar_no} />
+          <InfoRow icon={UserCheck} label="Client Type" value={client.type} />
           
-          {client.status && (
-            <div className="flex items-start gap-3">
-              <Shield className="w-4 h-4 text-gray-400 mt-0.5" />
-              <div className="flex-1">
-                <span className="text-sm text-gray-600">Status: </span>
-                <Badge className={
-                  client.status === 'active' 
-                    ? 'bg-green-100 text-green-700 border-green-200' 
-                    : 'bg-gray-100 text-gray-700 border-gray-200'
-                }>
-                  {client.status}
-                </Badge>
-              </div>
+          <div className="flex items-start gap-3">
+            <Shield className="w-4 h-4 text-gray-400 mt-0.5" />
+            <div className="flex-1">
+              <span className="text-sm text-gray-600">Status: </span>
+              <Badge className={
+                client.status === 'active' 
+                  ? 'bg-green-100 text-green-700 border-green-200' 
+                  : client.status === 'inactive'
+                  ? 'bg-gray-100 text-gray-700 border-gray-200'
+                  : client.status === 'lead'
+                  ? 'bg-blue-100 text-blue-700 border-blue-200'
+                  : 'bg-purple-100 text-purple-700 border-purple-200'
+              }>
+                {client.status || 'Not set'}
+              </Badge>
             </div>
-          )}
+          </div>
           
-          {client.client_portal_enabled !== null && (
-            <div className="flex items-start gap-3">
-              <Globe className="w-4 h-4 text-gray-400 mt-0.5" />
-              <div className="flex-1">
-                <span className="text-sm text-gray-600">Client Portal: </span>
-                <Badge variant={client.client_portal_enabled ? 'default' : 'outline'}>
-                  {client.client_portal_enabled ? 'Enabled' : 'Disabled'}
-                </Badge>
-              </div>
+          <div className="flex items-start gap-3">
+            <Globe className="w-4 h-4 text-gray-400 mt-0.5" />
+            <div className="flex-1">
+              <span className="text-sm text-gray-600">Client Portal: </span>
+              <Badge variant={client.client_portal_enabled ? 'default' : 'outline'}>
+                {client.client_portal_enabled ? 'Enabled' : 'Disabled'}
+              </Badge>
             </div>
-          )}
+          </div>
         </CardContent>
       </Card>
 
       {/* Address Information */}
-      {(client.address || client.city || client.district || client.state) && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <MapPin className="w-5 h-5 text-blue-600" />
-              <CardTitle>Address Information</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <InfoRow icon={MapPin} label="Address" value={client.address} />
-            <InfoRow icon={MapPin} label="City" value={client.city} />
-            <InfoRow icon={MapPin} label="District" value={client.district} />
-            <InfoRow icon={MapPin} label="State" value={client.state} />
-          </CardContent>
-        </Card>
-      )}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <MapPin className="w-5 h-5 text-blue-600" />
+            <CardTitle>Address Information</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <InfoRow icon={MapPin} label="Address" value={client.address} />
+          <InfoRow icon={MapPin} label="City" value={client.city} />
+          <InfoRow icon={MapPin} label="District" value={client.district} />
+          <InfoRow icon={MapPin} label="State" value={client.state} />
+        </CardContent>
+      </Card>
 
       {/* Professional Details */}
-      {(client.type || client.organization || client.designation || client.company_address || client.company_phone || client.company_email) && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Building className="w-5 h-5 text-blue-600" />
-              <CardTitle>Professional Details</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <InfoRow icon={UserCheck} label="Type" value={client.type} />
-            <InfoRow icon={Building} label="Organization" value={client.organization} />
-            <InfoRow icon={Briefcase} label="Designation" value={client.designation} />
-            <InfoRow icon={MapPin} label="Company Address" value={client.company_address} />
-            <InfoRow icon={Phone} label="Company Phone" value={client.company_phone} />
-            <InfoRow icon={Mail} label="Company Email" value={client.company_email} />
-          </CardContent>
-        </Card>
-      )}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Building className="w-5 h-5 text-blue-600" />
+            <CardTitle>Professional Details</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <InfoRow icon={Building} label="Organization" value={client.organization} />
+          <InfoRow icon={Briefcase} label="Designation" value={client.designation} />
+          <InfoRow icon={MapPin} label="Company Address" value={client.company_address} />
+          <InfoRow icon={Phone} label="Company Phone" value={client.company_phone} />
+          <InfoRow icon={Mail} label="Company Email" value={client.company_email} />
+        </CardContent>
+      </Card>
 
       {/* Reference & Source */}
-      {(client.source || client.referred_by_name || client.referred_by_phone || client.case_ref) && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Users className="w-5 h-5 text-blue-600" />
-              <CardTitle>Reference & Source</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <InfoRow icon={Globe} label="Source" value={client.source} />
-            <InfoRow icon={Users} label="Referred By" value={client.referred_by_name} />
-            <InfoRow icon={Phone} label="Reference Phone" value={client.referred_by_phone} />
-            <InfoRow icon={FileText} label="Case Reference" value={client.case_ref} />
-          </CardContent>
-        </Card>
-      )}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Users className="w-5 h-5 text-blue-600" />
+            <CardTitle>Reference & Source</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <InfoRow icon={Globe} label="Source" value={client.source} />
+          <InfoRow icon={Users} label="Referred By" value={client.referred_by_name} />
+          <InfoRow icon={Phone} label="Reference Phone" value={client.referred_by_phone} />
+          <InfoRow icon={FileText} label="Case Reference" value={client.case_ref} />
+        </CardContent>
+      </Card>
+
+      {/* Additional Notes */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <FileText className="w-5 h-5 text-blue-600" />
+            <CardTitle>Notes</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {client.notes ? (
+            <p className="text-sm text-gray-900 whitespace-pre-wrap">{client.notes}</p>
+          ) : (
+            <p className="text-sm italic text-gray-400">No notes added</p>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Services */}
-      {client.services && client.services.length > 0 && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Briefcase className="w-5 h-5 text-blue-600" />
-              <CardTitle>Services</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Briefcase className="w-5 h-5 text-blue-600" />
+            <CardTitle>Services Required</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {client.services && client.services.length > 0 ? (
             <div className="flex flex-wrap gap-2">
               {client.services.map((service: string, index: number) => (
                 <Badge key={index} variant="outline" className="text-sm">
@@ -199,21 +211,23 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({ clientId }
                 </Badge>
               ))}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          ) : (
+            <p className="text-sm italic text-gray-400">No services specified</p>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Assigned Lawyers */}
-      {assignedLawyers.length > 0 && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Users className="w-5 h-5 text-blue-600" />
-              <CardTitle>Assigned Lawyers</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {assignedLawyers.map((assignment: any) => (
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Users className="w-5 h-5 text-blue-600" />
+            <CardTitle>Assigned Lawyers</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {assignedLawyers.length > 0 ? (
+            assignedLawyers.map((assignment: any) => (
               <div key={assignment.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                 <User className="w-4 h-4 text-gray-400" />
                 <div className="flex-1">
@@ -225,10 +239,33 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({ clientId }
                   </p>
                 </div>
               </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
+            ))
+          ) : (
+            <p className="text-sm italic text-gray-400">No lawyers assigned yet</p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Financial Details */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <DollarSign className="w-5 h-5 text-blue-600" />
+            <CardTitle>Financial Information</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-start gap-3">
+            <DollarSign className="w-4 h-4 text-gray-400 mt-0.5" />
+            <div className="flex-1">
+              <span className="text-sm text-gray-600">Total Billed Amount: </span>
+              <span className="text-sm font-medium text-gray-900">
+                ₹{client.total_billed_amount ? Number(client.total_billed_amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
+              </span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Account Details */}
       <Card>
@@ -239,20 +276,16 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({ clientId }
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {client.appointment_date && (
-            <InfoRow 
-              icon={Calendar} 
-              label="Appointment Date" 
-              value={new Date(client.appointment_date).toLocaleDateString()}
-            />
-          )}
-          {client.created_at && (
-            <InfoRow 
-              icon={Calendar} 
-              label="Created Date" 
-              value={new Date(client.created_at).toLocaleDateString()}
-            />
-          )}
+          <InfoRow 
+            icon={Calendar} 
+            label="Appointment Date" 
+            value={client.appointment_date ? new Date(client.appointment_date).toLocaleDateString() : null}
+          />
+          <InfoRow 
+            icon={Calendar} 
+            label="Created Date" 
+            value={client.created_at ? new Date(client.created_at).toLocaleDateString() : null}
+          />
         </CardContent>
       </Card>
     </div>
