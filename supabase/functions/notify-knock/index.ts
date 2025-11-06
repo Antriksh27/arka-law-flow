@@ -38,6 +38,12 @@ serve(async (req) => {
       supabase
     );
 
+    // If constructMessageAndPayload returns empty subject (no-op update), skip
+    if (!subject || (data && data.skip)) {
+      console.log("Skipping notification due to no-op or filtered update", { table, eventType, recordId: record?.id });
+      return jsonResponse({ status: "skipped", reason: "no-op" });
+    }
+
     const workflowKey = "new-appointment-notification";
 
     console.log("Sending notification:", { recipients, subject });
@@ -194,6 +200,22 @@ async function constructMessageAndPayload(table: string, eventType: string, reco
         body = `Appointment created by ${createdBy} on **${date}** at **${time}** (${meetingMode}).`;
         data = { appointmentId: record.id, clientName, date, time, module: "appointments" };
       } else {
+        // Only notify on meaningful reschedule/status changes
+        const oldDate = oldRecord?.appointment_date || null;
+        const oldTime = oldRecord?.appointment_time || null;
+        const oldMode = oldRecord?.meeting_mode || null;
+        const oldStatus = oldRecord?.status || null;
+        const changed = (
+          (oldDate !== record.appointment_date) ||
+          (oldTime !== record.appointment_time) ||
+          (oldMode !== record.meeting_mode) ||
+          (oldStatus !== record.status)
+        );
+        if (!changed) {
+          // mark as skip
+          data = { skip: true } as any;
+          break;
+        }
         subject = `📅 Appointment rescheduled for ${clientName}`;
         body = `Appointment moved to **${date}** at **${time}**.`;
         data = { appointmentId: record.id, clientName, date, time, module: "appointments" };
