@@ -12,7 +12,6 @@ import { EditClientDialog } from './EditClientDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useDialog } from '@/hooks/use-dialog';
-import { ManageAssignedLawyersDialog } from './ManageAssignedLawyersDialog';
 import { EngagementLetterDialog } from './EngagementLetterDialog';
 
 interface ClientQuickActionsProps {
@@ -32,7 +31,6 @@ export const ClientQuickActions: React.FC<ClientQuickActionsProps> = ({
   const [showNoteDialog, setShowNoteDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [showManageLawyersDialog, setShowManageLawyersDialog] = useState(false);
   const [showEngagementLetterDialog, setShowEngagementLetterDialog] = useState(false);
   const [clientData, setClientData] = useState<any>(null);
   const { openDialog } = useDialog();
@@ -121,13 +119,6 @@ export const ClientQuickActions: React.FC<ClientQuickActionsProps> = ({
             </DropdownMenuItem>
             <DropdownMenuItem 
               className="hover:bg-gray-50 cursor-pointer"
-              onClick={() => setShowManageLawyersDialog(true)}
-            >
-              <Users className="w-4 h-4 mr-3 text-gray-400" />
-              <span>Lawyers</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem 
-              className="hover:bg-gray-50 cursor-pointer"
               onClick={() => setShowEngagementLetterDialog(true)}
             >
               <Mail className="w-4 h-4 mr-3 text-gray-400" />
@@ -192,13 +183,6 @@ export const ClientQuickActions: React.FC<ClientQuickActionsProps> = ({
           }}
         />
       )}
-
-      <ManageAssignedLawyersDialog
-        open={showManageLawyersDialog}
-        onOpenChange={setShowManageLawyersDialog}
-        clientId={clientId}
-        clientName={clientName}
-      />
 
       <EngagementLetterDialog
         open={showEngagementLetterDialog}

@@ -36,24 +36,7 @@ export const ClientInfoContent: React.FC<ClientInfoContentProps> = ({
         throw clientError;
       }
       console.log('✅ Client data fetched:', clientData);
-      let assignedLawyer = null;
-      if (clientData?.assigned_lawyer_id) {
-        console.log('👨‍💼 Fetching assigned lawyer profile for ID:', clientData.assigned_lawyer_id);
-        const {
-          data: lawyerData,
-          error: lawyerError
-        } = await supabase.from('profiles').select('id, full_name, profile_pic').eq('id', clientData.assigned_lawyer_id).maybeSingle();
-        if (lawyerError) {
-          console.error('❌ Error fetching lawyer profile:', lawyerError);
-        } else if (lawyerData) {
-          assignedLawyer = lawyerData;
-          console.log('✅ Assigned lawyer data fetched:', assignedLawyer);
-        }
-      }
-      return {
-        ...clientData,
-        assigned_lawyer: assignedLawyer
-      };
+      return clientData;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes

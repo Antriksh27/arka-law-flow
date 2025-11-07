@@ -63,7 +63,6 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
   const [clientType, setClientType] = useState<string>('Individual');
   const [selectedState, setSelectedState] = useState<string>('');
   const [selectedDistrict, setSelectedDistrict] = useState<string>('');
-  const [selectedLawyers, setSelectedLawyers] = useState<string[]>([]);
   
   const {
     register,
@@ -75,29 +74,6 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
   } = useForm<ClientFormData>();
 
   const type = watch('type');
-
-  // Fetch lawyers for assignment
-  const { data: lawyers = [] } = useQuery({
-    queryKey: ['lawyers'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name')
-        .in('role', ['lawyer', 'partner', 'associate', 'admin', 'junior']);
-      
-      if (error) throw error;
-      
-      // Sort to always show "chitrajeet upadhyaya" first
-      return data?.sort((a, b) => {
-        const nameA = a.full_name?.toLowerCase() || '';
-        const nameB = b.full_name?.toLowerCase() || '';
-        
-        if (nameA.includes('chitrajeet upadhyaya')) return -1;
-        if (nameB.includes('chitrajeet upadhyaya')) return 1;
-        return nameA.localeCompare(nameB);
-      }) || [];
-    },
-  });
 
   // Fetch states
   const { data: states = [] } = useQuery({
@@ -167,25 +143,6 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
     }
   }, [client, reset, states]);
 
-  // Fetch existing lawyer assignments
-  useEffect(() => {
-    const fetchAssignments = async () => {
-      if (!client?.id) return;
-      
-      const { data } = await supabase
-        .from('client_lawyer_assignments')
-        .select('lawyer_id')
-        .eq('client_id', client.id);
-      
-      if (data) {
-        const lawyerIds = data.map(a => a.lawyer_id);
-        setSelectedLawyers(lawyerIds);
-      }
-    };
-    
-    fetchAssignments();
-  }, [client?.id]);
-
   const onSubmit = async (data: ClientFormData) => {
     try {
       // Check for duplicate clients by email or phone (excluding current client)
@@ -234,16 +191,12 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
       // Get district name from selected district
       const districtName = selectedDistrict || null;
 
-      // Set primary lawyer (first selected) as assigned_lawyer_id
-      const primaryLawyerId = selectedLawyers.length > 0 ? selectedLawyers[0] : null;
-
       const { error } = await supabase
         .from('clients')
         .update({
           ...data,
           email: data.email?.trim() || null, // Allow null for blank email
           phone: data.phone?.trim() || null, // Allow null for blank phone
-          assigned_lawyer_id: primaryLawyerId,
           type: data.type,
           state: stateName,
           district: districtName,
@@ -251,34 +204,6 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
         .eq('id', client.id);
 
       if (error) throw error;
-
-      // Update lawyer assignments
-      // First, delete existing assignments
-      await supabase
-        .from('client_lawyer_assignments')
-        .delete()
-        .eq('client_id', client.id);
-
-      // Then create new assignments
-      if (selectedLawyers.length > 0) {
-        const { data: firmData } = await supabase
-          .from('clients')
-          .select('firm_id')
-          .eq('id', client.id)
-          .single();
-
-        if (firmData) {
-          const assignments = selectedLawyers.map(lawyerId => ({
-            client_id: client.id,
-            lawyer_id: lawyerId,
-            firm_id: firmData.firm_id
-          }));
-          
-          await supabase
-            .from('client_lawyer_assignments')
-            .insert(assignments);
-        }
-      }
 
       toast({
         title: "Success",
@@ -483,36 +408,6 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
                 ))}
               </SelectContent>
             </Select>
-          </div>
-
-          <div>
-            <Label>Assigned Lawyers</Label>
-            <div className="border rounded-lg p-4 space-y-2 max-h-48 overflow-y-auto">
-              {lawyers.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No lawyers available</p>
-              ) : (
-                lawyers.map(lawyer => (
-                  <div key={lawyer.id} className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id={`lawyer-${lawyer.id}`}
-                      checked={selectedLawyers.includes(lawyer.id)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedLawyers([...selectedLawyers, lawyer.id]);
-                        } else {
-                          setSelectedLawyers(selectedLawyers.filter(id => id !== lawyer.id));
-                        }
-                      }}
-                      className="h-4 w-4 rounded border-border"
-                    />
-                    <Label htmlFor={`lawyer-${lawyer.id}`} className="font-normal cursor-pointer">
-                      {lawyer.full_name}
-                    </Label>
-                  </div>
-                ))
-              )}
-            </div>
           </div>
 
           <div>

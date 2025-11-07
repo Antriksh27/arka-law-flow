@@ -55,7 +55,6 @@ export const ConvertToClientDialog = ({
   const [newDistrictName, setNewDistrictName] = useState('');
   const [showEngagementLetter, setShowEngagementLetter] = useState(false);
   const [newClientId, setNewClientId] = useState<string | null>(null);
-  const [selectedLawyers, setSelectedLawyers] = useState<string[]>([]);
   const {
     register,
     handleSubmit,
@@ -153,27 +152,6 @@ export const ConvertToClientDialog = ({
     }
   }, [districts, contact?.district_id, setValue]);
 
-  // Fetch lawyers for assignment
-  const {
-    data: lawyers = []
-  } = useQuery({
-    queryKey: ['lawyers'],
-    queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from('profiles').select('id, full_name').in('role', ['lawyer', 'partner', 'associate', 'admin', 'junior']);
-      if (error) throw error;
-      return data?.sort((a, b) => {
-        const nameA = a.full_name?.toLowerCase() || '';
-        const nameB = b.full_name?.toLowerCase() || '';
-        if (nameA.includes('chitrajeet upadhyaya')) return -1;
-        if (nameB.includes('chitrajeet upadhyaya')) return 1;
-        return nameA.localeCompare(nameB);
-      }) || [];
-    }
-  });
-
   // Add district mutation
   const addDistrictMutation = async (districtName: string) => {
     if (!selectedStateId) throw new Error('No state selected');
@@ -249,14 +227,10 @@ export const ConvertToClientDialog = ({
       const selectedState = states.find(s => s.id === selectedStateId);
       const selectedDistrict = districts.find(d => d.name === data.district);
       
-      // Set primary lawyer (first selected) as assigned_lawyer_id
-      const primaryLawyerId = selectedLawyers.length > 0 ? selectedLawyers[0] : null;
-      
       const clientData = {
         ...data,
         state: selectedState?.name || data.state,
         district: data.district,
-        assigned_lawyer_id: primaryLawyerId,
         firm_id: firmId,
         created_by: user?.id
       };
@@ -265,24 +239,6 @@ export const ConvertToClientDialog = ({
         error
       } = await supabase.from('clients').insert([clientData]).select('id, full_name').single();
       if (error) throw error;
-
-      // Create lawyer assignments for all selected lawyers
-      if (selectedLawyers.length > 0) {
-        const assignments = selectedLawyers.map(lawyerId => ({
-          client_id: newClient.id,
-          lawyer_id: lawyerId,
-          firm_id: firmId,
-          assigned_by: user?.id
-        }));
-        
-        const { error: assignmentError } = await supabase
-          .from('client_lawyer_assignments')
-          .insert(assignments);
-        
-        if (assignmentError) {
-          console.error('Error creating lawyer assignments:', assignmentError);
-        }
-      }
 
       // Delete the contact after successful conversion
       const {
@@ -304,7 +260,6 @@ export const ConvertToClientDialog = ({
       setNewClientId(newClient.id);
       reset();
       setSelectedStateId('');
-      setSelectedLawyers([]);
       setShowAddDistrict(false);
       setNewDistrictName('');
       onOpenChange(false);
@@ -454,69 +409,6 @@ export const ConvertToClientDialog = ({
                   </SelectContent>
                 </Select>}
             </div>
-
-            <div>
-              <Label>Assigned Lawyers</Label>
-              <div className="border rounded-lg p-4 space-y-2 max-h-48 overflow-y-auto">
-                {lawyers.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No lawyers available</p>
-                ) : (
-                  lawyers.map(lawyer => (
-                    <div key={lawyer.id} className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id={`lawyer-${lawyer.id}`}
-                        checked={selectedLawyers.includes(lawyer.id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedLawyers([...selectedLawyers, lawyer.id]);
-                          } else {
-                            setSelectedLawyers(selectedLawyers.filter(id => id !== lawyer.id));
-                          }
-                        }}
-                        className="h-4 w-4 rounded border-border"
-                      />
-                      <Label htmlFor={`lawyer-${lawyer.id}`} className="font-normal cursor-pointer">
-                        {lawyer.full_name}
-                      </Label>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="referred_by_name">Reference Name</Label>
-              <Input id="referred_by_name" {...register('referred_by_name')} placeholder="Name of person who referred" />
-            </div>
-
-            <div>
-              <Label htmlFor="referred_by_phone">Reference Contact</Label>
-              <Input id="referred_by_phone" {...register('referred_by_phone')} placeholder="Contact number of referrer" />
-            </div>
-
-            {/* Business Information Section - Only show for Corporate */}
-            {watch('type') === 'Corporate' && <>
-                <div>
-                  <Label htmlFor="designation">Designation</Label>
-                  <Input id="designation" {...register('designation')} placeholder="Designation in company" />
-                </div>
-
-                <div>
-                  <Label htmlFor="company_phone">Company Phone</Label>
-                  <Input id="company_phone" {...register('company_phone')} placeholder="Company phone number" />
-                </div>
-
-                <div>
-                  <Label htmlFor="company_email">Company Email</Label>
-                  <Input id="company_email" type="email" {...register('company_email')} placeholder="Company email address" />
-                </div>
-
-                <div>
-                  <Label htmlFor="company_address">Company Address</Label>
-                  <Input id="company_address" {...register('company_address')} placeholder="Company address" />
-                </div>
-              </>}
 
             <div>
               <Label htmlFor="notes">Notes</Label>

@@ -54,7 +54,6 @@ export const AddClientDialog: React.FC<AddClientDialogProps> = ({
   const [newDistrictName, setNewDistrictName] = useState('');
   const [showEngagementLetter, setShowEngagementLetter] = useState(false);
   const [newClientId, setNewClientId] = useState<string | null>(null);
-  const [selectedLawyers, setSelectedLawyers] = useState<string[]>([]);
   const {
     register,
     handleSubmit,
@@ -97,28 +96,6 @@ export const AddClientDialog: React.FC<AddClientDialogProps> = ({
       return data;
     },
     enabled: !!selectedStateId,
-  });
-
-  // Fetch lawyers for assignment
-  const { data: lawyers = [] } = useQuery({
-    queryKey: ['lawyers'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name')
-        .in('role', ['lawyer', 'partner', 'associate', 'admin', 'junior']);
-      if (error) throw error;
-      
-      // Sort to always show "chitrajeet upadhyaya" first
-      return data?.sort((a, b) => {
-        const nameA = a.full_name?.toLowerCase() || '';
-        const nameB = b.full_name?.toLowerCase() || '';
-        
-        if (nameA.includes('chitrajeet upadhyaya')) return -1;
-        if (nameB.includes('chitrajeet upadhyaya')) return 1;
-        return nameA.localeCompare(nameB);
-      }) || [];
-    }
   });
 
   // Add district mutation
@@ -208,14 +185,10 @@ export const AddClientDialog: React.FC<AddClientDialogProps> = ({
       const selectedState = states.find(s => s.id === selectedStateId);
       const selectedDistrict = districts.find(d => d.id === data.district);
       
-      // Set primary lawyer (first selected) as assigned_lawyer_id
-      const primaryLawyerId = selectedLawyers.length > 0 ? selectedLawyers[0] : null;
-      
       const clientData = {
         ...data,
         state: selectedState?.name || data.state,
         district: selectedDistrict?.name || data.district,
-        assigned_lawyer_id: primaryLawyerId,
         firm_id: firmId,
         created_by: user?.id
       };
@@ -232,24 +205,6 @@ export const AddClientDialog: React.FC<AddClientDialogProps> = ({
 
       if (error) throw error;
 
-      // Create lawyer assignments for all selected lawyers
-      if (selectedLawyers.length > 0) {
-        const assignments = selectedLawyers.map(lawyerId => ({
-          client_id: newClient.id,
-          lawyer_id: lawyerId,
-          firm_id: firmId,
-          assigned_by: user?.id
-        }));
-        
-        const { error: assignmentError } = await supabase
-          .from('client_lawyer_assignments')
-          .insert(assignments);
-        
-        if (assignmentError) {
-          console.error('Error creating lawyer assignments:', assignmentError);
-        }
-      }
-
       toast({
         title: "Success",
         description: "Client added successfully. You can now create an engagement letter."
@@ -258,7 +213,6 @@ export const AddClientDialog: React.FC<AddClientDialogProps> = ({
       setNewClientId(newClient.id);
       reset();
       setSelectedStateId('');
-      setSelectedLawyers([]);
       setShowAddDistrict(false);
       setNewDistrictName('');
       setShowEngagementLetter(true);
@@ -477,36 +431,6 @@ export const AddClientDialog: React.FC<AddClientDialogProps> = ({
                 </SelectContent>
               </Select>
             )}
-          </div>
-
-          <div>
-            <Label>Assigned Lawyers</Label>
-            <div className="border rounded-lg p-4 space-y-2 max-h-48 overflow-y-auto">
-              {lawyers.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No lawyers available</p>
-              ) : (
-                lawyers.map(lawyer => (
-                  <div key={lawyer.id} className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id={`lawyer-${lawyer.id}`}
-                      checked={selectedLawyers.includes(lawyer.id)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedLawyers([...selectedLawyers, lawyer.id]);
-                        } else {
-                          setSelectedLawyers(selectedLawyers.filter(id => id !== lawyer.id));
-                        }
-                      }}
-                      className="h-4 w-4 rounded border-border"
-                    />
-                    <Label htmlFor={`lawyer-${lawyer.id}`} className="font-normal cursor-pointer">
-                      {lawyer.full_name}
-                    </Label>
-                  </div>
-                ))
-              )}
-            </div>
           </div>
 
           <div>

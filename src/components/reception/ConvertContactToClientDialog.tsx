@@ -75,12 +75,6 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
     firmId
   } = useAuth();
   const queryClient = useQueryClient();
-  const [lawyers, setLawyers] = React.useState<Array<{
-    id: string;
-    full_name: string;
-    role: string;
-  }>>([]);
-  const [selectedLawyers, setSelectedLawyers] = React.useState<string[]>([]);
   const [selectedStateId, setSelectedStateId] = React.useState<string>(contact.state_id || '');
   const [showAddDistrict, setShowAddDistrict] = React.useState(false);
   const [newDistrictName, setNewDistrictName] = React.useState('');
@@ -205,57 +199,6 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
       });
     }
   });
-  React.useEffect(() => {
-    const fetchLawyers = async () => {
-      if (!firmId) {
-        console.log('ConvertContactToClientDialog: No firm ID available');
-        return;
-      }
-      console.log('ConvertContactToClientDialog: Fetching lawyers for firm:', firmId);
-
-      // First, let's check what team members exist
-      const {
-        data: teamMembers,
-        error: teamError
-      } = await supabase.from('team_members').select('*').eq('firm_id', firmId);
-      console.log('ConvertContactToClientDialog: Team members:', {
-        teamMembers,
-        teamError
-      });
-
-      // Query team members and then get their profile info separately
-      const {
-        data: teamMembersData,
-        error: tmError
-      } = await supabase.from('team_members').select('user_id, role, full_name').eq('firm_id', firmId).in('role', ['lawyer', 'junior']);
-
-      // Sort to always show "chitrajeet upadhyaya" first
-      const sortedTeamMembers = teamMembersData?.sort((a, b) => {
-        const nameA = a.full_name?.toLowerCase() || '';
-        const nameB = b.full_name?.toLowerCase() || '';
-        if (nameA.includes('chitrajeet upadhyaya')) return -1;
-        if (nameB.includes('chitrajeet upadhyaya')) return 1;
-        return nameA.localeCompare(nameB);
-      }) || [];
-      console.log('ConvertContactToClientDialog: Team members query result:', {
-        sortedTeamMembers,
-        tmError
-      });
-      if (sortedTeamMembers && sortedTeamMembers.length > 0) {
-        const lawyers = sortedTeamMembers.map(tm => ({
-          id: tm.user_id,
-          full_name: tm.full_name,
-          role: tm.role
-        }));
-        console.log('ConvertContactToClientDialog: Processed lawyers:', lawyers);
-        setLawyers(lawyers);
-      } else {
-        console.log('ConvertContactToClientDialog: No team members found');
-        setLawyers([]);
-      }
-    };
-    fetchLawyers();
-  }, [firmId]);
   const convertMutation = useMutation({
     mutationFn: async (formData: ConvertContactFormData) => {
       console.log('🔥 ConvertContactToClientDialog: MUTATION STARTED - This should only happen when user clicks Convert!');
@@ -319,7 +262,6 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
           phone: formData.phone,
           address: clientAddress,
           organization: formData.organization,
-          assigned_lawyer_id: formData.assigned_lawyer_ids?.[0],
           firm_id: firmId,
           status: 'new',
           notes: finalNotes,
@@ -531,25 +473,6 @@ export const ConvertContactToClientDialog: React.FC<ConvertContactToClientDialog
             <div>
               <Label htmlFor="notes">Notes</Label>
               <Textarea id="notes" {...register('notes')} placeholder="Additional notes about the client" rows={3} />
-            </div>
-
-            <div>
-              <Label>Lawyers</Label>
-              <div className="space-y-2 max-h-48 overflow-y-auto border rounded-md p-3">
-                {lawyers.length === 0 ? <p className="text-sm text-muted-foreground">No lawyers found in your firm</p> : lawyers.map(lawyer => <div key={lawyer.id} className="flex items-center space-x-2">
-                      <Checkbox id={`lawyer-${lawyer.id}`} checked={selectedLawyers.includes(lawyer.id)} onCheckedChange={checked => {
-                  const newSelected = checked ? [...selectedLawyers, lawyer.id] : selectedLawyers.filter(id => id !== lawyer.id);
-                  setSelectedLawyers(newSelected);
-                  setValue('assigned_lawyer_ids', newSelected);
-                }} />
-                      <Label htmlFor={`lawyer-${lawyer.id}`} className="text-sm font-normal cursor-pointer flex-1">
-                        {lawyer.full_name} ({lawyer.role})
-                      </Label>
-                    </div>)}
-              </div>
-              {selectedLawyers.length > 0 && <p className="text-sm text-muted-foreground mt-2">
-                  {selectedLawyers.length} lawyer(s) selected
-                </p>}
             </div>
           </div>
 
