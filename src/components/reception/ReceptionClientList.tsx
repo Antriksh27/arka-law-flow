@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Search, Phone, Mail, Calendar, Edit, User, Star } from 'lucide-react';
 import { format } from 'date-fns';
 import { EditClientDialog } from '@/components/clients/EditClientDialog';
+import { useToast } from '@/hooks/use-toast';
 
 interface ReceptionClient {
   id: string;
@@ -26,6 +27,7 @@ interface ReceptionClient {
 
 const ReceptionClientList = () => {
   const { firmId } = useAuth();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClient, setSelectedClient] = useState<ReceptionClient | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -70,6 +72,33 @@ const ReceptionClientList = () => {
     setEditDialogOpen(false);
     setSelectedClient(null);
     refetch();
+  };
+
+  const handleToggleVIP = async (e: React.MouseEvent, clientId: string, currentVipStatus: boolean) => {
+    e.stopPropagation();
+    
+    try {
+      const { error } = await supabase
+        .from('clients')
+        .update({ is_vip: !currentVipStatus })
+        .eq('id', clientId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Client ${!currentVipStatus ? 'marked as VIP' : 'unmarked as VIP'}`,
+      });
+      
+      refetch();
+    } catch (error) {
+      console.error('Error toggling VIP status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update VIP status",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -162,14 +191,25 @@ const ReceptionClientList = () => {
                         </div>
                       </td>
                       <td className="py-3 px-4">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEditClient(client)}
-                        >
-                          <Edit className="w-3 h-3 mr-1" />
-                          Edit
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => handleToggleVIP(e, client.id, client.is_vip || false)}
+                            className={client.is_vip ? "text-yellow-600 hover:text-yellow-700" : "text-gray-400 hover:text-yellow-600"}
+                            title={client.is_vip ? "Remove VIP status" : "Mark as VIP"}
+                          >
+                            <Star className={client.is_vip ? "w-3 h-3 fill-yellow-400" : "w-3 h-3"} />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditClient(client)}
+                          >
+                            <Edit className="w-3 h-3 mr-1" />
+                            Edit
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}

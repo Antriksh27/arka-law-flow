@@ -21,6 +21,7 @@ import {
 import { Search, Eye, Phone, Mail, User, Star } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 interface Client {
   id: string;
@@ -36,6 +37,7 @@ interface Client {
 
 const OfficeStaffClientList = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [clients, setClients] = useState<Client[]>([]);
   const [filteredClients, setFilteredClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
@@ -116,6 +118,34 @@ const OfficeStaffClientList = () => {
 
   const handleClientClick = (clientId: string) => {
     window.location.href = `/staff/clients/${clientId}`;
+  };
+
+  const handleToggleVIP = async (e: React.MouseEvent, clientId: string, currentVipStatus: boolean) => {
+    e.stopPropagation();
+    
+    try {
+      const { error } = await supabase
+        .from('clients')
+        .update({ is_vip: !currentVipStatus })
+        .eq('id', clientId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Client ${!currentVipStatus ? 'marked as VIP' : 'unmarked as VIP'}`,
+      });
+      
+      // Refresh the client list
+      fetchClients();
+    } catch (error) {
+      console.error('Error toggling VIP status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update VIP status",
+        variant: "destructive",
+      });
+    }
   };
 
   if (loading) {
@@ -222,17 +252,28 @@ const OfficeStaffClientList = () => {
                         {new Date(client.created_at).toLocaleDateString()}
                       </TableCell>
                       <TableCell>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleClientClick(client.id);
-                          }}
-                        >
-                          <Eye className="w-4 h-4 mr-1" />
-                          View
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => handleToggleVIP(e, client.id, client.is_vip || false)}
+                            className={client.is_vip ? "text-yellow-600 hover:text-yellow-700" : "text-gray-400 hover:text-yellow-600"}
+                            title={client.is_vip ? "Remove VIP status" : "Mark as VIP"}
+                          >
+                            <Star className={client.is_vip ? "w-4 h-4 fill-yellow-400" : "w-4 h-4"} />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleClientClick(client.id);
+                            }}
+                          >
+                            <Eye className="w-4 h-4 mr-1" />
+                            View
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
