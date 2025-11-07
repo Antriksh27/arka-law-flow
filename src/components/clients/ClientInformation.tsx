@@ -166,60 +166,10 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
       
 
       {/* Assigned Lawyers */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Users className="w-5 h-5 text-blue-600" />
-            <CardTitle>Assigned Lawyers</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {primaryLawyer && (
-            <div className="flex items-center gap-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
-              <User className="w-4 h-4 text-primary" />
-              <div className="flex-1">
-                <p className="text-sm font-medium">
-                  {primaryLawyer.full_name}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Primary Lawyer
-                </p>
-              </div>
-            </div>
-          )}
-          
-          {assignedLawyers.map((assignment: any) => (
-            <div key={assignment.id} className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg border border-border/50">
-              <User className="w-4 h-4 text-muted-foreground" />
-              <div className="flex-1">
-                <p className="text-sm font-medium">
-                  {assignment.profiles?.full_name || 'Unknown'}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Assigned on {new Date(assignment.assigned_at).toLocaleDateString()}
-                </p>
-              </div>
-            </div>
-          ))}
-          
-          {!primaryLawyer && assignedLawyers.length === 0 && (
-            <p className="text-sm italic text-muted-foreground">No lawyers assigned yet</p>
-          )}
-        </CardContent>
-      </Card>
+      
 
       {/* Notes */}
-      {client.notes && <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <User className="w-5 h-5 text-blue-600" />
-              <CardTitle>Notes</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm whitespace-pre-wrap">{client.notes}</p>
-          </CardContent>
-        </Card>}
+      {client.notes}
 
       {/* Financial Details */}
       
