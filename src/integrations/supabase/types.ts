@@ -1249,6 +1249,7 @@ export type Database = {
           status: Database["public"]["Enums"]["client_status_enum"] | null
           total_billed_amount: number | null
           type: string | null
+          updated_at: string | null
         }
         Insert: {
           aadhaar_no?: string | null
@@ -1281,6 +1282,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["client_status_enum"] | null
           total_billed_amount?: number | null
           type?: string | null
+          updated_at?: string | null
         }
         Update: {
           aadhaar_no?: string | null
@@ -1313,6 +1315,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["client_status_enum"] | null
           total_billed_amount?: number | null
           type?: string | null
+          updated_at?: string | null
         }
         Relationships: [
           {

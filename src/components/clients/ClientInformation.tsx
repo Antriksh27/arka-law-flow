@@ -183,6 +183,7 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
         </CardHeader>
         <CardContent className="space-y-4">
           <InfoRow icon={Calendar} label="Created Date" value={client.created_at ? new Date(client.created_at).toLocaleDateString() : null} />
+          <InfoRow icon={Calendar} label="Last Edited Date" value={client.updated_at ? new Date(client.updated_at).toLocaleDateString() : null} />
         </CardContent>
       </Card>
     </div>;
