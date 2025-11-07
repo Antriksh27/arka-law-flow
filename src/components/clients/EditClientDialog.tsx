@@ -43,11 +43,12 @@ interface ClientFormData {
   organization?: string;
   address?: string;
   status: 'active' | 'inactive' | 'lead' | 'prospect' | 'new';
-  assigned_lawyer_id?: string;
+  assigned_lawyer_ids?: string[];
   notes?: string;
   type: string;
   state?: string;
   district?: string;
+  pin_code?: string;
   referred_by_name?: string;
   referred_by_phone?: string;
 }
@@ -62,6 +63,7 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
   const [clientType, setClientType] = useState<string>('Individual');
   const [selectedState, setSelectedState] = useState<string>('');
   const [selectedDistrict, setSelectedDistrict] = useState<string>('');
+  const [selectedLawyers, setSelectedLawyers] = useState<string[]>([]);
   
   const {
     register,
@@ -142,7 +144,6 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
         organization: client.organization || '',
         address: client.address || '',
         status: client.status,
-        assigned_lawyer_id: client.assigned_lawyer_id || '',
         notes: client.notes || '',
         type: clientTypeValue,
         state: client.state || '',
@@ -165,6 +166,25 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
       }
     }
   }, [client, reset, states]);
+
+  // Fetch existing lawyer assignments
+  useEffect(() => {
+    const fetchAssignments = async () => {
+      if (!client?.id) return;
+      
+      const { data } = await supabase
+        .from('client_lawyer_assignments')
+        .select('lawyer_id')
+        .eq('client_id', client.id);
+      
+      if (data) {
+        const lawyerIds = data.map(a => a.lawyer_id);
+        setSelectedLawyers(lawyerIds);
+      }
+    };
+    
+    fetchAssignments();
+  }, [client?.id]);
 
   const onSubmit = async (data: ClientFormData) => {
     try {
@@ -209,11 +229,14 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
       // Get district name from selected district
       const districtName = selectedDistrict || null;
 
+      // Set primary lawyer (first selected) as assigned_lawyer_id
+      const primaryLawyerId = selectedLawyers.length > 0 ? selectedLawyers[0] : null;
+
       const { error } = await supabase
         .from('clients')
         .update({
           ...data,
-          assigned_lawyer_id: data.assigned_lawyer_id || null,
+          assigned_lawyer_id: primaryLawyerId,
           type: data.type,
           state: stateName,
           district: districtName,
@@ -221,6 +244,34 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
         .eq('id', client.id);
 
       if (error) throw error;
+
+      // Update lawyer assignments
+      // First, delete existing assignments
+      await supabase
+        .from('client_lawyer_assignments')
+        .delete()
+        .eq('client_id', client.id);
+
+      // Then create new assignments
+      if (selectedLawyers.length > 0) {
+        const { data: firmData } = await supabase
+          .from('clients')
+          .select('firm_id')
+          .eq('id', client.id)
+          .single();
+
+        if (firmData) {
+          const assignments = selectedLawyers.map(lawyerId => ({
+            client_id: client.id,
+            lawyer_id: lawyerId,
+            firm_id: firmData.firm_id
+          }));
+          
+          await supabase
+            .from('client_lawyer_assignments')
+            .insert(assignments);
+        }
+      }
 
       toast({
         title: "Success",
@@ -370,46 +421,66 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
             </div>
 
             <div>
-              <Label htmlFor="district">District</Label>
-              <Select
-                value={selectedDistrict}
-                onValueChange={(value) => {
-                  setSelectedDistrict(value);
-                  setValue('district', value);
-                }}
-                disabled={!selectedState}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={selectedState ? "Select district..." : "Select state first"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {districts.map((district) => (
-                    <SelectItem key={district.id} value={district.name}>
-                      {district.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="pin_code">PIN Code</Label>
+              <Input
+                id="pin_code"
+                {...register('pin_code')}
+                placeholder="Enter PIN code"
+              />
             </div>
           </div>
 
           <div>
-            <Label htmlFor="assigned_lawyer_id">Assigned Lawyer</Label>
+            <Label htmlFor="district">District</Label>
             <Select
-              value={watch('assigned_lawyer_id') || ''}
-              onValueChange={(value) => setValue('assigned_lawyer_id', value)}
+              value={selectedDistrict}
+              onValueChange={(value) => {
+                setSelectedDistrict(value);
+                setValue('district', value);
+              }}
+              disabled={!selectedState}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select a lawyer..." />
+                <SelectValue placeholder={selectedState ? "Select district..." : "Select state first"} />
               </SelectTrigger>
               <SelectContent>
-                {lawyers.map((lawyer) => (
-                  <SelectItem key={lawyer.id} value={lawyer.id}>
-                    {lawyer.full_name}
+                {districts.map((district) => (
+                  <SelectItem key={district.id} value={district.name}>
+                    {district.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div>
+            <Label>Assigned Lawyers</Label>
+            <div className="border rounded-lg p-4 space-y-2 max-h-48 overflow-y-auto">
+              {lawyers.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No lawyers available</p>
+              ) : (
+                lawyers.map(lawyer => (
+                  <div key={lawyer.id} className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id={`lawyer-${lawyer.id}`}
+                      checked={selectedLawyers.includes(lawyer.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedLawyers([...selectedLawyers, lawyer.id]);
+                        } else {
+                          setSelectedLawyers(selectedLawyers.filter(id => id !== lawyer.id));
+                        }
+                      }}
+                      className="h-4 w-4 rounded border-border"
+                    />
+                    <Label htmlFor={`lawyer-${lawyer.id}`} className="font-normal cursor-pointer">
+                      {lawyer.full_name}
+                    </Label>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
 
           <div>
