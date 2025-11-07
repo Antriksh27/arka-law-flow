@@ -23,6 +23,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 import { Plus } from 'lucide-react';
 
 interface EditContactDialogProps {
@@ -33,6 +35,7 @@ interface EditContactDialogProps {
 
 interface ContactFormData {
   name: string;
+  type: 'Individual' | 'Organization';
   organization?: string;
   email?: string;
   phone?: string;
@@ -45,6 +48,10 @@ interface ContactFormData {
   district_id?: string;
   referred_by_name?: string;
   referred_by_phone?: string;
+  designation?: string;
+  company_address?: string;
+  company_phone?: string;
+  company_email?: string;
 }
 
 export const EditContactDialog: React.FC<EditContactDialogProps> = ({ open, onOpenChange, contact }) => {
@@ -87,6 +94,7 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({ open, onOp
   const form = useForm<ContactFormData>({
     defaultValues: {
       name: '',
+      type: 'Individual',
       organization: '',
       email: '',
       phone: '',
@@ -99,6 +107,10 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({ open, onOp
       district_id: '',
       referred_by_name: '',
       referred_by_phone: '',
+      designation: '',
+      company_address: '',
+      company_phone: '',
+      company_email: '',
     },
   });
 
@@ -107,6 +119,7 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({ open, onOp
     if (contact) {
       form.reset({
         name: contact.name || '',
+        type: contact.type || 'Individual',
         organization: contact.organization || '',
         email: contact.email || '',
         phone: contact.phone || '',
@@ -119,6 +132,10 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({ open, onOp
         district_id: contact.district_id || '',
         referred_by_name: contact.referred_by_name || '',
         referred_by_phone: contact.referred_by_phone || '',
+        designation: contact.designation || '',
+        company_address: contact.company_address || '',
+        company_phone: contact.company_phone || '',
+        company_email: contact.company_email || '',
       });
       setSelectedStateId(contact.state_id || '');
     }
@@ -170,6 +187,7 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({ open, onOp
         .from('contacts')
         .update({
           name: data.name,
+          type: data.type,
           organization: data.organization || null,
           email: data.email || null,
           phone: data.phone || null,
@@ -182,6 +200,10 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({ open, onOp
           district_id: data.district_id || null,
           referred_by_name: data.referred_by_name || null,
           referred_by_phone: data.referred_by_phone || null,
+          designation: data.designation || null,
+          company_address: data.company_address || null,
+          company_phone: data.company_phone || null,
+          company_email: data.company_email || null,
           updated_at: new Date().toISOString()
         })
         .eq('id', contact.id);
@@ -236,15 +258,28 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({ open, onOp
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 mt-4">
+            {/* Contact Type Selection */}
             <FormField
               control={form.control}
-              name="name"
-              rules={{ required: "Name is required" }}
+              name="type"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name *</FormLabel>
+                  <FormLabel>Contact Type *</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter contact name" {...field} />
+                    <RadioGroup
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      className="flex gap-4 mt-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="Individual" id="individual-edit" />
+                        <Label htmlFor="individual-edit" className="font-normal cursor-pointer">Individual</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="Organization" id="organization-edit" />
+                        <Label htmlFor="organization-edit" className="font-normal cursor-pointer">Organization</Label>
+                      </div>
+                    </RadioGroup>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -253,17 +288,53 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({ open, onOp
 
             <FormField
               control={form.control}
-              name="organization"
+              name="name"
+              rules={{ required: "Name is required" }}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Organization</FormLabel>
+                  <FormLabel>
+                    {form.watch('type') === 'Organization' ? 'Contact Person Name' : 'Name'} *
+                  </FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter organization/company name" {...field} />
+                    <Input placeholder="Enter contact name" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+            {form.watch('type') === 'Organization' && (
+              <FormField
+                control={form.control}
+                name="organization"
+                rules={{ required: form.watch('type') === 'Organization' ? "Organization name is required" : false }}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Organization Name *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter organization/company name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {form.watch('type') === 'Organization' && (
+              <FormField
+                control={form.control}
+                name="designation"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Designation</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter designation in company" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <FormField
@@ -302,6 +373,64 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({ open, onOp
                 )}
               />
             </div>
+
+            {/* Business Information - Only for Organization */}
+            {form.watch('type') === 'Organization' && (
+              <>
+                <FormField
+                  control={form.control}
+                  name="company_phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Company Phone</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="tel" 
+                          placeholder="Enter company phone number" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="company_email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Company Email</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="email" 
+                          placeholder="Enter company email address" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="company_address"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Company Address</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Enter company address" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
+            )}
 
             <FormField
               control={form.control}

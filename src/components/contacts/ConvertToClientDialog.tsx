@@ -83,6 +83,10 @@ export const ConvertToClientDialog = ({
 
       // Combine notes
       const combinedNotes = [contact.notes, contact.visit_purpose].filter(Boolean).join('\n\n');
+      
+      // Use contact.type if available, otherwise fallback to checking organization
+      const contactType = contact.type || (contact.organization ? 'Corporate' : 'Individual');
+      
       setValue('full_name', contact.name || '');
       setValue('email', contact.email || '');
       setValue('phone', contact.phone || '');
@@ -92,8 +96,15 @@ export const ConvertToClientDialog = ({
       setValue('referred_by_name', contact.referred_by_name || '');
       setValue('referred_by_phone', contact.referred_by_phone || '');
       setValue('notes', combinedNotes);
-      setValue('type', contact.organization ? 'Corporate' : 'Individual');
+      setValue('type', contactType);
       setValue('status', 'lead');
+      
+      // Business/Organization fields
+      setValue('designation', contact.designation || '');
+      setValue('company_address', contact.company_address || '');
+      setValue('company_phone', contact.company_phone || '');
+      setValue('company_email', contact.company_email || '');
+      
       if (contact.state_id) {
         setSelectedStateId(contact.state_id);
       }

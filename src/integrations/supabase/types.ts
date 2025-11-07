@@ -1349,8 +1349,12 @@ export type Database = {
         Row: {
           address_line_1: string | null
           address_line_2: string | null
+          company_address: string | null
+          company_email: string | null
+          company_phone: string | null
           created_at: string | null
           created_by: string | null
+          designation: string | null
           district_id: string | null
           email: string | null
           firm_id: string | null
@@ -1364,14 +1368,19 @@ export type Database = {
           referred_by_name: string | null
           referred_by_phone: string | null
           state_id: string | null
+          type: string | null
           updated_at: string | null
           visit_purpose: string | null
         }
         Insert: {
           address_line_1?: string | null
           address_line_2?: string | null
+          company_address?: string | null
+          company_email?: string | null
+          company_phone?: string | null
           created_at?: string | null
           created_by?: string | null
+          designation?: string | null
           district_id?: string | null
           email?: string | null
           firm_id?: string | null
@@ -1385,14 +1394,19 @@ export type Database = {
           referred_by_name?: string | null
           referred_by_phone?: string | null
           state_id?: string | null
+          type?: string | null
           updated_at?: string | null
           visit_purpose?: string | null
         }
         Update: {
           address_line_1?: string | null
           address_line_2?: string | null
+          company_address?: string | null
+          company_email?: string | null
+          company_phone?: string | null
           created_at?: string | null
           created_by?: string | null
+          designation?: string | null
           district_id?: string | null
           email?: string | null
           firm_id?: string | null
@@ -1406,6 +1420,7 @@ export type Database = {
           referred_by_name?: string | null
           referred_by_phone?: string | null
           state_id?: string | null
+          type?: string | null
           updated_at?: string | null
           visit_purpose?: string | null
         }
