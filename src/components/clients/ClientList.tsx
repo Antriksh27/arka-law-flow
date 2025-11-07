@@ -52,30 +52,35 @@ export const ClientList = () => {
     error,
     refetch
   } = useQuery({
-    queryKey: ['clients', searchTerm, statusFilter, page],
+    queryKey: ['clients', searchTerm, statusFilter, page, sortField, sortDirection],
     queryFn: async () => {
       console.log('Fetching clients...');
       try {
         const startIndex = (page - 1) * pageSize;
         const endIndex = startIndex + pageSize - 1;
 
-        // First try to get from client_stats view with pagination
+        // Map sort field to database column
+        const dbSortField = sortField === 'name' ? 'full_name' : 
+                           sortField === 'active_cases' ? 'active_case_count' : 
+                           sortField;
+
+        // First try to get from client_stats view with pagination and sorting
         let {
           data,
           error,
           count
         } = await supabase.from('client_stats').select('*', {
           count: 'exact'
-        }).order('created_at', {
-          ascending: false
+        }).order(dbSortField, {
+          ascending: sortDirection === 'asc'
         }).range(startIndex, endIndex);
         if (error) {
           console.log('client_stats view failed, trying clients table:', error);
-          // Fallback to clients table with pagination
+          // Fallback to clients table with pagination and sorting
           const result = await supabase.from('clients').select('*', {
             count: 'exact'
-          }).order('created_at', {
-            ascending: false
+          }).order(dbSortField === 'active_case_count' ? 'created_at' : dbSortField, {
+            ascending: sortDirection === 'asc'
           }).range(startIndex, endIndex);
           if (result.error) throw result.error;
 
@@ -106,44 +111,8 @@ export const ClientList = () => {
       }
     }
   });
-  const rawClients = queryResult?.clients || [];
+  const clients = queryResult?.clients || [];
   const totalCount = queryResult?.totalCount || 0;
-
-  // Sort clients based on current sort field and direction
-  const clients = useMemo(() => {
-    if (!rawClients.length) return [];
-    const sorted = [...rawClients].sort((a, b) => {
-      let aValue: any, bValue: any;
-      switch (sortField) {
-        case 'name':
-          aValue = a.full_name?.toLowerCase() || '';
-          bValue = b.full_name?.toLowerCase() || '';
-          break;
-        case 'status':
-          aValue = a.status || '';
-          bValue = b.status || '';
-          break;
-        case 'created_at':
-          aValue = new Date(a.created_at);
-          bValue = new Date(b.created_at);
-          break;
-        case 'active_cases':
-          aValue = a.active_case_count || 0;
-          bValue = b.active_case_count || 0;
-          break;
-        case 'email':
-          aValue = a.email?.toLowerCase() || '';
-          bValue = b.email?.toLowerCase() || '';
-          break;
-        default:
-          return 0;
-      }
-      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
-      return 0;
-    });
-    return sorted;
-  }, [rawClients, sortField, sortDirection]);
   const handleSort = (field: SortField) => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -151,6 +120,16 @@ export const ClientList = () => {
       setSortField(field);
       setSortDirection('asc');
     }
+    setPage(1); // Reset to first page when sorting
+  };
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="w-3 h-3 opacity-40" />;
+    }
+    return sortDirection === 'asc' ? 
+      <ArrowUpDown className="w-3 h-3 rotate-180" /> : 
+      <ArrowUpDown className="w-3 h-3" />;
   };
   const handleDeleteClient = async (clientId: string) => {
     try {
@@ -240,27 +219,27 @@ export const ClientList = () => {
             <TableHeader>
               <TableRow>
                 <TableHead className="bg-slate-800 text-white">
-                  <button onClick={() => handleSort('name')} className="flex items-center gap-1 hover:text-gray-200">
+                  <button onClick={() => handleSort('name')} className="flex items-center gap-1 hover:text-gray-200 font-semibold">
                     Client Name
-                    <ArrowUpDown className="w-3 h-3" />
+                    <SortIcon field="name" />
                   </button>
                 </TableHead>
                 <TableHead className="bg-slate-800 text-white">
-                  <button onClick={() => handleSort('email')} className="flex items-center gap-1 hover:text-gray-200">
+                  <button onClick={() => handleSort('email')} className="flex items-center gap-1 hover:text-gray-200 font-semibold">
                     Contact
-                    <ArrowUpDown className="w-3 h-3" />
+                    <SortIcon field="email" />
                   </button>
                 </TableHead>
                 <TableHead className="bg-slate-800 text-white">
-                  <button onClick={() => handleSort('status')} className="flex items-center gap-1 hover:text-gray-200">
+                  <button onClick={() => handleSort('status')} className="flex items-center gap-1 hover:text-gray-200 font-semibold">
                     Status
-                    <ArrowUpDown className="w-3 h-3" />
+                    <SortIcon field="status" />
                   </button>
                 </TableHead>
                 <TableHead className="bg-slate-800 text-white">
-                  <button onClick={() => handleSort('active_cases')} className="flex items-center gap-1 hover:text-gray-200">
+                  <button onClick={() => handleSort('active_cases')} className="flex items-center gap-1 hover:text-gray-200 font-semibold">
                     Active Cases
-                    <ArrowUpDown className="w-3 h-3" />
+                    <SortIcon field="active_cases" />
                   </button>
                 </TableHead>
                 <TableHead className="bg-slate-800 text-white">Actions</TableHead>
