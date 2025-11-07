@@ -6,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { convertContactSchema, ConvertContactFormData } from '@/lib/convertContactValidation';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -14,17 +14,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { UserPlus, ArrowRight, ArrowLeft, CheckCircle2, Plus } from 'lucide-react';
+import { UserPlus, Plus } from 'lucide-react';
 
 interface ConvertToClientDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   contact: any;
 }
-
-type ConversionStep = 'preview' | 'form' | 'confirm';
 
 export const ConvertToClientDialog = ({
   open,
@@ -34,7 +31,6 @@ export const ConvertToClientDialog = ({
   const { user, firmId } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [currentStep, setCurrentStep] = useState<ConversionStep>('preview');
   const [selectedStateId, setSelectedStateId] = useState<string>('');
   const [showAddDistrict, setShowAddDistrict] = useState(false);
   const [newDistrictName, setNewDistrictName] = useState('');
@@ -123,7 +119,6 @@ export const ConvertToClientDialog = ({
       });
       
       setSelectedStateId(contact.state_id || '');
-      setCurrentStep('preview');
     }
   }, [contact, open, form]);
 
@@ -206,7 +201,7 @@ export const ConvertToClientDialog = ({
         noteParts.push(formData.notes.trim());
       }
       
-      if (contact.visit_purpose) {
+      if (contact.visit_purpose && contact.visit_purpose !== formData.case_ref) {
         noteParts.push(`\n--- Original Visit Purpose ---\n${contact.visit_purpose}`);
       }
       
@@ -270,7 +265,6 @@ export const ConvertToClientDialog = ({
       queryClient.invalidateQueries({ queryKey: ['reception-contacts'] });
       
       onOpenChange(false);
-      setCurrentStep('preview');
     },
     onError: (error: any) => {
       console.error('Error converting contact:', error);
@@ -300,670 +294,478 @@ export const ConvertToClientDialog = ({
 
   if (!contact) return null;
 
-  const stateName = states.find(s => s.id === contact.state_id)?.name;
-  const districtName = districts.find(d => d.id === contact.district_id)?.name;
-  const addressParts = [contact.address_line_1, contact.address_line_2].filter(Boolean);
-  const displayAddress = addressParts.length > 0 ? addressParts.join(', ') : 'N/A';
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <UserPlus className="h-5 w-5 text-primary" />
             Convert Contact to Client
           </DialogTitle>
           <DialogDescription>
-            {currentStep === 'preview' && 'Review contact information before proceeding'}
-            {currentStep === 'form' && 'Complete client information'}
-            {currentStep === 'confirm' && 'Confirm conversion'}
+            Review and complete the information below to convert this contact to a client
           </DialogDescription>
         </DialogHeader>
 
-        {/* Step Indicator */}
-        <div className="flex items-center justify-center gap-2 py-4">
-          <div className={`flex items-center gap-2 ${currentStep === 'preview' ? 'text-primary' : 'text-muted-foreground'}`}>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${currentStep === 'preview' ? 'border-primary bg-primary/10' : 'border-muted'}`}>
-              1
-            </div>
-            <span className="text-sm font-medium hidden sm:inline">Preview</span>
-          </div>
-          <ArrowRight className="w-4 h-4 text-muted-foreground" />
-          <div className={`flex items-center gap-2 ${currentStep === 'form' ? 'text-primary' : 'text-muted-foreground'}`}>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${currentStep === 'form' ? 'border-primary bg-primary/10' : 'border-muted'}`}>
-              2
-            </div>
-            <span className="text-sm font-medium hidden sm:inline">Complete Info</span>
-          </div>
-          <ArrowRight className="w-4 h-4 text-muted-foreground" />
-          <div className={`flex items-center gap-2 ${currentStep === 'confirm' ? 'text-primary' : 'text-muted-foreground'}`}>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${currentStep === 'confirm' ? 'border-primary bg-primary/10' : 'border-muted'}`}>
-              3
-            </div>
-            <span className="text-sm font-medium hidden sm:inline">Confirm</span>
-          </div>
-        </div>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 mt-4">
+            {/* Contact Type */}
+            <FormField
+              control={form.control}
+              name="type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Client Type *</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      className="flex gap-4"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="Individual" id="type-individual" />
+                        <Label htmlFor="type-individual" className="font-normal cursor-pointer">
+                          Individual
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="Organization" id="type-organization" />
+                        <Label htmlFor="type-organization" className="font-normal cursor-pointer">
+                          Organization
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <Separator />
+            <Separator />
 
-        {/* Preview Step */}
-        {currentStep === 'preview' && (
-          <div className="space-y-6 py-4">
-            <div className="bg-accent/50 rounded-lg p-6">
-              <h3 className="text-lg font-semibold mb-4">Contact Summary</h3>
+            {/* Basic Information */}
+            <div className="space-y-4">
+              <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3">Basic Information</h3>
               
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <Label className="text-muted-foreground">Name</Label>
-                  <p className="font-medium mt-1">{contact.name}</p>
-                </div>
-                
-                <div>
-                  <Label className="text-muted-foreground">Type</Label>
-                  <Badge variant="outline" className="mt-1">
-                    {contact.type || (contact.organization ? 'Organization' : 'Individual')}
-                  </Badge>
-                </div>
-
-                {contact.organization && (
-                  <div className="col-span-2">
-                    <Label className="text-muted-foreground">Organization</Label>
-                    <p className="font-medium mt-1">{contact.organization}</p>
-                  </div>
-                )}
-
-                <div>
-                  <Label className="text-muted-foreground">Email</Label>
-                  <p className="font-medium mt-1">{contact.email || 'Not provided'}</p>
-                </div>
-
-                <div>
-                  <Label className="text-muted-foreground">Phone</Label>
-                  <p className="font-medium mt-1">{contact.phone || 'Not provided'}</p>
-                </div>
-
-                <div className="col-span-2">
-                  <Label className="text-muted-foreground">Address</Label>
-                  <p className="font-medium mt-1">{displayAddress}</p>
-                  {stateName && (
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {districtName && `${districtName}, `}{stateName}
-                      {contact.pin_code && ` - ${contact.pin_code}`}
-                    </p>
-                  )}
-                </div>
-
-                {contact.visit_purpose && (
-                  <div className="col-span-2">
-                    <Label className="text-muted-foreground">Purpose of Visit</Label>
-                    <p className="font-medium mt-1">{contact.visit_purpose}</p>
-                  </div>
-                )}
-
-                {(contact.referred_by_name || contact.referred_by_phone) && (
-                  <div className="col-span-2">
-                    <Label className="text-muted-foreground">Referred By</Label>
-                    <p className="font-medium mt-1">
-                      {contact.referred_by_name}
-                      {contact.referred_by_phone && ` (${contact.referred_by_phone})`}
-                    </p>
-                  </div>
-                )}
-
-                {contact.notes && (
-                  <div className="col-span-2">
-                    <Label className="text-muted-foreground">Notes</Label>
-                    <p className="text-sm mt-1 whitespace-pre-wrap">{contact.notes}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-3">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel
-              </Button>
-              <Button type="button" onClick={() => setCurrentStep('form')}>
-                Continue
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* Form Step */}
-        {currentStep === 'form' && (
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(() => setCurrentStep('confirm'))} className="space-y-6 py-4">
-              {/* Contact Type */}
               <FormField
                 control={form.control}
-                name="type"
+                name="full_name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Client Type *</FormLabel>
+                    <FormLabel>
+                      {form.watch('type') === 'Organization' ? 'Contact Person Name' : 'Full Name'} *
+                    </FormLabel>
                     <FormControl>
-                      <RadioGroup
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        className="flex gap-4"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="Individual" id="type-individual" />
-                          <Label htmlFor="type-individual" className="font-normal cursor-pointer">
-                            Individual
-                          </Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="Organization" id="type-organization" />
-                          <Label htmlFor="type-organization" className="font-normal cursor-pointer">
-                            Organization
-                          </Label>
-                        </div>
-                      </RadioGroup>
+                      <Input {...field} placeholder="Enter full name" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+            </div>
 
-              {/* Basic Information */}
-              <div className="space-y-4">
-                <h3 className="text-base font-semibold border-b pb-2">Basic Information</h3>
-                
-                <FormField
-                  control={form.control}
-                  name="full_name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        {form.watch('type') === 'Organization' ? 'Contact Person Name' : 'Full Name'} *
-                      </FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Enter full name" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+            {/* Organization Details - Only for Organization */}
+            {form.watch('type') === 'Organization' && (
+              <>
+                <Separator />
+                <div className="space-y-4">
+                  <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3">Organization Details</h3>
+                  
+                  <FormField
+                    control={form.control}
+                    name="organization"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Organization Name *</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Enter organization name" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                {form.watch('type') === 'Organization' && (
-                  <>
+                  <FormField
+                    control={form.control}
+                    name="designation"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Designation</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Enter designation" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="company_address"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Company Address</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Enter company address" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
-                      name="organization"
+                      name="company_phone"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Organization Name *</FormLabel>
+                          <FormLabel>Company Phone</FormLabel>
                           <FormControl>
-                            <Input {...field} placeholder="Enter organization name" />
+                            <Input {...field} placeholder="Enter company phone" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="designation"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Designation</FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="Enter designation" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="company_address"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Company Address</FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="Enter company address" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="company_phone"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Company Phone</FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="Enter company phone" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="company_email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Company Email</FormLabel>
-                            <FormControl>
-                              <Input {...field} type="email" placeholder="Enter company email" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {/* Contact Details */}
-              <div className="space-y-4">
-                <h3 className="text-base font-semibold border-b pb-2">
-                  {form.watch('type') === 'Organization' ? 'Contact Person Details' : 'Contact Details'}
-                </h3>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="email" placeholder="Enter email" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Phone</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="Enter phone number" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-
-              {/* Address Information */}
-              <div className="space-y-4">
-                <h3 className="text-base font-semibold border-b pb-2">Address Information</h3>
-                
-                <FormField
-                  control={form.control}
-                  name="address_line_1"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Address Line 1</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Enter address line 1" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="address_line_2"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Address Line 2</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Enter address line 2" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="grid grid-cols-3 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="city"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>City</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="Enter city" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="state_id"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>State</FormLabel>
-                        <Select
-                          value={field.value}
-                          onValueChange={(value) => {
-                            field.onChange(value);
-                            setSelectedStateId(value);
-                            form.setValue('district_id', '');
-                          }}
-                        >
+                    <FormField
+                      control={form.control}
+                      name="company_email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Company Email</FormLabel>
                           <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select state" />
-                            </SelectTrigger>
+                            <Input {...field} type="email" placeholder="Enter company email" />
                           </FormControl>
-                          <SelectContent>
-                            {states.map((state) => (
-                              <SelectItem key={state.id} value={state.id}>
-                                {state.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="pin_code"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>PIN Code</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="6 digits" maxLength={6} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="district_id"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>District</FormLabel>
-                      {showAddDistrict ? (
-                        <div className="flex gap-2">
-                          <Input
-                            placeholder="Enter district name"
-                            value={newDistrictName}
-                            onChange={(e) => setNewDistrictName(e.target.value)}
-                          />
-                          <Button
-                            type="button"
-                            onClick={handleAddDistrict}
-                            disabled={addDistrictMutation.isPending}
-                            size="sm"
-                          >
-                            {addDistrictMutation.isPending ? 'Adding...' : 'Add'}
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => {
-                              setShowAddDistrict(false);
-                              setNewDistrictName('');
-                            }}
-                            size="sm"
-                          >
-                            Cancel
-                          </Button>
-                        </div>
-                      ) : (
-                        <Select
-                          value={field.value}
-                          onValueChange={(value) => {
-                            if (value === 'add_new') {
-                              setShowAddDistrict(true);
-                            } else {
-                              field.onChange(value);
-                            }
-                          }}
-                          disabled={!selectedStateId}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder={!selectedStateId ? "Select state first" : "Select district"} />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {districts.map((district) => (
-                              <SelectItem key={district.id} value={district.id}>
-                                {district.name}
-                              </SelectItem>
-                            ))}
-                            {selectedStateId && (
-                              <SelectItem value="add_new" className="border-t">
-                                <div className="flex items-center gap-2">
-                                  <Plus className="h-4 w-4" />
-                                  Add New District
-                                </div>
-                              </SelectItem>
-                            )}
-                          </SelectContent>
-                        </Select>
+                          <FormMessage />
+                        </FormItem>
                       )}
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              {/* Referral Information */}
-              <div className="space-y-4">
-                <h3 className="text-base font-semibold border-b pb-2">Referral Information</h3>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="referred_by_name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Referred By Name</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="Enter referrer name" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="referred_by_phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Referred By Phone</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="Enter referrer phone" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    />
+                  </div>
                 </div>
-              </div>
+              </>
+            )}
 
-              {/* Additional Information */}
-              <div className="space-y-4">
-                <h3 className="text-base font-semibold border-b pb-2">Additional Information</h3>
-                
-                <FormField
-                  control={form.control}
-                  name="case_ref"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Case Reference / Matter</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Enter case reference or matter type" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+            <Separator />
 
-                <FormField
-                  control={form.control}
-                  name="office_notes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Office Notes
-                        <span className="text-xs text-muted-foreground ml-2">(Visible to staff only)</span>
-                      </FormLabel>
-                      <FormControl>
-                        <Textarea
-                          {...field}
-                          rows={4}
-                          placeholder="Add internal notes visible to office staff only..."
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>General Notes</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          {...field}
-                          rows={4}
-                          placeholder="Add general notes about the client..."
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="flex justify-between pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setCurrentStep('preview')}
-                >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back
-                </Button>
-                <Button type="submit">
-                  Review & Confirm
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </div>
-            </form>
-          </Form>
-        )}
-
-        {/* Confirm Step */}
-        {currentStep === 'confirm' && (
-          <div className="space-y-6 py-4">
-            <div className="bg-accent/50 rounded-lg p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <CheckCircle2 className="w-6 h-6 text-primary" />
-                <h3 className="text-lg font-semibold">Ready to Convert</h3>
-              </div>
+            {/* Contact Details */}
+            <div className="space-y-4">
+              <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3">
+                {form.watch('type') === 'Organization' ? 'Contact Person Details' : 'Contact Details'}
+              </h3>
               
-              <p className="text-sm text-muted-foreground mb-4">
-                Please review the information below before converting this contact to a client.
-                This action cannot be undone.
-              </p>
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="email" placeholder="Enter email" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Name:</span>
-                  <span className="font-medium">{form.getValues('full_name')}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Type:</span>
-                  <Badge variant="outline">{form.getValues('type')}</Badge>
-                </div>
-                {form.getValues('organization') && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Organization:</span>
-                    <span className="font-medium">{form.getValues('organization')}</span>
-                  </div>
-                )}
-                {form.getValues('email') && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Email:</span>
-                    <span className="font-medium">{form.getValues('email')}</span>
-                  </div>
-                )}
-                {form.getValues('phone') && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Phone:</span>
-                    <span className="font-medium">{form.getValues('phone')}</span>
-                  </div>
-                )}
-                {form.getValues('case_ref') && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Case Reference:</span>
-                    <span className="font-medium">{form.getValues('case_ref')}</span>
-                  </div>
-                )}
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Enter phone number" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
-
-              {form.getValues('office_notes') && (
-                <div className="mt-4 pt-4 border-t">
-                  <Label className="text-muted-foreground">Office Notes</Label>
-                  <p className="text-sm mt-1 whitespace-pre-wrap">
-                    {form.getValues('office_notes')}
-                  </p>
-                </div>
-              )}
             </div>
 
-            <div className="flex justify-between">
+            <Separator />
+
+            {/* Address Information */}
+            <div className="space-y-4">
+              <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3">Address Information</h3>
+              
+              <FormField
+                control={form.control}
+                name="address_line_1"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Address Line 1</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Enter address line 1" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="address_line_2"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Address Line 2</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Enter address line 2" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-3 gap-4">
+                <FormField
+                  control={form.control}
+                  name="city"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>City</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Enter city" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="state_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>State</FormLabel>
+                      <Select
+                        value={field.value}
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          setSelectedStateId(value);
+                          form.setValue('district_id', '');
+                        }}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select state" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {states.map((state) => (
+                            <SelectItem key={state.id} value={state.id}>
+                              {state.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="pin_code"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>PIN Code</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="6 digits" maxLength={6} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="district_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>District</FormLabel>
+                    {showAddDistrict ? (
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Enter district name"
+                          value={newDistrictName}
+                          onChange={(e) => setNewDistrictName(e.target.value)}
+                        />
+                        <Button
+                          type="button"
+                          onClick={handleAddDistrict}
+                          disabled={addDistrictMutation.isPending}
+                          size="sm"
+                        >
+                          {addDistrictMutation.isPending ? 'Adding...' : 'Add'}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            setShowAddDistrict(false);
+                            setNewDistrictName('');
+                          }}
+                          size="sm"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    ) : (
+                      <Select
+                        value={field.value}
+                        onValueChange={(value) => {
+                          if (value === 'add_new') {
+                            setShowAddDistrict(true);
+                          } else {
+                            field.onChange(value);
+                          }
+                        }}
+                        disabled={!selectedStateId}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={!selectedStateId ? "Select state first" : "Select district"} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {districts.map((district) => (
+                            <SelectItem key={district.id} value={district.id}>
+                              {district.name}
+                            </SelectItem>
+                          ))}
+                          {selectedStateId && (
+                            <SelectItem value="add_new" className="border-t">
+                              <div className="flex items-center gap-2">
+                                <Plus className="h-4 w-4" />
+                                Add New District
+                              </div>
+                            </SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    )}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <Separator />
+
+            {/* Referral Information */}
+            <div className="space-y-4">
+              <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3">Referral Information</h3>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="referred_by_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Referred By Name</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Enter referrer name" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="referred_by_phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Referred By Phone</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Enter referrer phone" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Additional Information */}
+            <div className="space-y-4">
+              <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3">Additional Information</h3>
+              
+              <FormField
+                control={form.control}
+                name="case_ref"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Purpose of Visit / Case Reference</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Enter purpose of visit or case reference" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="office_notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Office Notes
+                      <span className="text-xs text-muted-foreground ml-2">(Visible to staff only)</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Textarea
+                        {...field}
+                        rows={3}
+                        placeholder="Add internal notes visible to office staff only..."
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>General Notes</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        {...field}
+                        rows={3}
+                        placeholder="Add general notes about the client..."
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <DialogFooter className="mt-6 pt-4 border-t">
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setCurrentStep('form')}
+                onClick={() => onOpenChange(false)}
                 disabled={convertMutation.isPending}
               >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back
+                Cancel
               </Button>
-              <Button
-                onClick={form.handleSubmit(onSubmit)}
-                disabled={convertMutation.isPending}
-              >
-                {convertMutation.isPending ? (
-                  <>Converting...</>
-                ) : (
-                  <>
-                    <CheckCircle2 className="w-4 h-4 mr-2" />
-                    Convert to Client
-                  </>
-                )}
+              <Button type="submit" disabled={convertMutation.isPending}>
+                {convertMutation.isPending ? 'Converting...' : 'Convert to Client'}
               </Button>
-            </div>
-          </div>
-        )}
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
