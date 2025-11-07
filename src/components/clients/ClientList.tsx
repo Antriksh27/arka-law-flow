@@ -28,7 +28,7 @@ interface Client {
   created_at: string;
   is_vip?: boolean;
 }
-type StatusFilter = 'all' | 'active' | 'inactive' | 'lead' | 'prospect' | 'new' | 'vip';
+type StatusFilter = 'all' | 'active' | 'inactive' | 'lead' | 'prospect' | 'new';
 type SortField = 'name' | 'status' | 'created_at' | 'active_cases' | 'email';
 type SortDirection = 'asc' | 'desc';
 type TabFilter = 'all' | 'vip';
@@ -152,7 +152,7 @@ export const ClientList = () => {
           filteredData = filteredData.filter(client => client.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || client.email?.toLowerCase().includes(searchTerm.toLowerCase()));
         }
         
-        if (statusFilter !== 'all' && statusFilter !== 'vip') {
+        if (statusFilter !== 'all') {
           filteredData = filteredData.filter(client => client.status === statusFilter);
         }
         console.log('Fetched clients:', filteredData);
@@ -358,14 +358,6 @@ export const ClientList = () => {
                 className={statusFilter === 'inactive' ? 'bg-accent' : ''}
               >
                 Inactive
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                onClick={() => setStatusFilter('vip')}
-                className={statusFilter === 'vip' ? 'bg-accent' : ''}
-              >
-                <Star className="w-4 h-4 mr-2 fill-yellow-400 text-yellow-400" />
-                VIP Clients
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
