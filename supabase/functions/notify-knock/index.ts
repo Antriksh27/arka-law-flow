@@ -24,6 +24,28 @@ serve(async (req) => {
 
     console.log("[notify-knock] Incoming DB event:", { table, eventType, recordId: record?.id });
 
+    // Idempotency guard: de-duplicate duplicate trigger invocations
+    const eventKey = `${table}:${eventType}:${record?.id ?? 'no-id'}`;
+    try {
+      const { error: dedupError } = await supabase
+        .from('notification_dedup')
+        .insert({ event_key: eventKey });
+
+      if (dedupError) {
+        // Unique violation means we've already processed this event key
+        // Postgres code 23505 or duplicate key in message
+        const code = (dedupError as any).code;
+        const msg = (dedupError as any).message || '';
+        if (code === '23505' || msg.includes('duplicate key')) {
+          console.log('[notify-knock] Skipping duplicate event via dedup table', { eventKey });
+          return jsonResponse({ status: 'skipped', reason: 'duplicate_event', eventKey });
+        }
+        console.warn('[notify-knock] Dedup insert error (non-unique)', { error: dedupError, eventKey });
+      }
+    } catch (e) {
+      console.warn('[notify-knock] Dedup insert threw, proceeding defensively', { eventKey, error: (e as Error).message });
+    }
+
     // Construct message and payload FIRST to decide if we should skip
     const { subject, body: messageBody, data } = await constructMessageAndPayload(
       table, 
