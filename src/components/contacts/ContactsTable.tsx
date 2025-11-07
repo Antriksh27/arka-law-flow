@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Mail, Phone, Building, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Mail, Phone, Building, MapPin, ChevronLeft, ChevronRight, Eye, Pencil, Trash2 } from 'lucide-react';
 
 interface ContactsTableProps {
   contacts: any[];
@@ -67,15 +67,14 @@ export const ContactsTable = ({
             <TableHead className="bg-slate-800 text-white">Organization</TableHead>
             <TableHead className="bg-slate-800 text-white">Contact Info</TableHead>
             <TableHead className="bg-slate-800 text-white">Location</TableHead>
-            <TableHead className="bg-slate-800 text-white">Purpose</TableHead>
+            <TableHead className="bg-slate-800 text-white text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {contacts.map((contact) => (
             <TableRow 
               key={contact.id} 
-              className="cursor-pointer hover:bg-gray-50"
-              onClick={() => onViewContact?.(contact)}
+              className="hover:bg-gray-50"
             >
               <TableCell>
                 <div className="flex items-center space-x-3">
@@ -133,11 +132,41 @@ export const ContactsTable = ({
               </TableCell>
               
               <TableCell>
-              {contact.visit_purpose && (
-                <Badge variant="outline" className="text-xs">
-                  {contact.visit_purpose}
-                </Badge>
-              )}
+                <div className="flex items-center justify-end gap-1">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onViewContact?.(contact);
+                    }}
+                    className="text-gray-600 hover:text-blue-600"
+                  >
+                    <Eye className="w-4 h-4" />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEditContact(contact);
+                    }}
+                    className="text-gray-600 hover:text-blue-600"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeleteContact(contact);
+                    }}
+                    className="text-gray-600 hover:text-red-600"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
               </TableCell>
             </TableRow>
           ))}
