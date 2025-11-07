@@ -12,7 +12,7 @@ import { UserPlus, Search, Phone, Mail, Calendar, Plus, Filter, Users } from 'lu
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { AddContactDialog } from '@/components/contacts/AddContactDialog';
-import { ConvertContactToClientDialog } from '@/components/reception/ConvertContactToClientDialog';
+import { ConvertToClientDialog } from '@/components/contacts/ConvertToClientDialog';
 import { EditContactDialog } from '@/components/contacts/EditContactDialog';
 import ReceptionClientList from '@/components/reception/ReceptionClientList';
 
@@ -233,7 +233,7 @@ const ReceptionContacts = () => {
 
       {/* Convert Contact to Client Modal */}
       {selectedContact && (
-        <ConvertContactToClientDialog
+        <ConvertToClientDialog
           contact={selectedContact}
           open={convertDialogOpen}
           onOpenChange={setConvertDialogOpen}

@@ -7,7 +7,7 @@ import { useDialog } from '@/hooks/use-dialog';
 import { EditAppointmentDialog } from './EditAppointmentDialog';
 import RescheduleAppointmentDialog from '../reception/RescheduleAppointmentDialog';
 import { ConvertToClientDialog } from './ConvertToClientDialog';
-import { ConvertContactToClientDialog } from '../reception/ConvertContactToClientDialog';
+import { ConvertToClientDialog as ConvertContactDialog } from '@/components/contacts/ConvertToClientDialog';
 import { parseISO } from 'date-fns';
 import { TimeUtils } from '@/lib/timeUtils';
 import { Calendar, Clock, User, MapPin, FileText, Edit, RotateCcw, X, UserPlus, Users, Plus, Trash } from 'lucide-react';
@@ -276,7 +276,7 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
     console.log('📝 Final contact data being passed to dialog:', contactToConvert);
     
     openDialog(
-      <ConvertContactToClientDialog
+      <ConvertContactDialog
         contact={contactToConvert}
         open={true}
         onOpenChange={(open) => {
@@ -309,7 +309,7 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
     console.log('ViewAppointmentDialog: Converting contact with data:', contactToConvert);
     
     openDialog(
-      <ConvertContactToClientDialog
+      <ConvertContactDialog
         contact={contactToConvert}
         open={true}
         onOpenChange={(open) => {
