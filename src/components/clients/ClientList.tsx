@@ -70,24 +70,19 @@ export const ClientList = () => {
         // Map sort field to database column
         const dbSortField = sortField === 'name' ? 'full_name' : sortField === 'active_cases' ? 'active_case_count' : sortField;
 
-        // First try to get from client_stats view with pagination and sorting
-        let {
-          data,
-          error,
-          count
-        } = await supabase.from('client_stats').select('*', {
-          count: 'exact'
-        }).order(dbSortField, {
-          ascending: sortDirection === 'asc'
-        }).range(startIndex, endIndex);
-        if (error) {
-          console.log('client_stats view failed, trying clients table:', error);
-          // Fallback to clients table with pagination and sorting
+        let data: any[] = [];
+        let count = 0;
+
+        // When on VIP tab, query directly from clients table with VIP filter for accurate count
+        if (activeTab === 'vip') {
           const result = await supabase.from('clients').select('*', {
             count: 'exact'
-          }).order(dbSortField === 'active_case_count' ? 'created_at' : dbSortField, {
+          })
+          .eq('is_vip', true)
+          .order(dbSortField === 'active_case_count' ? 'created_at' : dbSortField, {
             ascending: sortDirection === 'asc'
           }).range(startIndex, endIndex);
+          
           if (result.error) throw result.error;
 
           // Transform to match expected interface
@@ -95,44 +90,69 @@ export const ClientList = () => {
             ...client,
             active_case_count: 0
           })) || [];
-          count = result.count;
+          count = result.count || 0;
         } else {
-          // Fetch is_vip status from clients table for the client_stats results
-          if (data && data.length > 0) {
-            const clientIds = data.map(c => c.id);
-            const { data: vipData } = await supabase
-              .from('clients')
-              .select('id, is_vip')
-              .in('id', clientIds);
+          // For "all" tab, try to get from client_stats view
+          let {
+            data: statsData,
+            error,
+            count: statsCount
+          } = await supabase.from('client_stats').select('*', {
+            count: 'exact'
+          }).order(dbSortField, {
+            ascending: sortDirection === 'asc'
+          }).range(startIndex, endIndex);
+          
+          if (error) {
+            console.log('client_stats view failed, trying clients table:', error);
+            // Fallback to clients table with pagination and sorting
+            const result = await supabase.from('clients').select('*', {
+              count: 'exact'
+            }).order(dbSortField === 'active_case_count' ? 'created_at' : dbSortField, {
+              ascending: sortDirection === 'asc'
+            }).range(startIndex, endIndex);
+            if (result.error) throw result.error;
+
+            // Transform to match expected interface
+            data = result.data?.map(client => ({
+              ...client,
+              active_case_count: 0
+            })) || [];
+            count = result.count || 0;
+          } else {
+            data = statsData || [];
+            count = statsCount || 0;
             
-            if (vipData) {
-              // Merge is_vip data into client_stats data
-              data = data.map(client => {
-                const vipInfo = vipData.find(v => v.id === client.id);
-                return {
-                  ...client,
-                  is_vip: vipInfo?.is_vip || false
-                };
-              });
+            // Fetch is_vip status from clients table for the client_stats results
+            if (data && data.length > 0) {
+              const clientIds = data.map(c => c.id);
+              const { data: vipData } = await supabase
+                .from('clients')
+                .select('id, is_vip')
+                .in('id', clientIds);
+              
+              if (vipData) {
+                // Merge is_vip data into client_stats data
+                data = data.map(client => {
+                  const vipInfo = vipData.find(v => v.id === client.id);
+                  return {
+                    ...client,
+                    is_vip: vipInfo?.is_vip || false
+                  };
+                });
+              }
             }
           }
         }
 
-        // Apply client-side filters after pagination
+        // Apply client-side filters
         let filteredData = data || [];
-        
-        // Apply tab filter first
-        if (activeTab === 'vip') {
-          filteredData = filteredData.filter(client => (client as any).is_vip === true);
-        }
         
         if (searchTerm) {
           filteredData = filteredData.filter(client => client.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || client.email?.toLowerCase().includes(searchTerm.toLowerCase()));
         }
         
-        if (statusFilter === 'vip') {
-          filteredData = filteredData.filter(client => (client as any).is_vip === true);
-        } else if (statusFilter !== 'all') {
+        if (statusFilter !== 'all' && statusFilter !== 'vip') {
           filteredData = filteredData.filter(client => client.status === statusFilter);
         }
         console.log('Fetched clients:', filteredData);
