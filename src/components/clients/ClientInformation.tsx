@@ -27,44 +27,6 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
     }
   });
 
-  // Fetch primary assigned lawyer
-  const {
-    data: primaryLawyer
-  } = useQuery({
-    queryKey: ['client-primary-lawyer', client?.assigned_lawyer_id],
-    queryFn: async () => {
-      if (!client?.assigned_lawyer_id) return null;
-      const {
-        data,
-        error
-      } = await supabase.from('profiles').select('id, full_name, profile_pic').eq('id', client.assigned_lawyer_id).single();
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!client?.assigned_lawyer_id
-  });
-
-  // Fetch additional assigned lawyers
-  const {
-    data: assignedLawyers = []
-  } = useQuery({
-    queryKey: ['client-assigned-lawyers', clientId],
-    queryFn: async () => {
-      const {
-        data: assignments
-      } = await supabase.from('client_lawyer_assignments').select(`
-          id,
-          lawyer_id,
-          assigned_at,
-          profiles:lawyer_id (
-            id,
-            full_name,
-            profile_pic
-          )
-        `).eq('client_id', clientId);
-      return assignments || [];
-    }
-  });
   if (isLoading) {
     return <div className="flex items-center justify-center py-12">
         <Loader2 className="w-6 h-6 animate-spin text-primary" />

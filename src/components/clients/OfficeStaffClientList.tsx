@@ -28,7 +28,6 @@ interface Client {
   email: string;
   phone: string;
   status: string;
-  assigned_lawyer_id: string | null;
   firm_id: string;
   client_portal_enabled: boolean;
   created_at: string;
@@ -67,7 +66,6 @@ const OfficeStaffClientList = () => {
           email,
           phone,
           status,
-          assigned_lawyer_id,
           firm_id,
           client_portal_enabled,
           created_at

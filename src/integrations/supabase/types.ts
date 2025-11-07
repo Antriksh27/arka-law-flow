@@ -1187,42 +1187,11 @@ export type Database = {
           },
         ]
       }
-      client_lawyer_assignments: {
-        Row: {
-          assigned_at: string
-          assigned_by: string | null
-          client_id: string
-          created_at: string
-          firm_id: string
-          id: string
-          lawyer_id: string
-        }
-        Insert: {
-          assigned_at?: string
-          assigned_by?: string | null
-          client_id: string
-          created_at?: string
-          firm_id: string
-          id?: string
-          lawyer_id: string
-        }
-        Update: {
-          assigned_at?: string
-          assigned_by?: string | null
-          client_id?: string
-          created_at?: string
-          firm_id?: string
-          id?: string
-          lawyer_id?: string
-        }
-        Relationships: []
-      }
       clients: {
         Row: {
           aadhaar_no: string | null
           address: string | null
           appointment_date: string | null
-          assigned_lawyer_id: string | null
           case_ref: string | null
           city: string | null
           client_portal_enabled: boolean | null
@@ -1255,7 +1224,6 @@ export type Database = {
           aadhaar_no?: string | null
           address?: string | null
           appointment_date?: string | null
-          assigned_lawyer_id?: string | null
           case_ref?: string | null
           city?: string | null
           client_portal_enabled?: boolean | null
@@ -1288,7 +1256,6 @@ export type Database = {
           aadhaar_no?: string | null
           address?: string | null
           appointment_date?: string | null
-          assigned_lawyer_id?: string | null
           case_ref?: string | null
           city?: string | null
           client_portal_enabled?: boolean | null
@@ -1318,20 +1285,6 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "clients_assigned_lawyer_id_fkey"
-            columns: ["assigned_lawyer_id"]
-            isOneToOne: false
-            referencedRelation: "firm_statistics"
-            referencedColumns: ["admin_id"]
-          },
-          {
-            foreignKeyName: "clients_assigned_lawyer_id_fkey"
-            columns: ["assigned_lawyer_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "clients_firm_id_fkey"
             columns: ["firm_id"]
@@ -3727,8 +3680,6 @@ export type Database = {
       client_stats: {
         Row: {
           active_case_count: number | null
-          assigned_lawyer_id: string | null
-          assigned_lawyer_name: string | null
           client_portal_enabled: boolean | null
           created_at: string | null
           email: string | null
@@ -3739,20 +3690,6 @@ export type Database = {
           status: Database["public"]["Enums"]["client_status_enum"] | null
         }
         Relationships: [
-          {
-            foreignKeyName: "clients_assigned_lawyer_id_fkey"
-            columns: ["assigned_lawyer_id"]
-            isOneToOne: false
-            referencedRelation: "firm_statistics"
-            referencedColumns: ["admin_id"]
-          },
-          {
-            foreignKeyName: "clients_assigned_lawyer_id_fkey"
-            columns: ["assigned_lawyer_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "clients_firm_id_fkey"
             columns: ["firm_id"]
