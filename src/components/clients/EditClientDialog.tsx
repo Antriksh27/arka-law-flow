@@ -195,10 +195,10 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
           .select('id, full_name, email, phone')
           .neq('id', client.id);
 
-        // Build OR conditions for email and phone
+        // Build OR conditions for email and phone with case-insensitive comparison
         const orConditions = [];
         if (data.email?.trim()) {
-          orConditions.push(`email.eq.${data.email.trim()}`);
+          orConditions.push(`email.ilike.${data.email.trim()}`);
         }
         if (data.phone?.trim()) {
           orConditions.push(`phone.eq.${data.phone.trim()}`);
@@ -210,12 +210,13 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
 
           if (existingClients && existingClients.length > 0) {
             const duplicate = existingClients[0];
-            const matchField = duplicate.email === data.email ? 'email' : 'phone';
+            const matchedByEmail = data.email && duplicate.email?.toLowerCase() === data.email.toLowerCase();
+            const matchField = matchedByEmail ? 'email' : 'phone';
             const matchValue = matchField === 'email' ? duplicate.email : duplicate.phone;
             
             toast({
               title: "Duplicate Client",
-              description: `Another client with this ${matchField} (${matchValue}) already exists: ${duplicate.full_name}`,
+              description: `Another client "${duplicate.full_name}" already has this ${matchField}: ${matchValue}`,
               variant: "destructive",
             });
             return;
@@ -279,13 +280,38 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
       });
       
       onSuccess();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating client:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update client",
-        variant: "destructive",
-      });
+      
+      // Handle specific database errors
+      if (error?.code === '23505') {
+        // Unique constraint violation
+        if (error?.message?.includes('clients_email_key')) {
+          toast({
+            title: "Duplicate Email",
+            description: "This email address is already registered to another client. Please use a different email.",
+            variant: "destructive",
+          });
+        } else if (error?.message?.includes('clients_phone_key')) {
+          toast({
+            title: "Duplicate Phone",
+            description: "This phone number is already registered to another client. Please use a different phone number.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Duplicate Entry",
+            description: "A client with this information already exists. Please check the email or phone number.",
+            variant: "destructive",
+          });
+        }
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to update client. Please try again.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
