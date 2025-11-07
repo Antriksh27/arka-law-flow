@@ -28,7 +28,7 @@ interface ClientFormData {
   district?: string;
   type: 'Individual' | 'Corporate';
   status: 'active' | 'inactive' | 'lead' | 'prospect' | 'new';
-  assigned_lawyer_id?: string;
+  assigned_lawyer_ids?: string[];
   notes?: string;
   referred_by_name?: string;
   referred_by_phone?: string;
@@ -55,6 +55,7 @@ export const ConvertToClientDialog = ({
   const [newDistrictName, setNewDistrictName] = useState('');
   const [showEngagementLetter, setShowEngagementLetter] = useState(false);
   const [newClientId, setNewClientId] = useState<string | null>(null);
+  const [selectedLawyers, setSelectedLawyers] = useState<string[]>([]);
   const {
     register,
     handleSubmit,
@@ -236,11 +237,15 @@ export const ConvertToClientDialog = ({
       // Convert state_id and district_id to state and district names
       const selectedState = states.find(s => s.id === selectedStateId);
       const selectedDistrict = districts.find(d => d.name === data.district);
+      
+      // Set primary lawyer (first selected) as assigned_lawyer_id
+      const primaryLawyerId = selectedLawyers.length > 0 ? selectedLawyers[0] : null;
+      
       const clientData = {
         ...data,
         state: selectedState?.name || data.state,
         district: data.district,
-        assigned_lawyer_id: data.assigned_lawyer_id || null,
+        assigned_lawyer_id: primaryLawyerId,
         firm_id: firmId,
         created_by: user?.id
       };
@@ -249,6 +254,24 @@ export const ConvertToClientDialog = ({
         error
       } = await supabase.from('clients').insert([clientData]).select('id, full_name').single();
       if (error) throw error;
+
+      // Create lawyer assignments for all selected lawyers
+      if (selectedLawyers.length > 0) {
+        const assignments = selectedLawyers.map(lawyerId => ({
+          client_id: newClient.id,
+          lawyer_id: lawyerId,
+          firm_id: firmId,
+          assigned_by: user?.id
+        }));
+        
+        const { error: assignmentError } = await supabase
+          .from('client_lawyer_assignments')
+          .insert(assignments);
+        
+        if (assignmentError) {
+          console.error('Error creating lawyer assignments:', assignmentError);
+        }
+      }
 
       // Delete the contact after successful conversion
       const {
@@ -270,6 +293,7 @@ export const ConvertToClientDialog = ({
       setNewClientId(newClient.id);
       reset();
       setSelectedStateId('');
+      setSelectedLawyers([]);
       setShowAddDistrict(false);
       setNewDistrictName('');
       setShowEngagementLetter(true);
@@ -351,11 +375,6 @@ export const ConvertToClientDialog = ({
               <Input id="address" {...register('address')} placeholder="Street address" />
             </div>
 
-            <div>
-              <Label htmlFor="pin_code">PIN Code</Label>
-              <Input id="pin_code" {...register('pin_code')} placeholder="Enter PIN code" />
-            </div>
-
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="state">State</Label>
@@ -377,62 +396,83 @@ export const ConvertToClientDialog = ({
               </div>
 
               <div>
-                <Label htmlFor="district">District</Label>
-                {showAddDistrict ? <div className="space-y-2">
-                    <div className="flex gap-2">
-                      <Input placeholder="Enter new district name" value={newDistrictName} onChange={e => setNewDistrictName(e.target.value)} onKeyPress={e => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleAddDistrict();
-                    }
-                  }} />
-                      <Button type="button" onClick={handleAddDistrict} size="sm">
-                        Add
-                      </Button>
-                      <Button type="button" variant="outline" onClick={() => {
-                    setShowAddDistrict(false);
-                    setNewDistrictName('');
-                  }} size="sm">
-                        Cancel
-                      </Button>
-                    </div>
-                  </div> : <Select value={watch('district') || ''} onValueChange={value => {
-                if (value === 'add_new') {
-                  setShowAddDistrict(true);
-                } else {
-                  setValue('district', value);
-                }
-              }} disabled={!selectedStateId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={!selectedStateId ? "Select state first" : "Select district..."} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {districts.map(district => <SelectItem key={district.id} value={district.name}>
-                          {district.name}
-                        </SelectItem>)}
-                      {selectedStateId && <SelectItem value="add_new" className="border-t">
-                          <div className="flex items-center gap-2">
-                            <Plus className="h-4 w-4" />
-                            Add New District
-                          </div>
-                        </SelectItem>}
-                    </SelectContent>
-                  </Select>}
+                <Label htmlFor="pin_code">PIN Code</Label>
+                <Input id="pin_code" {...register('pin_code')} placeholder="Enter PIN code" />
               </div>
             </div>
 
             <div>
-              <Label htmlFor="assigned_lawyer_id">Assigned Lawyer</Label>
-              <Select value={watch('assigned_lawyer_id') || ''} onValueChange={value => setValue('assigned_lawyer_id', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a lawyer..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {lawyers.map(lawyer => <SelectItem key={lawyer.id} value={lawyer.id}>
-                      {lawyer.full_name}
-                    </SelectItem>)}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="district">District</Label>
+              {showAddDistrict ? <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <Input placeholder="Enter new district name" value={newDistrictName} onChange={e => setNewDistrictName(e.target.value)} onKeyPress={e => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddDistrict();
+                  }
+                }} />
+                    <Button type="button" onClick={handleAddDistrict} size="sm">
+                      Add
+                    </Button>
+                    <Button type="button" variant="outline" onClick={() => {
+                  setShowAddDistrict(false);
+                  setNewDistrictName('');
+                }} size="sm">
+                      Cancel
+                    </Button>
+                  </div>
+                </div> : <Select value={watch('district') || ''} onValueChange={value => {
+              if (value === 'add_new') {
+                setShowAddDistrict(true);
+              } else {
+                setValue('district', value);
+              }
+            }} disabled={!selectedStateId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={!selectedStateId ? "Select state first" : "Select district..."} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {districts.map(district => <SelectItem key={district.id} value={district.name}>
+                        {district.name}
+                      </SelectItem>)}
+                    {selectedStateId && <SelectItem value="add_new" className="border-t">
+                        <div className="flex items-center gap-2">
+                          <Plus className="h-4 w-4" />
+                          Add New District
+                        </div>
+                      </SelectItem>}
+                  </SelectContent>
+                </Select>}
+            </div>
+
+            <div>
+              <Label>Assigned Lawyers</Label>
+              <div className="border rounded-lg p-4 space-y-2 max-h-48 overflow-y-auto">
+                {lawyers.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No lawyers available</p>
+                ) : (
+                  lawyers.map(lawyer => (
+                    <div key={lawyer.id} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id={`lawyer-${lawyer.id}`}
+                        checked={selectedLawyers.includes(lawyer.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedLawyers([...selectedLawyers, lawyer.id]);
+                          } else {
+                            setSelectedLawyers(selectedLawyers.filter(id => id !== lawyer.id));
+                          }
+                        }}
+                        className="h-4 w-4 rounded border-border"
+                      />
+                      <Label htmlFor={`lawyer-${lawyer.id}`} className="font-normal cursor-pointer">
+                        {lawyer.full_name}
+                      </Label>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
 
             <div>
