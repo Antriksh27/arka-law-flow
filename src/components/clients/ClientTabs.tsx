@@ -137,7 +137,7 @@ export const ClientTabs: React.FC<ClientTabsProps> = ({
             
             <div className="flex gap-2">
               
-              <ClientQuickActions clientId={client.id} clientName={client.full_name} onAction={onUpdate} />
+              <ClientQuickActions clientId={client.id} clientName={client.full_name} clientEmail={client.email} onAction={onUpdate} />
             </div>
           </div>
         </div>
