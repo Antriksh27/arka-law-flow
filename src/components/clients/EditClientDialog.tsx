@@ -168,6 +168,41 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
 
   const onSubmit = async (data: ClientFormData) => {
     try {
+      // Check for duplicate clients by email or phone (excluding current client)
+      if (data.email || data.phone) {
+        let duplicateQuery = supabase
+          .from('clients')
+          .select('id, full_name, email, phone')
+          .neq('id', client.id);
+
+        // Build OR conditions for email and phone
+        const orConditions = [];
+        if (data.email?.trim()) {
+          orConditions.push(`email.eq.${data.email.trim()}`);
+        }
+        if (data.phone?.trim()) {
+          orConditions.push(`phone.eq.${data.phone.trim()}`);
+        }
+
+        if (orConditions.length > 0) {
+          duplicateQuery = duplicateQuery.or(orConditions.join(','));
+          const { data: existingClients } = await duplicateQuery;
+
+          if (existingClients && existingClients.length > 0) {
+            const duplicate = existingClients[0];
+            const matchField = duplicate.email === data.email ? 'email' : 'phone';
+            const matchValue = matchField === 'email' ? duplicate.email : duplicate.phone;
+            
+            toast({
+              title: "Duplicate Client",
+              description: `Another client with this ${matchField} (${matchValue}) already exists: ${duplicate.full_name}`,
+              variant: "destructive",
+            });
+            return;
+          }
+        }
+      }
+
       // Get state name from selected state ID
       const stateName = selectedState ? states.find(s => s.id === selectedState)?.name : null;
       

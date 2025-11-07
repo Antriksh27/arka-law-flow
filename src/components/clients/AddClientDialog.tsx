@@ -167,6 +167,41 @@ export const AddClientDialog: React.FC<AddClientDialogProps> = ({
 
   const onSubmit = async (data: ClientFormData) => {
     try {
+      // Check for duplicate clients by email or phone
+      if (data.email || data.phone) {
+        let duplicateQuery = supabase
+          .from('clients')
+          .select('id, full_name, email, phone')
+          .eq('firm_id', firmId);
+
+        // Build OR conditions for email and phone
+        const orConditions = [];
+        if (data.email?.trim()) {
+          orConditions.push(`email.eq.${data.email.trim()}`);
+        }
+        if (data.phone?.trim()) {
+          orConditions.push(`phone.eq.${data.phone.trim()}`);
+        }
+
+        if (orConditions.length > 0) {
+          duplicateQuery = duplicateQuery.or(orConditions.join(','));
+          const { data: existingClients } = await duplicateQuery;
+
+          if (existingClients && existingClients.length > 0) {
+            const duplicate = existingClients[0];
+            const matchField = duplicate.email === data.email ? 'email' : 'phone';
+            const matchValue = matchField === 'email' ? duplicate.email : duplicate.phone;
+            
+            toast({
+              title: "Duplicate Client",
+              description: `A client with this ${matchField} (${matchValue}) already exists: ${duplicate.full_name}`,
+              variant: "destructive",
+            });
+            return;
+          }
+        }
+      }
+
       // Convert state_id and district_id to state and district names
       const selectedState = states.find(s => s.id === selectedStateId);
       const selectedDistrict = districts.find(d => d.id === data.district);
