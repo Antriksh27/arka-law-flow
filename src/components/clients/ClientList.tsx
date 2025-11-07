@@ -65,17 +65,10 @@ export const ClientList = () => {
     queryFn: async () => {
       console.log('Fetching clients...');
       try {
-        const startIndex = (page - 1) * pageSize;
-        const endIndex = startIndex + pageSize - 1;
-
         // Map sort field to database column
         const dbSortField = sortField === 'name' ? 'full_name' : sortField === 'active_cases' ? 'active_case_count' : sortField;
 
-        let data: any[] = [];
-        let count = 0;
-
-
-        // Fetch clients with their case statuses to compute dynamic status
+        // Fetch ALL clients to handle filtering properly
         let clientsQuery = supabase
           .from('clients')
           .select('*', { count: 'exact' });
@@ -88,13 +81,14 @@ export const ClientList = () => {
         const clientsResult = await clientsQuery
           .order(dbSortField === 'active_case_count' ? 'created_at' : dbSortField, {
             ascending: sortDirection === 'asc'
-          })
-          .range(startIndex, endIndex);
+          });
 
         if (clientsResult.error) throw clientsResult.error;
 
         const baseClients = clientsResult.data || [];
-        count = clientsResult.count || 0;
+        const totalCount = clientsResult.count || 0;
+
+        let data: any[] = [];
 
         // Fetch case statuses for these clients
         if (baseClients.length > 0) {
@@ -130,24 +124,30 @@ export const ClientList = () => {
           data = [];
         }
 
-        if (activeTab === 'all') {
-          // Already computed above
-        }
-
         // Apply client-side filters
-        let filteredData = data || [];
+        let filteredData = data;
         
         if (searchTerm) {
-          filteredData = filteredData.filter(client => client.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || client.email?.toLowerCase().includes(searchTerm.toLowerCase()));
+          filteredData = filteredData.filter(client => 
+            client.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+            client.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            client.phone?.toLowerCase().includes(searchTerm.toLowerCase())
+          );
         }
         
         if (statusFilter !== 'all') {
           filteredData = filteredData.filter(client => client.computed_status === statusFilter);
         }
-        console.log('Fetched clients:', filteredData);
+
+        // Apply pagination AFTER filtering
+        const startIndex = (page - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+        const paginatedData = filteredData.slice(startIndex, endIndex);
+
+        console.log('Fetched clients:', paginatedData);
         return {
-          clients: filteredData as Client[],
-          totalCount: count || 0,
+          clients: paginatedData as Client[],
+          totalCount: totalCount,
           filteredCount: filteredData.length
         };
       } catch (err) {
