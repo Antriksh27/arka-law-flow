@@ -37,7 +37,8 @@ export const ClientAppointments: React.FC<ClientAppointmentsProps> = ({ clientId
   const { data: appointments = [], isLoading } = useQuery({
     queryKey: ['client-appointments', clientId],
     queryFn: async (): Promise<AppointmentWithDetails[]> => {
-      const { data, error } = await supabase
+      // First get appointments
+      const { data: appointmentsData, error: appointmentsError } = await supabase
         .from('appointments')
         .select(`
           id,
@@ -52,17 +53,36 @@ export const ClientAppointments: React.FC<ClientAppointmentsProps> = ({ clientId
           notes,
           lawyer_id,
           case_id,
-          team_members!appointments_lawyer_id_fkey(full_name),
           cases(case_title, case_number)
         `)
         .eq('client_id', clientId)
         .order('appointment_date', { ascending: false })
         .order('appointment_time', { ascending: false });
 
-      if (error) throw error;
+      if (appointmentsError) throw appointmentsError;
+      if (!appointmentsData) return [];
+
+      // Get unique lawyer IDs
+      const lawyerIds = [...new Set(appointmentsData.map(apt => apt.lawyer_id).filter(Boolean))];
+      
+      // Fetch lawyer details from team_members
+      let lawyersMap: Record<string, { full_name: string }> = {};
+      if (lawyerIds.length > 0) {
+        const { data: lawyersData } = await supabase
+          .from('team_members')
+          .select('user_id, full_name')
+          .in('user_id', lawyerIds);
+        
+        if (lawyersData) {
+          lawyersMap = lawyersData.reduce((acc, lawyer) => {
+            acc[lawyer.user_id] = { full_name: lawyer.full_name };
+            return acc;
+          }, {} as Record<string, { full_name: string }>);
+        }
+      }
       
       // Transform the data to match our interface
-      return (data || []).map(appointment => ({
+      return appointmentsData.map(appointment => ({
         id: appointment.id,
         title: appointment.title,
         appointment_date: appointment.appointment_date,
@@ -73,10 +93,8 @@ export const ClientAppointments: React.FC<ClientAppointmentsProps> = ({ clientId
         duration_minutes: appointment.duration_minutes,
         location: appointment.location,
         notes: appointment.notes,
-        lawyer: Array.isArray(appointment.team_members) && appointment.team_members.length > 0 
-          ? appointment.team_members[0] 
-          : appointment.team_members && !Array.isArray(appointment.team_members)
-          ? appointment.team_members
+        lawyer: appointment.lawyer_id && lawyersMap[appointment.lawyer_id] 
+          ? lawyersMap[appointment.lawyer_id]
           : null,
         case: Array.isArray(appointment.cases) && appointment.cases.length > 0 
           ? appointment.cases[0] 
