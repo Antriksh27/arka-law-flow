@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { Plus, Pin, Eye, EyeOff } from 'lucide-react';
-import { CreateNoteDialog } from '@/components/notes/CreateNoteDialog';
+import { CreateNoteMultiModal } from '@/components/notes/CreateNoteMultiModal';
 
 interface ClientNotesProps {
   clientId: string;
@@ -175,6 +175,12 @@ export const ClientNotes: React.FC<ClientNotesProps> = ({ clientId }) => {
           </div>
         )}
       </CardContent>
+
+      <CreateNoteMultiModal
+        open={showCreateDialog}
+        onClose={() => setShowCreateDialog(false)}
+        clientId={clientId}
+      />
     </Card>
   );
 };

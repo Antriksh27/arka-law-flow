@@ -17,6 +17,7 @@ interface CreateNoteMultiModalProps {
   open: boolean;
   onClose: () => void;
   caseId?: string;
+  clientId?: string;
   isPinned?: boolean;
 }
 interface NoteFormData {
@@ -31,6 +32,7 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
   open,
   onClose,
   caseId,
+  clientId,
   isPinned = false
 }) => {
   const {
@@ -110,6 +112,7 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
         title: data.title,
         content: finalContent || null,
         case_id: data.case_id === 'no-case' ? null : data.case_id,
+        client_id: clientId || null,
         visibility: data.visibility,
         color: data.color,
         tags: data.tags,
@@ -130,6 +133,9 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
       });
       queryClient.invalidateQueries({
         queryKey: ['case-notes']
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['client-notes-v2']
       });
       queryClient.invalidateQueries({
         queryKey: ['dashboard-data']
