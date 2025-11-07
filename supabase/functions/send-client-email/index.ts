@@ -23,9 +23,14 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { to, subject, body, clientName }: SendEmailRequest = await req.json();
+    const requestBody = await req.json();
+    console.log("Received request body:", requestBody);
+    
+    const { to, subject, body, clientName }: SendEmailRequest = requestBody;
+    console.log("Extracted fields - to:", to, "subject:", subject, "body length:", body?.length);
 
     if (!to || !subject || !body) {
+      console.error("Missing fields validation failed. to:", !!to, "subject:", !!subject, "body:", !!body);
       return new Response(
         JSON.stringify({ error: "Missing required fields: to, subject, or body" }),
         {
