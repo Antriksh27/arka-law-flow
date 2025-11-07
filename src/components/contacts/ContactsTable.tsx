@@ -9,13 +9,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, Mail, Phone, Building, MapPin, UserPlus, Edit, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { Mail, Phone, Building, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 interface ContactsTableProps {
@@ -76,7 +70,6 @@ export const ContactsTable = ({
             <TableHead className="bg-slate-800 text-white">Location</TableHead>
             <TableHead className="bg-slate-800 text-white">Purpose</TableHead>
             <TableHead className="bg-slate-800 text-white">Last Visit</TableHead>
-            <TableHead className="bg-slate-800 text-white w-[100px]">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -153,37 +146,6 @@ export const ContactsTable = ({
                 <span className="text-sm text-gray-500">
                   {formatDistanceToNow(new Date(contact.last_visited_at), { addSuffix: true })}
                 </span>
-              </TableCell>
-              
-              <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      className="h-8 w-8 p-0"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => onEditContact(contact)}>
-                      <Edit className="mr-2 h-4 w-4" />
-                      Edit Contact
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onConvertToClient(contact)}>
-                      <UserPlus className="mr-2 h-4 w-4" />
-                      Convert to Client
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => onDeleteContact(contact)}
-                      className="text-red-600"
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete Contact
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
               </TableCell>
             </TableRow>
           ))}
