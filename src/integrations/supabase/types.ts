@@ -3997,6 +3997,12 @@ export type Database = {
       get_user_team_role_secure: { Args: never; Returns: string }
       has_admin_access: { Args: never; Returns: boolean }
       has_case_access: { Args: { case_id: string }; Returns: boolean }
+      http_post:
+        | {
+            Args: { content_type: string; payload: Json; url: string }
+            Returns: undefined
+          }
+        | { Args: { payload: Json; url: string }; Returns: undefined }
       is_admin: { Args: { user_id: string }; Returns: boolean }
       is_admin_or_lawyer: { Args: never; Returns: boolean }
       is_assigned_to_hearing: { Args: { hearing_id: string }; Returns: boolean }
