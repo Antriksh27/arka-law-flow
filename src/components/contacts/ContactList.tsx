@@ -24,10 +24,11 @@ export const ContactList = () => {
   const [selectedContact, setSelectedContact] = useState<any>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
   const [page, setPage] = useState(1);
+  const [activeTab, setActiveTab] = useState<'all' | 'vip'>('all');
   const pageSize = 50;
 
-  const { data: queryResult, isLoading } = useQuery({
-    queryKey: ['contacts', firmId, searchTerm, page],
+  const { data: queryResult, isLoading, refetch } = useQuery({
+    queryKey: ['contacts', firmId, searchTerm, page, activeTab],
     queryFn: async () => {
       if (!firmId) return { contacts: [], totalCount: 0 };
       
@@ -40,6 +41,11 @@ export const ContactList = () => {
         .eq('firm_id', firmId)
         .order('created_at', { ascending: false })
         .range(startIndex, endIndex);
+
+      // Filter by VIP status if on VIP tab
+      if (activeTab === 'vip') {
+        query = query.eq('is_vip', true);
+      }
 
       if (searchTerm) {
         query = query.or(`name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%,organization.ilike.%${searchTerm}%`);
@@ -98,10 +104,17 @@ export const ContactList = () => {
         onSearchChange={setSearchTerm}
       />
 
-      <Tabs defaultValue="all" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 bg-white rounded-2xl shadow-sm border border-gray-200">
-          <TabsTrigger value="all" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white">All Contacts ({contacts.length})</TabsTrigger>
-          <TabsTrigger value="recent" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white">Recent</TabsTrigger>
+      <Tabs value={activeTab} onValueChange={(value: any) => setActiveTab(value)} className="w-full">
+        <TabsList className="grid w-full grid-cols-3 bg-white rounded-2xl shadow-sm border border-gray-200">
+          <TabsTrigger value="all" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white">
+            All Contacts
+          </TabsTrigger>
+          <TabsTrigger value="recent" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white">
+            Recent
+          </TabsTrigger>
+          <TabsTrigger value="vip" className="data-[state=active]:bg-yellow-600 data-[state=active]:text-white flex items-center gap-1">
+            <span>⭐</span> VIP Contacts
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="all" className="mt-6">
@@ -118,6 +131,7 @@ export const ContactList = () => {
                 page={page}
                 pageSize={pageSize}
                 onPageChange={setPage}
+                onRefetch={refetch}
               />
             ) : (
               <div className="p-6">
@@ -153,6 +167,7 @@ export const ContactList = () => {
                 page={page}
                 pageSize={pageSize}
                 onPageChange={setPage}
+                onRefetch={refetch}
               />
             ) : (
               <div className="p-6">
@@ -163,6 +178,37 @@ export const ContactList = () => {
                     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
                     return lastVisited > thirtyDaysAgo;
                   })}
+                  isLoading={isLoading}
+                  onEditContact={handleEditContact}
+                  onConvertToClient={handleConvertToClient}
+                  onDeleteContact={handleDeleteContact}
+                  onViewContact={handleViewContact}
+                />
+              </div>
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="vip" className="mt-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200">
+            {viewMode === 'table' ? (
+              <ContactsTable
+                contacts={contacts}
+                isLoading={isLoading}
+                onEditContact={handleEditContact}
+                onConvertToClient={handleConvertToClient}
+                onDeleteContact={handleDeleteContact}
+                onViewContact={handleViewContact}
+                totalCount={totalCount}
+                page={page}
+                pageSize={pageSize}
+                onPageChange={setPage}
+                onRefetch={refetch}
+              />
+            ) : (
+              <div className="p-6">
+                <ContactsGrid
+                  contacts={contacts}
                   isLoading={isLoading}
                   onEditContact={handleEditContact}
                   onConvertToClient={handleConvertToClient}

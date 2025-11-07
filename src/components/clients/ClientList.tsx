@@ -41,6 +41,7 @@ export const ClientList = () => {
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [viewingClient, setViewingClient] = useState<Client | null>(null);
   const [deletingClient, setDeletingClient] = useState<Client | null>(null);
+  const [vipToggleClient, setVipToggleClient] = useState<{ id: string; name: string; currentStatus: boolean } | null>(null);
   const [page, setPage] = useState(1);
   const pageSize = 50;
   const {
@@ -160,7 +161,18 @@ export const ClientList = () => {
     }
   };
 
-  const handleToggleVIP = async (clientId: string, currentVipStatus: boolean) => {
+  const handleToggleVIP = async (clientId: string, currentVipStatus: boolean, clientName: string) => {
+    // If removing VIP status, ask for confirmation
+    if (currentVipStatus) {
+      setVipToggleClient({ id: clientId, name: clientName, currentStatus: currentVipStatus });
+      return;
+    }
+
+    // If marking as VIP, do it immediately
+    await performVIPToggle(clientId, currentVipStatus);
+  };
+
+  const performVIPToggle = async (clientId: string, currentVipStatus: boolean) => {
     try {
       const { error } = await supabase
         .from('clients')
@@ -171,7 +183,7 @@ export const ClientList = () => {
 
       toast({
         title: "Success",
-        description: `Client ${!currentVipStatus ? 'marked as VIP' : 'unmarked as VIP'}`,
+        description: `Client ${!currentVipStatus ? 'marked as VIP ⭐' : 'removed from VIP'}`,
       });
       refetch();
     } catch (error) {
@@ -182,6 +194,12 @@ export const ClientList = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const confirmVIPRemoval = async () => {
+    if (!vipToggleClient) return;
+    await performVIPToggle(vipToggleClient.id, vipToggleClient.currentStatus);
+    setVipToggleClient(null);
   };
   const handleClientNameClick = (clientId: string) => {
     if (role === 'office_staff') {
@@ -403,9 +421,9 @@ export const ClientList = () => {
                         size="sm" 
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleToggleVIP(client.id, client.is_vip || false);
+                          handleToggleVIP(client.id, client.is_vip || false, client.full_name);
                         }}
-                        className={client.is_vip ? "text-yellow-600 hover:text-yellow-700" : "text-gray-400 hover:text-yellow-600"}
+                        className={client.is_vip ? "text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50" : "text-gray-400 hover:text-yellow-600 hover:bg-yellow-50"}
                         title={client.is_vip ? "Remove VIP status" : "Mark as VIP"}
                       >
                         <Star className={client.is_vip ? "w-4 h-4 fill-yellow-400" : "w-4 h-4"} />
@@ -518,6 +536,24 @@ export const ClientList = () => {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteClient} className="bg-red-600 hover:bg-red-700">
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* VIP Removal Confirmation Dialog */}
+      <AlertDialog open={!!vipToggleClient} onOpenChange={(open) => !open && setVipToggleClient(null)}>
+        <AlertDialogContent className="bg-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove VIP Status</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove VIP status from <span className="font-semibold">{vipToggleClient?.name}</span>?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmVIPRemoval} className="bg-yellow-600 hover:bg-yellow-700">
+              Remove VIP
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

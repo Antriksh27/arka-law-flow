@@ -1318,6 +1318,7 @@ export type Database = {
           email: string | null
           firm_id: string | null
           id: string
+          is_vip: boolean | null
           last_visited_at: string | null
           name: string
           notes: string | null
@@ -1344,6 +1345,7 @@ export type Database = {
           email?: string | null
           firm_id?: string | null
           id?: string
+          is_vip?: boolean | null
           last_visited_at?: string | null
           name: string
           notes?: string | null
@@ -1370,6 +1372,7 @@ export type Database = {
           email?: string | null
           firm_id?: string | null
           id?: string
+          is_vip?: boolean | null
           last_visited_at?: string | null
           name?: string
           notes?: string | null
