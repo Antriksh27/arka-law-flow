@@ -81,9 +81,6 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
-                  Edit Case
-                </DropdownMenuItem>
                 <DropdownMenuItem>Generate Report</DropdownMenuItem>
                 <DropdownMenuItem>Invoice</DropdownMenuItem>
                 <DropdownMenuItem 
