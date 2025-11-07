@@ -17,6 +17,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { FileText, Printer, Upload, Loader2 } from 'lucide-react';
+import { TimeUtils } from '@/lib/timeUtils';
 
 interface EngagementLetterDialogProps {
   open: boolean;
@@ -194,7 +195,7 @@ export const EngagementLetterDialog: React.FC<EngagementLetterDialogProps> = ({
     </div>
   </header>
 
-  <p class="right"><strong>Date:</strong> ${new Date(data.issue_date).toLocaleDateString()}</p>
+  <p class="right"><strong>Date:</strong> ${TimeUtils.formatDate(data.issue_date)}</p>
   <p><strong>To,</strong><br>
      ${clientName}<br>
      ${client?.address || 'Client Address'}
@@ -280,7 +281,7 @@ export const EngagementLetterDialog: React.FC<EngagementLetterDialogProps> = ({
       <strong>For ${firmDetails?.name || 'Law Firm'}</strong><br><br><br>
       Signature: ___________________________<br>
       Name: ${data.primary_lawyer_name}<br>
-      Date: ${new Date(data.issue_date).toLocaleDateString()}
+      Date: ${TimeUtils.formatDate(data.issue_date)}
     </div>
     <div class="sign">
       <strong>Accepted & Agreed – Client</strong><br><br><br>

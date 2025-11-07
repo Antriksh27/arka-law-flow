@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Brain, Calendar, FileText, Users, TrendingUp, Clock, AlertCircle, CheckCircle, User } from 'lucide-react';
+import { TimeUtils } from '@/lib/timeUtils';
 
 export interface CaseOverviewProps {
   caseId: string;
@@ -144,14 +145,14 @@ export const CaseOverview: React.FC<CaseOverviewProps> = ({ caseId }) => {
             <p className="text-foreground">
               This is an AI-generated summary of the case based on available information. 
               The case "{caseData.case_title}" is currently in {caseData.status} status and was filed on{' '}
-              {caseData.filing_date ? new Date(caseData.filing_date).toLocaleDateString() : 'Unknown date'}.
+              {caseData.filing_date ? TimeUtils.formatDate(caseData.filing_date) : 'Unknown date'}.
             </p>
             <div className="flex items-center gap-2">
               <Badge className={getStatusColor(caseData.status)}>
                 {caseData.status || 'Unknown'}
               </Badge>
               <span className="text-sm text-muted">
-                Last updated: {caseData.updated_at ? new Date(caseData.updated_at).toLocaleDateString() : 'Unknown'}
+                Last updated: {caseData.updated_at ? TimeUtils.formatDate(caseData.updated_at) : 'Unknown'}
               </span>
             </div>
           </div>
@@ -238,7 +239,7 @@ export const CaseOverview: React.FC<CaseOverviewProps> = ({ caseId }) => {
               <div>
                 <p className="text-sm text-muted">Created Date</p>
                 <p className="font-medium">
-                  {caseData.created_at ? new Date(caseData.created_at).toLocaleDateString() : 'Unknown'}
+                  {caseData.created_at ? TimeUtils.formatDate(caseData.created_at) : 'Unknown'}
                 </p>
               </div>
             </div>
@@ -263,7 +264,7 @@ export const CaseOverview: React.FC<CaseOverviewProps> = ({ caseId }) => {
               <div className="flex-1">
                 <p className="text-sm font-medium">Case created</p>
                 <p className="text-xs text-muted">
-                  {caseData.created_at ? new Date(caseData.created_at).toLocaleDateString() : 'Unknown date'}
+                  {caseData.created_at ? TimeUtils.formatDate(caseData.created_at) : 'Unknown date'}
                 </p>
               </div>
             </div>

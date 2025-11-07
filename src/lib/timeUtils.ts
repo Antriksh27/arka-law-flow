@@ -39,8 +39,9 @@ export class TimeUtils {
 
   /**
    * Format date for display using IST timezone
+   * Default format is DD/MM/YYYY as per Indian standard
    */
-  static formatDisplay(input: string | Date | null | undefined, formatString: string = 'MMM d, yyyy'): string {
+  static formatDisplay(input: string | Date | null | undefined, formatString: string = 'dd/MM/yyyy'): string {
     const date = this.parseDate(input);
     if (!date) return '';
     
@@ -53,8 +54,9 @@ export class TimeUtils {
 
   /**
    * Format datetime for display using IST timezone
+   * Default format is DD/MM/YYYY h:mm a as per Indian standard
    */
-  static formatDateTime(input: string | Date | null | undefined, formatString: string = 'MMM d, yyyy h:mm a'): string {
+  static formatDateTime(input: string | Date | null | undefined, formatString: string = 'dd/MM/yyyy h:mm a'): string {
     return this.formatDisplay(input, formatString);
   }
 
@@ -67,8 +69,9 @@ export class TimeUtils {
 
   /**
    * Format date only using system timezone
+   * Default format is DD/MM/YYYY as per Indian standard
    */
-  static formatDate(input: string | Date | null | undefined, formatString: string = 'MMM d, yyyy'): string {
+  static formatDate(input: string | Date | null | undefined, formatString: string = 'dd/MM/yyyy'): string {
     return this.formatDisplay(input, formatString);
   }
 

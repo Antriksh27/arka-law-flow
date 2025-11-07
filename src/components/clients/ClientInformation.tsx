@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { User, Mail, Phone, MapPin, Building, Briefcase, Users, Calendar, UserCheck, Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
+import { TimeUtils } from '@/lib/timeUtils';
 interface ClientInformationProps {
   clientId: string;
 }
@@ -182,8 +183,8 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <InfoRow icon={Calendar} label="Created Date" value={client.created_at ? new Date(client.created_at).toLocaleDateString() : null} />
-          <InfoRow icon={Calendar} label="Last Edited Date" value={client.updated_at ? new Date(client.updated_at).toLocaleDateString() : null} />
+          <InfoRow icon={Calendar} label="Created Date" value={TimeUtils.formatDate(client.created_at)} />
+          <InfoRow icon={Calendar} label="Last Edited Date" value={TimeUtils.formatDate(client.updated_at)} />
         </CardContent>
       </Card>
     </div>;

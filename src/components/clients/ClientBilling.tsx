@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Receipt } from 'lucide-react';
+import { TimeUtils } from '@/lib/timeUtils';
 
 interface ClientBillingProps {
   clientId: string;
@@ -124,8 +125,8 @@ export const ClientBilling: React.FC<ClientBillingProps> = ({ clientId }) => {
                 <tr key={inv.invoice_id} className="border-b last:border-b-0 hover:bg-gray-50 transition">
                   <td className="px-4 py-3 font-mono">{inv.invoice_number}</td>
                   <td className="px-4 py-3">{inv.reference_number || <span className="text-gray-400">—</span>}</td>
-                  <td className="px-4 py-3">{inv.date ? new Date(inv.date).toLocaleDateString() : '—'}</td>
-                  <td className="px-4 py-3">{inv.due_date ? new Date(inv.due_date).toLocaleDateString() : '—'}</td>
+                  <td className="px-4 py-3">{inv.date ? TimeUtils.formatDate(inv.date) : '—'}</td>
+                  <td className="px-4 py-3">{inv.due_date ? TimeUtils.formatDate(inv.due_date) : '—'}</td>
                   <td className="px-4 py-3">₹{Number(inv.total).toLocaleString()}</td>
                   <td className="px-4 py-3">
                     <Badge className={`${statusColors[inv.status?.toLowerCase()] || 'bg-gray-100 text-gray-700 border-gray-200'} rounded-full text-xs px-2`}>

@@ -15,6 +15,7 @@ import { LegalkartDocumentsTable } from './legalkart/LegalkartDocumentsTable';
 import { LegalkartObjectionsTable } from './legalkart/LegalkartObjectionsTable';
 import { LegalkartOrdersTable } from './legalkart/LegalkartOrdersTable';
 import { LegalkartHistoryTable } from './legalkart/LegalkartHistoryTable';
+import { TimeUtils } from '@/lib/timeUtils';
 
 interface CaseDetailsProps {
   caseId: string;
@@ -185,11 +186,7 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
               <div className="space-y-1">
                 <p className="text-sm text-muted-foreground">Next Hearing</p>
                 <p className="text-lg font-semibold text-foreground">
-                  {next_hearing_date ? new Date(next_hearing_date).toLocaleDateString('en-IN', { 
-                    day: 'numeric', 
-                    month: 'short', 
-                    year: 'numeric' 
-                  }) : 'Not scheduled'}
+                  {next_hearing_date ? TimeUtils.formatDate(next_hearing_date) : 'Not scheduled'}
                 </p>
               </div>
               <div className="p-2.5 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
@@ -309,11 +306,7 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
                     <div className="flex items-center justify-between pb-4 border-b last:border-0 last:pb-0">
                       <div className="space-y-1">
                         <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Filing Date</p>
-                        <p className="font-semibold text-sm">{new Date(filing_date).toLocaleDateString('en-IN', { 
-                          day: 'numeric', 
-                          month: 'long', 
-                          year: 'numeric' 
-                        })}</p>
+                        <p className="font-semibold text-sm">{TimeUtils.formatDate(filing_date)}</p>
                       </div>
                     </div>
                   )}
@@ -321,11 +314,7 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
                     <div className="flex items-center justify-between pb-4 border-b last:border-0 last:pb-0">
                       <div className="space-y-1">
                         <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Registration Date</p>
-                        <p className="font-semibold text-sm">{new Date(registration_date).toLocaleDateString('en-IN', { 
-                          day: 'numeric', 
-                          month: 'long', 
-                          year: 'numeric' 
-                        })}</p>
+                        <p className="font-semibold text-sm">{TimeUtils.formatDate(registration_date)}</p>
                       </div>
                     </div>
                   )}
@@ -333,11 +322,7 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
                     <div className="flex items-center justify-between pb-4 border-b last:border-0 last:pb-0">
                       <div className="space-y-1">
                         <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Next Hearing</p>
-                        <p className="font-semibold text-sm text-primary">{new Date(next_hearing_date).toLocaleDateString('en-IN', { 
-                          day: 'numeric', 
-                          month: 'long', 
-                          year: 'numeric' 
-                        })}</p>
+                        <p className="font-semibold text-sm text-primary">{TimeUtils.formatDate(next_hearing_date)}</p>
                       </div>
                     </div>
                   )}
