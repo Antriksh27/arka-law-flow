@@ -122,15 +122,15 @@ export const SendEmailDialog: React.FC<SendEmailDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] bg-white">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] bg-white flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>Send Email to {clientName}</DialogTitle>
           <DialogDescription>
             Compose and send an email to your client
           </DialogDescription>
         </DialogHeader>
         
-        <div className="space-y-4 py-4">
+        <div className="space-y-4 py-4 overflow-y-auto flex-1">
           <div className="space-y-2">
             <Label htmlFor="to">To</Label>
             <Input
@@ -230,7 +230,7 @@ export const SendEmailDialog: React.FC<SendEmailDialogProps> = ({
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex-shrink-0">
           <Button
             variant="outline"
             onClick={onClose}
