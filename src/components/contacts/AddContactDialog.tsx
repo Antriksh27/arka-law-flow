@@ -268,7 +268,7 @@ export const AddContactDialog = ({
 
             {/* Basic Information */}
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-foreground border-b pb-2">Basic Information</h3>
+              <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3 mb-4">Basic Information</h3>
               
               <FormField control={form.control} name="name" rules={{
               required: "Name is required"
@@ -288,7 +288,7 @@ export const AddContactDialog = ({
             {/* Organization Details - Only for Organization */}
             {form.watch('type') === 'Organization' && (
               <div className="space-y-4">
-                <h3 className="text-sm font-medium text-foreground border-b pb-2">Organization Details</h3>
+                <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3 mb-4">Organization Details</h3>
                 
                 <FormField control={form.control} name="organization" rules={{
                   required: form.watch('type') === 'Organization' ? "Organization name is required" : false
@@ -348,7 +348,7 @@ export const AddContactDialog = ({
 
             {/* Contact Details */}
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-foreground border-b pb-2">
+              <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3 mb-4">
                 {form.watch('type') === 'Organization' ? 'Contact Person Details' : 'Contact Details'}
               </h3>
               
@@ -377,7 +377,7 @@ export const AddContactDialog = ({
 
             {/* Address Information */}
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-foreground border-b pb-2">Address Information</h3>
+              <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3 mb-4">Address Information</h3>
               
               <FormField control={form.control} name="address_line_1" render={({
               field
@@ -486,7 +486,7 @@ export const AddContactDialog = ({
 
             {/* Referral Information */}
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-foreground border-b pb-2">Referral Information</h3>
+              <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3 mb-4">Referral Information</h3>
               
               <div className="grid grid-cols-2 gap-4">
                 <FormField control={form.control} name="referred_by_name" render={({
@@ -513,7 +513,7 @@ export const AddContactDialog = ({
 
             {/* Additional Notes */}
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-foreground border-b pb-2">Additional Notes</h3>
+              <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3 mb-4">Additional Notes</h3>
               
               <FormField control={form.control} name="notes" render={({
               field
