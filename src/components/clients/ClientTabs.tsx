@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -16,20 +15,7 @@ import { ClientEmails } from './ClientEmails';
 import { ClientTimeline } from './ClientTimeline';
 import { ClientQuickActions } from './ClientQuickActions';
 import { EditClientDialog } from './EditClientDialog';
-import { 
-  BarChart3, 
-  CheckSquare, 
-  Calendar, 
-  Briefcase, 
-  DollarSign, 
-  StickyNote, 
-  FileText, 
-  Mail,
-  User,
-  Clock,
-  Edit
-} from 'lucide-react';
-
+import { BarChart3, CheckSquare, Calendar, Briefcase, DollarSign, StickyNote, FileText, Mail, User, Clock, Edit } from 'lucide-react';
 interface ClientTabsProps {
   clientId: string;
   client: any;
@@ -37,16 +23,14 @@ interface ClientTabsProps {
   onTabChange: (tab: string) => void;
   onUpdate: () => void;
 }
-
-export const ClientTabs: React.FC<ClientTabsProps> = ({ 
-  clientId, 
+export const ClientTabs: React.FC<ClientTabsProps> = ({
+  clientId,
   client,
-  activeTab, 
+  activeTab,
   onTabChange,
   onUpdate
 }) => {
   const [showEditDialog, setShowEditDialog] = useState(false);
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
@@ -61,22 +45,48 @@ export const ClientTabs: React.FC<ClientTabsProps> = ({
         return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
-
-  const tabs = [
-    { value: 'overview', label: 'Overview', icon: BarChart3 },
-    { value: 'information', label: 'Information', icon: User },
-    { value: 'cases', label: 'Cases', icon: Briefcase },
-    { value: 'appointments', label: 'Appointments', icon: Calendar },
-    { value: 'documents', label: 'Documents', icon: FileText },
-    { value: 'tasks', label: 'Tasks', icon: CheckSquare },
-    { value: 'notes', label: 'Notes', icon: StickyNote },
-    { value: 'billing', label: 'Billing', icon: DollarSign },
-    { value: 'emails', label: 'Emails', icon: Mail },
-    { value: 'timeline', label: 'Timeline', icon: Clock },
-  ];
-
-  return (
-    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm m-8">
+  const tabs = [{
+    value: 'overview',
+    label: 'Overview',
+    icon: BarChart3
+  }, {
+    value: 'information',
+    label: 'Information',
+    icon: User
+  }, {
+    value: 'cases',
+    label: 'Cases',
+    icon: Briefcase
+  }, {
+    value: 'appointments',
+    label: 'Appointments',
+    icon: Calendar
+  }, {
+    value: 'documents',
+    label: 'Documents',
+    icon: FileText
+  }, {
+    value: 'tasks',
+    label: 'Tasks',
+    icon: CheckSquare
+  }, {
+    value: 'notes',
+    label: 'Notes',
+    icon: StickyNote
+  }, {
+    value: 'billing',
+    label: 'Billing',
+    icon: DollarSign
+  }, {
+    value: 'emails',
+    label: 'Emails',
+    icon: Mail
+  }, {
+    value: 'timeline',
+    label: 'Timeline',
+    icon: Clock
+  }];
+  return <div className="bg-white border border-gray-200 rounded-2xl shadow-sm m-8">
       <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
         {/* Header section integrated with tabs - matching CaseDetailEnhanced pattern */}
         <div className="p-6 pb-0">
@@ -94,54 +104,33 @@ export const ClientTabs: React.FC<ClientTabsProps> = ({
                 </h1>
                 <div className="space-y-2">
                   <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                    {client.email && (
-                      <div>
+                    {client.email && <div>
                         <span className="font-medium">Email:</span> {client.email}
-                      </div>
-                    )}
-                    {client.phone && (
-                      <div>
+                      </div>}
+                    {client.phone && <div>
                         <span className="font-medium">Phone:</span> {client.phone}
-                      </div>
-                    )}
-                    {client.type && (
-                      <div>
+                      </div>}
+                    {client.type && <div>
                         <span className="font-medium">Type:</span> {client.type}
-                      </div>
-                    )}
+                      </div>}
                   </div>
                   <div className="flex flex-wrap gap-4 text-sm text-gray-600 items-center">
-                    {client.organization && (
-                      <div>
+                    {client.organization && <div>
                         <span className="font-medium">Organization:</span> {client.organization}
-                      </div>
-                    )}
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">Status:</span>
-                      <Badge className={`${getStatusColor(client.status)} rounded-full px-3 py-1 text-xs`}>
-                        {client.status === 'active' ? 'Active' : client.status}
-                      </Badge>
-                    </div>
-                    {client.client_portal_enabled && (
-                      <Badge variant="outline" className="text-xs">
+                      </div>}
+                    
+                    {client.client_portal_enabled && <Badge variant="outline" className="text-xs">
                         Portal Enabled
-                      </Badge>
-                    )}
+                      </Badge>}
                   </div>
-                  {(client.referred_by_name || client.source) && (
-                    <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                      {client.referred_by_name && (
-                        <div>
+                  {(client.referred_by_name || client.source) && <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                      {client.referred_by_name && <div>
                           <span className="font-medium">Referred By:</span> {client.referred_by_name}
-                        </div>
-                      )}
-                      {client.source && (
-                        <div>
+                        </div>}
+                      {client.source && <div>
                           <span className="font-medium">Source:</span> {client.source}
-                        </div>
-                      )}
-                    </div>
-                  )}
+                        </div>}
+                    </div>}
                 </div>
               </div>
             </div>
@@ -151,11 +140,7 @@ export const ClientTabs: React.FC<ClientTabsProps> = ({
                 <Edit className="w-4 h-4 mr-2" />
                 Edit
               </Button>
-              <ClientQuickActions 
-                clientId={client.id} 
-                clientName={client.full_name} 
-                onAction={onUpdate} 
-              />
+              <ClientQuickActions clientId={client.id} clientName={client.full_name} onAction={onUpdate} />
             </div>
           </div>
         </div>
@@ -163,19 +148,13 @@ export const ClientTabs: React.FC<ClientTabsProps> = ({
         {/* Tabs List - matching case details styling */}
         <TabsList className="w-full bg-white border-b border-gray-200 h-auto p-0">
           <div className="flex flex-wrap sm:flex-nowrap overflow-x-auto">
-            {tabs.map((tab) => {
-              const IconComponent = tab.icon;
-              return (
-                <TabsTrigger 
-                  key={tab.value}
-                  value={tab.value} 
-                  className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 border-b-2 border-transparent data-[state=active]:border-blue-700 data-[state=active]:text-blue-800 data-[state=active]:bg-blue-50 bg-transparent rounded-none whitespace-nowrap transition-colors"
-                >
+            {tabs.map(tab => {
+            const IconComponent = tab.icon;
+            return <TabsTrigger key={tab.value} value={tab.value} className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 border-b-2 border-transparent data-[state=active]:border-blue-700 data-[state=active]:text-blue-800 data-[state=active]:bg-blue-50 bg-transparent rounded-none whitespace-nowrap transition-colors">
                   <IconComponent className="w-4 h-4" />
                   {tab.label}
-                </TabsTrigger>
-              );
-            })}
+                </TabsTrigger>;
+          })}
           </div>
         </TabsList>
 
@@ -215,15 +194,6 @@ export const ClientTabs: React.FC<ClientTabsProps> = ({
       </Tabs>
 
       {/* Edit Dialog */}
-      {showEditDialog && (
-        <EditClientDialog 
-          open={showEditDialog} 
-          onOpenChange={setShowEditDialog} 
-          client={client} 
-          onSuccess={onUpdate} 
-        />
-      )}
-    </div>
-  );
+      {showEditDialog && <EditClientDialog open={showEditDialog} onOpenChange={setShowEditDialog} client={client} onSuccess={onUpdate} />}
+    </div>;
 };
-
