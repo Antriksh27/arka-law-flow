@@ -10,7 +10,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Mail, Phone, Building, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
 
 interface ContactsTableProps {
   contacts: any[];
@@ -69,7 +68,6 @@ export const ContactsTable = ({
             <TableHead className="bg-slate-800 text-white">Contact Info</TableHead>
             <TableHead className="bg-slate-800 text-white">Location</TableHead>
             <TableHead className="bg-slate-800 text-white">Purpose</TableHead>
-            <TableHead className="bg-slate-800 text-white">Last Visit</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -140,12 +138,6 @@ export const ContactsTable = ({
                   {contact.visit_purpose}
                 </Badge>
               )}
-              </TableCell>
-              
-              <TableCell>
-                <span className="text-sm text-gray-500">
-                  {formatDistanceToNow(new Date(contact.last_visited_at), { addSuffix: true })}
-                </span>
               </TableCell>
             </TableRow>
           ))}
