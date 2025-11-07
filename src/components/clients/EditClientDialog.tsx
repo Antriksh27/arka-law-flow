@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -248,7 +249,7 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto p-6">
         <DialogHeader>
           <DialogTitle>Edit Client</DialogTitle>
           <DialogDescription>
@@ -256,7 +257,8 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 mt-4">
+          {/* Client Type */}
           <div>
             <Label>Client Type *</Label>
             <RadioGroup
@@ -278,164 +280,200 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
             </RadioGroup>
           </div>
 
-          <div>
-            <Label htmlFor="full_name">{type === 'Organization' ? 'Contact Person Name' : 'Full Name'} *</Label>
-            <Input
-              id="full_name"
-              {...register('full_name', { required: 'Full name is required' })}
-            />
-            {errors.full_name && (
-              <p className="text-sm text-red-600">{errors.full_name.message}</p>
-            )}
+          {/* Basic Information */}
+          <div className="space-y-4">
+            <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3 mb-4">Basic Information</h3>
+            
+            <div>
+              <Label htmlFor="full_name">{type === 'Organization' ? 'Contact Person Name' : 'Full Name'} *</Label>
+              <Input
+                id="full_name"
+                {...register('full_name', { required: 'Full name is required' })}
+                placeholder="Enter full name"
+              />
+              {errors.full_name && (
+                <p className="text-sm text-red-600 mt-1">{errors.full_name.message}</p>
+              )}
+            </div>
           </div>
 
+          {/* Organization Details - Only for Organization */}
           {type === 'Organization' && (
-            <div>
-              <Label htmlFor="organization">Organization Name *</Label>
-              <Input
-                id="organization"
-                {...register('organization', { 
-                  required: type === 'Organization' ? 'Organization name is required' : false 
-                })}
-              />
-              {errors.organization && (
-                <p className="text-sm text-red-600">{errors.organization.message}</p>
-              )}
+            <div className="space-y-4">
+              <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3 mb-4">Organization Details</h3>
+              
+              <div>
+                <Label htmlFor="organization">Organization Name *</Label>
+                <Input
+                  id="organization"
+                  {...register('organization', { 
+                    required: type === 'Organization' ? 'Organization name is required' : false 
+                  })}
+                  placeholder="Enter organization/company name"
+                />
+                {errors.organization && (
+                  <p className="text-sm text-red-600 mt-1">{errors.organization.message}</p>
+                )}
+              </div>
             </div>
           )}
 
-          <div>
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              {...register('email')}
-            />
-          </div>
+          {/* Contact Details */}
+          <div className="space-y-4">
+            <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3 mb-4">
+              {type === 'Organization' ? 'Contact Person Details' : 'Contact Details'}
+            </h3>
 
-          <div>
-            <Label htmlFor="phone">Phone *</Label>
-            <Input
-              id="phone"
-              {...register('phone', { required: 'Phone is required' })}
-            />
-            {errors.phone && (
-              <p className="text-sm text-red-600">{errors.phone.message}</p>
-            )}
-          </div>
-
-          <div>
-            <Label htmlFor="status">Status</Label>
-            <Select
-              value={watch('status') || 'active'}
-              onValueChange={(value: any) => setValue('status', value)}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="new">New</SelectItem>
-                <SelectItem value="lead">Lead</SelectItem>
-                <SelectItem value="prospect">Prospect</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label htmlFor="address">Address</Label>
-            <Input
-              id="address"
-              {...register('address')}
-              placeholder="Street address, building, etc."
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="state">State</Label>
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                {...register('email')}
+                placeholder="Enter email address"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="phone">Phone *</Label>
+              <Input
+                id="phone"
+                {...register('phone', { required: 'Phone is required' })}
+                placeholder="Enter phone number"
+              />
+              {errors.phone && (
+                <p className="text-sm text-red-600 mt-1">{errors.phone.message}</p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="status">Status</Label>
               <Select
-                value={selectedState}
-                onValueChange={(value) => {
-                  setSelectedState(value);
-                  setSelectedDistrict('');
-                  const stateName = states.find(s => s.id === value)?.name;
-                  setValue('state', stateName || '');
-                }}
+                value={watch('status') || 'active'}
+                onValueChange={(value: any) => setValue('status', value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select state..." />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {states.map((state) => (
-                    <SelectItem key={state.id} value={state.id}>
-                      {state.name}
+                  <SelectItem value="new">New</SelectItem>
+                  <SelectItem value="lead">Lead</SelectItem>
+                  <SelectItem value="prospect">Prospect</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Address Information */}
+          <div className="space-y-4">
+            <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3 mb-4">Address Information</h3>
+
+            <div>
+              <Label htmlFor="address">Address</Label>
+              <Input
+                id="address"
+                {...register('address')}
+                placeholder="Street address, building, etc."
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="state">State</Label>
+                <Select
+                  value={selectedState}
+                  onValueChange={(value) => {
+                    setSelectedState(value);
+                    setSelectedDistrict('');
+                    const stateName = states.find(s => s.id === value)?.name;
+                    setValue('state', stateName || '');
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select state..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {states.map((state) => (
+                      <SelectItem key={state.id} value={state.id}>
+                        {state.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="pin_code">PIN Code</Label>
+                <Input
+                  id="pin_code"
+                  {...register('pin_code')}
+                  placeholder="Enter PIN code"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="district">District</Label>
+              <Select
+                value={selectedDistrict}
+                onValueChange={(value) => {
+                  setSelectedDistrict(value);
+                  setValue('district', value);
+                }}
+                disabled={!selectedState}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={selectedState ? "Select district..." : "Select state first"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {districts.map((district) => (
+                    <SelectItem key={district.id} value={district.name}>
+                      {district.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          {/* Referral Information */}
+          <div className="space-y-4">
+            <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3 mb-4">Referral Information</h3>
 
             <div>
-              <Label htmlFor="pin_code">PIN Code</Label>
+              <Label htmlFor="referred_by_name">Reference Name</Label>
               <Input
-                id="pin_code"
-                {...register('pin_code')}
-                placeholder="Enter PIN code"
+                id="referred_by_name"
+                {...register('referred_by_name')}
+                placeholder="Name of person who referred"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="referred_by_phone">Reference Contact</Label>
+              <Input
+                id="referred_by_phone"
+                {...register('referred_by_phone')}
+                placeholder="Contact number of referrer"
               />
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="district">District</Label>
-            <Select
-              value={selectedDistrict}
-              onValueChange={(value) => {
-                setSelectedDistrict(value);
-                setValue('district', value);
-              }}
-              disabled={!selectedState}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={selectedState ? "Select district..." : "Select state first"} />
-              </SelectTrigger>
-              <SelectContent>
-                {districts.map((district) => (
-                  <SelectItem key={district.id} value={district.name}>
-                    {district.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Additional Notes */}
+          <div className="space-y-4">
+            <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3 mb-4">Additional Notes</h3>
 
-          <div>
-            <Label htmlFor="referred_by_name">Reference Name</Label>
-            <Input
-              id="referred_by_name"
-              {...register('referred_by_name')}
-              placeholder="Name of person who referred"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="referred_by_phone">Reference Contact</Label>
-            <Input
-              id="referred_by_phone"
-              {...register('referred_by_phone')}
-              placeholder="Contact number of referrer"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="notes">Notes</Label>
-            <textarea
-              id="notes"
-              {...register('notes')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              rows={3}
-            />
+            <div>
+              <Label htmlFor="notes">Notes</Label>
+              <Textarea
+                id="notes"
+                {...register('notes')}
+                rows={4}
+                placeholder="Additional notes about the client"
+              />
+            </div>
           </div>
 
           <DialogFooter>
