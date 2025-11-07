@@ -11,9 +11,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UserPlus, Search, Phone, Mail, Calendar, Plus, Filter, Users } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import AddContactDialog from '@/components/reception/AddContactDialog';
+import { AddContactDialog } from '@/components/contacts/AddContactDialog';
 import { ConvertContactToClientDialog } from '@/components/reception/ConvertContactToClientDialog';
-import EditContactDialog from '@/components/reception/EditContactDialog';
+import { EditContactDialog } from '@/components/contacts/EditContactDialog';
 import ReceptionClientList from '@/components/reception/ReceptionClientList';
 
 const ReceptionContacts = () => {

@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
 import { AddClientDialog } from '@/components/clients/AddClientDialog';
-import AddContactDialog from '@/components/reception/AddContactDialog';
+import { AddContactDialog } from '@/components/contacts/AddContactDialog';
 
 interface Client {
   id: string;

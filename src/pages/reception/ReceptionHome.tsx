@@ -11,9 +11,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Calendar, Users, UserPlus, Search, MoreHorizontal, User, Video, MapPin, Edit2, CalendarPlus, Briefcase, LayoutList, Edit, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
-import AddContactDialog from '@/components/reception/AddContactDialog';
+import { AddContactDialog } from '@/components/contacts/AddContactDialog';
 import BookAppointmentDialog from '@/components/reception/BookAppointmentDialog';
-import EditContactDialog from '@/components/reception/EditContactDialog';
+import { EditContactDialog } from '@/components/contacts/EditContactDialog';
 import EditAppointmentDialog from '@/components/reception/EditAppointmentDialog';
 import RescheduleAppointmentDialog from '@/components/reception/RescheduleAppointmentDialog';
 const ReceptionHome = () => {
