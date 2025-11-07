@@ -379,7 +379,7 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
               <h3 className="text-base font-semibold text-foreground">Client Information</h3>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="client_id" className="text-sm font-medium text-foreground">Client/Contact</Label>
                 <ClientSelector
