@@ -16,7 +16,7 @@ export const ClientInfoContent: React.FC<ClientInfoContentProps> = ({
 }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('overview-stats');
+  const [activeTab, setActiveTab] = useState('overview');
 
   const {
     data: client,
