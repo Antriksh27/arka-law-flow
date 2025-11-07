@@ -307,7 +307,6 @@ export const ConvertToClientDialog = ({
       setSelectedLawyers([]);
       setShowAddDistrict(false);
       setNewDistrictName('');
-      setShowEngagementLetter(true);
       onOpenChange(false);
     } catch (error: any) {
       console.error('Error converting to client:', error);
