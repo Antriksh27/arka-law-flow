@@ -138,7 +138,6 @@ export const ClientQuickActions: React.FC<ClientQuickActionsProps> = ({
             <DropdownMenuItem 
               className="hover:bg-gray-50 cursor-pointer"
               onClick={() => setShowEmailDialog(true)}
-              disabled={!clientEmail}
             >
               <Mail className="w-4 h-4 mr-3 text-gray-400" />
               <span>Send Email</span>
