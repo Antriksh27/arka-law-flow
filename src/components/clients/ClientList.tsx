@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Plus, Search, MoreHorizontal, Eye, Upload, ArrowUpDown, ChevronLeft, ChevronRight, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, Eye, Upload, ArrowUpDown, ChevronLeft, ChevronRight, Pencil, Trash2, Filter, SlidersHorizontal } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,7 @@ import { BulkImportClientsDialog } from './BulkImportClientsDialog';
 import { SyncClientsToZoho } from './SyncClientsToZoho';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
 interface Client {
   id: string;
   full_name: string;
@@ -201,13 +202,100 @@ export const ClientList = () => {
             <Input placeholder="Search clients by name or email..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10 border-slate-900" />
           </div>
 
-          
+          {/* Status Filter Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <Filter className="w-4 h-4" />
+                Status: {statusFilter === 'all' ? 'All' : statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48 bg-background z-50">
+              <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={() => setStatusFilter('all')}
+                className={statusFilter === 'all' ? 'bg-accent' : ''}
+              >
+                All Clients
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => setStatusFilter('active')}
+                className={statusFilter === 'active' ? 'bg-accent' : ''}
+              >
+                Active
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => setStatusFilter('new')}
+                className={statusFilter === 'new' ? 'bg-accent' : ''}
+              >
+                New
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => setStatusFilter('lead')}
+                className={statusFilter === 'lead' ? 'bg-accent' : ''}
+              >
+                Lead
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => setStatusFilter('prospect')}
+                className={statusFilter === 'prospect' ? 'bg-accent' : ''}
+              >
+                Prospect
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => setStatusFilter('inactive')}
+                className={statusFilter === 'inactive' ? 'bg-accent' : ''}
+              >
+                Inactive
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-          
-
-          
-
-          
+          {/* Sort Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <SlidersHorizontal className="w-4 h-4" />
+                Sort: {sortField === 'name' ? 'Name' : sortField === 'active_cases' ? 'Cases' : sortField.charAt(0).toUpperCase() + sortField.slice(1)}
+                {sortDirection === 'asc' ? ' ↑' : ' ↓'}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48 bg-background z-50">
+              <DropdownMenuLabel>Sort By</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={() => handleSort('name')}
+                className={sortField === 'name' ? 'bg-accent' : ''}
+              >
+                Name {sortField === 'name' && (sortDirection === 'asc' ? '↑' : '↓')}
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => handleSort('email')}
+                className={sortField === 'email' ? 'bg-accent' : ''}
+              >
+                Email {sortField === 'email' && (sortDirection === 'asc' ? '↑' : '↓')}
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => handleSort('status')}
+                className={sortField === 'status' ? 'bg-accent' : ''}
+              >
+                Status {sortField === 'status' && (sortDirection === 'asc' ? '↑' : '↓')}
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => handleSort('active_cases')}
+                className={sortField === 'active_cases' ? 'bg-accent' : ''}
+              >
+                Active Cases {sortField === 'active_cases' && (sortDirection === 'asc' ? '↑' : '↓')}
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => handleSort('created_at')}
+                className={sortField === 'created_at' ? 'bg-accent' : ''}
+              >
+                Date Added {sortField === 'created_at' && (sortDirection === 'asc' ? '↑' : '↓')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
