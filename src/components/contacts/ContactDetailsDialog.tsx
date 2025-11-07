@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { User, Building, Mail, Phone, MapPin, FileText, Calendar, UserCheck, UserPlus, Edit, Trash2 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
-
 interface ContactDetailsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -14,7 +13,6 @@ interface ContactDetailsDialogProps {
   onEditContact?: (contact: any) => void;
   onDeleteContact?: (contact: any) => void;
 }
-
 export const ContactDetailsDialog: React.FC<ContactDetailsDialogProps> = ({
   open,
   onOpenChange,
@@ -24,24 +22,19 @@ export const ContactDetailsDialog: React.FC<ContactDetailsDialogProps> = ({
   onDeleteContact
 }) => {
   if (!contact) return null;
-
   const handleConvertToClient = () => {
     onOpenChange(false);
     onConvertToClient?.(contact);
   };
-
   const handleEdit = () => {
     onOpenChange(false);
     onEditContact?.(contact);
   };
-
   const handleDelete = () => {
     onOpenChange(false);
     onDeleteContact?.(contact);
   };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+  return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
@@ -53,12 +46,10 @@ export const ContactDetailsDialog: React.FC<ContactDetailsDialogProps> = ({
               </div>
               <div>
                 <h2 className="text-2xl font-semibold text-gray-900">{contact.name}</h2>
-                {contact.organization && (
-                  <div className="flex items-center gap-2 text-muted-foreground mt-1">
+                {contact.organization && <div className="flex items-center gap-2 text-muted-foreground mt-1">
                     <Building className="h-4 w-4" />
                     <span>{contact.organization}</span>
-                  </div>
-                )}
+                  </div>}
               </div>
             </div>
           </DialogTitle>
@@ -159,31 +150,7 @@ export const ContactDetailsDialog: React.FC<ContactDetailsDialogProps> = ({
 
           {/* Visit Information */}
           <Separator />
-          <div className="space-y-4">
-            <h3 className="flex items-center gap-2 text-lg font-medium">
-              <Calendar className="w-5 h-5" />
-              Visit Information
-            </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <p className="text-sm font-medium mb-1">Purpose of Visit</p>
-                <p className="text-sm text-muted-foreground">
-                  {contact.visit_purpose || <span className="text-gray-400">Not provided</span>}
-                </p>
-              </div>
-              
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <p className="text-sm font-medium mb-1">Last Visit</p>
-                <p className="text-sm text-gray-600">
-                  {formatDistanceToNow(new Date(contact.last_visited_at), { addSuffix: true })}
-                </p>
-                <p className="text-xs text-gray-500">
-                  {format(new Date(contact.last_visited_at), 'dd/MM/yyyy')}
-                </p>
-              </div>
-            </div>
-          </div>
+          
 
           {/* Referral Information */}
           <Separator />
@@ -232,49 +199,29 @@ export const ContactDetailsDialog: React.FC<ContactDetailsDialogProps> = ({
               <p className="font-medium">Created</p>
               <p>{format(new Date(contact.created_at), 'dd/MM/yyyy HH:mm')}</p>
             </div>
-            {contact.updated_at && (
-              <div>
+            {contact.updated_at && <div>
                 <p className="font-medium">Updated</p>
                 <p>{format(new Date(contact.updated_at), 'dd/MM/yyyy HH:mm')}</p>
-              </div>
-            )}
+              </div>}
           </div>
         </div>
 
         <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
           <div className="flex gap-2 w-full sm:w-auto">
-            {onEditContact && (
-              <Button
-                variant="outline"
-                onClick={handleEdit}
-                className="flex-1 sm:flex-initial"
-              >
+            {onEditContact && <Button variant="outline" onClick={handleEdit} className="flex-1 sm:flex-initial">
                 <Edit className="mr-2 h-4 w-4" />
                 Edit
-              </Button>
-            )}
-            {onDeleteContact && (
-              <Button
-                variant="outline"
-                onClick={handleDelete}
-                className="flex-1 sm:flex-initial text-red-600 hover:text-red-700 hover:bg-red-50"
-              >
+              </Button>}
+            {onDeleteContact && <Button variant="outline" onClick={handleDelete} className="flex-1 sm:flex-initial text-red-600 hover:text-red-700 hover:bg-red-50">
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete
-              </Button>
-            )}
+              </Button>}
           </div>
-          {onConvertToClient && (
-            <Button
-              onClick={handleConvertToClient}
-              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
-            >
+          {onConvertToClient && <Button onClick={handleConvertToClient} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700">
               <UserPlus className="mr-2 h-4 w-4" />
               Convert to Client
-            </Button>
-          )}
+            </Button>}
         </DialogFooter>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 };
