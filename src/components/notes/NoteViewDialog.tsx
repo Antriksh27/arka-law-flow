@@ -1,10 +1,14 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Eye, EyeOff, Pin, Calendar, User, FileText, Play, Pause, Download } from 'lucide-react';
+import { Eye, EyeOff, Pin, Calendar, User, FileText, Play, Pause, Download, Trash2, PinOff } from 'lucide-react';
 import { format } from 'date-fns';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/components/ui/use-toast';
 
 interface NoteViewDialogProps {
   note: any;
@@ -21,8 +25,66 @@ export const NoteViewDialog: React.FC<NoteViewDialogProps> = ({
 }) => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = React.useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   if (!note) return null;
+
+  // Pin/Unpin mutation
+  const togglePinMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from('notes_v2')
+        .update({ is_pinned: !note.is_pinned })
+        .eq('id', note.id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['client-notes-v2'] });
+      toast({
+        title: note.is_pinned ? 'Note unpinned' : 'Note pinned',
+        description: note.is_pinned ? 'Note has been unpinned' : 'Note has been pinned to top',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: 'Failed to update note',
+        variant: 'destructive',
+      });
+      console.error('Error toggling pin:', error);
+    },
+  });
+
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from('notes_v2')
+        .delete()
+        .eq('id', note.id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['client-notes-v2'] });
+      toast({
+        title: 'Note deleted',
+        description: 'Note has been permanently deleted',
+      });
+      onClose();
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: 'Failed to delete note',
+        variant: 'destructive',
+      });
+      console.error('Error deleting note:', error);
+    },
+  });
 
   // Helper function to get actual data value
   const getDataValue = (data: any) => {
@@ -92,15 +154,51 @@ export const NoteViewDialog: React.FC<NoteViewDialogProps> = ({
               {note.title}
             </DialogTitle>
             <div className="flex items-center gap-2">
-              {onEdit && note.id !== 'client-notes' && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={onEdit}
-                  className="mr-2"
-                >
-                  Edit
-                </Button>
+              {note.id !== 'client-notes' && (
+                <>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      togglePinMutation.mutate();
+                    }}
+                    disabled={togglePinMutation.isPending}
+                  >
+                    {note.is_pinned ? (
+                      <>
+                        <PinOff className="w-4 h-4 mr-1" />
+                        Unpin
+                      </>
+                    ) : (
+                      <>
+                        <Pin className="w-4 h-4 mr-1" />
+                        Pin
+                      </>
+                    )}
+                  </Button>
+                  {onEdit && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={onEdit}
+                    >
+                      Edit
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowDeleteDialog(true);
+                    }}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <Trash2 className="w-4 h-4 mr-1" />
+                    Delete
+                  </Button>
+                </>
               )}
               {getVisibilityIcon()}
               {note.is_pinned && <Pin className="w-4 h-4 text-yellow-600 fill-current" />}
@@ -210,6 +308,27 @@ export const NoteViewDialog: React.FC<NoteViewDialogProps> = ({
           </div>
         </div>
       </DialogContent>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Note</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this note? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteMutation.mutate()}
+              className="bg-red-600 hover:bg-red-700"
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 };
