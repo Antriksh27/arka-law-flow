@@ -265,149 +265,197 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
   };
 
   return (
-    <>
-      <div className="pb-4">
-        <h2 className="text-xl font-semibold text-gray-900">Create New Appointment</h2>
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <div className="px-6 py-5 border-b border-border">
+        <h2 className="text-2xl font-semibold text-foreground">New Appointment</h2>
+        <p className="text-sm text-muted-foreground mt-1">Schedule a meeting with your client</p>
       </div>
       
-      <div className="overflow-y-auto px-1 max-h-[calc(90vh-120px)]">
-        <form onSubmit={handleSubmit} className="space-y-4 pr-3">
-          {/* Availability-based selection bound to selected lawyer */}
-          <SmartBookingCalendar
-            selectedLawyer={formData.lawyer_id || null}
-            selectedDate={typeof formData.appointment_date === 'string' ? new Date(formData.appointment_date) : formData.appointment_date}
-            selectedTime={formData.appointment_time}
-            hideLawyerPicker
-            onTimeSlotSelect={(date, time, duration) => {
-              handleInputChange('appointment_date', date);
-              handleInputChange('appointment_time', time);
-              handleInputChange('duration_minutes', duration);
-            }}
-          />
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="duration_minutes" className="text-sm font-medium text-gray-900">Duration (minutes)</Label>
-              <Select
-                value={formData.duration_minutes.toString()}
-                onValueChange={(value) => handleInputChange('duration_minutes', parseInt(value))}
-              >
-                <SelectTrigger className="bg-white border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-white border-gray-300">
-                  <SelectItem value="30" className="text-gray-900">30 minutes</SelectItem>
-                  <SelectItem value="60" className="text-gray-900">1 hour</SelectItem>
-                  <SelectItem value="90" className="text-gray-900">1.5 hours</SelectItem>
-                  <SelectItem value="120" className="text-gray-900">2 hours</SelectItem>
-                </SelectContent>
-              </Select>
+      {/* Form Content */}
+      <div className="flex-1 overflow-y-auto px-6 py-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Assigned To - Prominent at top */}
+          <div className="bg-accent/30 rounded-xl p-5 space-y-3 border border-accent/50">
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <Label htmlFor="lawyer_id" className="text-base font-semibold text-foreground">
+                Assigned To <span className="text-destructive">*</span>
+              </Label>
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="type" className="text-sm font-medium text-gray-900">Type</Label>
-              <Select
-                value={formData.type}
-                onValueChange={(value) => handleInputChange('type', value as 'in-person' | 'other' | 'call' | 'video-call')}
-              >
-                <SelectTrigger className="bg-white border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-white border-gray-300">
-                  <SelectItem value="in-person" className="text-gray-900">In-Person Meeting</SelectItem>
-                  <SelectItem value="video-call" className="text-gray-900">Video Call</SelectItem>
-                  <SelectItem value="call" className="text-gray-900">Phone Call</SelectItem>
-                  <SelectItem value="other" className="text-gray-900">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="client_id" className="text-sm font-medium text-gray-900">Client/Contact</Label>
-              <ClientSelector
-                value={formData.client_id}
-                onValueChange={(value) => handleInputChange('client_id', value)}
-                placeholder="Select or add client/contact..."
-                onClientAdded={(clientId) => {
-                  // Auto-select the newly created client while preserving date/time
-                  handleInputChange('client_id', clientId);
-                }}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="lawyer_id" className="text-sm font-medium text-gray-900">Assigned To *</Label>
-              <Select
-                value={formData.lawyer_id}
-                onValueChange={(value) => handleInputChange('lawyer_id', value)}
-                required
-              >
-                <SelectTrigger className="bg-white border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500">
-                  <SelectValue placeholder="Select user" />
-                </SelectTrigger>
-                <SelectContent className="bg-white border-gray-300">
-                  {users.map((user) => (
-                    <SelectItem key={user.id} value={user.id} className="text-gray-900">
-                      {user.full_name} ({user.role})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="case_id" className="text-sm font-medium text-gray-900">Related Case (Optional)</Label>
             <Select
-              value={formData.case_id}
-              onValueChange={(value) => handleInputChange('case_id', value)}
+              value={formData.lawyer_id}
+              onValueChange={(value) => handleInputChange('lawyer_id', value)}
+              required
             >
-              <SelectTrigger className="bg-white border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500">
-                <SelectValue placeholder="Select case" />
+              <SelectTrigger className="bg-background border-border text-foreground h-11">
+                <SelectValue placeholder="Select team member" />
               </SelectTrigger>
-              <SelectContent className="bg-white border-gray-300">
-                {cases.map((case_) => (
-                  <SelectItem key={case_.id} value={case_.id} className="text-gray-900">
-                    {case_.case_title} ({case_.case_number})
+              <SelectContent className="bg-background border-border">
+                {users.map((user) => (
+                  <SelectItem key={user.id} value={user.id} className="text-foreground">
+                    {user.full_name} <span className="text-muted-foreground">({user.role})</span>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
+
+          {/* Date & Time Selection */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 pb-2">
+              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h3 className="text-base font-semibold text-foreground">Schedule</h3>
+            </div>
+            
+            <SmartBookingCalendar
+              selectedLawyer={formData.lawyer_id || null}
+              selectedDate={typeof formData.appointment_date === 'string' ? new Date(formData.appointment_date) : formData.appointment_date}
+              selectedTime={formData.appointment_time}
+              hideLawyerPicker
+              onTimeSlotSelect={(date, time, duration) => {
+                handleInputChange('appointment_date', date);
+                handleInputChange('appointment_time', time);
+                handleInputChange('duration_minutes', duration);
+              }}
+            />
+          </div>
+
+          {/* Duration & Type */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="duration_minutes" className="text-sm font-medium text-foreground">Duration</Label>
+              <Select
+                value={formData.duration_minutes.toString()}
+                onValueChange={(value) => handleInputChange('duration_minutes', parseInt(value))}
+              >
+                <SelectTrigger className="bg-background border-border text-foreground h-11">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-background border-border">
+                  <SelectItem value="30" className="text-foreground">30 minutes</SelectItem>
+                  <SelectItem value="60" className="text-foreground">1 hour</SelectItem>
+                  <SelectItem value="90" className="text-foreground">1.5 hours</SelectItem>
+                  <SelectItem value="120" className="text-foreground">2 hours</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="type" className="text-sm font-medium text-foreground">Type</Label>
+              <Select
+                value={formData.type}
+                onValueChange={(value) => handleInputChange('type', value as 'in-person' | 'other' | 'call' | 'video-call')}
+              >
+                <SelectTrigger className="bg-background border-border text-foreground h-11">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-background border-border">
+                  <SelectItem value="in-person" className="text-foreground">In-Person Meeting</SelectItem>
+                  <SelectItem value="video-call" className="text-foreground">Video Call</SelectItem>
+                  <SelectItem value="call" className="text-foreground">Phone Call</SelectItem>
+                  <SelectItem value="other" className="text-foreground">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="notes" className="text-sm font-medium text-gray-900">Notes</Label>
+          {/* Client & Case Selection */}
+          <div className="space-y-4 pt-2">
+            <div className="flex items-center gap-2 pb-2">
+              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+              <h3 className="text-base font-semibold text-foreground">Client Information</h3>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="client_id" className="text-sm font-medium text-foreground">Client/Contact</Label>
+                <ClientSelector
+                  value={formData.client_id}
+                  onValueChange={(value) => handleInputChange('client_id', value)}
+                  placeholder="Select or add client..."
+                  onClientAdded={(clientId) => {
+                    handleInputChange('client_id', clientId);
+                  }}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="case_id" className="text-sm font-medium text-foreground">Related Case</Label>
+                <Select
+                  value={formData.case_id}
+                  onValueChange={(value) => handleInputChange('case_id', value)}
+                >
+                  <SelectTrigger className="bg-background border-border text-foreground h-11">
+                    <SelectValue placeholder="Select case (optional)" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border-border">
+                    {cases.map((case_) => (
+                      <SelectItem key={case_.id} value={case_.id} className="text-foreground">
+                        {case_.case_title} <span className="text-muted-foreground">({case_.case_number})</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          
+          {/* Notes Section */}
+          <div className="space-y-3 pt-2">
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </div>
+              <Label htmlFor="notes" className="text-base font-semibold text-foreground">Notes</Label>
+            </div>
             <Textarea
               id="notes"
               value={formData.notes}
               onChange={(e) => handleInputChange('notes', e.target.value)}
-              placeholder="Additional notes or agenda items..."
-              rows={3}
-              className="bg-white border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500 resize-none"
+              placeholder="Add agenda items, discussion points, or any additional information..."
+              rows={4}
+              className="bg-background border-border text-foreground resize-none"
             />
-          </div>
-
-          <div className="flex justify-end gap-3 pt-4 sticky bottom-0 bg-white border-t border-gray-200 pb-2">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={closeDialog} 
-              className="bg-white border-gray-300 text-gray-900 hover:bg-gray-50"
-            >
-              Cancel
-            </Button>
-            <Button 
-              type="submit" 
-              className="bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
-              disabled={loading || !isFormValid()}
-            >
-              {loading ? 'Creating...' : 'Create Appointment'}
-            </Button>
           </div>
         </form>
       </div>
-    </>
+
+      {/* Footer Actions */}
+      <div className="px-6 py-4 border-t border-border bg-muted/30">
+        <div className="flex justify-end gap-3">
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={closeDialog}
+            className="min-w-[100px]"
+          >
+            Cancel
+          </Button>
+          <Button 
+            type="submit" 
+            onClick={handleSubmit}
+            disabled={loading || !isFormValid()}
+            className="min-w-[140px] bg-primary hover:bg-primary/90"
+          >
+            {loading ? 'Creating...' : 'Create Appointment'}
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 };
