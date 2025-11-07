@@ -8,6 +8,7 @@ const corsHeaders = {
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const APP_BASE_URL = "https://hru-legal.lovable.app";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -171,11 +172,11 @@ async function constructMessageAndPayload(table: string, eventType: string, reco
       if (eventType === "INSERT") {
         subject = `🧍‍♂️ New client added: ${fullName}`;
         body = `${createdBy} added a new client record for **${fullName}** (${record.phone || "No phone"} / ${record.email || "No email"}).`;
-        data = { clientId: record.id, clientName: fullName, module: "clients" };
+        data = { clientId: record.id, clientName: fullName, module: "clients", primary_action_url: `${APP_BASE_URL}/clients/${record.id}` };
       } else {
         subject = `🧍‍♂️ Client details updated for ${fullName}`;
         body = `Information updated by ${createdBy}. Review the changes.`;
-        data = { clientId: record.id, clientName: fullName, module: "clients" };
+        data = { clientId: record.id, clientName: fullName, module: "clients", primary_action_url: `${APP_BASE_URL}/clients/${record.id}` };
       }
       break;
     }
@@ -187,11 +188,11 @@ async function constructMessageAndPayload(table: string, eventType: string, reco
       if (eventType === "INSERT") {
         subject = `📇 New contact added: ${name}`;
         body = `${createdBy} created a new contact record (${record.phone || "No phone"} / ${record.email || "No email"}).`;
-        data = { contactId: record.id, contactName: name, module: "contacts" };
+        data = { contactId: record.id, contactName: name, module: "contacts", primary_action_url: `${APP_BASE_URL}/contacts` };
       } else {
         subject = `📇 Contact updated: ${name}`;
         body = `Details were modified by ${createdBy}.`;
-        data = { contactId: record.id, contactName: name, module: "contacts" };
+        data = { contactId: record.id, contactName: name, module: "contacts", primary_action_url: `${APP_BASE_URL}/contacts` };
       }
       break;
     }
@@ -205,15 +206,15 @@ async function constructMessageAndPayload(table: string, eventType: string, reco
       if (eventType === "INSERT") {
         subject = `⚖️ New case added: ${caseTitle}`;
         body = `${createdBy} added case **${caseTitle}** (Case No: ${caseNumber}) for client ${clientName}.`;
-        data = { caseId: record.id, caseTitle, caseNumber, module: "cases" };
+        data = { caseId: record.id, caseTitle, caseNumber, module: "cases", primary_action_url: `${APP_BASE_URL}/cases/${record.id}` };
       } else if (oldRecord && oldRecord.status !== record.status) {
         subject = `📈 Case status changed: ${caseTitle}`;
         body = `Case stage updated to "**${record.stage || record.status}**" (${record.status}).`;
-        data = { caseId: record.id, caseTitle, status: record.status, module: "cases" };
+        data = { caseId: record.id, caseTitle, status: record.status, module: "cases", primary_action_url: `${APP_BASE_URL}/cases/${record.id}` };
       } else {
         subject = `⚖️ Case updated: ${caseTitle}`;
         body = `${createdBy} updated case details. Review the latest activity.`;
-        data = { caseId: record.id, caseTitle, module: "cases" };
+        data = { caseId: record.id, caseTitle, module: "cases", primary_action_url: `${APP_BASE_URL}/cases/${record.id}` };
       }
       break;
     }
@@ -225,7 +226,7 @@ async function constructMessageAndPayload(table: string, eventType: string, reco
       
       subject = `🧾 New court order uploaded for ${caseTitle}`;
       body = `Court order titled "**${orderTitle}**" added on ${orderDate}.`;
-      data = { caseId: record.case_id, orderId: record.id, orderTitle, module: "cases" };
+      data = { caseId: record.case_id, orderId: record.id, orderTitle, module: "cases", primary_action_url: `${APP_BASE_URL}/cases/${record.case_id}` };
       break;
     }
 
@@ -238,7 +239,7 @@ async function constructMessageAndPayload(table: string, eventType: string, reco
       if (eventType === "INSERT") {
         subject = `📅 New appointment scheduled with ${clientName}`;
         body = `Scheduled on **${date}** at **${time}** (${meetingMode}).`;
-        data = { appointmentId: record.id, clientName, date, time, module: "appointments" };
+        data = { appointmentId: record.id, clientName, date, time, module: "appointments", primary_action_url: `${APP_BASE_URL}/appointments` };
       } else if (eventType === "UPDATE") {
         // Skip ALL UPDATE notifications for appointments to avoid duplicates from Google Calendar sync
         console.log("[notify-knock] Skipping appointment UPDATE notification", { 
@@ -258,7 +259,7 @@ async function constructMessageAndPayload(table: string, eventType: string, reco
       
       subject = `⚖️ Hearing scheduled for ${caseTitle}`;
       body = `Hearing set for **${hearingDate}** at ${courtName}. Counsel: ${lawyerName}.`;
-      data = { hearingId: record.id, caseId: record.case_id, caseTitle, hearingDate, module: "hearings" };
+      data = { hearingId: record.id, caseId: record.case_id, caseTitle, hearingDate, module: "hearings", primary_action_url: `${APP_BASE_URL}/hearings` };
       break;
     }
 
@@ -270,16 +271,16 @@ async function constructMessageAndPayload(table: string, eventType: string, reco
       if (eventType === "INSERT") {
         subject = `📋 New task assigned: ${title}`;
         body = `${assignedBy} assigned you a task. Deadline: **${dueDate}**.`;
-        data = { taskId: record.id, title, dueDate, module: "tasks" };
+        data = { taskId: record.id, title, dueDate, module: "tasks", primary_action_url: `${APP_BASE_URL}/tasks` };
       } else if (oldRecord && oldRecord.status !== record.status && record.status === "completed") {
         const updatedBy = await getUserName(record.updated_by, supabase);
         subject = `✅ Task completed: ${title}`;
         body = `Task "**${title}**" marked as done by ${updatedBy}.`;
-        data = { taskId: record.id, title, module: "tasks" };
+        data = { taskId: record.id, title, module: "tasks", primary_action_url: `${APP_BASE_URL}/tasks` };
       } else {
         subject = `📋 Task updated: ${title}`;
         body = `Task status is now **${record.status || "pending"}**.`;
-        data = { taskId: record.id, title, status: record.status, module: "tasks" };
+        data = { taskId: record.id, title, status: record.status, module: "tasks", primary_action_url: `${APP_BASE_URL}/tasks` };
       }
       break;
     }
@@ -291,7 +292,13 @@ async function constructMessageAndPayload(table: string, eventType: string, reco
       
       subject = `📎 New document uploaded: ${fileName}`;
       body = `"**${fileName}**" uploaded to case ${caseTitle} by ${uploadedBy}.`;
-      data = { documentId: record.id, fileName, caseId: record.case_id, module: "documents" };
+      data = { 
+        documentId: record.id, 
+        fileName, 
+        caseId: record.case_id, 
+        module: "documents", 
+        primary_action_url: record.case_id ? `${APP_BASE_URL}/cases/${record.case_id}` : `${APP_BASE_URL}/documents`
+      };
       break;
     }
 
@@ -311,7 +318,12 @@ async function constructMessageAndPayload(table: string, eventType: string, reco
         noteTitle, 
         caseId: record.case_id, 
         clientId: record.client_id,
-        module: "notes" 
+        module: "notes",
+        primary_action_url: record.case_id 
+          ? `${APP_BASE_URL}/cases/${record.case_id}` 
+          : record.client_id 
+          ? `${APP_BASE_URL}/clients/${record.client_id}`
+          : `${APP_BASE_URL}/notes`
       };
       break;
     }
