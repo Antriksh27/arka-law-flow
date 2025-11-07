@@ -23,6 +23,7 @@ interface ClientFormData {
   phone?: string;
   organization?: string;
   address?: string;
+  pin_code?: string;
   state?: string;
   district?: string;
   type: 'Individual' | 'Corporate';
@@ -77,9 +78,6 @@ export const ConvertToClientDialog = ({
     if (contact && open) {
       // Build address from contact fields
       const addressParts = [contact.address_line_1, contact.address_line_2].filter(Boolean);
-      if (contact.pin_code) {
-        addressParts.push(`PIN: ${contact.pin_code}`);
-      }
       const fullAddress = addressParts.length > 0 ? addressParts.join(', ') : '';
 
       // Combine notes
@@ -89,6 +87,7 @@ export const ConvertToClientDialog = ({
       setValue('phone', contact.phone || '');
       setValue('organization', contact.organization || '');
       setValue('address', fullAddress);
+      setValue('pin_code', contact.pin_code || '');
       setValue('referred_by_name', contact.referred_by_name || '');
       setValue('referred_by_phone', contact.referred_by_phone || '');
       setValue('notes', combinedNotes);
@@ -350,6 +349,11 @@ export const ConvertToClientDialog = ({
             <div>
               <Label htmlFor="address">Address</Label>
               <Input id="address" {...register('address')} placeholder="Street address" />
+            </div>
+
+            <div>
+              <Label htmlFor="pin_code">PIN Code</Label>
+              <Input id="pin_code" {...register('pin_code')} placeholder="Enter PIN code" />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
