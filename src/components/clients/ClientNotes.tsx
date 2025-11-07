@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { Plus, Pin, Eye, EyeOff } from 'lucide-react';
 import { CreateNoteMultiModal } from '@/components/notes/CreateNoteMultiModal';
+import { NoteViewDialog } from '@/components/notes/NoteViewDialog';
+import { EditNoteDialog } from '@/components/notes/EditNoteDialog';
 
 interface ClientNotesProps {
   clientId: string;
@@ -51,6 +53,8 @@ export const ClientNotes: React.FC<ClientNotesProps> = ({ clientId }) => {
   const isLoading = notesV2Loading || clientLoading;
 
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [viewingNote, setViewingNote] = useState<any>(null);
+  const [editingNote, setEditingNote] = useState<any>(null);
 
   // Combine both types of notes
   const allNotes = [];
@@ -113,9 +117,10 @@ export const ClientNotes: React.FC<ClientNotesProps> = ({ clientId }) => {
             {notes.map((note) => (
               <div 
                 key={note.id} 
-                className={`border rounded-lg p-4 hover:bg-gray-50 ${
+                className={`border rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
                   note.is_pinned ? 'border-primary/20 bg-primary/5' : ''
                 }`}
+                onClick={() => setViewingNote(note)}
               >
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex items-center gap-2">
@@ -180,6 +185,22 @@ export const ClientNotes: React.FC<ClientNotesProps> = ({ clientId }) => {
         open={showCreateDialog}
         onClose={() => setShowCreateDialog(false)}
         clientId={clientId}
+      />
+
+      <NoteViewDialog
+        note={viewingNote}
+        open={!!viewingNote}
+        onClose={() => setViewingNote(null)}
+        onEdit={() => {
+          setEditingNote(viewingNote);
+          setViewingNote(null);
+        }}
+      />
+
+      <EditNoteDialog
+        note={editingNote}
+        open={!!editingNote}
+        onClose={() => setEditingNote(null)}
       />
     </Card>
   );

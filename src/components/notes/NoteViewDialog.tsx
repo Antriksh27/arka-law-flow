@@ -10,12 +10,14 @@ interface NoteViewDialogProps {
   note: any;
   open: boolean;
   onClose: () => void;
+  onEdit?: () => void;
 }
 
 export const NoteViewDialog: React.FC<NoteViewDialogProps> = ({
   note,
   open,
   onClose,
+  onEdit,
 }) => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = React.useState(false);
@@ -90,6 +92,16 @@ export const NoteViewDialog: React.FC<NoteViewDialogProps> = ({
               {note.title}
             </DialogTitle>
             <div className="flex items-center gap-2">
+              {onEdit && note.id !== 'client-notes' && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={onEdit}
+                  className="mr-2"
+                >
+                  Edit
+                </Button>
+              )}
               {getVisibilityIcon()}
               {note.is_pinned && <Pin className="w-4 h-4 text-yellow-600 fill-current" />}
             </div>
