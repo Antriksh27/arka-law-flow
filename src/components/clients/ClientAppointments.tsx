@@ -90,7 +90,7 @@ export const ClientAppointments: React.FC<ClientAppointmentsProps> = ({ clientId
     <Card className="bg-white rounded-2xl shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-xl font-semibold">Appointments</CardTitle>
-        <Button size="sm" className="bg-primary hover:bg-primary/90" onClick={() => openDialog(<CreateAppointmentDialog />)}>
+        <Button size="sm" className="bg-primary hover:bg-primary/90" onClick={() => openDialog(<CreateAppointmentDialog preSelectedClientId={clientId} />)}>
           <Plus className="w-4 h-4 mr-2" />
           Schedule
         </Button>

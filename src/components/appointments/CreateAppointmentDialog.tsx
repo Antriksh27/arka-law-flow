@@ -41,9 +41,10 @@ interface User {
 
 interface CreateAppointmentDialogProps {
   preSelectedDate?: Date;
+  preSelectedClientId?: string;
 }
 
-export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = ({ preSelectedDate }) => {
+export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = ({ preSelectedDate, preSelectedClientId }) => {
   const { closeDialog } = useDialog();
   const { firmId, user } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -55,7 +56,7 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
     appointment_date: preSelectedDate || TimeUtils.nowDate(),
     appointment_time: '',
     duration_minutes: 60,
-    client_id: '',
+    client_id: preSelectedClientId || '',
     lawyer_id: '',
     case_id: '',
     notes: '',
@@ -65,7 +66,7 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
 
   useEffect(() => {
     fetchClients();
-    fetchCases();
+    fetchCases(preSelectedClientId);
     fetchUsers();
   }, []);
 
