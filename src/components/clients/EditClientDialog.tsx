@@ -189,7 +189,11 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
   const onSubmit = async (data: ClientFormData) => {
     try {
       // Check for duplicate clients by email or phone (excluding current client)
-      if (data.email || data.phone) {
+      // Only check if email or phone is provided (not empty)
+      const trimmedEmail = data.email?.trim();
+      const trimmedPhone = data.phone?.trim();
+      
+      if (trimmedEmail || trimmedPhone) {
         let duplicateQuery = supabase
           .from('clients')
           .select('id, full_name, email, phone')
@@ -197,11 +201,11 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
 
         // Build OR conditions for email and phone with case-insensitive comparison
         const orConditions = [];
-        if (data.email?.trim()) {
-          orConditions.push(`email.ilike.${data.email.trim()}`);
+        if (trimmedEmail) {
+          orConditions.push(`email.ilike.${trimmedEmail}`);
         }
-        if (data.phone?.trim()) {
-          orConditions.push(`phone.eq.${data.phone.trim()}`);
+        if (trimmedPhone) {
+          orConditions.push(`phone.eq.${trimmedPhone}`);
         }
 
         if (orConditions.length > 0) {
@@ -210,7 +214,7 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
 
           if (existingClients && existingClients.length > 0) {
             const duplicate = existingClients[0];
-            const matchedByEmail = data.email && duplicate.email?.toLowerCase() === data.email.toLowerCase();
+            const matchedByEmail = trimmedEmail && duplicate.email?.toLowerCase() === trimmedEmail.toLowerCase();
             const matchField = matchedByEmail ? 'email' : 'phone';
             const matchValue = matchField === 'email' ? duplicate.email : duplicate.phone;
             
@@ -237,6 +241,8 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
         .from('clients')
         .update({
           ...data,
+          email: data.email?.trim() || null, // Allow null for blank email
+          phone: data.phone?.trim() || null, // Allow null for blank phone
           assigned_lawyer_id: primaryLawyerId,
           type: data.type,
           state: stateName,
