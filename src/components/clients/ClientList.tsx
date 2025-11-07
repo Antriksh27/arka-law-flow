@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Plus, Search, MoreHorizontal, Eye, Upload, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, Eye, Upload, ArrowUpDown, ChevronLeft, ChevronRight, Pencil, Trash2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -264,10 +264,30 @@ export const ClientList = () => {
                     <span className="capitalize">{client.active_case_count || 0} Cases</span>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      
-                      <Button variant="ghost" size="sm" className="text-gray-400 hover:text-gray-600">
-                        <MoreHorizontal className="w-4 h-4" />
+                    <div className="flex items-center gap-1">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => setViewingClient(client)}
+                        className="text-gray-600 hover:text-blue-600"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => setEditingClient(client)}
+                        className="text-gray-600 hover:text-blue-600"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => handleDeleteClient(client.id)}
+                        className="text-gray-600 hover:text-red-600"
+                      >
+                        <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
                   </TableCell>
