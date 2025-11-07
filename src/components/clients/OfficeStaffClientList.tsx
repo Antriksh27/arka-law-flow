@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, Eye, Phone, Mail, User } from 'lucide-react';
+import { Search, Eye, Phone, Mail, User, Star } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -31,6 +31,7 @@ interface Client {
   firm_id: string;
   client_portal_enabled: boolean;
   created_at: string;
+  is_vip?: boolean;
 }
 
 const OfficeStaffClientList = () => {
@@ -68,7 +69,8 @@ const OfficeStaffClientList = () => {
           status,
           firm_id,
           client_portal_enabled,
-          created_at
+          created_at,
+          is_vip
         `)
         .order('created_at', { ascending: false });
 
@@ -194,6 +196,9 @@ const OfficeStaffClientList = () => {
                         <div className="flex items-center gap-2">
                           <User className="w-4 h-4 text-muted-foreground" />
                           {client.full_name}
+                          {client.is_vip && (
+                            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" aria-label="VIP Client" />
+                          )}
                         </div>
                       </TableCell>
                       <TableCell>

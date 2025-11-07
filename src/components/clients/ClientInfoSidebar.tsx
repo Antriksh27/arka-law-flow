@@ -6,7 +6,7 @@ import { EditClientDialog } from './EditClientDialog';
 import { EngagementLetterDialog } from './EngagementLetterDialog';
 import { AddCaseDialog } from '../cases/AddCaseDialog';
 import { Badge } from '@/components/ui/badge';
-import { User, Mail, Phone, MapPin, Building, UserCheck, Users, Edit, Plus, FileText, UserCog } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Building, UserCheck, Users, Edit, Plus, FileText, UserCog, Star } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 interface ClientInfoSidebarProps {
@@ -66,7 +66,12 @@ export const ClientInfoSidebar: React.FC<ClientInfoSidebarProps> = ({
             </h4>
             <div className="flex items-center gap-3 text-sm">
               <User className="w-4 h-4 text-gray-400" />
-              <span className="text-gray-900 font-medium">{client.full_name}</span>
+              <span className="text-gray-900 font-medium flex items-center gap-2">
+                {client.full_name}
+                {client.is_vip && (
+                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" aria-label="VIP Client" />
+                )}
+              </span>
             </div>
             
             {client.type && <div className="flex items-center gap-3 text-sm">

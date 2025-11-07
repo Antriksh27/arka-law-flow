@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, Phone, Mail, Calendar, Edit, User } from 'lucide-react';
+import { Search, Phone, Mail, Calendar, Edit, User, Star } from 'lucide-react';
 import { format } from 'date-fns';
 import { EditClientDialog } from '@/components/clients/EditClientDialog';
 
@@ -21,6 +21,7 @@ interface ReceptionClient {
   organization?: string;
   address?: string;
   notes?: string;
+  is_vip?: boolean;
 }
 
 const ReceptionClientList = () => {
@@ -123,7 +124,12 @@ const ReceptionClientList = () => {
                   {clients?.map((client) => (
                     <tr key={client.id} className="border-b border-[#E5E7EB] hover:bg-[#F9FAFB]">
                       <td className="py-3 px-4">
-                        <div className="font-medium text-[#111827]">{client.full_name}</div>
+                        <div className="font-medium text-[#111827] flex items-center gap-2">
+                          {client.full_name}
+                          {client.is_vip && (
+                            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" aria-label="VIP Client" />
+                          )}
+                        </div>
                       </td>
                       <td className="py-3 px-4">
                         <div className="space-y-1">

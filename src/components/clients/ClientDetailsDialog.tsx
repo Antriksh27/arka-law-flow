@@ -3,6 +3,7 @@ import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Star } from 'lucide-react';
 
 interface Client {
   id: string;
@@ -14,6 +15,7 @@ interface Client {
   assigned_lawyer_name?: string;
   active_case_count: number;
   created_at: string;
+  is_vip?: boolean;
 }
 
 interface ClientDetailsDialogProps {
@@ -54,7 +56,12 @@ export const ClientDetailsDialog: React.FC<ClientDetailsDialogProps> = ({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-gray-500">Full Name</label>
-                  <p className="font-medium">{client.full_name}</p>
+                  <p className="font-medium flex items-center gap-2">
+                    {client.full_name}
+                    {client.is_vip && (
+                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" aria-label="VIP Client" />
+                    )}
+                  </p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-500">Status</label>

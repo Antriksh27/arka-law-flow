@@ -2,7 +2,7 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Edit, Link2, Briefcase } from 'lucide-react';
+import { Edit, Link2, Briefcase, Star } from 'lucide-react';
 import { ClientQuickActions } from './ClientQuickActions';
 interface ClientHeaderProps {
   client: any;
@@ -37,8 +37,11 @@ export const ClientHeader: React.FC<ClientHeaderProps> = ({
           
           <div>
             <div className="flex items-center gap-3 mb-1">
-              <h1 className="text-2xl font-semibold text-gray-900">
+              <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
                 {client.full_name}
+                {client.is_vip && (
+                  <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" aria-label="VIP Client" />
+                )}
               </h1>
               <Badge className={`${getStatusColor(client.status)} rounded-full px-3 py-1 text-sm font-medium`}>
                 {client.status === 'active' ? 'Active Client' : client.status}

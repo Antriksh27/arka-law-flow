@@ -15,7 +15,7 @@ import { ClientEmails } from './ClientEmails';
 import { ClientTimeline } from './ClientTimeline';
 import { ClientQuickActions } from './ClientQuickActions';
 import { EditClientDialog } from './EditClientDialog';
-import { BarChart3, CheckSquare, Calendar, Briefcase, DollarSign, StickyNote, FileText, Mail, User, Clock, Edit } from 'lucide-react';
+import { BarChart3, CheckSquare, Calendar, Briefcase, DollarSign, StickyNote, FileText, Mail, User, Clock, Edit, Star } from 'lucide-react';
 interface ClientTabsProps {
   clientId: string;
   client: any;
@@ -99,8 +99,11 @@ export const ClientTabs: React.FC<ClientTabsProps> = ({
               </Avatar>
               
               <div className="flex-1">
-                <h1 className="text-2xl font-semibold text-gray-900 mb-2">
+                <h1 className="text-2xl font-semibold text-gray-900 mb-2 flex items-center gap-2">
                   {client.full_name}
+                  {client.is_vip && (
+                    <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" aria-label="VIP Client" />
+                  )}
                 </h1>
                 <div className="space-y-2">
                   <div className="flex flex-wrap gap-4 text-sm text-gray-600">
