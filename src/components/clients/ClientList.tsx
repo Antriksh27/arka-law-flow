@@ -496,14 +496,6 @@ export const ClientList = () => {
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        onClick={() => setEditingClient(client)}
-                        className="text-gray-600 hover:text-blue-600"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
                         onClick={() => setDeletingClient(client)}
                         className="text-gray-600 hover:text-red-600"
                       >
@@ -747,14 +739,6 @@ export const ClientList = () => {
                             className="text-gray-600 hover:text-blue-600"
                           >
                             <Eye className="w-4 h-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => setEditingClient(client)}
-                            className="text-gray-600 hover:text-blue-600"
-                          >
-                            <Pencil className="w-4 h-4" />
                           </Button>
                           <Button 
                             variant="ghost" 
