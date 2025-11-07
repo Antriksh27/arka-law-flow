@@ -71,13 +71,20 @@ export const ConvertToClientDialog = ({ open, onOpenChange, contact }: ConvertTo
         districtName = districtData?.name || null;
       }
 
+      // Build address with pin code if available
+      const addressParts = [contact.address_line_1, contact.address_line_2].filter(Boolean);
+      if (contact.pin_code) {
+        addressParts.push(`PIN: ${contact.pin_code}`);
+      }
+      const fullAddress = addressParts.length > 0 ? addressParts.join(', ') : null;
+
       // Create client from contact
       const clientData = {
         full_name: contact.name,
         organization: contact.organization || null,
         email: contact.email || null,
         phone: contact.phone || null,
-        address: [contact.address_line_1, contact.address_line_2].filter(Boolean).join(', ') || null,
+        address: fullAddress,
         state: stateName,
         district: districtName,
         referred_by_name: contact.referred_by_name || null,
@@ -86,7 +93,7 @@ export const ConvertToClientDialog = ({ open, onOpenChange, contact }: ConvertTo
         firm_id: firmId,
         created_by: user.id,
         status: 'active' as const,
-        type: contact.organization ? 'Business' : 'Individual',
+        type: contact.organization ? 'Corporate' : 'Individual',
       };
 
       const { data: newClient, error: clientError } = await supabase
