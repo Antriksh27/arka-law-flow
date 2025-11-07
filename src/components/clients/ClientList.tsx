@@ -22,13 +22,14 @@ interface Client {
   full_name: string;
   email?: string;
   phone?: string;
-  status: 'active' | 'inactive' | 'lead' | 'prospect' | 'new';
+  status: 'active' | 'inactive' | 'lead' | 'new';
   organization?: string;
   active_case_count: number;
   created_at: string;
   is_vip?: boolean;
+  computed_status?: 'active' | 'inactive' | 'lead';
 }
-type StatusFilter = 'all' | 'active' | 'inactive' | 'lead' | 'prospect' | 'new';
+type StatusFilter = 'all' | 'active' | 'inactive' | 'lead' | 'new';
 type SortField = 'name' | 'status' | 'created_at' | 'active_cases' | 'email';
 type SortDirection = 'asc' | 'desc';
 type TabFilter = 'all' | 'vip';
@@ -73,76 +74,64 @@ export const ClientList = () => {
         let data: any[] = [];
         let count = 0;
 
-        // When on VIP tab, query directly from clients table with VIP filter for accurate count
+
+        // Fetch clients with their case statuses to compute dynamic status
+        let clientsQuery = supabase
+          .from('clients')
+          .select('*', { count: 'exact' });
+        
+        // Apply VIP filter if on VIP tab
         if (activeTab === 'vip') {
-          const result = await supabase.from('clients').select('*', {
-            count: 'exact'
-          })
-          .eq('is_vip', true)
+          clientsQuery = clientsQuery.eq('is_vip', true);
+        }
+        
+        const clientsResult = await clientsQuery
           .order(dbSortField === 'active_case_count' ? 'created_at' : dbSortField, {
             ascending: sortDirection === 'asc'
-          }).range(startIndex, endIndex);
-          
-          if (result.error) throw result.error;
+          })
+          .range(startIndex, endIndex);
 
-          // Transform to match expected interface
-          data = result.data?.map(client => ({
-            ...client,
-            active_case_count: 0
-          })) || [];
-          count = result.count || 0;
-        } else {
-          // For "all" tab, try to get from client_stats view
-          let {
-            data: statsData,
-            error,
-            count: statsCount
-          } = await supabase.from('client_stats').select('*', {
-            count: 'exact'
-          }).order(dbSortField, {
-            ascending: sortDirection === 'asc'
-          }).range(startIndex, endIndex);
-          
-          if (error) {
-            console.log('client_stats view failed, trying clients table:', error);
-            // Fallback to clients table with pagination and sorting
-            const result = await supabase.from('clients').select('*', {
-              count: 'exact'
-            }).order(dbSortField === 'active_case_count' ? 'created_at' : dbSortField, {
-              ascending: sortDirection === 'asc'
-            }).range(startIndex, endIndex);
-            if (result.error) throw result.error;
+        if (clientsResult.error) throw clientsResult.error;
 
-            // Transform to match expected interface
-            data = result.data?.map(client => ({
-              ...client,
-              active_case_count: 0
-            })) || [];
-            count = result.count || 0;
-          } else {
-            data = statsData || [];
-            count = statsCount || 0;
+        const baseClients = clientsResult.data || [];
+        count = clientsResult.count || 0;
+
+        // Fetch case statuses for these clients
+        if (baseClients.length > 0) {
+          const clientIds = baseClients.map(c => c.id);
+          const { data: casesData } = await supabase
+            .from('cases')
+            .select('client_id, status')
+            .in('client_id', clientIds);
+
+          // Compute status based on cases
+          data = baseClients.map(client => {
+            const clientCases = casesData?.filter(c => c.client_id === client.id) || [];
+            const activeCases = clientCases.filter(c => c.status === 'open').length;
+            const disposedCases = clientCases.filter(c => c.status === 'closed' || c.status === 'disposed').length;
             
-            // Fetch is_vip status from clients table for the client_stats results
-            if (data && data.length > 0) {
-              const clientIds = data.map(c => c.id);
-              const { data: vipData } = await supabase
-                .from('clients')
-                .select('id, is_vip')
-                .in('id', clientIds);
-              
-              if (vipData) {
-                // Merge is_vip data into client_stats data
-                data = data.map(client => {
-                  const vipInfo = vipData.find(v => v.id === client.id);
-                  return {
-                    ...client,
-                    is_vip: vipInfo?.is_vip || false
-                  };
-                });
-              }
+            let computed_status: 'lead' | 'active' | 'inactive' = 'lead';
+            
+            if (clientCases.length === 0) {
+              computed_status = 'lead';
+            } else if (activeCases > 0) {
+              computed_status = 'active';
+            } else if (disposedCases > 0) {
+              computed_status = 'inactive';
             }
-          }
+
+            return {
+              ...client,
+              active_case_count: activeCases,
+              computed_status
+            };
+          });
+        } else {
+          data = [];
+        }
+
+        if (activeTab === 'all') {
+          // Already computed above
         }
 
         // Apply client-side filters
@@ -153,7 +142,7 @@ export const ClientList = () => {
         }
         
         if (statusFilter !== 'all') {
-          filteredData = filteredData.filter(client => client.status === statusFilter);
+          filteredData = filteredData.filter(client => client.computed_status === statusFilter);
         }
         console.log('Fetched clients:', filteredData);
         return {
@@ -348,12 +337,6 @@ export const ClientList = () => {
                 Lead
               </DropdownMenuItem>
               <DropdownMenuItem 
-                onClick={() => setStatusFilter('prospect')}
-                className={statusFilter === 'prospect' ? 'bg-accent' : ''}
-              >
-                Prospect
-              </DropdownMenuItem>
-              <DropdownMenuItem 
                 onClick={() => setStatusFilter('inactive')}
                 className={statusFilter === 'inactive' ? 'bg-accent' : ''}
               >
@@ -464,8 +447,8 @@ export const ClientList = () => {
                     <div className="text-sm text-gray-500">{client.phone || '-'}</div>
                   </TableCell>
                   <TableCell>
-                    <Badge className={`${client.status === 'active' ? 'bg-green-100 text-green-700 border-green-200' : client.status === 'new' ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-gray-100 text-gray-700 border-gray-200'} rounded-full text-xs`}>
-                      {client.status === 'new' ? 'New' : client.status}
+                    <Badge className={`${client.computed_status === 'active' ? 'bg-green-100 text-green-700 border-green-200' : client.computed_status === 'lead' ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-gray-100 text-gray-700 border-gray-200'} rounded-full text-xs`}>
+                      {client.computed_status === 'lead' ? 'Lead' : client.computed_status}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -599,12 +582,6 @@ export const ClientList = () => {
                     Lead
                   </DropdownMenuItem>
                   <DropdownMenuItem 
-                    onClick={() => setStatusFilter('prospect')}
-                    className={statusFilter === 'prospect' ? 'bg-accent' : ''}
-                  >
-                    Prospect
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
                     onClick={() => setStatusFilter('inactive')}
                     className={statusFilter === 'inactive' ? 'bg-accent' : ''}
                   >
@@ -711,8 +688,8 @@ export const ClientList = () => {
                         <div className="text-sm text-gray-500">{client.phone || '-'}</div>
                       </TableCell>
                       <TableCell>
-                        <Badge className={`${client.status === 'active' ? 'bg-green-100 text-green-700 border-green-200' : client.status === 'new' ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-gray-100 text-gray-700 border-gray-200'} rounded-full text-xs`}>
-                          {client.status === 'new' ? 'New' : client.status}
+                        <Badge className={`${client.computed_status === 'active' ? 'bg-green-100 text-green-700 border-green-200' : client.computed_status === 'lead' ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-gray-100 text-gray-700 border-gray-200'} rounded-full text-xs`}>
+                          {client.computed_status === 'lead' ? 'Lead' : client.computed_status}
                         </Badge>
                       </TableCell>
                       <TableCell>
