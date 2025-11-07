@@ -124,6 +124,13 @@ export const ClientQuickActions: React.FC<ClientQuickActionsProps> = ({
               <Mail className="w-4 h-4 mr-3 text-gray-400" />
               <span>Generate Engagement Letter</span>
             </DropdownMenuItem>
+            <DropdownMenuItem 
+              className="hover:bg-gray-50 cursor-pointer"
+              onClick={() => setShowAssignDialog(true)}
+            >
+              <Briefcase className="w-4 h-4 mr-3 text-gray-400" />
+              <span>Link to Case</span>
+            </DropdownMenuItem>
             <DropdownMenuSeparator className="bg-gray-200" />
             <DropdownMenuItem 
               className="hover:bg-gray-50 cursor-pointer"
