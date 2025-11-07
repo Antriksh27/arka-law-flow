@@ -85,7 +85,7 @@ export const SendEmailDialog: React.FC<SendEmailDialogProps> = ({
               id="to"
               value={clientEmail || ''}
               disabled
-              className="bg-gray-50 text-gray-700"
+              className="bg-gray-100 text-gray-900 font-medium"
             />
           </div>
 
