@@ -90,17 +90,28 @@ export const ClientList = () => {
 
         let data: any[] = [];
 
-        // Fetch case statuses for these clients
+        // Fetch case statuses for these clients in batches to avoid URL length limits
         if (baseClients.length > 0) {
           const clientIds = baseClients.map(c => c.id);
-          const { data: casesData } = await supabase
-            .from('cases')
-            .select('client_id, status')
-            .in('client_id', clientIds);
+          let allCasesData: any[] = [];
+
+          // Batch fetch cases in chunks of 100 to avoid URL length limits
+          const batchSize = 100;
+          for (let i = 0; i < clientIds.length; i += batchSize) {
+            const batchIds = clientIds.slice(i, i + batchSize);
+            const { data: batchCases } = await supabase
+              .from('cases')
+              .select('client_id, status')
+              .in('client_id', batchIds);
+            
+            if (batchCases) {
+              allCasesData = [...allCasesData, ...batchCases];
+            }
+          }
 
           // Compute status based on cases
           data = baseClients.map(client => {
-            const clientCases = casesData?.filter(c => c.client_id === client.id) || [];
+            const clientCases = allCasesData.filter(c => c.client_id === client.id) || [];
             const activeCases = clientCases.filter(c => c.status === 'open').length;
             const disposedCases = clientCases.filter(c => c.status === 'closed' || c.status === 'disposed').length;
             
@@ -127,37 +138,22 @@ export const ClientList = () => {
         // Apply client-side filters
         let filteredData = data;
         
-        console.log('Before filters - Total clients:', filteredData.length);
-        console.log('Status filter:', statusFilter);
-        console.log('Sample client statuses:', filteredData.slice(0, 5).map(c => ({ name: c.full_name, computed_status: c.computed_status })));
-        
         if (searchTerm) {
           filteredData = filteredData.filter(client => 
             client.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
             client.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             client.phone?.toLowerCase().includes(searchTerm.toLowerCase())
           );
-          console.log('After search filter:', filteredData.length);
         }
         
         if (statusFilter !== 'all') {
-          const beforeStatusFilter = filteredData.length;
-          filteredData = filteredData.filter(client => {
-            const matches = client.computed_status === statusFilter;
-            if (!matches && beforeStatusFilter < 5) {
-              console.log('Status mismatch:', client.full_name, 'has', client.computed_status, 'looking for', statusFilter);
-            }
-            return matches;
-          });
-          console.log('After status filter:', filteredData.length, 'looking for:', statusFilter);
+          filteredData = filteredData.filter(client => client.computed_status === statusFilter);
         }
 
         // Apply pagination AFTER filtering
         const startIndex = (page - 1) * pageSize;
         const endIndex = startIndex + pageSize;
         const paginatedData = filteredData.slice(startIndex, endIndex);
-
-        console.log('Fetched clients (paginated):', paginatedData.length);
         return {
           clients: paginatedData as Client[],
           totalCount: totalCount,
