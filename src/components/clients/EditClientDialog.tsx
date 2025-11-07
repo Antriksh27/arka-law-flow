@@ -48,7 +48,6 @@ interface ClientFormData {
   type: string;
   state?: string;
   district?: string;
-  city?: string;
   referred_by_name?: string;
   referred_by_phone?: string;
 }
@@ -148,7 +147,6 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
         type: clientTypeValue,
         state: client.state || '',
         district: client.district || '',
-        city: client.city || '',
         referred_by_name: client.referred_by_name || '',
         referred_by_phone: client.referred_by_phone || '',
       });
@@ -358,16 +356,6 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
                 </SelectContent>
               </Select>
             </div>
-          </div>
-
-          <div>
-            <Label htmlFor="pincode">PIN Code</Label>
-            <Input
-              id="pincode"
-              {...register('address')}
-              placeholder="PIN Code"
-              maxLength={6}
-            />
           </div>
 
           <div>

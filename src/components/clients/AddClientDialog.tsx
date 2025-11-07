@@ -26,15 +26,12 @@ interface ClientFormData {
   phone?: string;
   organization?: string;
   address?: string;
-  city?: string;
   state?: string;
   district?: string;
-  aadhaar_no?: string;
   type: 'Individual' | 'Corporate';
   status: 'active' | 'inactive' | 'lead' | 'prospect' | 'new';
   assigned_lawyer_id?: string;
   notes?: string;
-  source?: string;
   referred_by_name?: string;
   referred_by_phone?: string;
   // Business Information
@@ -415,16 +412,6 @@ export const AddClientDialog: React.FC<AddClientDialogProps> = ({
           </div>
 
           <div>
-            <Label htmlFor="aadhaar_no">PIN Code</Label>
-            <Input 
-              id="aadhaar_no" 
-              {...register('aadhaar_no')} 
-              placeholder="PIN Code"
-              maxLength={6}
-            />
-          </div>
-
-          <div>
             <Label htmlFor="assigned_lawyer_id">Assigned Lawyer</Label>
             <Select
               value={watch('assigned_lawyer_id') || ''}
@@ -441,15 +428,6 @@ export const AddClientDialog: React.FC<AddClientDialogProps> = ({
                 ))}
               </SelectContent>
             </Select>
-          </div>
-
-          <div>
-            <Label htmlFor="source">Source</Label>
-            <Input 
-              id="source" 
-              {...register('source')} 
-              placeholder="How they found us"
-            />
           </div>
 
           <div>

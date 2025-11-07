@@ -49,6 +49,28 @@ export const ConvertToClientDialog = ({ open, onOpenChange, contact }: ConvertTo
         throw new Error(`A client with this ${contact.email ? 'email' : 'phone'} already exists: ${existingClients[0].full_name}`);
       }
 
+      // Fetch state and district names from IDs
+      let stateName = null;
+      let districtName = null;
+
+      if (contact.state_id) {
+        const { data: stateData } = await supabase
+          .from('states')
+          .select('name')
+          .eq('id', contact.state_id)
+          .single();
+        stateName = stateData?.name || null;
+      }
+
+      if (contact.district_id) {
+        const { data: districtData } = await supabase
+          .from('districts')
+          .select('name')
+          .eq('id', contact.district_id)
+          .single();
+        districtName = districtData?.name || null;
+      }
+
       // Create client from contact
       const clientData = {
         full_name: contact.name,
@@ -56,6 +78,10 @@ export const ConvertToClientDialog = ({ open, onOpenChange, contact }: ConvertTo
         email: contact.email || null,
         phone: contact.phone || null,
         address: [contact.address_line_1, contact.address_line_2].filter(Boolean).join(', ') || null,
+        state: stateName,
+        district: districtName,
+        referred_by_name: contact.referred_by_name || null,
+        referred_by_phone: contact.referred_by_phone || null,
         notes: contact.notes || null,
         firm_id: firmId,
         created_by: user.id,
