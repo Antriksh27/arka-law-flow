@@ -22,7 +22,6 @@ interface Client {
   phone?: string;
   status: 'active' | 'inactive' | 'lead' | 'prospect' | 'new';
   organization?: string;
-  assigned_lawyer_name?: string;
   active_case_count: number;
   created_at: string;
 }
@@ -83,8 +82,7 @@ export const ClientList = () => {
           // Transform to match expected interface
           data = result.data?.map(client => ({
             ...client,
-            active_case_count: 0,
-            assigned_lawyer_name: null
+            active_case_count: 0
           })) || [];
           count = result.count;
         }
@@ -337,7 +335,6 @@ export const ClientList = () => {
                     <ArrowUpDown className="w-3 h-3" />
                   </button>
                 </TableHead>
-                <TableHead className="bg-slate-800 text-white">Assigned Lawyer</TableHead>
                 <TableHead className="bg-slate-800 text-white">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -369,22 +366,6 @@ export const ClientList = () => {
                   </TableCell>
                   <TableCell>
                     <span className="capitalize">{client.active_case_count || 0} Cases</span>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      {client.assigned_lawyer_name ? (
-                        <>
-                          <div className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center">
-                            <span className="text-xs font-medium text-gray-600">
-                              {client.assigned_lawyer_name.split(' ').map(n => n[0]).join('')}
-                            </span>
-                          </div>
-                          <span className="text-sm">{client.assigned_lawyer_name}</span>
-                        </>
-                      ) : (
-                        <span className="text-sm text-gray-500">-</span>
-                      )}
-                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
