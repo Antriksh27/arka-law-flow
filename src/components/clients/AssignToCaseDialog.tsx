@@ -162,8 +162,8 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
                   />
                 </div>
 
-                <div className="flex-1 min-h-0">
-                  <ScrollArea className="h-full w-full rounded-md border">
+                <div className="flex-1 min-h-0 max-h-[500px]">
+                  <ScrollArea className="h-[500px] w-full rounded-md border">
                     <div className="p-4">
                       {isLoading ? (
                         <div className="text-center py-8 text-gray-500">
