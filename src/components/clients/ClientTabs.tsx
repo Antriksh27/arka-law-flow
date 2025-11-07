@@ -136,10 +136,7 @@ export const ClientTabs: React.FC<ClientTabsProps> = ({
             </div>
             
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => setShowEditDialog(true)}>
-                <Edit className="w-4 h-4 mr-2" />
-                Edit
-              </Button>
+              
               <ClientQuickActions clientId={client.id} clientName={client.full_name} onAction={onUpdate} />
             </div>
           </div>
