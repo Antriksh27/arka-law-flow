@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { UserPlus } from 'lucide-react';
-import { EngagementLetterDialog } from '@/components/clients/EngagementLetterDialog';
+
 interface ConvertToClientDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -24,9 +24,6 @@ export const ConvertToClientDialog = ({
   const queryClient = useQueryClient();
   const [officeNotes, setOfficeNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showEngagementLetter, setShowEngagementLetter] = useState(false);
-  const [newClientId, setNewClientId] = useState<string | null>(null);
-  const [newClientName, setNewClientName] = useState('');
 
   // Fetch states for display
   const { data: states = [] } = useQuery({
@@ -133,11 +130,9 @@ export const ConvertToClientDialog = ({
         created_by: user?.id
       };
 
-      const { data: newClient, error } = await supabase
+      const { error } = await supabase
         .from('clients')
-        .insert([clientData])
-        .select('id, full_name')
-        .single();
+        .insert([clientData]);
 
       if (error) throw error;
 
@@ -159,11 +154,8 @@ export const ConvertToClientDialog = ({
       queryClient.invalidateQueries({ queryKey: ['contacts'] });
       queryClient.invalidateQueries({ queryKey: ['clients'] });
       
-      setNewClientId(newClient.id);
-      setNewClientName(newClient.full_name);
       setOfficeNotes('');
       onOpenChange(false);
-      setShowEngagementLetter(true);
     } catch (error: any) {
       console.error('Error converting to client:', error);
       toast({
@@ -182,125 +174,111 @@ export const ConvertToClientDialog = ({
   const displayAddress = addressParts.length > 0 ? addressParts.join(', ') : 'N/A';
 
   return (
-    <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto p-6">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <UserPlus className="h-5 w-5" />
-              Convert to Client
-            </DialogTitle>
-            <DialogDescription>
-              Review contact information and add office notes before converting
-            </DialogDescription>
-          </DialogHeader>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto p-6">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <UserPlus className="h-5 w-5" />
+            Convert to Client
+          </DialogTitle>
+          <DialogDescription>
+            Review contact information and add office notes before converting
+          </DialogDescription>
+        </DialogHeader>
 
-          <div className="space-y-6 mt-4">
-            {/* Contact Summary */}
-            <div className="space-y-4">
-              <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3">Contact Information</h3>
-              
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <Label className="text-muted-foreground">Name</Label>
-                  <p className="font-medium">{contact.name}</p>
-                </div>
-                
-                <div>
-                  <Label className="text-muted-foreground">Type</Label>
-                  <p className="font-medium">{contact.type || (contact.organization ? 'Corporate' : 'Individual')}</p>
-                </div>
-
-                {contact.organization && (
-                  <div className="col-span-2">
-                    <Label className="text-muted-foreground">Organization</Label>
-                    <p className="font-medium">{contact.organization}</p>
-                  </div>
-                )}
-
-                <div>
-                  <Label className="text-muted-foreground">Email</Label>
-                  <p className="font-medium">{contact.email || 'N/A'}</p>
-                </div>
-
-                <div>
-                  <Label className="text-muted-foreground">Phone</Label>
-                  <p className="font-medium">{contact.phone || 'N/A'}</p>
-                </div>
-
-                <div className="col-span-2">
-                  <Label className="text-muted-foreground">Address</Label>
-                  <p className="font-medium">{displayAddress}</p>
-                </div>
-
-                {stateName && (
-                  <>
-                    <div>
-                      <Label className="text-muted-foreground">State</Label>
-                      <p className="font-medium">{stateName}</p>
-                    </div>
-                    <div>
-                      <Label className="text-muted-foreground">District</Label>
-                      <p className="font-medium">{districtName || 'N/A'}</p>
-                    </div>
-                  </>
-                )}
-
-                {contact.pin_code && (
-                  <div>
-                    <Label className="text-muted-foreground">PIN Code</Label>
-                    <p className="font-medium">{contact.pin_code}</p>
-                  </div>
-                )}
+        <div className="space-y-6 mt-4">
+          {/* Contact Summary */}
+          <div className="space-y-4">
+            <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3">Contact Information</h3>
+            
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <Label className="text-muted-foreground">Name</Label>
+                <p className="font-medium">{contact.name}</p>
               </div>
-            </div>
-
-            {/* Office Notes Section */}
-            <div className="space-y-4">
-              <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3">
-                Office Notes
-                <span className="text-xs font-normal text-muted-foreground ml-2">(Visible to Office Staff Only)</span>
-              </h3>
               
               <div>
-                <Label htmlFor="office-notes">Add Internal Notes</Label>
-                <Textarea
-                  id="office-notes"
-                  value={officeNotes}
-                  onChange={(e) => setOfficeNotes(e.target.value)}
-                  rows={6}
-                  placeholder="Add any internal notes for office staff only. These notes will not be visible to clients..."
-                  className="mt-2"
-                />
-                <p className="text-xs text-muted-foreground mt-2">
-                  These notes will be marked as "Office Staff Only" and saved with the client record.
-                </p>
+                <Label className="text-muted-foreground">Type</Label>
+                <p className="font-medium">{contact.type || (contact.organization ? 'Corporate' : 'Individual')}</p>
               </div>
+
+              {contact.organization && (
+                <div className="col-span-2">
+                  <Label className="text-muted-foreground">Organization</Label>
+                  <p className="font-medium">{contact.organization}</p>
+                </div>
+              )}
+
+              <div>
+                <Label className="text-muted-foreground">Email</Label>
+                <p className="font-medium">{contact.email || 'N/A'}</p>
+              </div>
+
+              <div>
+                <Label className="text-muted-foreground">Phone</Label>
+                <p className="font-medium">{contact.phone || 'N/A'}</p>
+              </div>
+
+              <div className="col-span-2">
+                <Label className="text-muted-foreground">Address</Label>
+                <p className="font-medium">{displayAddress}</p>
+              </div>
+
+              {stateName && (
+                <>
+                  <div>
+                    <Label className="text-muted-foreground">State</Label>
+                    <p className="font-medium">{stateName}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">District</Label>
+                    <p className="font-medium">{districtName || 'N/A'}</p>
+                  </div>
+                </>
+              )}
+
+              {contact.pin_code && (
+                <div>
+                  <Label className="text-muted-foreground">PIN Code</Label>
+                  <p className="font-medium">{contact.pin_code}</p>
+                </div>
+              )}
             </div>
           </div>
 
-          <DialogFooter className="mt-6">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleConvert} disabled={isSubmitting}>
-              {isSubmitting ? 'Converting...' : 'Convert to Client'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          {/* Office Notes Section */}
+          <div className="space-y-4">
+            <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3">
+              Office Notes
+              <span className="text-xs font-normal text-muted-foreground ml-2">(Visible to Office Staff Only)</span>
+            </h3>
+            
+            <div>
+              <Label htmlFor="office-notes">Add Internal Notes</Label>
+              <Textarea
+                id="office-notes"
+                value={officeNotes}
+                onChange={(e) => setOfficeNotes(e.target.value)}
+                rows={6}
+                placeholder="Add any internal notes for office staff only. These notes will not be visible to clients..."
+                className="mt-2"
+              />
+              <p className="text-xs text-muted-foreground mt-2">
+                These notes will be marked as "Office Staff Only" and saved with the client record.
+              </p>
+            </div>
+          </div>
+        </div>
 
-      {showEngagementLetter && newClientId && (
-        <EngagementLetterDialog
-          open={showEngagementLetter}
-          onClose={() => {
-            setShowEngagementLetter(false);
-            setNewClientId(null);
-          }}
-          clientId={newClientId}
-          clientName={newClientName}
-        />
-      )}
-    </>
+        <DialogFooter className="mt-6">
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleConvert} disabled={isSubmitting}>
+            {isSubmitting ? 'Converting...' : 'Convert to Client'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
