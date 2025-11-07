@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Plus, FileText, Calendar, Briefcase, DollarSign } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { TimeUtils } from '@/lib/timeUtils';
 interface ClientOverviewProps {
   clientId: string;
 }
@@ -132,7 +133,7 @@ export const ClientOverview: React.FC<ClientOverviewProps> = ({
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-sm text-gray-500">
-                    {new Date(activity.created_at).toLocaleDateString()}
+                    {TimeUtils.formatDate(activity.created_at)}
                   </span>
                   <Badge variant="outline" className="capitalize">
                     {activity.activity_type}

@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar, User, Tag, Clock, FileText, Edit, Trash2 } from 'lucide-react';
-import { format } from 'date-fns';
+import { TimeUtils } from '@/lib/timeUtils';
 import { supabase } from '@/integrations/supabase/client';
 
 interface TaskDetailDialogProps {
@@ -194,7 +194,7 @@ export const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                 </div>
                 <div className={`rounded-lg p-3 border ${isOverdue(taskData.due_date) ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200'}`}>
                   <p className={`${isOverdue(taskData.due_date) ? 'text-red-700' : 'text-gray-700'}`}>
-                    {format(new Date(taskData.due_date), 'dd/MM/yyyy')}
+                    {TimeUtils.formatDate(taskData.due_date)}
                     {isOverdue(taskData.due_date) && ' (Overdue)'}
                   </p>
                 </div>
@@ -209,7 +209,7 @@ export const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
               </div>
               <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
                 <p className="text-gray-700">
-                  {format(new Date(taskData.created_at), 'dd/MM/yyyy HH:mm')}
+                  {TimeUtils.formatDateTime(taskData.created_at, 'dd/MM/yyyy HH:mm')}
                 </p>
               </div>
             </div>
@@ -267,7 +267,7 @@ export const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                   <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
                     <p className="text-xs text-gray-500 mb-1">Started</p>
                     <p className="text-gray-700">
-                      {format(new Date(taskData.start_time), 'dd/MM/yyyy HH:mm')}
+                      {TimeUtils.formatDateTime(taskData.start_time, 'dd/MM/yyyy HH:mm')}
                     </p>
                   </div>
                 )}
@@ -275,7 +275,7 @@ export const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                   <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
                     <p className="text-xs text-gray-500 mb-1">Completed</p>
                     <p className="text-gray-700">
-                      {format(new Date(taskData.end_time), 'dd/MM/yyyy HH:mm')}
+                      {TimeUtils.formatDateTime(taskData.end_time, 'dd/MM/yyyy HH:mm')}
                     </p>
                   </div>
                 )}
@@ -291,7 +291,7 @@ export const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
             </div>
             <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
               <p className="text-gray-700">
-                {format(new Date(taskData.updated_at), 'dd/MM/yyyy HH:mm')}
+                {TimeUtils.formatDateTime(taskData.updated_at, 'dd/MM/yyyy HH:mm')}
               </p>
             </div>
           </div>

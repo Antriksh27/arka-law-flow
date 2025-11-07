@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Star } from 'lucide-react';
+import { TimeUtils } from '@/lib/timeUtils';
 
 interface Client {
   id: string;
@@ -85,7 +86,7 @@ export const ClientDetailsDialog: React.FC<ClientDetailsDialogProps> = ({
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-500">Created</label>
-                  <p>{new Date(client.created_at).toLocaleDateString()}</p>
+                  <p>{TimeUtils.formatDate(client.created_at)}</p>
                 </div>
               </div>
             </CardContent>

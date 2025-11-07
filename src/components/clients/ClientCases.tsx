@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { Eye, Link } from 'lucide-react';
+import { TimeUtils } from '@/lib/timeUtils';
 import { AssignToCaseDialog } from './AssignToCaseDialog';
 
 interface ClientCasesProps {
@@ -107,7 +108,7 @@ export const ClientCases: React.FC<ClientCasesProps> = ({ clientId }) => {
                         <span>Assigned to: {case_item.assigned_to.full_name}</span>
                       )}
                       <span>
-                        Created: {new Date(case_item.created_at).toLocaleDateString()}
+                        Created: {TimeUtils.formatDate(case_item.created_at)}
                       </span>
                     </div>
                   </div>

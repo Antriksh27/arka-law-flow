@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Loader2, ListTodo, Calendar, User, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { TimeUtils } from '@/lib/timeUtils';
 import { CreateTaskDialog } from '../tasks/CreateTaskDialog';
 
 interface ClientTasksProps {
@@ -124,7 +125,7 @@ export const ClientTasks: React.FC<ClientTasksProps> = ({ clientId }) => {
                   {task.due_date && (
                     <div className="flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
-                      {new Date(task.due_date).toLocaleDateString()}
+                      {TimeUtils.formatDate(task.due_date)}
                     </div>
                   )}
                 </div>

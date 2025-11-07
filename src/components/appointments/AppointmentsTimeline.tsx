@@ -3,7 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { FilterState } from '../../pages/Appointments';
 import { useAuth } from '@/contexts/AuthContext';
-import { format, parseISO, startOfDay, isSameDay, isToday, isTomorrow, isYesterday } from 'date-fns';
+import { format, parseISO, startOfDay, isSameDay } from 'date-fns';
+import { TimeUtils } from '@/lib/timeUtils';
 import { Badge } from '../ui/badge';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { IconButton } from '../messages/ui/IconButton';
@@ -175,10 +176,17 @@ export const AppointmentsTimeline: React.FC<AppointmentsTimelineProps> = ({
 
   const formatDateHeader = (dateString: string) => {
     const date = parseISO(dateString);
-    if (isToday(date)) return 'Today';
-    if (isTomorrow(date)) return 'Tomorrow';
-    if (isYesterday(date)) return 'Yesterday';
-    return format(date, 'EEEE, MMMM d');
+    if (TimeUtils.isToday(date)) return 'Today';
+    
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    if (date.toDateString() === tomorrow.toDateString()) return 'Tomorrow';
+    
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
+    
+    return TimeUtils.formatDate(date, 'EEEE, MMMM d');
   };
 
   const formatTime = (timeString: string) => {

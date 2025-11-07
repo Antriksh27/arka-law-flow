@@ -22,6 +22,7 @@ import { Search, Eye, Phone, Mail, User, Star } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { TimeUtils } from '@/lib/timeUtils';
 
 interface Client {
   id: string;
@@ -249,7 +250,7 @@ const OfficeStaffClientList = () => {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {new Date(client.created_at).toLocaleDateString()}
+                        {TimeUtils.formatDate(client.created_at)}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">

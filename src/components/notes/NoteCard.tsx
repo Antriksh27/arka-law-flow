@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Eye, EyeOff, Pin, Edit, Trash2, FileText, Calendar, User, Mic } from 'lucide-react';
-import { format } from 'date-fns';
+import { TimeUtils } from '@/lib/timeUtils';
 
 interface NoteCardProps {
   note: any;
@@ -161,7 +161,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
           </div>
           <div className="flex items-center gap-1">
             <Calendar className="w-3 h-3" />
-            <span>{format(new Date(note.updated_at), 'MMM d')}</span>
+            <span>{TimeUtils.formatDate(note.updated_at, 'MMM d')}</span>
           </div>
         </div>
       </CardContent>

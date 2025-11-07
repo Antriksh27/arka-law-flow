@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Download, Plus, File, Eye, FileText, Shield, Award, Copy, Clock, TestTube } from 'lucide-react';
+import { TimeUtils } from '@/lib/timeUtils';
 import { UploadDocumentForClientDialog } from '../documents/UploadDocumentForClientDialog';
 import { FileViewer } from '../documents/FileViewer';
 import { uploadFileToWebDAV } from '@/lib/pydioIntegration';
@@ -190,7 +191,7 @@ export const ClientDocuments: React.FC<ClientDocumentsProps> = ({
                             {document.uploaded_by && <span>By: {document.uploaded_by.full_name}</span>}
                             <span className="flex items-center gap-1">
                               <Clock className="w-3 h-3" />
-                              {new Date(document.uploaded_at).toLocaleDateString()}
+                              {TimeUtils.formatDate(document.uploaded_at)}
                             </span>
                           </div>
                         </div>

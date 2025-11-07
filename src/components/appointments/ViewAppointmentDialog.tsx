@@ -8,7 +8,8 @@ import { EditAppointmentDialog } from './EditAppointmentDialog';
 import RescheduleAppointmentDialog from '../reception/RescheduleAppointmentDialog';
 import { ConvertToClientDialog } from './ConvertToClientDialog';
 import { ConvertContactToClientDialog } from '../reception/ConvertContactToClientDialog';
-import { format, parseISO } from 'date-fns';
+import { parseISO } from 'date-fns';
+import { TimeUtils } from '@/lib/timeUtils';
 import { Calendar, Clock, User, MapPin, FileText, Edit, RotateCcw, X, UserPlus, Users, Plus, Trash } from 'lucide-react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -350,12 +351,12 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
 
   const formatDate = (date: string | null) => {
     if (!date) return 'No date';
-    return format(parseISO(date), 'EEEE, MMMM d, yyyy');
+    return TimeUtils.formatDate(parseISO(date), 'EEEE, MMMM d, yyyy');
   };
 
   const formatTime = (time: string | null) => {
     if (!time) return 'No time';
-    return format(parseISO(`2000-01-01T${time}`), 'h:mm a');
+    return TimeUtils.formatTime(`2000-01-01T${time}`, 'h:mm a');
   };
 
   return (

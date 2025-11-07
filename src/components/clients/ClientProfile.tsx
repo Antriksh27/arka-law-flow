@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Edit, Mail, Phone, MapPin, Building, Calendar, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { TimeUtils } from '@/lib/timeUtils';
 
 interface ClientProfileProps {
   client: any;
@@ -173,7 +174,7 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({ client, onUpdate }
           <div className="text-center pt-4 border-t border-gray-200">
             <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
               <Calendar className="w-3 h-3" />
-              <span>Client since {new Date(client.created_at).toLocaleDateString()}</span>
+              <span>Client since {TimeUtils.formatDate(client.created_at)}</span>
             </div>
           </div>
         </CardContent>

@@ -5,7 +5,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Eye, EyeOff, Pin, Calendar, User, FileText, Play, Pause, Download, Trash2, PinOff } from 'lucide-react';
-import { format } from 'date-fns';
+import { TimeUtils } from '@/lib/timeUtils';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
@@ -301,7 +301,7 @@ export const NoteViewDialog: React.FC<NoteViewDialogProps> = ({
               </div>
               <div className="flex items-center gap-1">
                 <Calendar className="w-4 h-4" />
-                <span>Created {format(new Date(note.created_at), 'MMM d, yyyy')}</span>
+                <span>Created {TimeUtils.formatDate(note.created_at, 'MMM d, yyyy')}</span>
               </div>
             </div>
             <Badge variant="outline" className="bg-white">

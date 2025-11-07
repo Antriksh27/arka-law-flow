@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Search, Phone, Mail, Calendar, Edit, User, Star } from 'lucide-react';
-import { format } from 'date-fns';
+import { TimeUtils } from '@/lib/timeUtils';
 import { EditClientDialog } from '@/components/clients/EditClientDialog';
 import { useToast } from '@/hooks/use-toast';
 
@@ -187,7 +187,7 @@ const ReceptionClientList = () => {
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-1 text-sm text-[#6B7280]">
                           <Calendar className="w-3 h-3" />
-                          {format(new Date(client.created_at), 'MMM d, yyyy')}
+                          {TimeUtils.formatDate(client.created_at, 'MMM d, yyyy')}
                         </div>
                       </td>
                       <td className="py-3 px-4">
