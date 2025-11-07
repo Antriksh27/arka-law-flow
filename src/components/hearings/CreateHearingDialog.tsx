@@ -24,7 +24,7 @@ export const CreateHearingDialog: React.FC = () => {
   const [formData, setFormData] = useState<HearingFormData>({
     case_id: '',
     hearing_date: new Date(),
-    hearing_time: '',
+    hearing_time: '12:00',
     court_name: '',
     bench: '',
     coram: '',

@@ -23,7 +23,7 @@ export const CreateHearingDialogWrapper: React.FC<CreateHearingDialogWrapperProp
 }) => {
   const [formData, setFormData] = useState({
     hearing_date: '',
-    hearing_time: '',
+    hearing_time: '12:00',
     hearing_type: 'initial_hearing',
     court_name: '',
     notes: '',
@@ -72,7 +72,7 @@ export const CreateHearingDialogWrapper: React.FC<CreateHearingDialogWrapperProp
   const handleClose = () => {
     setFormData({
       hearing_date: '',
-      hearing_time: '',
+      hearing_time: '12:00',
       hearing_type: 'initial_hearing',
       court_name: '',
       notes: '',
