@@ -2,7 +2,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { User, Mail, Phone, MapPin, Building, Briefcase, Users, Calendar, FileText, UserCheck, CreditCard, Shield, Globe, DollarSign } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Building, Briefcase, Users, Calendar, UserCheck, Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 interface ClientInformationProps {
@@ -89,7 +89,6 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
           <InfoRow icon={User} label="Full Name" value={client.full_name} />
           <InfoRow icon={Mail} label="Email" value={client.email} />
           <InfoRow icon={Phone} label="Phone" value={client.phone} />
-          <InfoRow icon={CreditCard} label="Aadhaar Number" value={client.aadhaar_no} />
           <InfoRow icon={UserCheck} label="Client Type" value={client.type} />
           
           <div className="flex items-start gap-3">
@@ -98,16 +97,6 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
               <span className="text-sm text-gray-600">Status: </span>
               <Badge className={client.status === 'active' ? 'bg-green-100 text-green-700 border-green-200' : client.status === 'inactive' ? 'bg-gray-100 text-gray-700 border-gray-200' : client.status === 'lead' ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-purple-100 text-purple-700 border-purple-200'}>
                 {client.status || 'Not set'}
-              </Badge>
-            </div>
-          </div>
-          
-          <div className="flex items-start gap-3">
-            <Globe className="w-4 h-4 text-gray-400 mt-0.5" />
-            <div className="flex-1">
-              <span className="text-sm text-gray-600">Client Portal: </span>
-              <Badge variant={client.client_portal_enabled ? 'default' : 'outline'}>
-                {client.client_portal_enabled ? 'Enabled' : 'Disabled'}
               </Badge>
             </div>
           </div>
@@ -124,7 +113,6 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
         </CardHeader>
         <CardContent className="space-y-4">
           <InfoRow icon={MapPin} label="Address" value={client.address} />
-          <InfoRow icon={MapPin} label="City" value={client.city} />
           <InfoRow icon={MapPin} label="District" value={client.district} />
           <InfoRow icon={MapPin} label="State" value={client.state} />
         </CardContent>
@@ -147,19 +135,17 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
         </CardContent>
       </Card>
 
-      {/* Reference & Source */}
+      {/* Reference Information */}
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
             <Users className="w-5 h-5 text-blue-600" />
-            <CardTitle>Reference & Source</CardTitle>
+            <CardTitle>Reference Information</CardTitle>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <InfoRow icon={Globe} label="Source" value={client.source} />
           <InfoRow icon={Users} label="Referred By" value={client.referred_by_name} />
           <InfoRow icon={Phone} label="Reference Phone" value={client.referred_by_phone} />
-          <InfoRow icon={FileText} label="Case Reference" value={client.case_ref} />
         </CardContent>
       </Card>
 
@@ -204,7 +190,6 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <InfoRow icon={Calendar} label="Appointment Date" value={client.appointment_date ? new Date(client.appointment_date).toLocaleDateString() : null} />
           <InfoRow icon={Calendar} label="Created Date" value={client.created_at ? new Date(client.created_at).toLocaleDateString() : null} />
         </CardContent>
       </Card>
