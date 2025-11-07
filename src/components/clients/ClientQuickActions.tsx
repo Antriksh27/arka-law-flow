@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { MoreHorizontal, Plus, Calendar, FileText, StickyNote, Briefcase, Edit, Trash2, Users } from 'lucide-react';
+import { MoreHorizontal, Plus, Calendar, FileText, StickyNote, Briefcase, Edit, Trash2, Users, Mail } from 'lucide-react';
 import { AssignToCaseDialog } from './AssignToCaseDialog';
 import { CreateAppointmentDialog } from '@/components/appointments/CreateAppointmentDialog';
 import { UploadDocumentForClientDialog } from '@/components/documents/UploadDocumentForClientDialog';
@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useDialog } from '@/hooks/use-dialog';
 import { ManageAssignedLawyersDialog } from './ManageAssignedLawyersDialog';
+import { EngagementLetterDialog } from './EngagementLetterDialog';
 
 interface ClientQuickActionsProps {
   clientId: string;
@@ -32,6 +33,7 @@ export const ClientQuickActions: React.FC<ClientQuickActionsProps> = ({
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showManageLawyersDialog, setShowManageLawyersDialog] = useState(false);
+  const [showEngagementLetterDialog, setShowEngagementLetterDialog] = useState(false);
   const [clientData, setClientData] = useState<any>(null);
   const { openDialog } = useDialog();
 
@@ -124,6 +126,13 @@ export const ClientQuickActions: React.FC<ClientQuickActionsProps> = ({
               <Users className="w-4 h-4 mr-3 text-gray-400" />
               <span>Lawyers</span>
             </DropdownMenuItem>
+            <DropdownMenuItem 
+              className="hover:bg-gray-50 cursor-pointer"
+              onClick={() => setShowEngagementLetterDialog(true)}
+            >
+              <Mail className="w-4 h-4 mr-3 text-gray-400" />
+              <span>Generate Engagement Letter</span>
+            </DropdownMenuItem>
             <DropdownMenuSeparator className="bg-gray-200" />
             <DropdownMenuItem 
               className="hover:bg-gray-50 cursor-pointer"
@@ -187,6 +196,16 @@ export const ClientQuickActions: React.FC<ClientQuickActionsProps> = ({
       <ManageAssignedLawyersDialog
         open={showManageLawyersDialog}
         onOpenChange={setShowManageLawyersDialog}
+        clientId={clientId}
+        clientName={clientName}
+      />
+
+      <EngagementLetterDialog
+        open={showEngagementLetterDialog}
+        onClose={() => {
+          setShowEngagementLetterDialog(false);
+          onAction();
+        }}
         clientId={clientId}
         clientName={clientName}
       />
