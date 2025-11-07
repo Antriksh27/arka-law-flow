@@ -1,5 +1,5 @@
-import React from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import React, { useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -12,6 +12,16 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { UserPlus, Building, Mail, Phone } from 'lucide-react';
 
 interface ConvertToClientDialogProps {
@@ -24,6 +34,33 @@ export const ConvertToClientDialog = ({ open, onOpenChange, contact }: ConvertTo
   const { user, firmId } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  const [clientType, setClientType] = useState<'Individual' | 'Corporate'>('Individual');
+  const [status, setStatus] = useState<'active' | 'lead' | 'prospect' | 'inactive'>('active');
+  const [assignedLawyerId, setAssignedLawyerId] = useState<string>('');
+  const [designation, setDesignation] = useState('');
+  const [companyAddress, setCompanyAddress] = useState('');
+  const [companyPhone, setCompanyPhone] = useState('');
+  const [companyEmail, setCompanyEmail] = useState('');
+  const [additionalNotes, setAdditionalNotes] = useState('');
+
+  // Fetch lawyers from the firm
+  const { data: lawyers = [] } = useQuery({
+    queryKey: ['firm-lawyers', firmId],
+    queryFn: async () => {
+      if (!firmId) return [];
+      const { data, error } = await supabase
+        .from('team_members')
+        .select('id, user_id, profiles:user_id(id, full_name)')
+        .eq('firm_id', firmId)
+        .in('role', ['admin', 'lawyer'])
+        .order('profiles(full_name)');
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!firmId && open,
+  });
 
   const convertToClientMutation = useMutation({
     mutationFn: async () => {
@@ -78,6 +115,11 @@ export const ConvertToClientDialog = ({ open, onOpenChange, contact }: ConvertTo
       }
       const fullAddress = addressParts.length > 0 ? addressParts.join(', ') : null;
 
+      // Combine notes
+      const combinedNotes = [contact.notes, contact.visit_purpose, additionalNotes]
+        .filter(Boolean)
+        .join('\n\n');
+
       // Create client from contact
       const clientData = {
         full_name: contact.name,
@@ -89,11 +131,16 @@ export const ConvertToClientDialog = ({ open, onOpenChange, contact }: ConvertTo
         district: districtName,
         referred_by_name: contact.referred_by_name || null,
         referred_by_phone: contact.referred_by_phone || null,
-        notes: contact.notes || null,
+        notes: combinedNotes || null,
         firm_id: firmId,
         created_by: user.id,
-        status: 'active' as const,
-        type: contact.organization ? 'Corporate' : 'Individual',
+        status: status,
+        type: clientType,
+        assigned_lawyer_id: assignedLawyerId || null,
+        designation: clientType === 'Corporate' ? designation || null : null,
+        company_address: clientType === 'Corporate' ? companyAddress || null : null,
+        company_phone: clientType === 'Corporate' ? companyPhone || null : null,
+        company_email: clientType === 'Corporate' ? companyEmail || null : null,
       };
 
       const { data: newClient, error: clientError } = await supabase
@@ -143,29 +190,30 @@ export const ConvertToClientDialog = ({ open, onOpenChange, contact }: ConvertTo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <UserPlus className="h-5 w-5" />
             Convert to Client
           </DialogTitle>
           <DialogDescription>
-            Are you sure you want to convert this contact to a client? This action cannot be undone.
+            Please provide additional details to complete the client profile
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
-          <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+        <div className="space-y-6 py-4">
+          {/* Contact Summary */}
+          <div className="bg-muted/50 rounded-lg p-4 space-y-3">
             <div className="flex items-center space-x-3">
-              <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
-                <span className="text-blue-600 font-medium">
+              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <span className="text-primary font-medium">
                   {contact.name?.charAt(0)?.toUpperCase()}
                 </span>
               </div>
               <div>
-                <h3 className="font-medium text-gray-900">{contact.name}</h3>
+                <h3 className="font-medium">{contact.name}</h3>
                 {contact.organization && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Building className="h-3 w-3" />
                     {contact.organization}
                   </div>
@@ -175,33 +223,126 @@ export const ConvertToClientDialog = ({ open, onOpenChange, contact }: ConvertTo
 
             <div className="space-y-2">
               {contact.email && (
-                <div className="flex items-center gap-2 text-sm text-gray-600">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Mail className="h-3 w-3" />
                   {contact.email}
                 </div>
               )}
               {contact.phone && (
-                <div className="flex items-center gap-2 text-sm text-gray-600">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Phone className="h-3 w-3" />
                   {contact.phone}
                 </div>
               )}
             </div>
-
-            {contact.notes && (
-              <div className="pt-2 border-t">
-                <p className="text-sm text-gray-600">{contact.notes}</p>
-              </div>
-            )}
           </div>
 
-          <div className="text-sm text-gray-600">
-            <p>This will:</p>
-            <ul className="list-disc list-inside mt-1 space-y-1">
-              <li>Create a new client record with this contact's information</li>
-              <li>Remove this contact from your contacts list</li>
-              <li>Allow you to create cases and appointments for this client</li>
-            </ul>
+          {/* Client Type */}
+          <div className="space-y-2">
+            <Label htmlFor="client-type">Client Type *</Label>
+            <Select value={clientType} onValueChange={(value: 'Individual' | 'Corporate') => setClientType(value)}>
+              <SelectTrigger id="client-type">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Individual">Individual</SelectItem>
+                <SelectItem value="Corporate">Corporate</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Status */}
+          <div className="space-y-2">
+            <Label htmlFor="status">Status *</Label>
+            <Select value={status} onValueChange={(value: any) => setStatus(value)}>
+              <SelectTrigger id="status">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="lead">Lead</SelectItem>
+                <SelectItem value="prospect">Prospect</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Assign Lawyer */}
+          <div className="space-y-2">
+            <Label htmlFor="lawyer">Assign Lawyer</Label>
+            <Select value={assignedLawyerId} onValueChange={setAssignedLawyerId}>
+              <SelectTrigger id="lawyer">
+                <SelectValue placeholder="Select a lawyer" />
+              </SelectTrigger>
+              <SelectContent>
+                {lawyers.map((lawyer: any) => (
+                  <SelectItem key={lawyer.user_id} value={lawyer.user_id}>
+                    {lawyer.profiles?.full_name || 'Unknown'}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Corporate Fields */}
+          {clientType === 'Corporate' && (
+            <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+              <h4 className="font-medium text-sm">Corporate Details</h4>
+              
+              <div className="space-y-2">
+                <Label htmlFor="designation">Designation</Label>
+                <Input
+                  id="designation"
+                  value={designation}
+                  onChange={(e) => setDesignation(e.target.value)}
+                  placeholder="e.g., Managing Director"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="company-address">Company Address</Label>
+                <Textarea
+                  id="company-address"
+                  value={companyAddress}
+                  onChange={(e) => setCompanyAddress(e.target.value)}
+                  placeholder="Company address"
+                  rows={2}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="company-phone">Company Phone</Label>
+                <Input
+                  id="company-phone"
+                  value={companyPhone}
+                  onChange={(e) => setCompanyPhone(e.target.value)}
+                  placeholder="Company phone number"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="company-email">Company Email</Label>
+                <Input
+                  id="company-email"
+                  type="email"
+                  value={companyEmail}
+                  onChange={(e) => setCompanyEmail(e.target.value)}
+                  placeholder="company@example.com"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Additional Notes */}
+          <div className="space-y-2">
+            <Label htmlFor="additional-notes">Additional Notes</Label>
+            <Textarea
+              id="additional-notes"
+              value={additionalNotes}
+              onChange={(e) => setAdditionalNotes(e.target.value)}
+              placeholder="Any additional information about this client..."
+              rows={3}
+            />
           </div>
         </div>
 

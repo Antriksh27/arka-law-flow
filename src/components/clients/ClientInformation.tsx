@@ -26,7 +26,25 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
     }
   });
 
-  // Fetch assigned lawyers
+  // Fetch primary assigned lawyer
+  const {
+    data: primaryLawyer
+  } = useQuery({
+    queryKey: ['client-primary-lawyer', client?.assigned_lawyer_id],
+    queryFn: async () => {
+      if (!client?.assigned_lawyer_id) return null;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, profile_pic')
+        .eq('id', client.assigned_lawyer_id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!client?.assigned_lawyer_id,
+  });
+
+  // Fetch additional assigned lawyers
   const {
     data: assignedLawyers = []
   } = useQuery({
@@ -164,19 +182,59 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
-          {assignedLawyers.length > 0 ? assignedLawyers.map((assignment: any) => <div key={assignment.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                <User className="w-4 h-4 text-gray-400" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">
-                    {assignment.profiles?.full_name || 'Unknown'}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    Assigned on {new Date(assignment.assigned_at).toLocaleDateString()}
-                  </p>
+          {primaryLawyer && (
+            <div className="flex items-center gap-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
+              <User className="w-4 h-4 text-primary" />
+              <div className="flex-1">
+                <p className="text-sm font-medium">
+                  {primaryLawyer.full_name}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Primary Lawyer
+                </p>
+              </div>
+            </div>
+          )}
+          
+          {assignedLawyers.length > 0 && (
+            <>
+              <div className="text-xs font-medium text-muted-foreground mt-4 mb-2">Additional Lawyers</div>
+              {assignedLawyers.map((assignment: any) => (
+                <div key={assignment.id} className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                  <User className="w-4 h-4 text-muted-foreground" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">
+                      {assignment.profiles?.full_name || 'Unknown'}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Assigned on {new Date(assignment.assigned_at).toLocaleDateString()}
+                    </p>
+                  </div>
                 </div>
-              </div>) : <p className="text-sm italic text-gray-400">No lawyers assigned yet</p>}
+              ))}
+            </>
+          )}
+          
+          {!primaryLawyer && assignedLawyers.length === 0 && (
+            <p className="text-sm italic text-muted-foreground">No lawyers assigned yet</p>
+          )}
         </CardContent>
       </Card>
+
+      {/* Notes */}
+      {client.notes && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <User className="w-5 h-5 text-blue-600" />
+              <CardTitle>Notes</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm whitespace-pre-wrap">{client.notes}</p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Financial Details */}
       
