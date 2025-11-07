@@ -95,7 +95,7 @@ export const ContactDetailsDialog: React.FC<ContactDetailsDialogProps> = ({
             </h3>
             
             <div className="p-3 bg-gray-50 rounded-lg">
-              <p className="text-sm font-medium mb-1">Organization/Company</p>
+              
               <p className="text-sm text-muted-foreground">
                 {contact.organization || <span className="text-gray-400">Not provided</span>}
               </p>
