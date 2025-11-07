@@ -41,7 +41,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const emailResponse = await resend.emails.send({
-      from: "HRU Legal <onboarding@resend.dev>",
+      from: "HRU Legal <office@hrulegal.com>",
       to: [to],
       subject: subject,
       html: `
