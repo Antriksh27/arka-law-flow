@@ -5,16 +5,28 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
-import { Eye, Plus } from 'lucide-react';
-import { AddCaseDialog } from '@/components/cases/AddCaseDialog';
+import { Eye, Link } from 'lucide-react';
+import { AssignToCaseDialog } from './AssignToCaseDialog';
 
 interface ClientCasesProps {
   clientId: string;
 }
 
 export const ClientCases: React.FC<ClientCasesProps> = ({ clientId }) => {
-  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showLinkDialog, setShowLinkDialog] = useState(false);
   const navigate = useNavigate();
+  const { data: client } = useQuery({
+    queryKey: ['client', clientId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('full_name')
+        .eq('id', clientId)
+        .single();
+      if (error) throw error;
+      return data;
+    }
+  });
   const { data: cases = [], isLoading } = useQuery({
     queryKey: ['client-cases', clientId],
     queryFn: async () => {
@@ -64,10 +76,10 @@ export const ClientCases: React.FC<ClientCasesProps> = ({ clientId }) => {
         <Button 
           size="sm" 
           className="bg-primary hover:bg-primary/90"
-          onClick={() => setShowAddDialog(true)}
+          onClick={() => setShowLinkDialog(true)}
         >
-          <Plus className="w-4 h-4 mr-2" />
-          New Case
+          <Link className="w-4 h-4 mr-2" />
+          Link Case
         </Button>
       </CardHeader>
       <CardContent>
@@ -114,10 +126,11 @@ export const ClientCases: React.FC<ClientCasesProps> = ({ clientId }) => {
         )}
       </CardContent>
       
-      <AddCaseDialog 
-        open={showAddDialog}
-        onClose={() => setShowAddDialog(false)}
-        preSelectedClientId={clientId}
+      <AssignToCaseDialog 
+        open={showLinkDialog}
+        onOpenChange={setShowLinkDialog}
+        clientId={clientId}
+        clientName={client?.full_name || ''}
       />
     </Card>
   );
