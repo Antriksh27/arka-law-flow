@@ -88,19 +88,7 @@ export const ContactDetailsDialog: React.FC<ContactDetailsDialogProps> = ({
 
           {/* Organization Information */}
           <Separator />
-          <div className="space-y-4">
-            <h3 className="flex items-center gap-2 text-lg font-medium">
-              <Building className="w-5 h-5" />
-              Organization
-            </h3>
-            
-            <div className="p-3 bg-gray-50 rounded-lg">
-              
-              <p className="text-sm text-muted-foreground">
-                {contact.organization || <span className="text-gray-400">Not provided</span>}
-              </p>
-            </div>
-          </div>
+          
 
           {/* Location Information */}
           <Separator />
