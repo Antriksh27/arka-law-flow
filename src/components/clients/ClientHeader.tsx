@@ -53,7 +53,12 @@ export const ClientHeader: React.FC<ClientHeaderProps> = ({
           
           
           
-          <ClientQuickActions clientId={client.id} clientName={client.full_name} onAction={onUpdate} />
+          <ClientQuickActions 
+            clientId={client.id} 
+            clientName={client.full_name} 
+            clientEmail={client.email}
+            onAction={onUpdate} 
+          />
         </div>
       </div>
     </div>;
