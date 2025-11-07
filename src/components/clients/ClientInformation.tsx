@@ -6,6 +6,8 @@ import { User, Mail, Phone, MapPin, Building, Briefcase, Users, Calendar, UserCh
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 import { TimeUtils } from '@/lib/timeUtils';
+import { InlineEditCard } from './InlineEditCard';
+import { z } from 'zod';
 interface ClientInformationProps {
   clientId: string;
 }
@@ -14,7 +16,8 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
 }) => {
   const {
     data: client,
-    isLoading
+    isLoading,
+    refetch
   } = useQuery({
     queryKey: ['client-full-info', clientId],
     queryFn: async () => {
@@ -27,6 +30,11 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
     }
   });
 
+  // Validation schemas
+  const emailSchema = z.string().trim().email({ message: "Invalid email address" }).max(255, { message: "Email must be less than 255 characters" }).or(z.literal(''));
+  const phoneSchema = z.string().trim().max(20, { message: "Phone must be less than 20 characters" }).or(z.literal(''));
+  const textSchema = (max: number) => z.string().trim().max(max, { message: `Must be less than ${max} characters` }).or(z.literal(''));
+
   if (isLoading) {
     return <div className="flex items-center justify-center py-12">
         <Loader2 className="w-6 h-6 animate-spin text-primary" />
@@ -37,6 +45,35 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
         Client information not found
       </div>;
   }
+
+  // Define fields for each card
+  const personalFields = [
+    { key: 'full_name', label: 'Full Name', icon: User, type: 'text' as const, maxLength: 100, validation: textSchema(100) },
+    { key: 'email', label: 'Email', icon: Mail, type: 'email' as const, maxLength: 255, validation: emailSchema },
+    { key: 'phone', label: 'Phone', icon: Phone, type: 'tel' as const, maxLength: 20, validation: phoneSchema },
+    { key: 'type', label: 'Client Type', icon: UserCheck, type: 'text' as const, maxLength: 50, validation: textSchema(50) },
+  ];
+
+  const addressFields = [
+    { key: 'address', label: 'Address', icon: MapPin, type: 'text' as const, maxLength: 255, validation: textSchema(255) },
+    { key: 'district', label: 'District', icon: MapPin, type: 'text' as const, maxLength: 100, validation: textSchema(100) },
+    { key: 'state', label: 'State', icon: MapPin, type: 'text' as const, maxLength: 100, validation: textSchema(100) },
+    { key: 'pin_code', label: 'PIN Code', icon: MapPin, type: 'text' as const, maxLength: 10, validation: textSchema(10) },
+  ];
+
+  const professionalFields = [
+    { key: 'organization', label: 'Organization', icon: Building, type: 'text' as const, maxLength: 200, validation: textSchema(200) },
+    { key: 'designation', label: 'Designation', icon: Briefcase, type: 'text' as const, maxLength: 100, validation: textSchema(100) },
+    { key: 'company_address', label: 'Company Address', icon: MapPin, type: 'text' as const, maxLength: 255, validation: textSchema(255) },
+    { key: 'company_phone', label: 'Company Phone', icon: Phone, type: 'tel' as const, maxLength: 20, validation: phoneSchema },
+    { key: 'company_email', label: 'Company Email', icon: Mail, type: 'email' as const, maxLength: 255, validation: emailSchema },
+  ];
+
+  const referenceFields = [
+    { key: 'referred_by_name', label: 'Referred By', icon: Users, type: 'text' as const, maxLength: 100, validation: textSchema(100) },
+    { key: 'referred_by_phone', label: 'Reference Phone', icon: Phone, type: 'tel' as const, maxLength: 20, validation: phoneSchema },
+  ];
+
   const InfoRow = ({
     icon: Icon,
     label,
@@ -56,71 +93,47 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
         </div>
       </div>;
   };
+
   return <div className="space-y-6">
       {/* Personal Details */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <User className="w-5 h-5 text-blue-600" />
-            <CardTitle>Personal Details</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <InfoRow icon={User} label="Full Name" value={client.full_name} />
-          <InfoRow icon={Mail} label="Email" value={client.email} />
-          <InfoRow icon={Phone} label="Phone" value={client.phone} />
-          <InfoRow icon={UserCheck} label="Client Type" value={client.type} />
-          
-          
-        </CardContent>
-      </Card>
+      <InlineEditCard
+        title="Personal Details"
+        icon={User}
+        fields={personalFields}
+        clientId={clientId}
+        clientData={client}
+        onUpdate={refetch}
+      />
 
       {/* Address Information */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <MapPin className="w-5 h-5 text-blue-600" />
-            <CardTitle>Address Information</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <InfoRow icon={MapPin} label="Address" value={client.address} />
-          <InfoRow icon={MapPin} label="District" value={client.district} />
-          <InfoRow icon={MapPin} label="State" value={client.state} />
-          <InfoRow icon={MapPin} label="PIN Code" value={client.pin_code} />
-        </CardContent>
-      </Card>
+      <InlineEditCard
+        title="Address Information"
+        icon={MapPin}
+        fields={addressFields}
+        clientId={clientId}
+        clientData={client}
+        onUpdate={refetch}
+      />
 
       {/* Professional Details */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Building className="w-5 h-5 text-blue-600" />
-            <CardTitle>Professional Details</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <InfoRow icon={Building} label="Organization" value={client.organization} />
-          <InfoRow icon={Briefcase} label="Designation" value={client.designation} />
-          <InfoRow icon={MapPin} label="Company Address" value={client.company_address} />
-          <InfoRow icon={Phone} label="Company Phone" value={client.company_phone} />
-          <InfoRow icon={Mail} label="Company Email" value={client.company_email} />
-        </CardContent>
-      </Card>
+      <InlineEditCard
+        title="Professional Details"
+        icon={Building}
+        fields={professionalFields}
+        clientId={clientId}
+        clientData={client}
+        onUpdate={refetch}
+      />
 
       {/* Reference Information */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Users className="w-5 h-5 text-blue-600" />
-            <CardTitle>Reference Information</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <InfoRow icon={Users} label="Referred By" value={client.referred_by_name} />
-          <InfoRow icon={Phone} label="Reference Phone" value={client.referred_by_phone} />
-        </CardContent>
-      </Card>
+      <InlineEditCard
+        title="Reference Information"
+        icon={Users}
+        fields={referenceFields}
+        clientId={clientId}
+        clientData={client}
+        onUpdate={refetch}
+      />
 
       {/* Additional Notes */}
       
