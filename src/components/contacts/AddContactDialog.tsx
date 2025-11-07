@@ -283,35 +283,74 @@ export const AddContactDialog = ({
                     </FormControl>
                     <FormMessage />
                   </FormItem>} />
-
-              {form.watch('type') === 'Organization' && <>
-                  <FormField control={form.control} name="organization" rules={{
-                required: form.watch('type') === 'Organization' ? "Organization name is required" : false
-              }} render={({
-                field
-              }) => <FormItem>
-                        <FormLabel>Organization Name *</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter organization/company name" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>} />
-
-                  <FormField control={form.control} name="designation" render={({
-                field
-              }) => <FormItem>
-                        <FormLabel>Designation</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter designation in company" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>} />
-                </>}
             </div>
+
+            {/* Organization Details - Only for Organization */}
+            {form.watch('type') === 'Organization' && (
+              <div className="space-y-4">
+                <h3 className="text-sm font-medium text-foreground border-b pb-2">Organization Details</h3>
+                
+                <FormField control={form.control} name="organization" rules={{
+                  required: form.watch('type') === 'Organization' ? "Organization name is required" : false
+                }} render={({
+                  field
+                }) => <FormItem>
+                      <FormLabel>Organization Name *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter organization/company name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>} />
+
+                <FormField control={form.control} name="designation" render={({
+                  field
+                }) => <FormItem>
+                      <FormLabel>Designation</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter designation in company" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>} />
+
+                <FormField control={form.control} name="company_address" render={({
+                  field
+                }) => <FormItem>
+                      <FormLabel>Company Address</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter company address" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>} />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField control={form.control} name="company_phone" render={({
+                    field
+                  }) => <FormItem>
+                        <FormLabel>Company Phone</FormLabel>
+                        <FormControl>
+                          <Input type="tel" placeholder="Enter company phone number" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>} />
+
+                  <FormField control={form.control} name="company_email" render={({
+                    field
+                  }) => <FormItem>
+                        <FormLabel>Company Email</FormLabel>
+                        <FormControl>
+                          <Input type="email" placeholder="Enter company email address" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>} />
+                </div>
+              </div>
+            )}
 
             {/* Contact Details */}
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-foreground border-b pb-2">Contact Details</h3>
+              <h3 className="text-sm font-medium text-foreground border-b pb-2">
+                {form.watch('type') === 'Organization' ? 'Contact Person Details' : 'Contact Details'}
+              </h3>
               
               <div className="grid grid-cols-2 gap-4">
                 <FormField control={form.control} name="email" render={({
@@ -334,40 +373,6 @@ export const AddContactDialog = ({
                       <FormMessage />
                     </FormItem>} />
               </div>
-
-              {form.watch('type') === 'Organization' && <>
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField control={form.control} name="company_phone" render={({
-                  field
-                }) => <FormItem>
-                          <FormLabel>Company Phone</FormLabel>
-                          <FormControl>
-                            <Input type="tel" placeholder="Enter company phone number" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>} />
-
-                    <FormField control={form.control} name="company_email" render={({
-                  field
-                }) => <FormItem>
-                          <FormLabel>Company Email</FormLabel>
-                          <FormControl>
-                            <Input type="email" placeholder="Enter company email address" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>} />
-                  </div>
-
-                  <FormField control={form.control} name="company_address" render={({
-                field
-              }) => <FormItem>
-                        <FormLabel>Company Address</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter company address" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>} />
-                </>}
             </div>
 
             {/* Address Information */}
