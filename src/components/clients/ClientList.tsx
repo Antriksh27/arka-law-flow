@@ -96,6 +96,26 @@ export const ClientList = () => {
             active_case_count: 0
           })) || [];
           count = result.count;
+        } else {
+          // Fetch is_vip status from clients table for the client_stats results
+          if (data && data.length > 0) {
+            const clientIds = data.map(c => c.id);
+            const { data: vipData } = await supabase
+              .from('clients')
+              .select('id, is_vip')
+              .in('id', clientIds);
+            
+            if (vipData) {
+              // Merge is_vip data into client_stats data
+              data = data.map(client => {
+                const vipInfo = vipData.find(v => v.id === client.id);
+                return {
+                  ...client,
+                  is_vip: vipInfo?.is_vip || false
+                };
+              });
+            }
+          }
         }
 
         // Apply client-side filters after pagination
@@ -195,7 +215,9 @@ export const ClientList = () => {
         title: "Success",
         description: `Client ${!currentVipStatus ? 'marked as VIP ⭐' : 'removed from VIP'}`,
       });
-      refetch();
+      
+      // Refetch to ensure UI is updated
+      await refetch();
     } catch (error) {
       console.error('Error toggling VIP status:', error);
       toast({

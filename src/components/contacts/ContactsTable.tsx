@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Table,
   TableBody,
@@ -9,10 +9,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Mail, Phone, Building, MapPin, ChevronLeft, ChevronRight, Eye, Pencil, Trash2, Star } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { Mail, Phone, Building, MapPin, ChevronLeft, ChevronRight, Eye, Pencil, Trash2 } from 'lucide-react';
 
 interface ContactsTableProps {
   contacts: any[];
@@ -41,50 +38,6 @@ export const ContactsTable = ({
   onPageChange,
   onRefetch
 }: ContactsTableProps) => {
-  const { toast } = useToast();
-  const [vipToggleContact, setVipToggleContact] = useState<{ id: string; name: string; currentStatus: boolean } | null>(null);
-
-  const handleToggleVIP = async (contactId: string, currentVipStatus: boolean, contactName: string) => {
-    // If removing VIP status, ask for confirmation
-    if (currentVipStatus) {
-      setVipToggleContact({ id: contactId, name: contactName, currentStatus: currentVipStatus });
-      return;
-    }
-
-    // If marking as VIP, do it immediately
-    await performVIPToggle(contactId, currentVipStatus);
-  };
-
-  const performVIPToggle = async (contactId: string, currentVipStatus: boolean) => {
-    try {
-      const { error } = await supabase
-        .from('contacts')
-        .update({ is_vip: !currentVipStatus })
-        .eq('id', contactId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: `Contact ${!currentVipStatus ? 'marked as VIP ⭐' : 'removed from VIP'}`,
-      });
-      
-      if (onRefetch) onRefetch();
-    } catch (error) {
-      console.error('Error toggling VIP status:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update VIP status",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const confirmVIPRemoval = async () => {
-    if (!vipToggleContact) return;
-    await performVIPToggle(vipToggleContact.id, vipToggleContact.currentStatus);
-    setVipToggleContact(null);
-  };
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -133,11 +86,8 @@ export const ContactsTable = ({
                 </span>
               </div>
                   <div>
-                    <div className="font-medium text-gray-900 flex items-center gap-2">
+                    <div className="font-medium text-gray-900">
                       {contact.name}
-                      {contact.is_vip && (
-                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" aria-label="VIP Contact" />
-                      )}
                     </div>
                     {contact.notes && (
                       <div className="text-sm text-gray-500 truncate max-w-[200px]">
@@ -187,18 +137,6 @@ export const ContactsTable = ({
               
               <TableCell>
                 <div className="flex items-center justify-end gap-1">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleToggleVIP(contact.id, contact.is_vip || false, contact.name);
-                    }}
-                    className={contact.is_vip ? "text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50" : "text-gray-400 hover:text-yellow-600 hover:bg-yellow-50"}
-                    title={contact.is_vip ? "Remove VIP status" : "Mark as VIP"}
-                  >
-                    <Star className={contact.is_vip ? "w-4 h-4 fill-yellow-400" : "w-4 h-4"} />
-                  </Button>
                   <Button 
                     variant="ghost" 
                     size="sm" 
@@ -314,24 +252,6 @@ export const ContactsTable = ({
           </div>
         </div>
       )}
-
-      {/* VIP Removal Confirmation Dialog */}
-      <AlertDialog open={!!vipToggleContact} onOpenChange={(open) => !open && setVipToggleContact(null)}>
-        <AlertDialogContent className="bg-white">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remove VIP Status</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to remove VIP status from <span className="font-semibold">{vipToggleContact?.name}</span>?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmVIPRemoval} className="bg-yellow-600 hover:bg-yellow-700">
-              Remove VIP
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 };
