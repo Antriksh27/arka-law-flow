@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { Plus, Pin, Eye, EyeOff } from 'lucide-react';
+import { format } from 'date-fns';
 import { CreateNoteMultiModal } from '@/components/notes/CreateNoteMultiModal';
 import { NoteViewDialog } from '@/components/notes/NoteViewDialog';
 import { EditNoteDialog } from '@/components/notes/EditNoteDialog';
@@ -166,7 +167,7 @@ export const ClientNotes: React.FC<ClientNotesProps> = ({ clientId }) => {
 
                 <div className="flex items-center justify-between text-xs text-gray-500">
                   <span>
-                    By {note.created_by?.full_name} • {new Date(note.created_at).toLocaleDateString()}
+                    By {note.created_by?.full_name} • {format(new Date(note.created_at), 'dd/MM/yyyy')}
                   </span>
                   {note.color && (
                     <div 
