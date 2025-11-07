@@ -5,6 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -30,10 +31,12 @@ interface Client {
 type StatusFilter = 'all' | 'active' | 'inactive' | 'lead' | 'prospect' | 'new' | 'vip';
 type SortField = 'name' | 'status' | 'created_at' | 'active_cases' | 'email';
 type SortDirection = 'asc' | 'desc';
+type TabFilter = 'all' | 'vip';
 export const ClientList = () => {
   console.log('ClientList component rendering...');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [activeTab, setActiveTab] = useState<TabFilter>('all');
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -57,7 +60,7 @@ export const ClientList = () => {
     error,
     refetch
   } = useQuery({
-    queryKey: ['clients', searchTerm, statusFilter, page, sortField, sortDirection],
+    queryKey: ['clients', searchTerm, statusFilter, page, sortField, sortDirection, activeTab],
     queryFn: async () => {
       console.log('Fetching clients...');
       try {
@@ -97,9 +100,16 @@ export const ClientList = () => {
 
         // Apply client-side filters after pagination
         let filteredData = data || [];
+        
+        // Apply tab filter first
+        if (activeTab === 'vip') {
+          filteredData = filteredData.filter(client => (client as any).is_vip === true);
+        }
+        
         if (searchTerm) {
           filteredData = filteredData.filter(client => client.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || client.email?.toLowerCase().includes(searchTerm.toLowerCase()));
         }
+        
         if (statusFilter === 'vip') {
           filteredData = filteredData.filter(client => (client as any).is_vip === true);
         } else if (statusFilter !== 'all') {
@@ -239,8 +249,21 @@ export const ClientList = () => {
         </div>
       </div>
 
-      {/* Filters Bar */}
-      <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-200">
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={(value: any) => setActiveTab(value)} className="w-full">
+        <TabsList className="grid w-full grid-cols-2 bg-white rounded-2xl shadow-sm border border-gray-200">
+          <TabsTrigger value="all" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white">
+            All Clients
+          </TabsTrigger>
+          <TabsTrigger value="vip" className="data-[state=active]:bg-yellow-600 data-[state=active]:text-white flex items-center gap-2">
+            <Star className="w-4 h-4 fill-current" />
+            VIP Clients
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="all" className="mt-6">
+          {/* Filters Bar */}
+          <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-200 mb-6">
         <div className="flex items-center gap-4">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -502,7 +525,264 @@ export const ClientList = () => {
               </Button>
             </div>
           </div>}
-      </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="vip" className="mt-6">
+          {/* Filters Bar */}
+          <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-200 mb-6">
+            <div className="flex items-center gap-4">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input placeholder="Search VIP clients..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10 border-slate-900" />
+              </div>
+
+              {/* Status Filter Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="gap-2">
+                    <Filter className="w-4 h-4" />
+                    Status: {statusFilter === 'all' ? 'All' : statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 bg-background z-50">
+                  <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={() => setStatusFilter('all')}
+                    className={statusFilter === 'all' ? 'bg-accent' : ''}
+                  >
+                    All VIP Clients
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => setStatusFilter('active')}
+                    className={statusFilter === 'active' ? 'bg-accent' : ''}
+                  >
+                    Active
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => setStatusFilter('new')}
+                    className={statusFilter === 'new' ? 'bg-accent' : ''}
+                  >
+                    New
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => setStatusFilter('lead')}
+                    className={statusFilter === 'lead' ? 'bg-accent' : ''}
+                  >
+                    Lead
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => setStatusFilter('prospect')}
+                    className={statusFilter === 'prospect' ? 'bg-accent' : ''}
+                  >
+                    Prospect
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => setStatusFilter('inactive')}
+                    className={statusFilter === 'inactive' ? 'bg-accent' : ''}
+                  >
+                    Inactive
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Sort Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="gap-2">
+                    <SlidersHorizontal className="w-4 h-4" />
+                    Sort: {sortField === 'name' ? 'Name' : sortField === 'active_cases' ? 'Cases' : sortField.charAt(0).toUpperCase() + sortField.slice(1)}
+                    {sortDirection === 'asc' ? ' ↑' : ' ↓'}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 bg-background z-50">
+                  <DropdownMenuLabel>Sort By</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={() => handleSort('name')}
+                    className={sortField === 'name' ? 'bg-accent' : ''}
+                  >
+                    Name {sortField === 'name' && (sortDirection === 'asc' ? '↑' : '↓')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => handleSort('email')}
+                    className={sortField === 'email' ? 'bg-accent' : ''}
+                  >
+                    Email {sortField === 'email' && (sortDirection === 'asc' ? '↑' : '↓')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => handleSort('status')}
+                    className={sortField === 'status' ? 'bg-accent' : ''}
+                  >
+                    Status {sortField === 'status' && (sortDirection === 'asc' ? '↑' : '↓')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => handleSort('active_cases')}
+                    className={sortField === 'active_cases' ? 'bg-accent' : ''}
+                  >
+                    Active Cases {sortField === 'active_cases' && (sortDirection === 'asc' ? '↑' : '↓')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => handleSort('created_at')}
+                    className={sortField === 'created_at' ? 'bg-accent' : ''}
+                  >
+                    Date Added {sortField === 'created_at' && (sortDirection === 'asc' ? '↑' : '↓')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+
+          {/* VIP Clients Table */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200">
+            {isLoading ? <div className="text-center py-8">Loading VIP clients...</div> : clients.length === 0 ? <div className="text-center py-12">
+                <Star className="w-12 h-12 mx-auto mb-4 text-yellow-400 fill-yellow-400" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No VIP clients yet</h3>
+                <p className="text-gray-500 mb-4">Mark important clients as VIP to see them here.</p>
+              </div> : <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="bg-yellow-600 text-white">
+                      <button onClick={() => handleSort('name')} className="flex items-center gap-1 hover:text-gray-200 font-semibold">
+                        Client Name
+                        <SortIcon field="name" />
+                      </button>
+                    </TableHead>
+                    <TableHead className="bg-yellow-600 text-white">
+                      <button onClick={() => handleSort('email')} className="flex items-center gap-1 hover:text-gray-200 font-semibold">
+                        Contact
+                        <SortIcon field="email" />
+                      </button>
+                    </TableHead>
+                    <TableHead className="bg-yellow-600 text-white">
+                      <button onClick={() => handleSort('status')} className="flex items-center gap-1 hover:text-gray-200 font-semibold">
+                        Status
+                        <SortIcon field="status" />
+                      </button>
+                    </TableHead>
+                    <TableHead className="bg-yellow-600 text-white">
+                      <button onClick={() => handleSort('active_cases')} className="flex items-center gap-1 hover:text-gray-200 font-semibold">
+                        Active Cases
+                        <SortIcon field="active_cases" />
+                      </button>
+                    </TableHead>
+                    <TableHead className="bg-yellow-600 text-white">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {clients.map(client => <TableRow key={client.id} className="hover:bg-yellow-50">
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => handleClientNameClick(client.id)} className="text-gray-900 hover:text-blue-600 hover:underline text-left font-medium cursor-pointer">
+                            {client.full_name}
+                          </button>
+                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" aria-label="VIP Client" />
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm text-gray-900">{client.email || '-'}</div>
+                        <div className="text-sm text-gray-500">{client.phone || '-'}</div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={`${client.status === 'active' ? 'bg-green-100 text-green-700 border-green-200' : client.status === 'new' ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-gray-100 text-gray-700 border-gray-200'} rounded-full text-xs`}>
+                          {client.status === 'new' ? 'New' : client.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <span className="capitalize">{client.active_case_count || 0} Cases</span>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleVIP(client.id, client.is_vip || false, client.full_name);
+                            }}
+                            className="text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50"
+                            title="Remove VIP status"
+                          >
+                            <Star className="w-4 h-4 fill-yellow-400" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => setViewingClient(client)}
+                            className="text-gray-600 hover:text-blue-600"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => setEditingClient(client)}
+                            className="text-gray-600 hover:text-blue-600"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => setDeletingClient(client)}
+                            className="text-gray-600 hover:text-red-600"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>)}
+                </TableBody>
+              </Table>}
+            
+            {/* Pagination */}
+            {!isLoading && Math.ceil(totalCount / pageSize) > 1 && <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200">
+                <div className="text-sm text-muted-foreground">
+                  Page {page} of {Math.ceil(totalCount / pageSize)} (Total: {totalCount} VIP clients)
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setPage(1)} disabled={page === 1} className="hidden sm:flex">
+                    First
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => setPage(p => p - 1)} disabled={page === 1}>
+                    <ChevronLeft className="h-4 w-4" />
+                    <span className="hidden sm:inline ml-1">Previous</span>
+                  </Button>
+                  
+                  <div className="flex items-center gap-1">
+                    {Array.from({
+                  length: Math.min(Math.ceil(totalCount / pageSize), 5)
+                }, (_, i) => {
+                  const totalPages = Math.ceil(totalCount / pageSize);
+                  let pageNum: number;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (page <= 3) {
+                    pageNum = i + 1;
+                  } else if (page >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = page - 2 + i;
+                  }
+                  return <Button key={pageNum} variant={page === pageNum ? "default" : "ghost"} size="sm" onClick={() => setPage(pageNum)} className="min-w-[32px]">
+                          {pageNum}
+                        </Button>;
+                })}
+                  </div>
+                  
+                  <Button variant="outline" size="sm" onClick={() => setPage(p => p + 1)} disabled={page === Math.ceil(totalCount / pageSize)}>
+                    <span className="hidden sm:inline mr-1">Next</span>
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => setPage(Math.ceil(totalCount / pageSize))} disabled={page === Math.ceil(totalCount / pageSize)} className="hidden sm:flex">
+                    Last
+                  </Button>
+                </div>
+              </div>}
+          </div>
+        </TabsContent>
+      </Tabs>
 
       {/* Dialogs */}
       <AddClientDialog open={showAddDialog} onOpenChange={setShowAddDialog} onSuccess={() => {
