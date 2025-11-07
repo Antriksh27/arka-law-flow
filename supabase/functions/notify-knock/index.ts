@@ -233,12 +233,11 @@ async function constructMessageAndPayload(table: string, eventType: string, reco
       const clientName = record.client_name || await getRelatedEntityName("clients", record.client_id, supabase);
       const date = formatDate(record.appointment_date);
       const time = record.appointment_time || "unspecified time";
-      const createdBy = await getUserName(record.created_by, supabase);
       const meetingMode = record.meeting_mode || "In-person";
 
       if (eventType === "INSERT") {
         subject = `📅 New appointment scheduled with ${clientName}`;
-        body = `Appointment created by ${createdBy} on **${date}** at **${time}** (${meetingMode}).`;
+        body = `Scheduled on **${date}** at **${time}** (${meetingMode}).`;
         data = { appointmentId: record.id, clientName, date, time, module: "appointments" };
       } else if (eventType === "UPDATE") {
         // Skip ALL UPDATE notifications for appointments to avoid duplicates from Google Calendar sync
