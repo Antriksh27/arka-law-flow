@@ -1,38 +1,65 @@
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { User, Building, Mail, Phone, MapPin, FileText, Calendar, UserCheck } from 'lucide-react';
+import { User, Building, Mail, Phone, MapPin, FileText, Calendar, UserCheck, UserPlus, Edit, Trash2 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 
 interface ContactDetailsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   contact: any;
+  onConvertToClient?: (contact: any) => void;
+  onEditContact?: (contact: any) => void;
+  onDeleteContact?: (contact: any) => void;
 }
 
 export const ContactDetailsDialog: React.FC<ContactDetailsDialogProps> = ({
   open,
   onOpenChange,
-  contact
+  contact,
+  onConvertToClient,
+  onEditContact,
+  onDeleteContact
 }) => {
   if (!contact) return null;
 
+  const handleConvertToClient = () => {
+    onOpenChange(false);
+    onConvertToClient?.(contact);
+  };
+
+  const handleEdit = () => {
+    onOpenChange(false);
+    onEditContact?.(contact);
+  };
+
+  const handleDelete = () => {
+    onOpenChange(false);
+    onDeleteContact?.(contact);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center">
-              <span className="text-slate-600 font-medium text-lg">
-                {contact.name?.charAt(0)?.toUpperCase()}
-              </span>
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold">{contact.name}</h2>
-              {contact.organization && (
-                <p className="text-muted-foreground">{contact.organization}</p>
-              )}
+          <DialogTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-14 w-14 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
+                <span className="text-white font-semibold text-xl">
+                  {contact.name?.charAt(0)?.toUpperCase()}
+                </span>
+              </div>
+              <div>
+                <h2 className="text-2xl font-semibold text-gray-900">{contact.name}</h2>
+                {contact.organization && (
+                  <div className="flex items-center gap-2 text-muted-foreground mt-1">
+                    <Building className="h-4 w-4" />
+                    <span>{contact.organization}</span>
+                  </div>
+                )}
+              </div>
             </div>
           </DialogTitle>
         </DialogHeader>
@@ -207,6 +234,40 @@ export const ContactDetailsDialog: React.FC<ContactDetailsDialogProps> = ({
             )}
           </div>
         </div>
+
+        <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+          <div className="flex gap-2 w-full sm:w-auto">
+            {onEditContact && (
+              <Button
+                variant="outline"
+                onClick={handleEdit}
+                className="flex-1 sm:flex-initial"
+              >
+                <Edit className="mr-2 h-4 w-4" />
+                Edit
+              </Button>
+            )}
+            {onDeleteContact && (
+              <Button
+                variant="outline"
+                onClick={handleDelete}
+                className="flex-1 sm:flex-initial text-red-600 hover:text-red-700 hover:bg-red-50"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </Button>
+            )}
+          </div>
+          {onConvertToClient && (
+            <Button
+              onClick={handleConvertToClient}
+              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
+            >
+              <UserPlus className="mr-2 h-4 w-4" />
+              Convert to Client
+            </Button>
+          )}
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

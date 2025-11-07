@@ -213,6 +213,9 @@ export const ContactList = () => {
             open={showDetailsDialog}
             onOpenChange={setShowDetailsDialog}
             contact={selectedContact}
+            onConvertToClient={handleConvertToClient}
+            onEditContact={handleEditContact}
+            onDeleteContact={handleDeleteContact}
           />
         </>
       )}
