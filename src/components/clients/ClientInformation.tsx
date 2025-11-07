@@ -174,7 +174,8 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
-          {primaryLawyer && <div className="flex items-center gap-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
+          {primaryLawyer && (
+            <div className="flex items-center gap-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
               <User className="w-4 h-4 text-primary" />
               <div className="flex-1">
                 <p className="text-sm font-medium">
@@ -184,24 +185,26 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
                   Primary Lawyer
                 </p>
               </div>
-            </div>}
+            </div>
+          )}
           
-          {assignedLawyers.length > 0 && <>
-              <div className="text-xs font-medium text-muted-foreground mt-4 mb-2">Additional Lawyers</div>
-              {assignedLawyers.map((assignment: any) => <div key={assignment.id} className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                  <User className="w-4 h-4 text-muted-foreground" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">
-                      {assignment.profiles?.full_name || 'Unknown'}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Assigned on {new Date(assignment.assigned_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>)}
-            </>}
+          {assignedLawyers.map((assignment: any) => (
+            <div key={assignment.id} className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg border border-border/50">
+              <User className="w-4 h-4 text-muted-foreground" />
+              <div className="flex-1">
+                <p className="text-sm font-medium">
+                  {assignment.profiles?.full_name || 'Unknown'}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Assigned on {new Date(assignment.assigned_at).toLocaleDateString()}
+                </p>
+              </div>
+            </div>
+          ))}
           
-          {!primaryLawyer && assignedLawyers.length === 0 && <p className="text-sm italic text-muted-foreground">No lawyers assigned yet</p>}
+          {!primaryLawyer && assignedLawyers.length === 0 && (
+            <p className="text-sm italic text-muted-foreground">No lawyers assigned yet</p>
+          )}
         </CardContent>
       </Card>
 
