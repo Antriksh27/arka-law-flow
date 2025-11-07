@@ -22,14 +22,9 @@ serve(async (req) => {
     const body = await req.json();
     const { table, eventType, record, oldRecord } = body;
 
-    console.log("Incoming DB event:", { table, eventType, recordId: record?.id });
+    console.log("[notify-knock] Incoming DB event:", { table, eventType, recordId: record?.id });
 
-    const recipients = await determineRecipients(table, record, supabase);
-    if (!recipients || recipients.length === 0) {
-      console.warn("No recipients found, skipping notification");
-      return jsonResponse({ status: "skipped", reason: "No recipients" });
-    }
-
+    // Construct message and payload FIRST to decide if we should skip
     const { subject, body: messageBody, data } = await constructMessageAndPayload(
       table, 
       eventType, 
@@ -40,13 +35,32 @@ serve(async (req) => {
 
     // If constructMessageAndPayload returns empty subject (no-op update), skip
     if (!subject || (data && data.skip)) {
-      console.log("Skipping notification due to no-op or filtered update", { table, eventType, recordId: record?.id });
-      return jsonResponse({ status: "skipped", reason: "no-op" });
+      console.log("[notify-knock] Skipping notification based on business logic", { 
+        table, 
+        eventType, 
+        recordId: record?.id,
+        reason: data?.skipReason || 'no_data' 
+      });
+      return jsonResponse({ status: "skipped", reason: data?.skipReason || "no-op" });
+    }
+
+    // Determine recipients (with deduplication)
+    const recipients = await determineRecipients(table, record, supabase);
+    const uniqueRecipients = [...new Set(recipients)];
+    
+    if (!uniqueRecipients || uniqueRecipients.length === 0) {
+      console.warn("[notify-knock] No recipients found, skipping notification");
+      return jsonResponse({ status: "skipped", reason: "no_recipients" });
     }
 
     const workflowKey = "new-appointment-notification";
 
-    console.log("Sending notification:", { recipients, subject });
+    console.log("[notify-knock] Sending notification:", { 
+      recipients: uniqueRecipients.length,
+      subject,
+      table,
+      eventType
+    });
 
     const response = await fetch(`https://api.knock.app/v1/workflows/${workflowKey}/trigger`, {
       method: "POST",
@@ -55,7 +69,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        recipients: recipients,
+        recipients: uniqueRecipients.map(id => ({ id })),
         data: {
           subject,
           body: messageBody,
@@ -65,9 +79,14 @@ serve(async (req) => {
     });
 
     const result = await response.json();
-    console.log("Knock response:", result);
+    console.log("[notify-knock] Notification sent successfully", { 
+      workflow_run_id: result.workflow_run_id,
+      recipients: uniqueRecipients.length,
+      table,
+      eventType
+    });
 
-    return jsonResponse({ status: "ok", result, recipientCount: recipients.length });
+    return jsonResponse({ status: "ok", result, recipientCount: uniqueRecipients.length });
   } catch (err) {
     console.error("Error in notify-knock:", err);
     return jsonResponse({ error: err.message }, 500);
@@ -199,26 +218,13 @@ async function constructMessageAndPayload(table: string, eventType: string, reco
         subject = `📅 New appointment scheduled with ${clientName}`;
         body = `Appointment created by ${createdBy} on **${date}** at **${time}** (${meetingMode}).`;
         data = { appointmentId: record.id, clientName, date, time, module: "appointments" };
-      } else {
-        // Only notify on meaningful reschedule/status changes
-        const oldDate = oldRecord?.appointment_date || null;
-        const oldTime = oldRecord?.appointment_time || null;
-        const oldMode = oldRecord?.meeting_mode || null;
-        const oldStatus = oldRecord?.status || null;
-        const changed = (
-          (oldDate !== record.appointment_date) ||
-          (oldTime !== record.appointment_time) ||
-          (oldMode !== record.meeting_mode) ||
-          (oldStatus !== record.status)
-        );
-        if (!changed) {
-          // mark as skip
-          data = { skip: true } as any;
-          break;
-        }
-        subject = `📅 Appointment rescheduled for ${clientName}`;
-        body = `Appointment moved to **${date}** at **${time}**.`;
-        data = { appointmentId: record.id, clientName, date, time, module: "appointments" };
+      } else if (eventType === "UPDATE") {
+        // Skip ALL UPDATE notifications for appointments to avoid duplicates from Google Calendar sync
+        console.log("[notify-knock] Skipping appointment UPDATE notification", { 
+          appointment_id: record.id,
+          reason: "update_notifications_disabled_for_appointments"
+        });
+        data = { skip: true, skipReason: "appointment_update_disabled" } as any;
       }
       break;
     }
@@ -303,37 +309,59 @@ async function constructMessageAndPayload(table: string, eventType: string, reco
 async function determineRecipients(table: string, record: any, supabase: any): Promise<string[]> {
   const recipients = new Set<string>();
 
-  // Direct assignment fields
-  if (record.assigned_to) recipients.add(record.assigned_to);
-  if (record.lawyer_id) recipients.add(record.lawyer_id);
-  if (record.assigned_lawyer_id) recipients.add(record.assigned_lawyer_id);
-  if (record.uploaded_by) recipients.add(record.uploaded_by);
-  
-  // Array of assigned users
-  if (Array.isArray(record.assigned_users)) {
-    record.assigned_users.forEach((userId: string) => recipients.add(userId));
-  }
+  // Special handling per table to avoid over-notifying
+  switch (table) {
+    case "appointments":
+      // For appointments, only notify the assigned lawyer (avoid duplicates)
+      if (record.assigned_lawyer_id) {
+        recipients.add(record.assigned_lawyer_id);
+      } else if (record.lawyer_id) {
+        recipients.add(record.lawyer_id);
+      }
+      break;
 
-  // For cases, notify assigned lawyer from cases table
-  if (table === "case_orders" || table === "documents" || table === "hearings") {
-    if (record.case_id) {
-      const { data: caseData } = await supabase
-        .from("cases")
-        .select("assigned_lawyer_id")
-        .eq("id", record.case_id)
-        .single();
-      if (caseData?.assigned_lawyer_id) recipients.add(caseData.assigned_lawyer_id);
-    }
-  }
+    case "tasks":
+      // For tasks, notify assignee only
+      if (record.assigned_to) {
+        recipients.add(record.assigned_to);
+      }
+      break;
 
-  // For clients module, notify assigned lawyer
-  if (table === "clients" && record.assigned_lawyer_id) {
-    recipients.add(record.assigned_lawyer_id);
-  }
+    case "clients":
+      // For clients, notify assigned lawyer
+      if (record.assigned_lawyer_id) {
+        recipients.add(record.assigned_lawyer_id);
+      }
+      break;
 
-  // For tasks, notify assignee
-  if (table === "tasks" && record.assigned_to) {
-    recipients.add(record.assigned_to);
+    case "case_orders":
+    case "documents":
+    case "hearings":
+      // For case-related items, notify case's assigned lawyer
+      if (record.case_id) {
+        const { data: caseData } = await supabase
+          .from("cases")
+          .select("assigned_lawyer_id")
+          .eq("id", record.case_id)
+          .single();
+        if (caseData?.assigned_lawyer_id) {
+          recipients.add(caseData.assigned_lawyer_id);
+        }
+      }
+      break;
+
+    default:
+      // For other tables, use generic assignment fields
+      if (record.assigned_to) recipients.add(record.assigned_to);
+      if (record.lawyer_id) recipients.add(record.lawyer_id);
+      if (record.assigned_lawyer_id) recipients.add(record.assigned_lawyer_id);
+      if (record.uploaded_by) recipients.add(record.uploaded_by);
+      
+      // Array of assigned users
+      if (Array.isArray(record.assigned_users)) {
+        record.assigned_users.forEach((userId: string) => recipients.add(userId));
+      }
+      break;
   }
 
   // Remove null/undefined values
