@@ -218,27 +218,9 @@ export const ClientList = () => {
             <Input placeholder="Search clients by name or email..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10 border-slate-900" />
           </div>
 
-          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as StatusFilter)} className="w-32 px-3 py-2 border border-slate-900 rounded-md text-sm bg-white">
-            <option value="all">All Status</option>
-            <option value="new">New</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-            <option value="lead">Lead</option>
-            <option value="prospect">Prospect</option>
-          </select>
+          
 
-          <select value={`${sortField}-${sortDirection}`} onChange={e => {
-          const [field, direction] = e.target.value.split('-');
-          setSortField(field as SortField);
-          setSortDirection(direction as SortDirection);
-        }} className="w-48 px-3 py-2 border border-slate-900 rounded-md text-sm bg-white">
-            <option value="created_at-desc">Newest First</option>
-            <option value="created_at-asc">Oldest First</option>
-            <option value="name-asc">Name A-Z</option>
-            <option value="name-desc">Name Z-A</option>
-            <option value="active_cases-desc">Most Cases</option>
-            <option value="active_cases-asc">Least Cases</option>
-          </select>
+          
 
           
 
