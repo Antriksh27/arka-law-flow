@@ -115,21 +115,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ lawyer, onSuccess }) =
         return;
       }
 
-      // Send notification to the lawyer
-      const { error: notificationError } = await supabase
-        .from('notifications')
-        .insert({
-          recipient_id: lawyer.id,
-          notification_type: 'appointment',
-          title: 'New Appointment Scheduled',
-          message: `New appointment scheduled with ${formData.clientName} on ${format(formData.selectedDate, 'yyyy-MM-dd')} at ${formData.selectedTime}`,
-          reference_id: appointment.id,
-          read: false
-        });
-
-      if (notificationError) {
-        console.error('Error creating notification:', notificationError);
-      }
+      // Notifications are handled by DB triggers via Knock. No direct insert here.
 
       onSuccess({
         date: formData.selectedDate,

@@ -104,21 +104,7 @@ const EditTeamMemberDialog = ({ open, onOpenChange, member }: EditTeamMemberDial
 
         // Send notification if role changed
         if (roleChanged) {
-          await supabase.from('notifications').insert({
-            recipient_id: member.user_id,
-            notification_type: 'role_changed',
-            title: 'Your Role Has Been Updated',
-            message: `Your role has been changed from ${oldRole} to ${data.role}`,
-            reference_id: member.user_id,
-            category: 'system',
-            priority: 'high',
-            action_url: '/team',
-            metadata: {
-              old_role: oldRole,
-              new_role: data.role
-            },
-            read: false
-          });
+          // Notifications are handled by DB triggers via Knock. No direct insert here.
         }
 
         return sanitizedData;

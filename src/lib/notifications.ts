@@ -19,24 +19,9 @@ export interface SendNotificationParams {
  * Send notifications using the unified notification service
  */
 export const sendNotification = async (params: SendNotificationParams) => {
-  try {
-    console.log('Sending notification:', params);
-    
-    const { data, error } = await supabase.functions.invoke('send-notification', {
-      body: params
-    });
-
-    if (error) {
-      console.error('Error sending notification:', error);
-      throw error;
-    }
-
-    console.log('Notification sent successfully:', data);
-    return data;
-  } catch (error) {
-    console.error('Failed to send notification:', error);
-    throw error;
-  }
+  // Legacy notifications are now disabled. We rely on DB-triggered Knock notifications.
+  console.info('[notifications] Skipping legacy notification send. Using Knock.', params);
+  return { status: 'skipped_legacy' } as const;
 };
 
 // Helper functions for common notification scenarios
