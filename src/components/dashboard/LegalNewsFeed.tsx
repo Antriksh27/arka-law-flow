@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { useState, useEffect } from 'react';
-import { format } from 'date-fns';
+import { TimeUtils } from '@/lib/timeUtils';
 
 interface NewsItem {
   title: string;
@@ -111,7 +111,7 @@ export const LegalNewsFeed = () => {
                             {item.source}
                           </Badge>
                           <span className="text-xs text-gray-500">
-                            {format(new Date(item.pubDate), 'MMM dd, yyyy')}
+                            {TimeUtils.formatDate(item.pubDate, 'MMM dd, yyyy')}
                           </span>
                         </div>
                         <h4 className="text-sm font-semibold text-gray-900 line-clamp-2 group-hover:text-primary transition-colors mb-2">

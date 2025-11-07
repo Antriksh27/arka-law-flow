@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { format } from 'date-fns';
+import { TimeUtils } from '@/lib/timeUtils';
 import { useNavigate } from 'react-router-dom';
 
 interface CaseHighlight {
@@ -76,7 +76,7 @@ export const CaseHighlightsCard = ({ cases, isLoading }: CaseHighlightsCardProps
                 {caseItem.next_hearing_date ? (
                   <div className="flex items-center gap-1 text-xs text-gray-600">
                     <Calendar className="w-3 h-3" />
-                    Next hearing: {format(new Date(caseItem.next_hearing_date), 'MMM dd, yyyy')}
+                    Next hearing: {TimeUtils.formatDate(caseItem.next_hearing_date, 'MMM dd, yyyy')}
                   </div>
                 ) : (
                   <div className="flex items-center gap-1 text-xs text-gray-500">

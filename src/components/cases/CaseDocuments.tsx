@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { FileText, Upload, Download, Eye, Star, StarOff } from 'lucide-react';
-import { format } from 'date-fns';
+import { TimeUtils } from '@/lib/timeUtils';
 import { UploadDocumentDialog } from '../documents/UploadDocumentDialog';
 import { FileViewer } from '../documents/FileViewer';
 import { useToast } from '@/hooks/use-toast';
@@ -174,7 +174,7 @@ export const CaseDocuments: React.FC<CaseDocumentsProps> = ({
                       </TableCell>
                       <TableCell>{doc.uploader_name}</TableCell>
                       <TableCell>
-                        {doc.uploaded_at ? format(new Date(doc.uploaded_at), 'MMM d, yyyy') : 'Unknown'}
+                        {doc.uploaded_at ? TimeUtils.formatDate(doc.uploaded_at, 'MMM d, yyyy') : 'Unknown'}
                       </TableCell>
                       <TableCell>
                         {doc.file_size ? `${(doc.file_size / 1024).toFixed(1)} KB` : 'Unknown'}

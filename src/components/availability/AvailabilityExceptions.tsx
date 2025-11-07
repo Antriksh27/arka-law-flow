@@ -13,6 +13,7 @@ import { toast } from '@/hooks/use-toast';
 import { CalendarIcon, Plus, Trash2, AlertCircle } from 'lucide-react';
 import { format, eachDayOfInterval, isValid } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { TimeUtils } from '@/lib/timeUtils';
 import type { DateRange } from 'react-day-picker';
 
 interface AvailabilityException {
@@ -238,7 +239,7 @@ export const AvailabilityExceptions = () => {
                   <div key={exception.id} className="flex items-center justify-between p-3 border rounded-lg">
                     <div>
                       <div className="font-medium">
-                        {format(new Date(exception.date), 'EEEE, MMMM d, yyyy')}
+                        {TimeUtils.formatDate(exception.date)}
                       </div>
                       {exception.reason && (
                         <div className="text-sm text-muted-foreground mt-1">

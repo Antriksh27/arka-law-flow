@@ -1,6 +1,6 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
-import { format } from 'date-fns';
+import { TimeUtils } from '@/lib/timeUtils';
 import { TodayFlow } from './workspace/TodayFlow';
 import { PinnedNotes } from './workspace/PinnedNotes';
 import { MyActiveCases } from './workspace/MyActiveCases';
@@ -37,7 +37,7 @@ const WorkspaceDashboard = () => {
                 {getGreeting()}, {userName}
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
-                {format(new Date(), "EEEE, MMMM d, yyyy • h:mm a")}
+                {TimeUtils.formatDateTime(new Date(), "EEEE, MMMM d, yyyy • h:mm a")}
               </p>
             </div>
           </div>

@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { format } from 'date-fns';
+import { TimeUtils } from '@/lib/timeUtils';
 import { CaseDocuments } from './CaseDocuments';
 import { CaseHearings } from './CaseHearings';
 import { CaseTasks } from './CaseTasks';
@@ -283,7 +283,7 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
                   <div className="flex-1">
                     <p className="text-sm font-medium">{getActivityTypeLabel(activity.activity_type)}</p>
                     <p className="text-xs text-muted">
-                      {format(new Date(activity.created_at), 'MMM d, h:mm a')}
+                      {TimeUtils.formatDateTime(activity.created_at, 'MMM d, h:mm a')}
                     </p>
                   </div>
               </div>) : <div className="text-center py-4">

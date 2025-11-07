@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { format } from 'date-fns';
+import { TimeUtils } from '@/lib/timeUtils';
 import { useNavigate } from 'react-router-dom';
 
 interface Appointment {
@@ -79,7 +79,7 @@ export const TodayAppointmentsCard = ({ appointments, isLoading }: TodayAppointm
                 <div className="flex items-center gap-3 text-xs text-gray-500">
                   <div className="flex items-center gap-1">
                     <Clock className="w-3 h-3" />
-                    {format(new Date(appt.start_time), 'h:mm a')}
+                    {TimeUtils.formatTime(appt.start_time)}
                   </div>
                   <div className="flex items-center gap-1">
                     {getTypeIcon(appt.meeting_type)}

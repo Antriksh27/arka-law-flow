@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar, FileText, Users, MoreHorizontal } from 'lucide-react';
-import { format } from 'date-fns';
+import { TimeUtils } from '@/lib/timeUtils';
 
 interface CaseCardProps {
   case: any;
@@ -101,7 +101,7 @@ export const CaseCard: React.FC<CaseCardProps> = ({ case: caseItem }) => {
           </div>
         </div>
         <span className="text-xs">
-          {format(new Date(caseItem.updated_at), 'MMM d')}
+          {TimeUtils.formatDate(caseItem.updated_at, 'MMM d')}
         </span>
       </div>
     </div>

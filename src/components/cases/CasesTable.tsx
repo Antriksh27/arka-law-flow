@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Trash2, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { format } from 'date-fns';
+import { TimeUtils } from '@/lib/timeUtils';
 interface CasesTableProps {
   searchQuery: string;
   statusFilter: string;
@@ -304,7 +304,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
                 <span className="capitalize">{caseItem.priority}</span>
               </TableCell>
               <TableCell>
-                {format(new Date(caseItem.updated_at), 'MMM d, yyyy')}
+                {TimeUtils.formatDate(caseItem.updated_at, 'MMM d, yyyy')}
               </TableCell>
             </TableRow>)}
         </TableBody>

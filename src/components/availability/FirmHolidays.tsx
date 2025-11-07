@@ -13,6 +13,7 @@ import { toast } from '@/hooks/use-toast';
 import { CalendarIcon, Plus, Trash2, AlertCircle, Building } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { TimeUtils } from '@/lib/timeUtils';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface FirmHoliday {
@@ -241,7 +242,7 @@ export const FirmHolidays = () => {
                         {holiday.name}
                       </div>
                       <div className="text-sm text-blue-600 font-medium">
-                        {format(new Date(holiday.date), 'EEEE, MMMM d, yyyy')}
+                        {TimeUtils.formatDate(holiday.date)}
                       </div>
                       {holiday.description && (
                         <div className="text-sm text-muted-foreground mt-1">
@@ -286,7 +287,7 @@ export const FirmHolidays = () => {
                         {holiday.name}
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        {format(new Date(holiday.date), 'EEEE, MMMM d, yyyy')}
+                        {TimeUtils.formatDate(holiday.date)}
                       </div>
                       {holiday.description && (
                         <div className="text-sm text-muted-foreground mt-1">

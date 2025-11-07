@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckSquare, Plus, Calendar, User, Tag } from 'lucide-react';
-import { format } from 'date-fns';
+import { TimeUtils } from '@/lib/timeUtils';
 import { CreateTaskDialog } from '../tasks/CreateTaskDialog';
 import { useToast } from '@/hooks/use-toast';
 interface CaseTasksProps {
@@ -161,7 +161,7 @@ export const CaseTasks: React.FC<CaseTasksProps> = ({
                       </div>
                       {task.due_date && <div className="flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
-                          {format(new Date(task.due_date), 'MMM d')}
+                          {TimeUtils.formatDate(task.due_date, 'MMM d')}
                         </div>}
                     </div>
 

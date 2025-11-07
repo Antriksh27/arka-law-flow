@@ -162,7 +162,7 @@ export const CaseActivity: React.FC<CaseActivityProps> = ({ caseId }) => {
       case 'hearing_scheduled':
         return (
           <div className="mt-2 text-xs text-gray-600">
-            <span className="font-medium">Date:</span> {format(new Date(metadata.hearing_date), 'MMM d, yyyy')}
+            <span className="font-medium">Date:</span> {TimeUtils.formatDate(metadata.hearing_date, 'MMM d, yyyy')}
             {metadata.hearing_type && (
               <span className="ml-2">• <span className="font-medium">Type:</span> {metadata.hearing_type}</span>
             )}
@@ -173,7 +173,7 @@ export const CaseActivity: React.FC<CaseActivityProps> = ({ caseId }) => {
           <div className="mt-2 text-xs text-gray-600">
             <span className="font-medium">Task:</span> {metadata.task_title}
             {metadata.due_date && (
-              <span className="ml-2">• <span className="font-medium">Due:</span> {format(new Date(metadata.due_date), 'MMM d, yyyy')}</span>
+              <span className="ml-2">• <span className="font-medium">Due:</span> {TimeUtils.formatDate(metadata.due_date, 'MMM d, yyyy')}</span>
             )}
           </div>
         );

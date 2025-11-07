@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { format, differenceInDays, differenceInHours } from 'date-fns';
+import { TimeUtils } from '@/lib/timeUtils';
+import { differenceInDays, differenceInHours } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 
 interface Hearing {
@@ -72,7 +73,7 @@ export const UpcomingHearingsCard = ({ hearings, isLoading }: UpcomingHearingsCa
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-xs text-gray-600">
                       <Clock className="w-3 h-3" />
-                      {format(new Date(hearing.hearing_date), 'MMM dd, yyyy - h:mm a')}
+                      {TimeUtils.formatDateTime(hearing.hearing_date, 'MMM dd, yyyy - h:mm a')}
                     </div>
                     <div className="flex items-center gap-2 text-xs text-gray-600">
                       <MapPin className="w-3 h-3" />

@@ -1,7 +1,8 @@
 import { Clock, Calendar, CheckSquare, Scale } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { format, isToday } from 'date-fns';
+import { TimeUtils } from '@/lib/timeUtils';
+import { isToday } from 'date-fns';
 
 interface TimelineEvent {
   id: string;
@@ -71,7 +72,7 @@ export const DailyTimeline = ({ events, isLoading }: DailyTimelineProps) => {
                   <div className="flex items-start justify-between mb-1">
                     <h4 className="font-medium text-sm">{event.title}</h4>
                     <span className="text-xs font-medium text-gray-600">
-                      {format(new Date(event.time), 'h:mm a')}
+                      {TimeUtils.formatTime(event.time)}
                     </span>
                   </div>
                   {event.location && (

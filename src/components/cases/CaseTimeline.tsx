@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, FileText, Gavel, Users, Clock, AlertCircle } from 'lucide-react';
+import { TimeUtils } from '@/lib/timeUtils';
 interface CaseTimelineProps {
   caseId: string;
 }
@@ -94,12 +95,7 @@ export const CaseTimeline: React.FC<CaseTimelineProps> = ({
                     <div>
                       <h3 className="font-semibold text-gray-900">{event.title}</h3>
                       <p className="text-sm text-gray-500">
-                        {new Date(event.date).toLocaleDateString('en-US', {
-                      weekday: 'long',
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
+                        {TimeUtils.formatDate(event.date)}
                       </p>
                     </div>
                     <Badge className={getStatusColor(event.status)}>

@@ -2,6 +2,7 @@
 import { Badge } from "@/components/ui/badge";
 import { HearingStatus } from "./types";
 import React from "react";
+import { TimeUtils } from '@/lib/timeUtils';
 
 // Function to get status badge with appropriate color
 export const getHearingStatusBadge = (status: HearingStatus) => {
@@ -49,12 +50,7 @@ export const canEditHearing = () => {
 // Function to convert ISO date string to formatted string
 export const formatDate = (dateString: string) => {
   if (!dateString) return "";
-  const date = new Date(dateString);
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  return TimeUtils.formatDate(dateString) || "";
 };
 
 // Function to convert time string to formatted string
