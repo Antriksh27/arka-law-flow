@@ -169,7 +169,6 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
       
 
       {/* Notes */}
-      {client.notes}
 
       {/* Financial Details */}
       
