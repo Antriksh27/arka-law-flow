@@ -161,10 +161,10 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
     queryFn: async () => {
       const { data, error } = await supabase
         .from('cases')
-        .select('id, case_title')
+        .select('id, case_title, case_number')
         .eq('client_id', clientId)
         .eq('status', 'open')
-        .order('title');
+        .order('case_title');
       if (error) throw error;
       return data || [];
     },
@@ -449,7 +449,7 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
                 <SelectItem value="no-case" className="hover:bg-gray-50">No Case (General Documents)</SelectItem>
                 {cases.map(case_item => (
                   <SelectItem key={case_item.id} value={case_item.id} className="hover:bg-gray-50">
-                    {case_item.case_title}
+                    {case_item.case_title} {case_item.case_number && `(${case_item.case_number})`}
                   </SelectItem>
                 ))}
               </SelectContent>
