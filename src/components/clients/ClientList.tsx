@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Plus, Search, MoreHorizontal, Eye, Upload, ArrowUpDown, ChevronLeft, ChevronRight, Pencil, Trash2, Filter, SlidersHorizontal } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, Eye, Upload, ArrowUpDown, ChevronLeft, ChevronRight, Pencil, Trash2, Filter, SlidersHorizontal, Star } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,8 +25,9 @@ interface Client {
   organization?: string;
   active_case_count: number;
   created_at: string;
+  is_vip?: boolean;
 }
-type StatusFilter = 'all' | 'active' | 'inactive' | 'lead' | 'prospect' | 'new';
+type StatusFilter = 'all' | 'active' | 'inactive' | 'lead' | 'prospect' | 'new' | 'vip';
 type SortField = 'name' | 'status' | 'created_at' | 'active_cases' | 'email';
 type SortDirection = 'asc' | 'desc';
 export const ClientList = () => {
@@ -98,7 +99,9 @@ export const ClientList = () => {
         if (searchTerm) {
           filteredData = filteredData.filter(client => client.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || client.email?.toLowerCase().includes(searchTerm.toLowerCase()));
         }
-        if (statusFilter !== 'all') {
+        if (statusFilter === 'vip') {
+          filteredData = filteredData.filter(client => (client as any).is_vip === true);
+        } else if (statusFilter !== 'all') {
           filteredData = filteredData.filter(client => client.status === statusFilter);
         }
         console.log('Fetched clients:', filteredData);
@@ -249,6 +252,14 @@ export const ClientList = () => {
               >
                 Inactive
               </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={() => setStatusFilter('vip')}
+                className={statusFilter === 'vip' ? 'bg-accent' : ''}
+              >
+                <Star className="w-4 h-4 mr-2 fill-yellow-400 text-yellow-400" />
+                VIP Clients
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
@@ -340,9 +351,14 @@ export const ClientList = () => {
             <TableBody>
               {clients.map(client => <TableRow key={client.id} className="hover:bg-gray-50">
                   <TableCell className="font-medium">
-                    <button onClick={() => handleClientNameClick(client.id)} className="text-gray-900 hover:text-blue-600 hover:underline text-left font-medium cursor-pointer">
-                      {client.full_name}
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => handleClientNameClick(client.id)} className="text-gray-900 hover:text-blue-600 hover:underline text-left font-medium cursor-pointer">
+                        {client.full_name}
+                      </button>
+                      {client.is_vip && (
+                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" aria-label="VIP Client" />
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="text-sm text-gray-900">{client.email || '-'}</div>

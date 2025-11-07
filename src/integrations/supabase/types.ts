@@ -1206,6 +1206,7 @@ export type Database = {
           firm_id: string | null
           full_name: string
           id: string
+          is_vip: boolean | null
           notes: string | null
           organization: string | null
           phone: string | null
@@ -1238,6 +1239,7 @@ export type Database = {
           firm_id?: string | null
           full_name: string
           id?: string
+          is_vip?: boolean | null
           notes?: string | null
           organization?: string | null
           phone?: string | null
@@ -1270,6 +1272,7 @@ export type Database = {
           firm_id?: string | null
           full_name?: string
           id?: string
+          is_vip?: boolean | null
           notes?: string | null
           organization?: string | null
           phone?: string | null

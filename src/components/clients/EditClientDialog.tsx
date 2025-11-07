@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useQuery } from '@tanstack/react-query';
@@ -9,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -28,6 +28,7 @@ interface Client {
   city?: string;
   referred_by_name?: string;
   referred_by_phone?: string;
+  is_vip?: boolean;
 }
 
 interface EditClientDialogProps {
@@ -64,6 +65,7 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
   const [clientType, setClientType] = useState<string>('Individual');
   const [selectedState, setSelectedState] = useState<string>('');
   const [selectedDistrict, setSelectedDistrict] = useState<string>('');
+  const [isVip, setIsVip] = useState<boolean>(false);
   
   const {
     register,
@@ -113,6 +115,7 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
     if (client) {
       const clientTypeValue = client.type || 'Individual';
       setClientType(clientTypeValue);
+      setIsVip(client.is_vip || false);
       
       reset({
         full_name: client.full_name,
@@ -201,6 +204,7 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
           type: data.type,
           state: stateName,
           district: districtName,
+          is_vip: isVip,
         })
         .eq('id', client.id);
 
@@ -363,6 +367,18 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
                   <SelectItem value="inactive">Inactive</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="flex items-center justify-between p-4 border border-border rounded-lg bg-accent/10">
+              <div className="flex-1">
+                <Label htmlFor="vip-toggle" className="text-base font-medium">VIP Client</Label>
+                <p className="text-sm text-muted-foreground mt-1">Mark this client as a VIP for priority handling</p>
+              </div>
+              <Switch
+                id="vip-toggle"
+                checked={isVip}
+                onCheckedChange={setIsVip}
+              />
             </div>
           </div>
 
