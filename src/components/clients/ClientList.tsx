@@ -127,16 +127,29 @@ export const ClientList = () => {
         // Apply client-side filters
         let filteredData = data;
         
+        console.log('Before filters - Total clients:', filteredData.length);
+        console.log('Status filter:', statusFilter);
+        console.log('Sample client statuses:', filteredData.slice(0, 5).map(c => ({ name: c.full_name, computed_status: c.computed_status })));
+        
         if (searchTerm) {
           filteredData = filteredData.filter(client => 
             client.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
             client.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             client.phone?.toLowerCase().includes(searchTerm.toLowerCase())
           );
+          console.log('After search filter:', filteredData.length);
         }
         
         if (statusFilter !== 'all') {
-          filteredData = filteredData.filter(client => client.computed_status === statusFilter);
+          const beforeStatusFilter = filteredData.length;
+          filteredData = filteredData.filter(client => {
+            const matches = client.computed_status === statusFilter;
+            if (!matches && beforeStatusFilter < 5) {
+              console.log('Status mismatch:', client.full_name, 'has', client.computed_status, 'looking for', statusFilter);
+            }
+            return matches;
+          });
+          console.log('After status filter:', filteredData.length, 'looking for:', statusFilter);
         }
 
         // Apply pagination AFTER filtering
@@ -144,7 +157,7 @@ export const ClientList = () => {
         const endIndex = startIndex + pageSize;
         const paginatedData = filteredData.slice(startIndex, endIndex);
 
-        console.log('Fetched clients:', paginatedData);
+        console.log('Fetched clients (paginated):', paginatedData.length);
         return {
           clients: paginatedData as Client[],
           totalCount: totalCount,
