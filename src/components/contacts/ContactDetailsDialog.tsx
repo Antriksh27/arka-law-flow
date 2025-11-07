@@ -69,82 +69,93 @@ export const ContactDetailsDialog: React.FC<ContactDetailsDialogProps> = ({
           <div className="space-y-4">
             <h3 className="flex items-center gap-2 text-lg font-medium">
               <User className="w-5 h-5" />
-              Basic Information
+              Contact Information
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {contact.email && (
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                  <Mail className="w-4 h-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Email</p>
-                    <p className="text-sm text-muted-foreground">{contact.email}</p>
-                  </div>
+              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <Mail className="w-4 h-4 text-muted-foreground" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium">Email</p>
+                  <p className="text-sm text-muted-foreground">
+                    {contact.email || <span className="text-gray-400">Not provided</span>}
+                  </p>
                 </div>
-              )}
+              </div>
               
-              {contact.phone && (
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                  <Phone className="w-4 h-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Phone</p>
-                    <p className="text-sm text-muted-foreground">{contact.phone}</p>
-                  </div>
+              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <Phone className="w-4 h-4 text-muted-foreground" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium">Phone</p>
+                  <p className="text-sm text-muted-foreground">
+                    {contact.phone || <span className="text-gray-400">Not provided</span>}
+                  </p>
                 </div>
-              )}
+              </div>
             </div>
           </div>
 
           {/* Organization Information */}
-          {contact.organization && (
-            <>
-              <Separator />
-              <div className="space-y-4">
-                <h3 className="flex items-center gap-2 text-lg font-medium">
-                  <Building className="w-5 h-5" />
-                  Organization
-                </h3>
-                
-                <div className="p-3 bg-gray-50 rounded-lg">
-                  <p className="font-medium">{contact.organization}</p>
-                </div>
-              </div>
-            </>
-          )}
+          <Separator />
+          <div className="space-y-4">
+            <h3 className="flex items-center gap-2 text-lg font-medium">
+              <Building className="w-5 h-5" />
+              Organization
+            </h3>
+            
+            <div className="p-3 bg-gray-50 rounded-lg">
+              <p className="text-sm font-medium mb-1">Organization/Company</p>
+              <p className="text-sm text-muted-foreground">
+                {contact.organization || <span className="text-gray-400">Not provided</span>}
+              </p>
+            </div>
+          </div>
 
           {/* Location Information */}
-          {(contact.address_line_1 || contact.address_line_2 || contact.states?.name || contact.districts?.name || contact.pin_code) && (
-            <>
-              <Separator />
-              <div className="space-y-4">
-                <h3 className="flex items-center gap-2 text-lg font-medium">
-                  <MapPin className="w-5 h-5" />
-                  Location
-                </h3>
-                
-                <div className="space-y-2">
-                  {contact.address_line_1 && (
-                    <p className="text-sm">{contact.address_line_1}</p>
-                  )}
-                  {contact.address_line_2 && (
-                    <p className="text-sm">{contact.address_line_2}</p>
-                  )}
-                  
-                  <div className="flex flex-wrap gap-2">
-                    {contact.districts?.name && (
-                      <Badge variant="outline">{contact.districts.name}</Badge>
-                    )}
-                    {contact.states?.name && (
-                      <Badge variant="outline">{contact.states.name}</Badge>
-                    )}
-                    {contact.pin_code && (
-                      <Badge variant="outline">PIN: {contact.pin_code}</Badge>
-                    )}
-                  </div>
-                </div>
+          <Separator />
+          <div className="space-y-4">
+            <h3 className="flex items-center gap-2 text-lg font-medium">
+              <MapPin className="w-5 h-5" />
+              Address & Location
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <p className="text-sm font-medium mb-1">Address Line 1</p>
+                <p className="text-sm text-muted-foreground">
+                  {contact.address_line_1 || <span className="text-gray-400">Not provided</span>}
+                </p>
               </div>
-            </>
-          )}
+              
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <p className="text-sm font-medium mb-1">Address Line 2</p>
+                <p className="text-sm text-muted-foreground">
+                  {contact.address_line_2 || <span className="text-gray-400">Not provided</span>}
+                </p>
+              </div>
+              
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <p className="text-sm font-medium mb-1">State</p>
+                <p className="text-sm text-muted-foreground">
+                  {contact.states?.name || <span className="text-gray-400">Not provided</span>}
+                </p>
+              </div>
+              
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <p className="text-sm font-medium mb-1">District</p>
+                <p className="text-sm text-muted-foreground">
+                  {contact.districts?.name || <span className="text-gray-400">Not provided</span>}
+                </p>
+              </div>
+              
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <p className="text-sm font-medium mb-1">PIN Code</p>
+                <p className="text-sm text-muted-foreground">
+                  {contact.pin_code || <span className="text-gray-400">Not provided</span>}
+                </p>
+              </div>
+            </div>
+          </div>
 
           {/* Visit Information */}
           <Separator />
@@ -155,12 +166,12 @@ export const ContactDetailsDialog: React.FC<ContactDetailsDialogProps> = ({
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {contact.visit_purpose && (
               <div className="p-3 bg-gray-50 rounded-lg">
                 <p className="text-sm font-medium mb-1">Purpose of Visit</p>
-                <Badge variant="outline">{contact.visit_purpose}</Badge>
+                <p className="text-sm text-muted-foreground">
+                  {contact.visit_purpose || <span className="text-gray-400">Not provided</span>}
+                </p>
               </div>
-              )}
               
               <div className="p-3 bg-gray-50 rounded-lg">
                 <p className="text-sm font-medium mb-1">Last Visit</p>
@@ -175,49 +186,44 @@ export const ContactDetailsDialog: React.FC<ContactDetailsDialogProps> = ({
           </div>
 
           {/* Referral Information */}
-          {(contact.referred_by_name || contact.referred_by_phone) && (
-            <>
-              <Separator />
-              <div className="space-y-4">
-                <h3 className="flex items-center gap-2 text-lg font-medium">
-                  <UserCheck className="w-5 h-5" />
-                  Referral Information
-                </h3>
-                
-                <div className="p-3 bg-gray-50 rounded-lg space-y-2">
-                  {contact.referred_by_name && (
-                    <div>
-                      <p className="text-sm font-medium">Referred By</p>
-                      <p className="text-sm text-gray-600">{contact.referred_by_name}</p>
-                    </div>
-                  )}
-                  {contact.referred_by_phone && (
-                    <div>
-                      <p className="text-sm font-medium">Referrer Phone</p>
-                      <p className="text-sm text-gray-600">{contact.referred_by_phone}</p>
-                    </div>
-                  )}
-                </div>
+          <Separator />
+          <div className="space-y-4">
+            <h3 className="flex items-center gap-2 text-lg font-medium">
+              <UserCheck className="w-5 h-5" />
+              Referral Information
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <p className="text-sm font-medium mb-1">Referred By (Name)</p>
+                <p className="text-sm text-muted-foreground">
+                  {contact.referred_by_name || <span className="text-gray-400">Not provided</span>}
+                </p>
               </div>
-            </>
-          )}
+              
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <p className="text-sm font-medium mb-1">Referrer Phone</p>
+                <p className="text-sm text-muted-foreground">
+                  {contact.referred_by_phone || <span className="text-gray-400">Not provided</span>}
+                </p>
+              </div>
+            </div>
+          </div>
 
           {/* Notes */}
-          {contact.notes && (
-            <>
-              <Separator />
-              <div className="space-y-4">
-                <h3 className="flex items-center gap-2 text-lg font-medium">
-                  <FileText className="w-5 h-5" />
-                  Notes
-                </h3>
-                
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <p className="text-sm whitespace-pre-wrap">{contact.notes}</p>
-                </div>
-              </div>
-            </>
-          )}
+          <Separator />
+          <div className="space-y-4">
+            <h3 className="flex items-center gap-2 text-lg font-medium">
+              <FileText className="w-5 h-5" />
+              Notes
+            </h3>
+            
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <p className="text-sm whitespace-pre-wrap">
+                {contact.notes || <span className="text-gray-400">No notes added</span>}
+              </p>
+            </div>
+          </div>
 
           {/* Timestamps */}
           <Separator />
