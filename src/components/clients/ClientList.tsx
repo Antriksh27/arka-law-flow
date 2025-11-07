@@ -147,7 +147,8 @@ export const ClientList = () => {
         console.log('Fetched clients:', filteredData);
         return {
           clients: filteredData as Client[],
-          totalCount: count || 0
+          totalCount: count || 0,
+          filteredCount: filteredData.length
         };
       } catch (err) {
         console.error('Error fetching clients:', err);
@@ -157,6 +158,8 @@ export const ClientList = () => {
   });
   const clients = queryResult?.clients || [];
   const totalCount = queryResult?.totalCount || 0;
+  const filteredCount = queryResult?.filteredCount || 0;
+  const displayCount = (searchTerm || statusFilter !== 'all') ? filteredCount : totalCount;
   const handleSort = (field: SortField) => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -491,9 +494,10 @@ export const ClientList = () => {
           </Table>}
         
         {/* Pagination */}
-        {!isLoading && Math.ceil(totalCount / pageSize) > 1 && <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200">
+        {!isLoading && Math.ceil(displayCount / pageSize) > 1 && <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200">
             <div className="text-sm text-muted-foreground">
-              Page {page} of {Math.ceil(totalCount / pageSize)} (Total: {totalCount} clients)
+              Page {page} of {Math.ceil(displayCount / pageSize)} (
+              {searchTerm || statusFilter !== 'all' ? `Filtered: ${displayCount} of ${totalCount}` : `Total: ${totalCount}`} clients)
             </div>
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" onClick={() => setPage(1)} disabled={page === 1} className="hidden sm:flex">
@@ -506,9 +510,9 @@ export const ClientList = () => {
               
               <div className="flex items-center gap-1">
                 {Array.from({
-              length: Math.min(Math.ceil(totalCount / pageSize), 5)
+              length: Math.min(Math.ceil(displayCount / pageSize), 5)
             }, (_, i) => {
-              const totalPages = Math.ceil(totalCount / pageSize);
+              const totalPages = Math.ceil(displayCount / pageSize);
               let pageNum: number;
               if (totalPages <= 5) {
                 pageNum = i + 1;
@@ -525,11 +529,11 @@ export const ClientList = () => {
             })}
               </div>
               
-              <Button variant="outline" size="sm" onClick={() => setPage(p => p + 1)} disabled={page === Math.ceil(totalCount / pageSize)}>
+              <Button variant="outline" size="sm" onClick={() => setPage(p => p + 1)} disabled={page === Math.ceil(displayCount / pageSize)}>
                 <span className="hidden sm:inline mr-1">Next</span>
                 <ChevronRight className="h-4 w-4" />
               </Button>
-              <Button variant="outline" size="sm" onClick={() => setPage(Math.ceil(totalCount / pageSize))} disabled={page === Math.ceil(totalCount / pageSize)} className="hidden sm:flex">
+              <Button variant="outline" size="sm" onClick={() => setPage(Math.ceil(displayCount / pageSize))} disabled={page === Math.ceil(displayCount / pageSize)} className="hidden sm:flex">
                 Last
               </Button>
             </div>
@@ -732,9 +736,10 @@ export const ClientList = () => {
               </Table>}
             
             {/* Pagination */}
-            {!isLoading && Math.ceil(totalCount / pageSize) > 1 && <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200">
+            {!isLoading && Math.ceil(displayCount / pageSize) > 1 && <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200">
                 <div className="text-sm text-muted-foreground">
-                  Page {page} of {Math.ceil(totalCount / pageSize)} (Total: {totalCount} VIP clients)
+                  Page {page} of {Math.ceil(displayCount / pageSize)} (
+                  {searchTerm || statusFilter !== 'all' ? `Filtered: ${displayCount} of ${totalCount}` : `Total: ${totalCount}`} VIP clients)
                 </div>
                 <div className="flex items-center gap-2">
                   <Button variant="outline" size="sm" onClick={() => setPage(1)} disabled={page === 1} className="hidden sm:flex">
@@ -747,9 +752,9 @@ export const ClientList = () => {
                   
                   <div className="flex items-center gap-1">
                     {Array.from({
-                  length: Math.min(Math.ceil(totalCount / pageSize), 5)
+                  length: Math.min(Math.ceil(displayCount / pageSize), 5)
                 }, (_, i) => {
-                  const totalPages = Math.ceil(totalCount / pageSize);
+                  const totalPages = Math.ceil(displayCount / pageSize);
                   let pageNum: number;
                   if (totalPages <= 5) {
                     pageNum = i + 1;
@@ -766,11 +771,11 @@ export const ClientList = () => {
                 })}
                   </div>
                   
-                  <Button variant="outline" size="sm" onClick={() => setPage(p => p + 1)} disabled={page === Math.ceil(totalCount / pageSize)}>
+                  <Button variant="outline" size="sm" onClick={() => setPage(p => p + 1)} disabled={page === Math.ceil(displayCount / pageSize)}>
                     <span className="hidden sm:inline mr-1">Next</span>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => setPage(Math.ceil(totalCount / pageSize))} disabled={page === Math.ceil(totalCount / pageSize)} className="hidden sm:flex">
+                  <Button variant="outline" size="sm" onClick={() => setPage(Math.ceil(displayCount / pageSize))} disabled={page === Math.ceil(displayCount / pageSize)} className="hidden sm:flex">
                     Last
                   </Button>
                 </div>
