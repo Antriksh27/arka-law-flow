@@ -242,10 +242,7 @@ export const ClientList = () => {
 
           
 
-          <Button variant="outline" className="border-slate-900 bg-slate-900 text-white hover:bg-slate-800">
-            <Search className="w-4 h-4 mr-2" />
-            More Filters
-          </Button>
+          
         </div>
       </div>
 
