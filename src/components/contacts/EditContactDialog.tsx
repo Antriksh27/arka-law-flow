@@ -248,7 +248,7 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({ open, onOp
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto p-6">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto p-6">
         <DialogHeader>
           <DialogTitle>Edit Contact</DialogTitle>
           <DialogDescription>
@@ -258,7 +258,7 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({ open, onOp
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 mt-4">
-            {/* Contact Type Selection */}
+            {/* Contact Type */}
             <FormField
               control={form.control}
               name="type"
@@ -286,87 +286,21 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({ open, onOp
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="name"
-              rules={{ required: "Name is required" }}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    {form.watch('type') === 'Organization' ? 'Contact Person Name' : 'Name'} *
-                  </FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter contact name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {form.watch('type') === 'Organization' && (
+            {/* Basic Information */}
+            <div className="space-y-4">
+              <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3 mb-4">Basic Information</h3>
+              
               <FormField
                 control={form.control}
-                name="organization"
-                rules={{ required: form.watch('type') === 'Organization' ? "Organization name is required" : false }}
+                name="name"
+                rules={{ required: "Name is required" }}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Organization Name *</FormLabel>
+                    <FormLabel>
+                      {form.watch('type') === 'Organization' ? 'Contact Person Name' : 'Name'} *
+                    </FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter organization/company name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-
-            {form.watch('type') === 'Organization' && (
-              <FormField
-                control={form.control}
-                name="designation"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Designation</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter designation in company" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="email" 
-                        placeholder="Enter email address" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Phone</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="tel" 
-                        placeholder="Enter phone number" 
-                        {...field} 
-                      />
+                      <Input placeholder="Enter contact name" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -374,21 +308,20 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({ open, onOp
               />
             </div>
 
-            {/* Business Information - Only for Organization */}
+            {/* Organization Details - Only for Organization */}
             {form.watch('type') === 'Organization' && (
-              <>
+              <div className="space-y-4">
+                <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3 mb-4">Organization Details</h3>
+                
                 <FormField
                   control={form.control}
-                  name="company_phone"
+                  name="organization"
+                  rules={{ required: form.watch('type') === 'Organization' ? "Organization name is required" : false }}
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Company Phone</FormLabel>
+                      <FormLabel>Organization Name *</FormLabel>
                       <FormControl>
-                        <Input 
-                          type="tel" 
-                          placeholder="Enter company phone number" 
-                          {...field} 
-                        />
+                        <Input placeholder="Enter organization/company name" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -397,16 +330,12 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({ open, onOp
 
                 <FormField
                   control={form.control}
-                  name="company_email"
+                  name="designation"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Company Email</FormLabel>
+                      <FormLabel>Designation</FormLabel>
                       <FormControl>
-                        <Input 
-                          type="email" 
-                          placeholder="Enter company email address" 
-                          {...field} 
-                        />
+                        <Input placeholder="Enter designation in company" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -420,86 +349,128 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({ open, onOp
                     <FormItem>
                       <FormLabel>Company Address</FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="Enter company address" 
-                          {...field} 
-                        />
+                        <Input placeholder="Enter company address" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-              </>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="company_phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Company Phone</FormLabel>
+                        <FormControl>
+                          <Input type="tel" placeholder="Enter company phone number" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="company_email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Company Email</FormLabel>
+                        <FormControl>
+                          <Input type="email" placeholder="Enter company email address" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
             )}
 
-            <FormField
-              control={form.control}
-              name="visit_purpose"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Purpose of Visit</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="e.g., Legal consultation, Document review" 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Contact Details */}
+            <div className="space-y-4">
+              <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3 mb-4">
+                {form.watch('type') === 'Organization' ? 'Contact Person Details' : 'Contact Details'}
+              </h3>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="Enter email address" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="address_line_1"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Address Line 1</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="Enter address line 1" 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone</FormLabel>
+                      <FormControl>
+                        <Input type="tel" placeholder="Enter phone number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
 
-            <FormField
-              control={form.control}
-              name="address_line_2"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Address Line 2</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="Enter address line 2 (optional)" 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-2 gap-4">
+            {/* Address Information */}
+            <div className="space-y-4">
+              <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3 mb-4">Address Information</h3>
+              
               <FormField
                 control={form.control}
-                name="pin_code"
+                name="address_line_1"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>PIN Code</FormLabel>
+                    <FormLabel>Address Line 1</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="Enter PIN code" 
-                        {...field} 
-                      />
+                      <Input placeholder="Enter address line 1" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="address_line_2"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Address Line 2</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter address line 2 (optional)" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-3 gap-4">
+                <FormField
+                  control={form.control}
+                  name="pin_code"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>PIN Code</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter PIN code" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
               <FormField
                 control={form.control}
@@ -511,7 +482,7 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({ open, onOp
                       onValueChange={(value) => {
                         field.onChange(value);
                         setSelectedStateId(value);
-                        form.setValue('district_id', ''); // Reset district when state changes
+                        form.setValue('district_id', '');
                       }} 
                       value={field.value}
                     >
@@ -532,123 +503,128 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({ open, onOp
                   </FormItem>
                 )}
               />
-            </div>
 
-            <FormField
-              control={form.control}
-              name="district_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>District</FormLabel>
-                  {showAddDistrict ? (
-                    <div className="space-y-2">
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="Enter new district name"
-                          value={newDistrictName}
-                          onChange={(e) => setNewDistrictName(e.target.value)}
-                          onKeyPress={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              handleAddDistrict();
-                            }
-                          }}
-                        />
-                        <Button 
-                          type="button" 
-                          onClick={handleAddDistrict}
-                          disabled={addDistrictMutation.isPending}
-                          size="sm"
-                        >
-                          {addDistrictMutation.isPending ? 'Adding...' : 'Add'}
-                        </Button>
-                        <Button 
-                          type="button" 
-                          variant="outline" 
-                          onClick={() => {
-                            setShowAddDistrict(false);
-                            setNewDistrictName('');
-                          }}
-                          size="sm"
-                        >
-                          Cancel
-                        </Button>
+              <FormField
+                control={form.control}
+                name="district_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>District</FormLabel>
+                    {showAddDistrict ? (
+                      <div className="space-y-2">
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="Enter new district name"
+                            value={newDistrictName}
+                            onChange={(e) => setNewDistrictName(e.target.value)}
+                            onKeyPress={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleAddDistrict();
+                              }
+                            }}
+                          />
+                          <Button 
+                            type="button" 
+                            onClick={handleAddDistrict}
+                            disabled={addDistrictMutation.isPending}
+                            size="sm"
+                          >
+                            {addDistrictMutation.isPending ? 'Adding...' : 'Add'}
+                          </Button>
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            onClick={() => {
+                              setShowAddDistrict(false);
+                              setNewDistrictName('');
+                            }}
+                            size="sm"
+                          >
+                            Cancel
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  ) : (
-                    <Select 
-                      onValueChange={(value) => {
-                        if (value === 'add_new') {
-                          setShowAddDistrict(true);
-                        } else {
-                          field.onChange(value);
-                        }
-                      }} 
-                      value={field.value}
-                      disabled={!selectedStateId}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={!selectedStateId ? "Select state first" : "Select district"} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {districts.map((district) => (
-                          <SelectItem key={district.id} value={district.id}>
-                            {district.name}
-                          </SelectItem>
-                        ))}
-                        {selectedStateId && (
-                          <SelectItem value="add_new" className="border-t">
-                            <div className="flex items-center gap-2">
-                              <Plus className="h-4 w-4" />
-                              Add New District
-                            </div>
-                          </SelectItem>
-                        )}
-                      </SelectContent>
-                    </Select>
-                  )}
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    ) : (
+                      <Select 
+                        onValueChange={(value) => {
+                          if (value === 'add_new') {
+                            setShowAddDistrict(true);
+                          } else {
+                            field.onChange(value);
+                          }
+                        }} 
+                        value={field.value}
+                        disabled={!selectedStateId}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={!selectedStateId ? "Select state first" : "Select district"} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {districts.map((district) => (
+                            <SelectItem key={district.id} value={district.id}>
+                              {district.name}
+                            </SelectItem>
+                          ))}
+                          {selectedStateId && (
+                            <SelectItem value="add_new" className="border-t">
+                              <div className="flex items-center gap-2">
+                                <Plus className="h-4 w-4" />
+                                Add New District
+                              </div>
+                            </SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    )}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
 
-            <FormField
-              control={form.control}
-              name="referred_by_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Referred By (Name)</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="Enter referrer's name" 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          {/* Referral Information */}
+          <div className="space-y-4">
+            <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3 mb-4">Referral Information</h3>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="referred_by_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Referred By (Name)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter referrer's name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="referred_by_phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Referred By (Phone)</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="tel"
-                      placeholder="Enter referrer's phone" 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="referred_by_phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Referred By (Phone)</FormLabel>
+                    <FormControl>
+                      <Input type="tel" placeholder="Enter referrer's phone" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
 
+          {/* Additional Notes */}
+          <div className="space-y-4">
+            <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3 mb-4">Additional Notes</h3>
+            
             <FormField
               control={form.control}
               name="notes"
@@ -656,16 +632,13 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({ open, onOp
                 <FormItem>
                   <FormLabel>Notes</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      placeholder="Additional notes about the contact"
-                      rows={3}
-                      {...field} 
-                    />
+                    <Textarea placeholder="Additional notes about the contact" rows={3} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+          </div>
 
             <div className="flex justify-end gap-3 pt-4 border-t">
               <Button
