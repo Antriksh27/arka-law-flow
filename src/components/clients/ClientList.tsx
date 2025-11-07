@@ -135,7 +135,6 @@ export const ClientList = () => {
   };
   const handleDeleteClient = async () => {
     if (!deletingClient) return;
-    
     try {
       const {
         error
@@ -213,40 +212,22 @@ export const ClientList = () => {
             <DropdownMenuContent align="end" className="w-48 bg-background z-50">
               <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                onClick={() => setStatusFilter('all')}
-                className={statusFilter === 'all' ? 'bg-accent' : ''}
-              >
+              <DropdownMenuItem onClick={() => setStatusFilter('all')} className={statusFilter === 'all' ? 'bg-accent' : ''}>
                 All Clients
               </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => setStatusFilter('active')}
-                className={statusFilter === 'active' ? 'bg-accent' : ''}
-              >
+              <DropdownMenuItem onClick={() => setStatusFilter('active')} className={statusFilter === 'active' ? 'bg-accent' : ''}>
                 Active
               </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => setStatusFilter('new')}
-                className={statusFilter === 'new' ? 'bg-accent' : ''}
-              >
+              <DropdownMenuItem onClick={() => setStatusFilter('new')} className={statusFilter === 'new' ? 'bg-accent' : ''}>
                 New
               </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => setStatusFilter('lead')}
-                className={statusFilter === 'lead' ? 'bg-accent' : ''}
-              >
+              <DropdownMenuItem onClick={() => setStatusFilter('lead')} className={statusFilter === 'lead' ? 'bg-accent' : ''}>
                 Lead
               </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => setStatusFilter('prospect')}
-                className={statusFilter === 'prospect' ? 'bg-accent' : ''}
-              >
+              <DropdownMenuItem onClick={() => setStatusFilter('prospect')} className={statusFilter === 'prospect' ? 'bg-accent' : ''}>
                 Prospect
               </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => setStatusFilter('inactive')}
-                className={statusFilter === 'inactive' ? 'bg-accent' : ''}
-              >
+              <DropdownMenuItem onClick={() => setStatusFilter('inactive')} className={statusFilter === 'inactive' ? 'bg-accent' : ''}>
                 Inactive
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -264,34 +245,19 @@ export const ClientList = () => {
             <DropdownMenuContent align="end" className="w-48 bg-background z-50">
               <DropdownMenuLabel>Sort By</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                onClick={() => handleSort('name')}
-                className={sortField === 'name' ? 'bg-accent' : ''}
-              >
+              <DropdownMenuItem onClick={() => handleSort('name')} className={sortField === 'name' ? 'bg-accent' : ''}>
                 Name {sortField === 'name' && (sortDirection === 'asc' ? '↑' : '↓')}
               </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => handleSort('email')}
-                className={sortField === 'email' ? 'bg-accent' : ''}
-              >
+              <DropdownMenuItem onClick={() => handleSort('email')} className={sortField === 'email' ? 'bg-accent' : ''}>
                 Email {sortField === 'email' && (sortDirection === 'asc' ? '↑' : '↓')}
               </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => handleSort('status')}
-                className={sortField === 'status' ? 'bg-accent' : ''}
-              >
+              <DropdownMenuItem onClick={() => handleSort('status')} className={sortField === 'status' ? 'bg-accent' : ''}>
                 Status {sortField === 'status' && (sortDirection === 'asc' ? '↑' : '↓')}
               </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => handleSort('active_cases')}
-                className={sortField === 'active_cases' ? 'bg-accent' : ''}
-              >
+              <DropdownMenuItem onClick={() => handleSort('active_cases')} className={sortField === 'active_cases' ? 'bg-accent' : ''}>
                 Active Cases {sortField === 'active_cases' && (sortDirection === 'asc' ? '↑' : '↓')}
               </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => handleSort('created_at')}
-                className={sortField === 'created_at' ? 'bg-accent' : ''}
-              >
+              <DropdownMenuItem onClick={() => handleSort('created_at')} className={sortField === 'created_at' ? 'bg-accent' : ''}>
                 Date Added {sortField === 'created_at' && (sortDirection === 'asc' ? '↑' : '↓')}
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -358,28 +324,11 @@ export const ClientList = () => {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => setViewingClient(client)}
-                        className="text-gray-600 hover:text-blue-600"
-                      >
+                      <Button variant="ghost" size="sm" onClick={() => setViewingClient(client)} className="text-gray-600 hover:text-blue-600">
                         <Eye className="w-4 h-4" />
                       </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => setEditingClient(client)}
-                        className="text-gray-600 hover:text-blue-600"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => setDeletingClient(client)}
-                        className="text-gray-600 hover:text-red-600"
-                      >
+                      
+                      <Button variant="ghost" size="sm" onClick={() => setDeletingClient(client)} className="text-gray-600 hover:text-red-600">
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
@@ -453,7 +402,7 @@ export const ClientList = () => {
     }} />
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deletingClient} onOpenChange={(open) => !open && setDeletingClient(null)}>
+      <AlertDialog open={!!deletingClient} onOpenChange={open => !open && setDeletingClient(null)}>
         <AlertDialogContent className="bg-white">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Client</AlertDialogTitle>
