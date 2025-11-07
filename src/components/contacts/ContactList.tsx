@@ -36,7 +36,7 @@ export const ContactList = () => {
       
       let query = supabase
         .from('contacts')
-        .select('*', { count: 'exact' })
+        .select('*, states(name), districts(name)', { count: 'exact' })
         .eq('firm_id', firmId)
         .order('created_at', { ascending: false })
         .range(startIndex, endIndex);
