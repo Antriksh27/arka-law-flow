@@ -33,15 +33,14 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
     queryKey: ['client-primary-lawyer', client?.assigned_lawyer_id],
     queryFn: async () => {
       if (!client?.assigned_lawyer_id) return null;
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, profile_pic')
-        .eq('id', client.assigned_lawyer_id)
-        .single();
+      const {
+        data,
+        error
+      } = await supabase.from('profiles').select('id, full_name, profile_pic').eq('id', client.assigned_lawyer_id).single();
       if (error) throw error;
       return data;
     },
-    enabled: !!client?.assigned_lawyer_id,
+    enabled: !!client?.assigned_lawyer_id
   });
 
   // Fetch additional assigned lawyers
@@ -109,15 +108,7 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
           <InfoRow icon={Phone} label="Phone" value={client.phone} />
           <InfoRow icon={UserCheck} label="Client Type" value={client.type} />
           
-          <div className="flex items-start gap-3">
-            <Shield className="w-4 h-4 text-gray-400 mt-0.5" />
-            <div className="flex-1">
-              <span className="text-sm text-gray-600">Status: </span>
-              <Badge className={client.status === 'active' ? 'bg-green-100 text-green-700 border-green-200' : client.status === 'inactive' ? 'bg-gray-100 text-gray-700 border-gray-200' : client.status === 'lead' ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-purple-100 text-purple-700 border-purple-200'}>
-                {client.status || 'Not set'}
-              </Badge>
-            </div>
-          </div>
+          
         </CardContent>
       </Card>
 
@@ -183,8 +174,7 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
-          {primaryLawyer && (
-            <div className="flex items-center gap-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
+          {primaryLawyer && <div className="flex items-center gap-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
               <User className="w-4 h-4 text-primary" />
               <div className="flex-1">
                 <p className="text-sm font-medium">
@@ -194,14 +184,11 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
                   Primary Lawyer
                 </p>
               </div>
-            </div>
-          )}
+            </div>}
           
-          {assignedLawyers.length > 0 && (
-            <>
+          {assignedLawyers.length > 0 && <>
               <div className="text-xs font-medium text-muted-foreground mt-4 mb-2">Additional Lawyers</div>
-              {assignedLawyers.map((assignment: any) => (
-                <div key={assignment.id} className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+              {assignedLawyers.map((assignment: any) => <div key={assignment.id} className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
                   <User className="w-4 h-4 text-muted-foreground" />
                   <div className="flex-1">
                     <p className="text-sm font-medium">
@@ -211,20 +198,15 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
                       Assigned on {new Date(assignment.assigned_at).toLocaleDateString()}
                     </p>
                   </div>
-                </div>
-              ))}
-            </>
-          )}
+                </div>)}
+            </>}
           
-          {!primaryLawyer && assignedLawyers.length === 0 && (
-            <p className="text-sm italic text-muted-foreground">No lawyers assigned yet</p>
-          )}
+          {!primaryLawyer && assignedLawyers.length === 0 && <p className="text-sm italic text-muted-foreground">No lawyers assigned yet</p>}
         </CardContent>
       </Card>
 
       {/* Notes */}
-      {client.notes && (
-        <Card>
+      {client.notes && <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
               <User className="w-5 h-5 text-blue-600" />
@@ -234,8 +216,7 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
           <CardContent>
             <p className="text-sm whitespace-pre-wrap">{client.notes}</p>
           </CardContent>
-        </Card>
-      )}
+        </Card>}
 
       {/* Financial Details */}
       
