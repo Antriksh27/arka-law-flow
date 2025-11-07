@@ -236,7 +236,7 @@ export const AddContactDialog = ({
     addDistrictMutation.mutate(newDistrictName.trim());
   };
   return <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto p-6">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto p-6">
         <DialogHeader>
           <DialogTitle>Add New Contact</DialogTitle>
           <DialogDescription>
