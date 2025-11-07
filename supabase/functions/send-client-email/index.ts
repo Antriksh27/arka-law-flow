@@ -14,6 +14,13 @@ interface SendEmailRequest {
   subject: string;
   body: string;
   clientName: string;
+  cc?: string;
+  bcc?: string;
+  attachments?: Array<{
+    filename: string;
+    content: string;
+    type: string;
+  }>;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -26,8 +33,8 @@ const handler = async (req: Request): Promise<Response> => {
     const requestBody = await req.json();
     console.log("Received request body:", requestBody);
     
-    const { to, subject, body, clientName }: SendEmailRequest = requestBody;
-    console.log("Extracted fields - to:", to, "subject:", subject, "body length:", body?.length);
+    const { to, subject, body, clientName, cc, bcc, attachments }: SendEmailRequest = requestBody;
+    console.log("Extracted fields - to:", to, "subject:", subject, "body length:", body?.length, "cc:", cc, "bcc:", bcc, "attachments:", attachments?.length);
 
     if (!to || !subject || !body) {
       console.error("Missing fields validation failed. to:", !!to, "subject:", !!subject, "body:", !!body);
@@ -40,9 +47,21 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // Parse CC and BCC emails
+    const ccEmails = cc ? cc.split(',').map(email => email.trim()).filter(Boolean) : undefined;
+    const bccEmails = bcc ? bcc.split(',').map(email => email.trim()).filter(Boolean) : undefined;
+
+    // Prepare attachments for Resend
+    const resendAttachments = attachments?.map(att => ({
+      filename: att.filename,
+      content: att.content,
+    }));
+
     const emailResponse = await resend.emails.send({
       from: "HRU Legal <office@hrulegal.com>",
       to: [to],
+      cc: ccEmails,
+      bcc: bccEmails,
       subject: subject,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -57,6 +76,7 @@ const handler = async (req: Request): Promise<Response> => {
           </div>
         </div>
       `,
+      attachments: resendAttachments,
     });
 
     console.log("Email sent successfully:", emailResponse);
