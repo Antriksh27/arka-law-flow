@@ -83,9 +83,9 @@ export const SendEmailDialog: React.FC<SendEmailDialogProps> = ({
             <Label htmlFor="to">To</Label>
             <Input
               id="to"
-              value={clientEmail}
+              value={clientEmail || ''}
               disabled
-              className="bg-gray-50"
+              className="bg-gray-50 text-gray-700"
             />
           </div>
 
