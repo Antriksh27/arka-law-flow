@@ -29,11 +29,10 @@ export const NoteViewDialog: React.FC<NoteViewDialogProps> = ({
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  if (!note) return null;
-
   // Pin/Unpin mutation
   const togglePinMutation = useMutation({
     mutationFn: async () => {
+      if (!note) return;
       const { error } = await supabase
         .from('notes_v2')
         .update({ is_pinned: !note.is_pinned })
@@ -44,8 +43,8 @@ export const NoteViewDialog: React.FC<NoteViewDialogProps> = ({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['client-notes-v2'] });
       toast({
-        title: note.is_pinned ? 'Note unpinned' : 'Note pinned',
-        description: note.is_pinned ? 'Note has been unpinned' : 'Note has been pinned to top',
+        title: note?.is_pinned ? 'Note unpinned' : 'Note pinned',
+        description: note?.is_pinned ? 'Note has been unpinned' : 'Note has been pinned to top',
       });
     },
     onError: (error) => {
@@ -61,6 +60,7 @@ export const NoteViewDialog: React.FC<NoteViewDialogProps> = ({
   // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: async () => {
+      if (!note) return;
       const { error } = await supabase
         .from('notes_v2')
         .delete()
@@ -85,6 +85,8 @@ export const NoteViewDialog: React.FC<NoteViewDialogProps> = ({
       console.error('Error deleting note:', error);
     },
   });
+
+  if (!note) return null;
 
   // Helper function to get actual data value
   const getDataValue = (data: any) => {
