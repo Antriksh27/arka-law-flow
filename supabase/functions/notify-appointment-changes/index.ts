@@ -31,27 +31,10 @@ serve(async (req) => {
 
     console.log('Processing notification:', { type, appointment_id, lawyer_id, title });
 
-    // Insert notification into notifications table
-    const { error: notificationError } = await supabase
-      .from('notifications')
-      .insert({
-        recipient_id: lawyer_id,
-        notification_type: 'appointment',
-        title,
-        message,
-        reference_id: appointment_id,
-        read: false
-      });
-
-    if (notificationError) {
-      console.error('Error creating notification:', notificationError);
-      throw notificationError;
-    }
-
-    console.log('Notification created successfully');
+    console.log('notify-appointment-changes: legacy path disabled, skipping direct DB insert');
 
     return new Response(
-      JSON.stringify({ success: true, message: 'Notification sent successfully' }),
+      JSON.stringify({ success: true, status: 'skipped_legacy' }),
       {
         status: 200,
         headers: { 'Content-Type': 'application/json', ...corsHeaders },

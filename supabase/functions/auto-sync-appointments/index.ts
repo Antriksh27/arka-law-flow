@@ -129,21 +129,9 @@ serve(async (req) => {
           continue
         }
 
-        // Notify the lawyer about the new appointment
-        const { error: notificationError } = await supabaseClient
-          .from('notifications')
-          .insert({
-            recipient_id: publicAppointment.lawyer_id,
-            notification_type: 'appointment',
-            title: 'New Appointment Scheduled',
-            message: `New appointment scheduled with ${publicAppointment.client_name} on ${publicAppointment.appointment_date} at ${publicAppointment.appointment_time}`,
-            reference_id: appointment.id,
-            read: false
-          })
+        // Notification creation disabled: handled by notify-knock workflow
+        console.log(`Skipping legacy notification insert for appointment ${appointment.id} (handled by Knock)`);
 
-        if (notificationError) {
-          console.error(`Error creating notification for appointment ${appointment.id}:`, notificationError)
-        }
 
         // Update public appointment status to processed
         await supabaseClient
