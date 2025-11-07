@@ -60,9 +60,7 @@ export const ClientList = () => {
         const endIndex = startIndex + pageSize - 1;
 
         // Map sort field to database column
-        const dbSortField = sortField === 'name' ? 'full_name' : 
-                           sortField === 'active_cases' ? 'active_case_count' : 
-                           sortField;
+        const dbSortField = sortField === 'name' ? 'full_name' : sortField === 'active_cases' ? 'active_case_count' : sortField;
 
         // First try to get from client_stats view with pagination and sorting
         let {
@@ -122,14 +120,15 @@ export const ClientList = () => {
     }
     setPage(1); // Reset to first page when sorting
   };
-
-  const SortIcon = ({ field }: { field: SortField }) => {
+  const SortIcon = ({
+    field
+  }: {
+    field: SortField;
+  }) => {
     if (sortField !== field) {
       return <ArrowUpDown className="w-3 h-3 opacity-40" />;
     }
-    return sortDirection === 'asc' ? 
-      <ArrowUpDown className="w-3 h-3 rotate-180" /> : 
-      <ArrowUpDown className="w-3 h-3" />;
+    return sortDirection === 'asc' ? <ArrowUpDown className="w-3 h-3 rotate-180" /> : <ArrowUpDown className="w-3 h-3" />;
   };
   const handleDeleteClient = async (clientId: string) => {
     try {
@@ -266,10 +265,7 @@ export const ClientList = () => {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm" className="text-white hover:text-white border-slate-900 bg-slate-800 hover:bg-slate-700" onClick={() => setViewingClient(client)}>
-                        <Eye className="w-4 h-4 mr-1" />
-                        View
-                      </Button>
+                      
                       <Button variant="ghost" size="sm" className="text-gray-400 hover:text-gray-600">
                         <MoreHorizontal className="w-4 h-4" />
                       </Button>
