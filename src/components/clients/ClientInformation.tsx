@@ -131,6 +131,7 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
         </CardHeader>
         <CardContent className="space-y-4">
           <InfoRow icon={MapPin} label="Address" value={client.address} />
+          <InfoRow icon={MapPin} label="PIN Code" value={client.pin_code} />
           <InfoRow icon={MapPin} label="District" value={client.district} />
           <InfoRow icon={MapPin} label="State" value={client.state} />
         </CardContent>

@@ -1240,6 +1240,7 @@ export type Database = {
           notes: string | null
           organization: string | null
           phone: string | null
+          pin_code: string | null
           referred_by_name: string | null
           referred_by_phone: string | null
           services: string[] | null
@@ -1271,6 +1272,7 @@ export type Database = {
           notes?: string | null
           organization?: string | null
           phone?: string | null
+          pin_code?: string | null
           referred_by_name?: string | null
           referred_by_phone?: string | null
           services?: string[] | null
@@ -1302,6 +1304,7 @@ export type Database = {
           notes?: string | null
           organization?: string | null
           phone?: string | null
+          pin_code?: string | null
           referred_by_name?: string | null
           referred_by_phone?: string | null
           services?: string[] | null
