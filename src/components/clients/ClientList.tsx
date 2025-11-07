@@ -14,6 +14,7 @@ import { ClientDetailsDialog } from './ClientDetailsDialog';
 import { BulkImportClientsDialog } from './BulkImportClientsDialog';
 import { SyncClientsToZoho } from './SyncClientsToZoho';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 interface Client {
   id: string;
   full_name: string;
@@ -37,6 +38,7 @@ export const ClientList = () => {
   const [showBulkImportDialog, setShowBulkImportDialog] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [viewingClient, setViewingClient] = useState<Client | null>(null);
+  const [deletingClient, setDeletingClient] = useState<Client | null>(null);
   const [page, setPage] = useState(1);
   const pageSize = 50;
   const {
@@ -130,16 +132,19 @@ export const ClientList = () => {
     }
     return sortDirection === 'asc' ? <ArrowUpDown className="w-3 h-3 rotate-180" /> : <ArrowUpDown className="w-3 h-3" />;
   };
-  const handleDeleteClient = async (clientId: string) => {
+  const handleDeleteClient = async () => {
+    if (!deletingClient) return;
+    
     try {
       const {
         error
-      } = await supabase.from('clients').delete().eq('id', clientId);
+      } = await supabase.from('clients').delete().eq('id', deletingClient.id);
       if (error) throw error;
       toast({
         title: "Success",
         description: "Client deleted successfully"
       });
+      setDeletingClient(null);
       refetch();
     } catch (error) {
       console.error('Error deleting client:', error);
@@ -284,7 +289,7 @@ export const ClientList = () => {
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        onClick={() => handleDeleteClient(client.id)}
+                        onClick={() => setDeletingClient(client)}
                         className="text-gray-600 hover:text-red-600"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -358,5 +363,24 @@ export const ClientList = () => {
       refetch();
       setShowBulkImportDialog(false);
     }} />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deletingClient} onOpenChange={(open) => !open && setDeletingClient(null)}>
+        <AlertDialogContent className="bg-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Client</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <span className="font-semibold">{deletingClient?.full_name}</span>? 
+              This action cannot be undone and will remove all associated data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteClient} className="bg-red-600 hover:bg-red-700">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>;
 };
