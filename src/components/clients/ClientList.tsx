@@ -44,7 +44,11 @@ export const ClientList = () => {
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [viewingClient, setViewingClient] = useState<Client | null>(null);
   const [deletingClient, setDeletingClient] = useState<Client | null>(null);
-  const [vipToggleClient, setVipToggleClient] = useState<{ id: string; name: string; currentStatus: boolean } | null>(null);
+  const [vipToggleClient, setVipToggleClient] = useState<{
+    id: string;
+    name: string;
+    currentStatus: boolean;
+  } | null>(null);
   const [page, setPage] = useState(1);
   const pageSize = 50;
   const {
@@ -69,7 +73,6 @@ export const ClientList = () => {
 
         // Map sort field to database column
         const dbSortField = sortField === 'name' ? 'full_name' : sortField === 'active_cases' ? 'active_case_count' : sortField;
-
         let data: any[] = [];
         let count = 0;
 
@@ -77,12 +80,9 @@ export const ClientList = () => {
         if (activeTab === 'vip') {
           const result = await supabase.from('clients').select('*', {
             count: 'exact'
-          })
-          .eq('is_vip', true)
-          .order(dbSortField === 'active_case_count' ? 'created_at' : dbSortField, {
+          }).eq('is_vip', true).order(dbSortField === 'active_case_count' ? 'created_at' : dbSortField, {
             ascending: sortDirection === 'asc'
           }).range(startIndex, endIndex);
-          
           if (result.error) throw result.error;
 
           // Transform to match expected interface
@@ -102,7 +102,6 @@ export const ClientList = () => {
           }).order(dbSortField, {
             ascending: sortDirection === 'asc'
           }).range(startIndex, endIndex);
-          
           if (error) {
             console.log('client_stats view failed, trying clients table:', error);
             // Fallback to clients table with pagination and sorting
@@ -122,15 +121,13 @@ export const ClientList = () => {
           } else {
             data = statsData || [];
             count = statsCount || 0;
-            
+
             // Fetch is_vip status from clients table for the client_stats results
             if (data && data.length > 0) {
               const clientIds = data.map(c => c.id);
-              const { data: vipData } = await supabase
-                .from('clients')
-                .select('id, is_vip')
-                .in('id', clientIds);
-              
+              const {
+                data: vipData
+              } = await supabase.from('clients').select('id, is_vip').in('id', clientIds);
               if (vipData) {
                 // Merge is_vip data into client_stats data
                 data = data.map(client => {
@@ -147,11 +144,9 @@ export const ClientList = () => {
 
         // Apply client-side filters
         let filteredData = data || [];
-        
         if (searchTerm) {
           filteredData = filteredData.filter(client => client.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || client.email?.toLowerCase().includes(searchTerm.toLowerCase()));
         }
-        
         if (statusFilter !== 'all') {
           filteredData = filteredData.filter(client => client.status === statusFilter);
         }
@@ -189,7 +184,6 @@ export const ClientList = () => {
   };
   const handleDeleteClient = async () => {
     if (!deletingClient) return;
-    
     try {
       const {
         error
@@ -210,32 +204,33 @@ export const ClientList = () => {
       });
     }
   };
-
   const handleToggleVIP = async (clientId: string, currentVipStatus: boolean, clientName: string) => {
     // If removing VIP status, ask for confirmation
     if (currentVipStatus) {
-      setVipToggleClient({ id: clientId, name: clientName, currentStatus: currentVipStatus });
+      setVipToggleClient({
+        id: clientId,
+        name: clientName,
+        currentStatus: currentVipStatus
+      });
       return;
     }
 
     // If marking as VIP, do it immediately
     await performVIPToggle(clientId, currentVipStatus);
   };
-
   const performVIPToggle = async (clientId: string, currentVipStatus: boolean) => {
     try {
-      const { error } = await supabase
-        .from('clients')
-        .update({ is_vip: !currentVipStatus })
-        .eq('id', clientId);
-
+      const {
+        error
+      } = await supabase.from('clients').update({
+        is_vip: !currentVipStatus
+      }).eq('id', clientId);
       if (error) throw error;
-
       toast({
         title: "Success",
-        description: `Client ${!currentVipStatus ? 'marked as VIP ⭐' : 'removed from VIP'}`,
+        description: `Client ${!currentVipStatus ? 'marked as VIP ⭐' : 'removed from VIP'}`
       });
-      
+
       // Refetch to ensure UI is updated
       await refetch();
     } catch (error) {
@@ -243,11 +238,10 @@ export const ClientList = () => {
       toast({
         title: "Error",
         description: "Failed to update VIP status",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
-
   const confirmVIPRemoval = async () => {
     if (!vipToggleClient) return;
     await performVIPToggle(vipToggleClient.id, vipToggleClient.currentStatus);
@@ -323,40 +317,22 @@ export const ClientList = () => {
             <DropdownMenuContent align="end" className="w-48 bg-background z-50">
               <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                onClick={() => setStatusFilter('all')}
-                className={statusFilter === 'all' ? 'bg-accent' : ''}
-              >
+              <DropdownMenuItem onClick={() => setStatusFilter('all')} className={statusFilter === 'all' ? 'bg-accent' : ''}>
                 All Clients
               </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => setStatusFilter('active')}
-                className={statusFilter === 'active' ? 'bg-accent' : ''}
-              >
+              <DropdownMenuItem onClick={() => setStatusFilter('active')} className={statusFilter === 'active' ? 'bg-accent' : ''}>
                 Active
               </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => setStatusFilter('new')}
-                className={statusFilter === 'new' ? 'bg-accent' : ''}
-              >
+              <DropdownMenuItem onClick={() => setStatusFilter('new')} className={statusFilter === 'new' ? 'bg-accent' : ''}>
                 New
               </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => setStatusFilter('lead')}
-                className={statusFilter === 'lead' ? 'bg-accent' : ''}
-              >
+              <DropdownMenuItem onClick={() => setStatusFilter('lead')} className={statusFilter === 'lead' ? 'bg-accent' : ''}>
                 Lead
               </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => setStatusFilter('prospect')}
-                className={statusFilter === 'prospect' ? 'bg-accent' : ''}
-              >
+              <DropdownMenuItem onClick={() => setStatusFilter('prospect')} className={statusFilter === 'prospect' ? 'bg-accent' : ''}>
                 Prospect
               </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => setStatusFilter('inactive')}
-                className={statusFilter === 'inactive' ? 'bg-accent' : ''}
-              >
+              <DropdownMenuItem onClick={() => setStatusFilter('inactive')} className={statusFilter === 'inactive' ? 'bg-accent' : ''}>
                 Inactive
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -374,34 +350,19 @@ export const ClientList = () => {
             <DropdownMenuContent align="end" className="w-48 bg-background z-50">
               <DropdownMenuLabel>Sort By</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                onClick={() => handleSort('name')}
-                className={sortField === 'name' ? 'bg-accent' : ''}
-              >
+              <DropdownMenuItem onClick={() => handleSort('name')} className={sortField === 'name' ? 'bg-accent' : ''}>
                 Name {sortField === 'name' && (sortDirection === 'asc' ? '↑' : '↓')}
               </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => handleSort('email')}
-                className={sortField === 'email' ? 'bg-accent' : ''}
-              >
+              <DropdownMenuItem onClick={() => handleSort('email')} className={sortField === 'email' ? 'bg-accent' : ''}>
                 Email {sortField === 'email' && (sortDirection === 'asc' ? '↑' : '↓')}
               </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => handleSort('status')}
-                className={sortField === 'status' ? 'bg-accent' : ''}
-              >
+              <DropdownMenuItem onClick={() => handleSort('status')} className={sortField === 'status' ? 'bg-accent' : ''}>
                 Status {sortField === 'status' && (sortDirection === 'asc' ? '↑' : '↓')}
               </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => handleSort('active_cases')}
-                className={sortField === 'active_cases' ? 'bg-accent' : ''}
-              >
+              <DropdownMenuItem onClick={() => handleSort('active_cases')} className={sortField === 'active_cases' ? 'bg-accent' : ''}>
                 Active Cases {sortField === 'active_cases' && (sortDirection === 'asc' ? '↑' : '↓')}
               </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => handleSort('created_at')}
-                className={sortField === 'created_at' ? 'bg-accent' : ''}
-              >
+              <DropdownMenuItem onClick={() => handleSort('created_at')} className={sortField === 'created_at' ? 'bg-accent' : ''}>
                 Date Added {sortField === 'created_at' && (sortDirection === 'asc' ? '↑' : '↓')}
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -454,9 +415,7 @@ export const ClientList = () => {
                       <button onClick={() => handleClientNameClick(client.id)} className="text-gray-900 hover:text-blue-600 hover:underline text-left font-medium cursor-pointer">
                         {client.full_name}
                       </button>
-                      {client.is_vip && (
-                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" aria-label="VIP Client" />
-                      )}
+                      {client.is_vip && <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" aria-label="VIP Client" />}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -473,40 +432,17 @@ export const ClientList = () => {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleToggleVIP(client.id, client.is_vip || false, client.full_name);
-                        }}
-                        className={client.is_vip ? "text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50" : "text-gray-400 hover:text-yellow-600 hover:bg-yellow-50"}
-                        title={client.is_vip ? "Remove VIP status" : "Mark as VIP"}
-                      >
+                      <Button variant="ghost" size="sm" onClick={e => {
+                      e.stopPropagation();
+                      handleToggleVIP(client.id, client.is_vip || false, client.full_name);
+                    }} className={client.is_vip ? "text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50" : "text-gray-400 hover:text-yellow-600 hover:bg-yellow-50"} title={client.is_vip ? "Remove VIP status" : "Mark as VIP"}>
                         <Star className={client.is_vip ? "w-4 h-4 fill-yellow-400" : "w-4 h-4"} />
                       </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => setViewingClient(client)}
-                        className="text-gray-600 hover:text-blue-600"
-                      >
+                      <Button variant="ghost" size="sm" onClick={() => setViewingClient(client)} className="text-gray-600 hover:text-blue-600">
                         <Eye className="w-4 h-4" />
                       </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => setEditingClient(client)}
-                        className="text-gray-600 hover:text-blue-600"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => setDeletingClient(client)}
-                        className="text-gray-600 hover:text-red-600"
-                      >
+                      
+                      <Button variant="ghost" size="sm" onClick={() => setDeletingClient(client)} className="text-gray-600 hover:text-red-600">
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
@@ -531,23 +467,23 @@ export const ClientList = () => {
               
               <div className="flex items-center gap-1">
                 {Array.from({
-              length: Math.min(Math.ceil(totalCount / pageSize), 5)
-            }, (_, i) => {
-              const totalPages = Math.ceil(totalCount / pageSize);
-              let pageNum: number;
-              if (totalPages <= 5) {
-                pageNum = i + 1;
-              } else if (page <= 3) {
-                pageNum = i + 1;
-              } else if (page >= totalPages - 2) {
-                pageNum = totalPages - 4 + i;
-              } else {
-                pageNum = page - 2 + i;
-              }
-              return <Button key={pageNum} variant={page === pageNum ? "default" : "ghost"} size="sm" onClick={() => setPage(pageNum)} className="min-w-[32px]">
+                  length: Math.min(Math.ceil(totalCount / pageSize), 5)
+                }, (_, i) => {
+                  const totalPages = Math.ceil(totalCount / pageSize);
+                  let pageNum: number;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (page <= 3) {
+                    pageNum = i + 1;
+                  } else if (page >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = page - 2 + i;
+                  }
+                  return <Button key={pageNum} variant={page === pageNum ? "default" : "ghost"} size="sm" onClick={() => setPage(pageNum)} className="min-w-[32px]">
                       {pageNum}
                     </Button>;
-            })}
+                })}
               </div>
               
               <Button variant="outline" size="sm" onClick={() => setPage(p => p + 1)} disabled={page === Math.ceil(totalCount / pageSize)}>
@@ -582,40 +518,22 @@ export const ClientList = () => {
                 <DropdownMenuContent align="end" className="w-48 bg-background z-50">
                   <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem 
-                    onClick={() => setStatusFilter('all')}
-                    className={statusFilter === 'all' ? 'bg-accent' : ''}
-                  >
+                  <DropdownMenuItem onClick={() => setStatusFilter('all')} className={statusFilter === 'all' ? 'bg-accent' : ''}>
                     All VIP Clients
                   </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => setStatusFilter('active')}
-                    className={statusFilter === 'active' ? 'bg-accent' : ''}
-                  >
+                  <DropdownMenuItem onClick={() => setStatusFilter('active')} className={statusFilter === 'active' ? 'bg-accent' : ''}>
                     Active
                   </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => setStatusFilter('new')}
-                    className={statusFilter === 'new' ? 'bg-accent' : ''}
-                  >
+                  <DropdownMenuItem onClick={() => setStatusFilter('new')} className={statusFilter === 'new' ? 'bg-accent' : ''}>
                     New
                   </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => setStatusFilter('lead')}
-                    className={statusFilter === 'lead' ? 'bg-accent' : ''}
-                  >
+                  <DropdownMenuItem onClick={() => setStatusFilter('lead')} className={statusFilter === 'lead' ? 'bg-accent' : ''}>
                     Lead
                   </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => setStatusFilter('prospect')}
-                    className={statusFilter === 'prospect' ? 'bg-accent' : ''}
-                  >
+                  <DropdownMenuItem onClick={() => setStatusFilter('prospect')} className={statusFilter === 'prospect' ? 'bg-accent' : ''}>
                     Prospect
                   </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => setStatusFilter('inactive')}
-                    className={statusFilter === 'inactive' ? 'bg-accent' : ''}
-                  >
+                  <DropdownMenuItem onClick={() => setStatusFilter('inactive')} className={statusFilter === 'inactive' ? 'bg-accent' : ''}>
                     Inactive
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -633,34 +551,19 @@ export const ClientList = () => {
                 <DropdownMenuContent align="end" className="w-48 bg-background z-50">
                   <DropdownMenuLabel>Sort By</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem 
-                    onClick={() => handleSort('name')}
-                    className={sortField === 'name' ? 'bg-accent' : ''}
-                  >
+                  <DropdownMenuItem onClick={() => handleSort('name')} className={sortField === 'name' ? 'bg-accent' : ''}>
                     Name {sortField === 'name' && (sortDirection === 'asc' ? '↑' : '↓')}
                   </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => handleSort('email')}
-                    className={sortField === 'email' ? 'bg-accent' : ''}
-                  >
+                  <DropdownMenuItem onClick={() => handleSort('email')} className={sortField === 'email' ? 'bg-accent' : ''}>
                     Email {sortField === 'email' && (sortDirection === 'asc' ? '↑' : '↓')}
                   </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => handleSort('status')}
-                    className={sortField === 'status' ? 'bg-accent' : ''}
-                  >
+                  <DropdownMenuItem onClick={() => handleSort('status')} className={sortField === 'status' ? 'bg-accent' : ''}>
                     Status {sortField === 'status' && (sortDirection === 'asc' ? '↑' : '↓')}
                   </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => handleSort('active_cases')}
-                    className={sortField === 'active_cases' ? 'bg-accent' : ''}
-                  >
+                  <DropdownMenuItem onClick={() => handleSort('active_cases')} className={sortField === 'active_cases' ? 'bg-accent' : ''}>
                     Active Cases {sortField === 'active_cases' && (sortDirection === 'asc' ? '↑' : '↓')}
                   </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => handleSort('created_at')}
-                    className={sortField === 'created_at' ? 'bg-accent' : ''}
-                  >
+                  <DropdownMenuItem onClick={() => handleSort('created_at')} className={sortField === 'created_at' ? 'bg-accent' : ''}>
                     Date Added {sortField === 'created_at' && (sortDirection === 'asc' ? '↑' : '↓')}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -728,40 +631,19 @@ export const ClientList = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleToggleVIP(client.id, client.is_vip || false, client.full_name);
-                            }}
-                            className="text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50"
-                            title="Remove VIP status"
-                          >
+                          <Button variant="ghost" size="sm" onClick={e => {
+                      e.stopPropagation();
+                      handleToggleVIP(client.id, client.is_vip || false, client.full_name);
+                    }} className="text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50" title="Remove VIP status">
                             <Star className="w-4 h-4 fill-yellow-400" />
                           </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => setViewingClient(client)}
-                            className="text-gray-600 hover:text-blue-600"
-                          >
+                          <Button variant="ghost" size="sm" onClick={() => setViewingClient(client)} className="text-gray-600 hover:text-blue-600">
                             <Eye className="w-4 h-4" />
                           </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => setEditingClient(client)}
-                            className="text-gray-600 hover:text-blue-600"
-                          >
+                          <Button variant="ghost" size="sm" onClick={() => setEditingClient(client)} className="text-gray-600 hover:text-blue-600">
                             <Pencil className="w-4 h-4" />
                           </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => setDeletingClient(client)}
-                            className="text-gray-600 hover:text-red-600"
-                          >
+                          <Button variant="ghost" size="sm" onClick={() => setDeletingClient(client)} className="text-gray-600 hover:text-red-600">
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
@@ -837,7 +719,7 @@ export const ClientList = () => {
     }} />
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deletingClient} onOpenChange={(open) => !open && setDeletingClient(null)}>
+      <AlertDialog open={!!deletingClient} onOpenChange={open => !open && setDeletingClient(null)}>
         <AlertDialogContent className="bg-white">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Client</AlertDialogTitle>
@@ -856,7 +738,7 @@ export const ClientList = () => {
       </AlertDialog>
 
       {/* VIP Removal Confirmation Dialog */}
-      <AlertDialog open={!!vipToggleClient} onOpenChange={(open) => !open && setVipToggleClient(null)}>
+      <AlertDialog open={!!vipToggleClient} onOpenChange={open => !open && setVipToggleClient(null)}>
         <AlertDialogContent className="bg-white">
           <AlertDialogHeader>
             <AlertDialogTitle>Remove VIP Status</AlertDialogTitle>
