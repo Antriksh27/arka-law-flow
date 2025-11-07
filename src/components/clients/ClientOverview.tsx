@@ -17,10 +17,15 @@ export const ClientOverview: React.FC<ClientOverviewProps> = ({
   } = useQuery({
     queryKey: ['client-stats', clientId],
     queryFn: async () => {
-      const [casesResult, appointmentsResult, documentsResult, invoicesResult] = await Promise.all([supabase.from('cases').select('id, status').eq('client_id', clientId), supabase.from('appointments').select('id, status').eq('client_id', clientId), supabase.from('documents').select('id').eq('client_id', clientId), supabase.from('invoices').select('id, total_amount, status').eq('client_id', clientId)]);
+      const [casesResult, appointmentsResult, documentsResult, invoicesResult] = await Promise.all([
+        supabase.from('cases').select('id, status').eq('client_id', clientId),
+        supabase.from('appointments').select('id, status').eq('client_id', clientId),
+        supabase.from('documents').select('id').eq('client_id', clientId),
+        supabase.from('invoices').select('id, total_amount, status').eq('client_id', clientId)
+      ]);
       const activeCases = casesResult.data?.filter(c => c.status === 'open').length || 0;
       const totalCases = casesResult.data?.length || 0;
-      const upcomingAppointments = appointmentsResult.data?.filter(a => a.status === 'scheduled').length || 0;
+      const upcomingAppointments = appointmentsResult.data?.filter(a => a.status === 'upcoming' || a.status === 'confirmed').length || 0;
       const totalDocuments = documentsResult.data?.length || 0;
       const totalInvoices = invoicesResult.data?.length || 0;
       const pendingInvoices = invoicesResult.data?.filter(i => i.status === 'sent').length || 0;
