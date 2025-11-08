@@ -133,12 +133,17 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
         if (appointmentsError) throw appointmentsError;
       }
 
-      // 5. Finally, delete the client
-      const { error: clientError } = await supabase
+      // 5. Finally, delete the client and verify it was deleted
+      const { data: deletedClient, error: clientError } = await supabase
         .from('clients')
         .delete()
-        .eq('id', clientId);
+        .eq('id', clientId)
+        .select('id')
+        .maybeSingle();
       if (clientError) throw clientError;
+      if (!deletedClient) {
+        throw new Error('Client was not deleted. It may not exist anymore or you may not have permission.');
+      }
 
       // Log the deletion
       await AuditLogger.logDataAccess('client', 'delete', clientId, {
