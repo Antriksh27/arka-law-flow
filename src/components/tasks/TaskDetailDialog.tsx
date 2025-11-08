@@ -3,9 +3,14 @@ import { useQuery } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, User, Tag, Clock, FileText, Edit, Trash2 } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Separator } from '@/components/ui/separator';
+import { Calendar, User, Tag, Clock, FileText, Edit, Trash2, Bell } from 'lucide-react';
 import { TimeUtils } from '@/lib/timeUtils';
 import { supabase } from '@/integrations/supabase/client';
+import { TaskComments } from './TaskComments';
+import { TaskAttachments } from './TaskAttachments';
+import { TaskTimeline } from './TaskTimeline';
 
 interface TaskDetailDialogProps {
   open: boolean;
@@ -44,6 +49,8 @@ export const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
+      case 'critical':
+        return 'bg-red-200 text-red-900 border-red-300';
       case 'high':
         return 'bg-red-100 text-red-700 border-red-200';
       case 'medium':
@@ -144,6 +151,17 @@ export const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
         </DialogHeader>
 
         <div className="space-y-6 pt-4">
+          {/* Progress Bar */}
+          {taskData.progress !== undefined && taskData.progress !== null && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium text-gray-900">Progress</h3>
+                <span className="text-sm font-semibold text-blue-600">{taskData.progress}%</span>
+              </div>
+              <Progress value={taskData.progress} className="h-2" />
+            </div>
+          )}
+
           {/* Description */}
           {taskData.description && (
             <div className="space-y-2">
@@ -196,6 +214,21 @@ export const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                   <p className={`${isOverdue(taskData.due_date) ? 'text-red-700' : 'text-gray-700'}`}>
                     {TimeUtils.formatDate(taskData.due_date)}
                     {isOverdue(taskData.due_date) && ' (Overdue)'}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Reminder */}
+            {taskData.reminder_time && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Bell className="w-4 h-4 text-gray-500" />
+                  <h3 className="font-medium text-gray-900">Reminder</h3>
+                </div>
+                <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                  <p className="text-blue-700">
+                    {TimeUtils.formatDateTime(taskData.reminder_time, 'dd/MM/yyyy HH:mm')}
                   </p>
                 </div>
               </div>
@@ -295,6 +328,21 @@ export const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
               </p>
             </div>
           </div>
+
+          <Separator />
+
+          {/* Attachments */}
+          <TaskAttachments taskId={taskId} attachments={taskData.attachments || []} />
+
+          <Separator />
+
+          {/* Comments */}
+          <TaskComments taskId={taskId} comments={taskData.comments || []} />
+
+          <Separator />
+
+          {/* Timeline */}
+          <TaskTimeline taskId={taskId} />
         </div>
       </DialogContent>
     </Dialog>

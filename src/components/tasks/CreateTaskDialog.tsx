@@ -24,9 +24,11 @@ interface TaskFormData {
   title: string;
   description?: string;
   assigned_to?: string;
-  priority: 'low' | 'medium' | 'high';
+  priority: 'low' | 'medium' | 'high' | 'critical';
   status: 'todo' | 'in_progress' | 'completed';
   due_date?: string;
+  reminder_time?: string;
+  progress?: number;
   tags?: string;
   link_type?: 'case' | 'client' | 'none';
   case_id?: string;
@@ -139,9 +141,12 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
         title: data.title,
         description: data.description || null,
         assigned_to: data.assigned_to || null,
+        assigned_by: user.data.user.id,
         priority: data.priority,
         status: data.status,
+        progress: data.progress || 0,
         due_date: data.due_date ? new Date(data.due_date).toISOString().split('T')[0] : null,
+        reminder_time: data.reminder_time ? new Date(data.reminder_time).toISOString() : null,
         case_id: data.link_type === 'case' ? data.case_id || null : null,
         client_id: data.link_type === 'client' ? data.client_id || null : null,
         created_by: user.data.user.id,
@@ -278,6 +283,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                   <SelectItem value="low" className="hover:bg-gray-50">Low</SelectItem>
                   <SelectItem value="medium" className="hover:bg-gray-50">Medium</SelectItem>
                   <SelectItem value="high" className="hover:bg-gray-50">High</SelectItem>
+                  <SelectItem value="critical" className="hover:bg-gray-50">Critical</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -317,15 +323,45 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
             </Select>
           </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="due_date" className="text-sm font-medium text-gray-700">
+                Due Date
+              </Label>
+              <Input
+                id="due_date"
+                type="date"
+                {...register('due_date')}
+                className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="reminder_time" className="text-sm font-medium text-gray-700">
+                Reminder
+              </Label>
+              <Input
+                id="reminder_time"
+                type="datetime-local"
+                {...register('reminder_time')}
+                className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+
           <div className="space-y-2">
-            <Label htmlFor="due_date" className="text-sm font-medium text-gray-700">
-              Due Date
+            <Label htmlFor="progress" className="text-sm font-medium text-gray-700">
+              Progress: {watch('progress') || 0}%
             </Label>
             <Input
-              id="due_date"
-              type="date"
-              {...register('due_date')}
-              className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+              id="progress"
+              type="range"
+              min="0"
+              max="100"
+              step="5"
+              defaultValue="0"
+              {...register('progress', { valueAsNumber: true })}
+              className="w-full"
             />
           </div>
 
