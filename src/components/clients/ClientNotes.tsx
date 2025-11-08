@@ -67,10 +67,7 @@ export const ClientNotes: React.FC<ClientNotesProps> = ({ clientId }) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('client_internal_notes')
-        .select(`
-          *,
-          creator:created_by(full_name)
-        `)
+        .select('*')
         .eq('client_id', clientId)
         .order('created_at', { ascending: false });
       
