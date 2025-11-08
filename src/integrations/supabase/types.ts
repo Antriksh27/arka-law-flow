@@ -1187,6 +1187,48 @@ export type Database = {
           },
         ]
       }
+      client_internal_notes: {
+        Row: {
+          client_id: string
+          created_at: string
+          created_by: string
+          id: string
+          note: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          created_by: string
+          id?: string
+          note: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          note?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_internal_notes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_internal_notes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           aadhaar_no: string | null
@@ -3974,6 +4016,7 @@ export type Database = {
       is_current_user_admin_in_firm: { Args: never; Returns: boolean }
       is_current_user_admin_safe: { Args: never; Returns: boolean }
       is_lawyer: { Args: { user_id: string }; Returns: boolean }
+      is_office_staff: { Args: { user_id: string }; Returns: boolean }
       is_participant: {
         Args: { p_thread_id: string; p_user_id: string }
         Returns: boolean

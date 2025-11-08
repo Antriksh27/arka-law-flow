@@ -188,12 +188,8 @@ export const ConvertToClientDialog = ({
         .filter(Boolean);
       const fullAddress = addressParts.length > 0 ? addressParts.join(', ') : null;
 
-      // Build comprehensive notes
+      // Build comprehensive notes (without office notes)
       const noteParts = [];
-      
-      if (formData.office_notes?.trim()) {
-        noteParts.push(`[OFFICE STAFF ONLY]\n${formData.office_notes.trim()}`);
-      }
       
       if (formData.notes?.trim()) {
         noteParts.push(formData.notes.trim());
@@ -238,6 +234,22 @@ export const ConvertToClientDialog = ({
         .single();
 
       if (clientError) throw clientError;
+
+      // Create internal note for office staff if provided
+      if (formData.office_notes?.trim()) {
+        const { error: internalNoteError } = await supabase
+          .from('client_internal_notes')
+          .insert({
+            client_id: newClient.id,
+            note: formData.office_notes.trim(),
+            created_by: user.id,
+          });
+
+        if (internalNoteError) {
+          console.error('Error creating internal note:', internalNoteError);
+          // Don't throw - we still want the client to be created even if note fails
+        }
+      }
 
       // Delete contact
       const { error: deleteError } = await supabase
