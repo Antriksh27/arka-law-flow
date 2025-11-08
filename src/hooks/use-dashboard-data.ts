@@ -53,7 +53,7 @@ const fetchDashboardData = async (firmId: string, userId: string, role: string) 
     supabase.from('tasks').select('*', { count: 'exact', head: true }).eq('firm_id', firmId).neq('status', 'completed'),
     supabase.from('case_hearings').select('hearing_date, cases!inner(firm_id)').eq('cases.firm_id', firmId).gte('hearing_date', startOfThisWeek.toISOString()).lte('hearing_date', endOfThisWeek.toISOString()),
     supabase.from('appointments').select('appointment_date').eq('firm_id', firmId).gte('appointment_date', format(startOfThisWeek, 'yyyy-MM-dd')).lte('appointment_date', format(endOfThisWeek, 'yyyy-MM-dd')),
-    supabase.from('tasks').select('title, priority, due_date').eq('assigned_to', userId).neq('status', 'completed').order('due_date', { ascending: true }).limit(3),
+    (supabase as any).from('tasks').select('title, priority, due_date').eq('assigned_to', userId).neq('status', 'completed').order('due_date', { ascending: true }).limit(3),
     supabase.from('notes_v2').select('id, title, content, created_at, color').eq('created_by', userId).eq('is_pinned', true).order('updated_at', { ascending: false }).limit(4),
     supabase.from('team_members').select('full_name, role').eq('firm_id', firmId).limit(5),
     supabase.from('cases').select('id').eq('firm_id', firmId),

@@ -3381,11 +3381,52 @@ export type Database = {
         }
         Relationships: []
       }
+      task_history: {
+        Row: {
+          action: string
+          changes: Json | null
+          created_at: string | null
+          id: string
+          task_id: string
+          user_id: string | null
+          user_name: string | null
+        }
+        Insert: {
+          action: string
+          changes?: Json | null
+          created_at?: string | null
+          id?: string
+          task_id: string
+          user_id?: string | null
+          user_name?: string | null
+        }
+        Update: {
+          action?: string
+          changes?: Json | null
+          created_at?: string | null
+          id?: string
+          task_id?: string
+          user_id?: string | null
+          user_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_history_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
+          assigned_by: string | null
           assigned_to: string | null
+          attachments: string[] | null
           case_id: string | null
           client_id: string | null
+          comments: Json | null
           created_at: string | null
           created_by: string | null
           description: string | null
@@ -3393,7 +3434,10 @@ export type Database = {
           end_time: string | null
           firm_id: string | null
           id: string
+          last_notified_at: string | null
           priority: Database["public"]["Enums"]["task_priority"] | null
+          progress: number | null
+          reminder_time: string | null
           start_time: string | null
           status: Database["public"]["Enums"]["task_status"] | null
           tags: string[] | null
@@ -3401,9 +3445,12 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          assigned_by?: string | null
           assigned_to?: string | null
+          attachments?: string[] | null
           case_id?: string | null
           client_id?: string | null
+          comments?: Json | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
@@ -3411,7 +3458,10 @@ export type Database = {
           end_time?: string | null
           firm_id?: string | null
           id?: string
+          last_notified_at?: string | null
           priority?: Database["public"]["Enums"]["task_priority"] | null
+          progress?: number | null
+          reminder_time?: string | null
           start_time?: string | null
           status?: Database["public"]["Enums"]["task_status"] | null
           tags?: string[] | null
@@ -3419,9 +3469,12 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          assigned_by?: string | null
           assigned_to?: string | null
+          attachments?: string[] | null
           case_id?: string | null
           client_id?: string | null
+          comments?: Json | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
@@ -3429,7 +3482,10 @@ export type Database = {
           end_time?: string | null
           firm_id?: string | null
           id?: string
+          last_notified_at?: string | null
           priority?: Database["public"]["Enums"]["task_priority"] | null
+          progress?: number | null
+          reminder_time?: string | null
           start_time?: string | null
           status?: Database["public"]["Enums"]["task_status"] | null
           tags?: string[] | null
@@ -4214,7 +4270,7 @@ export type Database = {
         | "client"
         | "appointment"
       pipeline_type: "litigation" | "advisory" | "corporate" | "regulatory"
-      task_priority: "low" | "medium" | "high"
+      task_priority: "low" | "medium" | "high" | "critical"
       task_status: "todo" | "in_progress" | "completed"
       team_member_status: "active" | "invited" | "suspended" | "pending"
       team_role_enum:
@@ -4431,7 +4487,7 @@ export const Constants = {
         "appointment",
       ],
       pipeline_type: ["litigation", "advisory", "corporate", "regulatory"],
-      task_priority: ["low", "medium", "high"],
+      task_priority: ["low", "medium", "high", "critical"],
       task_status: ["todo", "in_progress", "completed"],
       team_member_status: ["active", "invited", "suspended", "pending"],
       team_role_enum: [
