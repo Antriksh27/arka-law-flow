@@ -3,7 +3,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, AlertTriangle, FileText, Calendar, Briefcase } from 'lucide-react';
+import { Loader2, AlertTriangle, FileText, Calendar, Briefcase, ListTodo, File, Receipt } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { AuditLogger } from '@/lib/auditLogger';
 
@@ -27,16 +27,22 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
     queryFn: async () => {
       if (!clientId) return null;
 
-      const [casesResult, appointmentsResult, notesResult] = await Promise.all([
+      const [casesResult, appointmentsResult, notesResult, tasksResult, documentsResult, invoicesResult] = await Promise.all([
         supabase.from('cases').select('id, case_title, case_number').eq('client_id', clientId),
         supabase.from('appointments').select('id, title, start_time').eq('client_id', clientId),
-        supabase.from('notes_v2').select('id, title').eq('client_id', clientId)
+        supabase.from('notes_v2').select('id, title').eq('client_id', clientId),
+        supabase.from('tasks').select('id, title').eq('client_id', clientId),
+        supabase.from('documents').select('id, file_name').eq('client_id', clientId),
+        supabase.from('invoices').select('id, invoice_number').eq('client_id', clientId)
       ]);
 
       return {
         cases: casesResult.data || [],
         appointments: appointmentsResult.data || [],
-        notes: notesResult.data || []
+        notes: notesResult.data || [],
+        tasks: tasksResult.data || [],
+        documents: documentsResult.data || [],
+        invoices: invoicesResult.data || []
       };
     },
     enabled: !!clientId && open
@@ -62,7 +68,34 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
         if (notesError) throw notesError;
       }
 
-      // 2. Delete case-related records for each case
+      // 2. Delete tasks associated with the client
+      if (relatedData?.tasks && relatedData.tasks.length > 0) {
+        const { error: tasksError } = await supabase
+          .from('tasks')
+          .delete()
+          .eq('client_id', clientId);
+        if (tasksError) throw tasksError;
+      }
+
+      // 3. Delete documents associated with the client
+      if (relatedData?.documents && relatedData.documents.length > 0) {
+        const { error: docsError } = await supabase
+          .from('documents')
+          .delete()
+          .eq('client_id', clientId);
+        if (docsError) throw docsError;
+      }
+
+      // 4. Delete invoices associated with the client
+      if (relatedData?.invoices && relatedData.invoices.length > 0) {
+        const { error: invoicesError } = await supabase
+          .from('invoices')
+          .delete()
+          .eq('client_id', clientId);
+        if (invoicesError) throw invoicesError;
+      }
+
+      // 5. Delete case-related records for each case
       if (relatedData?.cases && relatedData.cases.length > 0) {
         const caseIds = relatedData.cases.map(c => c.id);
 
@@ -111,7 +144,10 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
         client_name: clientName,
         deleted_cases: relatedData?.cases?.length || 0,
         deleted_appointments: relatedData?.appointments?.length || 0,
-        deleted_notes: relatedData?.notes?.length || 0
+        deleted_notes: relatedData?.notes?.length || 0,
+        deleted_tasks: relatedData?.tasks?.length || 0,
+        deleted_documents: relatedData?.documents?.length || 0,
+        deleted_invoices: relatedData?.invoices?.length || 0
       });
     },
     onSuccess: () => {
@@ -145,7 +181,7 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
     deleteMutation.mutate();
   };
 
-  const totalItems = (relatedData?.cases?.length || 0) + (relatedData?.appointments?.length || 0) + (relatedData?.notes?.length || 0);
+  const totalItems = (relatedData?.cases?.length || 0) + (relatedData?.appointments?.length || 0) + (relatedData?.notes?.length || 0) + (relatedData?.tasks?.length || 0) + (relatedData?.documents?.length || 0) + (relatedData?.invoices?.length || 0);
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -222,6 +258,78 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
                           {relatedData.notes.length > 10 && (
                             <div className="text-xs text-gray-500 italic">
                               + {relatedData.notes.length - 10} more notes
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Tasks */}
+                    {relatedData?.tasks && relatedData.tasks.length > 0 && (
+                      <div className="border rounded-lg p-4 bg-gray-50">
+                        <div className="flex items-center gap-2 mb-3">
+                          <ListTodo className="w-4 h-4 text-indigo-600" />
+                          <h4 className="font-semibold text-gray-900">
+                            Tasks ({relatedData.tasks.length})
+                          </h4>
+                        </div>
+                        <div className="space-y-2 max-h-40 overflow-y-auto">
+                          {relatedData.tasks.slice(0, 10).map((task) => (
+                            <div key={task.id} className="text-sm text-gray-700 bg-white p-2 rounded border">
+                              <div className="font-medium">{task.title || 'Task'}</div>
+                            </div>
+                          ))}
+                          {relatedData.tasks.length > 10 && (
+                            <div className="text-xs text-gray-500 italic">
+                              + {relatedData.tasks.length - 10} more tasks
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Documents */}
+                    {relatedData?.documents && relatedData.documents.length > 0 && (
+                      <div className="border rounded-lg p-4 bg-gray-50">
+                        <div className="flex items-center gap-2 mb-3">
+                          <File className="w-4 h-4 text-slate-600" />
+                          <h4 className="font-semibold text-gray-900">
+                            Documents ({relatedData.documents.length})
+                          </h4>
+                        </div>
+                        <div className="space-y-2 max-h-40 overflow-y-auto">
+                          {relatedData.documents.slice(0, 10).map((doc) => (
+                            <div key={doc.id} className="text-sm text-gray-700 bg-white p-2 rounded border">
+                              <div className="font-medium">{doc.file_name || 'Document'}</div>
+                            </div>
+                          ))}
+                          {relatedData.documents.length > 10 && (
+                            <div className="text-xs text-gray-500 italic">
+                              + {relatedData.documents.length - 10} more documents
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Invoices */}
+                    {relatedData?.invoices && relatedData.invoices.length > 0 && (
+                      <div className="border rounded-lg p-4 bg-gray-50">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Receipt className="w-4 h-4 text-amber-600" />
+                          <h4 className="font-semibold text-gray-900">
+                            Invoices ({relatedData.invoices.length})
+                          </h4>
+                        </div>
+                        <div className="space-y-2 max-h-40 overflow-y-auto">
+                          {relatedData.invoices.slice(0, 10).map((inv) => (
+                            <div key={inv.id} className="text-sm text-gray-700 bg-white p-2 rounded border">
+                              <div className="font-medium">Invoice #{inv.invoice_number || inv.id.substring(0,6)}</div>
+                            </div>
+                          ))}
+                          {relatedData.invoices.length > 10 && (
+                            <div className="text-xs text-gray-500 italic">
+                              + {relatedData.invoices.length - 10} more invoices
                             </div>
                           )}
                         </div>
