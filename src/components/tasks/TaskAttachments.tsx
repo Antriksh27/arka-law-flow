@@ -53,9 +53,13 @@ export const TaskAttachments: React.FC<TaskAttachmentsProps> = ({ taskId, attach
 
       if (updateError) throw updateError;
 
+      // Get current user ID
+      const { data: { user } } = await supabase.auth.getUser();
+
       // Log to history
       await (supabase as any).from('task_history').insert({
         task_id: taskId,
+        user_id: user?.id,
         action: 'attachment_added',
         changes: { file_name: file.name, file_url: publicUrl }
       });
