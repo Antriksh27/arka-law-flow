@@ -33,12 +33,12 @@ const Tasks = () => {
     queryKey: ['tasks', searchTerm, statusFilter, priorityFilter, assigneeFilter],
     queryFn: async () => {
       console.log('Fetching tasks...');
-      let query = supabase
+      let query = (supabase as any)
         .from('tasks')
         .select(`
           *,
-          assigned_user:profiles!tasks_assigned_to_fkey(full_name),
-          creator:profiles!tasks_created_by_fkey(full_name),
+          assigned_user:team_members!tasks_assigned_to_fkey(full_name),
+          creator:team_members!tasks_created_by_fkey(full_name),
           case:cases!tasks_case_id_fkey(case_title),
           client:clients!tasks_client_id_fkey(full_name)
         `)
@@ -75,12 +75,11 @@ const Tasks = () => {
     queryKey: ['team-members-filter'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name')
-        .in('role', ['admin', 'lawyer', 'paralegal', 'junior', 'associate', 'partner'])
+        .from('team_members')
+        .select('user_id, full_name')
         .order('full_name');
       if (error) throw error;
-      return data || [];
+      return (data || []).map(tm => ({ id: tm.user_id, full_name: tm.full_name }));
     }
   });
 
