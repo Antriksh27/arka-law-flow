@@ -26,7 +26,6 @@ interface TaskFormData {
   status: 'todo' | 'in_progress' | 'completed';
   due_date?: string;
   reminder_time?: string;
-  progress?: number;
   tags?: string;
   link_type?: 'case' | 'client' | 'none';
   case_id?: string;
@@ -83,8 +82,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
       setValue('priority', taskData.priority);
       setValue('status', taskData.status);
       setValue('due_date', taskData.due_date || '');
-      setValue('reminder_time', taskData.reminder_time ? taskData.reminder_time.slice(0, 16) : '');
-      setValue('progress', taskData.progress || 0);
+      setValue('reminder_time', (taskData as any).reminder_time ? (taskData as any).reminder_time.slice(0, 16) : '');
       setValue('tags', taskData.tags?.join(', ') || '');
       
       if (taskData.case_id) {
@@ -161,13 +159,12 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
 
   const updateTaskMutation = useMutation({
     mutationFn: async (data: TaskFormData) => {
-      const updateData = {
+      const updateData: any = {
         title: data.title,
         description: data.description || null,
         assigned_to: data.assigned_to === 'unassigned' ? null : data.assigned_to || null,
         priority: data.priority,
         status: data.status,
-        progress: data.progress || 0,
         due_date: data.due_date ? new Date(data.due_date).toISOString().split('T')[0] : null,
         reminder_time: data.reminder_time ? new Date(data.reminder_time).toISOString() : null,
         case_id: data.link_type === 'case' ? data.case_id || null : null,
@@ -386,21 +383,6 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="progress" className="text-sm font-medium text-gray-700">
-              Progress: {watch('progress') || 0}%
-            </Label>
-            <Input
-              id="progress"
-              type="range"
-              min="0"
-              max="100"
-              step="5"
-              {...register('progress', { valueAsNumber: true })}
-              className="w-full"
-            />
-          </div>
-
-          <div className="space-y-2">
             <Label htmlFor="tags" className="text-sm font-medium text-gray-700">
               Tags
             </Label>
@@ -411,6 +393,12 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
               className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
             />
             <p className="text-xs text-gray-500">Separate multiple tags with commas</p>
+          </div>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p className="text-sm text-blue-800">
+              <strong>Note:</strong> View attachments, comments, and timeline in the task details dialog.
+            </p>
           </div>
 
           <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">

@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Calendar, User, Tag, Clock, FileText, Edit, Trash2, Bell } from 'lucide-react';
 import { TimeUtils } from '@/lib/timeUtils';
@@ -151,17 +150,6 @@ export const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
         </DialogHeader>
 
         <div className="space-y-6 pt-4">
-          {/* Progress Bar */}
-          {taskData.progress !== undefined && taskData.progress !== null && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <h3 className="font-medium text-gray-900">Progress</h3>
-                <span className="text-sm font-semibold text-blue-600">{taskData.progress}%</span>
-              </div>
-              <Progress value={taskData.progress} className="h-2" />
-            </div>
-          )}
-
           {/* Description */}
           {taskData.description && (
             <div className="space-y-2">
@@ -220,7 +208,7 @@ export const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
             )}
 
             {/* Reminder */}
-            {taskData.reminder_time && (
+            {(taskData as any).reminder_time && (
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Bell className="w-4 h-4 text-gray-500" />
@@ -228,7 +216,7 @@ export const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                 </div>
                 <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
                   <p className="text-blue-700">
-                    {TimeUtils.formatDateTime(taskData.reminder_time, 'dd/MM/yyyy HH:mm')}
+                    {TimeUtils.formatDateTime((taskData as any).reminder_time, 'dd/MM/yyyy HH:mm')}
                   </p>
                 </div>
               </div>
@@ -332,12 +320,12 @@ export const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
           <Separator />
 
           {/* Attachments */}
-          <TaskAttachments taskId={taskId} attachments={taskData.attachments || []} />
+          <TaskAttachments taskId={taskId} attachments={(taskData as any).attachments || []} />
 
           <Separator />
 
           {/* Comments */}
-          <TaskComments taskId={taskId} comments={taskData.comments || []} />
+          <TaskComments taskId={taskId} comments={(taskData as any).comments || []} />
 
           <Separator />
 
