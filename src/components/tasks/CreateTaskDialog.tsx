@@ -136,7 +136,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       const user = await supabase.auth.getUser();
       if (!user.data.user) throw new Error('Not authenticated');
 
-      const taskData = {
+      const taskData: any = {
         title: data.title,
         description: data.description || null,
         assigned_to: data.assigned_to || null,

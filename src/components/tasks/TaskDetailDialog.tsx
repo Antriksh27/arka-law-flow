@@ -208,7 +208,7 @@ export const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
             )}
 
             {/* Reminder */}
-            {taskData.reminder_time && (
+            {(taskData as any).reminder_time && (
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Bell className="w-4 h-4 text-gray-500" />
@@ -216,7 +216,7 @@ export const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                 </div>
                 <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
                   <p className="text-blue-700">
-                    {TimeUtils.formatDateTime(taskData.reminder_time, 'dd/MM/yyyy HH:mm')}
+                    {TimeUtils.formatDateTime((taskData as any).reminder_time, 'dd/MM/yyyy HH:mm')}
                   </p>
                 </div>
               </div>
@@ -320,12 +320,12 @@ export const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
           <Separator />
 
           {/* Attachments */}
-          <TaskAttachments taskId={taskId} attachments={(taskData.attachments as any) || []} />
+          <TaskAttachments taskId={taskId} attachments={((taskData as any).attachments || []) as string[]} />
 
           <Separator />
 
           {/* Comments */}
-          <TaskComments taskId={taskId} comments={(taskData.comments as any) || []} />
+          <TaskComments taskId={taskId} comments={((taskData as any).comments || []) as any[]} />
 
           <Separator />
 

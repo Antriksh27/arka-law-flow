@@ -82,7 +82,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
       setValue('priority', taskData.priority);
       setValue('status', taskData.status);
       setValue('due_date', taskData.due_date || '');
-      setValue('reminder_time', taskData.reminder_time ? taskData.reminder_time.slice(0, 16) : '');
+      setValue('reminder_time', (taskData as any).reminder_time ? (taskData as any).reminder_time.slice(0, 16) : '');
       setValue('tags', taskData.tags?.join(', ') || '');
       
       if (taskData.case_id) {
@@ -174,7 +174,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
       };
 
       console.log('Updating task with data:', updateData);
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('tasks')
         .update(updateData)
         .eq('id', taskId);
