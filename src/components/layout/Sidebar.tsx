@@ -8,7 +8,6 @@ import {
   Folder, 
   Inbox,
   MessageSquare,
-  ClipboardList,
   Clock,
   FileCode,
   Activity,
@@ -28,7 +27,6 @@ const getNavigationForRole = (role: string | null) => {
     { name: 'Chat', href: '/chat', icon: MessageSquare },
     { name: 'Hearings', href: '/hearings', icon: Calendar },
     { name: 'Tasks', href: '/tasks', icon: File },
-    { name: 'Instructions', href: '/instructions', icon: ClipboardList },
     { name: 'Notes', href: '/notes', icon: File },
     { name: 'Documents', href: '/documents', icon: Folder },
   ];

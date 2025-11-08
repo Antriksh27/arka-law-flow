@@ -18,7 +18,6 @@ import Documents from '@/pages/Documents';
 import Notes from '@/pages/Notes';
 import Invoices from '@/pages/Invoices';
 import Team from '@/pages/Team';
-import Instructions from '@/pages/Instructions';
 import Availability from '@/pages/Availability';
 import ECourts from '@/pages/ECourts';
 import NotFound from '@/pages/NotFound';
@@ -92,7 +91,6 @@ const RoleBasedRouter = () => {
           <Route path="/staff/hearings" element={<Hearings />} />
           <Route path="/staff/documents" element={<Documents />} />
           <Route path="/staff/tasks" element={<Tasks />} />
-          <Route path="/staff/instructions" element={<Instructions />} />
           <Route path="/staff/invoices" element={<Invoices />} />
           <Route path="/chat" element={<ModernMessenger />} />
           <Route path="*" element={<StaffDashboard />} />
@@ -118,7 +116,6 @@ const RoleBasedRouter = () => {
         <Route path="/hearings" element={<Hearings />} />
         <Route path="/documents" element={<Documents />} />
         <Route path="/notes" element={<Notes />} />
-        <Route path="/instructions" element={<Instructions />} />
         <Route path="/availability" element={<Availability />} />
         <Route path="/chat" element={<ModernMessenger />} />
         {/* Redirect invoices to dashboard for juniors */}
@@ -147,7 +144,6 @@ const RoleBasedRouter = () => {
         <Route path="/hearings" element={<Hearings />} />
         <Route path="/documents" element={<Documents />} />
         <Route path="/notes" element={<Notes />} />
-        <Route path="/instructions" element={<Instructions />} />
         <Route path="/invoices" element={<Invoices />} />
         <Route path="/availability" element={<Availability />} />
         <Route path="/team" element={<Team />} />
