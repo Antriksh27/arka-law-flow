@@ -27,14 +27,16 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
     queryFn: async () => {
       if (!clientId) return null;
 
-      const [casesResult, appointmentsResult] = await Promise.all([
+      const [casesResult, appointmentsResult, notesResult] = await Promise.all([
         supabase.from('cases').select('id, case_title, case_number').eq('client_id', clientId),
-        supabase.from('appointments').select('id, title, start_time').eq('client_id', clientId)
+        supabase.from('appointments').select('id, title, start_time').eq('client_id', clientId),
+        supabase.from('notes_v2').select('id, title').eq('client_id', clientId)
       ]);
 
       return {
         cases: casesResult.data || [],
-        appointments: appointmentsResult.data || []
+        appointments: appointmentsResult.data || [],
+        notes: notesResult.data || []
       };
     },
     enabled: !!clientId && open
@@ -50,7 +52,17 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
       }
 
       // Delete in the correct order (child records first)
-      // 1. Delete case-related records for each case
+      
+      // 1. Delete notes associated with the client
+      if (relatedData?.notes && relatedData.notes.length > 0) {
+        const { error: notesError } = await supabase
+          .from('notes_v2')
+          .delete()
+          .eq('client_id', clientId);
+        if (notesError) throw notesError;
+      }
+
+      // 2. Delete case-related records for each case
       if (relatedData?.cases && relatedData.cases.length > 0) {
         const caseIds = relatedData.cases.map(c => c.id);
 
@@ -69,7 +81,7 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
         ]);
       }
 
-      // 2. Delete cases
+      // 3. Delete cases
       if (relatedData?.cases && relatedData.cases.length > 0) {
         const { error: casesError } = await supabase
           .from('cases')
@@ -78,7 +90,7 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
         if (casesError) throw casesError;
       }
 
-      // 3. Delete appointments
+      // 4. Delete appointments
       if (relatedData?.appointments && relatedData.appointments.length > 0) {
         const { error: appointmentsError } = await supabase
           .from('appointments')
@@ -87,7 +99,7 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
         if (appointmentsError) throw appointmentsError;
       }
 
-      // 4. Finally, delete the client
+      // 5. Finally, delete the client
       const { error: clientError } = await supabase
         .from('clients')
         .delete()
@@ -98,7 +110,8 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
       await AuditLogger.logDataAccess('client', 'delete', clientId, {
         client_name: clientName,
         deleted_cases: relatedData?.cases.length || 0,
-        deleted_appointments: relatedData?.appointments.length || 0
+        deleted_appointments: relatedData?.appointments.length || 0,
+        deleted_notes: relatedData?.notes.length || 0
       });
     },
     onSuccess: () => {
@@ -132,7 +145,7 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
     deleteMutation.mutate();
   };
 
-  const totalItems = (relatedData?.cases.length || 0) + (relatedData?.appointments.length || 0);
+  const totalItems = (relatedData?.cases.length || 0) + (relatedData?.appointments.length || 0) + (relatedData?.notes.length || 0);
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -187,6 +200,30 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
                         </div>
                         <div className="mt-2 text-xs text-gray-600 bg-white p-2 rounded border">
                           This includes all case documents, hearings, orders, objections, contacts, and activities.
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Notes */}
+                    {relatedData?.notes && relatedData.notes.length > 0 && (
+                      <div className="border rounded-lg p-4 bg-gray-50">
+                        <div className="flex items-center gap-2 mb-3">
+                          <FileText className="w-4 h-4 text-purple-600" />
+                          <h4 className="font-semibold text-gray-900">
+                            Notes ({relatedData.notes.length})
+                          </h4>
+                        </div>
+                        <div className="space-y-2 max-h-40 overflow-y-auto">
+                          {relatedData.notes.slice(0, 10).map((note) => (
+                            <div key={note.id} className="text-sm text-gray-700 bg-white p-2 rounded border">
+                              <div className="font-medium">{note.title || 'Untitled Note'}</div>
+                            </div>
+                          ))}
+                          {relatedData.notes.length > 10 && (
+                            <div className="text-xs text-gray-500 italic">
+                              + {relatedData.notes.length - 10} more notes
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}
