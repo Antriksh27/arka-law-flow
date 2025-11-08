@@ -37,8 +37,6 @@ const Tasks = () => {
         .from('tasks')
         .select(`
           *,
-          assigned_user:team_members!tasks_assigned_to_fkey(full_name),
-          creator:team_members!tasks_created_by_fkey(full_name),
           case:cases!tasks_case_id_fkey(case_title),
           client:clients!tasks_client_id_fkey(full_name)
         `)
@@ -82,6 +80,14 @@ const Tasks = () => {
       return (data || []).map(tm => ({ id: tm.user_id, full_name: tm.full_name }));
     }
   });
+  
+  const memberMap = React.useMemo(() => {
+    const map: Record<string, string> = {};
+    (teamMembers || []).forEach((m: any) => {
+      if (m.id) map[m.id] = m.full_name;
+    });
+    return map;
+  }, [teamMembers]);
 
   const updateTaskMutation = useMutation({
     mutationFn: async ({ taskId, status }: { taskId: string; status: 'todo' | 'in_progress' | 'completed' }) => {
@@ -187,7 +193,7 @@ const Tasks = () => {
       <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
         <div className="flex items-center gap-1">
           <User className="w-3 h-3" />
-          <span className="truncate">{task.assigned_user?.full_name || 'Unassigned'}</span>
+          <span className="truncate">{(task.assigned_to && memberMap[task.assigned_to]) || 'Unassigned'}</span>
         </div>
         {task.due_date && (
           <div className={`flex items-center gap-1 ${isOverdue(task.due_date, task.status) ? 'text-red-600 font-medium' : ''}`}>
