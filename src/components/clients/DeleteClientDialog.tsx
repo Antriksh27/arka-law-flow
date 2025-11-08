@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -17,6 +17,7 @@ interface DeleteClientDialogProps {
 
 export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, onSuccess }: DeleteClientDialogProps) => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Debug logging
   console.log('DeleteClientDialog props:', { clientId, clientName, open });
@@ -155,6 +156,11 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
         title: "Success",
         description: `${clientName} and all related data deleted successfully`
       });
+      
+      // Invalidate all client-related queries
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
+      queryClient.invalidateQueries({ queryKey: ['client-related-data'] });
+      
       onOpenChange(false);
       onSuccess?.();
     },
