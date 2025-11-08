@@ -3,20 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import {
-  CheckSquare,
-  Clock,
-  AlertTriangle,
-  FileText,
-  Upload,
-  Plus,
-  Calendar,
-  MessageSquareText,
-  FolderOpen
-} from 'lucide-react';
+import { CheckSquare, Clock, AlertTriangle, FileText, Upload, Plus, Calendar, MessageSquareText, FolderOpen } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-
 interface DashboardStats {
   pendingTasks: number;
   inProgressTasks: number;
@@ -25,7 +14,6 @@ interface DashboardStats {
   pendingInstructions: number;
   documentsUploaded: number;
 }
-
 interface RecentActivity {
   id: string;
   type: 'task' | 'instruction' | 'document';
@@ -34,9 +22,10 @@ interface RecentActivity {
   time: string;
   priority?: string;
 }
-
 const StaffDashboard = () => {
-  const { user } = useAuth();
+  const {
+    user
+  } = useAuth();
   const [stats, setStats] = useState<DashboardStats>({
     pendingTasks: 0,
     inProgressTasks: 0,
@@ -47,43 +36,35 @@ const StaffDashboard = () => {
   });
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     fetchDashboardData();
   }, [user]);
-
   const fetchDashboardData = async () => {
     if (!user) return;
-
     try {
       // Fetch task statistics
-      const { data: tasks } = await supabase
-        .from('tasks')
-        .select('status, due_date')
-        .or(`assigned_to.eq.${user.id},created_by.eq.${user.id}`);
+      const {
+        data: tasks
+      } = await supabase.from('tasks').select('status, due_date').or(`assigned_to.eq.${user.id},created_by.eq.${user.id}`);
 
       // Fetch instruction statistics
-      const { data: instructions } = await supabase
-        .from('instructions')
-        .select('status, deadline')
-        .eq('staff_id', user.id);
+      const {
+        data: instructions
+      } = await supabase.from('instructions').select('status, deadline').eq('staff_id', user.id);
 
       // Fetch document statistics for today
       const today = new Date().toISOString().split('T')[0];
-      const { data: documents } = await supabase
-        .from('documents')
-        .select('id')
-        .eq('uploaded_by', user.id)
-        .gte('uploaded_at', today);
+      const {
+        data: documents
+      } = await supabase.from('documents').select('id').eq('uploaded_by', user.id).gte('uploaded_at', today);
 
       // Calculate statistics
       const taskStats = {
         pendingTasks: tasks?.filter(t => t.status === 'todo').length || 0,
         inProgressTasks: tasks?.filter(t => t.status === 'in_progress').length || 0,
         completedTasks: tasks?.filter(t => t.status === 'completed').length || 0,
-        todayDeadlines: tasks?.filter(t => t.due_date === today).length || 0,
+        todayDeadlines: tasks?.filter(t => t.due_date === today).length || 0
       };
-
       setStats({
         ...taskStats,
         pendingInstructions: instructions?.filter(i => i.status === 'pending').length || 0,
@@ -92,28 +73,23 @@ const StaffDashboard = () => {
 
       // Fetch recent activity
       await fetchRecentActivity();
-
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
       setLoading(false);
     }
   };
-
   const fetchRecentActivity = async () => {
     if (!user) return;
-
     try {
       const activities: RecentActivity[] = [];
 
       // Recent tasks
-      const { data: recentTasks } = await supabase
-        .from('tasks')
-        .select('id, title, status, updated_at, priority')
-        .or(`assigned_to.eq.${user.id},created_by.eq.${user.id}`)
-        .order('updated_at', { ascending: false })
-        .limit(3);
-
+      const {
+        data: recentTasks
+      } = await supabase.from('tasks').select('id, title, status, updated_at, priority').or(`assigned_to.eq.${user.id},created_by.eq.${user.id}`).order('updated_at', {
+        ascending: false
+      }).limit(3);
       recentTasks?.forEach(task => {
         activities.push({
           id: task.id,
@@ -126,13 +102,11 @@ const StaffDashboard = () => {
       });
 
       // Recent instructions
-      const { data: recentInstructions } = await supabase
-        .from('instructions')
-        .select('id, message, status, updated_at, priority')
-        .eq('staff_id', user.id)
-        .order('updated_at', { ascending: false })
-        .limit(2);
-
+      const {
+        data: recentInstructions
+      } = await supabase.from('instructions').select('id, message, status, updated_at, priority').eq('staff_id', user.id).order('updated_at', {
+        ascending: false
+      }).limit(2);
       recentInstructions?.forEach(instruction => {
         activities.push({
           id: instruction.id,
@@ -143,42 +117,44 @@ const StaffDashboard = () => {
           priority: instruction.priority
         });
       });
-
       setRecentActivity(activities.slice(0, 5));
     } catch (error) {
       console.error('Error fetching recent activity:', error);
     }
   };
-
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending': return 'error';
-      case 'in_progress': return 'default';
-      case 'completed': case 'done': return 'success';
-      default: return 'outline';
+      case 'pending':
+        return 'error';
+      case 'in_progress':
+        return 'default';
+      case 'completed':
+      case 'done':
+        return 'success';
+      default:
+        return 'outline';
     }
   };
-
   const getPriorityColor = (priority?: string) => {
     switch (priority) {
-      case 'urgent': return 'error';
-      case 'high': return 'error';
-      case 'medium': return 'default';
-      case 'low': return 'success';
-      default: return 'outline';
+      case 'urgent':
+        return 'error';
+      case 'high':
+        return 'error';
+      case 'medium':
+        return 'default';
+      case 'low':
+        return 'success';
+      default:
+        return 'outline';
     }
   };
-
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
+    return <div className="flex items-center justify-center h-64">
         <div className="text-muted-foreground">Loading dashboard...</div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="max-w-7xl mx-auto p-6 space-y-6">
+  return <div className="max-w-7xl mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -243,15 +219,7 @@ const StaffDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">New Instructions</CardTitle>
-            <MessageSquareText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.pendingInstructions}</div>
-          </CardContent>
-        </Card>
+        
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -272,28 +240,20 @@ const StaffDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentActivity.length === 0 ? (
-                <p className="text-muted-foreground text-center py-4">No recent activity</p>
-              ) : (
-                recentActivity.map((activity) => (
-                  <div key={activity.id} className="flex items-center justify-between p-3 rounded-lg border">
+              {recentActivity.length === 0 ? <p className="text-muted-foreground text-center py-4">No recent activity</p> : recentActivity.map(activity => <div key={activity.id} className="flex items-center justify-between p-3 rounded-lg border">
                     <div className="flex-1">
                       <p className="text-sm font-medium">{activity.title}</p>
                       <div className="flex items-center gap-2 mt-1">
                         <Badge variant={getStatusColor(activity.status)} className="text-xs">
                           {activity.status.replace('_', ' ')}
                         </Badge>
-                        {activity.priority && (
-                          <Badge variant={getPriorityColor(activity.priority)} className="text-xs">
+                        {activity.priority && <Badge variant={getPriorityColor(activity.priority)} className="text-xs">
                             {activity.priority}
-                          </Badge>
-                        )}
+                          </Badge>}
                         <span className="text-xs text-muted-foreground">{activity.time}</span>
                       </div>
                     </div>
-                  </div>
-                ))
-              )}
+                  </div>)}
             </div>
           </CardContent>
         </Card>
@@ -333,8 +293,6 @@ const StaffDashboard = () => {
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default StaffDashboard;
