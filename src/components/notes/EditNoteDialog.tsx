@@ -244,7 +244,7 @@ export const EditNoteDialog: React.FC<EditNoteDialogProps> = ({
           </div>
 
           <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
-            <Button type="button" variant="outline" onClick={onClose} className="px-6 py-2 border-gray-300 bg-red-600 hover:bg-red-500">
+            <Button type="button" variant="outline" onClick={onClose} className="px-6 py-2 border-gray-300 bg-red-600 hover:bg-red-500 text-slate-50">
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting} className="px-6 py-2 text-white bg-slate-800 hover:bg-slate-700">
