@@ -20,14 +20,37 @@ export const TaskTimeline: React.FC<TaskTimelineProps> = ({ taskId }) => {
   const { data: history = [], isLoading } = useQuery<HistoryItem[]>({
     queryKey: ['task-history', taskId],
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
+      const { data: historyData, error } = await (supabase as any)
         .from('task_history')
         .select('*')
         .eq('task_id', taskId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return (data || []) as HistoryItem[];
+      
+      // Fetch user names from team_members
+      const userIds = [...new Set((historyData || []).map((h: any) => h.user_id).filter(Boolean))] as string[];
+      if (userIds.length > 0) {
+        const { data: members } = await supabase
+          .from('team_members')
+          .select('user_id, full_name')
+          .in('user_id', userIds);
+        
+        const memberMap: Record<string, string> = {};
+        (members || []).forEach(m => {
+          if (m.user_id) memberMap[m.user_id] = m.full_name;
+        });
+        
+        return (historyData || []).map((h: any) => ({
+          ...h,
+          user_name: h.user_id && memberMap[h.user_id] ? memberMap[h.user_id] : 'Unknown User'
+        })) as HistoryItem[];
+      }
+      
+      return (historyData || []).map((h: any) => ({
+        ...h,
+        user_name: 'Unknown User'
+      })) as HistoryItem[];
     },
   });
 
@@ -74,7 +97,7 @@ export const TaskTimeline: React.FC<TaskTimelineProps> = ({ taskId }) => {
   };
 
   const getActionText = (item: HistoryItem) => {
-    const userName = item.user_name || 'Someone';
+    const userName = item.user_name || 'Unknown User';
     
     switch (item.action) {
       case 'created':
