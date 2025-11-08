@@ -16,54 +16,59 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { UserPlus, Plus } from 'lucide-react';
-
 interface ConvertToClientDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   contact: any;
 }
-
 export const ConvertToClientDialog = ({
   open,
   onOpenChange,
   contact
 }: ConvertToClientDialogProps) => {
-  const { user, firmId } = useAuth();
-  const { toast } = useToast();
+  const {
+    user,
+    firmId
+  } = useAuth();
+  const {
+    toast
+  } = useToast();
   const queryClient = useQueryClient();
   const [selectedStateId, setSelectedStateId] = useState<string>('');
   const [showAddDistrict, setShowAddDistrict] = useState(false);
   const [newDistrictName, setNewDistrictName] = useState('');
 
   // Fetch states
-  const { data: states = [] } = useQuery({
+  const {
+    data: states = []
+  } = useQuery({
     queryKey: ['states'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('states')
-        .select('id, name')
-        .order('name');
+      const {
+        data,
+        error
+      } = await supabase.from('states').select('id, name').order('name');
       if (error) throw error;
       return data;
     }
   });
 
   // Fetch districts
-  const { data: districts = [] } = useQuery({
+  const {
+    data: districts = []
+  } = useQuery({
     queryKey: ['districts', selectedStateId],
     queryFn: async () => {
       if (!selectedStateId) return [];
-      const { data, error } = await supabase
-        .from('districts')
-        .select('id, name')
-        .eq('state_id', selectedStateId)
-        .order('name');
+      const {
+        data,
+        error
+      } = await supabase.from('districts').select('id, name').eq('state_id', selectedStateId).order('name');
       if (error) throw error;
       return data;
     },
     enabled: !!selectedStateId
   });
-
   const form = useForm<ConvertContactFormData>({
     resolver: zodResolver(convertContactSchema),
     defaultValues: {
@@ -85,7 +90,7 @@ export const ConvertToClientDialog = ({
       referred_by_phone: '',
       notes: '',
       office_notes: '',
-      case_ref: '',
+      case_ref: ''
     }
   });
 
@@ -93,7 +98,6 @@ export const ConvertToClientDialog = ({
   useEffect(() => {
     if (contact && open) {
       const contactType = contact.type || (contact.organization ? 'Organization' : 'Individual');
-      
       form.reset({
         full_name: contact.name || '',
         type: contactType,
@@ -113,9 +117,8 @@ export const ConvertToClientDialog = ({
         referred_by_phone: contact.referred_by_phone || '',
         notes: contact.notes || '',
         office_notes: '',
-        case_ref: contact.visit_purpose || '',
+        case_ref: contact.visit_purpose || ''
       });
-      
       setSelectedStateId(contact.state_id || '');
     }
   }, [contact, open, form]);
@@ -124,37 +127,36 @@ export const ConvertToClientDialog = ({
   const addDistrictMutation = useMutation({
     mutationFn: async (districtName: string) => {
       if (!selectedStateId) throw new Error('No state selected');
-      
-      const { data, error } = await supabase
-        .from('districts')
-        .insert({
-          name: districtName,
-          state_id: selectedStateId,
-        })
-        .select('id, name')
-        .single();
-
+      const {
+        data,
+        error
+      } = await supabase.from('districts').insert({
+        name: districtName,
+        state_id: selectedStateId
+      }).select('id, name').single();
       if (error) throw error;
       return data;
     },
-    onSuccess: (newDistrict) => {
-      queryClient.invalidateQueries({ queryKey: ['districts', selectedStateId] });
+    onSuccess: newDistrict => {
+      queryClient.invalidateQueries({
+        queryKey: ['districts', selectedStateId]
+      });
       form.setValue('district_id', newDistrict.id);
       setShowAddDistrict(false);
       setNewDistrictName('');
       toast({
         title: "Success",
-        description: "District added successfully!",
+        description: "District added successfully!"
       });
     },
-    onError: (error) => {
+    onError: error => {
       console.error('Error adding district:', error);
       toast({
         title: "Error",
         description: "Failed to add district",
-        variant: "destructive",
+        variant: "destructive"
       });
-    },
+    }
   });
 
   // Convert mutation
@@ -163,19 +165,15 @@ export const ConvertToClientDialog = ({
       if (!firmId || !user?.id) {
         throw new Error('Missing required authentication data');
       }
-
       if (!contact?.id || contact.id === 'temp-id' || contact.id.startsWith('temp-')) {
         throw new Error('Cannot convert temporary contact');
       }
 
       // Check for duplicate clients
       if (formData.email || formData.phone) {
-        const { data: existingClients } = await supabase
-          .from('clients')
-          .select('id, full_name, email, phone')
-          .eq('firm_id', firmId)
-          .or(`email.eq.${formData.email || 'null'},phone.eq.${formData.phone || 'null'}`);
-
+        const {
+          data: existingClients
+        } = await supabase.from('clients').select('id, full_name, email, phone').eq('firm_id', firmId).or(`email.eq.${formData.email || 'null'},phone.eq.${formData.phone || 'null'}`);
         if (existingClients && existingClients.length > 0) {
           const duplicate = existingClients[0];
           const matchField = duplicate.email === formData.email ? 'email' : 'phone';
@@ -184,67 +182,59 @@ export const ConvertToClientDialog = ({
       }
 
       // Build address
-      const addressParts = [formData.address_line_1, formData.address_line_2]
-        .filter(Boolean);
+      const addressParts = [formData.address_line_1, formData.address_line_2].filter(Boolean);
       const fullAddress = addressParts.length > 0 ? addressParts.join(', ') : null;
 
       // Build comprehensive notes (without office notes)
       const noteParts = [];
-      
       if (formData.notes?.trim()) {
         noteParts.push(formData.notes.trim());
       }
-      
       if (contact.visit_purpose && contact.visit_purpose !== formData.case_ref) {
         noteParts.push(`\n--- Original Visit Purpose ---\n${contact.visit_purpose}`);
       }
-      
       noteParts.push(`\n--- Conversion Details ---`);
       noteParts.push(`Converted from contact on: ${new Date().toLocaleString('en-IN')}`);
       noteParts.push(`Converted by: ${user.email}`);
-      
       const finalNotes = noteParts.join('\n\n');
 
       // Create client
-      const { data: newClient, error: clientError } = await supabase
-        .from('clients')
-        .insert({
-          full_name: formData.full_name.trim(),
-          type: formData.type,
-          email: formData.email?.trim() || null,
-          phone: formData.phone?.trim() || null,
-          organization: formData.organization?.trim() || null,
-          designation: formData.designation?.trim() || null,
-          company_address: formData.company_address?.trim() || null,
-          company_phone: formData.company_phone?.trim() || null,
-          company_email: formData.company_email?.trim() || null,
-          address: fullAddress,
-          pin_code: formData.pin_code?.trim() || null,
-          state: states.find(s => s.id === formData.state_id)?.name || null,
-          district: districts.find(d => d.id === formData.district_id)?.name || null,
-          referred_by_name: formData.referred_by_name?.trim() || null,
-          referred_by_phone: formData.referred_by_phone?.trim() || null,
-          case_ref: formData.case_ref?.trim() || null,
-          notes: finalNotes,
-          status: 'lead',
-          firm_id: firmId,
-          created_by: user.id,
-        })
-        .select()
-        .single();
-
+      const {
+        data: newClient,
+        error: clientError
+      } = await supabase.from('clients').insert({
+        full_name: formData.full_name.trim(),
+        type: formData.type,
+        email: formData.email?.trim() || null,
+        phone: formData.phone?.trim() || null,
+        organization: formData.organization?.trim() || null,
+        designation: formData.designation?.trim() || null,
+        company_address: formData.company_address?.trim() || null,
+        company_phone: formData.company_phone?.trim() || null,
+        company_email: formData.company_email?.trim() || null,
+        address: fullAddress,
+        pin_code: formData.pin_code?.trim() || null,
+        state: states.find(s => s.id === formData.state_id)?.name || null,
+        district: districts.find(d => d.id === formData.district_id)?.name || null,
+        referred_by_name: formData.referred_by_name?.trim() || null,
+        referred_by_phone: formData.referred_by_phone?.trim() || null,
+        case_ref: formData.case_ref?.trim() || null,
+        notes: finalNotes,
+        status: 'lead',
+        firm_id: firmId,
+        created_by: user.id
+      }).select().single();
       if (clientError) throw clientError;
 
       // Create internal note for office staff if provided
       if (formData.office_notes?.trim()) {
-        const { error: internalNoteError } = await supabase
-          .from('client_internal_notes')
-          .insert({
-            client_id: newClient.id,
-            note: formData.office_notes.trim(),
-            created_by: user.id,
-          });
-
+        const {
+          error: internalNoteError
+        } = await supabase.from('client_internal_notes').insert({
+          client_id: newClient.id,
+          note: formData.office_notes.trim(),
+          created_by: user.id
+        });
         if (internalNoteError) {
           console.error('Error creating internal note:', internalNoteError);
           // Don't throw - we still want the client to be created even if note fails
@@ -252,27 +242,30 @@ export const ConvertToClientDialog = ({
       }
 
       // Delete contact
-      const { error: deleteError } = await supabase
-        .from('contacts')
-        .delete()
-        .eq('id', contact.id);
-
+      const {
+        error: deleteError
+      } = await supabase.from('contacts').delete().eq('id', contact.id);
       if (deleteError) {
         console.error('Error deleting contact:', deleteError);
       }
-
-      return { client: newClient };
+      return {
+        client: newClient
+      };
     },
-    onSuccess: (data) => {
+    onSuccess: data => {
       toast({
         title: "Success",
-        description: `${data.client.full_name} has been converted to a client successfully!`,
+        description: `${data.client.full_name} has been converted to a client successfully!`
       });
-
-      queryClient.invalidateQueries({ queryKey: ['contacts'] });
-      queryClient.invalidateQueries({ queryKey: ['clients'] });
-      queryClient.invalidateQueries({ queryKey: ['reception-contacts'] });
-      
+      queryClient.invalidateQueries({
+        queryKey: ['contacts']
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['clients']
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['reception-contacts']
+      });
       onOpenChange(false);
     },
     onError: (error: any) => {
@@ -280,31 +273,26 @@ export const ConvertToClientDialog = ({
       toast({
         title: "Conversion Failed",
         description: error.message || "Failed to convert contact to client",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   });
-
   const handleAddDistrict = () => {
     if (!newDistrictName.trim()) {
       toast({
         title: "Error",
         description: "Please enter a district name",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
     addDistrictMutation.mutate(newDistrictName.trim());
   };
-
   const onSubmit = (data: ConvertContactFormData) => {
     convertMutation.mutate(data);
   };
-
   if (!contact) return null;
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+  return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -319,18 +307,12 @@ export const ConvertToClientDialog = ({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 mt-4">
             {/* Contact Type */}
-            <FormField
-              control={form.control}
-              name="type"
-              render={({ field }) => (
-                <FormItem>
+            <FormField control={form.control} name="type" render={({
+            field
+          }) => <FormItem>
                   <FormLabel>Client Type *</FormLabel>
                   <FormControl>
-                    <RadioGroup
-                      value={field.value}
-                      onValueChange={field.onChange}
-                      className="flex gap-4"
-                    >
+                    <RadioGroup value={field.value} onValueChange={field.onChange} className="flex gap-4">
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="Individual" id="type-individual" />
                         <Label htmlFor="type-individual" className="font-normal cursor-pointer">
@@ -346,9 +328,7 @@ export const ConvertToClientDialog = ({
                     </RadioGroup>
                   </FormControl>
                   <FormMessage />
-                </FormItem>
-              )}
-            />
+                </FormItem>} />
 
             <Separator />
 
@@ -356,11 +336,9 @@ export const ConvertToClientDialog = ({
             <div className="space-y-4">
               <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3">Basic Information</h3>
               
-              <FormField
-                control={form.control}
-                name="full_name"
-                render={({ field }) => (
-                  <FormItem>
+              <FormField control={form.control} name="full_name" render={({
+              field
+            }) => <FormItem>
                     <FormLabel>
                       {form.watch('type') === 'Organization' ? 'Contact Person Name' : 'Full Name'} *
                     </FormLabel>
@@ -368,92 +346,68 @@ export const ConvertToClientDialog = ({
                       <Input {...field} placeholder="Enter full name" />
                     </FormControl>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  </FormItem>} />
             </div>
 
             {/* Organization Details - Only for Organization */}
-            {form.watch('type') === 'Organization' && (
-              <>
+            {form.watch('type') === 'Organization' && <>
                 <Separator />
                 <div className="space-y-4">
                   <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3">Organization Details</h3>
                   
-                  <FormField
-                    control={form.control}
-                    name="organization"
-                    render={({ field }) => (
-                      <FormItem>
+                  <FormField control={form.control} name="organization" render={({
+                field
+              }) => <FormItem>
                         <FormLabel>Organization Name *</FormLabel>
                         <FormControl>
                           <Input {...field} placeholder="Enter organization name" />
                         </FormControl>
                         <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                      </FormItem>} />
 
-                  <FormField
-                    control={form.control}
-                    name="designation"
-                    render={({ field }) => (
-                      <FormItem>
+                  <FormField control={form.control} name="designation" render={({
+                field
+              }) => <FormItem>
                         <FormLabel>Designation</FormLabel>
                         <FormControl>
                           <Input {...field} placeholder="Enter designation" />
                         </FormControl>
                         <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                      </FormItem>} />
 
-                  <FormField
-                    control={form.control}
-                    name="company_address"
-                    render={({ field }) => (
-                      <FormItem>
+                  <FormField control={form.control} name="company_address" render={({
+                field
+              }) => <FormItem>
                         <FormLabel>Company Address</FormLabel>
                         <FormControl>
                           <Input {...field} placeholder="Enter company address" />
                         </FormControl>
                         <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                      </FormItem>} />
 
                   <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="company_phone"
-                      render={({ field }) => (
-                        <FormItem>
+                    <FormField control={form.control} name="company_phone" render={({
+                  field
+                }) => <FormItem>
                           <FormLabel>Company Phone</FormLabel>
                           <FormControl>
                             <Input {...field} placeholder="Enter company phone" />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                        </FormItem>} />
 
-                    <FormField
-                      control={form.control}
-                      name="company_email"
-                      render={({ field }) => (
-                        <FormItem>
+                    <FormField control={form.control} name="company_email" render={({
+                  field
+                }) => <FormItem>
                           <FormLabel>Company Email</FormLabel>
                           <FormControl>
                             <Input {...field} type="email" placeholder="Enter company email" />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                        </FormItem>} />
                   </div>
                 </div>
-              </>
-            )}
+              </>}
 
             <Separator />
 
@@ -464,33 +418,25 @@ export const ConvertToClientDialog = ({
               </h3>
               
               <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
+                <FormField control={form.control} name="email" render={({
+                field
+              }) => <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
                         <Input {...field} type="email" placeholder="Enter email" />
                       </FormControl>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    </FormItem>} />
 
-                <FormField
-                  control={form.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem>
+                <FormField control={form.control} name="phone" render={({
+                field
+              }) => <FormItem>
                       <FormLabel>Phone</FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="Enter phone number" />
                       </FormControl>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    </FormItem>} />
               </div>
             </div>
 
@@ -500,153 +446,102 @@ export const ConvertToClientDialog = ({
             <div className="space-y-4">
               <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3">Address Information</h3>
               
-              <FormField
-                control={form.control}
-                name="address_line_1"
-                render={({ field }) => (
-                  <FormItem>
+              <FormField control={form.control} name="address_line_1" render={({
+              field
+            }) => <FormItem>
                     <FormLabel>Address Line 1</FormLabel>
                     <FormControl>
                       <Input {...field} placeholder="Enter address line 1" />
                     </FormControl>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  </FormItem>} />
 
-              <FormField
-                control={form.control}
-                name="address_line_2"
-                render={({ field }) => (
-                  <FormItem>
+              <FormField control={form.control} name="address_line_2" render={({
+              field
+            }) => <FormItem>
                     <FormLabel>Address Line 2</FormLabel>
                     <FormControl>
                       <Input {...field} placeholder="Enter address line 2" />
                     </FormControl>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  </FormItem>} />
 
               <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="state_id"
-                  render={({ field }) => (
-                    <FormItem>
+                <FormField control={form.control} name="state_id" render={({
+                field
+              }) => <FormItem>
                       <FormLabel>State</FormLabel>
-                      <Select
-                        value={field.value}
-                        onValueChange={(value) => {
-                          field.onChange(value);
-                          setSelectedStateId(value);
-                          form.setValue('district_id', '');
-                        }}
-                      >
+                      <Select value={field.value} onValueChange={value => {
+                  field.onChange(value);
+                  setSelectedStateId(value);
+                  form.setValue('district_id', '');
+                }}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select state" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {states.map((state) => (
-                            <SelectItem key={state.id} value={state.id}>
+                          {states.map(state => <SelectItem key={state.id} value={state.id}>
                               {state.name}
-                            </SelectItem>
-                          ))}
+                            </SelectItem>)}
                         </SelectContent>
                       </Select>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    </FormItem>} />
 
-                <FormField
-                  control={form.control}
-                  name="pin_code"
-                  render={({ field }) => (
-                    <FormItem>
+                <FormField control={form.control} name="pin_code" render={({
+                field
+              }) => <FormItem>
                       <FormLabel>PIN Code</FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="6 digits" maxLength={6} />
                       </FormControl>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    </FormItem>} />
               </div>
 
-              <FormField
-                control={form.control}
-                name="district_id"
-                render={({ field }) => (
-                  <FormItem>
+              <FormField control={form.control} name="district_id" render={({
+              field
+            }) => <FormItem>
                     <FormLabel>District</FormLabel>
-                    {showAddDistrict ? (
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="Enter district name"
-                          value={newDistrictName}
-                          onChange={(e) => setNewDistrictName(e.target.value)}
-                        />
-                        <Button
-                          type="button"
-                          onClick={handleAddDistrict}
-                          disabled={addDistrictMutation.isPending}
-                          size="sm"
-                        >
+                    {showAddDistrict ? <div className="flex gap-2">
+                        <Input placeholder="Enter district name" value={newDistrictName} onChange={e => setNewDistrictName(e.target.value)} />
+                        <Button type="button" onClick={handleAddDistrict} disabled={addDistrictMutation.isPending} size="sm">
                           {addDistrictMutation.isPending ? 'Adding...' : 'Add'}
                         </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => {
-                            setShowAddDistrict(false);
-                            setNewDistrictName('');
-                          }}
-                          size="sm"
-                        >
+                        <Button type="button" variant="outline" onClick={() => {
+                  setShowAddDistrict(false);
+                  setNewDistrictName('');
+                }} size="sm">
                           Cancel
                         </Button>
-                      </div>
-                    ) : (
-                      <Select
-                        value={field.value}
-                        onValueChange={(value) => {
-                          if (value === 'add_new') {
-                            setShowAddDistrict(true);
-                          } else {
-                            field.onChange(value);
-                          }
-                        }}
-                        disabled={!selectedStateId}
-                      >
+                      </div> : <Select value={field.value} onValueChange={value => {
+                if (value === 'add_new') {
+                  setShowAddDistrict(true);
+                } else {
+                  field.onChange(value);
+                }
+              }} disabled={!selectedStateId}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder={!selectedStateId ? "Select state first" : "Select district"} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {districts.map((district) => (
-                            <SelectItem key={district.id} value={district.id}>
+                          {districts.map(district => <SelectItem key={district.id} value={district.id}>
                               {district.name}
-                            </SelectItem>
-                          ))}
-                          {selectedStateId && (
-                            <SelectItem value="add_new" className="border-t">
+                            </SelectItem>)}
+                          {selectedStateId && <SelectItem value="add_new" className="border-t">
                               <div className="flex items-center gap-2">
                                 <Plus className="h-4 w-4" />
                                 Add New District
                               </div>
-                            </SelectItem>
-                          )}
+                            </SelectItem>}
                         </SelectContent>
-                      </Select>
-                    )}
+                      </Select>}
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  </FormItem>} />
             </div>
 
             <Separator />
@@ -656,33 +551,25 @@ export const ConvertToClientDialog = ({
               <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3">Referral Information</h3>
               
               <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="referred_by_name"
-                  render={({ field }) => (
-                    <FormItem>
+                <FormField control={form.control} name="referred_by_name" render={({
+                field
+              }) => <FormItem>
                       <FormLabel>Referred By Name</FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="Enter referrer name" />
                       </FormControl>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    </FormItem>} />
 
-                <FormField
-                  control={form.control}
-                  name="referred_by_phone"
-                  render={({ field }) => (
-                    <FormItem>
+                <FormField control={form.control} name="referred_by_phone" render={({
+                field
+              }) => <FormItem>
                       <FormLabel>Referred By Phone</FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="Enter referrer phone" />
                       </FormControl>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    </FormItem>} />
               </div>
             </div>
 
@@ -692,67 +579,36 @@ export const ConvertToClientDialog = ({
             <div className="space-y-4">
               <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3">Additional Information</h3>
               
-              <FormField
-                control={form.control}
-                name="case_ref"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Purpose of Visit / Case Reference</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Enter purpose of visit or case reference" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <FormField control={form.control} name="case_ref" render={({
+              field
+            }) => {}} />
 
-              <FormField
-                control={form.control}
-                name="office_notes"
-                render={({ field }) => (
-                  <FormItem>
+              <FormField control={form.control} name="office_notes" render={({
+              field
+            }) => <FormItem>
                     <FormLabel>
                       Office Notes
                       <span className="text-xs text-muted-foreground ml-2">(Visible to staff only)</span>
                     </FormLabel>
                     <FormControl>
-                      <Textarea
-                        {...field}
-                        rows={3}
-                        placeholder="Add internal notes visible to office staff only..."
-                      />
+                      <Textarea {...field} rows={3} placeholder="Add internal notes visible to office staff only..." />
                     </FormControl>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  </FormItem>} />
 
-              <FormField
-                control={form.control}
-                name="notes"
-                render={({ field }) => (
-                  <FormItem>
+              <FormField control={form.control} name="notes" render={({
+              field
+            }) => <FormItem>
                     <FormLabel>General Notes</FormLabel>
                     <FormControl>
-                      <Textarea
-                        {...field}
-                        rows={3}
-                        placeholder="Add general notes about the client..."
-                      />
+                      <Textarea {...field} rows={3} placeholder="Add general notes about the client..." />
                     </FormControl>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  </FormItem>} />
             </div>
 
             <DialogFooter className="mt-6 pt-4 border-t">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                disabled={convertMutation.isPending}
-              >
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={convertMutation.isPending}>
                 Cancel
               </Button>
               <Button type="submit" disabled={convertMutation.isPending}>
@@ -762,6 +618,5 @@ export const ConvertToClientDialog = ({
           </form>
         </Form>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 };
