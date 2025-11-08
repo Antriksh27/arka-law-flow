@@ -17,17 +17,17 @@ interface HistoryItem {
 }
 
 export const TaskTimeline: React.FC<TaskTimelineProps> = ({ taskId }) => {
-  const { data: history = [], isLoading } = useQuery({
+  const { data: history = [], isLoading } = useQuery<HistoryItem[]>({
     queryKey: ['task-history', taskId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('task_history')
         .select('*')
         .eq('task_id', taskId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as HistoryItem[];
+      return (data || []) as unknown as HistoryItem[];
     },
   });
 
