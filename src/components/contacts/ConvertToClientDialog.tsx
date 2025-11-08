@@ -579,10 +579,6 @@ export const ConvertToClientDialog = ({
             <div className="space-y-4">
               <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3">Additional Information</h3>
               
-              <FormField control={form.control} name="case_ref" render={({
-              field
-            }) => {}} />
-
               <FormField control={form.control} name="office_notes" render={({
               field
             }) => <FormItem>

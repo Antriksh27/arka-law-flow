@@ -1,19 +1,29 @@
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { User, Mail, Phone, MapPin, Building, Briefcase, Users, Calendar, UserCheck, Shield } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { User, Mail, Phone, MapPin, Building, Briefcase, Users, Calendar, UserCheck, Shield, FileText, Plus, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 import { TimeUtils } from '@/lib/timeUtils';
 import { InlineEditCard } from './InlineEditCard';
 import { z } from 'zod';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 interface ClientInformationProps {
   clientId: string;
 }
 export const ClientInformation: React.FC<ClientInformationProps> = ({
   clientId
 }) => {
+  const { user, role } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [newNote, setNewNote] = useState('');
+  const [isAddingNote, setIsAddingNote] = useState(false);
+
   const {
     data: client,
     isLoading,
@@ -29,6 +39,100 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
       return data;
     }
   });
+
+  // Fetch internal notes
+  const { data: internalNotes, isLoading: notesLoading } = useQuery({
+    queryKey: ['client-internal-notes', clientId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('client_internal_notes')
+        .select(`
+          *,
+          creator:created_by(full_name)
+        `)
+        .eq('client_id', clientId)
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching internal notes:', error);
+        throw error;
+      }
+      return data;
+    },
+    enabled: !!user && (role === 'office_staff' || role === 'admin')
+  });
+
+  // Add note mutation
+  const addNoteMutation = useMutation({
+    mutationFn: async (noteText: string) => {
+      const { data, error } = await supabase
+        .from('client_internal_notes')
+        .insert({
+          client_id: clientId,
+          note: noteText.trim(),
+          created_by: user?.id
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['client-internal-notes', clientId] });
+      setNewNote('');
+      setIsAddingNote(false);
+      toast({
+        title: "Success",
+        description: "Internal note added successfully"
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add internal note",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Delete note mutation
+  const deleteNoteMutation = useMutation({
+    mutationFn: async (noteId: string) => {
+      const { error } = await supabase
+        .from('client_internal_notes')
+        .delete()
+        .eq('id', noteId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['client-internal-notes', clientId] });
+      toast({
+        title: "Success",
+        description: "Internal note deleted successfully"
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete internal note",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const handleAddNote = () => {
+    if (!newNote.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a note",
+        variant: "destructive"
+      });
+      return;
+    }
+    addNoteMutation.mutate(newNote);
+  };
 
   // Validation schemas
   const emailSchema = z.string().trim().email({ message: "Invalid email address" }).max(255, { message: "Email must be less than 255 characters" }).or(z.literal(''));
@@ -135,19 +239,119 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
         onUpdate={refetch}
       />
 
-      {/* Additional Notes */}
-      
+      {/* Internal Office Notes - Only visible to office_staff, admin, and note creators */}
+      {(role === 'office_staff' || role === 'admin') && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Shield className="w-5 h-5 text-primary" />
+                <CardTitle>Internal Office Notes</CardTitle>
+                <Badge variant="outline" className="text-xs">Staff Only</Badge>
+              </div>
+              {!isAddingNote && (
+                <Button
+                  size="sm"
+                  onClick={() => setIsAddingNote(true)}
+                  className="gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Note
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {isAddingNote && (
+              <div className="space-y-2 p-4 bg-muted rounded-lg">
+                <Textarea
+                  placeholder="Enter internal note (visible only to office staff and admins)..."
+                  value={newNote}
+                  onChange={(e) => setNewNote(e.target.value)}
+                  rows={3}
+                />
+                <div className="flex gap-2 justify-end">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setIsAddingNote(false);
+                      setNewNote('');
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleAddNote}
+                    disabled={addNoteMutation.isPending}
+                  >
+                    {addNoteMutation.isPending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      'Save Note'
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
 
-      {/* Services */}
-      
-
-      {/* Assigned Lawyers */}
-      
-
-      {/* Notes */}
-
-      {/* Financial Details */}
-      
+            {notesLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              </div>
+            ) : internalNotes && internalNotes.length > 0 ? (
+              <div className="space-y-3">
+                {internalNotes.map((note: any) => (
+                  <div
+                    key={note.id}
+                    className="p-4 bg-muted rounded-lg border border-border"
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-sm font-medium text-foreground">
+                            {note.creator?.full_name || 'Unknown'}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {TimeUtils.formatDate(note.created_at)}
+                          </span>
+                        </div>
+                        <p className="text-sm text-foreground whitespace-pre-wrap">
+                          {note.note}
+                        </p>
+                      </div>
+                      {(role === 'admin' || note.created_by === user?.id) && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            if (window.confirm('Are you sure you want to delete this note?')) {
+                              deleteNoteMutation.mutate(note.id);
+                            }
+                          }}
+                          disabled={deleteNoteMutation.isPending}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <FileText className="w-12 h-12 mx-auto mb-2 text-muted-foreground/50" />
+                <p className="text-sm">No internal notes yet</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Account Details */}
       <Card>
