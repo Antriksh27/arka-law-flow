@@ -78,7 +78,6 @@ export const ConvertToClientDialog = ({
       company_email: '',
       address_line_1: '',
       address_line_2: '',
-      city: '',
       state_id: '',
       district_id: '',
       pin_code: '',
@@ -107,7 +106,6 @@ export const ConvertToClientDialog = ({
         company_email: contact.company_email || '',
         address_line_1: contact.address_line_1 || '',
         address_line_2: contact.address_line_2 || '',
-        city: contact.city || '',
         state_id: contact.state_id || '',
         district_id: contact.district_id || '',
         pin_code: contact.pin_code || '',
@@ -186,7 +184,7 @@ export const ConvertToClientDialog = ({
       }
 
       // Build address
-      const addressParts = [formData.address_line_1, formData.address_line_2, formData.city]
+      const addressParts = [formData.address_line_1, formData.address_line_2]
         .filter(Boolean);
       const fullAddress = addressParts.length > 0 ? addressParts.join(', ') : null;
 
@@ -225,7 +223,6 @@ export const ConvertToClientDialog = ({
           company_phone: formData.company_phone?.trim() || null,
           company_email: formData.company_email?.trim() || null,
           address: fullAddress,
-          city: formData.city?.trim() || null,
           pin_code: formData.pin_code?.trim() || null,
           state: states.find(s => s.id === formData.state_id)?.name || null,
           district: districts.find(d => d.id === formData.district_id)?.name || null,
@@ -519,21 +516,7 @@ export const ConvertToClientDialog = ({
                 )}
               />
 
-              <div className="grid grid-cols-3 gap-4">
-                <FormField
-                  control={form.control}
-                  name="city"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>City</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Enter city" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
+              <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="state_id"

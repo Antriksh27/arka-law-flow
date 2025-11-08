@@ -84,13 +84,6 @@ export const convertContactSchema = z.object({
     .optional()
     .or(z.literal('')),
 
-  city: z
-    .string()
-    .trim()
-    .max(100, { message: "City must be less than 100 characters" })
-    .optional()
-    .or(z.literal('')),
-
   state_id: z
     .string()
     .optional()

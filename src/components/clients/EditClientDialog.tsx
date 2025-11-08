@@ -25,7 +25,6 @@ interface Client {
   type?: string;
   state?: string;
   district?: string;
-  city?: string;
   referred_by_name?: string;
   referred_by_phone?: string;
   is_vip?: boolean;
