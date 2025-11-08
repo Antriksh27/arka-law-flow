@@ -18,6 +18,9 @@ interface DeleteClientDialogProps {
 export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, onSuccess }: DeleteClientDialogProps) => {
   const { toast } = useToast();
 
+  // Debug logging
+  console.log('DeleteClientDialog props:', { clientId, clientName, open });
+
   // Fetch all related data
   const { data: relatedData, isLoading } = useQuery({
     queryKey: ['client-related-data', clientId],
@@ -39,7 +42,12 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
-      if (!clientId) throw new Error('No client ID');
+      console.log('Delete mutation started with clientId:', clientId);
+      
+      if (!clientId) {
+        console.error('No client ID provided to delete mutation');
+        throw new Error('No client ID');
+      }
 
       // Delete in the correct order (child records first)
       // 1. Delete case-related records for each case
@@ -112,6 +120,15 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
   });
 
   const handleDelete = () => {
+    console.log('handleDelete called with clientId:', clientId);
+    if (!clientId) {
+      toast({
+        title: "Error",
+        description: "No client ID available for deletion",
+        variant: "destructive"
+      });
+      return;
+    }
     deleteMutation.mutate();
   };
 
@@ -125,7 +142,7 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
             <AlertTriangle className="w-5 h-5" />
             Delete Client - {clientName}
           </AlertDialogTitle>
-          <AlertDialogDescription className="text-left space-y-4">
+          <div className="text-left space-y-4 text-sm text-gray-600 mt-2">
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
@@ -213,13 +230,13 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
                 )}
               </>
             )}
-          </AlertDialogDescription>
+          </div>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={deleteMutation.isPending}>Cancel</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDelete}
-            disabled={isLoading || deleteMutation.isPending}
+            disabled={isLoading || deleteMutation.isPending || !clientId}
             className="bg-red-600 hover:bg-red-700 text-white"
           >
             {deleteMutation.isPending ? (

@@ -790,13 +790,15 @@ export const ClientList = () => {
     }} />
 
       {/* Delete Confirmation Dialog */}
-      <DeleteClientDialog
-        clientId={deletingClient?.id || null}
-        clientName={deletingClient?.full_name || ''}
-        open={!!deletingClient}
-        onOpenChange={(open) => !open && setDeletingClient(null)}
-        onSuccess={refetch}
-      />
+      {deletingClient && (
+        <DeleteClientDialog
+          clientId={deletingClient.id}
+          clientName={deletingClient.full_name}
+          open={true}
+          onOpenChange={(open) => !open && setDeletingClient(null)}
+          onSuccess={refetch}
+        />
+      )}
 
       {/* VIP Removal Confirmation Dialog */}
       <AlertDialog open={!!vipToggleClient} onOpenChange={(open) => !open && setVipToggleClient(null)}>
