@@ -1,0 +1,238 @@
+import React, { useEffect } from 'react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { Loader2, AlertTriangle, FileText, Calendar, Briefcase } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { AuditLogger } from '@/lib/auditLogger';
+
+interface DeleteClientDialogProps {
+  clientId: string | null;
+  clientName: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
+}
+
+export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, onSuccess }: DeleteClientDialogProps) => {
+  const { toast } = useToast();
+
+  // Fetch all related data
+  const { data: relatedData, isLoading } = useQuery({
+    queryKey: ['client-related-data', clientId],
+    queryFn: async () => {
+      if (!clientId) return null;
+
+      const [casesResult, appointmentsResult] = await Promise.all([
+        supabase.from('cases').select('id, case_title, case_number').eq('client_id', clientId),
+        supabase.from('appointments').select('id, title, start_time').eq('client_id', clientId)
+      ]);
+
+      return {
+        cases: casesResult.data || [],
+        appointments: appointmentsResult.data || []
+      };
+    },
+    enabled: !!clientId && open
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      if (!clientId) throw new Error('No client ID');
+
+      // Delete in the correct order (child records first)
+      // 1. Delete case-related records for each case
+      if (relatedData?.cases && relatedData.cases.length > 0) {
+        const caseIds = relatedData.cases.map(c => c.id);
+
+        await Promise.all([
+          supabase.from('case_activities').delete().in('case_id', caseIds),
+          supabase.from('case_contacts').delete().in('case_id', caseIds),
+          supabase.from('case_documents').delete().in('case_id', caseIds),
+          supabase.from('case_hearings').delete().in('case_id', caseIds),
+          supabase.from('case_objections').delete().in('case_id', caseIds),
+          supabase.from('case_orders').delete().in('case_id', caseIds),
+          supabase.from('case_relations').delete().in('case_id', caseIds),
+          supabase.from('case_emails').delete().in('case_id', caseIds),
+          supabase.from('case_files').delete().in('case_id', caseIds),
+          supabase.from('case_notes').delete().in('case_id', caseIds),
+          supabase.from('court_hearings').delete().in('case_id', caseIds)
+        ]);
+      }
+
+      // 2. Delete cases
+      if (relatedData?.cases && relatedData.cases.length > 0) {
+        const { error: casesError } = await supabase
+          .from('cases')
+          .delete()
+          .eq('client_id', clientId);
+        if (casesError) throw casesError;
+      }
+
+      // 3. Delete appointments
+      if (relatedData?.appointments && relatedData.appointments.length > 0) {
+        const { error: appointmentsError } = await supabase
+          .from('appointments')
+          .delete()
+          .eq('client_id', clientId);
+        if (appointmentsError) throw appointmentsError;
+      }
+
+      // 4. Finally, delete the client
+      const { error: clientError } = await supabase
+        .from('clients')
+        .delete()
+        .eq('id', clientId);
+      if (clientError) throw clientError;
+
+      // Log the deletion
+      await AuditLogger.logDataAccess('client', 'delete', clientId, {
+        client_name: clientName,
+        deleted_cases: relatedData?.cases.length || 0,
+        deleted_appointments: relatedData?.appointments.length || 0
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: `${clientName} and all related data deleted successfully`
+      });
+      onOpenChange(false);
+      onSuccess?.();
+    },
+    onError: (error: any) => {
+      console.error('Error deleting client:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete client",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const handleDelete = () => {
+    deleteMutation.mutate();
+  };
+
+  const totalItems = (relatedData?.cases.length || 0) + (relatedData?.appointments.length || 0);
+
+  return (
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent className="bg-white max-w-2xl max-h-[80vh] overflow-y-auto">
+        <AlertDialogHeader>
+          <AlertDialogTitle className="flex items-center gap-2 text-red-600">
+            <AlertTriangle className="w-5 h-5" />
+            Delete Client - {clientName}
+          </AlertDialogTitle>
+          <AlertDialogDescription className="text-left space-y-4">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+              </div>
+            ) : (
+              <>
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <p className="text-sm text-red-800 font-medium">
+                    ⚠️ This action cannot be undone. The following data will be permanently deleted:
+                  </p>
+                </div>
+
+                {totalItems === 0 ? (
+                  <div className="text-center py-4 text-gray-600">
+                    No related data found. Only the client record will be deleted.
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Cases */}
+                    {relatedData?.cases && relatedData.cases.length > 0 && (
+                      <div className="border rounded-lg p-4 bg-gray-50">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Briefcase className="w-4 h-4 text-blue-600" />
+                          <h4 className="font-semibold text-gray-900">
+                            Cases ({relatedData.cases.length})
+                          </h4>
+                        </div>
+                        <div className="space-y-2 max-h-40 overflow-y-auto">
+                          {relatedData.cases.slice(0, 10).map((case_) => (
+                            <div key={case_.id} className="text-sm text-gray-700 bg-white p-2 rounded border">
+                              <div className="font-medium">{case_.case_title}</div>
+                              {case_.case_number && (
+                                <div className="text-xs text-gray-500">{case_.case_number}</div>
+                              )}
+                            </div>
+                          ))}
+                          {relatedData.cases.length > 10 && (
+                            <div className="text-xs text-gray-500 italic">
+                              + {relatedData.cases.length - 10} more cases
+                            </div>
+                          )}
+                        </div>
+                        <div className="mt-2 text-xs text-gray-600 bg-white p-2 rounded border">
+                          This includes all case documents, hearings, orders, objections, contacts, and activities.
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Appointments */}
+                    {relatedData?.appointments && relatedData.appointments.length > 0 && (
+                      <div className="border rounded-lg p-4 bg-gray-50">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Calendar className="w-4 h-4 text-green-600" />
+                          <h4 className="font-semibold text-gray-900">
+                            Appointments ({relatedData.appointments.length})
+                          </h4>
+                        </div>
+                        <div className="space-y-2 max-h-40 overflow-y-auto">
+                          {relatedData.appointments.slice(0, 10).map((apt) => (
+                            <div key={apt.id} className="text-sm text-gray-700 bg-white p-2 rounded border">
+                              <div className="font-medium">{apt.title || 'Appointment'}</div>
+                              {apt.start_time && (
+                                <div className="text-xs text-gray-500">
+                                  {new Date(apt.start_time).toLocaleDateString()}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                          {relatedData.appointments.length > 10 && (
+                            <div className="text-xs text-gray-500 italic">
+                              + {relatedData.appointments.length - 10} more appointments
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Summary */}
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                      <p className="text-sm text-yellow-800">
+                        <strong>Total items to be deleted:</strong> {totalItems} record{totalItems !== 1 ? 's' : ''} plus all their associated data
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={deleteMutation.isPending}>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleDelete}
+            disabled={isLoading || deleteMutation.isPending}
+            className="bg-red-600 hover:bg-red-700 text-white"
+          >
+            {deleteMutation.isPending ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Deleting...
+              </>
+            ) : (
+              'Delete Everything'
+            )}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+};

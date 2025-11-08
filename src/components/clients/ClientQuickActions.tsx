@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { MoreHorizontal, Plus, Calendar, FileText, StickyNote, Briefcase, Edit, Trash2, Users, Mail } from 'lucide-react';
 import { AssignToCaseDialog } from './AssignToCaseDialog';
 import { CreateAppointmentDialog } from '@/components/appointments/CreateAppointmentDialog';
 import { UploadDocumentForClientDialog } from '@/components/documents/UploadDocumentForClientDialog';
 import { CreateNoteDialog } from '@/components/notes/CreateNoteDialog';
 import { EditClientDialog } from './EditClientDialog';
+import { DeleteClientDialog } from './DeleteClientDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useDialog } from '@/hooks/use-dialog';
@@ -51,27 +51,6 @@ export const ClientQuickActions: React.FC<ClientQuickActionsProps> = ({
       toast({
         title: "Error",
         description: "Failed to load client data",
-        variant: "destructive"
-      });
-    }
-  };
-  const handleDeleteClient = async () => {
-    try {
-      const {
-        error
-      } = await supabase.from('clients').delete().eq('id', clientId);
-      if (error) throw error;
-      toast({
-        title: "Success",
-        description: "Client deleted successfully"
-      });
-      onAction();
-      setShowDeleteDialog(false);
-    } catch (error) {
-      console.error('Error deleting client:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete client",
         variant: "destructive"
       });
     }
@@ -151,21 +130,12 @@ export const ClientQuickActions: React.FC<ClientQuickActionsProps> = ({
 
       <SendEmailDialog open={showEmailDialog} onClose={() => setShowEmailDialog(false)} clientEmail={clientEmail} clientName={clientName} />
 
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Client</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete {clientName}? This action cannot be undone and will permanently remove the client and all associated data.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteClient} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete Client
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteClientDialog
+        clientId={clientId}
+        clientName={clientName}
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        onSuccess={onAction}
+      />
     </>;
 };

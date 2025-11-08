@@ -14,6 +14,7 @@ import { EditClientDialog } from './EditClientDialog';
 import { ClientDetailsDialog } from './ClientDetailsDialog';
 import { BulkImportClientsDialog } from './BulkImportClientsDialog';
 import { SyncClientsToZoho } from './SyncClientsToZoho';
+import { DeleteClientDialog } from './DeleteClientDialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
@@ -187,29 +188,6 @@ export const ClientList = () => {
       return <ArrowUpDown className="w-3 h-3 opacity-40" />;
     }
     return sortDirection === 'asc' ? <ArrowUpDown className="w-3 h-3 rotate-180" /> : <ArrowUpDown className="w-3 h-3" />;
-  };
-  const handleDeleteClient = async () => {
-    if (!deletingClient) return;
-    
-    try {
-      const {
-        error
-      } = await supabase.from('clients').delete().eq('id', deletingClient.id);
-      if (error) throw error;
-      toast({
-        title: "Success",
-        description: "Client deleted successfully"
-      });
-      setDeletingClient(null);
-      refetch();
-    } catch (error) {
-      console.error('Error deleting client:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete client",
-        variant: "destructive"
-      });
-    }
   };
 
   const handleToggleVIP = async (clientId: string, currentVipStatus: boolean, clientName: string) => {
@@ -812,23 +790,13 @@ export const ClientList = () => {
     }} />
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deletingClient} onOpenChange={(open) => !open && setDeletingClient(null)}>
-        <AlertDialogContent className="bg-white">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Client</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete <span className="font-semibold">{deletingClient?.full_name}</span>? 
-              This action cannot be undone and will remove all associated data.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteClient} className="bg-red-600 hover:bg-red-700">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteClientDialog
+        clientId={deletingClient?.id || null}
+        clientName={deletingClient?.full_name || ''}
+        open={!!deletingClient}
+        onOpenChange={(open) => !open && setDeletingClient(null)}
+        onSuccess={refetch}
+      />
 
       {/* VIP Removal Confirmation Dialog */}
       <AlertDialog open={!!vipToggleClient} onOpenChange={(open) => !open && setVipToggleClient(null)}>
