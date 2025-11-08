@@ -109,9 +109,9 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
       // Log the deletion
       await AuditLogger.logDataAccess('client', 'delete', clientId, {
         client_name: clientName,
-        deleted_cases: relatedData?.cases.length || 0,
-        deleted_appointments: relatedData?.appointments.length || 0,
-        deleted_notes: relatedData?.notes.length || 0
+        deleted_cases: relatedData?.cases?.length || 0,
+        deleted_appointments: relatedData?.appointments?.length || 0,
+        deleted_notes: relatedData?.notes?.length || 0
       });
     },
     onSuccess: () => {
@@ -145,7 +145,7 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
     deleteMutation.mutate();
   };
 
-  const totalItems = (relatedData?.cases.length || 0) + (relatedData?.appointments.length || 0) + (relatedData?.notes.length || 0);
+  const totalItems = (relatedData?.cases?.length || 0) + (relatedData?.appointments?.length || 0) + (relatedData?.notes?.length || 0);
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
