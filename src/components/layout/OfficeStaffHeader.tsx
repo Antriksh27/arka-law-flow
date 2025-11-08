@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import KnockNotificationInbox from '@/components/notifications/KnockNotificationInbox';
+import { ChatDropdown } from '@/components/messages/ChatDropdown';
 const OfficeStaffHeader = () => {
   const {
     user,
@@ -52,6 +53,7 @@ const OfficeStaffHeader = () => {
           
           {/* Right Side Actions */}
           <div className="flex items-center gap-3">
+            <ChatDropdown />
             <KnockNotificationInbox />
             
             {/* User Profile Dropdown */}
