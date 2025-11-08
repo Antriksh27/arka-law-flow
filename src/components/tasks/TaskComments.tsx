@@ -48,31 +48,31 @@ export const TaskComments: React.FC<TaskCommentsProps> = ({ taskId, comments = [
       };
 
       // Get current comments
-      const { data: task } = await (supabase as any)
+      const { data: task } = await supabase
         .from('tasks')
         .select('comments')
         .eq('id', taskId)
         .single();
 
-      const currentComments = (task?.comments as Comment[]) || [];
+      const currentComments = (task?.comments as any) || [];
       const updatedComments = [...currentComments, comment];
 
       // Update task with new comment
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('tasks')
-        .update({ comments: updatedComments } as any)
+        .update({ comments: updatedComments })
         .eq('id', taskId);
 
       if (error) throw error;
 
       // Log to history
-      await (supabase as any).from('task_history').insert({
+      await supabase.from('task_history').insert({
         task_id: taskId,
         user_id: user.id,
         user_name: profile?.full_name || 'Unknown User',
         action: 'commented',
         changes: { comment: text.trim() }
-      } as any);
+      });
 
       return comment;
     },

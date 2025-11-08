@@ -136,14 +136,15 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       const user = await supabase.auth.getUser();
       if (!user.data.user) throw new Error('Not authenticated');
 
-      const normalizedPriority = data.priority === 'critical' ? 'high' : data.priority;
-      const taskData: any = {
+      const taskData = {
         title: data.title,
         description: data.description || null,
         assigned_to: data.assigned_to || null,
-        priority: normalizedPriority,
+        assigned_by: user.data.user.id,
+        priority: data.priority,
         status: data.status,
         due_date: data.due_date ? new Date(data.due_date).toISOString().split('T')[0] : null,
+        reminder_time: data.reminder_time ? new Date(data.reminder_time).toISOString() : null,
         case_id: data.link_type === 'case' ? data.case_id || null : null,
         client_id: data.link_type === 'client' ? data.client_id || null : null,
         created_by: user.data.user.id,
@@ -152,7 +153,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       };
 
       console.log('Creating task with data:', taskData);
-      const { error } = await (supabase as any).from('tasks').insert([taskData]);
+      const { error } = await supabase.from('tasks').insert([taskData]);
       if (error) throw error;
     },
     onSuccess: () => {

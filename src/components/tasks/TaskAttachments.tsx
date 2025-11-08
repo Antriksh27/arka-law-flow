@@ -36,29 +36,29 @@ export const TaskAttachments: React.FC<TaskAttachmentsProps> = ({ taskId, attach
         .getPublicUrl(filePath);
 
       // Get current attachments
-      const { data: task } = await (supabase as any)
+      const { data: task } = await supabase
         .from('tasks')
         .select('attachments')
         .eq('id', taskId)
         .single();
 
-      const currentAttachments = (task?.attachments as string[]) || [];
+      const currentAttachments = (task?.attachments as any) || [];
       const updatedAttachments = [...currentAttachments, publicUrl];
 
       // Update task
-      const { error: updateError } = await (supabase as any)
+      const { error: updateError } = await supabase
         .from('tasks')
-        .update({ attachments: updatedAttachments } as any)
+        .update({ attachments: updatedAttachments })
         .eq('id', taskId);
 
       if (updateError) throw updateError;
 
       // Log to history
-      await (supabase as any).from('task_history').insert({
+      await supabase.from('task_history').insert({
         task_id: taskId,
         action: 'attachment_added',
         changes: { file_name: file.name, file_url: publicUrl }
-      } as any);
+      });
 
       return publicUrl;
     },
@@ -80,19 +80,19 @@ export const TaskAttachments: React.FC<TaskAttachmentsProps> = ({ taskId, attach
   const deleteFileMutation = useMutation({
     mutationFn: async (fileUrl: string) => {
       // Get current attachments
-      const { data: task } = await (supabase as any)
+      const { data: task } = await supabase
         .from('tasks')
         .select('attachments')
         .eq('id', taskId)
         .single();
 
-      const currentAttachments = (task?.attachments as string[]) || [];
+      const currentAttachments = (task?.attachments as any) || [];
       const updatedAttachments = currentAttachments.filter((url: string) => url !== fileUrl);
 
       // Update task
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('tasks')
-        .update({ attachments: updatedAttachments } as any)
+        .update({ attachments: updatedAttachments })
         .eq('id', taskId);
 
       if (error) throw error;
