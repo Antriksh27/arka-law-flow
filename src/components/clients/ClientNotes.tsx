@@ -80,7 +80,7 @@ export const ClientNotes: React.FC<ClientNotesProps> = ({ clientId }) => {
       }
       return data;
     },
-    enabled: !!user && (role === 'office_staff' || role === 'admin')
+    enabled: !!user
   });
 
   // Add internal note mutation
@@ -206,7 +206,7 @@ export const ClientNotes: React.FC<ClientNotesProps> = ({ clientId }) => {
   return (
     <div className="space-y-6">
       {/* Internal Office Notes - Only visible to office_staff, admin, and note creators */}
-      {(role === 'office_staff' || role === 'admin') && (
+      {(role === 'office_staff' || role === 'admin' || (internalNotes && internalNotes.length > 0)) && (
         <Card className="bg-white rounded-2xl shadow-sm">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -215,7 +215,7 @@ export const ClientNotes: React.FC<ClientNotesProps> = ({ clientId }) => {
                 <CardTitle>Internal Office Notes</CardTitle>
                 <Badge variant="outline" className="text-xs">Staff Only</Badge>
               </div>
-              {!isAddingInternalNote && (
+              {!isAddingInternalNote && (role === 'office_staff' || role === 'admin') && (
                 <Button
                   size="sm"
                   onClick={() => setIsAddingInternalNote(true)}
