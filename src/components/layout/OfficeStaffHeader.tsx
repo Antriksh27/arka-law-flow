@@ -16,7 +16,6 @@ const OfficeStaffHeader = () => {
     { name: 'Hearings', href: '/staff/hearings' },
     { name: 'Documents', href: '/staff/documents' },
     { name: 'Tasks', href: '/staff/tasks' },
-    { name: 'Instructions', href: '/staff/instructions' },
     { name: 'Invoices', href: '/staff/invoices' },
     { name: 'Chat', href: '/chat' },
   ];
