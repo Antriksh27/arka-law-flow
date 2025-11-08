@@ -29,19 +29,38 @@ export const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
   const { data: taskData, isLoading } = useQuery({
     queryKey: ['task', taskId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: task, error } = await supabase
         .from('tasks')
         .select(`
           *,
-          assigned_user:profiles!tasks_assigned_to_fkey(full_name),
-          creator:profiles!tasks_created_by_fkey(full_name),
           case:cases!tasks_case_id_fkey(case_title),
           client:clients!tasks_client_id_fkey(full_name)
         `)
         .eq('id', taskId)
         .single();
       if (error) throw error;
-      return data;
+      
+      // Fetch team member names separately
+      const userIds = [task.created_by, task.assigned_to].filter(Boolean);
+      if (userIds.length > 0) {
+        const { data: members } = await supabase
+          .from('team_members')
+          .select('user_id, full_name')
+          .in('user_id', userIds);
+        
+        const memberMap: Record<string, string> = {};
+        (members || []).forEach(m => {
+          if (m.user_id) memberMap[m.user_id] = m.full_name;
+        });
+        
+        return {
+          ...task,
+          creator: task.created_by ? { full_name: memberMap[task.created_by] } : null,
+          assigned_user: task.assigned_to ? { full_name: memberMap[task.assigned_to] } : null,
+        } as any;
+      }
+      
+      return { ...task, creator: null, assigned_user: null } as any;
     },
     enabled: open && !!taskId
   });
