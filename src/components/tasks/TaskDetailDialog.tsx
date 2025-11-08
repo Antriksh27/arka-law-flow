@@ -10,7 +10,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { TaskComments } from './TaskComments';
 import { TaskAttachments } from './TaskAttachments';
 import { TaskTimeline } from './TaskTimeline';
-
 interface TaskDetailDialogProps {
   open: boolean;
   onClose: () => void;
@@ -18,7 +17,6 @@ interface TaskDetailDialogProps {
   onEdit: (taskId: string) => void;
   onDelete: (taskId: string) => void;
 }
-
 export const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
   open,
   onClose,
@@ -26,45 +24,50 @@ export const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
   onEdit,
   onDelete
 }) => {
-  const { data: taskData, isLoading } = useQuery({
+  const {
+    data: taskData,
+    isLoading
+  } = useQuery({
     queryKey: ['task', taskId],
     queryFn: async () => {
-      const { data: task, error } = await supabase
-        .from('tasks')
-        .select(`
+      const {
+        data: task,
+        error
+      } = await supabase.from('tasks').select(`
           *,
           case:cases!tasks_case_id_fkey(case_title),
           client:clients!tasks_client_id_fkey(full_name)
-        `)
-        .eq('id', taskId)
-        .single();
+        `).eq('id', taskId).single();
       if (error) throw error;
-      
+
       // Fetch team member names separately
       const userIds = [task.created_by, task.assigned_to].filter(Boolean);
       if (userIds.length > 0) {
-        const { data: members } = await supabase
-          .from('team_members')
-          .select('user_id, full_name')
-          .in('user_id', userIds);
-        
+        const {
+          data: members
+        } = await supabase.from('team_members').select('user_id, full_name').in('user_id', userIds);
         const memberMap: Record<string, string> = {};
         (members || []).forEach(m => {
           if (m.user_id) memberMap[m.user_id] = m.full_name;
         });
-        
         return {
           ...task,
-          creator: task.created_by ? { full_name: memberMap[task.created_by] } : null,
-          assigned_user: task.assigned_to ? { full_name: memberMap[task.assigned_to] } : null,
+          creator: task.created_by ? {
+            full_name: memberMap[task.created_by]
+          } : null,
+          assigned_user: task.assigned_to ? {
+            full_name: memberMap[task.assigned_to]
+          } : null
         } as any;
       }
-      
-      return { ...task, creator: null, assigned_user: null } as any;
+      return {
+        ...task,
+        creator: null,
+        assigned_user: null
+      } as any;
     },
     enabled: open && !!taskId
   });
-
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'critical':
@@ -79,7 +82,6 @@ export const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
         return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'todo':
@@ -92,38 +94,29 @@ export const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
         return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
-
   const isOverdue = (dueDate: string | null) => {
     if (!dueDate) return false;
     return new Date(dueDate) < new Date() && taskData?.status !== 'completed';
   };
-
   if (isLoading) {
-    return (
-      <Dialog open={open} onOpenChange={onClose}>
+    return <Dialog open={open} onOpenChange={onClose}>
         <DialogContent className="max-w-2xl">
           <div className="flex items-center justify-center py-8">
             Loading task details...
           </div>
         </DialogContent>
-      </Dialog>
-    );
+      </Dialog>;
   }
-
   if (!taskData) {
-    return (
-      <Dialog open={open} onOpenChange={onClose}>
+    return <Dialog open={open} onOpenChange={onClose}>
         <DialogContent className="max-w-2xl">
           <div className="flex items-center justify-center py-8">
             Task not found
           </div>
         </DialogContent>
-      </Dialog>
-    );
+      </Dialog>;
   }
-
-  return (
-    <Dialog open={open} onOpenChange={onClose}>
+  return <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-white border border-gray-200 shadow-lg">
         <DialogHeader className="pb-4 border-b border-gray-100">
           <div className="flex items-start justify-between">
@@ -138,40 +131,18 @@ export const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                 <Badge className={`${getPriorityColor(taskData.priority)} text-xs rounded-full border`}>
                   {taskData.priority}
                 </Badge>
-                {isOverdue(taskData.due_date) && (
-                  <Badge className="bg-red-100 text-red-700 border-red-200 text-xs rounded-full border">
+                {isOverdue(taskData.due_date) && <Badge className="bg-red-100 text-red-700 border-red-200 text-xs rounded-full border">
                     Overdue
-                  </Badge>
-                )}
+                  </Badge>}
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onEdit(taskId)}
-                className="text-blue-600 border-blue-200 hover:bg-blue-50"
-              >
-                <Edit className="w-4 h-4 mr-1" />
-                Edit
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onDelete(taskId)}
-                className="text-red-600 border-red-200 hover:bg-red-50"
-              >
-                <Trash2 className="w-4 h-4 mr-1" />
-                Delete
-              </Button>
-            </div>
+            
           </div>
         </DialogHeader>
 
         <div className="space-y-6 pt-4">
           {/* Description */}
-          {taskData.description && (
-            <div className="space-y-2">
+          {taskData.description && <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <FileText className="w-4 h-4 text-gray-500" />
                 <h3 className="font-medium text-gray-900">Description</h3>
@@ -179,8 +150,7 @@ export const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
               <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                 <p className="text-gray-700 whitespace-pre-wrap">{taskData.description}</p>
               </div>
-            </div>
-          )}
+            </div>}
 
           {/* Task Details Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -211,8 +181,7 @@ export const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
             </div>
 
             {/* Due Date */}
-            {taskData.due_date && (
-              <div className="space-y-2">
+            {taskData.due_date && <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-gray-500" />
                   <h3 className="font-medium text-gray-900">Due Date</h3>
@@ -223,12 +192,10 @@ export const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                     {isOverdue(taskData.due_date) && ' (Overdue)'}
                   </p>
                 </div>
-              </div>
-            )}
+              </div>}
 
             {/* Reminder */}
-            {(taskData as any).reminder_time && (
-              <div className="space-y-2">
+            {(taskData as any).reminder_time && <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Bell className="w-4 h-4 text-gray-500" />
                   <h3 className="font-medium text-gray-900">Reminder</h3>
@@ -238,8 +205,7 @@ export const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                     {TimeUtils.formatDateTime((taskData as any).reminder_time, 'dd/MM/yyyy HH:mm')}
                   </p>
                 </div>
-              </div>
-            )}
+              </div>}
 
             {/* Created Date */}
             <div className="space-y-2">
@@ -256,72 +222,56 @@ export const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
           </div>
 
           {/* Linked Case/Client */}
-          {(taskData.case || taskData.client) && (
-            <div className="space-y-2">
+          {(taskData.case || taskData.client) && <div className="space-y-2">
               <h3 className="font-medium text-gray-900">Linked To</h3>
               <div className="space-y-2">
-                {taskData.case && (
-                  <div className="flex items-center gap-2 bg-blue-50 rounded-lg p-3 border border-blue-200">
+                {taskData.case && <div className="flex items-center gap-2 bg-blue-50 rounded-lg p-3 border border-blue-200">
                     <FileText className="w-4 h-4 text-blue-600" />
                     <span className="text-blue-700 font-medium">Case:</span>
                     <span className="text-blue-600">{taskData.case.case_title}</span>
-                  </div>
-                )}
-                {taskData.client && (
-                  <div className="flex items-center gap-2 bg-green-50 rounded-lg p-3 border border-green-200">
+                  </div>}
+                {taskData.client && <div className="flex items-center gap-2 bg-green-50 rounded-lg p-3 border border-green-200">
                     <User className="w-4 h-4 text-green-600" />
                     <span className="text-green-700 font-medium">Client:</span>
                     <span className="text-green-600">{taskData.client.full_name}</span>
-                  </div>
-                )}
+                  </div>}
               </div>
-            </div>
-          )}
+            </div>}
 
           {/* Tags */}
-          {taskData.tags && taskData.tags.length > 0 && (
-            <div className="space-y-2">
+          {taskData.tags && taskData.tags.length > 0 && <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Tag className="w-4 h-4 text-gray-500" />
                 <h3 className="font-medium text-gray-900">Tags</h3>
               </div>
               <div className="flex flex-wrap gap-2">
-                {taskData.tags.map((tag: string, index: number) => (
-                  <Badge key={index} variant="outline" className="bg-gray-50">
+                {taskData.tags.map((tag: string, index: number) => <Badge key={index} variant="outline" className="bg-gray-50">
                     {tag}
-                  </Badge>
-                ))}
+                  </Badge>)}
               </div>
-            </div>
-          )}
+            </div>}
 
           {/* Task Times */}
-          {(taskData.start_time || taskData.end_time) && (
-            <div className="space-y-2">
+          {(taskData.start_time || taskData.end_time) && <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-gray-500" />
                 <h3 className="font-medium text-gray-900">Time Tracking</h3>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {taskData.start_time && (
-                  <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                {taskData.start_time && <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
                     <p className="text-xs text-gray-500 mb-1">Started</p>
                     <p className="text-gray-700">
                       {TimeUtils.formatDateTime(taskData.start_time, 'dd/MM/yyyy HH:mm')}
                     </p>
-                  </div>
-                )}
-                {taskData.end_time && (
-                  <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                  </div>}
+                {taskData.end_time && <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
                     <p className="text-xs text-gray-500 mb-1">Completed</p>
                     <p className="text-gray-700">
                       {TimeUtils.formatDateTime(taskData.end_time, 'dd/MM/yyyy HH:mm')}
                     </p>
-                  </div>
-                )}
+                  </div>}
               </div>
-            </div>
-          )}
+            </div>}
 
           {/* Last Updated */}
           <div className="space-y-2">
@@ -352,6 +302,5 @@ export const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
           <TaskTimeline taskId={taskId} />
         </div>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 };
