@@ -1,5 +1,4 @@
-
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 interface DialogContextType {
@@ -9,7 +8,7 @@ interface DialogContextType {
 
 const DialogContext = createContext<DialogContextType | undefined>(undefined);
 
-export const DialogProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const DialogProvider = ({ children }: { children: ReactNode }) => {
   const [dialogContent, setDialogContent] = useState<ReactNode | null>(null);
 
   const openDialog = (content: ReactNode) => {
@@ -23,7 +22,6 @@ export const DialogProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   return (
     <DialogContext.Provider value={{ openDialog, closeDialog }}>
       {children}
-      {/* This Dialog provides the required context/portal */}
       <Dialog open={!!dialogContent} onOpenChange={(open) => { if (!open) closeDialog(); }}>
         <DialogContent className="max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto p-6">
           {dialogContent}
