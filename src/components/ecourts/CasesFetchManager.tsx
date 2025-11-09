@@ -285,6 +285,9 @@ export const CasesFetchManager = () => {
     if (fetchStatusFilter === "unfetched" && (c.fetch_status || c.is_auto_fetched)) {
       return false;
     }
+    if (fetchStatusFilter === "failed" && c.fetch_status !== 'failed') {
+      return false;
+    }
     if (fetchStatusFilter === "no_cnr" && c.cnr_number) {
       return false;
     }
@@ -502,10 +505,11 @@ export const CasesFetchManager = () => {
               <SelectTrigger className="w-full md:w-40">
                 <SelectValue placeholder="Fetch Status" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-background z-50">
                 <SelectItem value="all">All</SelectItem>
                 <SelectItem value="fetched">Fetched</SelectItem>
                 <SelectItem value="unfetched">Not Fetched</SelectItem>
+                <SelectItem value="failed">Failed</SelectItem>
                 <SelectItem value="no_cnr">No CNR</SelectItem>
               </SelectContent>
             </Select>
