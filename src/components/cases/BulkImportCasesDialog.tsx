@@ -86,6 +86,7 @@ export const BulkImportCasesDialog = ({
           reference_number: 'REF-2024-001',
           case_title: 'Contract Dispute Case',
           case_number: 'CIV/2024/001',
+          by_against: 'by',
           case_type: 'civil',
           status: 'open',
           priority: 'medium',
@@ -103,6 +104,7 @@ export const BulkImportCasesDialog = ({
           reference_number: 'REF-2024-002',
           case_title: 'Property Dispute',
           case_number: 'CIV/2024/002',
+          by_against: 'against',
           case_type: 'civil',
           status: 'active',
           priority: 'high',
@@ -263,6 +265,7 @@ export const BulkImportCasesDialog = ({
             title: caseTitle, // For compatibility
             reference_number: cleanField(row.reference_number || row['Reference Number'] || row['reference_number'] || row['REFERENCE NUMBER']),
             case_number: cleanField(row.case_number || row['Case Number'] || row['case_number']),
+            by_against: (cleanField(row.by_against || row['By/Against'] || row['by_against'] || row['BY/AGAINST']) || null)?.toLowerCase() as any,
             case_type: (cleanField(row.case_type || row['Case Type'] || row['case_type']) || 'civil').toLowerCase() as any,
             status: (cleanField(row.status || row['Status']) || 'open').toLowerCase() as any,
             priority: (cleanField(row.priority || row['Priority']) || 'medium').toLowerCase() as any,
@@ -281,6 +284,11 @@ export const BulkImportCasesDialog = ({
           };
 
           // Validate enums
+          const validByAgainst = ['by', 'against'];
+          if (caseData.by_against && !validByAgainst.includes(caseData.by_against)) {
+            caseData.by_against = null;
+          }
+
           const validCaseTypes = ['civil', 'criminal', 'family', 'corporate', 'tax', 'labor', 'property', 'other'];
           if (!validCaseTypes.includes(caseData.case_type)) {
             caseData.case_type = 'civil';
@@ -482,6 +490,7 @@ export const BulkImportCasesDialog = ({
               <li>Fill in your case data following the template structure</li>
               <li>Case title is required for each case</li>
               <li>Column names are flexible (e.g., "Case Title", "case_title", "TITLE" all work)</li>
+              <li>Valid by_against values: by, against (indicates if case is filed by or against the client)</li>
               <li>Valid case types: civil, criminal, family, corporate, tax, labor, property, other</li>
               <li>Valid status values: open, closed, on_hold, active, pending</li>
               <li>Valid priority values: low, medium, high, urgent</li>

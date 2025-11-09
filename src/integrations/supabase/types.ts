@@ -1031,6 +1031,7 @@ export type Database = {
           assigned_users: string[] | null
           bench_type: string | null
           business_type: string | null
+          by_against: Database["public"]["Enums"]["case_by_against_enum"] | null
           case_classification: string | null
           case_number: string | null
           case_sub_type: string | null
@@ -1120,6 +1121,9 @@ export type Database = {
           assigned_users?: string[] | null
           bench_type?: string | null
           business_type?: string | null
+          by_against?:
+            | Database["public"]["Enums"]["case_by_against_enum"]
+            | null
           case_classification?: string | null
           case_number?: string | null
           case_sub_type?: string | null
@@ -1209,6 +1213,9 @@ export type Database = {
           assigned_users?: string[] | null
           bench_type?: string | null
           business_type?: string | null
+          by_against?:
+            | Database["public"]["Enums"]["case_by_against_enum"]
+            | null
           case_classification?: string | null
           case_number?: string | null
           case_sub_type?: string | null
@@ -4377,6 +4384,7 @@ export type Database = {
       app_role: "admin" | "moderator" | "user" | "super_admin"
       appointment_status: "pending" | "confirmed" | "cancelled" | "completed"
       appointment_type: "in-person" | "call" | "video-call" | "other"
+      case_by_against_enum: "by" | "against"
       case_priority_enum: "low" | "medium" | "high"
       case_stage: "new" | "hearing" | "judgment" | "closed"
       case_status_enum:
@@ -4589,6 +4597,7 @@ export const Constants = {
       app_role: ["admin", "moderator", "user", "super_admin"],
       appointment_status: ["pending", "confirmed", "cancelled", "completed"],
       appointment_type: ["in-person", "call", "video-call", "other"],
+      case_by_against_enum: ["by", "against"],
       case_priority_enum: ["low", "medium", "high"],
       case_stage: ["new", "hearing", "judgment", "closed"],
       case_status_enum: [
