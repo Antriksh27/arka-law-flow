@@ -197,6 +197,51 @@ export type Database = {
           },
         ]
       }
+      auto_refresh_logs: {
+        Row: {
+          cases_failed: number
+          cases_processed: number
+          cases_skipped: number
+          cases_succeeded: number
+          created_at: string
+          error_details: Json | null
+          execution_date: string
+          execution_duration_ms: number | null
+          execution_time: string
+          id: string
+          success_details: Json | null
+          total_hearings: number
+        }
+        Insert: {
+          cases_failed?: number
+          cases_processed?: number
+          cases_skipped?: number
+          cases_succeeded?: number
+          created_at?: string
+          error_details?: Json | null
+          execution_date: string
+          execution_duration_ms?: number | null
+          execution_time?: string
+          id?: string
+          success_details?: Json | null
+          total_hearings?: number
+        }
+        Update: {
+          cases_failed?: number
+          cases_processed?: number
+          cases_skipped?: number
+          cases_succeeded?: number
+          created_at?: string
+          error_details?: Json | null
+          execution_date?: string
+          execution_duration_ms?: number | null
+          execution_time?: string
+          id?: string
+          success_details?: Json | null
+          total_hearings?: number
+        }
+        Relationships: []
+      }
       availability_exceptions: {
         Row: {
           created_at: string
