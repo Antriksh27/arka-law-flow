@@ -26,7 +26,7 @@ export const CaseHighlightsCard = ({ cases, isLoading }: CaseHighlightsCardProps
     const statusLower = status.toLowerCase();
     if (statusLower === 'open' || statusLower === 'active') return 'bg-blue-100 text-blue-800';
     if (statusLower === 'closed') return 'bg-gray-100 text-gray-800';
-    if (statusLower === 'pending') return 'bg-yellow-100 text-yellow-800';
+    if (statusLower === 'in_court') return 'bg-yellow-100 text-yellow-800';
     return 'bg-gray-100 text-gray-800';
   };
 

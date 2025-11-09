@@ -123,14 +123,14 @@ export const CasesTable: React.FC<CasesTableProps> = ({
       // Transform the data to match the expected structure
       const mapToLegalkartStatus = (text?: string | null) => {
         const s = (text || '').toLowerCase();
-        if (!s) return 'pending';
+        if (!s) return 'in_court';
         if (
           s.includes('disposed') || s.includes('dismiss') || s.includes('withdraw') ||
           s.includes('decid') || s.includes('complete') || s.includes('settled') || s.includes('close')
         ) {
           return 'disposed';
         }
-        return 'pending';
+        return 'in_court';
       };
 
       const transformedData = data?.map((caseItem: any) => {
@@ -169,14 +169,12 @@ export const CasesTable: React.FC<CasesTableProps> = ({
     switch (status) {
       case 'open':
         return 'bg-blue-100 text-blue-700 border-blue-200';
-      case 'pending':
+      case 'in_court':
         return 'bg-yellow-100 text-yellow-700 border-yellow-200';
       case 'disposed':
         return 'bg-purple-100 text-purple-700 border-purple-200';
       case 'closed':
         return 'bg-gray-100 text-gray-700 border-gray-200';
-      case 'in_court':
-        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
       case 'on_hold':
         return 'bg-orange-100 text-orange-700 border-orange-200';
       default:
