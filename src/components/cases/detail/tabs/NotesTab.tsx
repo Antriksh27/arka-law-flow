@@ -1,116 +1,106 @@
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
-import { Plus, Trash2 } from 'lucide-react';
-import { format } from 'date-fns';
-import { toast } from 'sonner';
+import { NoteCard } from '@/components/notes/NoteCard';
+import { NoteViewDialog } from '@/components/notes/NoteViewDialog';
+import { CreateNoteMultiModal } from '@/components/notes/CreateNoteMultiModal';
+import { EditNoteDialog } from '@/components/notes/EditNoteDialog';
+import { StickyNote, Plus } from 'lucide-react';
+
 interface NotesTabProps {
   caseId: string;
 }
-export const NotesTab: React.FC<NotesTabProps> = ({
-  caseId
-}) => {
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const queryClient = useQueryClient();
-  const {
-    data: notes,
-    isLoading
-  } = useQuery({
+
+export const NotesTab: React.FC<NotesTabProps> = ({ caseId }) => {
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [editingNote, setEditingNote] = useState<any>(null);
+  const [viewingNote, setViewingNote] = useState<any>(null);
+
+  const { data: notes, isLoading } = useQuery({
     queryKey: ['case-notes', caseId],
     queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from('notes_v2').select('*, profiles(full_name)').eq('case_id', caseId).order('created_at', {
-        ascending: false
-      });
+      const { data, error } = await supabase
+        .from('notes_v2')
+        .select(`
+          *,
+          profiles!notes_v2_created_by_fkey(full_name)
+        `)
+        .eq('case_id', caseId)
+        .order('is_pinned', { ascending: false })
+        .order('updated_at', { ascending: false });
+      
       if (error) throw error;
-      return data;
+      return data || [];
     }
   });
-  const createNote = useMutation({
-    mutationFn: async () => {
-      const {
-        error
-      } = await supabase.from('notes_v2').insert({
-        case_id: caseId,
-        title,
-        content,
-        created_by: (await supabase.auth.getUser()).data.user?.id
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['case-notes', caseId]
-      });
-      setTitle('');
-      setContent('');
-      toast.success('Note created successfully');
-    },
-    onError: () => {
-      toast.error('Failed to create note');
-    }
-  });
-  const deleteNote = useMutation({
-    mutationFn: async (noteId: string) => {
-      const {
-        error
-      } = await supabase.from('notes_v2').delete().eq('id', noteId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['case-notes', caseId]
-      });
-      toast.success('Note deleted successfully');
-    },
-    onError: () => {
-      toast.error('Failed to delete note');
-    }
-  });
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title.trim() || !content.trim()) {
-      toast.error('Please fill in all fields');
-      return;
-    }
-    createNote.mutate();
-  };
-  return <div className="space-y-6">
-      {/* Create Note Form */}
-      <form onSubmit={handleSubmit} className="space-y-4 p-4 rounded-lg bg-slate-50">
-        <h3 className="text-lg font-semibold">Add New Note</h3>
-        <Input placeholder="Note title" value={title} onChange={e => setTitle(e.target.value)} />
-        <Textarea placeholder="Note content" value={content} onChange={e => setContent(e.target.value)} rows={4} />
-        <Button type="submit" disabled={createNote.isPending}>
+
+  if (isLoading) {
+    return <div className="text-center py-8">Loading notes...</div>;
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-xl font-semibold">Notes</h3>
+        <Button 
+          onClick={() => setShowCreateDialog(true)}
+        >
           <Plus className="w-4 h-4 mr-2" />
           Add Note
         </Button>
-      </form>
-
-      {/* Notes List */}
-      <div className="space-y-4">
-        {isLoading ? <div className="text-center py-8">
-            <p className="text-muted-foreground">Loading notes...</p>
-          </div> : notes && notes.length > 0 ? notes.map((note: any) => <div key={note.id} className="p-4 border border-border rounded-lg">
-              <div className="flex items-start justify-between mb-2">
-                <h4 className="font-semibold">{note.title}</h4>
-                <Button variant="ghost" size="sm" onClick={() => deleteNote.mutate(note.id)}>
-                  <Trash2 className="w-4 h-4 text-destructive" />
-                </Button>
-              </div>
-              <p className="text-sm text-muted-foreground mb-2">{note.content}</p>
-              <div className="text-xs text-muted-foreground">
-                {note.profiles?.full_name} • {format(new Date(note.created_at), 'dd/MM/yyyy HH:mm')}
-              </div>
-            </div>) : <div className="text-center py-8">
-            <p className="text-muted-foreground">No notes yet. Add your first note above.</p>
-          </div>}
       </div>
-    </div>;
+
+      {notes && notes.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {notes.map((note) => (
+            <NoteCard
+              key={note.id}
+              note={note}
+              onEdit={() => setEditingNote(note)}
+              onDelete={() => {
+                // Handle delete - this will be handled by the NoteCard component
+              }}
+              onTogglePin={() => {
+                // Handle toggle pin - this will be handled by the NoteCard component
+              }}
+              onView={() => setViewingNote(note)}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-12 text-muted">
+          <StickyNote className="w-12 h-12 mx-auto mb-4 text-muted" />
+          <p>No notes created yet</p>
+          <Button 
+            onClick={() => setShowCreateDialog(true)} 
+            className="mt-4"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Create First Note
+          </Button>
+        </div>
+      )}
+
+      <CreateNoteMultiModal
+        open={showCreateDialog}
+        onClose={() => setShowCreateDialog(false)}
+        caseId={caseId}
+      />
+
+      {editingNote && (
+        <EditNoteDialog
+          note={editingNote}
+          open={!!editingNote}
+          onClose={() => setEditingNote(null)}
+        />
+      )}
+
+      <NoteViewDialog
+        note={viewingNote}
+        open={!!viewingNote}
+        onClose={() => setViewingNote(null)}
+      />
+    </div>
+  );
 };
