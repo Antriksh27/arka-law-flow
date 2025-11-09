@@ -45,6 +45,15 @@ export const BulkImportCasesDialog = ({
     return cnr.replace(/[-\s]/g, '').toUpperCase();
   };
 
+  // Normalize client name for matching
+  const normalizeClientName = (name: string): string => {
+    return name
+      .toLowerCase()
+      .replace(/[.\s]+/g, ' ') // Replace periods and multiple spaces with single space
+      .replace(/&/g, 'and')     // Normalize ampersand
+      .trim();
+  };
+
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
@@ -137,29 +146,19 @@ export const BulkImportCasesDialog = ({
         }
 
         if (clientName) {
-          // Try exact match first
-          let { data: client } = await supabase
+          const normalizedInputName = normalizeClientName(clientName);
+          
+          // Get all clients and find best match
+          const { data: allClients } = await supabase
             .from('clients')
             .select('id, full_name')
-            .eq('firm_id', teamMember.firm_id)
-            .ilike('full_name', clientName)
-            .limit(1)
-            .maybeSingle();
+            .eq('firm_id', teamMember.firm_id);
 
-          // If no exact match, try fuzzy match
-          if (!client) {
-            const { data: fuzzyClient } = await supabase
-              .from('clients')
-              .select('id, full_name')
-              .eq('firm_id', teamMember.firm_id)
-              .ilike('full_name', `%${clientName}%`)
-              .limit(1)
-              .maybeSingle();
-            
-            client = fuzzyClient;
-          }
+          const matchedDbClient = allClients?.find(c => 
+            normalizeClientName(c.full_name) === normalizedInputName
+          );
 
-          matchedClient = client?.full_name || null;
+          matchedClient = matchedDbClient?.full_name || null;
         }
 
         clientMatches.push({
@@ -351,31 +350,21 @@ export const BulkImportCasesDialog = ({
           const clientName = cleanField(row.client_name || row['Client Name'] || row['client_name']);
           
           if (clientName) {
-            // Try exact match first
-            let { data: client } = await supabase
+            const normalizedInputName = normalizeClientName(clientName);
+            
+            // Get all clients and find best match
+            const { data: allClients } = await supabase
               .from('clients')
               .select('id, full_name')
-              .eq('firm_id', teamMember.firm_id)
-              .ilike('full_name', clientName)
-              .limit(1)
-              .maybeSingle();
+              .eq('firm_id', teamMember.firm_id);
 
-            // If no exact match, try fuzzy match
-            if (!client) {
-              const { data: fuzzyClient } = await supabase
-                .from('clients')
-                .select('id, full_name')
-                .eq('firm_id', teamMember.firm_id)
-                .ilike('full_name', `%${clientName}%`)
-                .limit(1)
-                .maybeSingle();
-              
-              client = fuzzyClient;
-            }
+            const matchedClient = allClients?.find(c => 
+              normalizeClientName(c.full_name) === normalizedInputName
+            );
             
-            if (client) {
-              clientId = client.id;
-              matchedClientName = client.full_name;
+            if (matchedClient) {
+              clientId = matchedClient.id;
+              matchedClientName = matchedClient.full_name;
             } else {
               clientsNotFound.push(`Row ${rowNumber}: ${clientName}`);
               continue;
