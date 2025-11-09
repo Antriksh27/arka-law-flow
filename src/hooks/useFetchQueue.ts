@@ -248,6 +248,76 @@ export const useFetchQueue = () => {
     },
   });
 
+  // Queue all eligible cases
+  const queueAllEligible = useMutation({
+    mutationFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || !firmId) throw new Error('Not authenticated');
+
+      // Get all cases with CNR and court_type that aren't already in queue
+      const { data: cases, error: casesError } = await supabase
+        .from('cases')
+        .select('id, cnr_number, court_type')
+        .eq('firm_id', firmId)
+        .not('cnr_number', 'is', null)
+        .not('court_type', 'is', null)
+        .in('court_type', ['High Court', 'District Court', 'Supreme Court']);
+
+      if (casesError) throw casesError;
+      if (!cases || cases.length === 0) {
+        throw new Error('No eligible cases found');
+      }
+
+      // Get existing queue items to avoid duplicates
+      const { data: existing, error: existingError } = await supabase
+        .from('case_fetch_queue')
+        .select('case_id')
+        .eq('firm_id', firmId);
+
+      if (existingError) throw existingError;
+
+      const existingCaseIds = new Set(existing?.map(e => e.case_id) || []);
+      const newCases = cases.filter(c => !existingCaseIds.has(c.id));
+
+      if (newCases.length === 0) {
+        throw new Error('All eligible cases are already in queue');
+      }
+
+      // Insert new queue items
+      const inserts = newCases.map(c => ({
+        case_id: c.id,
+        cnr_number: c.cnr_number!,
+        court_type: c.court_type!,
+        firm_id: firmId,
+        created_by: user.id,
+        priority: 5,
+        metadata: { triggered_by: 'queue_all_eligible' }
+      }));
+
+      const { error: insertError } = await supabase
+        .from('case_fetch_queue')
+        .insert(inserts);
+
+      if (insertError) throw insertError;
+
+      return { queued: newCases.length, skipped: cases.length - newCases.length };
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['fetch-queue'] });
+      toast({
+        title: "Cases queued successfully",
+        description: `${data.queued} case(s) added to queue${data.skipped > 0 ? `, ${data.skipped} already queued` : ''}`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to queue cases",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   return {
     queueItems,
     stats,
@@ -258,5 +328,6 @@ export const useFetchQueue = () => {
     deleteQueueItems,
     retryFailed,
     clearCompleted,
+    queueAllEligible,
   };
 };

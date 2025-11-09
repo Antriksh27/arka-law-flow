@@ -54,6 +54,7 @@ export const FetchQueueDashboard = () => {
     deleteQueueItems,
     retryFailed,
     clearCompleted,
+    queueAllEligible,
   } = useFetchQueue();
 
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
@@ -141,16 +142,29 @@ export const FetchQueueDashboard = () => {
               Monitor and control case fetch operations
             </p>
           </div>
-          <Button
-            onClick={() => processQueue.mutateAsync({ batch_size: 10, delay_ms: 1500 })}
-            disabled={processQueue.isPending || stats.queued === 0}
-          >
-            {processQueue.isPending ? (
-              <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</>
-            ) : (
-              <><Play className="mr-2 h-4 w-4" /> Process Now</>
-            )}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => queueAllEligible.mutateAsync()}
+              disabled={queueAllEligible.isPending}
+            >
+              {queueAllEligible.isPending ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Queueing...</>
+              ) : (
+                <><Play className="mr-2 h-4 w-4" /> Queue All Eligible</>
+              )}
+            </Button>
+            <Button
+              onClick={() => processQueue.mutateAsync({ batch_size: 10, delay_ms: 1500 })}
+              disabled={processQueue.isPending || stats.queued === 0}
+            >
+              {processQueue.isPending ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</>
+              ) : (
+                <><Play className="mr-2 h-4 w-4" /> Process Now</>
+              )}
+            </Button>
+          </div>
         </div>
 
         {/* Stats Cards */}
