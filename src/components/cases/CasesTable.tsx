@@ -18,7 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Trash2, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Trash2, Loader2, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { TimeUtils } from '@/lib/timeUtils';
 interface CasesTableProps {
@@ -40,13 +40,15 @@ export const CasesTable: React.FC<CasesTableProps> = ({
   const [selectedCases, setSelectedCases] = useState<Set<string>>(new Set());
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [page, setPage] = useState(1);
+  const [sortField, setSortField] = useState<'created_at' | 'reference_number'>('created_at');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const pageSize = 50;
   
   const {
     data: queryResult,
     isLoading
   } = useQuery({
-    queryKey: ['cases-table', searchQuery, statusFilter, typeFilter, assignedFilter, page],
+    queryKey: ['cases-table', searchQuery, statusFilter, typeFilter, assignedFilter, page, sortField, sortOrder],
     queryFn: async () => {
       // Get current user info
       const { data: { user } } = await supabase.auth.getUser();
@@ -87,7 +89,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
         assigned_users,
         clients!client_id(full_name)
       `, { count: 'exact' })
-      .order('created_at', { ascending: false })
+      .order(sortField, { ascending: sortOrder === 'asc' })
       .range(startIndex, endIndex);
 
       // Apply role-based filtering
@@ -97,7 +99,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
       }
 
       if (searchQuery) {
-        query = query.or(`case_title.ilike.%${searchQuery}%,petitioner.ilike.%${searchQuery}%,respondent.ilike.%${searchQuery}%,case_number.ilike.%${searchQuery}%,cnr_number.ilike.%${searchQuery}%,filing_number.ilike.%${searchQuery}%`);
+        query = query.or(`case_title.ilike.%${searchQuery}%,petitioner.ilike.%${searchQuery}%,respondent.ilike.%${searchQuery}%,case_number.ilike.%${searchQuery}%,cnr_number.ilike.%${searchQuery}%,filing_number.ilike.%${searchQuery}%,reference_number.ilike.%${searchQuery}%`);
       }
       if (statusFilter !== 'all') {
         query = query.eq('status', statusFilter as any);
@@ -174,6 +176,19 @@ export const CasesTable: React.FC<CasesTableProps> = ({
 
   const cases = queryResult?.cases || [];
   const totalCount = queryResult?.totalCount || 0;
+
+  const handleSort = (field: 'created_at' | 'reference_number') => {
+    if (sortField === field) {
+      // Toggle sort order
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      // New field, default to ascending
+      setSortField(field);
+      setSortOrder('asc');
+    }
+    // Reset to first page when sorting changes
+    setPage(1);
+  };
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -268,12 +283,36 @@ export const CasesTable: React.FC<CasesTableProps> = ({
                 />
               </TableHead>
               <TableHead className="bg-slate-800 text-white">Case Title</TableHead>
-              <TableHead className="bg-slate-800 text-white">Reference No</TableHead>
+              <TableHead 
+                className="bg-slate-800 text-white cursor-pointer hover:bg-slate-700 select-none"
+                onClick={() => handleSort('reference_number')}
+              >
+                <div className="flex items-center gap-2">
+                  Reference No
+                  {sortField === 'reference_number' ? (
+                    sortOrder === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                  ) : (
+                    <ArrowUpDown className="h-4 w-4 opacity-50" />
+                  )}
+                </div>
+              </TableHead>
               <TableHead className="bg-slate-800 text-white">Client</TableHead>
               <TableHead className="bg-slate-800 text-white">Type</TableHead>
               <TableHead className="bg-slate-800 text-white">Status</TableHead>
               <TableHead className="bg-slate-800 text-white">Priority</TableHead>
-              <TableHead className="bg-slate-800 text-white">Updated</TableHead>
+              <TableHead 
+                className="bg-slate-800 text-white cursor-pointer hover:bg-slate-700 select-none"
+                onClick={() => handleSort('created_at')}
+              >
+                <div className="flex items-center gap-2">
+                  Updated
+                  {sortField === 'created_at' ? (
+                    sortOrder === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                  ) : (
+                    <ArrowUpDown className="h-4 w-4 opacity-50" />
+                  )}
+                </div>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
