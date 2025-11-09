@@ -398,6 +398,12 @@ export const BulkImportCasesDialog = ({
         } catch (error: any) {
           console.error(`Row ${rowNumber} error:`, error);
           errors.push(`Row ${rowNumber}: ${error.message}`);
+          
+          // Stop processing if we hit a timeout error
+          if (error.code === '57014' || error.message?.includes('timeout')) {
+            errors.push('Import stopped due to database timeout. Please try with fewer rows at a time.');
+            break;
+          }
         }
       }
 
