@@ -3,6 +3,9 @@ project_id = "hpcnipcbymruvsnqrmjx"
 [functions.send-notification]
 verify_jwt = true
 
+[functions.delete-all-cases]
+verify_jwt = true
+
 [functions.auto-refresh-hearings]
 verify_jwt = false
 
