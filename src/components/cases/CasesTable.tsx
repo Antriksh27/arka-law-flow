@@ -87,6 +87,9 @@ export const CasesTable: React.FC<CasesTableProps> = ({
         client_id,
         assigned_to,
         assigned_users,
+        cnr_number,
+        last_fetched_at,
+        stage,
         clients!client_id(full_name)
       `, { count: 'exact' })
       .order(sortField, { ascending: sortOrder === 'asc' })
@@ -129,9 +132,16 @@ export const CasesTable: React.FC<CasesTableProps> = ({
           displayTitle = `${cleanPetitioner} Vs ${cleanRespondent}`;
         }
         
+        // Determine display status: if linked to Legalkart, show Legalkart status; otherwise show "open"
+        const isLinkedToLegalkart = caseItem.cnr_number && caseItem.last_fetched_at;
+        const displayStatus = isLinkedToLegalkart && caseItem.stage 
+          ? caseItem.stage.toLowerCase() 
+          : 'open';
+        
         return {
           ...caseItem,
           displayTitle,
+          displayStatus,
           client_name: caseItem.clients?.full_name
         };
       }) || [];
@@ -336,8 +346,8 @@ export const CasesTable: React.FC<CasesTableProps> = ({
                 {formatCaseType(caseItem.case_type)}
               </TableCell>
               <TableCell>
-                <Badge className={`${getStatusColor(caseItem.status)} rounded-full text-xs`}>
-                  {caseItem.status?.replace('_', ' ')}
+                <Badge className={`${getStatusColor(caseItem.displayStatus)} rounded-full text-xs`}>
+                  {caseItem.displayStatus?.replace('_', ' ')}
                 </Badge>
               </TableCell>
               <TableCell>

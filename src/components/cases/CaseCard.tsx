@@ -10,6 +10,16 @@ interface CaseCardProps {
   case: any;
 }
 
+const getDisplayStatus = (caseItem: any) => {
+  // If linked to Legalkart (has CNR and has been fetched), show Legalkart status
+  const isLinkedToLegalkart = caseItem.cnr_number && caseItem.last_fetched_at;
+  if (isLinkedToLegalkart && caseItem.stage) {
+    return caseItem.stage.toLowerCase();
+  }
+  // Otherwise, show "open"
+  return 'open';
+};
+
 export const CaseCard: React.FC<CaseCardProps> = ({ case: caseItem }) => {
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -77,8 +87,8 @@ export const CaseCard: React.FC<CaseCardProps> = ({ case: caseItem }) => {
       </div>
 
       <div className="flex flex-wrap gap-2 mb-4">
-        <Badge className={`${getStatusColor(caseItem.status)} rounded-full text-xs`}>
-          {caseItem.status?.replace('_', ' ')}
+        <Badge className={`${getStatusColor(getDisplayStatus(caseItem))} rounded-full text-xs`}>
+          {getDisplayStatus(caseItem)?.replace('_', ' ')}
         </Badge>
         <Badge className={`${getPriorityColor(caseItem.priority)} rounded-full text-xs`}>
           {caseItem.priority} priority
