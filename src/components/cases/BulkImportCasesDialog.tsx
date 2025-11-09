@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Progress } from '@/components/ui/progress';
 import { Upload, Download, AlertCircle, CheckCircle, Trash2, Eye, FileDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -34,6 +35,7 @@ export const BulkImportCasesDialog = ({
 }: BulkImportCasesDialogProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
+  const [progress, setProgress] = useState({ current: 0, total: 0 });
   const [preview, setPreview] = useState<PreviewData | null>(null);
   const [results, setResults] = useState<DetailedResults | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -271,6 +273,7 @@ export const BulkImportCasesDialog = ({
 
     setImporting(true);
     setResults(null);
+    setProgress({ current: 0, total: 0 });
 
     try {
       const XLSX = await import('xlsx');
@@ -288,6 +291,8 @@ export const BulkImportCasesDialog = ({
       if (jsonData.length === 0) {
         throw new Error('No data found in the Excel file');
       }
+
+      setProgress({ current: 0, total: jsonData.length });
 
       // Get user's firm_id
       const { data: teamMember } = await supabase
@@ -321,7 +326,8 @@ export const BulkImportCasesDialog = ({
       const successfulUpdates: { caseId: string; caseTitle: string; clientName: string }[] = [];
       const errors: string[] = [];
 
-      const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+      // Prepare batch updates
+      const batchUpdates: Array<{ id: string; client_id: string; rowInfo: any }> = [];
 
       for (let i = 0; i < jsonData.length; i++) {
         const row = jsonData[i];
@@ -381,56 +387,71 @@ export const BulkImportCasesDialog = ({
             continue;
           }
 
-          // Update existing case with client_id (with retry on timeouts)
-          let lastError: any = null;
-          let updated = false;
-          for (let attempt = 0; attempt < 3; attempt++) {
-            const { error } = await supabase
-              .from('cases')
-              .update({ 
-                client_id: clientId,
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', existingCase.id);
-
-            if (!error) {
-              updated = true;
-              break;
+          // Prepare for batch update
+          batchUpdates.push({
+            id: existingCase.id,
+            client_id: clientId,
+            rowInfo: {
+              caseId: existingCase.cnr_number || existingCase.id,
+              caseTitle: existingCase.case_title,
+              clientName: matchedClientName || clientName
             }
-
-            lastError = error;
-            if (error?.code === '57014' || error?.message?.toLowerCase().includes('timeout')) {
-              // exponential backoff: 500ms, 1000ms, 2000ms
-              await sleep(500 * Math.pow(2, attempt));
-              continue;
-            } else {
-              // non-timeout error: stop retrying
-              break;
-            }
-          }
-
-          if (!updated) {
-            throw lastError || new Error('Unknown error while updating case');
-          }
-
-          // small throttle every 20 rows to avoid DB overload
-          if ((i + 1) % 20 === 0) {
-            await sleep(800);
-          }
-
-          successCount++;
-          successfulUpdates.push({
-            caseId: existingCase.cnr_number || existingCase.id,
-            caseTitle: existingCase.case_title,
-            clientName: matchedClientName || clientName
           });
 
         } catch (error: any) {
           console.error(`Row ${rowNumber} error:`, error);
           errors.push(`Row ${rowNumber}: ${error.message}`);
-          
-          // Continue processing other rows even if this one failed due to timeout after retries
         }
+      }
+
+      // Process batch updates in chunks of 50
+      const BATCH_SIZE = 50;
+      for (let i = 0; i < batchUpdates.length; i += BATCH_SIZE) {
+        const batch = batchUpdates.slice(i, i + BATCH_SIZE);
+        
+        // Execute batch updates in parallel
+        const updatePromises = batch.map(async (update) => {
+          try {
+            const { error } = await supabase
+              .from('cases')
+              .update({ 
+                client_id: update.client_id,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', update.id);
+
+            if (error) {
+              throw error;
+            }
+
+            return { success: true, rowInfo: update.rowInfo };
+          } catch (error: any) {
+            console.error(`Update error for case ${update.id}:`, error);
+            return { 
+              success: false, 
+              error: error.message,
+              rowInfo: update.rowInfo
+            };
+          }
+        });
+
+        const results = await Promise.all(updatePromises);
+        
+        // Track results
+        results.forEach((result) => {
+          if (result.success) {
+            successCount++;
+            successfulUpdates.push(result.rowInfo);
+          } else {
+            errors.push(`Failed to update ${result.rowInfo.caseId}: ${result.error}`);
+          }
+        });
+
+        // Update progress
+        setProgress({ 
+          current: Math.min(i + BATCH_SIZE, batchUpdates.length), 
+          total: batchUpdates.length 
+        });
       }
 
       setResults({ 
@@ -683,6 +704,20 @@ export const BulkImportCasesDialog = ({
                     </div>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* Progress Bar */}
+            {importing && progress.total > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm text-slate-700">
+                  <span>Processing...</span>
+                  <span>{progress.current} / {progress.total} rows</span>
+                </div>
+                <Progress 
+                  value={(progress.current / progress.total) * 100} 
+                  className="h-2"
+                />
               </div>
             )}
 
