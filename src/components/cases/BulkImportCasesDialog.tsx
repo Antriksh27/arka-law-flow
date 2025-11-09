@@ -283,7 +283,7 @@ export const BulkImportCasesDialog = ({
       // Fetch all cases and clients ONCE upfront to avoid repeated queries
       const {
         data: allCases
-      } = await supabase.from('cases').select('id, case_title, cnr_number').eq('firm_id', teamMember.firm_id);
+      } = await supabase.from('cases').select('id, case_title, cnr_number, client_id').eq('firm_id', teamMember.firm_id);
       const {
         data: allClients
       } = await supabase.from('clients').select('id, full_name').eq('firm_id', teamMember.firm_id);
@@ -299,8 +299,12 @@ export const BulkImportCasesDialog = ({
         clientName: string;
       }[] = [];
       const errors: string[] = [];
+      const skippedCases: string[] = [];
 
-      // Process each row one by one
+      // Prepare batch updates
+      const batchUpdates: Array<{ caseId: string; clientId: string; cnrNumber: string; caseTitle: string; clientName: string; rowNumber: number }> = [];
+
+      // Process each row to prepare batch updates
       for (let i = 0; i < jsonData.length; i++) {
         const row = jsonData[i];
         const rowNumber = i + 2;
@@ -335,6 +339,12 @@ export const BulkImportCasesDialog = ({
             continue;
           }
 
+          // Skip if case already has a client
+          if (existingCase.client_id) {
+            skippedCases.push(`Row ${rowNumber}: CNR ${cnrNumber} - already has a client`);
+            continue;
+          }
+
           // Find client by name if provided
           const clientName = cleanField(row.client_name || row['Client Name'] || row['client_name'] || row.client || row['Client']);
           
@@ -353,37 +363,95 @@ export const BulkImportCasesDialog = ({
             continue;
           }
 
-          // Update case one by one
-          try {
-            const { error } = await supabase
-              .from('cases')
-              .update({
-                client_id: matchedClient.id,
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', existingCase.id);
+          // Add to batch updates
+          batchUpdates.push({
+            caseId: existingCase.id,
+            clientId: matchedClient.id,
+            cnrNumber: existingCase.cnr_number || existingCase.id,
+            caseTitle: existingCase.case_title,
+            clientName: matchedClient.full_name,
+            rowNumber
+          });
 
-            if (error) {
-              throw error;
-            }
-
-            successCount++;
-            successfulUpdates.push({
-              caseId: existingCase.cnr_number || existingCase.id,
-              caseTitle: existingCase.case_title,
-              clientName: matchedClient.full_name
-            });
-
-            // Small delay between updates to prevent overload
-            await sleep(100);
-          } catch (error: any) {
-            console.error(`Update error for case ${existingCase.id}:`, error);
-            errors.push(`Row ${rowNumber}: Failed to update ${cnrNumber}: ${error.message}`);
-          }
         } catch (error: any) {
           console.error(`Row ${rowNumber} error:`, error);
           errors.push(`Row ${rowNumber}: ${error.message}`);
         }
+      }
+
+      // Process batch updates in chunks of 100
+      const BATCH_SIZE = 100;
+      for (let i = 0; i < batchUpdates.length; i += BATCH_SIZE) {
+        const batch = batchUpdates.slice(i, i + BATCH_SIZE);
+        
+        try {
+          // Update all cases in this batch using individual updates
+          // Note: Supabase doesn't support batch updates with different IDs in a single query
+          // So we do them sequentially but in batches to limit concurrent operations
+          const updatePromises = batch.map(update =>
+            supabase
+              .from('cases')
+              .update({
+                client_id: update.clientId,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', update.caseId)
+          );
+
+          const results = await Promise.all(updatePromises);
+          
+          // Check for errors in batch
+          const batchErrors = results.filter(r => r.error);
+          if (batchErrors.length > 0) {
+            throw new Error(`${batchErrors.length} updates failed in batch`);
+          }
+
+          // Record successful updates
+          batch.forEach(update => {
+            successCount++;
+            successfulUpdates.push({
+              caseId: update.cnrNumber,
+              caseTitle: update.caseTitle,
+              clientName: update.clientName
+            });
+          });
+
+        } catch (error: any) {
+          console.error(`Batch update error:`, error);
+          // If batch fails, try individual updates
+          for (const update of batch) {
+            try {
+              const { error: singleError } = await supabase
+                .from('cases')
+                .update({
+                  client_id: update.clientId,
+                  updated_at: new Date().toISOString()
+                })
+                .eq('id', update.caseId);
+
+              if (singleError) {
+                throw singleError;
+              }
+
+              successCount++;
+              successfulUpdates.push({
+                caseId: update.cnrNumber,
+                caseTitle: update.caseTitle,
+                clientName: update.clientName
+              });
+            } catch (singleError: any) {
+              errors.push(`Row ${update.rowNumber}: Failed to update ${update.cnrNumber}: ${singleError.message}`);
+            }
+          }
+        }
+
+        // Small delay between batches
+        await sleep(100);
+      }
+
+      // Log skipped cases info
+      if (skippedCases.length > 0) {
+        console.log(`Skipped ${skippedCases.length} cases that already have clients assigned`);
       }
       setResults({
         successCount,
