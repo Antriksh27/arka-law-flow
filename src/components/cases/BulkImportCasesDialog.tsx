@@ -40,6 +40,11 @@ export const BulkImportCasesDialog = ({
   const { toast } = useToast();
   const { user } = useAuth();
 
+  // Normalize CNR number by removing dashes and converting to uppercase
+  const normalizeCNR = (cnr: string): string => {
+    return cnr.replace(/[-\s]/g, '').toUpperCase();
+  };
+
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
@@ -114,15 +119,19 @@ export const BulkImportCasesDialog = ({
         let matchedClient = null;
         let caseFound = false;
 
-        // Check if case exists with this CNR
+        // Check if case exists with this CNR (normalize for matching)
         if (cnrNumber) {
-          const { data: existingCase } = await supabase
+          const normalizedCNR = normalizeCNR(cnrNumber);
+          
+          // Get all cases and check normalized CNR in case_number field
+          const { data: allCases } = await supabase
             .from('cases')
-            .select('id, case_title')
-            .eq('firm_id', teamMember.firm_id)
-            .or(`case_number.eq.${cnrNumber},cnr.eq.${cnrNumber}`)
-            .limit(1)
-            .maybeSingle();
+            .select('id, case_title, case_number')
+            .eq('firm_id', teamMember.firm_id);
+          
+          const existingCase = allCases?.find(c => 
+            normalizeCNR(c.case_number || '') === normalizedCNR
+          );
           
           caseFound = !!existingCase;
         }
@@ -318,14 +327,18 @@ export const BulkImportCasesDialog = ({
             continue;
           }
 
-          // Find existing case by CNR (could be in case_number or cnr field)
-          const { data: existingCase } = await supabase
+          // Normalize CNR for matching
+          const normalizedCNR = normalizeCNR(cnrNumber);
+
+          // Find existing case by CNR (normalize both sides for comparison)
+          const { data: allCases } = await supabase
             .from('cases')
             .select('id, case_title, case_number')
-            .eq('firm_id', teamMember.firm_id)
-            .or(`case_number.eq.${cnrNumber},cnr.eq.${cnrNumber}`)
-            .limit(1)
-            .maybeSingle();
+            .eq('firm_id', teamMember.firm_id);
+
+          const existingCase = allCases?.find(c => 
+            normalizeCNR(c.case_number || '') === normalizedCNR
+          );
 
           if (!existingCase) {
             casesNotFound.push(`Row ${rowNumber}: CNR ${cnrNumber}`);
