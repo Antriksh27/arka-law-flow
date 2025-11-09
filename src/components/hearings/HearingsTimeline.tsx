@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, MapPin, FileText } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
+import TimeUtils from '@/lib/timeUtils';
 import { FilterState } from './types';
 interface HearingsTimelineProps {
   filters: FilterState;
@@ -27,10 +28,10 @@ export const HearingsTimeline: React.FC<HearingsTimelineProps> = ({
             clients(full_name)
           )
         `);
-      const today = format(new Date(), 'yyyy-MM-dd');
+      const today = TimeUtils.formatDateInput(TimeUtils.nowDate());
       query = query.gte('hearing_date', today);
       if (filters.dateRange.from && filters.dateRange.to) {
-        query = query.gte('hearing_date', format(filters.dateRange.from, 'yyyy-MM-dd')).lte('hearing_date', format(filters.dateRange.to, 'yyyy-MM-dd'));
+        query = query.gte('hearing_date', TimeUtils.formatDateInput(filters.dateRange.from)).lte('hearing_date', TimeUtils.formatDateInput(filters.dateRange.to));
       }
       if (filters.case && filters.case !== 'all') {
         query = query.eq('case_id', filters.case);
@@ -73,11 +74,12 @@ export const HearingsTimeline: React.FC<HearingsTimelineProps> = ({
       {groupedHearings && Object.keys(groupedHearings).length > 0 ? Object.entries(groupedHearings).map(([date, dateHearings]) => <div key={date} className="flex w-full items-start gap-2">
             <div className="flex w-32 flex-none flex-col items-start gap-1 rounded-md bg-gray-50 px-6 py-6">
               <span className="text-lg font-semibold text-gray-900">
-                {format(parseISO(date), 'EEEE')}
+                {TimeUtils.formatDate(date, 'EEEE')}
               </span>
               <span className="text-sm text-gray-600">
-                {format(parseISO(date), 'MMM d, yyyy')}
+                {TimeUtils.formatDate(date, 'MMM d, yyyy')}
               </span>
+              <span className="text-xs text-muted-foreground">(IST)</span>
             </div>
 
             <div className="flex flex-1 flex-col items-start gap-2">

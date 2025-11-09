@@ -12,6 +12,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
+import TimeUtils from '@/lib/timeUtils';
 import { useDialog } from '@/hooks/use-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { HearingFormData, HearingType, HearingStatus } from './types';
@@ -23,7 +24,7 @@ export const CreateHearingDialog: React.FC = () => {
   
   const [formData, setFormData] = useState<HearingFormData>({
     case_id: '',
-    hearing_date: new Date(),
+    hearing_date: TimeUtils.nowDate(),
     hearing_time: '12:00',
     court_name: '',
     bench: '',
@@ -56,7 +57,7 @@ export const CreateHearingDialog: React.FC = () => {
         case_id: data.case_id,
         hearing_date: typeof data.hearing_date === 'string' 
           ? data.hearing_date 
-          : format(data.hearing_date, 'yyyy-MM-dd'),
+          : TimeUtils.formatDateInput(data.hearing_date),
         hearing_time: data.hearing_time || null,
         court_name: data.court_name,
         bench: data.bench || null,
@@ -172,12 +173,8 @@ export const CreateHearingDialog: React.FC = () => {
                   <PopoverTrigger asChild>
                     <Button variant="outline" className="w-full justify-start text-left bg-white border-gray-900 text-gray-900 hover:bg-gray-50">
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formData.hearing_date ? format(
-                        typeof formData.hearing_date === 'string' 
-                          ? new Date(formData.hearing_date) 
-                          : formData.hearing_date, 
-                        'PPP'
-                      ) : 'Select date'}
+                      {formData.hearing_date ? TimeUtils.formatDisplay(formData.hearing_date, 'PPP') : 'Select date'}
+                      <span className="ml-2 text-xs text-muted-foreground">(IST)</span>
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0 bg-white border-gray-900">

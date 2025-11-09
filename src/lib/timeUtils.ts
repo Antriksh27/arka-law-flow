@@ -10,17 +10,89 @@ const IST_TIMEZONE = 'Asia/Kolkata';
 
 export class TimeUtils {
   /**
-   * Get current system time as ISO string
+   * Get current IST time as ISO string
    */
   static now(): string {
     return new Date().toISOString();
   }
 
   /**
-   * Get current system time as Date object
+   * Get current IST time as Date object
    */
   static nowDate(): Date {
     return new Date();
+  }
+
+  /**
+   * Get current IST date/time formatted for display
+   */
+  static getCurrentISTDateTime(): string {
+    return this.formatDateTime(this.nowDate());
+  }
+
+  /**
+   * Convert any date input to IST timezone Date object
+   */
+  static toISTDate(input: string | Date | null | undefined): Date | null {
+    return this.parseDate(input);
+  }
+
+  /**
+   * Convert HTML5 date and time inputs to IST timestamp
+   * @param dateString - Date in 'yyyy-MM-dd' format
+   * @param timeString - Time in 'HH:mm' format (optional)
+   */
+  static fromUserInput(dateString: string, timeString?: string): Date {
+    if (timeString) {
+      return parseISO(`${dateString}T${timeString}:00`);
+    }
+    return parseISO(`${dateString}T00:00:00`);
+  }
+
+  /**
+   * Convert IST date to HTML5 date input format (yyyy-MM-dd)
+   */
+  static toDateInputFormat(input: string | Date | null | undefined): string {
+    return this.formatDateInput(input);
+  }
+
+  /**
+   * Convert IST date to HTML5 time input format (HH:mm)
+   */
+  static toTimeInputFormat(input: string | Date | null | undefined): string {
+    return this.formatTimeInput(input);
+  }
+
+  /**
+   * Add days to a date in IST context
+   */
+  static addDaysIST(date: Date, days: number): Date {
+    const result = new Date(date);
+    result.setDate(result.getDate() + days);
+    return result;
+  }
+
+  /**
+   * Compare two dates in IST context
+   * Returns: -1 if date1 < date2, 0 if equal, 1 if date1 > date2
+   */
+  static compareDates(date1: string | Date | null | undefined, date2: string | Date | null | undefined): number {
+    const d1 = this.parseDate(date1);
+    const d2 = this.parseDate(date2);
+    
+    if (!d1 || !d2) return 0;
+    
+    if (d1 < d2) return -1;
+    if (d1 > d2) return 1;
+    return 0;
+  }
+
+  /**
+   * Check if a date string is valid
+   */
+  static isValidDate(input: string | Date | null | undefined): boolean {
+    const date = this.parseDate(input);
+    return date !== null && isValid(date);
   }
 
   /**

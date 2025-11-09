@@ -14,13 +14,13 @@ import { Calendar } from '../ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
+import TimeUtils from '@/lib/timeUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { useDialog } from '@/hooks/use-dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { SmartBookingCalendar } from '@/components/appointments/SmartBookingCalendar';
 import { ClientSelector } from '@/components/appointments/ClientSelector';
-import TimeUtils from '@/lib/timeUtils';
 
 interface Client {
   id: string;

@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { format, startOfDay, endOfDay } from 'date-fns';
+import TimeUtils from '@/lib/timeUtils';
 import { Clock, AlertCircle } from 'lucide-react';
 import { IconButton } from '../messages/ui/IconButton';
 
@@ -12,7 +13,7 @@ export const AppointmentsSidebar: React.FC = () => {
   const { data: todayStats } = useQuery({
     queryKey: ['today-appointments-stats', user?.id],
     queryFn: async () => {
-      const today = format(new Date(), 'yyyy-MM-dd');
+      const today = TimeUtils.formatDateInput(TimeUtils.nowDate());
       
       let query = supabase
         .from('appointment_details')
@@ -42,7 +43,7 @@ export const AppointmentsSidebar: React.FC = () => {
     <div className="flex w-64 flex-none flex-col items-start gap-4">
       <div className="flex w-full flex-col items-start gap-2 rounded-lg border border-gray-200 bg-white px-6 py-6">
         <span className="text-lg font-semibold text-gray-900">
-          Today's Overview
+          Today's Overview (IST)
         </span>
         <div className="flex w-full flex-col items-start gap-2">
           <div className="flex w-full items-center gap-2 rounded-md bg-gray-50 px-4 py-4">

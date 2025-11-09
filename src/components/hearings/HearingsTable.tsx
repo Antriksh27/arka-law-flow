@@ -2,6 +2,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { format, parseISO } from 'date-fns';
+import TimeUtils from '@/lib/timeUtils';
 import { FilterState } from './types';
 import { Badge } from '@/components/ui/badge';
 
@@ -27,13 +28,13 @@ export const HearingsTable: React.FC<HearingsTableProps> = ({ filters }) => {
           )
         `);
 
-      const today = format(new Date(), 'yyyy-MM-dd');
+      const today = TimeUtils.formatDateInput(TimeUtils.nowDate());
       query = query.gte('hearing_date', today);
 
       if (filters.dateRange.from && filters.dateRange.to) {
         query = query
-          .gte('hearing_date', format(filters.dateRange.from, 'yyyy-MM-dd'))
-          .lte('hearing_date', format(filters.dateRange.to, 'yyyy-MM-dd'));
+          .gte('hearing_date', TimeUtils.formatDateInput(filters.dateRange.from))
+          .lte('hearing_date', TimeUtils.formatDateInput(filters.dateRange.to));
       }
 
       if (filters.case && filters.case !== 'all') {
@@ -89,7 +90,7 @@ export const HearingsTable: React.FC<HearingsTableProps> = ({ filters }) => {
               hearings.map((hearing) => (
                 <tr key={hearing.id} className="border-b border-gray-100 hover:bg-gray-50">
                   <td className="py-3 px-4">
-                    {format(parseISO(hearing.hearing_date), 'MMM d, yyyy')}
+                    {TimeUtils.formatDate(hearing.hearing_date, 'MMM d, yyyy')} (IST)
                   </td>
                   <td className="py-3 px-4">
                     <div>

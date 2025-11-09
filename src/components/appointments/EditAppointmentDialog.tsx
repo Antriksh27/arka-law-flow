@@ -20,6 +20,7 @@ import { Calendar } from '../ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { CalendarIcon } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
+import TimeUtils from '@/lib/timeUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { useDialog } from '@/hooks/use-dialog';
 import { toast } from 'sonner';
@@ -82,8 +83,8 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
   
   const [formData, setFormData] = useState({
     title: appointment.title || '',
-    // Ensure appointment_date is a Date object for the Calendar component
-    appointment_date: appointment.appointment_date ? parseISO(appointment.appointment_date) : new Date(),
+    // Parse date in IST context
+    appointment_date: TimeUtils.toISTDate(appointment.appointment_date) || TimeUtils.nowDate(),
     appointment_time: appointment.appointment_time || '',
     duration_minutes: appointment.duration_minutes || 60,
     client_id: appointment.client_id || '',
@@ -132,13 +133,13 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
     try {
       const updateData = {
         title: formData.title,
-        appointment_date: format(formData.appointment_date, 'yyyy-MM-dd'),
+        appointment_date: TimeUtils.formatDateInput(formData.appointment_date),
         appointment_time: formData.appointment_time,
         duration_minutes: Number(formData.duration_minutes),
         client_id: formData.client_id || null,
         lawyer_id: formData.lawyer_id,
         case_id: formData.case_id || null,
-        location: formData.location, // This field is 'location'
+        location: formData.location,
         notes: formData.notes,
         status: formData.status
       };

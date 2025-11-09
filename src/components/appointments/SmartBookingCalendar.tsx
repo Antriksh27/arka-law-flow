@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
 import { format, addMinutes, isAfter, isBefore, startOfDay, endOfDay, parseISO } from 'date-fns';
+import TimeUtils from '@/lib/timeUtils';
 import { Calendar as CalendarIcon, Clock, User } from 'lucide-react';
 import { getUserBlockedDates } from '@/lib/availabilityUtils';
 
@@ -131,13 +132,13 @@ export const SmartBookingCalendar: React.FC<SmartBookingCalendarProps> = ({
   const isDateAvailable = (date: Date): boolean => {
     if (!selectedLawyer) return false;
     
-    // If override is allowed (for receptionists), all dates are available
+    // If override is allowed (for receptionists), all future dates are available
     if (allowOverride) return true;
     
     if (!availabilityRules) return false;
     
     const dayOfWeek = date.getDay();
-    const dateStr = format(date, 'yyyy-MM-dd');
+    const dateStr = TimeUtils.formatDateInput(date);
     
     // Check if there are availability rules for this day
     const hasRulesForDay = availabilityRules.some(rule => rule.day_of_week === dayOfWeek);
@@ -161,7 +162,7 @@ export const SmartBookingCalendar: React.FC<SmartBookingCalendarProps> = ({
     if (!selectedLawyer || !internalSelectedDate) return [];
     
     const dayOfWeek = internalSelectedDate.getDay();
-    const dateStr = format(internalSelectedDate, 'yyyy-MM-dd');
+    const dateStr = TimeUtils.formatDateInput(internalSelectedDate);
     
     // If override is allowed (for receptionists), generate slots from 7am to 10pm
     if (allowOverride) {
@@ -379,7 +380,7 @@ export const SmartBookingCalendar: React.FC<SmartBookingCalendarProps> = ({
                     )}
                   </div>
                   <Badge variant="outline">
-                    {format(internalSelectedDate, 'EEEE, MMMM d')}
+                    {TimeUtils.formatDisplay(internalSelectedDate, 'EEEE, MMMM d')} (IST)
                   </Badge>
                 </CardTitle>
               </CardHeader>

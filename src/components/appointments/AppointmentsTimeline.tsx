@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { FilterState } from '../../pages/Appointments';
 import { useAuth } from '@/contexts/AuthContext';
 import { format, parseISO, startOfDay, isSameDay } from 'date-fns';
-import { TimeUtils } from '@/lib/timeUtils';
+import TimeUtils from '@/lib/timeUtils';
 import { Badge } from '../ui/badge';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { IconButton } from '../messages/ui/IconButton';
@@ -55,9 +55,9 @@ export const AppointmentsTimeline: React.FC<AppointmentsTimelineProps> = ({
         query = query.eq('lawyer_id', user.id);
       }
       
-      // Filter by date - show only future appointments by default
+      // Filter by date in IST - show only future appointments by default
       if (!filters.showPastAppointments) {
-        const today = format(startOfDay(new Date()), 'yyyy-MM-dd');
+        const today = TimeUtils.formatDateInput(TimeUtils.nowDate());
         query = query.gte('appointment_date', today);
       }
       
@@ -105,12 +105,12 @@ export const AppointmentsTimeline: React.FC<AppointmentsTimelineProps> = ({
     },
   });
 
-  // Group appointments by category: today, upcoming, past
+  // Group appointments by category: today, upcoming, past (IST)
   const categorizedAppointments = useMemo(() => {
     if (!appointments) return { today: {}, upcoming: {}, past: {} };
     
-    const today = new Date();
-    const todayStr = format(today, 'yyyy-MM-dd');
+    const today = TimeUtils.nowDate();
+    const todayStr = TimeUtils.formatDateInput(today);
     
     const categories = {
       today: {} as Record<string, Appointment[]>,
@@ -175,18 +175,18 @@ export const AppointmentsTimeline: React.FC<AppointmentsTimelineProps> = ({
   };
 
   const formatDateHeader = (dateString: string) => {
-    const date = parseISO(dateString);
-    if (TimeUtils.isToday(date)) return 'Today';
+    const date = TimeUtils.toISTDate(dateString);
+    if (!date) return dateString;
     
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    if (date.toDateString() === tomorrow.toDateString()) return 'Tomorrow';
+    if (TimeUtils.isToday(date)) return 'Today (IST)';
     
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
+    const tomorrow = TimeUtils.addDaysIST(TimeUtils.nowDate(), 1);
+    if (TimeUtils.formatDateInput(date) === TimeUtils.formatDateInput(tomorrow)) return 'Tomorrow (IST)';
     
-    return TimeUtils.formatDate(date, 'EEEE, MMMM d');
+    const yesterday = TimeUtils.addDaysIST(TimeUtils.nowDate(), -1);
+    if (TimeUtils.formatDateInput(date) === TimeUtils.formatDateInput(yesterday)) return 'Yesterday (IST)';
+    
+    return TimeUtils.formatDate(date, 'EEEE, MMMM d') + ' (IST)';
   };
 
   const formatTime = (timeString: string) => {
