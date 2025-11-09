@@ -213,7 +213,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                     <SelectValue placeholder="Select..." />
                   </SelectTrigger>
                   <SelectContent className="bg-white z-50">
-                    <SelectItem value="">Not specified</SelectItem>
+                    <SelectItem value="not_specified">Not specified</SelectItem>
                     <SelectItem value="by">By (Filed by client)</SelectItem>
                     <SelectItem value="against">Against (Filed against client)</SelectItem>
                   </SelectContent>
