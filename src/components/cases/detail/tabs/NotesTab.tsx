@@ -142,15 +142,17 @@ export const NotesTab: React.FC<NotesTabProps> = ({ caseId }) => {
 
   return (
     <div className="space-y-6">
-      {/* Internal Office Notes - Only visible to office_staff, admin, and lawyers */}
-      {(role === 'office_staff' || role === 'admin' || role === 'lawyer' || (internalNotes && internalNotes.length > 0)) && (
+      {/* Internal Office Notes - Visible based on role */}
+      {(role === 'office_staff' || role === 'admin' || role === 'lawyer') && (
         <Card className="bg-white rounded-2xl shadow-sm">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Shield className="w-5 h-5 text-primary" />
                 <CardTitle>Internal Office Notes</CardTitle>
-                <Badge variant="outline" className="text-xs">Staff Only</Badge>
+                <Badge variant="outline" className="text-xs">
+                  {role === 'lawyer' ? 'Your Private Notes' : 'Staff Only'}
+                </Badge>
               </div>
               {!isAddingInternalNote && (role === 'office_staff' || role === 'admin' || role === 'lawyer') && (
                 <Button size="sm" onClick={() => setIsAddingInternalNote(true)} className="gap-2">
@@ -164,7 +166,11 @@ export const NotesTab: React.FC<NotesTabProps> = ({ caseId }) => {
             {isAddingInternalNote && (
               <div className="space-y-2 p-4 bg-muted rounded-lg">
                 <Textarea
-                  placeholder="Enter internal note (visible only to office staff, admins, and lawyers)..."
+                  placeholder={
+                    role === 'lawyer'
+                      ? "Enter your private note (only you can see this)..."
+                      : "Enter internal note (visible to all office staff and admins)..."
+                  }
                   value={newInternalNote}
                   onChange={(e) => setNewInternalNote(e.target.value)}
                   rows={3}
@@ -212,6 +218,9 @@ export const NotesTab: React.FC<NotesTabProps> = ({ caseId }) => {
                           <span className="text-sm font-medium text-foreground">
                             {note.creator?.full_name || 'Unknown'}
                           </span>
+                          {note.created_by === user?.id && (
+                            <Badge variant="outline" className="text-xs">You</Badge>
+                          )}
                           <span className="text-xs text-muted-foreground">
                             {TimeUtils.formatDate(note.created_at)}
                           </span>
@@ -242,7 +251,11 @@ export const NotesTab: React.FC<NotesTabProps> = ({ caseId }) => {
             ) : (
               <div className="text-center py-8 text-muted-foreground">
                 <FileText className="w-12 h-12 mx-auto mb-2 text-muted-foreground/50" />
-                <p className="text-sm">No internal notes yet</p>
+                <p className="text-sm">
+                  {role === 'lawyer' 
+                    ? 'No private notes yet. Add notes that only you can see.' 
+                    : 'No internal notes yet'}
+                </p>
               </div>
             )}
           </CardContent>
