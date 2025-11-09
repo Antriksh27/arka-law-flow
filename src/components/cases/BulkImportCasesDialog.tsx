@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Upload, Download, AlertCircle, CheckCircle, Trash2 } from 'lucide-react';
+import { Upload, Download, AlertCircle, CheckCircle, Trash2, Eye, FileDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -13,6 +13,20 @@ interface BulkImportCasesDialogProps {
   onSuccess?: () => void;
 }
 
+interface PreviewData {
+  rows: any[];
+  columns: string[];
+  clientMatches: { rowNumber: number; clientName: string; matchedClient: string | null }[];
+}
+
+interface DetailedResults {
+  successCount: number;
+  casesNotFound: string[];
+  clientsNotFound: string[];
+  successfulUpdates: { caseId: string; caseTitle: string; clientName: string }[];
+  errors: string[];
+}
+
 export const BulkImportCasesDialog = ({ 
   open, 
   onOpenChange, 
@@ -20,17 +34,22 @@ export const BulkImportCasesDialog = ({
 }: BulkImportCasesDialogProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
-  const [results, setResults] = useState<{ success: number; errors: string[] } | null>(null);
+  const [preview, setPreview] = useState<PreviewData | null>(null);
+  const [results, setResults] = useState<DetailedResults | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { user } = useAuth();
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
       if (selectedFile.type.includes('spreadsheet') || selectedFile.name.endsWith('.xlsx') || selectedFile.name.endsWith('.xls')) {
         setFile(selectedFile);
         setResults(null);
+        setPreview(null);
+        
+        // Generate preview
+        await generatePreview(selectedFile);
       } else {
         toast({
           title: "Invalid file type",
@@ -38,6 +57,107 @@ export const BulkImportCasesDialog = ({
           variant: "destructive"
         });
       }
+    }
+  };
+
+  const generatePreview = async (selectedFile: File) => {
+    if (!user) return;
+
+    try {
+      const XLSX = await import('xlsx');
+      const data = await selectedFile.arrayBuffer();
+      const workbook = XLSX.read(data, { type: 'array' });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
+        raw: false,
+        defval: ''
+      }) as any[];
+
+      if (jsonData.length === 0) {
+        toast({
+          title: "Empty file",
+          description: "The Excel file contains no data",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Get user's firm_id
+      const { data: teamMember } = await supabase
+        .from('team_members')
+        .select('firm_id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!teamMember?.firm_id) return;
+
+      // Extract columns
+      const columns = Object.keys(jsonData[0]);
+      
+      // Preview first 5 rows
+      const previewRows = jsonData.slice(0, 5);
+
+      // Check client matches for preview rows
+      const clientMatches = [];
+      for (let i = 0; i < previewRows.length; i++) {
+        const row = previewRows[i];
+        const cleanField = (value: any): string | null => {
+          if (value === null || value === undefined || value === '') return null;
+          const cleaned = String(value).trim();
+          return cleaned === '' ? null : cleaned;
+        };
+
+        const clientName = cleanField(row.client_name || row['Client Name'] || row['client_name']);
+        let matchedClient = null;
+
+        if (clientName) {
+          // Try exact match first
+          let { data: client } = await supabase
+            .from('clients')
+            .select('id, full_name')
+            .eq('firm_id', teamMember.firm_id)
+            .ilike('full_name', clientName)
+            .limit(1)
+            .maybeSingle();
+
+          // If no exact match, try fuzzy match
+          if (!client) {
+            const { data: fuzzyClient } = await supabase
+              .from('clients')
+              .select('id, full_name')
+              .eq('firm_id', teamMember.firm_id)
+              .ilike('full_name', `%${clientName}%`)
+              .limit(1)
+              .maybeSingle();
+            
+            client = fuzzyClient;
+          }
+
+          matchedClient = client?.full_name || null;
+        }
+
+        clientMatches.push({
+          rowNumber: i + 2,
+          clientName: clientName || 'N/A',
+          matchedClient
+        });
+      }
+
+      setPreview({
+        rows: previewRows,
+        columns,
+        clientMatches
+      });
+
+    } catch (error: any) {
+      console.error('Preview error:', error);
+      toast({
+        title: "Preview failed",
+        description: error.message,
+        variant: "destructive"
+      });
     }
   };
 
@@ -165,8 +285,6 @@ export const BulkImportCasesDialog = ({
         defval: ''
       }) as any[];
 
-      console.log('Raw parsed data sample:', jsonData.slice(0, 3));
-
       if (jsonData.length === 0) {
         throw new Error('No data found in the Excel file');
       }
@@ -183,6 +301,9 @@ export const BulkImportCasesDialog = ({
       }
 
       let successCount = 0;
+      const casesNotFound: string[] = [];
+      const clientsNotFound: string[] = [];
+      const successfulUpdates: { caseId: string; caseTitle: string; clientName: string }[] = [];
       const errors: string[] = [];
 
       for (let i = 0; i < jsonData.length; i++) {
@@ -209,7 +330,7 @@ export const BulkImportCasesDialog = ({
           // Find existing case
           let query = supabase
             .from('cases')
-            .select('id, case_title')
+            .select('id, case_title, case_number')
             .eq('firm_id', teamMember.firm_id);
 
           if (caseNumber) {
@@ -220,31 +341,53 @@ export const BulkImportCasesDialog = ({
             query = query.ilike('case_title', `%${caseTitle}%`);
           }
 
-          const { data: existingCase } = await query.limit(1).single();
+          const { data: existingCase } = await query.limit(1).maybeSingle();
 
           if (!existingCase) {
-            errors.push(`Row ${rowNumber}: Case not found (${caseNumber || referenceNumber || caseTitle})`);
+            const identifier = caseNumber || referenceNumber || caseTitle;
+            casesNotFound.push(`Row ${rowNumber}: ${identifier}`);
             continue;
           }
 
           // Find client by name if provided
           let clientId = null;
+          let matchedClientName = null;
           const clientName = cleanField(row.client_name || row['Client Name'] || row['client_name']);
+          
           if (clientName) {
-            const { data: client } = await supabase
+            // Try exact match first
+            let { data: client } = await supabase
               .from('clients')
-              .select('id')
+              .select('id, full_name')
               .eq('firm_id', teamMember.firm_id)
-              .ilike('full_name', `%${clientName}%`)
+              .ilike('full_name', clientName)
               .limit(1)
-              .single();
+              .maybeSingle();
+
+            // If no exact match, try fuzzy match
+            if (!client) {
+              const { data: fuzzyClient } = await supabase
+                .from('clients')
+                .select('id, full_name')
+                .eq('firm_id', teamMember.firm_id)
+                .ilike('full_name', `%${clientName}%`)
+                .limit(1)
+                .maybeSingle();
+              
+              client = fuzzyClient;
+            }
             
             if (client) {
               clientId = client.id;
+              matchedClientName = client.full_name;
             } else {
-              errors.push(`Row ${rowNumber}: Client not found: ${clientName}`);
+              clientsNotFound.push(`Row ${rowNumber}: ${clientName}`);
               continue;
             }
+          } else {
+            // No client name provided, skip this row
+            errors.push(`Row ${rowNumber}: No client_name provided`);
+            continue;
           }
 
           // Update existing case with client_id
@@ -261,13 +404,25 @@ export const BulkImportCasesDialog = ({
           }
 
           successCount++;
+          successfulUpdates.push({
+            caseId: existingCase.case_number || existingCase.id,
+            caseTitle: existingCase.case_title,
+            clientName: matchedClientName || clientName
+          });
+
         } catch (error: any) {
           console.error(`Row ${rowNumber} error:`, error);
           errors.push(`Row ${rowNumber}: ${error.message}`);
         }
       }
 
-      setResults({ success: successCount, errors });
+      setResults({ 
+        successCount, 
+        casesNotFound, 
+        clientsNotFound, 
+        successfulUpdates,
+        errors 
+      });
 
       if (successCount > 0) {
         toast({
@@ -275,6 +430,12 @@ export const BulkImportCasesDialog = ({
           description: `Successfully updated ${successCount} case(s) with client information`,
         });
         onSuccess?.();
+      } else {
+        toast({
+          title: "No updates made",
+          description: "Check the errors below for details",
+          variant: "destructive"
+        });
       }
 
     } catch (error: any) {
@@ -289,9 +450,66 @@ export const BulkImportCasesDialog = ({
     }
   };
 
+  const downloadReport = async () => {
+    if (!results) return;
+
+    try {
+      const XLSX = await import('xlsx');
+      
+      // Create report data
+      const reportData = {
+        summary: [
+          { Metric: 'Total Successful Updates', Count: results.successCount },
+          { Metric: 'Cases Not Found', Count: results.casesNotFound.length },
+          { Metric: 'Clients Not Found', Count: results.clientsNotFound.length },
+          { Metric: 'Other Errors', Count: results.errors.length }
+        ],
+        successfulUpdates: results.successfulUpdates.map(u => ({
+          'Case ID': u.caseId,
+          'Case Title': u.caseTitle,
+          'Client Name': u.clientName
+        })),
+        casesNotFound: results.casesNotFound.map(c => ({ Error: c })),
+        clientsNotFound: results.clientsNotFound.map(c => ({ Error: c })),
+        otherErrors: results.errors.map(e => ({ Error: e }))
+      };
+
+      const wb = XLSX.utils.book_new();
+      
+      // Add sheets
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(reportData.summary), 'Summary');
+      if (reportData.successfulUpdates.length > 0) {
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(reportData.successfulUpdates), 'Successful Updates');
+      }
+      if (reportData.casesNotFound.length > 0) {
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(reportData.casesNotFound), 'Cases Not Found');
+      }
+      if (reportData.clientsNotFound.length > 0) {
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(reportData.clientsNotFound), 'Clients Not Found');
+      }
+      if (reportData.otherErrors.length > 0) {
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(reportData.otherErrors), 'Other Errors');
+      }
+
+      XLSX.writeFile(wb, `bulk_update_report_${new Date().toISOString().split('T')[0]}.xlsx`);
+      
+      toast({
+        title: "Report downloaded",
+        description: "Detailed report has been downloaded",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Download failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
   const resetDialog = () => {
     setFile(null);
     setResults(null);
+    setPreview(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -375,6 +593,72 @@ export const BulkImportCasesDialog = ({
               </div>
             </div>
 
+            {/* Preview */}
+            {preview && (
+              <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                <div className="flex items-start gap-3">
+                  <Eye className="w-5 h-5 text-purple-600 mt-0.5" />
+                  <div className="flex-1">
+                    <h3 className="font-medium text-purple-900 mb-2">Data Preview</h3>
+                    
+                    <div className="mb-3">
+                      <p className="text-sm text-purple-700 mb-1">
+                        <strong>Detected Columns:</strong> {preview.columns.join(', ')}
+                      </p>
+                      <p className="text-sm text-purple-700">
+                        <strong>Total Rows:</strong> {preview.rows.length} (showing first 5)
+                      </p>
+                    </div>
+
+                    <div className="bg-white rounded border border-purple-200 overflow-hidden">
+                      <div className="overflow-x-auto max-h-48">
+                        <table className="w-full text-xs">
+                          <thead className="bg-purple-100 sticky top-0">
+                            <tr>
+                              <th className="px-2 py-1 text-left">Row</th>
+                              {preview.columns.slice(0, 5).map(col => (
+                                <th key={col} className="px-2 py-1 text-left">{col}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {preview.rows.map((row, idx) => (
+                              <tr key={idx} className="border-t border-purple-100">
+                                <td className="px-2 py-1 font-medium">{idx + 2}</td>
+                                {preview.columns.slice(0, 5).map(col => (
+                                  <td key={col} className="px-2 py-1 truncate max-w-[150px]">
+                                    {row[col] || '-'}
+                                  </td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    <div className="mt-3">
+                      <p className="text-sm font-medium text-purple-900 mb-2">Client Matching Preview:</p>
+                      <div className="space-y-1">
+                        {preview.clientMatches.map((match, idx) => (
+                          <div key={idx} className="text-xs text-purple-700 flex items-center gap-2">
+                            <span className="font-medium">Row {match.rowNumber}:</span>
+                            <span>{match.clientName}</span>
+                            <span>→</span>
+                            {match.matchedClient ? (
+                              <span className="text-green-700 font-medium">✓ {match.matchedClient}</span>
+                            ) : (
+                              <span className="text-red-700 font-medium">✗ Not found</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <Button
               onClick={processImport}
               disabled={!file || importing}
@@ -383,12 +667,12 @@ export const BulkImportCasesDialog = ({
               {importing ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                  Importing...
+                  Processing...
                 </>
               ) : (
                 <>
                   <Upload className="w-4 h-4 mr-2" />
-                  Import Cases
+                  Update Cases with Client Links
                 </>
               )}
             </Button>
@@ -397,26 +681,122 @@ export const BulkImportCasesDialog = ({
           {/* Results */}
           {results && (
             <div className="space-y-4">
-              {results.success > 0 && (
+              {/* Summary */}
+              <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-slate-900">Update Summary</h3>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={downloadReport}
+                    className="text-slate-700"
+                  >
+                    <FileDown className="w-4 h-4 mr-2" />
+                    Download Report
+                  </Button>
+                </div>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="bg-green-100 p-3 rounded">
+                    <p className="text-green-600 font-medium">Successful</p>
+                    <p className="text-2xl font-bold text-green-800">{results.successCount}</p>
+                  </div>
+                  <div className="bg-red-100 p-3 rounded">
+                    <p className="text-red-600 font-medium">Failed</p>
+                    <p className="text-2xl font-bold text-red-800">
+                      {results.casesNotFound.length + results.clientsNotFound.length + results.errors.length}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Successful Updates */}
+              {results.successfulUpdates.length > 0 && (
                 <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                  <div className="flex items-center gap-2 text-green-800">
-                    <CheckCircle className="w-5 h-5" />
-                    <span className="font-medium">
-                      Successfully updated {results.success} case(s) with client information
-                    </span>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
+                    <div className="flex-1">
+                      <h3 className="font-medium text-green-800 mb-2">
+                        Successfully Updated ({results.successfulUpdates.length})
+                      </h3>
+                      <div className="space-y-1 max-h-40 overflow-y-auto">
+                        {results.successfulUpdates.slice(0, 10).map((update, index) => (
+                          <p key={index} className="text-sm text-green-700">
+                            • {update.caseId}: {update.caseTitle} → {update.clientName}
+                          </p>
+                        ))}
+                        {results.successfulUpdates.length > 10 && (
+                          <p className="text-sm text-green-600 italic">
+                            ...and {results.successfulUpdates.length - 10} more (download report for full list)
+                          </p>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
 
+              {/* Cases Not Found */}
+              {results.casesNotFound.length > 0 && (
+                <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="w-5 h-5 text-orange-600 mt-0.5" />
+                    <div className="flex-1">
+                      <h3 className="font-medium text-orange-800 mb-2">
+                        Cases Not Found ({results.casesNotFound.length})
+                      </h3>
+                      <div className="space-y-1 max-h-32 overflow-y-auto">
+                        {results.casesNotFound.slice(0, 5).map((error, index) => (
+                          <p key={index} className="text-sm text-orange-700">
+                            • {error}
+                          </p>
+                        ))}
+                        {results.casesNotFound.length > 5 && (
+                          <p className="text-sm text-orange-600 italic">
+                            ...and {results.casesNotFound.length - 5} more
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Clients Not Found */}
+              {results.clientsNotFound.length > 0 && (
+                <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
+                    <div className="flex-1">
+                      <h3 className="font-medium text-red-800 mb-2">
+                        Clients Not Found ({results.clientsNotFound.length})
+                      </h3>
+                      <div className="space-y-1 max-h-32 overflow-y-auto">
+                        {results.clientsNotFound.slice(0, 5).map((error, index) => (
+                          <p key={index} className="text-sm text-red-700">
+                            • {error}
+                          </p>
+                        ))}
+                        {results.clientsNotFound.length > 5 && (
+                          <p className="text-sm text-red-600 italic">
+                            ...and {results.clientsNotFound.length - 5} more
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Other Errors */}
               {results.errors.length > 0 && (
                 <div className="bg-red-50 p-4 rounded-lg border border-red-200">
                   <div className="flex items-start gap-2">
                     <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
                     <div className="flex-1">
                       <h3 className="font-medium text-red-800 mb-2">
-                        {results.errors.length} error(s) occurred:
+                        Other Errors ({results.errors.length})
                       </h3>
-                      <div className="space-y-1 max-h-40 overflow-y-auto">
+                      <div className="space-y-1 max-h-32 overflow-y-auto">
                         {results.errors.map((error, index) => (
                           <p key={index} className="text-sm text-red-700">
                             • {error}
