@@ -48,7 +48,7 @@ export const ClientList = () => {
   const [deletingClient, setDeletingClient] = useState<Client | null>(null);
   const [vipToggleClient, setVipToggleClient] = useState<{ id: string; name: string; currentStatus: boolean } | null>(null);
   const [page, setPage] = useState(1);
-  const pageSize = 50;
+  const pageSize = 20;
   const {
     toast
   } = useToast();

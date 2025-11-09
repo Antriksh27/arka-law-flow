@@ -16,7 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Trash2, Loader2 } from 'lucide-react';
+import { Trash2, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface CasesGridProps {
@@ -36,9 +36,11 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
   const queryClient = useQueryClient();
   const [selectedCases, setSelectedCases] = useState<Set<string>>(new Set());
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
   
-  const { data: cases, isLoading } = useQuery({
-    queryKey: ['cases', searchQuery, statusFilter, typeFilter, assignedFilter],
+  const { data: queryResult, isLoading } = useQuery({
+    queryKey: ['cases', searchQuery, statusFilter, typeFilter, assignedFilter, page],
     queryFn: async () => {
       // Get current user info
       const { data: { user } } = await supabase.auth.getUser();
@@ -81,7 +83,7 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
         query = query.eq('case_type', typeFilter as any);
       }
 
-      const { data, error } = await query;
+      const { data, error, count } = await query;
       if (error) throw error;
       
       // Apply status filter after fetching if needed
@@ -94,9 +96,21 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
         });
       }
       
-      return filteredData;
+      // Apply pagination
+      const startIndex = (page - 1) * pageSize;
+      const endIndex = startIndex + pageSize;
+      const paginatedData = filteredData.slice(startIndex, endIndex);
+      
+      return {
+        cases: paginatedData,
+        totalCount: filteredData.length
+      };
     }
   });
+
+  const cases = queryResult?.cases || [];
+  const totalCount = queryResult?.totalCount || 0;
+  const totalPages = Math.ceil(totalCount / pageSize);
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -212,6 +226,81 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
           </div>
         ))}
       </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between px-4 py-4 bg-white rounded-2xl shadow-sm border border-gray-200">
+          <div className="text-sm text-muted-foreground">
+            Page {page} of {totalPages} (Total: {totalCount} cases)
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(1)}
+              disabled={page === 1}
+              className="hidden sm:flex"
+            >
+              First
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(p => p - 1)}
+              disabled={page === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              <span className="hidden sm:inline ml-1">Previous</span>
+            </Button>
+            
+            <div className="flex items-center gap-1">
+              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                let pageNum: number;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (page <= 3) {
+                  pageNum = i + 1;
+                } else if (page >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  pageNum = page - 2 + i;
+                }
+                
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={page === pageNum ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setPage(pageNum)}
+                    className="min-w-[32px]"
+                  >
+                    {pageNum}
+                  </Button>
+                );
+              })}
+            </div>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(p => p + 1)}
+              disabled={page === totalPages}
+            >
+              <span className="hidden sm:inline mr-1">Next</span>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(totalPages)}
+              disabled={page === totalPages}
+              className="hidden sm:flex"
+            >
+              Last
+            </Button>
+          </div>
+        </div>
+      )}
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>

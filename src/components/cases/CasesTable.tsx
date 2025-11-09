@@ -42,7 +42,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
   const [page, setPage] = useState(1);
   const [sortField, setSortField] = useState<'created_at' | 'reference_number'>('created_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const pageSize = 50;
+  const pageSize = 20;
   
   const {
     data: queryResult,
