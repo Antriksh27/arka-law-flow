@@ -646,6 +646,7 @@ serve(async (req) => {
           fetched_data: searchResult.data,
           fetch_status: 'success',
           fetch_message: `Successfully fetched from ${searchType} on ${new Date().toISOString()}`,
+          is_auto_fetched: true,
         };
         
         // Add only valid fields from mappedData
