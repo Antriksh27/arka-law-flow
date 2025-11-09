@@ -55,6 +55,7 @@ export const FetchQueueDashboard = () => {
     retryFailed,
     clearCompleted,
     queueAllEligible,
+    stopProcessing,
   } = useFetchQueue();
 
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
@@ -154,6 +155,19 @@ export const FetchQueueDashboard = () => {
                 <><Play className="mr-2 h-4 w-4" /> Queue All Eligible</>
               )}
             </Button>
+            {stats.processing > 0 && (
+              <Button
+                variant="destructive"
+                onClick={() => stopProcessing.mutateAsync()}
+                disabled={stopProcessing.isPending}
+              >
+                {stopProcessing.isPending ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Stopping...</>
+                ) : (
+                  <><XCircle className="mr-2 h-4 w-4" /> Stop Processing</>
+                )}
+              </Button>
+            )}
             <Button
               onClick={() => processQueue.mutateAsync({ batch_size: 10, delay_ms: 1500 })}
               disabled={processQueue.isPending || stats.queued === 0}

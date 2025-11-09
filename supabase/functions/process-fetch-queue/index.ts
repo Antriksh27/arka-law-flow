@@ -71,6 +71,9 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    
+    // Get authorization header to pass to legalkart-api
+    const authHeader = req.headers.get('authorization');
 
     const { batch_size = 10, delay_ms = 1500 } = await req.json();
 
@@ -151,10 +154,11 @@ serve(async (req) => {
           })
           .eq('id', item.id);
 
-        // Call legalkart API
+        // Call legalkart API with authorization
         const searchType = mapCourtTypeToSearchType(item.court_type);
         
         const { data: apiResponse, error: apiError } = await supabase.functions.invoke('legalkart-api', {
+          headers: authHeader ? { authorization: authHeader } : {},
           body: {
             action: 'search',
             cnr: item.cnr_number,

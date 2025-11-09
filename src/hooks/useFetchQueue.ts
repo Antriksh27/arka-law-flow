@@ -248,6 +248,37 @@ export const useFetchQueue = () => {
     },
   });
 
+  // Stop processing mutation
+  const stopProcessing = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from('case_fetch_queue')
+        .update({ 
+          status: 'failed', 
+          last_error: 'Processing stopped by user',
+          last_error_at: new Date().toISOString()
+        })
+        .eq('status', 'processing')
+        .eq('firm_id', firmId!);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['fetch-queue'] });
+      toast({
+        title: "Processing stopped",
+        description: "All processing items have been marked as failed",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to stop processing",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Queue all eligible cases
   const queueAllEligible = useMutation({
     mutationFn: async () => {
@@ -329,5 +360,6 @@ export const useFetchQueue = () => {
     retryFailed,
     clearCompleted,
     queueAllEligible,
+    stopProcessing,
   };
 };
