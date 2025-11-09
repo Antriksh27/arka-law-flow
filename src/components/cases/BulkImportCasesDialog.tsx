@@ -124,7 +124,7 @@ export const BulkImportCasesDialog = ({
         };
 
         const cnrNumber = cleanField(row.cnr_number || row['CNR Number'] || row['cnr_number'] || row['CNR'] || row['cnr']);
-        const clientName = cleanField(row.client_name || row['Client Name'] || row['client_name']);
+        const clientName = cleanField(row.client_name || row['Client Name'] || row['client_name'] || row.client || row['Client']);
         let matchedClient = null;
         let caseFound = false;
 
@@ -347,7 +347,7 @@ export const BulkImportCasesDialog = ({
           // Find client by name if provided
           let clientId = null;
           let matchedClientName = null;
-          const clientName = cleanField(row.client_name || row['Client Name'] || row['client_name']);
+          const clientName = cleanField(row.client_name || row['Client Name'] || row['client_name'] || row.client || row['Client']);
           
           if (clientName) {
             const normalizedInputName = normalizeClientName(clientName);
