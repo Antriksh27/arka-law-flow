@@ -123,14 +123,14 @@ export const BulkImportCasesDialog = ({
         if (cnrNumber) {
           const normalizedCNR = normalizeCNR(cnrNumber);
           
-          // Get all cases and check normalized CNR in case_number field
+          // Get all cases and check normalized CNR in cnr_number field
           const { data: allCases } = await supabase
             .from('cases')
-            .select('id, case_title, case_number')
+            .select('id, case_title, cnr_number')
             .eq('firm_id', teamMember.firm_id);
           
           const existingCase = allCases?.find(c => 
-            normalizeCNR(c.case_number || '') === normalizedCNR
+            normalizeCNR(c.cnr_number || '') === normalizedCNR
           );
           
           caseFound = !!existingCase;
@@ -333,11 +333,11 @@ export const BulkImportCasesDialog = ({
           // Find existing case by CNR (normalize both sides for comparison)
           const { data: allCases } = await supabase
             .from('cases')
-            .select('id, case_title, case_number')
+            .select('id, case_title, cnr_number')
             .eq('firm_id', teamMember.firm_id);
 
           const existingCase = allCases?.find(c => 
-            normalizeCNR(c.case_number || '') === normalizedCNR
+            normalizeCNR(c.cnr_number || '') === normalizedCNR
           );
 
           if (!existingCase) {
@@ -401,7 +401,7 @@ export const BulkImportCasesDialog = ({
 
           successCount++;
           successfulUpdates.push({
-            caseId: existingCase.case_number || existingCase.id,
+            caseId: existingCase.cnr_number || existingCase.id,
             caseTitle: existingCase.case_title,
             clientName: matchedClientName || clientName
           });

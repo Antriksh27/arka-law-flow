@@ -58,9 +58,9 @@ export const StandardizeCNRDialog = ({
       // Get all cases with CNR numbers
       const { data: cases, error } = await supabase
         .from('cases')
-        .select('id, case_title, case_number')
+        .select('id, case_title, cnr_number')
         .eq('firm_id', teamMember.firm_id)
-        .not('case_number', 'is', null);
+        .not('cnr_number', 'is', null);
 
       if (error) throw error;
 
@@ -76,7 +76,7 @@ export const StandardizeCNRDialog = ({
       const needsStandardization: CNRPreview[] = [];
       
       for (const caseItem of cases) {
-        const original = caseItem.case_number || '';
+        const original = caseItem.cnr_number || '';
         const standardized = normalizeCNR(original);
         
         // Only include if there's a difference
@@ -132,7 +132,7 @@ export const StandardizeCNRDialog = ({
           const { error } = await supabase
             .from('cases')
             .update({ 
-              case_number: item.standardizedCNR,
+              cnr_number: item.standardizedCNR,
               updated_at: new Date().toISOString()
             })
             .eq('id', item.caseId);
