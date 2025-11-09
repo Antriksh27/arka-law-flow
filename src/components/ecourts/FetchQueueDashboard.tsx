@@ -37,9 +37,11 @@ import {
   Clock,
   Loader2,
   AlertCircle,
-  FileText
+  FileText,
+  Plug
 } from "lucide-react";
 import { useFetchQueue, QueueItem } from "@/hooks/useFetchQueue";
+import { useLegalkartIntegration } from "@/hooks/useLegalkartIntegration";
 import { useNavigate } from "react-router-dom";
 import TimeUtils from "@/lib/timeUtils";
 
@@ -57,6 +59,8 @@ export const FetchQueueDashboard = () => {
     queueAllEligible,
     stopProcessing,
   } = useFetchQueue();
+
+  const { authenticate } = useLegalkartIntegration();
 
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -144,6 +148,17 @@ export const FetchQueueDashboard = () => {
             </p>
           </div>
           <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => authenticate.mutateAsync()}
+              disabled={authenticate.isPending}
+            >
+              {authenticate.isPending ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Testing...</>
+              ) : (
+                <><Plug className="mr-2 h-4 w-4" /> Test Connection</>
+              )}
+            </Button>
             <Button
               variant="outline"
               onClick={() => queueAllEligible.mutateAsync()}

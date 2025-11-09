@@ -333,40 +333,87 @@ serve(async (req) => {
       console.warn('Legalkart credentials not configured - skipping for non-external actions');
     }
 
-    // Create Supabase client (service role) and verify user from Authorization header
-    const authHeader = req.headers.get('Authorization') || '';
-    const jwt = authHeader.replace('Bearer ', '');
+    // Initialize Supabase client
     const supabase = createClient(supabaseUrl, serviceRoleKey, {
       auth: { persistSession: false }
     });
 
-    // Get current user from JWT
-    const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
-    if (userError || !user) {
-      console.error('Authentication error:', userError);
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Get user's firm
-    const { data: teamMember } = await supabase
-      .from('team_members')
-      .select('firm_id, role')
-      .eq('user_id', user.id)
-      .single();
-
-    if (!teamMember) {
-      console.error('User not found in team members');
-      return new Response(
-        JSON.stringify({ error: 'User not authorized' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
+    // Parse request body early
     const requestBody = await req.json();
     const { action } = requestBody;
+
+    // Detect call type: internal (from another edge function) vs user (from frontend)
+    const authHeader = req.headers.get('Authorization') || req.headers.get('authorization') || '';
+    const apikeyHeader = req.headers.get('apikey') || req.headers.get('x-api-key') || '';
+    const isInternalCall = apikeyHeader === serviceRoleKey;
+
+    let teamMember: { firm_id: string; role: string };
+    let userId: string;
+
+    if (isInternalCall) {
+      // Internal call from process-fetch-queue or other edge functions
+      console.log('🔧 Internal call detected');
+      
+      if (!requestBody.firmId) {
+        console.error('❌ firmId is required for internal calls');
+        return new Response(
+          JSON.stringify({ success: false, error: 'firmId is required for internal calls' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      teamMember = { firm_id: requestBody.firmId, role: 'system' };
+      userId = requestBody.userId || 'system';
+      console.log(`✅ Internal call authorized: firmId=${teamMember.firm_id}, action=${action}`);
+    } else {
+      // User call from frontend
+      console.log('👤 User call detected');
+      
+      if (!authHeader.startsWith('Bearer ')) {
+        console.error('❌ Missing Authorization header');
+        return new Response(
+          JSON.stringify({ success: false, error: 'Missing Authorization. Please sign in.' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Decode JWT locally to extract userId (sub claim)
+      try {
+        const jwt = authHeader.split(' ')[1];
+        const payload = JSON.parse(atob(jwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+        userId = payload.sub;
+
+        if (!userId) {
+          throw new Error('Missing sub claim in JWT');
+        }
+
+        console.log(`🔍 Decoded userId from JWT: ${userId}`);
+
+        // Look up team_members to get firm_id
+        const { data: tm, error: tmError } = await supabase
+          .from('team_members')
+          .select('firm_id, role')
+          .eq('user_id', userId)
+          .single();
+
+        if (tmError || !tm) {
+          console.error('❌ User not found in team_members:', tmError);
+          return new Response(
+            JSON.stringify({ success: false, error: 'User not authorized. Please contact your administrator.' }),
+            { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        teamMember = tm;
+        console.log(`✅ User authorized: userId=${userId}, firmId=${teamMember.firm_id}, role=${teamMember.role}, action=${action}`);
+      } catch (e) {
+        console.error('❌ JWT decode error:', e);
+        return new Response(
+          JSON.stringify({ success: false, error: 'Invalid authentication token' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
 
     if (action === 'authenticate') {
       // Authenticate with Legalkart API
@@ -511,7 +558,7 @@ serve(async (req) => {
           cnr_number: normalizedCnr, // Store normalized CNR
           search_type: searchType,
           request_data: { cnr, searchType },
-          created_by: user.id,
+          created_by: userId,
         })
         .select()
         .single();
@@ -846,7 +893,7 @@ serve(async (req) => {
               response_data: searchResult.data,
               status: searchResult.success ? 'success' : 'failed',
               error_message: searchResult.error || null,
-              created_by: user.id,
+              created_by: userId,
             });
 
           if (insertError) {

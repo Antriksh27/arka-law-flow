@@ -15,15 +15,35 @@ interface BatchSearchOptions {
 export const useLegalkartIntegration = () => {
   const { toast } = useToast();
 
+  // Get firmId from current user
+  const getFirmId = async (): Promise<string | null> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+
+    const { data: teamMember } = await supabase
+      .from('team_members')
+      .select('firm_id')
+      .eq('user_id', user.id)
+      .single();
+
+    return teamMember?.firm_id || null;
+  };
+
   // Single case search
   const searchCase = useMutation({
     mutationFn: async ({ cnr, searchType, caseId }: LegalkartSearchOptions) => {
+      const firmId = await getFirmId();
+      if (!firmId) {
+        throw new Error('Please sign in to fetch case details');
+      }
+
       const { data, error } = await supabase.functions.invoke('legalkart-api', {
         body: { 
           action: 'search', 
           cnr, 
           searchType, 
-          caseId 
+          caseId,
+          firmId
         },
       });
 
@@ -56,10 +76,16 @@ export const useLegalkartIntegration = () => {
   // Batch search
   const batchSearch = useMutation({
     mutationFn: async ({ cnrs }: BatchSearchOptions) => {
+      const firmId = await getFirmId();
+      if (!firmId) {
+        throw new Error('Please sign in to perform batch search');
+      }
+
       const { data, error } = await supabase.functions.invoke('legalkart-api', {
         body: { 
           action: 'batch_search', 
-          cnrs 
+          cnrs,
+          firmId
         },
       });
 
@@ -92,8 +118,13 @@ export const useLegalkartIntegration = () => {
   // Gujarat Display Board
   const getDisplayBoard = useMutation({
     mutationFn: async () => {
+      const firmId = await getFirmId();
+      if (!firmId) {
+        throw new Error('Please sign in to fetch display board');
+      }
+
       const { data, error } = await supabase.functions.invoke('legalkart-api', {
-        body: { action: 'gujarat_display_board' },
+        body: { action: 'gujarat_display_board', firmId },
       });
 
       if (error) throw error;
@@ -125,8 +156,13 @@ export const useLegalkartIntegration = () => {
   // Authenticate with Legalkart
   const authenticate = useMutation({
     mutationFn: async () => {
+      const firmId = await getFirmId();
+      if (!firmId) {
+        throw new Error('Please sign in to authenticate with Legalkart');
+      }
+
       const { data, error } = await supabase.functions.invoke('legalkart-api', {
-        body: { action: 'authenticate' },
+        body: { action: 'authenticate', firmId },
       });
 
       if (error) throw error;
