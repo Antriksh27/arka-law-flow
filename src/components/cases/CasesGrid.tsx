@@ -76,17 +76,25 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
         query = query.or(`title.ilike.%${searchQuery}%,case_title.ilike.%${searchQuery}%,client_name.ilike.%${searchQuery}%,petitioner.ilike.%${searchQuery}%,respondent.ilike.%${searchQuery}%,vs.ilike.%${searchQuery}%,case_number.ilike.%${searchQuery}%,cnr_number.ilike.%${searchQuery}%,filing_number.ilike.%${searchQuery}%`);
       }
 
-      if (statusFilter !== 'all') {
-        query = query.eq('status', statusFilter as any);
-      }
-
+      // Note: Status filter applied after fetching to work with displayStatus logic
       if (typeFilter !== 'all') {
         query = query.eq('case_type', typeFilter as any);
       }
 
       const { data, error } = await query;
       if (error) throw error;
-      return data || [];
+      
+      // Apply status filter after fetching if needed
+      let filteredData = data || [];
+      if (statusFilter !== 'all') {
+        filteredData = filteredData.filter(caseItem => {
+          const isLinkedToLegalkart = caseItem.cnr_number && caseItem.last_fetched_at;
+          const displayStatus = isLinkedToLegalkart ? caseItem.status || 'in_court' : caseItem.status || 'open';
+          return displayStatus === statusFilter;
+        });
+      }
+      
+      return filteredData;
     }
   });
 

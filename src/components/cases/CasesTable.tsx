@@ -103,9 +103,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
       if (searchQuery) {
         query = query.or(`case_title.ilike.%${searchQuery}%,petitioner.ilike.%${searchQuery}%,respondent.ilike.%${searchQuery}%,case_number.ilike.%${searchQuery}%,cnr_number.ilike.%${searchQuery}%,filing_number.ilike.%${searchQuery}%,reference_number.ilike.%${searchQuery}%`);
       }
-      if (statusFilter !== 'all') {
-        query = query.eq('status', statusFilter as any);
-      }
+      // Note: Status filter applied after data transformation to work with displayStatus
       if (typeFilter !== 'all') {
         query = query.eq('case_type', typeFilter as any);
       }
@@ -143,11 +141,11 @@ export const CasesTable: React.FC<CasesTableProps> = ({
           displayTitle = `${cleanPetitioner} Vs ${cleanRespondent}`;
         }
         
-        // Determine display status: if linked to Legalkart, map to pending/disposed; otherwise show "open"
+        // Determine display status: if linked to Legalkart, map to pending/disposed; otherwise show actual status
         const isLinkedToLegalkart = caseItem.cnr_number && caseItem.last_fetched_at;
         const displayStatus = isLinkedToLegalkart 
           ? mapToLegalkartStatus(caseItem.status)
-          : 'open';
+          : caseItem.status || 'open';
         
         return {
           ...caseItem,
@@ -157,11 +155,16 @@ export const CasesTable: React.FC<CasesTableProps> = ({
         };
       }) || [];
       
-      console.log('Transformed cases:', transformedData);
+      // Apply status filter after transformation to work with displayStatus
+      const filteredData = statusFilter !== 'all' 
+        ? transformedData.filter(c => c.displayStatus === statusFilter)
+        : transformedData;
+      
+      console.log('Transformed and filtered cases:', filteredData);
       
       return {
-        cases: transformedData,
-        totalCount: count || 0
+        cases: filteredData,
+        totalCount: statusFilter !== 'all' ? filteredData.length : count || 0
       };
     }
   });
