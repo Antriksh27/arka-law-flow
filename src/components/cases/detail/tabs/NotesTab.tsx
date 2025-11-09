@@ -9,7 +9,7 @@ import { NoteCard } from '@/components/notes/NoteCard';
 import { NoteViewDialog } from '@/components/notes/NoteViewDialog';
 import { CreateNoteMultiModal } from '@/components/notes/CreateNoteMultiModal';
 import { EditNoteDialog } from '@/components/notes/EditNoteDialog';
-import { StickyNote, Plus, Shield, FileText, Trash2, Loader2 } from 'lucide-react';
+import { StickyNote, Plus, Shield, FileText, Trash2, Loader2, Share2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { TimeUtils } from '@/lib/timeUtils';
@@ -90,7 +90,8 @@ export const NotesTab: React.FC<NotesTabProps> = ({ caseId }) => {
         .insert({
           case_id: caseId,
           note: noteText.trim(),
-          created_by: user?.id
+          created_by: user?.id,
+          shared_with_staff: false
         })
         .select()
         .single();
@@ -106,6 +107,48 @@ export const NotesTab: React.FC<NotesTabProps> = ({ caseId }) => {
     },
     onError: (error: any) => {
       toast({ title: "Error", description: error.message || "Failed to add internal note", variant: "destructive" });
+    }
+  });
+
+  // Share note with staff mutation
+  const shareNoteMutation = useMutation({
+    mutationFn: async (noteId: string) => {
+      const { error } = await supabase
+        .from('case_internal_notes')
+        .update({ shared_with_staff: true })
+        .eq('id', noteId);
+
+      if (error) throw error;
+
+      // Send notification to office_staff and admin users
+      await supabase.functions.invoke('send-notification', {
+        body: {
+          recipients: 'team',
+          notification_type: 'note_shared',
+          title: 'Lawyer Note Shared for Review',
+          message: `A lawyer has shared a private note on case for your review`,
+          reference_id: caseId,
+          reference_type: 'case',
+          priority: 'normal',
+          category: 'tasks',
+        },
+      });
+
+      return noteId;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['case-internal-notes', caseId] });
+      toast({ 
+        title: "Note shared", 
+        description: "Office staff and admins have been notified" 
+      });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Error", 
+        description: error.message || "Failed to share note", 
+        variant: "destructive" 
+      });
     }
   });
 
@@ -214,12 +257,18 @@ export const NotesTab: React.FC<NotesTabProps> = ({ caseId }) => {
                   <div key={note.id} className="p-4 rounded-lg border border-border bg-slate-50">
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
                           <span className="text-sm font-medium text-foreground">
                             {note.creator?.full_name || 'Unknown'}
                           </span>
                           {note.created_by === user?.id && (
                             <Badge variant="outline" className="text-xs">You</Badge>
+                          )}
+                          {note.shared_with_staff && (
+                            <Badge variant="outline" className="text-xs gap-1 bg-blue-50 border-blue-200">
+                              <Share2 className="w-3 h-3" />
+                              Shared with Staff
+                            </Badge>
                           )}
                           <span className="text-xs text-muted-foreground">
                             {TimeUtils.formatDate(note.created_at)}
@@ -229,21 +278,35 @@ export const NotesTab: React.FC<NotesTabProps> = ({ caseId }) => {
                           {note.note}
                         </p>
                       </div>
-                      {(role === 'admin' || note.created_by === user?.id) && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            if (window.confirm('Are you sure you want to delete this note?')) {
-                              deleteInternalNoteMutation.mutate(note.id);
-                            }
-                          }}
-                          disabled={deleteInternalNoteMutation.isPending}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {note.created_by === user?.id && !note.shared_with_staff && role === 'lawyer' && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => shareNoteMutation.mutate(note.id)}
+                            disabled={shareNoteMutation.isPending}
+                            className="gap-1"
+                          >
+                            <Share2 className="w-3 h-3" />
+                            Share
+                          </Button>
+                        )}
+                        {(role === 'admin' || note.created_by === user?.id) && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              if (window.confirm('Are you sure you want to delete this note?')) {
+                                deleteInternalNoteMutation.mutate(note.id);
+                              }
+                            }}
+                            disabled={deleteInternalNoteMutation.isPending}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}

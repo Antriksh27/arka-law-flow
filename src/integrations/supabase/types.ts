@@ -682,6 +682,7 @@ export type Database = {
           created_by: string
           id: string
           note: string
+          shared_with_staff: boolean | null
           updated_at: string
         }
         Insert: {
@@ -690,6 +691,7 @@ export type Database = {
           created_by: string
           id?: string
           note: string
+          shared_with_staff?: boolean | null
           updated_at?: string
         }
         Update: {
@@ -698,6 +700,7 @@ export type Database = {
           created_by?: string
           id?: string
           note?: string
+          shared_with_staff?: boolean | null
           updated_at?: string
         }
         Relationships: [
