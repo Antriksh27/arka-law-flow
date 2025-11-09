@@ -12,6 +12,7 @@ export const CaseInfoCard = ({ caseData }: CaseInfoCardProps) => {
   const [isOpen, setIsOpen] = useState(true);
 
   const infoItems = [
+    { label: 'Reference Number', value: caseData?.reference_number },
     { label: 'Filing Number', value: caseData?.filing_number },
     { label: 'Filing Date', value: formatDateDisplay(caseData?.filing_date) },
     { label: 'Registration Number', value: caseData?.registration_number },

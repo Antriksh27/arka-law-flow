@@ -1093,6 +1093,7 @@ export type Database = {
           police_station: string | null
           priority: Database["public"]["Enums"]["case_priority_enum"] | null
           purpose_of_hearing: string | null
+          reference_number: string | null
           registration_date: string | null
           registration_number: string | null
           respondent: string | null
@@ -1181,6 +1182,7 @@ export type Database = {
           police_station?: string | null
           priority?: Database["public"]["Enums"]["case_priority_enum"] | null
           purpose_of_hearing?: string | null
+          reference_number?: string | null
           registration_date?: string | null
           registration_number?: string | null
           respondent?: string | null
@@ -1269,6 +1271,7 @@ export type Database = {
           police_station?: string | null
           priority?: Database["public"]["Enums"]["case_priority_enum"] | null
           purpose_of_hearing?: string | null
+          reference_number?: string | null
           registration_date?: string | null
           registration_number?: string | null
           respondent?: string | null

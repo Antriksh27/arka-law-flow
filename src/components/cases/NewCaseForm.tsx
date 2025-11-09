@@ -24,6 +24,7 @@ interface CaseFormData {
   case_type: string;
   status: string;
   priority: string;
+  reference_number?: string;
   case_number?: string;
   filing_date?: string;
   court_name?: string;
@@ -125,6 +126,7 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
         case_type: data.case_type as any,
         status: data.status as any,
         priority: data.priority as any,
+        reference_number: data.reference_number || null,
         case_number: data.case_number || null,
         filing_date: data.filing_date ? new Date(data.filing_date).toISOString().split('T')[0] : null,
         court_name: data.court_name || null,
@@ -292,6 +294,16 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
                 <option value="medium">Medium</option>
                 <option value="high">High</option>
               </select>
+            </div>
+
+            <div>
+              <Label htmlFor="reference_number">Reference Number (Internal)</Label>
+              <Input
+                id="reference_number"
+                {...register('reference_number')}
+                className="mt-2 bg-white border-gray-300"
+                placeholder="Internal case reference number..."
+              />
             </div>
 
             <div>

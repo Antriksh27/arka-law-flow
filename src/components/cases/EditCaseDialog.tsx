@@ -28,6 +28,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
 }) => {
   const [formData, setFormData] = useState({
     client_id: caseData?.client_id || '',
+    reference_number: caseData?.reference_number || '',
     registration_number: caseData?.registration_number || '',
     status: caseData?.status || 'open',
     stage: caseData?.stage || '',
@@ -351,7 +352,16 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
           {/* Case Numbers */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Case Numbers & References</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="reference_number">Reference Number (Internal)</Label>
+                <Input
+                  id="reference_number"
+                  value={formData.reference_number}
+                  onChange={(e) => setFormData({ ...formData, reference_number: e.target.value })}
+                  placeholder="Internal case reference number"
+                />
+              </div>
               <div>
                 <Label htmlFor="filing_number">Filing Number</Label>
                 <Input
