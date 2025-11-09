@@ -6,6 +6,7 @@ import { CasesGrid } from '../components/cases/CasesGrid';
 import { CasesTable } from '../components/cases/CasesTable';
 import { AddCaseDialog } from '../components/cases/AddCaseDialog';
 import { BulkImportCasesDialog } from '../components/cases/BulkImportCasesDialog';
+import { StandardizeCNRDialog } from '../components/cases/StandardizeCNRDialog';
 
 const Cases = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
@@ -15,6 +16,7 @@ const Cases = () => {
   const [assignedFilter, setAssignedFilter] = useState('all');
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showBulkImportDialog, setShowBulkImportDialog] = useState(false);
+  const [showStandardizeCNRDialog, setShowStandardizeCNRDialog] = useState(false);
 
   useEffect(() => {
     console.log('Cases component mounted');
@@ -32,6 +34,7 @@ const Cases = () => {
         onViewModeChange={setViewMode}
         onAddCase={() => setShowAddDialog(true)}
         onBulkImport={() => setShowBulkImportDialog(true)}
+        onStandardizeCNR={() => setShowStandardizeCNRDialog(true)}
       />
       
       <CasesFilters
@@ -81,6 +84,15 @@ const Cases = () => {
         onSuccess={() => {
           // Refresh the cases list if needed
           console.log('Cases imported successfully');
+        }}
+      />
+
+      <StandardizeCNRDialog
+        open={showStandardizeCNRDialog}
+        onOpenChange={setShowStandardizeCNRDialog}
+        onSuccess={() => {
+          // Cases will be refreshed automatically via realtime subscriptions
+          console.log('CNR numbers standardized successfully');
         }}
       />
     </div>

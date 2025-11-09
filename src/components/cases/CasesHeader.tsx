@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, Grid3X3, List, Upload } from 'lucide-react';
+import { Plus, Grid3X3, List, Upload, Settings } from 'lucide-react';
 import { DeleteAllCasesDialog } from '@/components/admin/DeleteAllCasesDialog';
 import { useAuth } from '@/contexts/AuthContext';
 interface CasesHeaderProps {
@@ -8,12 +8,14 @@ interface CasesHeaderProps {
   onViewModeChange: (mode: 'grid' | 'table') => void;
   onAddCase: () => void;
   onBulkImport: () => void;
+  onStandardizeCNR: () => void;
 }
 export const CasesHeader: React.FC<CasesHeaderProps> = ({
   viewMode,
   onViewModeChange,
   onAddCase,
-  onBulkImport
+  onBulkImport,
+  onStandardizeCNR
 }) => {
   const { role } = useAuth();
   const isAdmin = role === 'admin';
@@ -42,6 +44,17 @@ export const CasesHeader: React.FC<CasesHeaderProps> = ({
           <Upload className="w-4 h-4 mr-2" />
           Bulk Import
         </Button>
+
+        {isAdmin && (
+          <Button 
+            onClick={onStandardizeCNR}
+            variant="outline" 
+            className="border-orange-300 text-orange-700 hover:bg-orange-50"
+          >
+            <Settings className="w-4 h-4 mr-2" />
+            Standardize CNR
+          </Button>
+        )}
 
         <Button onClick={onAddCase} className="bg-slate-800 hover:bg-slate-700">
           <Plus className="w-4 h-4 mr-2" />
