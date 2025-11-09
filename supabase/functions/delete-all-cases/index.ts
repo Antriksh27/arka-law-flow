@@ -54,7 +54,6 @@ Deno.serve(async (req) => {
     }
 
     const firmId = teamMember.firm_id;
-    const deletionSummary: Record<string, number> = {};
 
     console.log(`Starting case deletion for firm ${firmId} by user ${user.id}`);
 
@@ -76,165 +75,111 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Delete in correct order to handle foreign key constraints
+    // Process deletion in background to avoid timeout
+    const deletionTask = async () => {
+      const deletionSummary: Record<string, number> = {};
+      
+      try {
+        console.log(`Background deletion started for ${caseIds.length} cases`);
+        
+        // Process in batches of 100 to avoid overwhelming the database
+        const batchSize = 100;
+        for (let i = 0; i < caseIds.length; i += batchSize) {
+          const batch = caseIds.slice(i, i + batchSize);
+          console.log(`Processing batch ${i / batchSize + 1}, cases ${i + 1}-${Math.min(i + batchSize, caseIds.length)}`);
+          
+          // Delete related data for this batch
+          await Promise.all([
+            supabaseClient.from('case_activities').delete().in('case_id', batch),
+            supabaseClient.from('case_assignments').delete().in('case_id', batch),
+            supabaseClient.from('case_contacts').delete().in('case_id', batch),
+            supabaseClient.from('case_relations').delete().in('case_id', batch),
+            supabaseClient.from('case_internal_notes').delete().in('case_id', batch),
+            supabaseClient.from('case_notes').delete().in('case_id', batch),
+            supabaseClient.from('case_emails').delete().in('case_id', batch),
+            supabaseClient.from('case_documents').delete().in('case_id', batch),
+            supabaseClient.from('case_hearings').delete().in('case_id', batch),
+            supabaseClient.from('case_orders').delete().in('case_id', batch),
+            supabaseClient.from('case_objections').delete().in('case_id', batch),
+            supabaseClient.from('case_files').delete().in('case_id', batch),
+            supabaseClient.from('case_fetch_queue').delete().in('case_id', batch),
+          ]);
+          
+          // Nullify case_id references (preserve these records)
+          await Promise.all([
+            supabaseClient.from('appointments').update({ case_id: null }).in('case_id', batch),
+            supabaseClient.from('tasks').update({ case_id: null }).in('case_id', batch),
+            supabaseClient.from('documents').update({ case_id: null }).in('case_id', batch),
+          ]);
+          
+          console.log(`Batch ${i / batchSize + 1} related data deleted`);
+        }
+        
+        // Finally, delete all cases at once
+        console.log(`Deleting ${caseIds.length} cases from main table`);
+        const { error: casesDeleteError } = await supabaseClient
+          .from('cases')
+          .delete()
+          .eq('firm_id', firmId);
+        
+        if (casesDeleteError) {
+          console.error('Error deleting cases:', casesDeleteError);
+          throw casesDeleteError;
+        }
+        
+        deletionSummary.cases = caseIds.length;
+        deletionSummary.total_batches = Math.ceil(caseIds.length / batchSize);
+        
+        // Log this operation in audit logs
+        await supabaseClient.from('audit_logs').insert({
+          entity_type: 'cases',
+          action: 'bulk_delete_all',
+          user_id: user.id,
+          details: {
+            firm_id: firmId,
+            deleted_count: caseIds.length,
+            summary: deletionSummary,
+            timestamp: new Date().toISOString(),
+          },
+        });
+        
+        console.log(`Successfully deleted all ${caseIds.length} cases for firm ${firmId}`);
+      } catch (error) {
+        console.error('Error in background deletion task:', error);
+        
+        // Log the error
+        await supabaseClient.from('audit_logs').insert({
+          entity_type: 'cases',
+          action: 'bulk_delete_failed',
+          user_id: user.id,
+          details: {
+            firm_id: firmId,
+            error: error.message,
+            timestamp: new Date().toISOString(),
+          },
+        });
+      }
+    };
 
-    // 1. Case activities
-    const { error: activitiesError } = await supabaseClient
-      .from('case_activities')
-      .delete()
-      .in('case_id', caseIds);
-    if (activitiesError) console.error('Error deleting case_activities:', activitiesError);
-    else {
-      const { count } = await supabaseClient
-        .from('case_activities')
-        .select('*', { count: 'exact', head: true })
-        .in('case_id', caseIds);
-      deletionSummary.case_activities = count || 0;
+    // Start background task
+    // @ts-ignore - EdgeRuntime is available in Deno Deploy
+    if (typeof EdgeRuntime !== 'undefined') {
+      // @ts-ignore
+      EdgeRuntime.waitUntil(deletionTask());
+    } else {
+      // Fallback for local development - run immediately but don't await
+      deletionTask();
     }
 
-    // 2. Case assignments
-    const { error: assignmentsError } = await supabaseClient
-      .from('case_assignments')
-      .delete()
-      .in('case_id', caseIds);
-    if (assignmentsError) console.error('Error deleting case_assignments:', assignmentsError);
-    else deletionSummary.case_assignments = 0;
-
-    // 3. Case contacts
-    const { error: contactsError } = await supabaseClient
-      .from('case_contacts')
-      .delete()
-      .in('case_id', caseIds);
-    if (contactsError) console.error('Error deleting case_contacts:', contactsError);
-    else deletionSummary.case_contacts = 0;
-
-    // 4. Case relations
-    const { error: relationsError } = await supabaseClient
-      .from('case_relations')
-      .delete()
-      .in('case_id', caseIds);
-    if (relationsError) console.error('Error deleting case_relations:', relationsError);
-    else deletionSummary.case_relations = 0;
-
-    // 5. Case internal notes
-    const { error: internalNotesError } = await supabaseClient
-      .from('case_internal_notes')
-      .delete()
-      .in('case_id', caseIds);
-    if (internalNotesError) console.error('Error deleting case_internal_notes:', internalNotesError);
-    else deletionSummary.case_internal_notes = 0;
-
-    // 6. Case notes
-    const { error: notesError } = await supabaseClient
-      .from('case_notes')
-      .delete()
-      .in('case_id', caseIds);
-    if (notesError) console.error('Error deleting case_notes:', notesError);
-    else deletionSummary.case_notes = 0;
-
-    // 7. Case emails
-    const { error: emailsError } = await supabaseClient
-      .from('case_emails')
-      .delete()
-      .in('case_id', caseIds);
-    if (emailsError) console.error('Error deleting case_emails:', emailsError);
-    else deletionSummary.case_emails = 0;
-
-    // 8. Case documents
-    const { error: documentsError } = await supabaseClient
-      .from('case_documents')
-      .delete()
-      .in('case_id', caseIds);
-    if (documentsError) console.error('Error deleting case_documents:', documentsError);
-    else deletionSummary.case_documents = 0;
-
-    // 9. Case hearings
-    const { error: hearingsError } = await supabaseClient
-      .from('case_hearings')
-      .delete()
-      .in('case_id', caseIds);
-    if (hearingsError) console.error('Error deleting case_hearings:', hearingsError);
-    else deletionSummary.case_hearings = 0;
-
-    // 10. Case orders
-    const { error: ordersError } = await supabaseClient
-      .from('case_orders')
-      .delete()
-      .in('case_id', caseIds);
-    if (ordersError) console.error('Error deleting case_orders:', ordersError);
-    else deletionSummary.case_orders = 0;
-
-    // 11. Case objections
-    const { error: objectionsError } = await supabaseClient
-      .from('case_objections')
-      .delete()
-      .in('case_id', caseIds);
-    if (objectionsError) console.error('Error deleting case_objections:', objectionsError);
-    else deletionSummary.case_objections = 0;
-
-    // 12. Case files
-    const { error: filesError } = await supabaseClient
-      .from('case_files')
-      .delete()
-      .in('case_id', caseIds);
-    if (filesError) console.error('Error deleting case_files:', filesError);
-    else deletionSummary.case_files = 0;
-
-    // 13. Case fetch queue
-    const { error: queueError } = await supabaseClient
-      .from('case_fetch_queue')
-      .delete()
-      .in('case_id', caseIds);
-    if (queueError) console.error('Error deleting case_fetch_queue:', queueError);
-    else deletionSummary.case_fetch_queue = 0;
-
-    // 14. Nullify case_id in appointments, tasks, and documents (preserve them)
-    await supabaseClient
-      .from('appointments')
-      .update({ case_id: null })
-      .in('case_id', caseIds);
-    
-    await supabaseClient
-      .from('tasks')
-      .update({ case_id: null })
-      .in('case_id', caseIds);
-
-    await supabaseClient
-      .from('documents')
-      .update({ case_id: null })
-      .in('case_id', caseIds);
-
-    // 15. Finally, delete the cases themselves
-    const { error: casesDeleteError } = await supabaseClient
-      .from('cases')
-      .delete()
-      .eq('firm_id', firmId);
-    
-    if (casesDeleteError) throw casesDeleteError;
-    deletionSummary.cases = caseIds.length;
-
-    // Log this operation in audit logs
-    await supabaseClient.from('audit_logs').insert({
-      entity_type: 'cases',
-      action: 'bulk_delete_all',
-      user_id: user.id,
-      details: {
-        firm_id: firmId,
-        deleted_count: caseIds.length,
-        summary: deletionSummary,
-        timestamp: new Date().toISOString(),
-      },
-    });
-
-    console.log(`Successfully deleted all cases for firm ${firmId}:`, deletionSummary);
-
+    // Return immediate response
     return new Response(
       JSON.stringify({
         success: true,
-        message: `Successfully deleted ${caseIds.length} cases and related data`,
-        summary: deletionSummary,
+        message: `Deletion of ${caseIds.length} cases has been started in the background`,
+        total_cases: caseIds.length,
+        status: 'processing',
       }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 202, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
     console.error('Error in delete-all-cases function:', error);

@@ -36,15 +36,24 @@ export const DeleteAllCasesDialog = () => {
 
       if (error) throw error;
 
-      toast.success(data.message || 'All cases deleted successfully', {
-        description: `Deleted ${data.summary?.cases || 0} cases`,
-      });
+      if (data.status === 'processing') {
+        toast.success(data.message || 'Case deletion started', {
+          description: `Processing ${data.total_cases} cases in the background. This may take a few minutes.`,
+          duration: 5000,
+        });
+      } else {
+        toast.success(data.message || 'All cases deleted successfully', {
+          description: `Deleted ${data.summary?.cases || 0} cases`,
+        });
+      }
 
       setOpen(false);
       setConfirmation('');
       
-      // Reload the page to refresh all data
-      window.location.reload();
+      // Wait a moment then reload to refresh data
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
     } catch (error: any) {
       console.error('Error deleting cases:', error);
       toast.error('Failed to delete cases', {
