@@ -262,10 +262,10 @@ export const CasesFetchManager = () => {
     }
 
     // Fetch status filter
-    if (fetchStatusFilter === "fetched" && !c.is_auto_fetched) {
+    if (fetchStatusFilter === "fetched" && !(c.fetch_status === 'success' || c.is_auto_fetched)) {
       return false;
     }
-    if (fetchStatusFilter === "unfetched" && c.is_auto_fetched) {
+    if (fetchStatusFilter === "unfetched" && (c.fetch_status || c.is_auto_fetched)) {
       return false;
     }
     if (fetchStatusFilter === "no_cnr" && c.cnr_number) {
@@ -278,8 +278,8 @@ export const CasesFetchManager = () => {
   // Statistics
   const stats = {
     total: cases?.length || 0,
-    fetched: cases?.filter(c => c.is_auto_fetched).length || 0,
-    unfetched: cases?.filter(c => !c.is_auto_fetched && c.cnr_number).length || 0,
+    fetched: cases?.filter(c => c.fetch_status === 'success' || c.is_auto_fetched).length || 0,
+    unfetched: cases?.filter(c => (!c.fetch_status || c.fetch_status === null) && c.cnr_number && !c.is_auto_fetched).length || 0,
     noCnr: cases?.filter(c => !c.cnr_number).length || 0,
   };
 
@@ -312,7 +312,8 @@ export const CasesFetchManager = () => {
       );
     }
 
-    if (caseData.is_auto_fetched) {
+    // Success if explicit success or legacy is_auto_fetched flag
+    if (caseData.fetch_status === 'success' || caseData.is_auto_fetched) {
       return (
         <Badge variant="default" className="gap-1 bg-green-500">
           <CheckCircle className="h-3 w-3" />
@@ -330,6 +331,7 @@ export const CasesFetchManager = () => {
       );
     }
 
+    // No attempt yet
     return (
       <Badge variant="outline" className="gap-1">
         <Clock className="h-3 w-3" />
