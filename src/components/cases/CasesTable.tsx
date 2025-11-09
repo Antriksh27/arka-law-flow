@@ -168,11 +168,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
     if ((e.target as HTMLElement).closest('[role="checkbox"]')) {
       return;
     }
-    if (role === 'office_staff') {
-      navigate(`/staff/cases/${caseId}`);
-    } else {
-      navigate(`/cases/${caseId}`);
-    }
+    navigate(`/cases/${caseId}`);
   };
 
   const cases = queryResult?.cases || [];

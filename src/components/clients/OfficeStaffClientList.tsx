@@ -118,7 +118,7 @@ const OfficeStaffClientList = () => {
   };
 
   const handleClientClick = (clientId: string) => {
-    window.location.href = `/staff/clients/${clientId}`;
+    window.location.href = `/clients/${clientId}`;
   };
 
   const handleToggleVIP = async (e: React.MouseEvent, clientId: string, currentVipStatus: boolean) => {

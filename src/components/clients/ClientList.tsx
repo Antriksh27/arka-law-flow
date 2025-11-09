@@ -233,11 +233,7 @@ export const ClientList = () => {
     setVipToggleClient(null);
   };
   const handleClientNameClick = (clientId: string) => {
-    if (role === 'office_staff') {
-      navigate(`/staff/clients/${clientId}`);
-    } else {
-      navigate(`/clients/${clientId}`);
-    }
+    navigate(`/clients/${clientId}`);
   };
   console.log('ClientList render state:', {
     isLoading,
