@@ -25,9 +25,11 @@ export const CasesUploadSection = ({ onUploadComplete }: CasesUploadSectionProps
     try {
       const template = [
         {
+          reference_number: "REF-2024-001",
           case_title: "Example: ABC vs XYZ",
           cnr_number: "GJHC010012342025",
           forum: "High Court",
+          by_against: "by",
           client_name: "John Doe",
           case_number: "123/2024",
           description: "Sample case description"
@@ -43,7 +45,7 @@ export const CasesUploadSection = ({ onUploadComplete }: CasesUploadSectionProps
 
       toast({
         title: "Template downloaded",
-        description: "Fill in the template. Forum must be: High Court, District Court, or Supreme Court",
+        description: "Fill in the template. Forum must be: High Court, District Court, or Supreme Court. By/Against values: by or against",
       });
     } catch (error: any) {
       toast({
@@ -131,16 +133,27 @@ export const CasesUploadSection = ({ onUploadComplete }: CasesUploadSectionProps
             clientId = matchedClient?.id || null;
           }
 
+          // Validate and normalize by_against value
+          let byAgainst = null;
+          if (row.by_against) {
+            const byAgainstValue = String(row.by_against).toLowerCase().trim();
+            if (byAgainstValue === 'by' || byAgainstValue === 'against') {
+              byAgainst = byAgainstValue;
+            }
+          }
+
           // Insert case
           const { data: insertedCase, error } = await supabase
             .from("cases")
             .insert({
               title: row.case_title,
               case_title: row.case_title,
+              reference_number: row.reference_number || null,
               cnr_number: row.cnr_number,
               court_type: courtType,
               court_name: courtType,
               case_number: row.case_number || null,
+              by_against: byAgainst,
               description: row.description || null,
               client_id: clientId,
               firm_id: teamMember.firm_id,
@@ -230,7 +243,7 @@ export const CasesUploadSection = ({ onUploadComplete }: CasesUploadSectionProps
         <div>
           <h3 className="text-xl font-semibold mb-2">Upload Cases in Bulk</h3>
           <p className="text-sm text-muted-foreground">
-            Download the template, fill in: <strong>case_title</strong>, <strong>cnr_number</strong>, <strong>forum</strong> (High Court/District Court/Supreme Court), <strong>client_name</strong> (optional), case_number, description. Then upload.
+            Download the template, fill in: <strong>reference_number</strong> (optional), <strong>case_title</strong>, <strong>cnr_number</strong>, <strong>forum</strong> (High Court/District Court/Supreme Court), <strong>by_against</strong> (by/against - optional), <strong>client_name</strong> (optional), case_number, description. Then upload.
           </p>
         </div>
 
