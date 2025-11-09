@@ -113,7 +113,7 @@ export const ClientList = () => {
           // Compute status based on cases
           data = baseClients.map(client => {
             const clientCases = allCasesData.filter(c => c.client_id === client.id) || [];
-            const activeCases = clientCases.filter(c => c.status === 'open').length;
+            const activeCases = clientCases.filter(c => c.status === 'open' || c.status === 'pending').length;
             const disposedCases = clientCases.filter(c => c.status === 'closed' || c.status === 'disposed').length;
             
             let computed_status: 'lead' | 'active' | 'inactive' = 'lead';
