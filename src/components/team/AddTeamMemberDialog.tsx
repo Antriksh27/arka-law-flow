@@ -199,7 +199,7 @@ const AddTeamMemberDialog = ({
                         <SelectItem value="lawyer">Lawyer</SelectItem>
                         <SelectItem value="paralegal">Paralegal</SelectItem>
                         
-                        <SelectItem value="office_staff">Office Staff</SelectItem>
+                        <SelectItem value="office_staff">Office</SelectItem>
                         <SelectItem value="receptionist">Receptionist</SelectItem>
                       </SelectContent>
                     </Select>

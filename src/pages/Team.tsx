@@ -28,7 +28,7 @@ const roleLabels: Record<string, string> = {
   admin: "Admin",
   lawyer: "Lawyer",
   paralegal: "Paralegal",
-  office_staff: "Office Staff",
+  office_staff: "Office",
   receptionist: "Receptionist"
 };
 
