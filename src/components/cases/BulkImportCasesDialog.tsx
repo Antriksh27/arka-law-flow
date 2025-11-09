@@ -42,6 +42,9 @@ export const BulkImportCasesDialog = ({
   const { toast } = useToast();
   const { user } = useAuth();
 
+  // Helper function to add delay
+  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
   // Normalize CNR number by removing dashes and converting to uppercase
   const normalizeCNR = (cnr: string): string => {
     return cnr.replace(/[-\s]/g, '').toUpperCase();
@@ -405,8 +408,8 @@ export const BulkImportCasesDialog = ({
         }
       }
 
-      // Process batch updates in chunks of 50
-      const BATCH_SIZE = 50;
+      // Process batch updates in chunks of 20 to avoid timeouts
+      const BATCH_SIZE = 20;
       for (let i = 0; i < batchUpdates.length; i += BATCH_SIZE) {
         const batch = batchUpdates.slice(i, i + BATCH_SIZE);
         
@@ -453,6 +456,11 @@ export const BulkImportCasesDialog = ({
           current: Math.min(i + BATCH_SIZE, batchUpdates.length), 
           total: batchUpdates.length 
         });
+
+        // Add delay between batches to prevent database overload
+        if (i + BATCH_SIZE < batchUpdates.length) {
+          await sleep(400);
+        }
       }
 
       setResults({ 
