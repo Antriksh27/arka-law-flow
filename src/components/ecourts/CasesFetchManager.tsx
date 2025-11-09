@@ -31,7 +31,9 @@ import {
   Search,
   RefreshCw,
   FileText,
-  AlertCircle
+  AlertCircle,
+  Play,
+  StopCircle
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
@@ -62,6 +64,9 @@ export const CasesFetchManager = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [fetchStatusFilter, setFetchStatusFilter] = useState<string>("all");
+  const [isAutoFetching, setIsAutoFetching] = useState(false);
+  const [autoFetchProgress, setAutoFetchProgress] = useState({ current: 0, total: 0, currentCase: '' });
+  const [stopAutoFetch, setStopAutoFetch] = useState(false);
 
   // Fetch all cases
   const { data: cases, isLoading } = useQuery({
@@ -170,6 +175,72 @@ export const CasesFetchManager = () => {
       });
     },
   });
+
+  // Auto fetch all unfetched cases one by one
+  const startAutoFetch = async () => {
+    const unfetchedCases = cases?.filter(c => !c.is_auto_fetched && c.cnr_number) || [];
+    
+    if (unfetchedCases.length === 0) {
+      toast({
+        title: "No Cases to Fetch",
+        description: "All cases with CNR numbers have already been fetched",
+      });
+      return;
+    }
+
+    setIsAutoFetching(true);
+    setStopAutoFetch(false);
+    setAutoFetchProgress({ current: 0, total: unfetchedCases.length, currentCase: '' });
+
+    let successCount = 0;
+    let failCount = 0;
+
+    for (let i = 0; i < unfetchedCases.length; i++) {
+      if (stopAutoFetch) {
+        toast({
+          title: "Auto Fetch Stopped",
+          description: `Fetched ${successCount} cases before stopping`,
+        });
+        break;
+      }
+
+      const caseData = unfetchedCases[i];
+      setAutoFetchProgress({
+        current: i + 1,
+        total: unfetchedCases.length,
+        currentCase: caseData.case_number || caseData.case_title
+      });
+
+      try {
+        await fetchSingleCase.mutateAsync(caseData);
+        successCount++;
+      } catch (error) {
+        failCount++;
+      }
+
+      // Refresh the list after each fetch
+      await queryClient.invalidateQueries({ queryKey: ['cases-fetch-list'] });
+
+      // Delay between fetches (2 seconds)
+      if (i < unfetchedCases.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+    }
+
+    setIsAutoFetching(false);
+    setAutoFetchProgress({ current: 0, total: 0, currentCase: '' });
+
+    if (!stopAutoFetch) {
+      toast({
+        title: "Auto Fetch Complete",
+        description: `Successfully fetched ${successCount} cases. ${failCount > 0 ? `${failCount} failed.` : ''}`,
+      });
+    }
+  };
+
+  const handleStopAutoFetch = () => {
+    setStopAutoFetch(true);
+  };
 
   // Filter cases
   const filteredCases = cases?.filter(c => {
@@ -311,12 +382,62 @@ export const CasesFetchManager = () => {
       {/* Main Content */}
       <Card>
         <CardHeader>
-          <CardTitle>Cases Fetch Manager</CardTitle>
-          <CardDescription>
-            Fetch case details from Legalkart for cases with CNR numbers
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Cases Fetch Manager</CardTitle>
+              <CardDescription>
+                Fetch case details from Legalkart for cases with CNR numbers
+              </CardDescription>
+            </div>
+            <div className="flex gap-2">
+              {!isAutoFetching ? (
+                <Button
+                  onClick={startAutoFetch}
+                  disabled={stats.unfetched === 0}
+                  size="lg"
+                >
+                  <Play className="mr-2 h-4 w-4" />
+                  Start Auto Fetch ({stats.unfetched})
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleStopAutoFetch}
+                  variant="destructive"
+                  size="lg"
+                >
+                  <StopCircle className="mr-2 h-4 w-4" />
+                  Stop Fetching
+                </Button>
+              )}
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Auto Fetch Progress */}
+          {isAutoFetching && (
+            <Card className="border-primary">
+              <CardContent className="pt-6">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                      <span className="font-medium">Auto Fetching Cases...</span>
+                    </div>
+                    <span className="text-sm text-muted-foreground">
+                      {autoFetchProgress.current} of {autoFetchProgress.total}
+                    </span>
+                  </div>
+                  <Progress 
+                    value={(autoFetchProgress.current / autoFetchProgress.total) * 100} 
+                    className="h-2"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Currently fetching: <span className="font-medium">{autoFetchProgress.currentCase}</span>
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
           {/* Filters and Actions */}
           <div className="flex flex-col md:flex-row gap-3">
             <div className="relative flex-1">
