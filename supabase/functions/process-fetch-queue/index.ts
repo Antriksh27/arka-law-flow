@@ -77,17 +77,40 @@ serve(async (req) => {
     console.log(`[Queue Processor] Starting batch processing (size: ${batch_size}, delay: ${delay_ms}ms)`);
 
     // Fetch queue items to process
-    const { data: queueItems, error: fetchError } = await supabase
+    // Get queued items first
+    const { data: queuedItems, error: queuedError } = await supabase
       .from('case_fetch_queue')
       .select('*')
-      .or(`status.eq.queued,and(status.eq.failed,retry_count.lt.max_retries,next_retry_at.lte.${new Date().toISOString()})`)
+      .eq('status', 'queued')
       .order('priority', { ascending: true })
       .order('queued_at', { ascending: true })
       .limit(batch_size);
 
-    if (fetchError) {
-      console.error('[Queue Processor] Error fetching queue:', fetchError);
-      throw fetchError;
+    if (queuedError) {
+      console.error('[Queue Processor] Error fetching queued items:', queuedError);
+      throw queuedError;
+    }
+
+    let queueItems = queuedItems || [];
+
+    // If we need more items, get retryable failed items
+    if (queueItems.length < batch_size) {
+      const { data: failedItems, error: failedError } = await supabase
+        .from('case_fetch_queue')
+        .select('*')
+        .eq('status', 'failed')
+        .lte('next_retry_at', new Date().toISOString())
+        .order('priority', { ascending: true })
+        .order('queued_at', { ascending: true })
+        .limit(batch_size - queueItems.length);
+
+      if (failedError) {
+        console.error('[Queue Processor] Error fetching failed items:', failedError);
+      } else if (failedItems) {
+        // Filter items where retry_count < max_retries
+        const retryableItems = failedItems.filter(item => item.retry_count < item.max_retries);
+        queueItems = [...queueItems, ...retryableItems];
+      }
     }
 
     if (!queueItems || queueItems.length === 0) {
