@@ -51,6 +51,7 @@ export const BulkImportCasesDialog = ({
   const normalizeClientName = (name: string): string => {
     return name
       .toLowerCase()
+      .replace(/^(mr\.?|mrs\.?|ms\.?|miss\.?|dr\.?|prof\.?|sr\.?|jr\.?)\s+/gi, '') // Remove titles at start
       .replace(/[.\s]+/g, ' ') // Replace periods and multiple spaces with single space
       .replace(/&/g, 'and')     // Normalize ampersand
       .trim();
