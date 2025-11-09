@@ -13,25 +13,25 @@ const OfficeStaffHeader = () => {
   const location = useLocation();
   const navItems = [{
     name: 'Dashboard',
-    href: '/staff/dashboard'
+    href: '/'
   }, {
     name: 'Cases',
-    href: '/staff/cases'
+    href: '/cases'
   }, {
     name: 'Clients',
-    href: '/staff/clients'
+    href: '/clients'
   }, {
     name: 'Hearings',
-    href: '/staff/hearings'
+    href: '/hearings'
   }, {
     name: 'Documents',
-    href: '/staff/documents'
+    href: '/documents'
   }, {
     name: 'Tasks',
-    href: '/staff/tasks'
+    href: '/tasks'
   }, {
     name: 'Invoices',
-    href: '/staff/invoices'
+    href: '/invoices'
   }, {
     name: 'Chat',
     href: '/chat'

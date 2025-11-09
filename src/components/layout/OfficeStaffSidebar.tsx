@@ -6,11 +6,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 const menuItems = [{
   name: 'Dashboard',
-  href: '/staff/dashboard',
+  href: '/',
   icon: LayoutDashboard
 }, {
   name: 'Cases Overview',
-  href: '/staff/cases',
+  href: '/cases',
   icon: FolderOpen
 }, {
   name: 'eCourts',
@@ -18,15 +18,15 @@ const menuItems = [{
   icon: FileCode
 }, {
   name: 'Documents',
-  href: '/staff/documents',
+  href: '/documents',
   icon: FileText
 }, {
   name: 'Tasks',
-  href: '/staff/tasks',
+  href: '/tasks',
   icon: CheckSquare
 }, {
   name: 'Invoices',
-  href: '/staff/invoices',
+  href: '/invoices',
   icon: Receipt
 }, {
   name: 'Chat',
@@ -35,11 +35,11 @@ const menuItems = [{
 }];
 const quickActions = [{
   name: 'Upload Document',
-  href: '/staff/documents?action=upload',
+  href: '/documents?action=upload',
   icon: Upload
 }, {
   name: 'New Task',
-  href: '/staff/tasks?action=create',
+  href: '/tasks?action=create',
   icon: Plus
 }];
 const OfficeStaffSidebar = () => {

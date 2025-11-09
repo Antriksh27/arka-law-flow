@@ -163,13 +163,13 @@ const StaffDashboard = () => {
         </div>
         <div className="flex gap-2">
           <Button asChild>
-            <Link to="/staff/documents?action=upload">
+            <Link to="/documents?action=upload">
               <Upload className="w-4 h-4 mr-2" />
               Upload Document
             </Link>
           </Button>
           <Button variant="outline" asChild>
-            <Link to="/staff/tasks?action=create">
+            <Link to="/tasks?action=create">
               <Plus className="w-4 h-4 mr-2" />
               New Task
             </Link>
@@ -266,27 +266,27 @@ const StaffDashboard = () => {
           <CardContent>
             <div className="grid grid-cols-2 gap-4">
               <Button variant="outline" className="h-20 flex-col" asChild>
-                <Link to="/staff/documents?action=upload">
+                <Link to="/documents?action=upload">
                   <Upload className="w-6 h-6 mb-2" />
                   Upload Document
                 </Link>
               </Button>
               <Button variant="outline" className="h-20 flex-col" asChild>
-                <Link to="/staff/tasks?action=create">
+                <Link to="/tasks?action=create">
                   <Plus className="w-6 h-6 mb-2" />
                   Create Task
                 </Link>
               </Button>
               <Button variant="outline" className="h-20 flex-col" asChild>
-                <Link to="/staff/cases">
+                <Link to="/cases">
                   <FolderOpen className="w-6 h-6 mb-2" />
                   View Cases
                 </Link>
               </Button>
               <Button variant="outline" className="h-20 flex-col" asChild>
-                <Link to="/staff/instructions">
+                <Link to="/chat">
                   <MessageSquareText className="w-6 h-6 mb-2" />
-                  Instructions
+                  Messages
                 </Link>
               </Button>
             </div>

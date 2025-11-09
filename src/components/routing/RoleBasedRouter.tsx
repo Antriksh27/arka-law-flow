@@ -33,10 +33,6 @@ import ReceptionCalendar from '@/pages/reception/ReceptionCalendar';
 // Office Staff pages
 import OfficeStaffLayout from '@/components/layout/OfficeStaffLayout';
 import StaffDashboard from '@/pages/staff/StaffDashboard';
-import StaffCases from '@/pages/staff/StaffCases';
-import StaffDocuments from '@/pages/staff/StaffDocuments';
-import StaffTasks from '@/pages/staff/StaffTasks';
-import OfficeStaffClientList from '@/components/clients/OfficeStaffClientList';
 
 const RoleBasedRouter = () => {
   const { role, loading } = useAuth();
@@ -82,16 +78,16 @@ const RoleBasedRouter = () => {
       <OfficeStaffLayout>
         <Routes>
           <Route path="/" element={<StaffDashboard />} />
-          <Route path="/staff/dashboard" element={<StaffDashboard />} />
-          <Route path="/staff/cases" element={<Cases />} />
-          <Route path="/staff/cases/:id" element={<CaseDetailEnhanced />} />
+          <Route path="/cases" element={<Cases />} />
+          <Route path="/cases/:id" element={<CaseDetailEnhanced />} />
           <Route path="/ecourts" element={<ECourts />} />
-          <Route path="/staff/clients" element={<Clients />} />
-          <Route path="/staff/clients/:id" element={<ClientInfo />} />
-          <Route path="/staff/hearings" element={<Hearings />} />
-          <Route path="/staff/documents" element={<Documents />} />
-          <Route path="/staff/tasks" element={<Tasks />} />
-          <Route path="/staff/invoices" element={<Invoices />} />
+          <Route path="/clients" element={<Clients />} />
+          <Route path="/clients/:id" element={<ClientInfo />} />
+          <Route path="/hearings" element={<Hearings />} />
+          <Route path="/documents" element={<Documents />} />
+          <Route path="/tasks" element={<Tasks />} />
+          <Route path="/invoices" element={<Invoices />} />
+          <Route path="/appointments" element={<Appointments />} />
           <Route path="/chat" element={<ModernMessenger />} />
           <Route path="*" element={<StaffDashboard />} />
         </Routes>
