@@ -498,7 +498,8 @@ export const CasesFetchManager = () => {
                 <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="open">Open</SelectItem>
                 <SelectItem value="closed">Closed</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="in_court">In Court</SelectItem>
+                <SelectItem value="disposed">Disposed</SelectItem>
               </SelectContent>
             </Select>
             <Select value={fetchStatusFilter} onValueChange={setFetchStatusFilter}>

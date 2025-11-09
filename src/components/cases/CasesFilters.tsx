@@ -45,9 +45,10 @@ export const CasesFilters: React.FC<CasesFiltersProps> = ({
           <SelectContent className="bg-white">
             <SelectItem value="all">All Status</SelectItem>
             <SelectItem value="open">Open</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="in_court">In Court</SelectItem>
             <SelectItem value="disposed">Disposed</SelectItem>
             <SelectItem value="closed">Closed</SelectItem>
+            <SelectItem value="on_hold">On Hold</SelectItem>
           </SelectContent>
         </Select>
 
