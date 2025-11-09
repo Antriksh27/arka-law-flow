@@ -321,6 +321,8 @@ export const BulkImportCasesDialog = ({
       const successfulUpdates: { caseId: string; caseTitle: string; clientName: string }[] = [];
       const errors: string[] = [];
 
+      const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
       for (let i = 0; i < jsonData.length; i++) {
         const row = jsonData[i];
         const rowNumber = i + 2;
@@ -379,17 +381,41 @@ export const BulkImportCasesDialog = ({
             continue;
           }
 
-          // Update existing case with client_id
-          const { error } = await supabase
-            .from('cases')
-            .update({ 
-              client_id: clientId,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', existingCase.id);
+          // Update existing case with client_id (with retry on timeouts)
+          let lastError: any = null;
+          let updated = false;
+          for (let attempt = 0; attempt < 3; attempt++) {
+            const { error } = await supabase
+              .from('cases')
+              .update({ 
+                client_id: clientId,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', existingCase.id);
 
-          if (error) {
-            throw error;
+            if (!error) {
+              updated = true;
+              break;
+            }
+
+            lastError = error;
+            if (error?.code === '57014' || error?.message?.toLowerCase().includes('timeout')) {
+              // exponential backoff: 500ms, 1000ms, 2000ms
+              await sleep(500 * Math.pow(2, attempt));
+              continue;
+            } else {
+              // non-timeout error: stop retrying
+              break;
+            }
+          }
+
+          if (!updated) {
+            throw lastError || new Error('Unknown error while updating case');
+          }
+
+          // small throttle every 20 rows to avoid DB overload
+          if ((i + 1) % 20 === 0) {
+            await sleep(800);
           }
 
           successCount++;
@@ -403,11 +429,7 @@ export const BulkImportCasesDialog = ({
           console.error(`Row ${rowNumber} error:`, error);
           errors.push(`Row ${rowNumber}: ${error.message}`);
           
-          // Stop processing if we hit a timeout error
-          if (error.code === '57014' || error.message?.includes('timeout')) {
-            errors.push('Import stopped due to database timeout. Please try with fewer rows at a time.');
-            break;
-          }
+          // Continue processing other rows even if this one failed due to timeout after retries
         }
       }
 
