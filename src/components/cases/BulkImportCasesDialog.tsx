@@ -21,12 +21,15 @@ interface PreviewData {
     caseFound: boolean;
     clientName: string;
     matchedClient: string | null;
+    alreadyLinked: boolean;
   }[];
 }
 interface DetailedResults {
   successCount: number;
+  skippedCount: number;
   casesNotFound: string[];
   clientsNotFound: string[];
+  duplicatesFound: string[];
   successfulUpdates: {
     caseId: string;
     caseTitle: string;
@@ -43,7 +46,10 @@ export const BulkImportCasesDialog = ({
   const [importing, setImporting] = useState(false);
   const [progress, setProgress] = useState({
     current: 0,
-    total: 0
+    total: 0,
+    phase: '' as 'validating' | 'processing' | '',
+    currentBatch: 0,
+    totalBatches: 0
   });
   const [preview, setPreview] = useState<PreviewData | null>(null);
   const [results, setResults] = useState<DetailedResults | null>(null);
@@ -58,17 +64,43 @@ export const BulkImportCasesDialog = ({
   // Helper function to add delay
   const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-  // Normalize CNR number by removing dashes and converting to uppercase
+  // Normalize CNR number by removing dashes, slashes, spaces and converting to uppercase
   const normalizeCNR = (cnr: string): string => {
-    return cnr.replace(/[-\s]/g, '').toUpperCase();
+    return cnr.replace(/[-\s\/]/g, '').toUpperCase();
   };
 
-  // Normalize client name for matching
+  // Normalize client name for matching (more comprehensive)
   const normalizeClientName = (name: string): string => {
-    return name.toLowerCase().replace(/^(mr\.?|mrs\.?|ms\.?|miss\.?|dr\.?|prof\.?|sr\.?|jr\.?)\s+/gi, '') // Remove titles at start
-    .replace(/[.\s]+/g, ' ') // Replace periods and multiple spaces with single space
-    .replace(/&/g, 'and') // Normalize ampersand
-    .trim();
+    return name.toLowerCase()
+      .replace(/^(mr\.?|mrs\.?|ms\.?|miss\.?|dr\.?|prof\.?|sr\.?|jr\.?)\s+/gi, '') // Remove titles
+      .replace(/[.\s]+/g, ' ') // Replace periods and multiple spaces
+      .replace(/&/g, 'and') // Normalize ampersand
+      .replace(/\s+(ltd|limited|pvt|private|inc|incorporated|llp|llc)\.?$/gi, '') // Remove company suffixes
+      .trim();
+  };
+
+  // Get CNR from row with support for multiple column names
+  const getCNRFromRow = (row: any): string | null => {
+    const possibleKeys = ['cnr_number', 'CNR Number', 'CNR', 'cnr', 'case_cnr', 'Case CNR', 'CNR_NUMBER'];
+    for (const key of possibleKeys) {
+      const value = row[key];
+      if (value && String(value).trim()) {
+        return String(value).trim();
+      }
+    }
+    return null;
+  };
+
+  // Get client name from row with support for multiple column names
+  const getClientNameFromRow = (row: any): string | null => {
+    const possibleKeys = ['client_name', 'Client Name', 'client', 'Client', 'CLIENT_NAME', 'Client_Name'];
+    for (const key of possibleKeys) {
+      const value = row[key];
+      if (value && String(value).trim()) {
+        return String(value).trim();
+      }
+    }
+    return null;
   };
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
@@ -121,7 +153,7 @@ export const BulkImportCasesDialog = ({
       // Fetch all cases and clients ONCE upfront to avoid repeated queries
       const {
         data: allCases
-      } = await supabase.from('cases').select('id, case_title, cnr_number').eq('firm_id', teamMember.firm_id);
+      } = await supabase.from('cases').select('id, case_title, cnr_number, client_id').eq('firm_id', teamMember.firm_id);
       const {
         data: allClients
       } = await supabase.from('clients').select('id, full_name').eq('firm_id', teamMember.firm_id);
@@ -136,21 +168,20 @@ export const BulkImportCasesDialog = ({
       const clientMatches = [];
       for (let i = 0; i < previewRows.length; i++) {
         const row = previewRows[i];
-        const cleanField = (value: any): string | null => {
-          if (value === null || value === undefined || value === '') return null;
-          const cleaned = String(value).trim();
-          return cleaned === '' ? null : cleaned;
-        };
-        const cnrNumber = cleanField(row.cnr_number || row['CNR Number'] || row['cnr_number'] || row['CNR'] || row['cnr']);
-        const clientName = cleanField(row.client_name || row['Client Name'] || row['client_name'] || row.client || row['Client']);
+        const cnrNumber = getCNRFromRow(row);
+        const clientName = getClientNameFromRow(row);
         let matchedClient = null;
         let caseFound = false;
+        let alreadyLinked = false;
 
         // Check if case exists with this CNR (normalize for matching)
         if (cnrNumber && allCases) {
           const normalizedCNR = normalizeCNR(cnrNumber);
           const existingCase = allCases.find(c => normalizeCNR(c.cnr_number || '') === normalizedCNR);
-          caseFound = !!existingCase;
+          if (existingCase) {
+            caseFound = true;
+            alreadyLinked = !!existingCase.client_id;
+          }
         }
         if (clientName && allClients) {
           const normalizedInputName = normalizeClientName(clientName);
@@ -162,7 +193,8 @@ export const BulkImportCasesDialog = ({
           cnrNumber: cnrNumber || 'N/A',
           caseFound,
           clientName: clientName || 'N/A',
-          matchedClient
+          matchedClient,
+          alreadyLinked
         });
       }
       setPreview({
@@ -250,7 +282,10 @@ export const BulkImportCasesDialog = ({
     setResults(null);
     setProgress({
       current: 0,
-      total: 0
+      total: 0,
+      phase: 'validating',
+      currentBatch: 0,
+      totalBatches: 0
     });
     try {
       const XLSX = await import('xlsx');
@@ -269,7 +304,10 @@ export const BulkImportCasesDialog = ({
       }
       setProgress({
         current: 0,
-        total: jsonData.length
+        total: jsonData.length,
+        phase: 'validating',
+        currentBatch: 0,
+        totalBatches: 0
       });
 
       // Get user's firm_id
@@ -280,7 +318,7 @@ export const BulkImportCasesDialog = ({
         throw new Error('Unable to determine your firm. Please contact support.');
       }
 
-      // Fetch all cases and clients ONCE upfront to avoid repeated queries
+      // Fetch all cases and clients ONCE upfront
       const {
         data: allCases
       } = await supabase.from('cases').select('id, case_title, cnr_number, client_id').eq('firm_id', teamMember.firm_id);
@@ -290,40 +328,44 @@ export const BulkImportCasesDialog = ({
       if (!allCases || !allClients) {
         throw new Error('Failed to load cases and clients data');
       }
+
       let successCount = 0;
+      let skippedCount = 0;
       const casesNotFound: string[] = [];
       const clientsNotFound: string[] = [];
+      const duplicatesFound: string[] = [];
       const successfulUpdates: {
         caseId: string;
         caseTitle: string;
         clientName: string;
       }[] = [];
       const errors: string[] = [];
-      const skippedCases: string[] = [];
 
-      // Prepare batch updates
-      const batchUpdates: Array<{ caseId: string; clientId: string; cnrNumber: string; caseTitle: string; clientName: string; rowNumber: number }> = [];
+      // Track CNRs we've seen to detect duplicates in file
+      const seenCNRs = new Set<string>();
+      const validUpdates: Array<{ 
+        caseId: string; 
+        clientId: string; 
+        cnrNumber: string; 
+        caseTitle: string; 
+        clientName: string; 
+        rowNumber: number 
+      }> = [];
 
-      // Process each row to prepare batch updates
+      // Phase 1: Validate all rows
       for (let i = 0; i < jsonData.length; i++) {
         const row = jsonData[i];
         const rowNumber = i + 2;
         
-        // Update progress
-        setProgress({
+        setProgress(prev => ({
+          ...prev,
           current: i + 1,
-          total: jsonData.length
-        });
+          phase: 'validating'
+        }));
 
         try {
-          const cleanField = (value: any): string | null => {
-            if (value === null || value === undefined || value === '') return null;
-            const cleaned = String(value).trim();
-            return cleaned === '' ? null : cleaned;
-          };
-
           // Get CNR number
-          const cnrNumber = cleanField(row.cnr_number || row['CNR Number'] || row['cnr_number'] || row['CNR'] || row['cnr']);
+          const cnrNumber = getCNRFromRow(row);
           if (!cnrNumber) {
             errors.push(`Row ${rowNumber}: CNR number is required`);
             continue;
@@ -332,7 +374,14 @@ export const BulkImportCasesDialog = ({
           // Normalize CNR for matching
           const normalizedCNR = normalizeCNR(cnrNumber);
 
-          // Find existing case by CNR using cached data
+          // Check for duplicates in the file
+          if (seenCNRs.has(normalizedCNR)) {
+            duplicatesFound.push(`Row ${rowNumber}: Duplicate CNR ${cnrNumber}`);
+            continue;
+          }
+          seenCNRs.add(normalizedCNR);
+
+          // Find existing case by CNR
           const existingCase = allCases.find(c => normalizeCNR(c.cnr_number || '') === normalizedCNR);
           if (!existingCase) {
             casesNotFound.push(`Row ${rowNumber}: CNR ${cnrNumber}`);
@@ -341,21 +390,20 @@ export const BulkImportCasesDialog = ({
 
           // Skip if case already has a client
           if (existingCase.client_id) {
-            skippedCases.push(`Row ${rowNumber}: CNR ${cnrNumber} - already has a client`);
+            skippedCount++;
             continue;
           }
 
-          // Find client by name if provided
-          const clientName = cleanField(row.client_name || row['Client Name'] || row['client_name'] || row.client || row['Client']);
-          
-          // Skip if no client name provided
+          // Get client name
+          const clientName = getClientNameFromRow(row);
           if (!clientName) {
+            errors.push(`Row ${rowNumber}: Client name is required`);
             continue;
           }
 
           const normalizedInputName = normalizeClientName(clientName);
 
-          // Find best match using cached clients data
+          // Find client match
           const matchedClient = allClients.find(c => normalizeClientName(c.full_name) === normalizedInputName);
           
           if (!matchedClient) {
@@ -363,8 +411,8 @@ export const BulkImportCasesDialog = ({
             continue;
           }
 
-          // Add to batch updates
-          batchUpdates.push({
+          // Add to valid updates
+          validUpdates.push({
             caseId: existingCase.id,
             clientId: matchedClient.id,
             cnrNumber: existingCase.cnr_number || existingCase.id,
@@ -374,54 +422,37 @@ export const BulkImportCasesDialog = ({
           });
 
         } catch (error: any) {
-          console.error(`Row ${rowNumber} error:`, error);
+          console.error(`Row ${rowNumber} validation error:`, error);
           errors.push(`Row ${rowNumber}: ${error.message}`);
         }
       }
 
-      // Process batch updates in chunks of 100
-      const BATCH_SIZE = 100;
-      for (let i = 0; i < batchUpdates.length; i += BATCH_SIZE) {
-        const batch = batchUpdates.slice(i, i + BATCH_SIZE);
+      // Phase 2: Process updates in smaller batches
+      if (validUpdates.length > 0) {
+        const BATCH_SIZE = 10; // Smaller batch size to avoid timeouts
+        const totalBatches = Math.ceil(validUpdates.length / BATCH_SIZE);
         
-        try {
-          // Update all cases in this batch using individual updates
-          // Note: Supabase doesn't support batch updates with different IDs in a single query
-          // So we do them sequentially but in batches to limit concurrent operations
-          const updatePromises = batch.map(update =>
-            supabase
-              .from('cases')
-              .update({
-                client_id: update.clientId,
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', update.caseId)
-          );
+        setProgress(prev => ({
+          ...prev,
+          phase: 'processing',
+          current: 0,
+          total: validUpdates.length,
+          totalBatches
+        }));
 
-          const results = await Promise.all(updatePromises);
+        for (let i = 0; i < validUpdates.length; i += BATCH_SIZE) {
+          const batch = validUpdates.slice(i, i + BATCH_SIZE);
+          const batchNumber = Math.floor(i / BATCH_SIZE) + 1;
           
-          // Check for errors in batch
-          const batchErrors = results.filter(r => r.error);
-          if (batchErrors.length > 0) {
-            throw new Error(`${batchErrors.length} updates failed in batch`);
-          }
-
-          // Record successful updates
-          batch.forEach(update => {
-            successCount++;
-            successfulUpdates.push({
-              caseId: update.cnrNumber,
-              caseTitle: update.caseTitle,
-              clientName: update.clientName
-            });
-          });
-
-        } catch (error: any) {
-          console.error(`Batch update error:`, error);
-          // If batch fails, try individual updates
+          setProgress(prev => ({
+            ...prev,
+            currentBatch: batchNumber
+          }));
+          
+          // Process batch sequentially (one at a time to avoid overwhelming DB)
           for (const update of batch) {
             try {
-              const { error: singleError } = await supabase
+              const { error } = await supabase
                 .from('cases')
                 .update({
                   client_id: update.clientId,
@@ -429,9 +460,7 @@ export const BulkImportCasesDialog = ({
                 })
                 .eq('id', update.caseId);
 
-              if (singleError) {
-                throw singleError;
-              }
+              if (error) throw error;
 
               successCount++;
               successfulUpdates.push({
@@ -439,24 +468,31 @@ export const BulkImportCasesDialog = ({
                 caseTitle: update.caseTitle,
                 clientName: update.clientName
               });
-            } catch (singleError: any) {
-              errors.push(`Row ${update.rowNumber}: Failed to update ${update.cnrNumber}: ${singleError.message}`);
+
+              setProgress(prev => ({
+                ...prev,
+                current: i + successCount
+              }));
+
+            } catch (error: any) {
+              console.error(`Update error for row ${update.rowNumber}:`, error);
+              errors.push(`Row ${update.rowNumber}: Failed to update ${update.cnrNumber}: ${error.message}`);
             }
           }
+
+          // Wait 500ms between batches to avoid overwhelming the database
+          if (i + BATCH_SIZE < validUpdates.length) {
+            await sleep(500);
+          }
         }
-
-        // Small delay between batches
-        await sleep(100);
       }
 
-      // Log skipped cases info
-      if (skippedCases.length > 0) {
-        console.log(`Skipped ${skippedCases.length} cases that already have clients assigned`);
-      }
       setResults({
         successCount,
+        skippedCount,
         casesNotFound,
         clientsNotFound,
+        duplicatesFound,
         successfulUpdates,
         errors
       });
@@ -495,11 +531,17 @@ export const BulkImportCasesDialog = ({
           Metric: 'Total Successful Updates',
           Count: results.successCount
         }, {
+          Metric: 'Cases Already Linked (Skipped)',
+          Count: results.skippedCount
+        }, {
           Metric: 'Cases Not Found',
           Count: results.casesNotFound.length
         }, {
           Metric: 'Clients Not Found',
           Count: results.clientsNotFound.length
+        }, {
+          Metric: 'Duplicate CNRs in File',
+          Count: results.duplicatesFound.length
         }, {
           Metric: 'Other Errors',
           Count: results.errors.length
@@ -514,6 +556,9 @@ export const BulkImportCasesDialog = ({
         })),
         clientsNotFound: results.clientsNotFound.map(c => ({
           Error: c
+        })),
+        duplicates: results.duplicatesFound.map(d => ({
+          Error: d
         })),
         otherErrors: results.errors.map(e => ({
           Error: e
@@ -531,6 +576,9 @@ export const BulkImportCasesDialog = ({
       }
       if (reportData.clientsNotFound.length > 0) {
         XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(reportData.clientsNotFound), 'Clients Not Found');
+      }
+      if (reportData.duplicates.length > 0) {
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(reportData.duplicates), 'Duplicate CNRs');
       }
       if (reportData.otherErrors.length > 0) {
         XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(reportData.otherErrors), 'Other Errors');
@@ -642,10 +690,16 @@ export const BulkImportCasesDialog = ({
                       <p className="text-sm font-medium text-purple-900 mb-2">Matching Preview:</p>
                       <div className="space-y-1">
                         {preview.clientMatches.map((match, idx) => <div key={idx} className="text-xs text-purple-700">
-                            <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-1">
                               <span className="font-medium">Row {match.rowNumber}:</span>
                               <span className="text-purple-600">CNR: {match.cnrNumber}</span>
-                              {match.caseFound ? <span className="text-green-700 font-medium">✓ Case Found</span> : <span className="text-red-700 font-medium">✗ Case Not Found</span>}
+                              {match.caseFound ? (
+                                match.alreadyLinked ? 
+                                  <span className="text-yellow-700 font-medium">⊘ Already Linked</span> :
+                                  <span className="text-green-700 font-medium">✓ Case Found</span>
+                              ) : (
+                                <span className="text-red-700 font-medium">✗ Case Not Found</span>
+                              )}
                             </div>
                             <div className="flex items-center gap-2 ml-4">
                               <span>Client: {match.clientName}</span>
@@ -662,10 +716,19 @@ export const BulkImportCasesDialog = ({
             {/* Progress Bar */}
             {importing && progress.total > 0 && <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm text-slate-700">
-                  <span>Processing...</span>
-                  <span>{progress.current} / {progress.total} rows</span>
+                  <span>
+                    {progress.phase === 'validating' ? 'Validating data...' : 
+                     progress.phase === 'processing' ? `Processing batch ${progress.currentBatch} of ${progress.totalBatches}...` : 
+                     'Processing...'}
+                  </span>
+                  <span>{progress.current} / {progress.total}</span>
                 </div>
                 <Progress value={progress.current / progress.total * 100} className="h-2" />
+                {progress.phase === 'processing' && (
+                  <p className="text-xs text-slate-500 text-center">
+                    Processing 10 cases per batch with 500ms delay to ensure stability
+                  </p>
+                )}
               </div>}
 
             <Button onClick={processImport} disabled={!file || importing} className="w-full bg-slate-800 hover:bg-slate-700">
@@ -690,15 +753,19 @@ export const BulkImportCasesDialog = ({
                     Download Report
                   </Button>
                 </div>
-                <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="grid grid-cols-3 gap-3 text-sm">
                   <div className="bg-green-100 p-3 rounded">
                     <p className="text-green-600 font-medium">Successful</p>
                     <p className="text-2xl font-bold text-green-800">{results.successCount}</p>
                   </div>
+                  <div className="bg-yellow-100 p-3 rounded">
+                    <p className="text-yellow-700 font-medium">Skipped</p>
+                    <p className="text-2xl font-bold text-yellow-800">{results.skippedCount}</p>
+                  </div>
                   <div className="bg-red-100 p-3 rounded">
                     <p className="text-red-600 font-medium">Failed</p>
                     <p className="text-2xl font-bold text-red-800">
-                      {results.casesNotFound.length + results.clientsNotFound.length + results.errors.length}
+                      {results.casesNotFound.length + results.clientsNotFound.length + results.duplicatesFound.length + results.errors.length}
                     </p>
                   </div>
                 </div>
@@ -764,6 +831,26 @@ export const BulkImportCasesDialog = ({
                   </div>
                 </div>}
 
+              {/* Duplicate CNRs */}
+              {results.duplicatesFound.length > 0 && <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5" />
+                    <div className="flex-1">
+                      <h3 className="font-medium text-yellow-800 mb-2">
+                        Duplicate CNRs in File ({results.duplicatesFound.length})
+                      </h3>
+                      <div className="space-y-1 max-h-32 overflow-y-auto">
+                        {results.duplicatesFound.slice(0, 5).map((error, index) => <p key={index} className="text-sm text-yellow-700">
+                            • {error}
+                          </p>)}
+                        {results.duplicatesFound.length > 5 && <p className="text-sm text-yellow-600 italic">
+                            ...and {results.duplicatesFound.length - 5} more
+                          </p>}
+                      </div>
+                    </div>
+                  </div>
+                </div>}
+
               {/* Other Errors */}
               {results.errors.length > 0 && <div className="bg-red-50 p-4 rounded-lg border border-red-200">
                   <div className="flex items-start gap-2">
@@ -786,11 +873,12 @@ export const BulkImportCasesDialog = ({
           <div className="bg-gray-50 p-4 rounded-lg text-sm text-gray-600">
             <h3 className="font-medium text-gray-800 mb-2">Instructions:</h3>
             <ul className="space-y-1 list-disc list-inside">
-              <li>Upload Excel file with two columns: <strong>cnr_number</strong> and <strong>client_name</strong></li>
-              <li>CNR number will be matched with cases in your database</li>
-              <li>Client names will be matched using fuzzy matching</li>
-              <li>Both case and client must exist in your database</li>
-              <li>Cases or clients not found will be shown in errors</li>
+              <li>Upload Excel file with columns: <strong>cnr_number</strong> (or CNR) and <strong>client_name</strong> (or Client Name)</li>
+              <li>CNR will be normalized (removes dashes, spaces, slashes) for matching</li>
+              <li>Client names are matched using smart normalization (titles, company suffixes removed)</li>
+              <li>Cases already linked to clients will be automatically skipped</li>
+              <li>Duplicate CNRs in the file will be detected and reported</li>
+              <li>Processing is done in batches of 10 with 500ms delays for reliability</li>
               <li>Download the template to see the correct format</li>
             </ul>
           </div>
