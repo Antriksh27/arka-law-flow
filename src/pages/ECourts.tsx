@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Eye, FileText, Calendar, Building2, Search, Upload, History, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Eye, FileText, Calendar, Building2, Search, Upload, History, CheckCircle, XCircle, Clock, List } from "lucide-react";
 import TimeUtils from '@/lib/timeUtils';
 import { LegalkartCaseSearch } from "@/components/cases/LegalkartCaseSearch";
 import { CasesUploadSection } from "@/components/ecourts/CasesUploadSection";
+import { CasesFetchManager } from "@/components/ecourts/CasesFetchManager";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -103,9 +104,13 @@ export const ECourts = () => {
 
       {/* Main Content Tabs */}
       <Card>
-        <Tabs defaultValue="search" className="w-full">
+        <Tabs defaultValue="fetch-all" className="w-full">
           <CardHeader>
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="fetch-all" className="flex items-center gap-2">
+                <List className="h-4 w-4" />
+                Fetch All Cases
+              </TabsTrigger>
               <TabsTrigger value="search" className="flex items-center gap-2">
                 <Search className="h-4 w-4" />
                 Search Cases
@@ -122,6 +127,17 @@ export const ECourts = () => {
           </CardHeader>
 
           <CardContent className="pt-6">
+            {/* Fetch All Cases Tab */}
+            <TabsContent value="fetch-all" className="space-y-4 mt-0">
+              <div className="space-y-2 mb-6">
+                <h3 className="text-lg font-semibold">Fetch All Cases with CNR</h3>
+                <p className="text-sm text-muted-foreground">
+                  View all cases and fetch their details from Legalkart. Cases are automatically categorized by fetch status.
+                </p>
+              </div>
+              <CasesFetchManager />
+            </TabsContent>
+
             {/* Search Tab */}
             <TabsContent value="search" className="space-y-4 mt-0">
               <div className="space-y-2 mb-6">
