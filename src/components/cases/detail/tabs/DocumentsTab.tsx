@@ -93,7 +93,7 @@ export const DocumentsTab: React.FC<DocumentsTabProps> = ({
     toast.success('Document uploaded successfully');
     setShowUploadDialog(false);
   };
-  return <div className="space-y-6">
+  return <div className="space-y-6 mx-[600px]">
       {/* Create Document Upload Form */}
       <div className="p-4 rounded-lg bg-slate-50">
         
