@@ -207,8 +207,24 @@ export const useLegalkartCaseDetails = (caseId: string) => {
         throw caseError;
       }
 
-      // Auto-select court type based on case.court_type
-      let searchType: 'high_court' | 'district_court' | 'supreme_court' = 'high_court';
+      // Check if CNR exists
+      if (!caseData.cnr_number) {
+        throw new Error('CNR number is required to fetch case details. Please add CNR first.');
+      }
+
+      // Auto-detect court type from CNR
+      const cnr = caseData.cnr_number.toUpperCase().replace(/[-\s]/g, '');
+      let searchType: 'high_court' | 'district_court' | 'supreme_court' = 'district_court';
+      
+      if (cnr.startsWith('SCIN')) {
+        searchType = 'supreme_court';
+      } else if (cnr.length >= 4 && cnr.substring(2, 4) === 'HC') {
+        searchType = 'high_court';
+      } else {
+        searchType = 'district_court';
+      }
+
+      // Override with stored court_type if it exists
       if (caseData.court_type) {
         const courtTypeStr = caseData.court_type.toLowerCase();
         if (courtTypeStr.includes('supreme')) {
@@ -247,6 +263,7 @@ export const useLegalkartCaseDetails = (caseId: string) => {
     },
     onSuccess: () => {
       console.log('Refresh successful, invalidating queries...');
+      queryClient.invalidateQueries({ queryKey: ['case', caseId] });
       queryClient.invalidateQueries({ queryKey: ['legalkart-case', caseId] });
       queryClient.invalidateQueries({ queryKey: ['petitioners', caseId] });
       queryClient.invalidateQueries({ queryKey: ['respondents', caseId] });

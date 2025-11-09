@@ -27,6 +27,7 @@ import { IADetailsTable } from '@/components/cases/enhanced/IADetailsTable';
 import { CreateNoteMultiModal } from '@/components/notes/CreateNoteMultiModal';
 import { CreateTaskDialog } from '@/components/tasks/CreateTaskDialog';
 import { useLegalkartCaseDetails } from '@/hooks/useLegalkartCaseDetails';
+import { FetchCaseDetailsDialog } from '@/components/cases/FetchCaseDetailsDialog';
 export default function CaseDetailEnhanced() {
   const {
     id
@@ -37,6 +38,7 @@ export default function CaseDetailEnhanced() {
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isFetchDialogOpen, setIsFetchDialogOpen] = useState(false);
 
   // Fetch case data
   const {
@@ -103,6 +105,17 @@ export default function CaseDetailEnhanced() {
     refreshCaseData,
     isRefreshing
   } = useLegalkartCaseDetails(id!);
+
+  // Handler for Fetch Details button
+  const handleFetchDetails = () => {
+    if (!caseData?.cnr_number) {
+      // No CNR - show dialog to input CNR
+      setIsFetchDialogOpen(true);
+    } else {
+      // CNR exists - directly refresh
+      refreshCaseData();
+    }
+  };
 
   // Refresh handled by useLegalkartCaseDetails.refreshCaseData
   const tabs = [{
@@ -207,9 +220,24 @@ export default function CaseDetailEnhanced() {
                   <Pencil className="w-4 h-4 mr-2" />
                   Edit
                 </Button>
-                
-                
-                
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleFetchDetails}
+                  disabled={isRefreshing}
+                >
+                  {isRefreshing ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      Fetching...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Fetch Details
+                    </>
+                  )}
+                </Button>
               </div>
             </div>
           </div>
@@ -266,5 +294,17 @@ export default function CaseDetailEnhanced() {
       {isTaskModalOpen && <CreateTaskDialog open={isTaskModalOpen} onClose={() => setIsTaskModalOpen(false)} caseId={id} />}
 
       {isEditDialogOpen && caseData && <EditCaseDialog open={isEditDialogOpen} onClose={() => setIsEditDialogOpen(false)} caseId={id!} caseData={caseData} />}
+
+      {isFetchDialogOpen && (
+        <FetchCaseDetailsDialog
+          open={isFetchDialogOpen}
+          onClose={() => setIsFetchDialogOpen(false)}
+          caseId={id!}
+          onFetchTriggered={() => {
+            setIsFetchDialogOpen(false);
+            refreshCaseData();
+          }}
+        />
+      )}
     </div>;
 }
