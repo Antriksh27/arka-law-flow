@@ -195,7 +195,7 @@ const EditTeamMemberDialog = ({ open, onOpenChange, member }: EditTeamMemberDial
                         <SelectItem value="paralegal">Paralegal</SelectItem>
                         
                         <SelectItem value="office_staff">Office</SelectItem>
-                        <SelectItem value="receptionist">Receptionist</SelectItem>
+                        <SelectItem value="receptionist">Reception</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

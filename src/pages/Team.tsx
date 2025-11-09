@@ -29,7 +29,7 @@ const roleLabels: Record<string, string> = {
   lawyer: "Lawyer",
   paralegal: "Paralegal",
   office_staff: "Office",
-  receptionist: "Receptionist"
+  receptionist: "Reception"
 };
 
 const roleOrder = ["lawyer", "paralegal"];
