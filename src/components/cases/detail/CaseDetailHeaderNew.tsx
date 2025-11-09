@@ -43,6 +43,11 @@ export const CaseDetailHeaderNew = ({
             </div>
 
             <div className="flex flex-wrap gap-3 mt-3">
+              {caseData?.reference_number && (
+                <Badge variant="outline" className="border-[#1E3A8A] text-[#1E3A8A]">
+                  Ref: {caseData.reference_number}
+                </Badge>
+              )}
               {caseData?.next_hearing_date && (
                 <Badge variant="default" className="bg-[#1E3A8A] text-white">
                   Next Hearing: {formatDateLong(caseData.next_hearing_date)}
