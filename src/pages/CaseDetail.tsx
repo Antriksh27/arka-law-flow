@@ -266,7 +266,17 @@ const CaseDetail = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      // Check if the fetch was actually successful
+      if (!data?.success) {
+        toast({
+          title: "No case data found",
+          description: data?.error || "Unable to fetch case details from eCourts",
+          variant: "destructive"
+        });
+        return;
+      }
+
       queryClient.invalidateQueries({ queryKey: ['case-detail', id] });
       queryClient.invalidateQueries({ queryKey: ['legalkart-case', id] });
       queryClient.invalidateQueries({ queryKey: ['petitioners', id] });
