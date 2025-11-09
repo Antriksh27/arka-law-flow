@@ -176,38 +176,36 @@ export const CasesFetchManager = () => {
     },
   });
 
-  // Auto fetch all unfetched cases one by one
-  const startAutoFetch = async () => {
-    const unfetchedCases = cases?.filter(c => !c.is_auto_fetched && c.cnr_number) || [];
-    
-    if (unfetchedCases.length === 0) {
+  // Generic fetch function for batching cases
+  const startBatchFetch = async (casesToFetch: Case[], actionName: string) => {
+    if (casesToFetch.length === 0) {
       toast({
         title: "No Cases to Fetch",
-        description: "All cases with CNR numbers have already been fetched",
+        description: `No ${actionName.toLowerCase()} cases with CNR numbers found`,
       });
       return;
     }
 
     setIsAutoFetching(true);
     setStopAutoFetch(false);
-    setAutoFetchProgress({ current: 0, total: unfetchedCases.length, currentCase: '' });
+    setAutoFetchProgress({ current: 0, total: casesToFetch.length, currentCase: '' });
 
     let successCount = 0;
     let failCount = 0;
 
-    for (let i = 0; i < unfetchedCases.length; i++) {
+    for (let i = 0; i < casesToFetch.length; i++) {
       if (stopAutoFetch) {
         toast({
-          title: "Auto Fetch Stopped",
+          title: "Fetch Stopped",
           description: `Fetched ${successCount} cases before stopping`,
         });
         break;
       }
 
-      const caseData = unfetchedCases[i];
+      const caseData = casesToFetch[i];
       setAutoFetchProgress({
         current: i + 1,
-        total: unfetchedCases.length,
+        total: casesToFetch.length,
         currentCase: caseData.case_number || caseData.case_title
       });
 
@@ -222,7 +220,7 @@ export const CasesFetchManager = () => {
       await queryClient.invalidateQueries({ queryKey: ['cases-fetch-list'] });
 
       // Delay between fetches (2 seconds)
-      if (i < unfetchedCases.length - 1) {
+      if (i < casesToFetch.length - 1) {
         await new Promise(resolve => setTimeout(resolve, 2000));
       }
     }
@@ -232,10 +230,29 @@ export const CasesFetchManager = () => {
 
     if (!stopAutoFetch) {
       toast({
-        title: "Auto Fetch Complete",
+        title: `${actionName} Complete`,
         description: `Successfully fetched ${successCount} cases. ${failCount > 0 ? `${failCount} failed.` : ''}`,
       });
     }
+  };
+
+  // Fetch only unfetched cases (no attempt yet)
+  const startUnfetchedOnly = async () => {
+    const unfetchedCases = cases?.filter(c => 
+      (!c.fetch_status || c.fetch_status === null) && 
+      !c.is_auto_fetched && 
+      c.cnr_number
+    ) || [];
+    await startBatchFetch(unfetchedCases, "Unfetched Cases Fetch");
+  };
+
+  // Retry only failed cases
+  const startRetryFailed = async () => {
+    const failedCases = cases?.filter(c => 
+      c.fetch_status === 'failed' && 
+      c.cnr_number
+    ) || [];
+    await startBatchFetch(failedCases, "Failed Cases Retry");
   };
 
   const handleStopAutoFetch = () => {
@@ -280,6 +297,7 @@ export const CasesFetchManager = () => {
     total: cases?.length || 0,
     fetched: cases?.filter(c => c.fetch_status === 'success' || c.is_auto_fetched).length || 0,
     unfetched: cases?.filter(c => (!c.fetch_status || c.fetch_status === null) && c.cnr_number && !c.is_auto_fetched).length || 0,
+    failed: cases?.filter(c => c.fetch_status === 'failed' && c.cnr_number).length || 0,
     noCnr: cases?.filter(c => !c.cnr_number).length || 0,
   };
 
@@ -343,7 +361,7 @@ export const CasesFetchManager = () => {
   return (
     <div className="space-y-6">
       {/* Statistics Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
@@ -374,6 +392,15 @@ export const CasesFetchManager = () => {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
+              <p className="text-3xl font-bold text-red-600">{stats.failed}</p>
+              <p className="text-sm text-muted-foreground">Failed</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center">
               <p className="text-3xl font-bold text-gray-600">{stats.noCnr}</p>
               <p className="text-sm text-muted-foreground">No CNR</p>
             </div>
@@ -393,19 +420,28 @@ export const CasesFetchManager = () => {
             </div>
             <div className="flex gap-2">
               {!isAutoFetching ? (
-                <Button
-                  onClick={startAutoFetch}
-                  disabled={stats.unfetched === 0}
-                  size="lg"
-                >
-                  <Play className="mr-2 h-4 w-4" />
-                  Start Auto Fetch ({stats.unfetched})
-                </Button>
+                <>
+                  <Button
+                    onClick={startUnfetchedOnly}
+                    disabled={stats.unfetched === 0}
+                    variant="default"
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Fetch Unfetched ({stats.unfetched})
+                  </Button>
+                  <Button
+                    onClick={startRetryFailed}
+                    disabled={stats.failed === 0}
+                    variant="secondary"
+                  >
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Retry Failed ({stats.failed})
+                  </Button>
+                </>
               ) : (
                 <Button
                   onClick={handleStopAutoFetch}
                   variant="destructive"
-                  size="lg"
                 >
                   <StopCircle className="mr-2 h-4 w-4" />
                   Stop Fetching
