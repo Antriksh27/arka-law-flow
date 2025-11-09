@@ -63,3 +63,6 @@ verify_jwt = false
 
 [functions.fetch-legal-news]
 verify_jwt = false
+
+[functions.process-fetch-queue]
+verify_jwt = false

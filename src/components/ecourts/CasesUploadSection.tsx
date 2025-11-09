@@ -85,6 +85,8 @@ export const CasesUploadSection = ({ onUploadComplete }: CasesUploadSectionProps
         errors: []
       };
 
+      const successfulCases: Array<{ id: string; cnr: string; courtType: string }> = [];
+
       // Get all clients for name matching
       const { data: clients } = await supabase
         .from("clients")
@@ -130,7 +132,7 @@ export const CasesUploadSection = ({ onUploadComplete }: CasesUploadSectionProps
           }
 
           // Insert case
-          const { error } = await supabase
+          const { data: insertedCase, error } = await supabase
             .from("cases")
             .insert({
               title: row.case_title,
@@ -144,9 +146,19 @@ export const CasesUploadSection = ({ onUploadComplete }: CasesUploadSectionProps
               firm_id: teamMember.firm_id,
               created_by: user.id,
               status: 'open'
-            });
+            })
+            .select('id')
+            .single();
 
           if (error) throw error;
+
+          if (insertedCase) {
+            successfulCases.push({
+              id: insertedCase.id,
+              cnr: row.cnr_number,
+              courtType: courtType
+            });
+          }
 
           uploadResult.success++;
         } catch (error: any) {
@@ -160,11 +172,36 @@ export const CasesUploadSection = ({ onUploadComplete }: CasesUploadSectionProps
 
       setResult(uploadResult);
 
-      if (uploadResult.success > 0) {
-        toast({
-          title: "Upload complete",
-          description: `Successfully uploaded ${uploadResult.success} case(s)`,
-        });
+      // Auto-add to fetch queue
+      if (successfulCases.length > 0) {
+        const batchId = crypto.randomUUID();
+        
+        const { error: queueError } = await supabase
+          .from('case_fetch_queue')
+          .insert(
+            successfulCases.map(c => ({
+              case_id: c.id,
+              cnr_number: c.cnr,
+              court_type: c.courtType,
+              firm_id: teamMember.firm_id,
+              created_by: user.id,
+              priority: 5,
+              batch_id: batchId,
+              metadata: { triggered_by: 'bulk_upload' }
+            }))
+          );
+
+        if (!queueError) {
+          toast({
+            title: "Upload complete",
+            description: `${uploadResult.success} case(s) uploaded and queued for fetching`,
+          });
+        } else {
+          toast({
+            title: "Upload complete",
+            description: `${uploadResult.success} case(s) uploaded (queue error: ${queueError.message})`,
+          });
+        }
         onUploadComplete();
       }
 

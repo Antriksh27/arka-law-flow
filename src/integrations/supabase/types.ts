@@ -621,6 +621,83 @@ export type Database = {
           },
         ]
       }
+      case_fetch_queue: {
+        Row: {
+          batch_id: string | null
+          case_id: string
+          cnr_number: string
+          completed_at: string | null
+          court_type: string
+          created_at: string
+          created_by: string
+          firm_id: string
+          id: string
+          last_error: string | null
+          last_error_at: string | null
+          max_retries: number
+          metadata: Json | null
+          next_retry_at: string | null
+          priority: number
+          queued_at: string
+          retry_count: number
+          started_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          batch_id?: string | null
+          case_id: string
+          cnr_number: string
+          completed_at?: string | null
+          court_type: string
+          created_at?: string
+          created_by: string
+          firm_id: string
+          id?: string
+          last_error?: string | null
+          last_error_at?: string | null
+          max_retries?: number
+          metadata?: Json | null
+          next_retry_at?: string | null
+          priority?: number
+          queued_at?: string
+          retry_count?: number
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          batch_id?: string | null
+          case_id?: string
+          cnr_number?: string
+          completed_at?: string | null
+          court_type?: string
+          created_at?: string
+          created_by?: string
+          firm_id?: string
+          id?: string
+          last_error?: string | null
+          last_error_at?: string | null
+          max_retries?: number
+          metadata?: Json | null
+          next_retry_at?: string | null
+          priority?: number
+          queued_at?: string
+          retry_count?: number
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_fetch_queue_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       case_files: {
         Row: {
           case_id: string | null
@@ -2615,8 +2692,11 @@ export type Database = {
           error_message: string | null
           firm_id: string
           id: string
+          processing_duration_ms: number | null
+          queue_item_id: string | null
           request_data: Json | null
           response_data: Json | null
+          retry_attempt: number | null
           search_type: string
           status: string
           updated_at: string
@@ -2629,8 +2709,11 @@ export type Database = {
           error_message?: string | null
           firm_id: string
           id?: string
+          processing_duration_ms?: number | null
+          queue_item_id?: string | null
           request_data?: Json | null
           response_data?: Json | null
+          retry_attempt?: number | null
           search_type: string
           status?: string
           updated_at?: string
@@ -2643,8 +2726,11 @@ export type Database = {
           error_message?: string | null
           firm_id?: string
           id?: string
+          processing_duration_ms?: number | null
+          queue_item_id?: string | null
           request_data?: Json | null
           response_data?: Json | null
+          retry_attempt?: number | null
           search_type?: string
           status?: string
           updated_at?: string
@@ -2669,6 +2755,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "legalkart_case_searches_queue_item_id_fkey"
+            columns: ["queue_item_id"]
+            isOneToOne: false
+            referencedRelation: "case_fetch_queue"
             referencedColumns: ["id"]
           },
         ]
