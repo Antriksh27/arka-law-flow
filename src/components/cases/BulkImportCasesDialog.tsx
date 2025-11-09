@@ -16,7 +16,7 @@ interface BulkImportCasesDialogProps {
 interface PreviewData {
   rows: any[];
   columns: string[];
-  clientMatches: { rowNumber: number; clientName: string; matchedClient: string | null }[];
+  clientMatches: { rowNumber: number; cnrNumber: string; caseFound: boolean; clientName: string; matchedClient: string | null }[];
 }
 
 interface DetailedResults {
@@ -99,7 +99,7 @@ export const BulkImportCasesDialog = ({
       // Preview first 5 rows
       const previewRows = jsonData.slice(0, 5);
 
-      // Check client matches for preview rows
+      // Check CNR and client matches for preview rows
       const clientMatches = [];
       for (let i = 0; i < previewRows.length; i++) {
         const row = previewRows[i];
@@ -109,8 +109,23 @@ export const BulkImportCasesDialog = ({
           return cleaned === '' ? null : cleaned;
         };
 
+        const cnrNumber = cleanField(row.cnr_number || row['CNR Number'] || row['cnr_number'] || row['CNR'] || row['cnr']);
         const clientName = cleanField(row.client_name || row['Client Name'] || row['client_name']);
         let matchedClient = null;
+        let caseFound = false;
+
+        // Check if case exists with this CNR
+        if (cnrNumber) {
+          const { data: existingCase } = await supabase
+            .from('cases')
+            .select('id, case_title')
+            .eq('firm_id', teamMember.firm_id)
+            .or(`case_number.eq.${cnrNumber},cnr.eq.${cnrNumber}`)
+            .limit(1)
+            .maybeSingle();
+          
+          caseFound = !!existingCase;
+        }
 
         if (clientName) {
           // Try exact match first
@@ -140,6 +155,8 @@ export const BulkImportCasesDialog = ({
 
         clientMatches.push({
           rowNumber: i + 2,
+          cnrNumber: cnrNumber || 'N/A',
+          caseFound,
           clientName: clientName || 'N/A',
           matchedClient
         });
@@ -203,40 +220,16 @@ export const BulkImportCasesDialog = ({
       
       const sampleData = [
         {
-          reference_number: 'REF-2024-001',
-          case_title: 'Contract Dispute Case',
-          case_number: 'CIV/2024/001',
-          by_against: 'by',
-          case_type: 'civil',
-          status: 'open',
-          priority: 'medium',
-          court: 'District Court',
-          court_name: 'Mumbai District Court',
-          petitioner: 'John Doe',
-          respondent: 'ABC Corporation',
-          filing_date: '2024-01-15',
-          next_hearing_date: '2024-02-15',
-          description: 'Contract breach dispute case',
-          stage: 'Initial hearing',
+          cnr_number: 'GUJHC010123452024',
           client_name: 'John Doe'
         },
         {
-          reference_number: 'REF-2024-002',
-          case_title: 'Property Dispute',
-          case_number: 'CIV/2024/002',
-          by_against: 'against',
-          case_type: 'civil',
-          status: 'active',
-          priority: 'high',
-          court: 'High Court',
-          court_name: 'Bombay High Court',
-          petitioner: 'Jane Smith',
-          respondent: 'XYZ Developers',
-          filing_date: '2024-01-20',
-          next_hearing_date: '2024-03-01',
-          description: 'Property ownership dispute',
-          stage: 'Evidence submission',
+          cnr_number: 'GUJHC010123462024',
           client_name: 'Jane Smith'
+        },
+        {
+          cnr_number: 'GUJHC010123472024',
+          client_name: 'ABC Corporation'
         }
       ];
 
@@ -250,7 +243,7 @@ export const BulkImportCasesDialog = ({
       }));
       ws['!cols'] = colWidths;
 
-      XLSX.writeFile(wb, 'cases_import_template.xlsx');
+      XLSX.writeFile(wb, 'cases_client_link_template.xlsx');
       
       toast({
         title: "Template downloaded",
@@ -317,35 +310,25 @@ export const BulkImportCasesDialog = ({
             return cleaned === '' ? null : cleaned;
           };
 
-          // Get case identifiers
-          const caseNumber = cleanField(row.case_number || row['Case Number'] || row['case_number']);
-          const referenceNumber = cleanField(row.reference_number || row['Reference Number'] || row['reference_number'] || row['REFERENCE NUMBER']);
-          const caseTitle = cleanField(row.case_title || row['Case Title'] || row['case_title'] || row['TITLE'] || row['Title']);
+          // Get CNR number
+          const cnrNumber = cleanField(row.cnr_number || row['CNR Number'] || row['cnr_number'] || row['CNR'] || row['cnr']);
 
-          if (!caseNumber && !referenceNumber && !caseTitle) {
-            errors.push(`Row ${rowNumber}: Need at least case_number, reference_number, or case_title to identify the case`);
+          if (!cnrNumber) {
+            errors.push(`Row ${rowNumber}: CNR number is required`);
             continue;
           }
 
-          // Find existing case
-          let query = supabase
+          // Find existing case by CNR (could be in case_number or cnr field)
+          const { data: existingCase } = await supabase
             .from('cases')
             .select('id, case_title, case_number')
-            .eq('firm_id', teamMember.firm_id);
-
-          if (caseNumber) {
-            query = query.eq('case_number', caseNumber);
-          } else if (referenceNumber) {
-            query = query.eq('reference_number', referenceNumber);
-          } else if (caseTitle) {
-            query = query.ilike('case_title', `%${caseTitle}%`);
-          }
-
-          const { data: existingCase } = await query.limit(1).maybeSingle();
+            .eq('firm_id', teamMember.firm_id)
+            .or(`case_number.eq.${cnrNumber},cnr.eq.${cnrNumber}`)
+            .limit(1)
+            .maybeSingle();
 
           if (!existingCase) {
-            const identifier = caseNumber || referenceNumber || caseTitle;
-            casesNotFound.push(`Row ${rowNumber}: ${identifier}`);
+            casesNotFound.push(`Row ${rowNumber}: CNR ${cnrNumber}`);
             continue;
           }
 
@@ -522,7 +505,7 @@ export const BulkImportCasesDialog = ({
     }}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Bulk Update Cases with Clients</DialogTitle>
+          <DialogTitle>Link Cases with Clients by CNR</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -555,7 +538,7 @@ export const BulkImportCasesDialog = ({
               <div className="flex-1">
                 <h3 className="font-medium text-blue-900 mb-1">Download Template</h3>
                 <p className="text-sm text-blue-700 mb-3">
-                  Download the sample Excel template to see the required format and columns.
+                  Download template with CNR number and client name columns.
                 </p>
                 <Button 
                   variant="outline" 
@@ -638,18 +621,28 @@ export const BulkImportCasesDialog = ({
                     </div>
 
                     <div className="mt-3">
-                      <p className="text-sm font-medium text-purple-900 mb-2">Client Matching Preview:</p>
+                      <p className="text-sm font-medium text-purple-900 mb-2">Matching Preview:</p>
                       <div className="space-y-1">
                         {preview.clientMatches.map((match, idx) => (
-                          <div key={idx} className="text-xs text-purple-700 flex items-center gap-2">
-                            <span className="font-medium">Row {match.rowNumber}:</span>
-                            <span>{match.clientName}</span>
-                            <span>→</span>
-                            {match.matchedClient ? (
-                              <span className="text-green-700 font-medium">✓ {match.matchedClient}</span>
-                            ) : (
-                              <span className="text-red-700 font-medium">✗ Not found</span>
-                            )}
+                          <div key={idx} className="text-xs text-purple-700">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-medium">Row {match.rowNumber}:</span>
+                              <span className="text-purple-600">CNR: {match.cnrNumber}</span>
+                              {match.caseFound ? (
+                                <span className="text-green-700 font-medium">✓ Case Found</span>
+                              ) : (
+                                <span className="text-red-700 font-medium">✗ Case Not Found</span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 ml-4">
+                              <span>Client: {match.clientName}</span>
+                              <span>→</span>
+                              {match.matchedClient ? (
+                                <span className="text-green-700 font-medium">✓ {match.matchedClient}</span>
+                              ) : (
+                                <span className="text-red-700 font-medium">✗ Not found</span>
+                              )}
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -814,12 +807,12 @@ export const BulkImportCasesDialog = ({
           <div className="bg-gray-50 p-4 rounded-lg text-sm text-gray-600">
             <h3 className="font-medium text-gray-800 mb-2">Instructions:</h3>
             <ul className="space-y-1 list-disc list-inside">
-              <li>This tool updates existing cases with client information</li>
-              <li>Include case_number, reference_number, or case_title to identify cases</li>
-              <li>Provide client_name to link cases with clients</li>
-              <li>Clients must already exist in your database</li>
-              <li>Client names are matched using partial/fuzzy matching</li>
-              <li>Cases not found will be skipped and shown in errors</li>
+              <li>Upload Excel file with two columns: <strong>cnr_number</strong> and <strong>client_name</strong></li>
+              <li>CNR number will be matched with cases in your database</li>
+              <li>Client names will be matched using fuzzy matching</li>
+              <li>Both case and client must exist in your database</li>
+              <li>Cases or clients not found will be shown in errors</li>
+              <li>Download the template to see the correct format</li>
             </ul>
           </div>
         </div>
