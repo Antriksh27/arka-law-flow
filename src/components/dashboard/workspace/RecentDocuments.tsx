@@ -60,7 +60,7 @@ export const RecentDocuments = ({
                 <div className="flex-1 min-w-0">
                   <h3 className="font-medium text-sm truncate">{doc.file_name}</h3>
                   <p className="text-xs text-muted-foreground">
-                    {doc.case_title} • Uploaded {TimeUtils.formatRelative(doc.uploaded_at)} (IST)
+                    {doc.case_title} • Uploaded {TimeUtils.formatRelative(doc.uploaded_at)}
                   </p>
                 </div>
                 <button className="text-muted-foreground hover:text-foreground">

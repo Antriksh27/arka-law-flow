@@ -212,7 +212,7 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({
             <tbody>
               {expenses.map((expense: any) => <tr key={expense.expense_id} className="border-b hover:bg-muted/50">
                   <td className="p-3 text-sm">
-                    {expense.date ? TimeUtils.formatDate(expense.date, 'dd/MM/yyyy') : '-'} (IST)
+                    {expense.date ? TimeUtils.formatDate(expense.date, 'dd/MM/yyyy') : '-'}
                   </td>
                   <td className="p-3 text-sm">{expense.description}</td>
                   <td className="p-3 text-sm">{expense.account_name || '-'}</td>

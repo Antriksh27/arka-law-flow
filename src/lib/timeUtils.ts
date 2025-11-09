@@ -278,7 +278,7 @@ export class TimeUtils {
     if (!date) return '';
     
     const formatted = this.formatDateTime(date);
-    return `${formatted} (IST)`;
+    return formatted;
   }
 }
 

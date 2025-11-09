@@ -133,7 +133,7 @@ export const TaskComments: React.FC<TaskCommentsProps> = ({ taskId, comments = [
                 <div className="flex items-center justify-between gap-2 mb-1">
                   <p className="font-medium text-sm text-gray-900">{comment.user_name}</p>
                   <span className="text-xs text-gray-500">
-                    {TimeUtils.formatDateTime(comment.timestamp, 'dd/MM/yyyy HH:mm')} (IST)
+                    {TimeUtils.formatDateTime(comment.timestamp, 'dd/MM/yyyy HH:mm')}
                   </span>
                 </div>
                 <p className="text-sm text-gray-700 whitespace-pre-wrap">{comment.text}</p>

@@ -200,7 +200,7 @@ export default function CaseDetailEnhanced() {
                   </div>
                   <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                     <div>
-                      <span className="font-medium">Next Hearing:</span> {caseData.next_hearing_date ? TimeUtils.formatDate(caseData.next_hearing_date, 'dd/MM/yyyy') : 'N/A'} (IST)
+                      <span className="font-medium">Next Hearing:</span> {caseData.next_hearing_date ? TimeUtils.formatDate(caseData.next_hearing_date, 'dd/MM/yyyy') : 'N/A'}
                     </div>
                     {clientData && <div>
                         <span className="font-medium">Client:</span>{' '}

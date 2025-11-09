@@ -90,7 +90,7 @@ export const HearingsTable: React.FC<HearingsTableProps> = ({ filters }) => {
               hearings.map((hearing) => (
                 <tr key={hearing.id} className="border-b border-gray-100 hover:bg-gray-50">
                   <td className="py-3 px-4">
-                    {TimeUtils.formatDate(hearing.hearing_date, 'MMM d, yyyy')} (IST)
+                    {TimeUtils.formatDate(hearing.hearing_date, 'MMM d, yyyy')}
                   </td>
                   <td className="py-3 px-4">
                     <div>

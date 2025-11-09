@@ -271,7 +271,7 @@ export const NotesTab: React.FC<NotesTabProps> = ({ caseId }) => {
                             </Badge>
                           )}
                           <span className="text-xs text-muted-foreground">
-                            {TimeUtils.formatDate(note.created_at)} (IST)
+                            {TimeUtils.formatDate(note.created_at)}
                           </span>
                         </div>
                         <p className="text-sm text-foreground whitespace-pre-wrap">

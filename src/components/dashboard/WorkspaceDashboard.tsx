@@ -37,7 +37,7 @@ const WorkspaceDashboard = () => {
                 {getGreeting()}, {userName}
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
-                {TimeUtils.formatDateTime(new Date(), "EEEE, MMMM d, yyyy • h:mm a")} (IST)
+                {TimeUtils.formatDateTime(new Date(), "EEEE, MMMM d, yyyy • h:mm a")}
               </p>
             </div>
           </div>

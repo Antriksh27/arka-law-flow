@@ -95,7 +95,7 @@ export const PinnedNotes = ({
                   {note.content}
                 </p>
                 <p className="text-xs text-muted-foreground mt-2">
-                  {TimeUtils.formatDate(note.created_at)} (IST)
+                  {TimeUtils.formatDate(note.created_at)}
                 </p>
               </Card>)}
           </div>}

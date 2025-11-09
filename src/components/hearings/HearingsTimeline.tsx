@@ -79,7 +79,6 @@ export const HearingsTimeline: React.FC<HearingsTimelineProps> = ({
               <span className="text-sm text-gray-600">
                 {TimeUtils.formatDate(date, 'MMM d, yyyy')}
               </span>
-              <span className="text-xs text-muted-foreground">(IST)</span>
             </div>
 
             <div className="flex flex-1 flex-col items-start gap-2">

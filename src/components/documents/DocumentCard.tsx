@@ -118,7 +118,7 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({ document, onRefresh 
           
           <div className="text-center">
             <p className="text-xs text-gray-500">
-              {TimeUtils.formatDate(document.uploaded_at, 'MMM d, yyyy')} (IST)
+              {TimeUtils.formatDate(document.uploaded_at, 'MMM d, yyyy')}
             </p>
             <p className="text-xs text-gray-500">
               {formatFileSize(document.file_size)}

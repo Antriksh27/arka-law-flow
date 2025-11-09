@@ -105,7 +105,7 @@ export const AppointmentsTimeline: React.FC<AppointmentsTimelineProps> = ({
     },
   });
 
-  // Group appointments by category: today, upcoming, past (IST)
+  // Group appointments by category: today, upcoming, past
   const categorizedAppointments = useMemo(() => {
     if (!appointments) return { today: {}, upcoming: {}, past: {} };
     
@@ -178,15 +178,15 @@ export const AppointmentsTimeline: React.FC<AppointmentsTimelineProps> = ({
     const date = TimeUtils.toISTDate(dateString);
     if (!date) return dateString;
     
-    if (TimeUtils.isToday(date)) return 'Today (IST)';
+    if (TimeUtils.isToday(date)) return 'Today';
     
     const tomorrow = TimeUtils.addDaysIST(TimeUtils.nowDate(), 1);
-    if (TimeUtils.formatDateInput(date) === TimeUtils.formatDateInput(tomorrow)) return 'Tomorrow (IST)';
+    if (TimeUtils.formatDateInput(date) === TimeUtils.formatDateInput(tomorrow)) return 'Tomorrow';
     
     const yesterday = TimeUtils.addDaysIST(TimeUtils.nowDate(), -1);
-    if (TimeUtils.formatDateInput(date) === TimeUtils.formatDateInput(yesterday)) return 'Yesterday (IST)';
+    if (TimeUtils.formatDateInput(date) === TimeUtils.formatDateInput(yesterday)) return 'Yesterday';
     
-    return TimeUtils.formatDate(date, 'EEEE, MMMM d') + ' (IST)';
+    return TimeUtils.formatDate(date, 'EEEE, MMMM d');
   };
 
   const formatTime = (timeString: string) => {

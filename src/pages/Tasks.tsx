@@ -199,7 +199,7 @@ const Tasks = () => {
         {task.due_date && (
           <div className={`flex items-center gap-1 ${isOverdue(task.due_date, task.status) ? 'text-red-600 font-medium' : ''}`}>
             <Calendar className="w-3 h-3" />
-            {TimeUtils.formatDate(task.due_date, 'MMM d')} (IST)
+            {TimeUtils.formatDate(task.due_date, 'MMM d')}
             {isOverdue(task.due_date, task.status) && ' (Overdue)'}
           </div>
         )}

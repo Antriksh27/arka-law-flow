@@ -380,7 +380,7 @@ export const SmartBookingCalendar: React.FC<SmartBookingCalendarProps> = ({
                     )}
                   </div>
                   <Badge variant="outline">
-                    {TimeUtils.formatDisplay(internalSelectedDate, 'EEEE, MMMM d')} (IST)
+                    {TimeUtils.formatDisplay(internalSelectedDate, 'EEEE, MMMM d')}
                   </Badge>
                 </CardTitle>
               </CardHeader>

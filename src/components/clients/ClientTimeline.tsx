@@ -195,7 +195,7 @@ export const ClientTimeline: React.FC<ClientTimelineProps> = ({ clientId }) => {
                       </Badge>
                     </div>
                     <p className="text-xs text-gray-500">
-                      {TimeUtils.formatDateTime(event.date, 'dd MMM yyyy, HH:mm')} (IST)
+                      {TimeUtils.formatDateTime(event.date, 'dd MMM yyyy, HH:mm')}
                     </p>
                   </Card>
                 </div>

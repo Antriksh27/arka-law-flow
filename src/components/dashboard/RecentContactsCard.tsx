@@ -79,7 +79,7 @@ export const RecentContactsCard = ({ contacts, isLoading }: RecentContactsCardPr
                   {contact.last_visited_at && (
                     <div className="flex items-center gap-1 text-xs text-gray-500">
                       <Calendar className="w-3 h-3" />
-                      Visited {TimeUtils.formatRelative(contact.last_visited_at)} (IST)
+                      Visited {TimeUtils.formatRelative(contact.last_visited_at)}
                     </div>
                   )}
                 </div>

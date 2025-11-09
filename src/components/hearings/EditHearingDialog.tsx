@@ -220,7 +220,6 @@ export const EditHearingDialog: React.FC<EditHearingDialogProps> = ({ hearingId 
                   <Button variant="outline" className="w-full justify-start text-left bg-white border-gray-900 text-gray-900 hover:bg-gray-50">
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {formData.hearing_date ? TimeUtils.formatDisplay(formData.hearing_date, 'PPP') : 'Select date'}
-                    <span className="ml-2 text-xs text-muted-foreground">(IST)</span>
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0 bg-white border-gray-900 z-50">

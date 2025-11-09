@@ -45,7 +45,7 @@ export const ECourts = () => {
   const formatDate = (date: string | null) => {
     if (!date) return '-';
     try {
-      return TimeUtils.formatDateTime(date, 'dd/MM/yyyy hh:mm a') + ' (IST)';
+      return TimeUtils.formatDateTime(date, 'dd/MM/yyyy hh:mm a');
     } catch {
       return '-';
     }

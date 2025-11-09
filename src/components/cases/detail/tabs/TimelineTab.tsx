@@ -135,7 +135,7 @@ export const TimelineTab: React.FC<TimelineTabProps> = ({ caseData, legalkartDat
                     <div className="flex items-start justify-between mb-2">
                       <h4 className="font-semibold text-base">{event.title}</h4>
                       <span className="text-sm text-gray-500">
-                        {TimeUtils.formatDate(event.date, 'dd MMM yyyy')} (IST)
+                        {TimeUtils.formatDate(event.date, 'dd MMM yyyy')}
                       </span>
                     </div>
                     <p className="text-sm text-gray-600">{event.description}</p>

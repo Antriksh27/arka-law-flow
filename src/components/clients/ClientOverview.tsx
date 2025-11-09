@@ -122,7 +122,7 @@ export const ClientOverview: React.FC<ClientOverviewProps> = ({
 
       {/* Recent Activity */}
       <div>
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Activity (IST)</h3>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Activity</h3>
         <div className="space-y-3">
           {recentActivity && recentActivity.length > 0 ? recentActivity.map((activity, index) => <div key={activity.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex-1">

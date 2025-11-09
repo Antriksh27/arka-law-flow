@@ -155,7 +155,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
                   </TableCell>
                   <TableCell>
                     <span className="text-sm text-gray-600">
-                      {TimeUtils.formatDate(doc.uploaded_at, 'MMM d, yyyy')} (IST)
+                      {TimeUtils.formatDate(doc.uploaded_at, 'MMM d, yyyy')}
                     </span>
                   </TableCell>
                   <TableCell>

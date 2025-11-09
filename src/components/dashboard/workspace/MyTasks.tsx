@@ -111,7 +111,7 @@ export const MyTasks = ({
                       </Badge>
                     </div>
                     {task.due_date && <p className="text-xs text-muted-foreground">
-                        Due: {TimeUtils.formatDate(task.due_date, 'MMM d, yyyy')} (IST)
+                        Due: {TimeUtils.formatDate(task.due_date, 'MMM d, yyyy')}
                       </p>}
                   </div>
                 </div>

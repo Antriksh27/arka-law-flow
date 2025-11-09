@@ -296,8 +296,8 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({
                 {invoices.map((invoice: any) => <tr key={invoice.invoice_id} className="border-b hover:bg-muted/50">
                     <td className="p-3 text-sm font-medium">{invoice.invoice_number}</td>
                     <td className="p-3 text-sm">{invoice.customer_name || '-'}</td>
-                    <td className="p-3 text-sm">{TimeUtils.formatDate(invoice.date, 'dd/MM/yyyy')} (IST)</td>
-                    <td className="p-3 text-sm">{TimeUtils.formatDate(invoice.due_date, 'dd/MM/yyyy')} (IST)</td>
+                    <td className="p-3 text-sm">{TimeUtils.formatDate(invoice.date, 'dd/MM/yyyy')}</td>
+                    <td className="p-3 text-sm">{TimeUtils.formatDate(invoice.due_date, 'dd/MM/yyyy')}</td>
                     <td className="p-3 text-sm text-right font-medium">₹{Number(invoice.total || 0).toFixed(2)}</td>
                     <td className="p-3 text-sm">
                       <Badge variant={invoice.status === 'paid' ? 'success' : invoice.status === 'overdue' ? 'error' : 'default'}>
