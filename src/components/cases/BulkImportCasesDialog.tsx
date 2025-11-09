@@ -196,24 +196,36 @@ export const BulkImportCasesDialog = ({
             return cleaned === '' ? null : cleaned;
           };
 
-          // Validate required fields
+          // Get case identifiers
+          const caseNumber = cleanField(row.case_number || row['Case Number'] || row['case_number']);
+          const referenceNumber = cleanField(row.reference_number || row['Reference Number'] || row['reference_number'] || row['REFERENCE NUMBER']);
           const caseTitle = cleanField(row.case_title || row['Case Title'] || row['case_title'] || row['TITLE'] || row['Title']);
-          if (!caseTitle) {
-            errors.push(`Row ${rowNumber}: Case title is required`);
+
+          if (!caseNumber && !referenceNumber && !caseTitle) {
+            errors.push(`Row ${rowNumber}: Need at least case_number, reference_number, or case_title to identify the case`);
             continue;
           }
 
-          // Parse dates
-          const parseDate = (dateValue: any): string | null => {
-            if (!dateValue) return null;
-            try {
-              const date = new Date(dateValue);
-              if (isNaN(date.getTime())) return null;
-              return date.toISOString().split('T')[0];
-            } catch {
-              return null;
-            }
-          };
+          // Find existing case
+          let query = supabase
+            .from('cases')
+            .select('id, case_title')
+            .eq('firm_id', teamMember.firm_id);
+
+          if (caseNumber) {
+            query = query.eq('case_number', caseNumber);
+          } else if (referenceNumber) {
+            query = query.eq('reference_number', referenceNumber);
+          } else if (caseTitle) {
+            query = query.ilike('case_title', `%${caseTitle}%`);
+          }
+
+          const { data: existingCase } = await query.limit(1).single();
+
+          if (!existingCase) {
+            errors.push(`Row ${rowNumber}: Case not found (${caseNumber || referenceNumber || caseTitle})`);
+            continue;
+          }
 
           // Find client by name if provided
           let clientId = null;
@@ -229,84 +241,20 @@ export const BulkImportCasesDialog = ({
             
             if (client) {
               clientId = client.id;
+            } else {
+              errors.push(`Row ${rowNumber}: Client not found: ${clientName}`);
+              continue;
             }
           }
 
-          // Find Chitrajeet Upadhyaya as assigned lawyer
-          let assignedLawyerId = null;
-          const { data: lawyer } = await supabase
-            .from('team_members')
-            .select('user_id')
-            .eq('firm_id', teamMember.firm_id)
-            .in('role', ['lawyer', 'admin'])
-            .limit(1)
-            .single();
-          
-          if (lawyer) {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('id')
-              .eq('id', lawyer.user_id)
-              .ilike('full_name', '%Chitrajeet Upadhyaya%')
-              .single();
-            
-            if (profile) {
-              assignedLawyerId = profile.id;
-            }
-          }
-
-          // If Chitrajeet not found, use any lawyer/admin from the firm
-          if (!assignedLawyerId && lawyer) {
-            assignedLawyerId = lawyer.user_id;
-          }
-
-          const caseData = {
-            case_title: caseTitle,
-            title: caseTitle, // For compatibility
-            reference_number: cleanField(row.reference_number || row['Reference Number'] || row['reference_number'] || row['REFERENCE NUMBER']),
-            case_number: cleanField(row.case_number || row['Case Number'] || row['case_number']),
-            by_against: (cleanField(row.by_against || row['By/Against'] || row['by_against'] || row['BY/AGAINST']) || null)?.toLowerCase() as any,
-            case_type: (cleanField(row.case_type || row['Case Type'] || row['case_type']) || 'civil').toLowerCase() as any,
-            status: (cleanField(row.status || row['Status']) || 'open').toLowerCase() as any,
-            priority: (cleanField(row.priority || row['Priority']) || 'medium').toLowerCase() as any,
-            court: cleanField(row.court || row['Court'] || row.court_name || row['Court Name'] || row['court_name']),
-            court_name: cleanField(row.court_name || row['Court Name'] || row['court_name'] || row.court || row['Court']),
-            petitioner: cleanField(row.petitioner || row['Petitioner']),
-            respondent: cleanField(row.respondent || row['Respondent']),
-            filing_date: parseDate(row.filing_date || row['Filing Date'] || row['filing_date']),
-            next_hearing_date: parseDate(row.next_hearing_date || row['Next Hearing Date'] || row['next_hearing_date']),
-            description: cleanField(row.description || row['Description']),
-            stage: cleanField(row.stage || row['Stage']),
-            client_id: clientId,
-            assigned_to: assignedLawyerId,
-            firm_id: teamMember.firm_id,
-            created_by: user.id
-          };
-
-          // Validate enums
-          const validByAgainst = ['by', 'against'];
-          if (caseData.by_against && !validByAgainst.includes(caseData.by_against)) {
-            caseData.by_against = null;
-          }
-
-          const validCaseTypes = ['civil', 'criminal', 'family', 'corporate', 'tax', 'labor', 'property', 'other'];
-          if (!validCaseTypes.includes(caseData.case_type)) {
-            caseData.case_type = 'civil';
-          }
-
-          const validStatuses = ['open', 'closed', 'on_hold', 'active', 'pending'];
-          if (!validStatuses.includes(caseData.status)) {
-            caseData.status = 'open';
-          }
-
-          const validPriorities = ['low', 'medium', 'high', 'urgent'];
-          if (!validPriorities.includes(caseData.priority)) {
-            caseData.priority = 'medium';
-          }
-
+          // Update existing case with client_id
           const { error } = await supabase
             .from('cases')
-            .insert([caseData]);
+            .update({ 
+              client_id: clientId,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', existingCase.id);
 
           if (error) {
             throw error;
@@ -323,8 +271,8 @@ export const BulkImportCasesDialog = ({
 
       if (successCount > 0) {
         toast({
-          title: "Import completed",
-          description: `Successfully imported ${successCount} case(s)`,
+          title: "Update completed",
+          description: `Successfully updated ${successCount} case(s) with client information`,
         });
         onSuccess?.();
       }
@@ -356,7 +304,7 @@ export const BulkImportCasesDialog = ({
     }}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Bulk Import Cases</DialogTitle>
+          <DialogTitle>Bulk Update Cases with Clients</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -454,7 +402,7 @@ export const BulkImportCasesDialog = ({
                   <div className="flex items-center gap-2 text-green-800">
                     <CheckCircle className="w-5 h-5" />
                     <span className="font-medium">
-                      Successfully imported {results.success} case(s)
+                      Successfully updated {results.success} case(s) with client information
                     </span>
                   </div>
                 </div>
@@ -486,17 +434,12 @@ export const BulkImportCasesDialog = ({
           <div className="bg-gray-50 p-4 rounded-lg text-sm text-gray-600">
             <h3 className="font-medium text-gray-800 mb-2">Instructions:</h3>
             <ul className="space-y-1 list-disc list-inside">
-              <li>Download the template first to see the required format</li>
-              <li>Fill in your case data following the template structure</li>
-              <li>Case title is required for each case</li>
-              <li>Column names are flexible (e.g., "Case Title", "case_title", "TITLE" all work)</li>
-              <li>Valid by_against values: by, against (indicates if case is filed by or against the client)</li>
-              <li>Valid case types: civil, criminal, family, corporate, tax, labor, property, other</li>
-              <li>Valid status values: open, closed, on_hold, active, pending</li>
-              <li>Valid priority values: low, medium, high, urgent</li>
-              <li>Dates should be in YYYY-MM-DD format or Excel date format</li>
-              <li>Client names will be matched with existing clients in your firm</li>
-              <li>Save your file as .xlsx or .xls format</li>
+              <li>This tool updates existing cases with client information</li>
+              <li>Include case_number, reference_number, or case_title to identify cases</li>
+              <li>Provide client_name to link cases with clients</li>
+              <li>Clients must already exist in your database</li>
+              <li>Client names are matched using partial/fuzzy matching</li>
+              <li>Cases not found will be skipped and shown in errors</li>
             </ul>
           </div>
         </div>
