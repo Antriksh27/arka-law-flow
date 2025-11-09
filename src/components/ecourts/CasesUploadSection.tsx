@@ -156,11 +156,14 @@ export const CasesUploadSection = ({ onUploadComplete }: CasesUploadSectionProps
           if (error) throw error;
 
           if (insertedCase) {
-            successfulCases.push({
-              id: insertedCase.id,
-              cnr: row.cnr_number,
-              courtType: courtType
-            });
+            // Only add to fetch queue if case has CNR and court type
+            if (row.cnr_number && courtType) {
+              successfulCases.push({
+                id: insertedCase.id,
+                cnr: row.cnr_number,
+                courtType: courtType
+              });
+            }
           }
 
           uploadResult.success++;
@@ -197,7 +200,7 @@ export const CasesUploadSection = ({ onUploadComplete }: CasesUploadSectionProps
         if (!queueError) {
           toast({
             title: "Upload complete",
-            description: `${uploadResult.success} case(s) uploaded and queued for fetching`,
+            description: `${uploadResult.success} case(s) uploaded, ${successfulCases.length} queued for fetching`,
           });
         } else {
           toast({
