@@ -83,6 +83,7 @@ export const BulkImportCasesDialog = ({
       
       const sampleData = [
         {
+          reference_number: 'REF-2024-001',
           case_title: 'Contract Dispute Case',
           case_number: 'CIV/2024/001',
           case_type: 'civil',
@@ -99,6 +100,7 @@ export const BulkImportCasesDialog = ({
           client_name: 'John Doe'
         },
         {
+          reference_number: 'REF-2024-002',
           case_title: 'Property Dispute',
           case_number: 'CIV/2024/002',
           case_type: 'civil',
@@ -259,6 +261,7 @@ export const BulkImportCasesDialog = ({
           const caseData = {
             case_title: caseTitle,
             title: caseTitle, // For compatibility
+            reference_number: cleanField(row.reference_number || row['Reference Number'] || row['reference_number'] || row['REFERENCE NUMBER']),
             case_number: cleanField(row.case_number || row['Case Number'] || row['case_number']),
             case_type: (cleanField(row.case_type || row['Case Type'] || row['case_type']) || 'civil').toLowerCase() as any,
             status: (cleanField(row.status || row['Status']) || 'open').toLowerCase() as any,
