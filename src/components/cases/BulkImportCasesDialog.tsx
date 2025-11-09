@@ -7,40 +7,53 @@ import { Upload, Download, AlertCircle, CheckCircle, Trash2, Eye, FileDown } fro
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-
 interface BulkImportCasesDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
 }
-
 interface PreviewData {
   rows: any[];
   columns: string[];
-  clientMatches: { rowNumber: number; cnrNumber: string; caseFound: boolean; clientName: string; matchedClient: string | null }[];
+  clientMatches: {
+    rowNumber: number;
+    cnrNumber: string;
+    caseFound: boolean;
+    clientName: string;
+    matchedClient: string | null;
+  }[];
 }
-
 interface DetailedResults {
   successCount: number;
   casesNotFound: string[];
   clientsNotFound: string[];
-  successfulUpdates: { caseId: string; caseTitle: string; clientName: string }[];
+  successfulUpdates: {
+    caseId: string;
+    caseTitle: string;
+    clientName: string;
+  }[];
   errors: string[];
 }
-
-export const BulkImportCasesDialog = ({ 
-  open, 
-  onOpenChange, 
-  onSuccess 
+export const BulkImportCasesDialog = ({
+  open,
+  onOpenChange,
+  onSuccess
 }: BulkImportCasesDialogProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
-  const [progress, setProgress] = useState({ current: 0, total: 0 });
+  const [progress, setProgress] = useState({
+    current: 0,
+    total: 0
+  });
   const [preview, setPreview] = useState<PreviewData | null>(null);
   const [results, setResults] = useState<DetailedResults | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { toast } = useToast();
-  const { user } = useAuth();
+  const {
+    toast
+  } = useToast();
+  const {
+    user
+  } = useAuth();
 
   // Helper function to add delay
   const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -52,14 +65,11 @@ export const BulkImportCasesDialog = ({
 
   // Normalize client name for matching
   const normalizeClientName = (name: string): string => {
-    return name
-      .toLowerCase()
-      .replace(/^(mr\.?|mrs\.?|ms\.?|miss\.?|dr\.?|prof\.?|sr\.?|jr\.?)\s+/gi, '') // Remove titles at start
-      .replace(/[.\s]+/g, ' ') // Replace periods and multiple spaces with single space
-      .replace(/&/g, 'and')     // Normalize ampersand
-      .trim();
+    return name.toLowerCase().replace(/^(mr\.?|mrs\.?|ms\.?|miss\.?|dr\.?|prof\.?|sr\.?|jr\.?)\s+/gi, '') // Remove titles at start
+    .replace(/[.\s]+/g, ' ') // Replace periods and multiple spaces with single space
+    .replace(/&/g, 'and') // Normalize ampersand
+    .trim();
   };
-
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
@@ -67,7 +77,7 @@ export const BulkImportCasesDialog = ({
         setFile(selectedFile);
         setResults(null);
         setPreview(null);
-        
+
         // Generate preview
         await generatePreview(selectedFile);
       } else {
@@ -79,22 +89,20 @@ export const BulkImportCasesDialog = ({
       }
     }
   };
-
   const generatePreview = async (selectedFile: File) => {
     if (!user) return;
-
     try {
       const XLSX = await import('xlsx');
       const data = await selectedFile.arrayBuffer();
-      const workbook = XLSX.read(data, { type: 'array' });
+      const workbook = XLSX.read(data, {
+        type: 'array'
+      });
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
-      
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, {
         raw: false,
         defval: ''
       }) as any[];
-
       if (jsonData.length === 0) {
         toast({
           title: "Empty file",
@@ -105,28 +113,22 @@ export const BulkImportCasesDialog = ({
       }
 
       // Get user's firm_id
-      const { data: teamMember } = await supabase
-        .from('team_members')
-        .select('firm_id')
-        .eq('user_id', user.id)
-        .single();
-
+      const {
+        data: teamMember
+      } = await supabase.from('team_members').select('firm_id').eq('user_id', user.id).single();
       if (!teamMember?.firm_id) return;
 
       // Fetch all cases and clients ONCE upfront to avoid repeated queries
-      const { data: allCases } = await supabase
-        .from('cases')
-        .select('id, case_title, cnr_number')
-        .eq('firm_id', teamMember.firm_id);
-
-      const { data: allClients } = await supabase
-        .from('clients')
-        .select('id, full_name')
-        .eq('firm_id', teamMember.firm_id);
+      const {
+        data: allCases
+      } = await supabase.from('cases').select('id, case_title, cnr_number').eq('firm_id', teamMember.firm_id);
+      const {
+        data: allClients
+      } = await supabase.from('clients').select('id, full_name').eq('firm_id', teamMember.firm_id);
 
       // Extract columns
       const columns = Object.keys(jsonData[0]);
-      
+
       // Preview first 5 rows
       const previewRows = jsonData.slice(0, 5);
 
@@ -139,7 +141,6 @@ export const BulkImportCasesDialog = ({
           const cleaned = String(value).trim();
           return cleaned === '' ? null : cleaned;
         };
-
         const cnrNumber = cleanField(row.cnr_number || row['CNR Number'] || row['cnr_number'] || row['CNR'] || row['cnr']);
         const clientName = cleanField(row.client_name || row['Client Name'] || row['client_name'] || row.client || row['Client']);
         let matchedClient = null;
@@ -148,24 +149,14 @@ export const BulkImportCasesDialog = ({
         // Check if case exists with this CNR (normalize for matching)
         if (cnrNumber && allCases) {
           const normalizedCNR = normalizeCNR(cnrNumber);
-          
-          const existingCase = allCases.find(c => 
-            normalizeCNR(c.cnr_number || '') === normalizedCNR
-          );
-          
+          const existingCase = allCases.find(c => normalizeCNR(c.cnr_number || '') === normalizedCNR);
           caseFound = !!existingCase;
         }
-
         if (clientName && allClients) {
           const normalizedInputName = normalizeClientName(clientName);
-          
-          const matchedDbClient = allClients.find(c => 
-            normalizeClientName(c.full_name) === normalizedInputName
-          );
-
+          const matchedDbClient = allClients.find(c => normalizeClientName(c.full_name) === normalizedInputName);
           matchedClient = matchedDbClient?.full_name || null;
         }
-
         clientMatches.push({
           rowNumber: i + 2,
           cnrNumber: cnrNumber || 'N/A',
@@ -174,13 +165,11 @@ export const BulkImportCasesDialog = ({
           matchedClient
         });
       }
-
       setPreview({
         rows: previewRows,
         columns,
         clientMatches
       });
-
     } catch (error: any) {
       console.error('Preview error:', error);
       toast({
@@ -190,32 +179,25 @@ export const BulkImportCasesDialog = ({
       });
     }
   };
-
   const deleteRecentCases = async () => {
     try {
-      const { data: recentCases } = await supabase
-        .from('cases')
-        .select('id')
-        .gte('created_at', new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()) // Last 2 hours
-        .is('case_number', null)
-        .is('client_id', null);
-
+      const {
+        data: recentCases
+      } = await supabase.from('cases').select('id').gte('created_at', new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()) // Last 2 hours
+      .is('case_number', null).is('client_id', null);
       if (recentCases && recentCases.length > 0) {
-        const { error } = await supabase
-          .from('cases')
-          .delete()
-          .in('id', recentCases.map(c => c.id));
-
+        const {
+          error
+        } = await supabase.from('cases').delete().in('id', recentCases.map(c => c.id));
         if (error) throw error;
-
         toast({
           title: "Cases deleted",
-          description: `Deleted ${recentCases.length} recent cases with missing case number/client`,
+          description: `Deleted ${recentCases.length} recent cases with missing case number/client`
         });
       } else {
         toast({
           title: "No cases to delete",
-          description: "No recent cases found with missing case number/client",
+          description: "No recent cases found with missing case number/client"
         });
       }
     } catch (error: any) {
@@ -226,41 +208,32 @@ export const BulkImportCasesDialog = ({
       });
     }
   };
-
   const downloadSampleTemplate = async () => {
     try {
       const XLSX = await import('xlsx');
-      
-      const sampleData = [
-        {
-          cnr_number: 'GUJHC010123452024',
-          client_name: 'John Doe'
-        },
-        {
-          cnr_number: 'GUJHC010123462024',
-          client_name: 'Jane Smith'
-        },
-        {
-          cnr_number: 'GUJHC010123472024',
-          client_name: 'ABC Corporation'
-        }
-      ];
-
+      const sampleData = [{
+        cnr_number: 'GUJHC010123452024',
+        client_name: 'John Doe'
+      }, {
+        cnr_number: 'GUJHC010123462024',
+        client_name: 'Jane Smith'
+      }, {
+        cnr_number: 'GUJHC010123472024',
+        client_name: 'ABC Corporation'
+      }];
       const ws = XLSX.utils.json_to_sheet(sampleData);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Cases');
-      
+
       // Auto-size columns
       const colWidths = Object.keys(sampleData[0]).map(key => ({
         wch: Math.max(key.length, ...sampleData.map(row => String(row[key as keyof typeof row] || '').length)) + 2
       }));
       ws['!cols'] = colWidths;
-
       XLSX.writeFile(wb, 'cases_client_link_template.xlsx');
-      
       toast({
         title: "Template downloaded",
-        description: "Sample Excel template has been downloaded",
+        description: "Sample Excel template has been downloaded"
       });
     } catch (error) {
       console.error('Error downloading template:', error);
@@ -271,72 +244,71 @@ export const BulkImportCasesDialog = ({
       });
     }
   };
-
   const processImport = async () => {
     if (!file || !user) return;
-
     setImporting(true);
     setResults(null);
-    setProgress({ current: 0, total: 0 });
-
+    setProgress({
+      current: 0,
+      total: 0
+    });
     try {
       const XLSX = await import('xlsx');
-      
       const data = await file.arrayBuffer();
-      const workbook = XLSX.read(data, { type: 'array' });
+      const workbook = XLSX.read(data, {
+        type: 'array'
+      });
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
-      
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, {
         raw: false,
         defval: ''
       }) as any[];
-
       if (jsonData.length === 0) {
         throw new Error('No data found in the Excel file');
       }
-
-      setProgress({ current: 0, total: jsonData.length });
+      setProgress({
+        current: 0,
+        total: jsonData.length
+      });
 
       // Get user's firm_id
-      const { data: teamMember } = await supabase
-        .from('team_members')
-        .select('firm_id')
-        .eq('user_id', user.id)
-        .single();
-
+      const {
+        data: teamMember
+      } = await supabase.from('team_members').select('firm_id').eq('user_id', user.id).single();
       if (!teamMember?.firm_id) {
         throw new Error('Unable to determine your firm. Please contact support.');
       }
 
       // Fetch all cases and clients ONCE upfront to avoid repeated queries
-      const { data: allCases } = await supabase
-        .from('cases')
-        .select('id, case_title, cnr_number')
-        .eq('firm_id', teamMember.firm_id);
-
-      const { data: allClients } = await supabase
-        .from('clients')
-        .select('id, full_name')
-        .eq('firm_id', teamMember.firm_id);
-
+      const {
+        data: allCases
+      } = await supabase.from('cases').select('id, case_title, cnr_number').eq('firm_id', teamMember.firm_id);
+      const {
+        data: allClients
+      } = await supabase.from('clients').select('id, full_name').eq('firm_id', teamMember.firm_id);
       if (!allCases || !allClients) {
         throw new Error('Failed to load cases and clients data');
       }
-
       let successCount = 0;
       const casesNotFound: string[] = [];
       const clientsNotFound: string[] = [];
-      const successfulUpdates: { caseId: string; caseTitle: string; clientName: string }[] = [];
+      const successfulUpdates: {
+        caseId: string;
+        caseTitle: string;
+        clientName: string;
+      }[] = [];
       const errors: string[] = [];
 
       // Prepare batch updates
-      const batchUpdates: Array<{ id: string; client_id: string; rowInfo: any }> = [];
-
+      const batchUpdates: Array<{
+        id: string;
+        client_id: string;
+        rowInfo: any;
+      }> = [];
       for (let i = 0; i < jsonData.length; i++) {
         const row = jsonData[i];
         const rowNumber = i + 2;
-
         try {
           const cleanField = (value: any): string | null => {
             if (value === null || value === undefined || value === '') return null;
@@ -346,7 +318,6 @@ export const BulkImportCasesDialog = ({
 
           // Get CNR number
           const cnrNumber = cleanField(row.cnr_number || row['CNR Number'] || row['cnr_number'] || row['CNR'] || row['cnr']);
-
           if (!cnrNumber) {
             errors.push(`Row ${rowNumber}: CNR number is required`);
             continue;
@@ -356,10 +327,7 @@ export const BulkImportCasesDialog = ({
           const normalizedCNR = normalizeCNR(cnrNumber);
 
           // Find existing case by CNR using cached data
-          const existingCase = allCases.find(c => 
-            normalizeCNR(c.cnr_number || '') === normalizedCNR
-          );
-
+          const existingCase = allCases.find(c => normalizeCNR(c.cnr_number || '') === normalizedCNR);
           if (!existingCase) {
             casesNotFound.push(`Row ${rowNumber}: CNR ${cnrNumber}`);
             continue;
@@ -369,15 +337,11 @@ export const BulkImportCasesDialog = ({
           let clientId = null;
           let matchedClientName = null;
           const clientName = cleanField(row.client_name || row['Client Name'] || row['client_name'] || row.client || row['Client']);
-          
           if (clientName) {
             const normalizedInputName = normalizeClientName(clientName);
-            
+
             // Find best match using cached clients data
-            const matchedClient = allClients.find(c => 
-              normalizeClientName(c.full_name) === normalizedInputName
-            );
-            
+            const matchedClient = allClients.find(c => normalizeClientName(c.full_name) === normalizedInputName);
             if (matchedClient) {
               clientId = matchedClient.id;
               matchedClientName = matchedClient.full_name;
@@ -401,7 +365,6 @@ export const BulkImportCasesDialog = ({
               clientName: matchedClientName || clientName
             }
           });
-
         } catch (error: any) {
           console.error(`Row ${rowNumber} error:`, error);
           errors.push(`Row ${rowNumber}: ${error.message}`);
@@ -412,37 +375,36 @@ export const BulkImportCasesDialog = ({
       const BATCH_SIZE = 20;
       for (let i = 0; i < batchUpdates.length; i += BATCH_SIZE) {
         const batch = batchUpdates.slice(i, i + BATCH_SIZE);
-        
-        // Execute batch updates in parallel
-        const updatePromises = batch.map(async (update) => {
-          try {
-            const { error } = await supabase
-              .from('cases')
-              .update({ 
-                client_id: update.client_id,
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', update.id);
 
+        // Execute batch updates in parallel
+        const updatePromises = batch.map(async update => {
+          try {
+            const {
+              error
+            } = await supabase.from('cases').update({
+              client_id: update.client_id,
+              updated_at: new Date().toISOString()
+            }).eq('id', update.id);
             if (error) {
               throw error;
             }
-
-            return { success: true, rowInfo: update.rowInfo };
+            return {
+              success: true,
+              rowInfo: update.rowInfo
+            };
           } catch (error: any) {
             console.error(`Update error for case ${update.id}:`, error);
-            return { 
-              success: false, 
+            return {
+              success: false,
               error: error.message,
               rowInfo: update.rowInfo
             };
           }
         });
-
         const results = await Promise.all(updatePromises);
-        
+
         // Track results
-        results.forEach((result) => {
+        results.forEach(result => {
           if (result.success) {
             successCount++;
             successfulUpdates.push(result.rowInfo);
@@ -452,9 +414,9 @@ export const BulkImportCasesDialog = ({
         });
 
         // Update progress
-        setProgress({ 
-          current: Math.min(i + BATCH_SIZE, batchUpdates.length), 
-          total: batchUpdates.length 
+        setProgress({
+          current: Math.min(i + BATCH_SIZE, batchUpdates.length),
+          total: batchUpdates.length
         });
 
         // Add delay between batches to prevent database overload
@@ -462,19 +424,17 @@ export const BulkImportCasesDialog = ({
           await sleep(400);
         }
       }
-
-      setResults({ 
-        successCount, 
-        casesNotFound, 
-        clientsNotFound, 
+      setResults({
+        successCount,
+        casesNotFound,
+        clientsNotFound,
         successfulUpdates,
-        errors 
+        errors
       });
-
       if (successCount > 0) {
         toast({
           title: "Update completed",
-          description: `Successfully updated ${successCount} case(s) with client information`,
+          description: `Successfully updated ${successCount} case(s) with client information`
         });
         onSuccess?.();
       } else {
@@ -484,7 +444,6 @@ export const BulkImportCasesDialog = ({
           variant: "destructive"
         });
       }
-
     } catch (error: any) {
       console.error('Import error:', error);
       toast({
@@ -496,33 +455,43 @@ export const BulkImportCasesDialog = ({
       setImporting(false);
     }
   };
-
   const downloadReport = async () => {
     if (!results) return;
-
     try {
       const XLSX = await import('xlsx');
-      
+
       // Create report data
       const reportData = {
-        summary: [
-          { Metric: 'Total Successful Updates', Count: results.successCount },
-          { Metric: 'Cases Not Found', Count: results.casesNotFound.length },
-          { Metric: 'Clients Not Found', Count: results.clientsNotFound.length },
-          { Metric: 'Other Errors', Count: results.errors.length }
-        ],
+        summary: [{
+          Metric: 'Total Successful Updates',
+          Count: results.successCount
+        }, {
+          Metric: 'Cases Not Found',
+          Count: results.casesNotFound.length
+        }, {
+          Metric: 'Clients Not Found',
+          Count: results.clientsNotFound.length
+        }, {
+          Metric: 'Other Errors',
+          Count: results.errors.length
+        }],
         successfulUpdates: results.successfulUpdates.map(u => ({
           'Case ID': u.caseId,
           'Case Title': u.caseTitle,
           'Client Name': u.clientName
         })),
-        casesNotFound: results.casesNotFound.map(c => ({ Error: c })),
-        clientsNotFound: results.clientsNotFound.map(c => ({ Error: c })),
-        otherErrors: results.errors.map(e => ({ Error: e }))
+        casesNotFound: results.casesNotFound.map(c => ({
+          Error: c
+        })),
+        clientsNotFound: results.clientsNotFound.map(c => ({
+          Error: c
+        })),
+        otherErrors: results.errors.map(e => ({
+          Error: e
+        }))
       };
-
       const wb = XLSX.utils.book_new();
-      
+
       // Add sheets
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(reportData.summary), 'Summary');
       if (reportData.successfulUpdates.length > 0) {
@@ -537,12 +506,10 @@ export const BulkImportCasesDialog = ({
       if (reportData.otherErrors.length > 0) {
         XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(reportData.otherErrors), 'Other Errors');
       }
-
       XLSX.writeFile(wb, `bulk_update_report_${new Date().toISOString().split('T')[0]}.xlsx`);
-      
       toast({
         title: "Report downloaded",
-        description: "Detailed report has been downloaded",
+        description: "Detailed report has been downloaded"
       });
     } catch (error: any) {
       toast({
@@ -552,7 +519,6 @@ export const BulkImportCasesDialog = ({
       });
     }
   };
-
   const resetDialog = () => {
     setFile(null);
     setResults(null);
@@ -561,12 +527,10 @@ export const BulkImportCasesDialog = ({
       fileInputRef.current.value = '';
     }
   };
-
-  return (
-    <Dialog open={open} onOpenChange={(open) => {
-      if (!open) resetDialog();
-      onOpenChange(open);
-    }}>
+  return <Dialog open={open} onOpenChange={open => {
+    if (!open) resetDialog();
+    onOpenChange(open);
+  }}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Link Cases with Clients by CNR</DialogTitle>
@@ -574,26 +538,7 @@ export const BulkImportCasesDialog = ({
 
         <div className="space-y-6">
           {/* Clean up recent uploads */}
-          <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
-            <div className="flex items-start gap-3">
-              <Trash2 className="w-5 h-5 text-orange-600 mt-0.5" />
-              <div className="flex-1">
-                <h3 className="font-medium text-orange-900 mb-1">Clean Up Failed Imports</h3>
-                <p className="text-sm text-orange-700 mb-3">
-                  Delete recent cases that were uploaded without case number/client data.
-                </p>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={deleteRecentCases}
-                  className="border-orange-300 text-orange-700 hover:bg-orange-100"
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Delete Recent Incomplete Cases
-                </Button>
-              </div>
-            </div>
-          </div>
+          
 
           {/* Template Download */}
           <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
@@ -604,12 +549,7 @@ export const BulkImportCasesDialog = ({
                 <p className="text-sm text-blue-700 mb-3">
                   Download template with CNR number and client name columns.
                 </p>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={downloadSampleTemplate}
-                  className="border-blue-300 text-blue-700 hover:bg-blue-100"
-                >
+                <Button variant="outline" size="sm" onClick={downloadSampleTemplate} className="border-blue-300 text-blue-700 hover:bg-blue-100">
                   <Download className="w-4 h-4 mr-2" />
                   Download Template
                 </Button>
@@ -624,25 +564,16 @@ export const BulkImportCasesDialog = ({
                 Select Excel File (.xlsx or .xls)
               </label>
               <div className="flex items-center gap-3">
-                <Input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".xlsx,.xls"
-                  onChange={handleFileSelect}
-                  className="border-gray-300"
-                />
-                {file && (
-                  <div className="flex items-center gap-2 text-sm text-green-600">
+                <Input ref={fileInputRef} type="file" accept=".xlsx,.xls" onChange={handleFileSelect} className="border-gray-300" />
+                {file && <div className="flex items-center gap-2 text-sm text-green-600">
                     <CheckCircle className="w-4 h-4" />
                     {file.name}
-                  </div>
-                )}
+                  </div>}
               </div>
             </div>
 
             {/* Preview */}
-            {preview && (
-              <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+            {preview && <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
                 <div className="flex items-start gap-3">
                   <Eye className="w-5 h-5 text-purple-600 mt-0.5" />
                   <div className="flex-1">
@@ -663,22 +594,16 @@ export const BulkImportCasesDialog = ({
                           <thead className="bg-purple-100 sticky top-0">
                             <tr>
                               <th className="px-2 py-1 text-left">Row</th>
-                              {preview.columns.slice(0, 5).map(col => (
-                                <th key={col} className="px-2 py-1 text-left">{col}</th>
-                              ))}
+                              {preview.columns.slice(0, 5).map(col => <th key={col} className="px-2 py-1 text-left">{col}</th>)}
                             </tr>
                           </thead>
                           <tbody>
-                            {preview.rows.map((row, idx) => (
-                              <tr key={idx} className="border-t border-purple-100">
+                            {preview.rows.map((row, idx) => <tr key={idx} className="border-t border-purple-100">
                                 <td className="px-2 py-1 font-medium">{idx + 2}</td>
-                                {preview.columns.slice(0, 5).map(col => (
-                                  <td key={col} className="px-2 py-1 truncate max-w-[150px]">
+                                {preview.columns.slice(0, 5).map(col => <td key={col} className="px-2 py-1 truncate max-w-[150px]">
                                     {row[col] || '-'}
-                                  </td>
-                                ))}
-                              </tr>
-                            ))}
+                                  </td>)}
+                              </tr>)}
                           </tbody>
                         </table>
                       </div>
@@ -687,81 +612,51 @@ export const BulkImportCasesDialog = ({
                     <div className="mt-3">
                       <p className="text-sm font-medium text-purple-900 mb-2">Matching Preview:</p>
                       <div className="space-y-1">
-                        {preview.clientMatches.map((match, idx) => (
-                          <div key={idx} className="text-xs text-purple-700">
+                        {preview.clientMatches.map((match, idx) => <div key={idx} className="text-xs text-purple-700">
                             <div className="flex items-center gap-2 mb-1">
                               <span className="font-medium">Row {match.rowNumber}:</span>
                               <span className="text-purple-600">CNR: {match.cnrNumber}</span>
-                              {match.caseFound ? (
-                                <span className="text-green-700 font-medium">✓ Case Found</span>
-                              ) : (
-                                <span className="text-red-700 font-medium">✗ Case Not Found</span>
-                              )}
+                              {match.caseFound ? <span className="text-green-700 font-medium">✓ Case Found</span> : <span className="text-red-700 font-medium">✗ Case Not Found</span>}
                             </div>
                             <div className="flex items-center gap-2 ml-4">
                               <span>Client: {match.clientName}</span>
                               <span>→</span>
-                              {match.matchedClient ? (
-                                <span className="text-green-700 font-medium">✓ {match.matchedClient}</span>
-                              ) : (
-                                <span className="text-red-700 font-medium">✗ Not found</span>
-                              )}
+                              {match.matchedClient ? <span className="text-green-700 font-medium">✓ {match.matchedClient}</span> : <span className="text-red-700 font-medium">✗ Not found</span>}
                             </div>
-                          </div>
-                        ))}
+                          </div>)}
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
+              </div>}
 
             {/* Progress Bar */}
-            {importing && progress.total > 0 && (
-              <div className="space-y-2">
+            {importing && progress.total > 0 && <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm text-slate-700">
                   <span>Processing...</span>
                   <span>{progress.current} / {progress.total} rows</span>
                 </div>
-                <Progress 
-                  value={(progress.current / progress.total) * 100} 
-                  className="h-2"
-                />
-              </div>
-            )}
+                <Progress value={progress.current / progress.total * 100} className="h-2" />
+              </div>}
 
-            <Button
-              onClick={processImport}
-              disabled={!file || importing}
-              className="w-full bg-slate-800 hover:bg-slate-700"
-            >
-              {importing ? (
-                <>
+            <Button onClick={processImport} disabled={!file || importing} className="w-full bg-slate-800 hover:bg-slate-700">
+              {importing ? <>
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
                   Processing...
-                </>
-              ) : (
-                <>
+                </> : <>
                   <Upload className="w-4 h-4 mr-2" />
                   Update Cases with Client Links
-                </>
-              )}
+                </>}
             </Button>
           </div>
 
           {/* Results */}
-          {results && (
-            <div className="space-y-4">
+          {results && <div className="space-y-4">
               {/* Summary */}
               <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-semibold text-slate-900">Update Summary</h3>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={downloadReport}
-                    className="text-slate-700"
-                  >
+                  <Button variant="outline" size="sm" onClick={downloadReport} className="text-slate-700">
                     <FileDown className="w-4 h-4 mr-2" />
                     Download Report
                   </Button>
@@ -781,8 +676,7 @@ export const BulkImportCasesDialog = ({
               </div>
 
               {/* Successful Updates */}
-              {results.successfulUpdates.length > 0 && (
-                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+              {results.successfulUpdates.length > 0 && <div className="bg-green-50 p-4 rounded-lg border border-green-200">
                   <div className="flex items-start gap-2">
                     <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
                     <div className="flex-1">
@@ -790,25 +684,19 @@ export const BulkImportCasesDialog = ({
                         Successfully Updated ({results.successfulUpdates.length})
                       </h3>
                       <div className="space-y-1 max-h-40 overflow-y-auto">
-                        {results.successfulUpdates.slice(0, 10).map((update, index) => (
-                          <p key={index} className="text-sm text-green-700">
+                        {results.successfulUpdates.slice(0, 10).map((update, index) => <p key={index} className="text-sm text-green-700">
                             • {update.caseId}: {update.caseTitle} → {update.clientName}
-                          </p>
-                        ))}
-                        {results.successfulUpdates.length > 10 && (
-                          <p className="text-sm text-green-600 italic">
+                          </p>)}
+                        {results.successfulUpdates.length > 10 && <p className="text-sm text-green-600 italic">
                             ...and {results.successfulUpdates.length - 10} more (download report for full list)
-                          </p>
-                        )}
+                          </p>}
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
+                </div>}
 
               {/* Cases Not Found */}
-              {results.casesNotFound.length > 0 && (
-                <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+              {results.casesNotFound.length > 0 && <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
                   <div className="flex items-start gap-2">
                     <AlertCircle className="w-5 h-5 text-orange-600 mt-0.5" />
                     <div className="flex-1">
@@ -816,25 +704,19 @@ export const BulkImportCasesDialog = ({
                         Cases Not Found ({results.casesNotFound.length})
                       </h3>
                       <div className="space-y-1 max-h-32 overflow-y-auto">
-                        {results.casesNotFound.slice(0, 5).map((error, index) => (
-                          <p key={index} className="text-sm text-orange-700">
+                        {results.casesNotFound.slice(0, 5).map((error, index) => <p key={index} className="text-sm text-orange-700">
                             • {error}
-                          </p>
-                        ))}
-                        {results.casesNotFound.length > 5 && (
-                          <p className="text-sm text-orange-600 italic">
+                          </p>)}
+                        {results.casesNotFound.length > 5 && <p className="text-sm text-orange-600 italic">
                             ...and {results.casesNotFound.length - 5} more
-                          </p>
-                        )}
+                          </p>}
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
+                </div>}
 
               {/* Clients Not Found */}
-              {results.clientsNotFound.length > 0 && (
-                <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+              {results.clientsNotFound.length > 0 && <div className="bg-red-50 p-4 rounded-lg border border-red-200">
                   <div className="flex items-start gap-2">
                     <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
                     <div className="flex-1">
@@ -842,25 +724,19 @@ export const BulkImportCasesDialog = ({
                         Clients Not Found ({results.clientsNotFound.length})
                       </h3>
                       <div className="space-y-1 max-h-32 overflow-y-auto">
-                        {results.clientsNotFound.slice(0, 5).map((error, index) => (
-                          <p key={index} className="text-sm text-red-700">
+                        {results.clientsNotFound.slice(0, 5).map((error, index) => <p key={index} className="text-sm text-red-700">
                             • {error}
-                          </p>
-                        ))}
-                        {results.clientsNotFound.length > 5 && (
-                          <p className="text-sm text-red-600 italic">
+                          </p>)}
+                        {results.clientsNotFound.length > 5 && <p className="text-sm text-red-600 italic">
                             ...and {results.clientsNotFound.length - 5} more
-                          </p>
-                        )}
+                          </p>}
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
+                </div>}
 
               {/* Other Errors */}
-              {results.errors.length > 0 && (
-                <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+              {results.errors.length > 0 && <div className="bg-red-50 p-4 rounded-lg border border-red-200">
                   <div className="flex items-start gap-2">
                     <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
                     <div className="flex-1">
@@ -868,18 +744,14 @@ export const BulkImportCasesDialog = ({
                         Other Errors ({results.errors.length})
                       </h3>
                       <div className="space-y-1 max-h-32 overflow-y-auto">
-                        {results.errors.map((error, index) => (
-                          <p key={index} className="text-sm text-red-700">
+                        {results.errors.map((error, index) => <p key={index} className="text-sm text-red-700">
                             • {error}
-                          </p>
-                        ))}
+                          </p>)}
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
-            </div>
-          )}
+                </div>}
+            </div>}
 
           {/* Instructions */}
           <div className="bg-gray-50 p-4 rounded-lg text-sm text-gray-600">
@@ -895,6 +767,5 @@ export const BulkImportCasesDialog = ({
           </div>
         </div>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 };
