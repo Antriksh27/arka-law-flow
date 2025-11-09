@@ -50,12 +50,9 @@ export const NotesTab: React.FC<NotesTabProps> = ({ caseId }) => {
   const { data: internalNotes, isLoading: internalNotesLoading } = useQuery({
     queryKey: ['case-internal-notes', caseId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: notes, error } = await supabase
         .from('case_internal_notes')
-        .select(`
-          *,
-          creator:profiles!case_internal_notes_created_by_fkey(full_name)
-        `)
+        .select('*')
         .eq('case_id', caseId)
         .order('created_at', { ascending: false });
       
@@ -63,7 +60,24 @@ export const NotesTab: React.FC<NotesTabProps> = ({ caseId }) => {
         console.error('Error fetching internal notes:', error);
         throw error;
       }
-      return data;
+
+      // Fetch creator names from team_members
+      if (notes && notes.length > 0) {
+        const creatorIds = [...new Set(notes.map(n => n.created_by))];
+        const { data: creators } = await supabase
+          .from('team_members')
+          .select('user_id, full_name')
+          .in('user_id', creatorIds);
+
+        const creatorMap = new Map(creators?.map(c => [c.user_id, c.full_name]) || []);
+        
+        return notes.map(note => ({
+          ...note,
+          creator: { full_name: creatorMap.get(note.created_by) || 'Unknown' }
+        }));
+      }
+      
+      return notes || [];
     },
     enabled: !!user
   });
