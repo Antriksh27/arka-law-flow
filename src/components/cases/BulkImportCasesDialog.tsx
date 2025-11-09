@@ -300,15 +300,17 @@ export const BulkImportCasesDialog = ({
       }[] = [];
       const errors: string[] = [];
 
-      // Prepare batch updates
-      const batchUpdates: Array<{
-        id: string;
-        client_id: string;
-        rowInfo: any;
-      }> = [];
+      // Process each row one by one
       for (let i = 0; i < jsonData.length; i++) {
         const row = jsonData[i];
         const rowNumber = i + 2;
+        
+        // Update progress
+        setProgress({
+          current: i + 1,
+          total: jsonData.length
+        });
+
         try {
           const cleanField = (value: any): string | null => {
             if (value === null || value === undefined || value === '') return null;
@@ -334,94 +336,53 @@ export const BulkImportCasesDialog = ({
           }
 
           // Find client by name if provided
-          let clientId = null;
-          let matchedClientName = null;
           const clientName = cleanField(row.client_name || row['Client Name'] || row['client_name'] || row.client || row['Client']);
-          if (clientName) {
-            const normalizedInputName = normalizeClientName(clientName);
-
-            // Find best match using cached clients data
-            const matchedClient = allClients.find(c => normalizeClientName(c.full_name) === normalizedInputName);
-            if (matchedClient) {
-              clientId = matchedClient.id;
-              matchedClientName = matchedClient.full_name;
-            } else {
-              clientsNotFound.push(`Row ${rowNumber}: ${clientName}`);
-              continue;
-            }
-          } else {
-            // No client name provided, skip this row
-            errors.push(`Row ${rowNumber}: No client_name provided`);
+          
+          // Skip if no client name provided
+          if (!clientName) {
             continue;
           }
 
-          // Prepare for batch update
-          batchUpdates.push({
-            id: existingCase.id,
-            client_id: clientId,
-            rowInfo: {
-              caseId: existingCase.cnr_number || existingCase.id,
-              caseTitle: existingCase.case_title,
-              clientName: matchedClientName || clientName
-            }
-          });
-        } catch (error: any) {
-          console.error(`Row ${rowNumber} error:`, error);
-          errors.push(`Row ${rowNumber}: ${error.message}`);
-        }
-      }
+          const normalizedInputName = normalizeClientName(clientName);
 
-      // Process batch updates in chunks of 20 to avoid timeouts
-      const BATCH_SIZE = 20;
-      for (let i = 0; i < batchUpdates.length; i += BATCH_SIZE) {
-        const batch = batchUpdates.slice(i, i + BATCH_SIZE);
+          // Find best match using cached clients data
+          const matchedClient = allClients.find(c => normalizeClientName(c.full_name) === normalizedInputName);
+          
+          if (!matchedClient) {
+            clientsNotFound.push(`Row ${rowNumber}: ${clientName}`);
+            continue;
+          }
 
-        // Execute batch updates in parallel
-        const updatePromises = batch.map(async update => {
+          // Update case one by one
           try {
-            const {
-              error
-            } = await supabase.from('cases').update({
-              client_id: update.client_id,
-              updated_at: new Date().toISOString()
-            }).eq('id', update.id);
+            const { error } = await supabase
+              .from('cases')
+              .update({
+                client_id: matchedClient.id,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', existingCase.id);
+
             if (error) {
               throw error;
             }
-            return {
-              success: true,
-              rowInfo: update.rowInfo
-            };
-          } catch (error: any) {
-            console.error(`Update error for case ${update.id}:`, error);
-            return {
-              success: false,
-              error: error.message,
-              rowInfo: update.rowInfo
-            };
-          }
-        });
-        const results = await Promise.all(updatePromises);
 
-        // Track results
-        results.forEach(result => {
-          if (result.success) {
             successCount++;
-            successfulUpdates.push(result.rowInfo);
-          } else {
-            errors.push(`Failed to update ${result.rowInfo.caseId}: ${result.error}`);
+            successfulUpdates.push({
+              caseId: existingCase.cnr_number || existingCase.id,
+              caseTitle: existingCase.case_title,
+              clientName: matchedClient.full_name
+            });
+
+            // Small delay between updates to prevent overload
+            await sleep(100);
+          } catch (error: any) {
+            console.error(`Update error for case ${existingCase.id}:`, error);
+            errors.push(`Row ${rowNumber}: Failed to update ${cnrNumber}: ${error.message}`);
           }
-        });
-
-        // Update progress
-        setProgress({
-          current: Math.min(i + BATCH_SIZE, batchUpdates.length),
-          total: batchUpdates.length
-        });
-
-        // Add delay between batches to prevent database overload
-        if (i + BATCH_SIZE < batchUpdates.length) {
-          await sleep(400);
+        } catch (error: any) {
+          console.error(`Row ${rowNumber} error:`, error);
+          errors.push(`Row ${rowNumber}: ${error.message}`);
         }
       }
       setResults({
