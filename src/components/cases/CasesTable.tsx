@@ -89,7 +89,6 @@ export const CasesTable: React.FC<CasesTableProps> = ({
         assigned_users,
         cnr_number,
         last_fetched_at,
-        stage,
         clients!client_id(full_name)
       `, { count: 'exact' })
       .order(sortField, { ascending: sortOrder === 'asc' })
@@ -132,10 +131,10 @@ export const CasesTable: React.FC<CasesTableProps> = ({
           displayTitle = `${cleanPetitioner} Vs ${cleanRespondent}`;
         }
         
-        // Determine display status: if linked to Legalkart, show Legalkart status; otherwise show "open"
+        // Determine display status: if linked to Legalkart, show actual status; otherwise show "open"
         const isLinkedToLegalkart = caseItem.cnr_number && caseItem.last_fetched_at;
-        const displayStatus = isLinkedToLegalkart && caseItem.stage 
-          ? caseItem.stage.toLowerCase() 
+        const displayStatus = isLinkedToLegalkart 
+          ? (caseItem.status || 'pending')
           : 'open';
         
         return {

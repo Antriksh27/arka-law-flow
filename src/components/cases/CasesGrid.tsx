@@ -63,7 +63,7 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
 
       let query = supabase
         .from('cases')
-        .select('*, cnr_number, last_fetched_at, stage')
+        .select('*')
         .order('created_at', { ascending: false });
 
       // Apply role-based filtering

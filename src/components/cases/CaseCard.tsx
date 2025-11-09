@@ -11,10 +11,10 @@ interface CaseCardProps {
 }
 
 const getDisplayStatus = (caseItem: any) => {
-  // If linked to Legalkart (has CNR and has been fetched), show Legalkart status
+  // If linked to Legalkart (has CNR and has been fetched), show actual status (pending/disposed)
   const isLinkedToLegalkart = caseItem.cnr_number && caseItem.last_fetched_at;
-  if (isLinkedToLegalkart && caseItem.stage) {
-    return caseItem.stage.toLowerCase();
+  if (isLinkedToLegalkart) {
+    return caseItem.status || 'pending';
   }
   // Otherwise, show "open"
   return 'open';
