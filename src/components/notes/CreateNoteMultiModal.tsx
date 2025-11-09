@@ -379,7 +379,7 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
 
           <div className="space-y-2">
             <Label htmlFor="case_id" className="text-sm font-medium text-gray-700">
-              Link to Case (Optional)
+              Link to Case (Optional) {caseId && <span className="text-green-600 text-xs">(Auto-linked)</span>}
             </Label>
             <Select onValueChange={value => setValue('case_id', value)} defaultValue={caseId || 'no-case'}>
               <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">

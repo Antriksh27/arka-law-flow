@@ -237,9 +237,9 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
           {linkType === 'case' && (
             <div className="space-y-2">
               <Label htmlFor="case_id" className="text-sm font-medium text-gray-700">
-                Select Case
+                Select Case {caseId && <span className="text-green-600 text-xs">(Auto-linked)</span>}
               </Label>
-              <Select onValueChange={(value) => setValue('case_id', value)}>
+              <Select onValueChange={(value) => setValue('case_id', value)} defaultValue={caseId || undefined}>
                 <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                   <SelectValue placeholder="Select a case..." />
                 </SelectTrigger>
