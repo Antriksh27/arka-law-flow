@@ -79,6 +79,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
         case_type,
         status,
         priority,
+        reference_number,
         created_at,
         updated_at,
         client_id,
@@ -267,6 +268,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
                 />
               </TableHead>
               <TableHead className="bg-slate-800 text-white">Case Title</TableHead>
+              <TableHead className="bg-slate-800 text-white">Reference No</TableHead>
               <TableHead className="bg-slate-800 text-white">Client</TableHead>
               <TableHead className="bg-slate-800 text-white">Type</TableHead>
               <TableHead className="bg-slate-800 text-white">Status</TableHead>
@@ -285,6 +287,9 @@ export const CasesTable: React.FC<CasesTableProps> = ({
                 <TableCell className="font-medium">
                   {caseItem.displayTitle || caseItem.case_title}
                 </TableCell>
+              <TableCell className="text-sm text-muted-foreground">
+                {caseItem.reference_number || '-'}
+              </TableCell>
               <TableCell>
                 {caseItem.client_name || 'No client assigned'}
               </TableCell>
