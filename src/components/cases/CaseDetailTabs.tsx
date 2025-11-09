@@ -283,7 +283,7 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
                   <div className="flex-1">
                     <p className="text-sm font-medium">{getActivityTypeLabel(activity.activity_type)}</p>
                     <p className="text-xs text-muted">
-                      {TimeUtils.formatDateTime(activity.created_at, 'MMM d, h:mm a')}
+                      {TimeUtils.formatDateTime(activity.created_at, 'MMM d, h:mm a')} (IST)
                     </p>
                   </div>
               </div>) : <div className="text-center py-4">

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Download, Eye, Star, StarOff, Trash2 } from 'lucide-react';
-import { format } from 'date-fns';
+import TimeUtils from '@/lib/timeUtils';
 import { getFileIcon } from '@/lib/fileUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -118,7 +118,7 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({ document, onRefresh 
           
           <div className="text-center">
             <p className="text-xs text-gray-500">
-              {format(new Date(document.uploaded_at), 'MMM d, yyyy')}
+              {TimeUtils.formatDate(document.uploaded_at, 'MMM d, yyyy')} (IST)
             </p>
             <p className="text-xs text-gray-500">
               {formatFileSize(document.file_size)}

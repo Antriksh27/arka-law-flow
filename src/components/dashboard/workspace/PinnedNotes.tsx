@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import TimeUtils from '@/lib/timeUtils';
 interface Note {
   id: string;
   title: string;
@@ -94,7 +95,7 @@ export const PinnedNotes = ({
                   {note.content}
                 </p>
                 <p className="text-xs text-muted-foreground mt-2">
-                  {new Date(note.created_at).toLocaleDateString()}
+                  {TimeUtils.formatDate(note.created_at)} (IST)
                 </p>
               </Card>)}
           </div>}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { format } from 'date-fns';
+import TimeUtils from '@/lib/timeUtils';
 import { Calendar, FileText, Scale, AlertCircle } from 'lucide-react';
 
 interface TimelineTabProps {
@@ -135,7 +135,7 @@ export const TimelineTab: React.FC<TimelineTabProps> = ({ caseData, legalkartDat
                     <div className="flex items-start justify-between mb-2">
                       <h4 className="font-semibold text-base">{event.title}</h4>
                       <span className="text-sm text-gray-500">
-                        {format(event.date, 'dd MMM yyyy')}
+                        {TimeUtils.formatDate(event.date, 'dd MMM yyyy')} (IST)
                       </span>
                     </div>
                     <p className="text-sm text-gray-600">{event.description}</p>

@@ -161,7 +161,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
           </div>
           <div className="flex items-center gap-1">
             <Calendar className="w-3 h-3" />
-            <span>{TimeUtils.formatDate(note.updated_at, 'MMM d')}</span>
+            <span>{TimeUtils.formatDate(note.updated_at, 'MMM d')} (IST)</span>
           </div>
         </div>
       </CardContent>

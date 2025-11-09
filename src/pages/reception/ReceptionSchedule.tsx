@@ -14,7 +14,7 @@ const ReceptionSchedule = () => {
   const { data: todayAppointments, isLoading } = useQuery({
     queryKey: ['reception-today-schedule', firmId],
     queryFn: async () => {
-      const today = format(new Date(), 'yyyy-MM-dd');
+      const today = TimeUtils.formatDateInput(TimeUtils.nowDate());
       const { data, error } = await supabase
         .from('appointments')
         .select('*')

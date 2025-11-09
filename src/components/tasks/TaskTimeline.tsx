@@ -164,7 +164,7 @@ export const TaskTimeline: React.FC<TaskTimelineProps> = ({ taskId }) => {
                   {getActionText(item)}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {TimeUtils.formatDateTime(item.created_at, 'dd/MM/yyyy HH:mm')}
+                  {TimeUtils.formatDateTime(item.created_at, 'dd/MM/yyyy HH:mm')} (IST)
                 </p>
               </div>
             </div>

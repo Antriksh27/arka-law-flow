@@ -148,7 +148,7 @@ export const TasksTab: React.FC<TasksTabProps> = ({ caseId }) => {
                       {task.due_date && (
                         <div className="flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
-                          {TimeUtils.formatDate(task.due_date, 'MMM d')}
+                          {TimeUtils.formatDate(task.due_date, 'MMM d')} (IST)
                         </div>
                       )}
                     </div>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { FileText, Upload, Download, Trash2 } from 'lucide-react';
-import { format } from 'date-fns';
+import TimeUtils from '@/lib/timeUtils';
 import { Button } from '@/components/ui/button';
 import { UploadDocumentDialog } from '@/components/documents/UploadDocumentDialog';
 import { toast } from 'sonner';
@@ -113,7 +113,7 @@ export const DocumentsTab: React.FC<DocumentsTabProps> = ({
                 <div className="flex-1">
                   <p className="font-medium">{doc.file_name}</p>
                   <p className="text-sm text-muted-foreground">
-                    {formatFileSize(doc.file_size)} • {doc.uploaded_at ? format(new Date(doc.uploaded_at), 'dd/MM/yyyy') : 'N/A'}
+                    {formatFileSize(doc.file_size)} • {doc.uploaded_at ? TimeUtils.formatDate(doc.uploaded_at, 'dd/MM/yyyy') : 'N/A'} (IST)
                   </p>
                   {doc.notes && <p className="text-sm text-muted-foreground mt-1">{doc.notes}</p>}
                   <div className="text-xs text-muted-foreground mt-1">
@@ -143,7 +143,7 @@ export const DocumentsTab: React.FC<DocumentsTabProps> = ({
                 <div>
                   <p className="font-medium">{doc.document_filed || 'Court Document'}</p>
                   <p className="text-sm text-muted-foreground">
-                    Filed: {doc.document_filed_date ? format(new Date(doc.document_filed_date), 'dd/MM/yyyy') : 'Date not available'}
+                    Filed: {doc.document_filed_date ? TimeUtils.formatDate(doc.document_filed_date, 'dd/MM/yyyy') : 'Date not available'} (IST)
                   </p>
                 </div>
               </div>)}

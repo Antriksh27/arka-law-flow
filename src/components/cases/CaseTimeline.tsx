@@ -95,7 +95,7 @@ export const CaseTimeline: React.FC<CaseTimelineProps> = ({
                     <div>
                       <h3 className="font-semibold text-gray-900">{event.title}</h3>
                       <p className="text-sm text-gray-500">
-                        {TimeUtils.formatDate(event.date)}
+                        {TimeUtils.formatDate(event.date)} (IST)
                       </p>
                     </div>
                     <Badge className={getStatusColor(event.status)}>

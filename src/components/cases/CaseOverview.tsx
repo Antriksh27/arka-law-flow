@@ -152,7 +152,7 @@ export const CaseOverview: React.FC<CaseOverviewProps> = ({ caseId }) => {
                 {caseData.status || 'Unknown'}
               </Badge>
               <span className="text-sm text-muted">
-                Last updated: {caseData.updated_at ? TimeUtils.formatDate(caseData.updated_at) : 'Unknown'}
+                Last updated: {caseData.updated_at ? TimeUtils.formatDate(caseData.updated_at) : 'Unknown'} (IST)
               </span>
             </div>
           </div>
@@ -239,7 +239,7 @@ export const CaseOverview: React.FC<CaseOverviewProps> = ({ caseId }) => {
               <div>
                 <p className="text-sm text-muted">Created Date</p>
                 <p className="font-medium">
-                  {caseData.created_at ? TimeUtils.formatDate(caseData.created_at) : 'Unknown'}
+                  {caseData.created_at ? TimeUtils.formatDate(caseData.created_at) : 'Unknown'} (IST)
                 </p>
               </div>
             </div>
@@ -264,7 +264,7 @@ export const CaseOverview: React.FC<CaseOverviewProps> = ({ caseId }) => {
               <div className="flex-1">
                 <p className="text-sm font-medium">Case created</p>
                 <p className="text-xs text-muted">
-                  {caseData.created_at ? TimeUtils.formatDate(caseData.created_at) : 'Unknown date'}
+                  {caseData.created_at ? TimeUtils.formatDate(caseData.created_at) : 'Unknown date'} (IST)
                 </p>
               </div>
             </div>

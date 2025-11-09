@@ -301,7 +301,7 @@ export const NoteViewDialog: React.FC<NoteViewDialogProps> = ({
               </div>
               <div className="flex items-center gap-1">
                 <Calendar className="w-4 h-4" />
-                <span>Created {TimeUtils.formatDate(note.created_at, 'MMM d, yyyy')}</span>
+                <span>Created {TimeUtils.formatDate(note.created_at, 'MMM d, yyyy')} (IST)</span>
               </div>
             </div>
             <Badge variant="outline" className="bg-white">

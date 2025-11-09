@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { format } from 'date-fns';
+import TimeUtils from '@/lib/timeUtils';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -21,7 +21,7 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({
   } = useToast();
   const queryClient = useQueryClient();
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
-  const [expenseDate, setExpenseDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [expenseDate, setExpenseDate] = useState(TimeUtils.formatDateInput(TimeUtils.nowDate()));
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [accountId, setAccountId] = useState('');
@@ -107,7 +107,7 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({
     }
   });
   const resetForm = () => {
-    setExpenseDate(format(new Date(), 'yyyy-MM-dd'));
+    setExpenseDate(TimeUtils.formatDateInput(TimeUtils.nowDate()));
     setAmount('');
     setDescription('');
     setAccountId('');
@@ -212,7 +212,7 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({
             <tbody>
               {expenses.map((expense: any) => <tr key={expense.expense_id} className="border-b hover:bg-muted/50">
                   <td className="p-3 text-sm">
-                    {expense.date ? format(new Date(expense.date), 'dd/MM/yyyy') : '-'}
+                    {expense.date ? TimeUtils.formatDate(expense.date, 'dd/MM/yyyy') : '-'} (IST)
                   </td>
                   <td className="p-3 text-sm">{expense.description}</td>
                   <td className="p-3 text-sm">{expense.account_name || '-'}</td>

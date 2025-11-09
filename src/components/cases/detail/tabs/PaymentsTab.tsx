@@ -1,7 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { format } from 'date-fns';
+import TimeUtils from '@/lib/timeUtils';
 
 interface PaymentsTabProps {
   caseId: string;
@@ -55,7 +55,7 @@ export const PaymentsTab: React.FC<PaymentsTabProps> = ({ caseId }) => {
                 <tr key={payment.id} className="border-b hover:bg-gray-50">
                   <td className="p-3 text-sm font-medium">{payment.invoice_number}</td>
                   <td className="p-3 text-sm">{payment.clients?.full_name || '-'}</td>
-                  <td className="p-3 text-sm">{format(new Date(payment.issue_date), 'dd/MM/yyyy')}</td>
+                  <td className="p-3 text-sm">{TimeUtils.formatDate(payment.issue_date, 'dd/MM/yyyy')} (IST)</td>
                   <td className="p-3 text-sm text-right font-medium text-green-600">
                     ₹{Number(payment.total_amount || 0).toFixed(2)}
                   </td>

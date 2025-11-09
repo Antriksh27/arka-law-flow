@@ -188,7 +188,7 @@ export const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                 </div>
                 <div className={`rounded-lg p-3 border ${isOverdue(taskData.due_date) ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200'}`}>
                   <p className={`${isOverdue(taskData.due_date) ? 'text-red-700' : 'text-gray-700'}`}>
-                    {TimeUtils.formatDate(taskData.due_date)}
+                    {TimeUtils.formatDate(taskData.due_date)} (IST)
                     {isOverdue(taskData.due_date) && ' (Overdue)'}
                   </p>
                 </div>
@@ -202,7 +202,7 @@ export const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
                 </div>
                 <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
                   <p className="text-blue-700">
-                    {TimeUtils.formatDateTime((taskData as any).reminder_time, 'dd/MM/yyyy HH:mm')}
+                    {TimeUtils.formatDateTime((taskData as any).reminder_time, 'dd/MM/yyyy HH:mm')} (IST)
                   </p>
                 </div>
               </div>}
@@ -215,7 +215,7 @@ export const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
               </div>
               <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
                 <p className="text-gray-700">
-                  {TimeUtils.formatDateTime(taskData.created_at, 'dd/MM/yyyy HH:mm')}
+                  {TimeUtils.formatDateTime(taskData.created_at, 'dd/MM/yyyy HH:mm')} (IST)
                 </p>
               </div>
             </div>

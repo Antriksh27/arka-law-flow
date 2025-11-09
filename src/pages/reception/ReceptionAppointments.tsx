@@ -21,7 +21,7 @@ const ReceptionAppointments = () => {
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedLawyer, setSelectedLawyer] = useState<string>('all');
-  const [selectedDate, setSelectedDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
+  const [selectedDate, setSelectedDate] = useState<string>(TimeUtils.formatDateInput(TimeUtils.nowDate()));
   const [bookAppointmentOpen, setBookAppointmentOpen] = useState(false);
   const [editAppointmentOpen, setEditAppointmentOpen] = useState(false);
   const [rescheduleAppointmentOpen, setRescheduleAppointmentOpen] = useState(false);

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { format } from 'date-fns';
+import TimeUtils from '@/lib/timeUtils';
 import { Badge } from '@/components/ui/badge';
 import { Eye, Plus, Loader2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -31,8 +31,8 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [newInvoice, setNewInvoice] = useState({
     customer_id: '',
-    date: format(new Date(), 'yyyy-MM-dd'),
-    due_date: format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
+    date: TimeUtils.formatDateInput(TimeUtils.nowDate()),
+    due_date: TimeUtils.formatDateInput(TimeUtils.addDaysIST(TimeUtils.nowDate(), 30)),
     payment_terms_label: 'Net 30',
     notes: '',
     line_items: [] as LineItem[]
@@ -177,8 +177,8 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({
       });
       setNewInvoice({
         customer_id: '',
-        date: format(new Date(), 'yyyy-MM-dd'),
-        due_date: format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
+        date: TimeUtils.formatDateInput(TimeUtils.nowDate()),
+        due_date: TimeUtils.formatDateInput(TimeUtils.addDaysIST(TimeUtils.nowDate(), 30)),
         payment_terms_label: 'Net 30',
         notes: '',
         line_items: []
@@ -296,8 +296,8 @@ export const InvoicesTab: React.FC<InvoicesTabProps> = ({
                 {invoices.map((invoice: any) => <tr key={invoice.invoice_id} className="border-b hover:bg-muted/50">
                     <td className="p-3 text-sm font-medium">{invoice.invoice_number}</td>
                     <td className="p-3 text-sm">{invoice.customer_name || '-'}</td>
-                    <td className="p-3 text-sm">{format(new Date(invoice.date), 'dd/MM/yyyy')}</td>
-                    <td className="p-3 text-sm">{format(new Date(invoice.due_date), 'dd/MM/yyyy')}</td>
+                    <td className="p-3 text-sm">{TimeUtils.formatDate(invoice.date, 'dd/MM/yyyy')} (IST)</td>
+                    <td className="p-3 text-sm">{TimeUtils.formatDate(invoice.due_date, 'dd/MM/yyyy')} (IST)</td>
                     <td className="p-3 text-sm text-right font-medium">₹{Number(invoice.total || 0).toFixed(2)}</td>
                     <td className="p-3 text-sm">
                       <Badge variant={invoice.status === 'paid' ? 'success' : invoice.status === 'overdue' ? 'error' : 'default'}>

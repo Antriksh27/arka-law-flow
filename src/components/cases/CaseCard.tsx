@@ -101,7 +101,7 @@ export const CaseCard: React.FC<CaseCardProps> = ({ case: caseItem }) => {
           </div>
         </div>
         <span className="text-xs">
-          {TimeUtils.formatDate(caseItem.updated_at, 'MMM d')}
+          {TimeUtils.formatDate(caseItem.updated_at, 'MMM d')} (IST)
         </span>
       </div>
     </div>

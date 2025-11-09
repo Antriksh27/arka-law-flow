@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, FileText, File, Scale, Calendar, XCircle, StickyNote, CheckSquare, Pencil, Users } from 'lucide-react';
 import { format } from 'date-fns';
+import TimeUtils from '@/lib/timeUtils';
 import { EditCaseDialog } from '@/components/cases/EditCaseDialog';
 import { DetailsTab } from '@/components/cases/detail/tabs/DetailsTab';
 import { DocumentsTab } from '@/components/cases/detail/tabs/DocumentsTab';
@@ -186,7 +187,7 @@ export default function CaseDetailEnhanced() {
                   </div>
                   <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                     <div>
-                      <span className="font-medium">Next Hearing:</span> {caseData.next_hearing_date ? format(new Date(caseData.next_hearing_date), 'dd/MM/yyyy') : 'N/A'}
+                      <span className="font-medium">Next Hearing:</span> {caseData.next_hearing_date ? TimeUtils.formatDate(caseData.next_hearing_date, 'dd/MM/yyyy') : 'N/A'} (IST)
                     </div>
                     {clientData && <div>
                         <span className="font-medium">Client:</span>{' '}

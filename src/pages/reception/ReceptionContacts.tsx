@@ -178,7 +178,7 @@ const ReceptionContacts = () => {
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-1 text-sm text-[#6B7280]">
                           <Calendar className="w-3 h-3" />
-                          {contact.last_visited_at ? format(new Date(contact.last_visited_at), 'MMM d, yyyy') : 'Never'}
+                          {contact.last_visited_at ? TimeUtils.formatDate(contact.last_visited_at, 'MMM d, yyyy') : 'Never'} (IST)
                         </div>
                       </td>
                       <td className="py-3 px-4">

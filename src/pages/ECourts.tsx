@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Eye, Download, Loader2, FileText, Calendar, Building2 } from "lucide-react";
-import { format } from "date-fns";
+import TimeUtils from '@/lib/timeUtils';
 import { LegalkartCaseSearch } from "@/components/cases/LegalkartCaseSearch";
 import { CasesUploadSection } from "@/components/ecourts/CasesUploadSection";
 import { CasesFetchList } from "@/components/ecourts/CasesFetchList";
@@ -45,7 +45,7 @@ export const ECourts = () => {
   const formatDate = (date: string | null) => {
     if (!date) return '-';
     try {
-      return format(new Date(date), 'dd/MM/yyyy hh:mm a');
+      return TimeUtils.formatDateTime(date, 'dd/MM/yyyy hh:mm a') + ' (IST)';
     } catch {
       return '-';
     }

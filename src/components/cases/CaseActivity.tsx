@@ -222,8 +222,8 @@ export const CaseActivity: React.FC<CaseActivityProps> = ({ caseId }) => {
                   <Badge variant="outline" className="text-xs font-medium">
                     {getActivityTypeLabel(activity.activity_type)}
                   </Badge>
-                  <span className="text-xs text-gray-500">
-                    {TimeUtils.formatDateTime(activity.created_at)}
+                   <span className="text-xs text-gray-500">
+                    {TimeUtils.formatDateTime(activity.created_at)} (IST)
                   </span>
                 </div>
                 

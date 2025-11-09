@@ -8,7 +8,7 @@ import { CreateTaskDialog } from '@/components/tasks/CreateTaskDialog';
 import { TaskDetailDialog } from '@/components/tasks/TaskDetailDialog';
 import { EditTaskDialog } from '@/components/tasks/EditTaskDialog';
 import { DeleteTaskDialog } from '@/components/tasks/DeleteTaskDialog';
-import { format } from 'date-fns';
+import TimeUtils from '@/lib/timeUtils';
 interface Task {
   id?: string;
   title: string;
@@ -111,7 +111,7 @@ export const MyTasks = ({
                       </Badge>
                     </div>
                     {task.due_date && <p className="text-xs text-muted-foreground">
-                        Due: {format(new Date(task.due_date), 'MMM d, yyyy')}
+                        Due: {TimeUtils.formatDate(task.due_date, 'MMM d, yyyy')} (IST)
                       </p>}
                   </div>
                 </div>

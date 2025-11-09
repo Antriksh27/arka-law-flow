@@ -3,7 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Download, Eye, Star, StarOff, Trash2 } from 'lucide-react';
-import { format } from 'date-fns';
+import TimeUtils from '@/lib/timeUtils';
 import { getFileIcon } from '@/lib/fileUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -155,7 +155,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
                   </TableCell>
                   <TableCell>
                     <span className="text-sm text-gray-600">
-                      {format(new Date(doc.uploaded_at), 'MMM d, yyyy')}
+                      {TimeUtils.formatDate(doc.uploaded_at, 'MMM d, yyyy')} (IST)
                     </span>
                   </TableCell>
                   <TableCell>

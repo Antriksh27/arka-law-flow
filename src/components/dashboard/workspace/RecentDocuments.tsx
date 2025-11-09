@@ -1,7 +1,7 @@
 import { FileText, Download } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { formatDistanceToNow } from 'date-fns';
+import TimeUtils from '@/lib/timeUtils';
 interface Document {
   id: string;
   file_name: string;
@@ -60,9 +60,7 @@ export const RecentDocuments = ({
                 <div className="flex-1 min-w-0">
                   <h3 className="font-medium text-sm truncate">{doc.file_name}</h3>
                   <p className="text-xs text-muted-foreground">
-                    {doc.case_title} • Uploaded {formatDistanceToNow(new Date(doc.uploaded_at), {
-                addSuffix: true
-              })}
+                    {doc.case_title} • Uploaded {TimeUtils.formatRelative(doc.uploaded_at)} (IST)
                   </p>
                 </div>
                 <button className="text-muted-foreground hover:text-foreground">

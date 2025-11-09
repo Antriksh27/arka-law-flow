@@ -2,7 +2,7 @@ import { UserPlus, Phone, Calendar, ArrowRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { formatDistanceToNow } from 'date-fns';
+import TimeUtils from '@/lib/timeUtils';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -79,7 +79,7 @@ export const RecentContactsCard = ({ contacts, isLoading }: RecentContactsCardPr
                   {contact.last_visited_at && (
                     <div className="flex items-center gap-1 text-xs text-gray-500">
                       <Calendar className="w-3 h-3" />
-                      Visited {formatDistanceToNow(new Date(contact.last_visited_at), { addSuffix: true })}
+                      Visited {TimeUtils.formatRelative(contact.last_visited_at)} (IST)
                     </div>
                   )}
                 </div>

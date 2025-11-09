@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CheckSquare, Plus, Calendar, User, Tag, Search, Edit, Trash2, Eye, MoreHorizontal } from 'lucide-react';
 import { format } from 'date-fns';
+import TimeUtils from '@/lib/timeUtils';
 import { CreateTaskDialog } from '../components/tasks/CreateTaskDialog';
 import { EditTaskDialog } from '../components/tasks/EditTaskDialog';
 import { TaskDetailDialog } from '../components/tasks/TaskDetailDialog';
@@ -198,7 +199,7 @@ const Tasks = () => {
         {task.due_date && (
           <div className={`flex items-center gap-1 ${isOverdue(task.due_date, task.status) ? 'text-red-600 font-medium' : ''}`}>
             <Calendar className="w-3 h-3" />
-            {format(new Date(task.due_date), 'MMM d')}
+            {TimeUtils.formatDate(task.due_date, 'MMM d')} (IST)
             {isOverdue(task.due_date, task.status) && ' (Overdue)'}
           </div>
         )}

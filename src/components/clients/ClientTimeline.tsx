@@ -7,7 +7,7 @@ import {
   FileText, Calendar, CheckSquare, StickyNote, 
   Briefcase, DollarSign, Loader2 
 } from 'lucide-react';
-import { format } from 'date-fns';
+import TimeUtils from '@/lib/timeUtils';
 
 interface ClientTimelineProps {
   clientId: string;
@@ -195,7 +195,7 @@ export const ClientTimeline: React.FC<ClientTimelineProps> = ({ clientId }) => {
                       </Badge>
                     </div>
                     <p className="text-xs text-gray-500">
-                      {format(new Date(event.date), 'dd MMM yyyy, HH:mm')}
+                      {TimeUtils.formatDateTime(event.date, 'dd MMM yyyy, HH:mm')} (IST)
                     </p>
                   </Card>
                 </div>
