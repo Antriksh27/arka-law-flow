@@ -47,7 +47,7 @@ const fetchDashboardData = async (firmId: string, userId: string, role: string) 
   ] = await Promise.all([
     supabase.from('team_members').select('full_name').eq('user_id', userId).single(),
     supabase.from('legal_news').select('title, url, source, published_at').order('published_at', { ascending: false }).limit(5),
-    supabase.from('cases').select('*', { count: 'exact', head: true }).eq('firm_id', firmId).in('status', ['open', 'in_court']),
+    supabase.from('cases').select('*', { count: 'exact', head: true }).eq('firm_id', firmId).in('status', ['open', 'in_court', 'pending']),
     supabase.from('case_hearings').select('*, cases!inner(firm_id)', { count: 'exact', head: true }).eq('cases.firm_id', firmId).gte('hearing_date', today.toISOString()),
     supabase.from('appointments').select('*', { count: 'exact', head: true }).eq('firm_id', firmId).gte('appointment_date', format(today, 'yyyy-MM-dd')),
     supabase.from('tasks').select('*', { count: 'exact', head: true }).eq('firm_id', firmId).neq('status', 'completed'),
@@ -63,7 +63,7 @@ const fetchDashboardData = async (firmId: string, userId: string, role: string) 
     supabase.from('case_hearings').select('id, hearing_date, judge, cases!inner(case_title, firm_id)').eq('cases.firm_id', firmId).gte('hearing_date', format(startOfToday, 'yyyy-MM-dd')).lte('hearing_date', format(endOfToday, 'yyyy-MM-dd')).order('hearing_date', { ascending: true }).limit(50),
     supabase.from('clients').select('id, full_name, email, phone, status, created_at').eq('firm_id', firmId).order('created_at', { ascending: false }).limit(5),
     supabase.from('contacts').select('id, name, phone, last_visited_at').eq('firm_id', firmId).order('last_visited_at', { ascending: false, nullsFirst: false }).limit(5),
-    supabase.from('cases').select('id, case_title, case_number, status, case_hearings(hearing_date)').eq('firm_id', firmId).in('status', ['open', 'in_court']).order('created_at', { ascending: false }).limit(5),
+    supabase.from('cases').select('id, case_title, case_number, status, case_hearings(hearing_date)').eq('firm_id', firmId).in('status', ['open', 'in_court', 'pending']).order('created_at', { ascending: false }).limit(5),
   ]);
 
   const caseIds = (caseIdsInFirm || []).map(c => c.id);
