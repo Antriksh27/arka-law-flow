@@ -107,6 +107,17 @@ export const BulkImportCasesDialog = ({
 
       if (!teamMember?.firm_id) return;
 
+      // Fetch all cases and clients ONCE upfront to avoid repeated queries
+      const { data: allCases } = await supabase
+        .from('cases')
+        .select('id, case_title, cnr_number')
+        .eq('firm_id', teamMember.firm_id);
+
+      const { data: allClients } = await supabase
+        .from('clients')
+        .select('id, full_name')
+        .eq('firm_id', teamMember.firm_id);
+
       // Extract columns
       const columns = Object.keys(jsonData[0]);
       
@@ -129,32 +140,20 @@ export const BulkImportCasesDialog = ({
         let caseFound = false;
 
         // Check if case exists with this CNR (normalize for matching)
-        if (cnrNumber) {
+        if (cnrNumber && allCases) {
           const normalizedCNR = normalizeCNR(cnrNumber);
           
-          // Get all cases and check normalized CNR in cnr_number field
-          const { data: allCases } = await supabase
-            .from('cases')
-            .select('id, case_title, cnr_number')
-            .eq('firm_id', teamMember.firm_id);
-          
-          const existingCase = allCases?.find(c => 
+          const existingCase = allCases.find(c => 
             normalizeCNR(c.cnr_number || '') === normalizedCNR
           );
           
           caseFound = !!existingCase;
         }
 
-        if (clientName) {
+        if (clientName && allClients) {
           const normalizedInputName = normalizeClientName(clientName);
           
-          // Get all clients and find best match
-          const { data: allClients } = await supabase
-            .from('clients')
-            .select('id, full_name')
-            .eq('firm_id', teamMember.firm_id);
-
-          const matchedDbClient = allClients?.find(c => 
+          const matchedDbClient = allClients.find(c => 
             normalizeClientName(c.full_name) === normalizedInputName
           );
 
@@ -301,6 +300,21 @@ export const BulkImportCasesDialog = ({
         throw new Error('Unable to determine your firm. Please contact support.');
       }
 
+      // Fetch all cases and clients ONCE upfront to avoid repeated queries
+      const { data: allCases } = await supabase
+        .from('cases')
+        .select('id, case_title, cnr_number')
+        .eq('firm_id', teamMember.firm_id);
+
+      const { data: allClients } = await supabase
+        .from('clients')
+        .select('id, full_name')
+        .eq('firm_id', teamMember.firm_id);
+
+      if (!allCases || !allClients) {
+        throw new Error('Failed to load cases and clients data');
+      }
+
       let successCount = 0;
       const casesNotFound: string[] = [];
       const clientsNotFound: string[] = [];
@@ -329,13 +343,8 @@ export const BulkImportCasesDialog = ({
           // Normalize CNR for matching
           const normalizedCNR = normalizeCNR(cnrNumber);
 
-          // Find existing case by CNR (normalize both sides for comparison)
-          const { data: allCases } = await supabase
-            .from('cases')
-            .select('id, case_title, cnr_number')
-            .eq('firm_id', teamMember.firm_id);
-
-          const existingCase = allCases?.find(c => 
+          // Find existing case by CNR using cached data
+          const existingCase = allCases.find(c => 
             normalizeCNR(c.cnr_number || '') === normalizedCNR
           );
 
@@ -352,13 +361,8 @@ export const BulkImportCasesDialog = ({
           if (clientName) {
             const normalizedInputName = normalizeClientName(clientName);
             
-            // Get all clients and find best match
-            const { data: allClients } = await supabase
-              .from('clients')
-              .select('id, full_name')
-              .eq('firm_id', teamMember.firm_id);
-
-            const matchedClient = allClients?.find(c => 
+            // Find best match using cached clients data
+            const matchedClient = allClients.find(c => 
               normalizeClientName(c.full_name) === normalizedInputName
             );
             
