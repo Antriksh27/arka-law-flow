@@ -17,9 +17,10 @@ export const CasesHeader: React.FC<CasesHeaderProps> = ({
   onBulkImport,
   onStandardizeCNR
 }) => {
-  const { role } = useAuth();
+  const {
+    role
+  } = useAuth();
   const isAdmin = role === 'admin';
-
   return <div className="flex items-center justify-between">
       <div>
         <h1 className="text-2xl font-semibold text-gray-900">Cases</h1>
@@ -36,25 +37,12 @@ export const CasesHeader: React.FC<CasesHeaderProps> = ({
           </Button>
         </div>
 
-        <Button 
-          onClick={onBulkImport}
-          variant="outline" 
-          className="border-slate-300 text-slate-700 hover:bg-slate-50"
-        >
+        <Button onClick={onBulkImport} variant="outline" className="border-slate-300 text-slate-700 hover:bg-slate-50">
           <Upload className="w-4 h-4 mr-2" />
           Bulk Import
         </Button>
 
-        {isAdmin && (
-          <Button 
-            onClick={onStandardizeCNR}
-            variant="outline" 
-            className="border-orange-300 text-orange-700 hover:bg-orange-50"
-          >
-            <Settings className="w-4 h-4 mr-2" />
-            Standardize CNR
-          </Button>
-        )}
+        {isAdmin}
 
         <Button onClick={onAddCase} className="bg-slate-800 hover:bg-slate-700">
           <Plus className="w-4 h-4 mr-2" />
