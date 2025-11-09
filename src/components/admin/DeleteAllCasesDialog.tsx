@@ -30,30 +30,42 @@ export const DeleteAllCasesDialog = () => {
     setIsDeleting(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('delete-all-cases', {
-        body: { confirmation },
-      });
+      const batchSize = 100;
+      let totalDeleted = 0;
+      let hasMore = true;
+      let iteration = 0;
 
-      if (error) throw error;
+      toast.message('Starting deletion', { description: 'Processing cases in batches…' });
 
-      if (data.status === 'processing') {
-        toast.success(data.message || 'Case deletion started', {
-          description: `Processing ${data.total_cases} cases in the background. This may take a few minutes.`,
-          duration: 5000,
+      while (hasMore && iteration < 200) { // hard cap to prevent infinite loop
+        const { data, error } = await supabase.functions.invoke('delete-all-cases', {
+          body: { confirmation, batch_size: batchSize },
         });
-      } else {
-        toast.success(data.message || 'All cases deleted successfully', {
-          description: `Deleted ${data.summary?.cases || 0} cases`,
+        if (error) throw error;
+
+        totalDeleted += data?.processed || 0;
+        hasMore = !!data?.has_more;
+        iteration += 1;
+
+        toast.message('Deleting…', {
+          description: `Deleted ${totalDeleted} so far${hasMore ? ' (continuing)…' : ''}`,
+          duration: 1500,
         });
+
+        // Small delay to avoid hammering
+        if (hasMore) await new Promise((r) => setTimeout(r, 250));
       }
+
+      toast.success('Deletion complete', {
+        description: `Total cases deleted: ${totalDeleted}`,
+      });
 
       setOpen(false);
       setConfirmation('');
-      
-      // Wait a moment then reload to refresh data
+
       setTimeout(() => {
         window.location.reload();
-      }, 2000);
+      }, 800);
     } catch (error: any) {
       console.error('Error deleting cases:', error);
       toast.error('Failed to delete cases', {
