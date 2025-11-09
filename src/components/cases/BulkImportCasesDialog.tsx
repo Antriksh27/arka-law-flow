@@ -427,9 +427,9 @@ export const BulkImportCasesDialog = ({
         }
       }
 
-      // Phase 2: Process updates in smaller batches
+      // Phase 2: Process updates one at a time with delays to prevent timeouts
       if (validUpdates.length > 0) {
-        const BATCH_SIZE = 10; // Smaller batch size to avoid timeouts
+        const BATCH_SIZE = 3; // For progress display only
         const totalBatches = Math.ceil(validUpdates.length / BATCH_SIZE);
         
         setProgress(prev => ({
@@ -440,49 +440,43 @@ export const BulkImportCasesDialog = ({
           totalBatches
         }));
 
-        for (let i = 0; i < validUpdates.length; i += BATCH_SIZE) {
-          const batch = validUpdates.slice(i, i + BATCH_SIZE);
+        // Process each case individually with delay between each
+        for (let i = 0; i < validUpdates.length; i++) {
+          const update = validUpdates[i];
           const batchNumber = Math.floor(i / BATCH_SIZE) + 1;
           
           setProgress(prev => ({
             ...prev,
-            currentBatch: batchNumber
+            currentBatch: batchNumber,
+            current: i + 1
           }));
           
-          // Process batch sequentially (one at a time to avoid overwhelming DB)
-          for (const update of batch) {
-            try {
-              const { error } = await supabase
-                .from('cases')
-                .update({
-                  client_id: update.clientId,
-                  updated_at: new Date().toISOString()
-                })
-                .eq('id', update.caseId);
+          try {
+            const { error } = await supabase
+              .from('cases')
+              .update({
+                client_id: update.clientId,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', update.caseId);
 
-              if (error) throw error;
+            if (error) throw error;
 
-              successCount++;
-              successfulUpdates.push({
-                caseId: update.cnrNumber,
-                caseTitle: update.caseTitle,
-                clientName: update.clientName
-              });
+            successCount++;
+            successfulUpdates.push({
+              caseId: update.cnrNumber,
+              caseTitle: update.caseTitle,
+              clientName: update.clientName
+            });
 
-              setProgress(prev => ({
-                ...prev,
-                current: i + successCount
-              }));
-
-            } catch (error: any) {
-              console.error(`Update error for row ${update.rowNumber}:`, error);
-              errors.push(`Row ${update.rowNumber}: Failed to update ${update.cnrNumber}: ${error.message}`);
-            }
+          } catch (error: any) {
+            console.error(`Update error for row ${update.rowNumber}:`, error);
+            errors.push(`Row ${update.rowNumber}: Failed to update ${update.cnrNumber}: ${error.message}`);
           }
 
-          // Wait 500ms between batches to avoid overwhelming the database
-          if (i + BATCH_SIZE < validUpdates.length) {
-            await sleep(500);
+          // Wait 800ms between each case to prevent database timeouts
+          if (i < validUpdates.length - 1) {
+            await sleep(800);
           }
         }
       }
