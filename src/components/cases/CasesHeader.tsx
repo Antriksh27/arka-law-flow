@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, Grid3X3, List, Upload, Settings } from 'lucide-react';
+import { Plus, Grid3X3, List, Upload, Settings, Link2 } from 'lucide-react';
 import { DeleteAllCasesDialog } from '@/components/admin/DeleteAllCasesDialog';
 import { useAuth } from '@/contexts/AuthContext';
 interface CasesHeaderProps {
@@ -9,13 +9,15 @@ interface CasesHeaderProps {
   onAddCase: () => void;
   onBulkImport: () => void;
   onStandardizeCNR: () => void;
+  onLinkClients: () => void;
 }
 export const CasesHeader: React.FC<CasesHeaderProps> = ({
   viewMode,
   onViewModeChange,
   onAddCase,
   onBulkImport,
-  onStandardizeCNR
+  onStandardizeCNR,
+  onLinkClients
 }) => {
   const {
     role
@@ -40,6 +42,11 @@ export const CasesHeader: React.FC<CasesHeaderProps> = ({
         <Button onClick={onBulkImport} variant="outline" className="border-slate-300 text-slate-700 hover:bg-slate-50">
           <Upload className="w-4 h-4 mr-2" />
           Bulk Import
+        </Button>
+
+        <Button onClick={onLinkClients} variant="outline" className="border-slate-300 text-slate-700 hover:bg-slate-50">
+          <Link2 className="w-4 h-4 mr-2" />
+          Link Clients
         </Button>
 
         {isAdmin}

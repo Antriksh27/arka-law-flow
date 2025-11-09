@@ -7,6 +7,7 @@ import { CasesTable } from '../components/cases/CasesTable';
 import { AddCaseDialog } from '../components/cases/AddCaseDialog';
 import { BulkImportCasesDialog } from '../components/cases/BulkImportCasesDialog';
 import { StandardizeCNRDialog } from '../components/cases/StandardizeCNRDialog';
+import { LinkClientsDialog } from '../components/cases/LinkClientsDialog';
 
 const Cases = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
@@ -17,6 +18,7 @@ const Cases = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showBulkImportDialog, setShowBulkImportDialog] = useState(false);
   const [showStandardizeCNRDialog, setShowStandardizeCNRDialog] = useState(false);
+  const [showLinkClientsDialog, setShowLinkClientsDialog] = useState(false);
 
   useEffect(() => {
     console.log('Cases component mounted');
@@ -35,6 +37,7 @@ const Cases = () => {
         onAddCase={() => setShowAddDialog(true)}
         onBulkImport={() => setShowBulkImportDialog(true)}
         onStandardizeCNR={() => setShowStandardizeCNRDialog(true)}
+        onLinkClients={() => setShowLinkClientsDialog(true)}
       />
       
       <CasesFilters
@@ -93,6 +96,14 @@ const Cases = () => {
         onSuccess={() => {
           // Cases will be refreshed automatically via realtime subscriptions
           console.log('CNR numbers standardized successfully');
+        }}
+      />
+
+      <LinkClientsDialog
+        open={showLinkClientsDialog}
+        onOpenChange={setShowLinkClientsDialog}
+        onSuccess={() => {
+          console.log('Clients linked successfully');
         }}
       />
     </div>
