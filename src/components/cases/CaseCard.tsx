@@ -11,10 +11,22 @@ interface CaseCardProps {
 }
 
 const getDisplayStatus = (caseItem: any) => {
-  // If linked to Legalkart (has CNR and has been fetched), show actual status (pending/disposed)
+  // If linked to Legalkart (has CNR and has been fetched), show actual status mapped to pending/disposed
   const isLinkedToLegalkart = caseItem.cnr_number && caseItem.last_fetched_at;
+  const mapToLegalkartStatus = (text?: string | null) => {
+    const s = (text || '').toLowerCase();
+    if (!s) return 'pending';
+    if (
+      s.includes('disposed') || s.includes('dismiss') || s.includes('withdraw') ||
+      s.includes('decid') || s.includes('complete') || s.includes('settled') || s.includes('close')
+    ) {
+      return 'disposed';
+    }
+    return 'pending';
+  };
+
   if (isLinkedToLegalkart) {
-    return caseItem.status || 'pending';
+    return mapToLegalkartStatus(caseItem.status);
   }
   // Otherwise, show "open"
   return 'open';

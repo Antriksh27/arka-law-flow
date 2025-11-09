@@ -59,7 +59,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
         .from('team_members')
         .select('role, firm_id')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       console.log('Team member data:', teamMember);
 
@@ -121,6 +121,18 @@ export const CasesTable: React.FC<CasesTableProps> = ({
       console.log('Cases query result:', { data, error, count });
       
       // Transform the data to match the expected structure
+      const mapToLegalkartStatus = (text?: string | null) => {
+        const s = (text || '').toLowerCase();
+        if (!s) return 'pending';
+        if (
+          s.includes('disposed') || s.includes('dismiss') || s.includes('withdraw') ||
+          s.includes('decid') || s.includes('complete') || s.includes('settled') || s.includes('close')
+        ) {
+          return 'disposed';
+        }
+        return 'pending';
+      };
+
       const transformedData = data?.map((caseItem: any) => {
         // Prefer the case_title field; fallback to generated "Petitioner Vs Respondent"
         let displayTitle = caseItem.case_title;
@@ -131,10 +143,10 @@ export const CasesTable: React.FC<CasesTableProps> = ({
           displayTitle = `${cleanPetitioner} Vs ${cleanRespondent}`;
         }
         
-        // Determine display status: if linked to Legalkart, show actual status; otherwise show "open"
+        // Determine display status: if linked to Legalkart, map to pending/disposed; otherwise show "open"
         const isLinkedToLegalkart = caseItem.cnr_number && caseItem.last_fetched_at;
         const displayStatus = isLinkedToLegalkart 
-          ? (caseItem.status || 'pending')
+          ? mapToLegalkartStatus(caseItem.status)
           : 'open';
         
         return {
