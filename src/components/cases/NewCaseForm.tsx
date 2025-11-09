@@ -24,6 +24,7 @@ interface CaseFormData {
   case_type: string;
   status: string;
   priority: string;
+  by_against?: string;
   reference_number?: string;
   case_number?: string;
   filing_date?: string;
@@ -126,6 +127,7 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
         case_type: data.case_type as any,
         status: data.status as any,
         priority: data.priority as any,
+        by_against: data.by_against ? data.by_against as any : null,
         reference_number: data.reference_number || null,
         case_number: data.case_number || null,
         filing_date: data.filing_date ? new Date(data.filing_date).toISOString().split('T')[0] : null,
@@ -293,6 +295,19 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
                 <option value="high">High</option>
+              </select>
+            </div>
+
+            <div>
+              <Label htmlFor="by_against">By/Against</Label>
+              <select
+                id="by_against"
+                {...register('by_against')}
+                className="w-full px-3 py-2 mt-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white z-50"
+              >
+                <option value="">Not specified</option>
+                <option value="by">By (Filed by client)</option>
+                <option value="against">Against (Filed against client)</option>
               </select>
             </div>
 

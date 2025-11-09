@@ -31,6 +31,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
     reference_number: caseData?.reference_number || '',
     registration_number: caseData?.registration_number || '',
     status: caseData?.status || 'open',
+    by_against: caseData?.by_against || '',
     stage: caseData?.stage || '',
     court_name: caseData?.court_name || '',
     court_complex: caseData?.court_complex || '',
@@ -191,14 +192,30 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                   value={formData.status} 
                   onValueChange={(value) => setFormData({ ...formData, status: value })}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-white">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white z-50">
                     <SelectItem value="open">Open</SelectItem>
                     <SelectItem value="in_court">In Court</SelectItem>
                     <SelectItem value="closed">Closed</SelectItem>
                     <SelectItem value="on_hold">On Hold</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="by_against">By/Against</Label>
+                <Select 
+                  value={formData.by_against} 
+                  onValueChange={(value) => setFormData({ ...formData, by_against: value })}
+                >
+                  <SelectTrigger className="bg-white">
+                    <SelectValue placeholder="Select..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white z-50">
+                    <SelectItem value="">Not specified</SelectItem>
+                    <SelectItem value="by">By (Filed by client)</SelectItem>
+                    <SelectItem value="against">Against (Filed against client)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
