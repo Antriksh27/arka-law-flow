@@ -282,7 +282,6 @@ export const CasesTable: React.FC<CasesTableProps> = ({
                   className="border-white"
                 />
               </TableHead>
-              <TableHead className="bg-slate-800 text-white">Case Title</TableHead>
               <TableHead 
                 className="bg-slate-800 text-white cursor-pointer hover:bg-slate-700 select-none"
                 onClick={() => handleSort('reference_number')}
@@ -296,6 +295,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
                   )}
                 </div>
               </TableHead>
+              <TableHead className="bg-slate-800 text-white">Case Title</TableHead>
               <TableHead className="bg-slate-800 text-white">Client</TableHead>
               <TableHead className="bg-slate-800 text-white">Type</TableHead>
               <TableHead className="bg-slate-800 text-white">Status</TableHead>
@@ -323,12 +323,12 @@ export const CasesTable: React.FC<CasesTableProps> = ({
                     onCheckedChange={(checked) => handleSelectCase(caseItem.id, checked as boolean)}
                   />
                 </TableCell>
+                <TableCell className="text-sm text-muted-foreground">
+                  {caseItem.reference_number || '-'}
+                </TableCell>
                 <TableCell className="font-medium">
                   {caseItem.displayTitle || caseItem.case_title}
                 </TableCell>
-              <TableCell className="text-sm text-muted-foreground">
-                {caseItem.reference_number || '-'}
-              </TableCell>
               <TableCell>
                 {caseItem.client_name || 'No client assigned'}
               </TableCell>
