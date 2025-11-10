@@ -76,7 +76,7 @@ export const CaseHighlightsCard = ({ cases, isLoading }: CaseHighlightsCardProps
                 {caseItem.next_hearing_date ? (
                   <div className="flex items-center gap-1 text-xs text-gray-600">
                     <Calendar className="w-3 h-3" />
-                    Next hearing: {TimeUtils.formatDate(caseItem.next_hearing_date, 'MMM dd, yyyy')}
+                    Next hearing: {TimeUtils.formatDate(caseItem.next_hearing_date, 'dd/MM/yyyy')}
                   </div>
                 ) : (
                   <div className="flex items-center gap-1 text-xs text-gray-500">
