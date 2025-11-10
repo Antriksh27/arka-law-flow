@@ -32,52 +32,20 @@ export const CasesHeader: React.FC<CasesHeaderProps> = ({
       </div>
 
       <div className="flex items-center gap-3">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onViewModeChange(viewMode === 'grid' ? 'table' : 'grid')}
-        >
-          {viewMode === 'grid' ? (
-            <>
-              <List className="w-4 h-4 mr-2" />
-              Table View
-            </>
-          ) : (
-            <>
-              <Grid3X3 className="w-4 h-4 mr-2" />
-              Grid View
-            </>
-          )}
-        </Button>
+        
 
-        <Button variant="outline" size="sm" onClick={onBulkImport}>
-          <Upload className="w-4 h-4 mr-2" />
-          Bulk Import
-        </Button>
+        
 
-        {onBulkImportDisposed && (
-          <Button variant="outline" size="sm" onClick={onBulkImportDisposed}>
-            <Upload className="w-4 h-4 mr-2" />
-            Import Disposed
-          </Button>
-        )}
+        {onBulkImportDisposed}
 
-        <Button variant="outline" size="sm" onClick={onStandardizeCNR}>
-          <Settings className="w-4 h-4 mr-2" />
-          Standardize CNR
-        </Button>
+        
 
-        <Button variant="outline" size="sm" onClick={onLinkClients}>
-          <Link2 className="w-4 h-4 mr-2" />
-          Link Clients
-        </Button>
+        
 
-        {isAdmin && (
-          <Button onClick={onAddCase} className="bg-slate-800 hover:bg-slate-700">
+        {isAdmin && <Button onClick={onAddCase} className="bg-slate-800 hover:bg-slate-700">
             <Plus className="w-4 h-4 mr-2" />
             New Case
-          </Button>
-        )}
+          </Button>}
 
         {isAdmin && <DeleteAllCasesDialog />}
       </div>
