@@ -5,6 +5,10 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+import { useDialog } from '@/hooks/use-dialog';
+import { HearingDetailsModal } from '@/components/hearings/HearingDetailsModal';
+import { ViewAppointmentDialog } from '@/components/appointments/ViewAppointmentDialog';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TimelineEvent {
   id: string;
@@ -24,6 +28,40 @@ interface TodayFlowProps {
 
 export const TodayFlow = ({ events, isLoading }: TodayFlowProps) => {
   const navigate = useNavigate();
+  const { openDialog } = useDialog();
+
+  const handleViewEvent = async (event: TimelineEvent) => {
+    if (event.type === 'hearing') {
+      const { data: hearing } = await supabase
+        .from('case_hearings')
+        .select('*, cases(title, case_title)')
+        .eq('id', event.id)
+        .single();
+      
+      if (hearing) {
+        openDialog(<HearingDetailsModal hearing={hearing} />);
+      }
+    } else if (event.type === 'appointment') {
+      const { data: appointment } = await supabase
+        .from('appointments')
+        .select('*, profiles!appointments_lawyer_id_fkey(full_name)')
+        .eq('id', event.id)
+        .single();
+      
+      if (appointment) {
+        const profiles: any = appointment.profiles;
+        const lawyerName = Array.isArray(profiles) 
+          ? profiles[0]?.full_name || ''
+          : profiles?.full_name || '';
+        
+        const formattedAppointment = {
+          ...appointment,
+          lawyer_name: lawyerName
+        };
+        openDialog(<ViewAppointmentDialog appointment={formattedAppointment as any} />);
+      }
+    }
+  };
 
   const getEventIcon = (type: string) => {
     switch (type) {
@@ -115,7 +153,12 @@ export const TodayFlow = ({ events, isLoading }: TodayFlowProps) => {
                         </>
                       ) : (
                         <>
-                          <Button size="sm" variant="ghost" className="h-7 text-xs">
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            className="h-7 text-xs"
+                            onClick={() => handleViewEvent(event)}
+                          >
                             View
                           </Button>
                           {event.type === 'appointment' && (
