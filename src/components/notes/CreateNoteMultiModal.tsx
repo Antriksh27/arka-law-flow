@@ -78,7 +78,7 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
       const {
         data,
         error
-      } = await supabase.from('cases').select('id, case_title').eq('status', 'open').order('title');
+      } = await supabase.from('cases').select('id, case_title').eq('status', 'open').order('case_title');
       if (error) throw error;
       return data || [];
     }
