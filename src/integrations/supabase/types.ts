@@ -4043,6 +4043,10 @@ export type Database = {
           updated_count: number
         }[]
       }
+      batch_update_case_priority_once: {
+        Args: { batch_size?: number }
+        Returns: number
+      }
       can_assign_to_role: {
         Args: { assignee_id: string; assigner_id: string }
         Returns: boolean

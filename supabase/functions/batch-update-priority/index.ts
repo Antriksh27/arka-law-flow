@@ -16,30 +16,36 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    console.log('Starting batch priority update using database function...');
+    console.log('Starting background batch priority update...');
 
-    // Call the database function that handles batching efficiently
-    const { data, error } = await supabaseClient
-      .rpc('batch_update_case_priority', {
-        target_priority: 'medium',
-        batch_size: 1000
-      });
+    // Background task: call the single-batch RPC repeatedly until no rows left
+    const backgroundTask = async () => {
+      let totalUpdated = 0;
+      let loops = 0;
+      while (true) {
+        const { data, error } = await supabaseClient.rpc('batch_update_case_priority_once', { batch_size: 200 });
+        if (error) {
+          console.error('RPC error during batch update:', error);
+          break;
+        }
+        const updated = typeof data === 'number' ? data : (data?.updated_count ?? 0);
+        totalUpdated += updated;
+        loops += 1;
+        console.log(`Batch ${loops}: updated ${updated}, total ${totalUpdated}`);
+        if (!updated || updated === 0) break;
+        // small pause to reduce load
+        await new Promise((r) => setTimeout(r, 150));
+      }
+      console.log(`Background batch update complete. Total updated: ${totalUpdated}`);
+    };
 
-    if (error) {
-      console.error('Database function error:', error);
-      throw error;
-    }
-
-    const totalUpdated = data?.[0]?.updated_count || 0;
-    console.log(`Successfully updated ${totalUpdated} cases to medium priority`);
+    // Start background task and return immediately
+    // @ts-ignore - Edge runtime helper provided by Supabase
+    EdgeRuntime.waitUntil(backgroundTask());
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        totalUpdated,
-        message: `Successfully updated ${totalUpdated} cases to medium priority` 
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ started: true, message: 'Batch priority update started in background' }),
+      { status: 202, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
