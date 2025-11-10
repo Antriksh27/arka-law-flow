@@ -34,13 +34,7 @@ const Cases = () => {
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
       <CasesHeader 
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
         onAddCase={() => setShowAddDialog(true)}
-        onBulkImport={() => setShowBulkImportDialog(true)}
-        onBulkImportDisposed={() => setShowBulkImportDisposedDialog(true)}
-        onStandardizeCNR={() => setShowStandardizeCNRDialog(true)}
-        onLinkClients={() => setShowLinkClientsDialog(true)}
       />
       
       <CasesFilters
