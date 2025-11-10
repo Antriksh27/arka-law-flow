@@ -78,6 +78,7 @@ export const HearingsTable: React.FC<HearingsTableProps> = ({ filters }) => {
           <thead>
             <tr className="border-b border-gray-200">
               <th className="text-left py-3 px-4 font-medium text-gray-900">Date</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">Time</th>
               <th className="text-left py-3 px-4 font-medium text-gray-900">Case</th>
               <th className="text-left py-3 px-4 font-medium text-gray-900">Judge</th>
               <th className="text-left py-3 px-4 font-medium text-gray-900">Purpose</th>
@@ -91,6 +92,9 @@ export const HearingsTable: React.FC<HearingsTableProps> = ({ filters }) => {
                 <tr key={hearing.id} className="border-b border-gray-100 hover:bg-gray-50">
                   <td className="py-3 px-4">
                     {TimeUtils.formatDate(hearing.hearing_date, 'MMM d, yyyy')}
+                  </td>
+                  <td className="py-3 px-4">
+                    {hearing.hearing_time ? TimeUtils.formatTime(hearing.hearing_time, 'h:mm a') : '-'}
                   </td>
                   <td className="py-3 px-4">
                     <div>
@@ -112,7 +116,7 @@ export const HearingsTable: React.FC<HearingsTableProps> = ({ filters }) => {
               ))
             ) : (
               <tr>
-                <td colSpan={6} className="py-12 text-center text-gray-500">
+                <td colSpan={7} className="py-12 text-center text-gray-500">
                   No hearings found
                 </td>
               </tr>

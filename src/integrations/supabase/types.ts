@@ -760,6 +760,7 @@ export type Database = {
           cause_list_type: string | null
           created_at: string | null
           hearing_date: string | null
+          hearing_time: string | null
           id: string
           judge: string | null
           purpose_of_hearing: string | null
@@ -771,6 +772,7 @@ export type Database = {
           cause_list_type?: string | null
           created_at?: string | null
           hearing_date?: string | null
+          hearing_time?: string | null
           id?: string
           judge?: string | null
           purpose_of_hearing?: string | null
@@ -782,6 +784,7 @@ export type Database = {
           cause_list_type?: string | null
           created_at?: string | null
           hearing_date?: string | null
+          hearing_time?: string | null
           id?: string
           judge?: string | null
           purpose_of_hearing?: string | null

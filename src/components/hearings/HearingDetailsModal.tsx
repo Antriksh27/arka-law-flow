@@ -30,9 +30,14 @@ export const HearingDetailsModal: React.FC<HearingDetailsModalProps> = ({
         <div className="flex items-start gap-3 p-4 rounded-xl bg-[#F9FAFB] border border-[#E5E7EB]">
           <Calendar className="w-5 h-5 text-[#1E3A8A] mt-0.5" />
           <div>
-            <div className="text-sm font-medium text-[#6B7280]">Date</div>
+            <div className="text-sm font-medium text-[#6B7280]">Date & Time</div>
             <div className="text-base font-semibold text-[#111827]">
               {format(parseISO(hearing.hearing_date), 'EEEE, MMM d, yyyy')}
+              {hearing.hearing_time && (
+                <span className="block text-sm text-[#1E3A8A] mt-1">
+                  {format(parseISO(`2000-01-01T${hearing.hearing_time}`), 'h:mm a')}
+                </span>
+              )}
             </div>
           </div>
         </div>

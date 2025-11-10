@@ -147,15 +147,18 @@ export const HearingsCalendarView: React.FC<HearingsCalendarViewProps> = ({ filt
     return hearings
       .filter(hearing => hearing.hearing_date)
       .map(hearing => {
-        const startTime = parseISO(hearing.hearing_date);
-        const endTime = new Date(startTime.getTime() + 60 * 60 * 1000);
+        // Use actual hearing_time if available, otherwise default to start of day
+        const startTime = hearing.hearing_time 
+          ? parseISO(`${hearing.hearing_date}T${hearing.hearing_time}`)
+          : parseISO(hearing.hearing_date);
+        const endTime = new Date(startTime.getTime() + 60 * 60 * 1000); // 1 hour duration
 
         return {
           title: hearing.cases?.case_title || 'Untitled Case',
           start: startTime,
           end: endTime,
           resource: hearing,
-          allDay: false
+          allDay: !hearing.hearing_time // Only treat as all-day if no time is set
         };
       });
   }, [hearings]);

@@ -90,6 +90,11 @@ export const HearingsTimeline: React.FC<HearingsTimelineProps> = ({
                       <div className="flex flex-col items-start gap-1">
                         <div className="flex items-center gap-2">
                           <Badge className="bg-blue-100 text-blue-800 border-blue-200">Scheduled</Badge>
+                          {hearing.hearing_time && (
+                            <span className="text-sm font-medium text-gray-600">
+                              {TimeUtils.formatTime(hearing.hearing_time, 'h:mm a')}
+                            </span>
+                          )}
                         </div>
                         <span className="text-lg font-semibold text-gray-900">
                           {hearing.cases?.case_title || 'Case title not available'}
