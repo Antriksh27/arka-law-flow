@@ -9,6 +9,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -265,6 +272,35 @@ export const CasesTable: React.FC<CasesTableProps> = ({
     deleteCasesMutation.mutate(Array.from(selectedCases));
   };
 
+  const updatePriorityMutation = useMutation({
+    mutationFn: async ({ caseId, priority }: { caseId: string; priority: 'low' | 'medium' | 'high' }) => {
+      const { error } = await supabase
+        .from('cases')
+        .update({ priority })
+        .eq('id', caseId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cases-table"] });
+      toast({
+        title: "Priority updated",
+        description: "Case priority has been updated successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update priority",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handlePriorityChange = (caseId: string, priority: string) => {
+    updatePriorityMutation.mutate({ caseId, priority: priority as 'low' | 'medium' | 'high' });
+  };
+
   if (isLoading) {
     return <div className="text-center py-8">Loading cases...</div>;
   }
@@ -362,8 +398,20 @@ export const CasesTable: React.FC<CasesTableProps> = ({
                   {caseItem.displayStatus?.replace('_', ' ')}
                 </Badge>
               </TableCell>
-              <TableCell>
-                <span className="capitalize">{caseItem.priority}</span>
+              <TableCell onClick={(e) => e.stopPropagation()}>
+                <Select
+                  value={caseItem.priority || 'medium'}
+                  onValueChange={(value) => handlePriorityChange(caseItem.id, value)}
+                >
+                  <SelectTrigger className="w-[110px] h-8">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                  </SelectContent>
+                </Select>
               </TableCell>
               <TableCell>
                 {TimeUtils.formatDate(caseItem.updated_at, 'MMM d, yyyy')}
