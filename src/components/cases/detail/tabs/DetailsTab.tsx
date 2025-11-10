@@ -112,7 +112,7 @@ export const DetailsTab: React.FC<DetailsTabProps> = ({
                 value: legalkartData?.bench_type || caseData?.bench_type
               }, {
                 label: 'Judicial Branch',
-                value: legalkartData?.judicial_branch
+                value: legalkartData?.judicial_branch || caseData?.judicial_branch
               }, {
                 label: 'State',
                 value: legalkartData?.state || caseData?.state
@@ -128,7 +128,27 @@ export const DetailsTab: React.FC<DetailsTabProps> = ({
               }, {
                 label: 'Sub-Category',
                 value: legalkartData?.sub_category || caseData?.sub_category
-              }].filter(item => item.value).map((item, index) => <div key={index}>
+              },
+              // Disposed case specific fields
+              ...((caseData?.status === 'disposed' || legalkartData?.status === 'disposed') ? [
+                {
+                  label: 'Case Status',
+                  value: 'CASE DISPOSED'
+                },
+                {
+                  label: 'Decision Date',
+                  value: formatDate(legalkartData?.decision_date || caseData?.decision_date)
+                },
+                {
+                  label: 'Disposal Date',
+                  value: formatDate(legalkartData?.disposal_date || caseData?.disposal_date)
+                },
+                {
+                  label: 'Nature of Disposal',
+                  value: legalkartData?.description || caseData?.description
+                }
+              ] : [])
+              ].filter(item => item.value).map((item, index) => <div key={index}>
                     <p className="text-sm text-gray-500 mb-1">{item.label}</p>
                     <p className="text-sm font-medium text-gray-900">{item.value}</p>
                   </div>)}
