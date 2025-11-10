@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { DialogProvider } from './hooks/use-dialog';
 import RoleBasedRouter from './components/routing/RoleBasedRouter';
@@ -9,22 +10,64 @@ import { LawyerSelection } from './pages/LawyerSelection';
 import { Toaster } from './components/ui/toaster';
 import { BookRedirect } from './pages/BookRedirect';
 import CaseDetailEnhanced from './pages/CaseDetailEnhanced';
-import ChatbotDemo from './pages/ChatbotDemo';
 import ZohoCallback from './pages/ZohoCallback';
+import { defaultQueryConfig } from './lib/queryConfig';
+import { useAuth } from './contexts/AuthContext';
+import { supabase } from './integrations/supabase/client';
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      refetchOnWindowFocus: false,
-      retry: false,
+      ...defaultQueryConfig,
       refetchInterval: 30000, // Auto-refresh every 30 seconds
     },
   },
 });
+
+// Prefetch common queries for better performance
+const prefetchCommonQueries = async () => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+
+  // Prefetch cases list (frequently accessed)
+  queryClient.prefetchQuery({
+    queryKey: ['cases'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('cases')
+        .select('id, case_title, status, created_at')
+        .order('created_at', { ascending: false })
+        .limit(20);
+      return data;
+    },
+  });
+
+  // Prefetch team members (rarely changes)
+  queryClient.prefetchQuery({
+    queryKey: ['team-members'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('team_members')
+        .select('user_id, full_name, role')
+        .limit(50);
+      return data;
+    },
+  });
+};
+
 const BUILD_INFO = new Date().toISOString();
 console.log('App build:', BUILD_INFO);
 
 function AppContent() {
+  const { user } = useAuth();
+
+  useEffect(() => {
+    // Prefetch when user logs in
+    if (user) {
+      prefetchCommonQueries();
+    }
+  }, [user]);
+
   return (
     <div className="min-h-screen bg-gray-50" data-build={BUILD_INFO}>
         <Router>
@@ -36,9 +79,6 @@ function AppContent() {
               <Route path="/bk/:compact" element={<BookRedirect />} />
               <Route path="/book/:lawyerId" element={<BookingPage />} />
               <Route path="/book" element={<LawyerSelection />} />
-              
-              {/* Chatbot demo - public route */}
-              <Route path="/chatbot-demo" element={<ChatbotDemo />} />
               
               {/* Auth route */}
               <Route path="/auth" element={<Auth />} />
