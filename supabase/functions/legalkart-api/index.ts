@@ -1269,7 +1269,17 @@ function mapLegalkartDataToCRM(data: any, searchType: string = 'unknown'): any {
   );
   mappedData.docket_number = cleanText(data.docket_number || data.docket_no);
 
-  mappedData.description = cleanText(data.description || data.case_summary || data.nature_of_case);
+  // Nature of Disposal - for disposed cases (prioritize this for disposed status)
+  mappedData.description = cleanText(
+    data.nature_of_disposal || 
+    data.natureOfDisposal ||
+    data.disposal_nature ||
+    caseStatus.nature_of_disposal ||
+    caseStatusDetails.nature_of_disposal ||
+    data.description || 
+    data.case_summary || 
+    data.nature_of_case
+  );
   mappedData.case_summary = cleanText(data.case_summary || data.summary);
 
   // COURT AND STATUS INFORMATION (12 fields)
@@ -1450,6 +1460,18 @@ function mapLegalkartDataToCRM(data: any, searchType: string = 'unknown'): any {
     caseDetails.scrutiny_date || 
     objections[0]?.scrutiny_date || 
     data.scrutiny_date
+  );
+
+  // Nature of Disposal - for disposed cases
+  mappedData.description = cleanText(
+    data.nature_of_disposal || 
+    data.natureOfDisposal ||
+    data.disposal_nature ||
+    caseStatus.nature_of_disposal ||
+    caseStatusDetails.nature_of_disposal ||
+    data.description || 
+    data.case_summary || 
+    data.nature_of_case
   );
 
   // CATEGORY AND CLASSIFICATION (6 fields)
