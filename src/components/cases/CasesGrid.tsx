@@ -157,12 +157,42 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
     },
   });
 
+  const setPriorityMutation = useMutation({
+    mutationFn: async (caseIds: string[]) => {
+      const { error } = await supabase
+        .from('cases')
+        .update({ priority: 'medium' })
+        .in('id', caseIds);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cases"] });
+      toast({
+        title: "Priority updated",
+        description: `${selectedCases.size} case(s) set to medium priority`,
+      });
+      setSelectedCases(new Set());
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update priority",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleDeleteSelected = () => {
     setShowDeleteDialog(true);
   };
 
   const confirmDelete = () => {
     deleteCasesMutation.mutate(Array.from(selectedCases));
+  };
+
+  const handleSetPrioritySelected = () => {
+    setPriorityMutation.mutate(Array.from(selectedCases));
   };
 
   if (isLoading) {
@@ -196,19 +226,32 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
               {selectedCases.size} case(s) selected
             </span>
           </div>
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={handleDeleteSelected}
-            disabled={deleteCasesMutation.isPending}
-          >
-            {deleteCasesMutation.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-            ) : (
-              <Trash2 className="h-4 w-4 mr-2" />
-            )}
-            Delete Selected
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSetPrioritySelected}
+              disabled={setPriorityMutation.isPending}
+            >
+              {setPriorityMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : null}
+              Set Medium Priority
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleDeleteSelected}
+              disabled={deleteCasesMutation.isPending}
+            >
+              {deleteCasesMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Trash2 className="h-4 w-4 mr-2" />
+              )}
+              Delete Selected
+            </Button>
+          </div>
         </div>
       )}
       
