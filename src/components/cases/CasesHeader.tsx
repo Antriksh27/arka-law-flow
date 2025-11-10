@@ -32,31 +32,13 @@ export const CasesHeader: React.FC<CasesHeaderProps> = ({
       </div>
 
       <div className="flex items-center gap-3">
-        <div className="flex items-center border border-gray-200 rounded-lg p-1">
-          <Button variant={viewMode === 'table' ? 'default' : 'ghost'} size="sm" onClick={() => onViewModeChange('table')} className="h-8 px-3 text-slate-50 bg-slate-900 hover:bg-slate-800">
-            <List className="w-4 h-4" />
-          </Button>
-          <Button variant={viewMode === 'grid' ? 'default' : 'ghost'} size="sm" onClick={() => onViewModeChange('grid')} className="h-8 px-3">
-            <Grid3X3 className="w-4 h-4" />
-          </Button>
-        </div>
+        
 
-        <Button onClick={onBulkImport} variant="outline" className="border-slate-300 text-slate-700 hover:bg-slate-50">
-          <Upload className="w-4 h-4 mr-2" />
-          Link Cases
-        </Button>
+        
 
-        {onBulkImportDisposed && (
-          <Button onClick={onBulkImportDisposed} variant="outline" className="border-slate-300 text-slate-700 hover:bg-slate-50">
-            <Upload className="w-4 h-4 mr-2" />
-            Import Disposed
-          </Button>
-        )}
+        {onBulkImportDisposed}
 
-        <Button onClick={onLinkClients} variant="outline" className="border-slate-300 text-slate-700 hover:bg-slate-50">
-          <Link2 className="w-4 h-4 mr-2" />
-          Link Clients
-        </Button>
+        
 
         {isAdmin}
 
