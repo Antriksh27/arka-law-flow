@@ -237,14 +237,16 @@ export const EditHearingDialog: React.FC<EditHearingDialogProps> = ({ hearingId 
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="hearing_time" className="text-gray-900">Time</Label>
+              <Label htmlFor="hearing_time" className="text-gray-900">Time (Optional)</Label>
               <Input
                 id="hearing_time"
                 type="time"
                 value={formData.hearing_time || ''}
                 onChange={(e) => handleInputChange('hearing_time', e.target.value)}
                 className="bg-white border-gray-900 text-gray-900"
+                placeholder="HH:MM"
               />
+              <p className="text-xs text-gray-500">Leave empty if time is not specified</p>
             </div>
           </div>
 

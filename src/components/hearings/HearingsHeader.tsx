@@ -22,42 +22,6 @@ export const HearingsHeader: React.FC<HearingsHeaderProps> = ({
     toast
   } = useToast();
   const queryClient = useQueryClient();
-  const [isUpdating, setIsUpdating] = useState(false);
-  const bulkUpdateTimeMutation = useMutation({
-    mutationFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from('hearings').update({
-        hearing_time: '12:00:00'
-      }).eq('hearing_time', '05:30:00').select();
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: data => {
-      queryClient.invalidateQueries({
-        queryKey: ['hearings']
-      });
-      toast({
-        title: "Success",
-        description: `Updated ${data?.length || 0} hearing(s) to 12:00 PM`
-      });
-      setIsUpdating(false);
-    },
-    onError: error => {
-      console.error('Error updating hearings:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update hearing times",
-        variant: "destructive"
-      });
-      setIsUpdating(false);
-    }
-  });
-  const handleBulkUpdate = () => {
-    setIsUpdating(true);
-    bulkUpdateTimeMutation.mutate();
-  };
   return <div className="flex w-full flex-col items-start gap-4">
       <div className="flex w-full items-center justify-between">
         <div className="flex flex-col items-start gap-1">
