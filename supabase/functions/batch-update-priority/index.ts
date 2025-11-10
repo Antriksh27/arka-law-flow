@@ -16,42 +16,22 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const batchSize = 500;
-    let totalUpdated = 0;
-    let hasMore = true;
+    console.log('Starting batch priority update using database function...');
 
-    while (hasMore) {
-      // Fetch a batch of cases
-      const { data: cases, error: fetchError } = await supabaseClient
-        .from('cases')
-        .select('id')
-        .neq('priority', 'medium')
-        .limit(batchSize);
+    // Call the database function that handles batching efficiently
+    const { data, error } = await supabaseClient
+      .rpc('batch_update_case_priority', {
+        target_priority: 'medium',
+        batch_size: 1000
+      });
 
-      if (fetchError) throw fetchError;
-
-      if (!cases || cases.length === 0) {
-        hasMore = false;
-        break;
-      }
-
-      // Update this batch
-      const caseIds = cases.map(c => c.id);
-      const { error: updateError } = await supabaseClient
-        .from('cases')
-        .update({ priority: 'medium' })
-        .in('id', caseIds);
-
-      if (updateError) throw updateError;
-
-      totalUpdated += cases.length;
-      console.log(`Updated ${totalUpdated} cases so far...`);
-
-      // If we got fewer cases than the batch size, we're done
-      if (cases.length < batchSize) {
-        hasMore = false;
-      }
+    if (error) {
+      console.error('Database function error:', error);
+      throw error;
     }
+
+    const totalUpdated = data?.[0]?.updated_count || 0;
+    console.log(`Successfully updated ${totalUpdated} cases to medium priority`);
 
     return new Response(
       JSON.stringify({ 

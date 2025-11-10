@@ -4037,6 +4037,12 @@ export type Database = {
       }
     }
     Functions: {
+      batch_update_case_priority: {
+        Args: { batch_size?: number; target_priority: string }
+        Returns: {
+          updated_count: number
+        }[]
+      }
       can_assign_to_role: {
         Args: { assignee_id: string; assigner_id: string }
         Returns: boolean
