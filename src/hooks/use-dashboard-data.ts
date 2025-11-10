@@ -63,7 +63,7 @@ const fetchDashboardData = async (firmId: string, userId: string, role: string) 
     supabase.from('case_hearings').select('id, hearing_date, hearing_time, judge, cases!inner(case_title, firm_id)').eq('cases.firm_id', firmId).gte('hearing_date', format(startOfToday, 'yyyy-MM-dd')).lte('hearing_date', format(endOfToday, 'yyyy-MM-dd')).order('hearing_date', { ascending: true }).limit(50),
     supabase.from('clients').select('id, full_name, email, phone, status, created_at').eq('firm_id', firmId).order('created_at', { ascending: false }).limit(5),
     supabase.from('contacts').select('id, name, phone, last_visited_at').eq('firm_id', firmId).order('last_visited_at', { ascending: false, nullsFirst: false }).limit(5),
-    supabase.from('cases').select('id, case_title, case_number, status, case_hearings(hearing_date)').eq('firm_id', firmId).in('status', ['open', 'in_court']).order('created_at', { ascending: false }).limit(5),
+    supabase.from('cases').select('id, case_title, case_number, status, next_hearing_date, client_id, clients(full_name)').eq('firm_id', firmId).in('status', ['open', 'in_court']).not('next_hearing_date', 'is', null).gte('next_hearing_date', format(today, 'yyyy-MM-dd')).order('next_hearing_date', { ascending: true }).limit(5),
   ]);
 
   const caseIds = (caseIdsInFirm || []).map(c => c.id);
@@ -108,10 +108,10 @@ const fetchDashboardData = async (firmId: string, userId: string, role: string) 
     })
   );
 
-  // Get next hearing dates for case highlights
+  // Case highlights already have next_hearing_date from the cases table
   const casesWithNextHearing = (caseHighlights || []).map(c => ({
     ...c,
-    next_hearing_date: c.case_hearings?.[0]?.hearing_date || null,
+    client: c.clients || null,
   }));
 
   // Format today's appointments
