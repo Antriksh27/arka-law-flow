@@ -3,6 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { TimeUtils } from '@/lib/timeUtils';
 interface Case {
   id: string;
   case_title: string;
@@ -70,7 +71,7 @@ export const MyActiveCases = ({
                     Client: {caseItem.client_name}
                   </p>
                   {caseItem.next_hearing_date && <p className="text-xs text-muted-foreground">
-                      Next Hearing: {new Date(caseItem.next_hearing_date).toLocaleDateString()} • District Court
+                      Next Hearing: {TimeUtils.formatDate(caseItem.next_hearing_date, 'dd/MM/yyyy')} • District Court
                     </p>}
                 </div>
                 <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors flex-shrink-0 ml-2" />
