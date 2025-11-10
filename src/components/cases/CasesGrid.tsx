@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { defaultQueryConfig } from '@/lib/queryConfig';
 import { CaseCard } from './CaseCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -107,8 +108,7 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
         totalCount: count || 0
       };
     },
-    staleTime: 2 * 60 * 1000, // 2 minutes
-    gcTime: 5 * 60 * 1000, // 5 minutes (formerly cacheTime)
+    ...defaultQueryConfig,
   });
 
   const cases = queryResult?.cases || [];

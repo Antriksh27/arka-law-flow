@@ -1,6 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { filterQueryConfig } from '@/lib/queryConfig';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -55,8 +56,7 @@ export const HearingsFilters: React.FC<HearingsFiltersProps> = ({
 
       return { courts: uniqueCourts, clients, cases, users };
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
+    ...filterQueryConfig,
   });
 
   const courts = filterOptions?.courts || [];

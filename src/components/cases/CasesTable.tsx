@@ -1,9 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useVirtualizer } from '@tanstack/react-virtual';
+import { defaultQueryConfig } from '@/lib/queryConfig';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -173,7 +175,8 @@ export const CasesTable: React.FC<CasesTableProps> = ({
         cases: filteredData,
         totalCount: statusFilter !== 'all' ? filteredData.length : count || 0
       };
-    }
+    },
+    ...defaultQueryConfig,
   });
   const getStatusColor = (status: string) => {
     switch (status) {

@@ -14,7 +14,14 @@ import ZohoCallback from './pages/ZohoCallback';
 
 // Lazy load heavy components for better performance
 const CaseDetailEnhanced = lazy(() => import('./pages/CaseDetailEnhanced'));
+const Cases = lazy(() => import('./pages/Cases'));
+const Hearings = lazy(() => import('./pages/Hearings'));
 const Documents = lazy(() => import('./pages/Documents'));
+const Clients = lazy(() => import('./pages/Clients'));
+const Tasks = lazy(() => import('./pages/Tasks'));
+const Notes = lazy(() => import('./pages/Notes'));
+const Team = lazy(() => import('./pages/Team'));
+
 import { defaultQueryConfig } from './lib/queryConfig';
 import { useAuth } from './contexts/AuthContext';
 import { supabase } from './integrations/supabase/client';

@@ -1,17 +1,21 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { format, parseISO } from 'date-fns';
 import TimeUtils from '@/lib/timeUtils';
 import { FilterState } from './types';
 import { Badge } from '@/components/ui/badge';
+import { useVirtualizer } from '@tanstack/react-virtual';
+import { defaultQueryConfig } from '@/lib/queryConfig';
 
 interface HearingsTableProps {
   filters: FilterState;
 }
 
 export const HearingsTable: React.FC<HearingsTableProps> = ({ filters }) => {
-  const { data: hearings, isLoading } = useQuery({
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  
+  const { data: hearings = [], isLoading } = useQuery({
     queryKey: ['hearings', filters],
     queryFn: async () => {
       let query = supabase
@@ -60,7 +64,15 @@ export const HearingsTable: React.FC<HearingsTableProps> = ({ filters }) => {
       const { data, error } = await query.order('hearing_date', { ascending: true });
       if (error) throw error;
       return data || [];
-    }
+    },
+    ...defaultQueryConfig,
+  });
+
+  const virtualizer = useVirtualizer({
+    count: hearings.length,
+    getScrollElement: () => tableContainerRef.current,
+    estimateSize: () => 60,
+    overscan: 5,
   });
 
   if (isLoading) {
@@ -73,28 +85,34 @@ export const HearingsTable: React.FC<HearingsTableProps> = ({ filters }) => {
 
   return (
     <div className="p-6">
-      <div className="overflow-x-auto">
+      <div ref={tableContainerRef} className="overflow-auto max-h-[600px]">
         <table className="w-full">
-          <thead>
+          <thead className="sticky top-0 bg-white z-10">
             <tr className="border-b border-gray-200">
               <th className="text-left py-3 px-4 font-medium text-gray-900">Date</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">Time</th>
               <th className="text-left py-3 px-4 font-medium text-gray-900">Case</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">Court</th>
               <th className="text-left py-3 px-4 font-medium text-gray-900">Judge</th>
               <th className="text-left py-3 px-4 font-medium text-gray-900">Purpose</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">Cause List Type</th>
               <th className="text-left py-3 px-4 font-medium text-gray-900">Status</th>
             </tr>
           </thead>
-          <tbody>
-            {hearings && hearings.length > 0 ? (
-              hearings.map((hearing) => (
-                <tr key={hearing.id} className="border-b border-gray-100 hover:bg-gray-50">
+          <tbody style={{ height: `${virtualizer.getTotalSize()}px`, position: 'relative' }}>
+            {virtualizer.getVirtualItems().map((virtualRow) => {
+              const hearing = hearings[virtualRow.index];
+              if (!hearing) return null;
+              
+              return (
+                <tr 
+                  key={hearing.id} 
+                  className="border-b border-gray-100 hover:bg-gray-50 absolute w-full"
+                  style={{
+                    height: `${virtualRow.size}px`,
+                    transform: `translateY(${virtualRow.start}px)`,
+                  }}
+                >
                   <td className="py-3 px-4">
                     {TimeUtils.formatDate(hearing.hearing_date, 'MMM d, yyyy')}
-                  </td>
-                  <td className="py-3 px-4">
-                    {hearing.hearing_time ? TimeUtils.formatTime(hearing.hearing_time, 'h:mm a') : '-'}
                   </td>
                   <td className="py-3 px-4">
                     <div>
@@ -102,25 +120,19 @@ export const HearingsTable: React.FC<HearingsTableProps> = ({ filters }) => {
                       <div className="text-sm text-gray-500">{hearing.cases?.registration_number || 'Not registered'}</div>
                     </div>
                   </td>
+                  <td className="py-3 px-4">{hearing.cases?.court_name || '-'}</td>
                   <td className="py-3 px-4">{hearing.judge || '-'}</td>
                   <td className="py-3 px-4">
                     <div className="max-w-xs truncate">
                       {hearing.purpose_of_hearing || '-'}
                     </div>
                   </td>
-                  <td className="py-3 px-4">{hearing.cause_list_type || '-'}</td>
                   <td className="py-3 px-4">
                     <Badge className="bg-blue-100 text-blue-800 border-blue-200">Scheduled</Badge>
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={7} className="py-12 text-center text-gray-500">
-                  No hearings found
-                </td>
-              </tr>
-            )}
+              );
+            })}
           </tbody>
         </table>
       </div>

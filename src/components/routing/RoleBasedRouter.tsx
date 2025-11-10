@@ -1,27 +1,30 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, lazy, Suspense } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import ReceptionistLayout from '@/components/layout/ReceptionistLayout';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 // Main application pages
 import Index from '@/pages/Index';
-import Contacts from '@/pages/Contacts';
-import Cases from '@/pages/Cases';
-import CaseDetailEnhanced from '@/pages/CaseDetailEnhanced';
-import Clients from '@/pages/Clients';
-import ClientInfo from '@/pages/ClientInfo';
-import Appointments from '@/pages/Appointments';
-import Tasks from '@/pages/Tasks';
-import Hearings from '@/pages/Hearings';
-import Documents from '@/pages/Documents';
-import Notes from '@/pages/Notes';
-import Invoices from '@/pages/Invoices';
-import Team from '@/pages/Team';
-import Availability from '@/pages/Availability';
-import ECourts from '@/pages/ECourts';
 import NotFound from '@/pages/NotFound';
-import ModernMessenger from '@/components/messages/ModernMessenger';
+
+// Lazy load heavy pages
+const Contacts = lazy(() => import('@/pages/Contacts'));
+const Cases = lazy(() => import('@/pages/Cases'));
+const CaseDetailEnhanced = lazy(() => import('@/pages/CaseDetailEnhanced'));
+const Clients = lazy(() => import('@/pages/Clients'));
+const ClientInfo = lazy(() => import('@/pages/ClientInfo'));
+const Appointments = lazy(() => import('@/pages/Appointments'));
+const Tasks = lazy(() => import('@/pages/Tasks'));
+const Hearings = lazy(() => import('@/pages/Hearings'));
+const Documents = lazy(() => import('@/pages/Documents'));
+const Notes = lazy(() => import('@/pages/Notes'));
+const Invoices = lazy(() => import('@/pages/Invoices'));
+const Team = lazy(() => import('@/pages/Team'));
+const Availability = lazy(() => import('@/pages/Availability'));
+const ECourts = lazy(() => import('@/pages/ECourts'));
+const ModernMessenger = lazy(() => import('@/components/messages/ModernMessenger'));
 
 // Reception pages
 import ReceptionHome from '@/pages/reception/ReceptionHome';
@@ -58,16 +61,18 @@ const RoleBasedRouter = () => {
   if (role === 'receptionist') {
     return (
       <ReceptionistLayout>
-        <Routes>
-          <Route path="/" element={<ReceptionHome />} />
-          <Route path="/reception/home" element={<ReceptionHome />} />
-          <Route path="/reception/contacts" element={<ReceptionContacts />} />
-          <Route path="/reception/appointments" element={<ReceptionAppointments />} />
-          <Route path="/reception/schedule" element={<ReceptionSchedule />} />
-          <Route path="/reception/calendar" element={<ReceptionCalendar />} />
-          <Route path="/chat" element={<ModernMessenger />} />
-          <Route path="*" element={<ReceptionHome />} />
-        </Routes>
+        <Suspense fallback={<LoadingSpinner message="Loading page..." />}>
+          <Routes>
+            <Route path="/" element={<ReceptionHome />} />
+            <Route path="/reception/home" element={<ReceptionHome />} />
+            <Route path="/reception/contacts" element={<ReceptionContacts />} />
+            <Route path="/reception/appointments" element={<ReceptionAppointments />} />
+            <Route path="/reception/schedule" element={<ReceptionSchedule />} />
+            <Route path="/reception/calendar" element={<ReceptionCalendar />} />
+            <Route path="/chat" element={<ModernMessenger />} />
+            <Route path="*" element={<ReceptionHome />} />
+          </Routes>
+        </Suspense>
       </ReceptionistLayout>
     );
   }
@@ -76,21 +81,23 @@ const RoleBasedRouter = () => {
   if (role === 'office_staff') {
     return (
       <OfficeStaffLayout>
-        <Routes>
-          <Route path="/" element={<StaffDashboard />} />
-          <Route path="/cases" element={<Cases />} />
-          <Route path="/cases/:id" element={<CaseDetailEnhanced />} />
-          <Route path="/ecourts" element={<ECourts />} />
-          <Route path="/clients" element={<Clients />} />
-          <Route path="/clients/:id" element={<ClientInfo />} />
-          <Route path="/hearings" element={<Hearings />} />
-          <Route path="/documents" element={<Documents />} />
-          <Route path="/tasks" element={<Tasks />} />
-          <Route path="/invoices" element={<Invoices />} />
-          <Route path="/appointments" element={<Appointments />} />
-          <Route path="/chat" element={<ModernMessenger />} />
-          <Route path="*" element={<StaffDashboard />} />
-        </Routes>
+        <Suspense fallback={<LoadingSpinner message="Loading page..." />}>
+          <Routes>
+            <Route path="/" element={<StaffDashboard />} />
+            <Route path="/cases" element={<Cases />} />
+            <Route path="/cases/:id" element={<CaseDetailEnhanced />} />
+            <Route path="/ecourts" element={<ECourts />} />
+            <Route path="/clients" element={<Clients />} />
+            <Route path="/clients/:id" element={<ClientInfo />} />
+            <Route path="/hearings" element={<Hearings />} />
+            <Route path="/documents" element={<Documents />} />
+            <Route path="/tasks" element={<Tasks />} />
+            <Route path="/invoices" element={<Invoices />} />
+            <Route path="/appointments" element={<Appointments />} />
+            <Route path="/chat" element={<ModernMessenger />} />
+            <Route path="*" element={<StaffDashboard />} />
+          </Routes>
+        </Suspense>
       </OfficeStaffLayout>
     );
   }
@@ -99,27 +106,29 @@ const RoleBasedRouter = () => {
   if (role === 'junior') {
     return (
       <DashboardLayout>
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/contacts" element={<Contacts />} />
-        <Route path="/cases" element={<Cases />} />
-        <Route path="/cases/:id" element={<CaseDetailEnhanced />} />
-        <Route path="/ecourts" element={<ECourts />} />
-        <Route path="/clients" element={<Clients />} />
-        <Route path="/clients/:id" element={<ClientInfo />} />
-        <Route path="/appointments" element={<Appointments />} />
-        <Route path="/tasks" element={<Tasks />} />
-        <Route path="/hearings" element={<Hearings />} />
-        <Route path="/documents" element={<Documents />} />
-        <Route path="/notes" element={<Notes />} />
-        <Route path="/availability" element={<Availability />} />
-        <Route path="/chat" element={<ModernMessenger />} />
-        {/* Redirect invoices to dashboard for juniors */}
-        <Route path="/invoices" element={<Index />} />
-        <Route path="/team" element={<Index />} />
-        <Route path="/reception/*" element={<Index />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+        <Suspense fallback={<LoadingSpinner message="Loading page..." />}>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/contacts" element={<Contacts />} />
+            <Route path="/cases" element={<Cases />} />
+            <Route path="/cases/:id" element={<CaseDetailEnhanced />} />
+            <Route path="/ecourts" element={<ECourts />} />
+            <Route path="/clients" element={<Clients />} />
+            <Route path="/clients/:id" element={<ClientInfo />} />
+            <Route path="/appointments" element={<Appointments />} />
+            <Route path="/tasks" element={<Tasks />} />
+            <Route path="/hearings" element={<Hearings />} />
+            <Route path="/documents" element={<Documents />} />
+            <Route path="/notes" element={<Notes />} />
+            <Route path="/availability" element={<Availability />} />
+            <Route path="/chat" element={<ModernMessenger />} />
+            {/* Redirect invoices to dashboard for juniors */}
+            <Route path="/invoices" element={<Index />} />
+            <Route path="/team" element={<Index />} />
+            <Route path="/reception/*" element={<Index />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
       </DashboardLayout>
     );
   }
@@ -127,27 +136,29 @@ const RoleBasedRouter = () => {
   // Standard layout for all other roles (admin, lawyer, paralegal, etc.)
   return (
     <DashboardLayout>
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/contacts" element={<Contacts />} />
-        <Route path="/cases" element={<Cases />} />
-        <Route path="/cases/:id" element={<CaseDetailEnhanced />} />
-        <Route path="/ecourts" element={<ECourts />} />
-        <Route path="/clients" element={<Clients />} />
-        <Route path="/clients/:id" element={<ClientInfo />} />
-        <Route path="/appointments" element={<Appointments />} />
-        <Route path="/tasks" element={<Tasks />} />
-        <Route path="/hearings" element={<Hearings />} />
-        <Route path="/documents" element={<Documents />} />
-        <Route path="/notes" element={<Notes />} />
-        <Route path="/invoices" element={<Invoices />} />
-        <Route path="/availability" element={<Availability />} />
-        <Route path="/team" element={<Team />} />
-        <Route path="/chat" element={<ModernMessenger />} />
-        {/* Fallback for reception routes accessed by non-receptionists */}
-        <Route path="/reception/*" element={<Index />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+      <Suspense fallback={<LoadingSpinner message="Loading page..." />}>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/contacts" element={<Contacts />} />
+          <Route path="/cases" element={<Cases />} />
+          <Route path="/cases/:id" element={<CaseDetailEnhanced />} />
+          <Route path="/ecourts" element={<ECourts />} />
+          <Route path="/clients" element={<Clients />} />
+          <Route path="/clients/:id" element={<ClientInfo />} />
+          <Route path="/appointments" element={<Appointments />} />
+          <Route path="/tasks" element={<Tasks />} />
+          <Route path="/hearings" element={<Hearings />} />
+          <Route path="/documents" element={<Documents />} />
+          <Route path="/notes" element={<Notes />} />
+          <Route path="/invoices" element={<Invoices />} />
+          <Route path="/availability" element={<Availability />} />
+          <Route path="/team" element={<Team />} />
+          <Route path="/chat" element={<ModernMessenger />} />
+          {/* Fallback for reception routes accessed by non-receptionists */}
+          <Route path="/reception/*" element={<Index />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
     </DashboardLayout>
   );
 };
