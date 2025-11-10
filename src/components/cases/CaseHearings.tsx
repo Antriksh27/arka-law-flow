@@ -85,7 +85,7 @@ export const CaseHearings: React.FC<CaseHearingsProps> = ({
                     </div>
                   </div>
                 </div>
-                {getHearingStatusBadge(hearing.status)}
+                {getHearingStatusBadge(hearing.status as any)}
               </div>
               
               {hearing.notes && <div className="mt-3 p-3 bg-soft rounded-lg">

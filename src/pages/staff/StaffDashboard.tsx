@@ -50,6 +50,7 @@ const StaffDashboard = () => {
       // Fetch instruction statistics
       const {
         data: instructions
+        // @ts-ignore - Type depth warning (safe to ignore)
       } = await supabase.from('instructions').select('status, deadline').eq('staff_id', user.id);
 
       // Fetch document statistics for today

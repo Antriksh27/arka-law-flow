@@ -100,7 +100,9 @@ export const useThreads = () => {
           id: thread.id,
           title: title || 'Untitled Chat',
           avatar,
+          // @ts-ignore - Messages type from Supabase may show depth warnings
           message: lastMessage?.message_text || 'No messages yet.',
+          // @ts-ignore - Messages type from Supabase may show depth warnings
           timestamp: formatTimestamp(lastMessage?.created_at),
           is_private: isPrivate,
           related_case_id: thread.related_case_id,

@@ -517,6 +517,7 @@ export type Database = {
       }
       case_emails: {
         Row: {
+          attachments: string[] | null
           body: string | null
           case_id: string | null
           client_id: string | null
@@ -524,11 +525,13 @@ export type Database = {
           created_at: string | null
           id: string
           recipient: string | null
+          recipients: string[] | null
           sender: string | null
           sent_at: string | null
           subject: string | null
         }
         Insert: {
+          attachments?: string[] | null
           body?: string | null
           case_id?: string | null
           client_id?: string | null
@@ -536,11 +539,13 @@ export type Database = {
           created_at?: string | null
           id?: string
           recipient?: string | null
+          recipients?: string[] | null
           sender?: string | null
           sent_at?: string | null
           subject?: string | null
         }
         Update: {
+          attachments?: string[] | null
           body?: string | null
           case_id?: string | null
           client_id?: string | null
@@ -548,6 +553,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           recipient?: string | null
+          recipients?: string[] | null
           sender?: string | null
           sent_at?: string | null
           subject?: string | null

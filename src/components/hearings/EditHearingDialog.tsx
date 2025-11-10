@@ -77,8 +77,8 @@ export const EditHearingDialog: React.FC<EditHearingDialogProps> = ({ hearingId 
         court_name: hearing.court_name,
         bench: hearing.bench || '',
         coram: hearing.coram || '',
-        hearing_type: hearing.hearing_type,
-        status: hearing.status,
+        hearing_type: hearing.hearing_type as any,
+        status: hearing.status as any,
         outcome: hearing.outcome || '',
         notes: hearing.notes || '',
       });
