@@ -45,10 +45,7 @@ export const HearingsHeader: React.FC<HearingsHeaderProps> = ({
             <Calendar className="h-4 w-4" />
             <span className="text-sm font-medium">Timeline</span>
           </button>
-          <button className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 ${currentView === 'table' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-600 hover:text-gray-900'}`} onClick={() => onViewChange('table')}>
-            <List className="h-4 w-4" />
-            <span className="text-sm font-medium">Table</span>
-          </button>
+          
         </div>
       </div>
     </div>;
