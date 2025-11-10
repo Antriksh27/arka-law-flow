@@ -8,6 +8,7 @@ interface CasesHeaderProps {
   onViewModeChange: (mode: 'grid' | 'table') => void;
   onAddCase: () => void;
   onBulkImport: () => void;
+  onBulkImportDisposed?: () => void;
   onStandardizeCNR: () => void;
   onLinkClients: () => void;
 }
@@ -16,6 +17,7 @@ export const CasesHeader: React.FC<CasesHeaderProps> = ({
   onViewModeChange,
   onAddCase,
   onBulkImport,
+  onBulkImportDisposed,
   onStandardizeCNR,
   onLinkClients
 }) => {
@@ -41,8 +43,15 @@ export const CasesHeader: React.FC<CasesHeaderProps> = ({
 
         <Button onClick={onBulkImport} variant="outline" className="border-slate-300 text-slate-700 hover:bg-slate-50">
           <Upload className="w-4 h-4 mr-2" />
-          Bulk Import
+          Link Cases
         </Button>
+
+        {onBulkImportDisposed && (
+          <Button onClick={onBulkImportDisposed} variant="outline" className="border-slate-300 text-slate-700 hover:bg-slate-50">
+            <Upload className="w-4 h-4 mr-2" />
+            Import Disposed
+          </Button>
+        )}
 
         <Button onClick={onLinkClients} variant="outline" className="border-slate-300 text-slate-700 hover:bg-slate-50">
           <Link2 className="w-4 h-4 mr-2" />

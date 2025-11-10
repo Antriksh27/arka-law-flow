@@ -6,6 +6,7 @@ import { CasesGrid } from '../components/cases/CasesGrid';
 import { CasesTable } from '../components/cases/CasesTable';
 import { AddCaseDialog } from '../components/cases/AddCaseDialog';
 import { BulkImportCasesDialog } from '../components/cases/BulkImportCasesDialog';
+import { BulkImportDisposedCasesDialog } from '../components/cases/BulkImportDisposedCasesDialog';
 import { StandardizeCNRDialog } from '../components/cases/StandardizeCNRDialog';
 import { LinkClientsDialog } from '../components/cases/LinkClientsDialog';
 
@@ -17,6 +18,7 @@ const Cases = () => {
   const [assignedFilter, setAssignedFilter] = useState('all');
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showBulkImportDialog, setShowBulkImportDialog] = useState(false);
+  const [showBulkImportDisposedDialog, setShowBulkImportDisposedDialog] = useState(false);
   const [showStandardizeCNRDialog, setShowStandardizeCNRDialog] = useState(false);
   const [showLinkClientsDialog, setShowLinkClientsDialog] = useState(false);
 
@@ -36,6 +38,7 @@ const Cases = () => {
         onViewModeChange={setViewMode}
         onAddCase={() => setShowAddDialog(true)}
         onBulkImport={() => setShowBulkImportDialog(true)}
+        onBulkImportDisposed={() => setShowBulkImportDisposedDialog(true)}
         onStandardizeCNR={() => setShowStandardizeCNRDialog(true)}
         onLinkClients={() => setShowLinkClientsDialog(true)}
       />
@@ -87,6 +90,14 @@ const Cases = () => {
         onSuccess={() => {
           // Refresh the cases list if needed
           console.log('Cases imported successfully');
+        }}
+      />
+
+      <BulkImportDisposedCasesDialog
+        open={showBulkImportDisposedDialog}
+        onOpenChange={setShowBulkImportDisposedDialog}
+        onSuccess={() => {
+          console.log('Disposed cases imported successfully');
         }}
       />
 
