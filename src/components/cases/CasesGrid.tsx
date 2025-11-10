@@ -63,49 +63,52 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
                               userProfile?.role === 'associate' ||
                               userProfile?.role === 'junior';
 
+      // Build query with count
       let query = supabase
         .from('cases')
-        .select('*')
+        .select('*', { count: 'exact' })
         .order('created_at', { ascending: false });
 
       // Apply role-based filtering
       if (!isAdminOrLawyer) {
-        // Non-admin users only see cases they're assigned to
         query = query.or(`assigned_to.eq.${user.id},assigned_users.cs.{${user.id}}`);
       }
 
+      // Apply search filter
       if (searchQuery) {
-        query = query.or(`title.ilike.%${searchQuery}%,case_title.ilike.%${searchQuery}%,client_name.ilike.%${searchQuery}%,petitioner.ilike.%${searchQuery}%,respondent.ilike.%${searchQuery}%,vs.ilike.%${searchQuery}%,case_number.ilike.%${searchQuery}%,cnr_number.ilike.%${searchQuery}%,filing_number.ilike.%${searchQuery}%`);
+        query = query.or(`case_title.ilike.%${searchQuery}%,client_name.ilike.%${searchQuery}%,petitioner.ilike.%${searchQuery}%,respondent.ilike.%${searchQuery}%,vs.ilike.%${searchQuery}%,case_number.ilike.%${searchQuery}%,cnr_number.ilike.%${searchQuery}%,filing_number.ilike.%${searchQuery}%`);
       }
 
-      // Note: Status filter applied after fetching to work with displayStatus logic
+      // Apply status filter at DB level
+      if (statusFilter !== 'all') {
+        query = query.eq('status', statusFilter as any);
+      }
+
+      // Apply type filter
       if (typeFilter !== 'all') {
         query = query.eq('case_type', typeFilter as any);
       }
 
+      // Apply assigned filter
+      if (assignedFilter !== 'all') {
+        query = query.eq('assigned_to', assignedFilter);
+      }
+
+      // Apply pagination at DB level
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      query = query.range(from, to);
+
       const { data, error, count } = await query;
       if (error) throw error;
       
-      // Apply status filter after fetching if needed
-      let filteredData = data || [];
-      if (statusFilter !== 'all') {
-        filteredData = filteredData.filter(caseItem => {
-          const isLinkedToLegalkart = caseItem.cnr_number && caseItem.last_fetched_at;
-          const displayStatus = isLinkedToLegalkart ? caseItem.status || 'in_court' : caseItem.status || 'open';
-          return displayStatus === statusFilter;
-        });
-      }
-      
-      // Apply pagination
-      const startIndex = (page - 1) * pageSize;
-      const endIndex = startIndex + pageSize;
-      const paginatedData = filteredData.slice(startIndex, endIndex);
-      
       return {
-        cases: paginatedData,
-        totalCount: filteredData.length
+        cases: data || [],
+        totalCount: count || 0
       };
-    }
+    },
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes (formerly cacheTime)
   });
 
   const cases = queryResult?.cases || [];

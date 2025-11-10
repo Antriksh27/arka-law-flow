@@ -314,54 +314,6 @@ export type Database = {
         }
         Relationships: []
       }
-      calendar_events: {
-        Row: {
-          created_at: string | null
-          end_time: string | null
-          event_type: string | null
-          id: string
-          ref_id: string | null
-          start_time: string
-          title: string
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          end_time?: string | null
-          event_type?: string | null
-          id?: string
-          ref_id?: string | null
-          start_time: string
-          title: string
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          end_time?: string | null
-          event_type?: string | null
-          id?: string
-          ref_id?: string | null
-          start_time?: string
-          title?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "calendar_events_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "firm_statistics"
-            referencedColumns: ["admin_id"]
-          },
-          {
-            foreignKeyName: "calendar_events_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       case_activities: {
         Row: {
           activity_type: string
@@ -565,37 +517,40 @@ export type Database = {
       }
       case_emails: {
         Row: {
-          attachments: Json | null
+          body: string | null
           case_id: string | null
+          client_id: string | null
           content: string | null
-          created_by: string | null
+          created_at: string | null
           id: string
-          recipients: string[] | null
-          sender: string
-          sent_at: string
-          subject: string
+          recipient: string | null
+          sender: string | null
+          sent_at: string | null
+          subject: string | null
         }
         Insert: {
-          attachments?: Json | null
+          body?: string | null
           case_id?: string | null
+          client_id?: string | null
           content?: string | null
-          created_by?: string | null
+          created_at?: string | null
           id?: string
-          recipients?: string[] | null
-          sender: string
-          sent_at?: string
-          subject: string
+          recipient?: string | null
+          sender?: string | null
+          sent_at?: string | null
+          subject?: string | null
         }
         Update: {
-          attachments?: Json | null
+          body?: string | null
           case_id?: string | null
+          client_id?: string | null
           content?: string | null
-          created_by?: string | null
+          created_at?: string | null
           id?: string
-          recipients?: string[] | null
-          sender?: string
-          sent_at?: string
-          subject?: string
+          recipient?: string | null
+          sender?: string | null
+          sent_at?: string | null
+          subject?: string | null
         }
         Relationships: [
           {
@@ -603,20 +558,6 @@ export type Database = {
             columns: ["case_id"]
             isOneToOne: false
             referencedRelation: "cases"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "case_emails_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "firm_statistics"
-            referencedColumns: ["admin_id"]
-          },
-          {
-            foreignKeyName: "case_emails_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -702,32 +643,26 @@ export type Database = {
         Row: {
           case_id: string | null
           file_name: string
-          file_size: number | null
           file_type: string | null
-          file_url: string
+          file_url: string | null
           id: string
-          uploaded_at: string
-          uploaded_by: string | null
+          uploaded_at: string | null
         }
         Insert: {
           case_id?: string | null
           file_name: string
-          file_size?: number | null
           file_type?: string | null
-          file_url: string
+          file_url?: string | null
           id?: string
-          uploaded_at?: string
-          uploaded_by?: string | null
+          uploaded_at?: string | null
         }
         Update: {
           case_id?: string | null
           file_name?: string
-          file_size?: number | null
           file_type?: string | null
-          file_url?: string
+          file_url?: string | null
           id?: string
-          uploaded_at?: string
-          uploaded_by?: string | null
+          uploaded_at?: string | null
         }
         Relationships: [
           {
@@ -735,20 +670,6 @@ export type Database = {
             columns: ["case_id"]
             isOneToOne: false
             referencedRelation: "cases"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "case_files_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "firm_statistics"
-            referencedColumns: ["admin_id"]
-          },
-          {
-            foreignKeyName: "case_files_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -841,24 +762,24 @@ export type Database = {
       case_notes: {
         Row: {
           case_id: string | null
-          content: string
-          created_at: string
+          created_at: string | null
           created_by: string | null
           id: string
+          note_text: string | null
         }
         Insert: {
           case_id?: string | null
-          content: string
-          created_at?: string
+          created_at?: string | null
           created_by?: string | null
           id?: string
+          note_text?: string | null
         }
         Update: {
           case_id?: string | null
-          content?: string
-          created_at?: string
+          created_at?: string | null
           created_by?: string | null
           id?: string
+          note_text?: string | null
         }
         Relationships: [
           {
@@ -866,20 +787,6 @@ export type Database = {
             columns: ["case_id"]
             isOneToOne: false
             referencedRelation: "cases"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "case_notes_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "firm_statistics"
-            referencedColumns: ["admin_id"]
-          },
-          {
-            foreignKeyName: "case_notes_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1621,41 +1528,26 @@ export type Database = {
       court_hearings: {
         Row: {
           case_id: string | null
-          courtroom: string | null
+          court_name: string | null
           created_at: string | null
-          end_time: string | null
-          hearing_date: string
+          hearing_date: string | null
           id: string
-          judge_name: string | null
-          lawyer_id: string | null
-          notes: string | null
-          start_time: string
           status: string | null
         }
         Insert: {
           case_id?: string | null
-          courtroom?: string | null
+          court_name?: string | null
           created_at?: string | null
-          end_time?: string | null
-          hearing_date: string
+          hearing_date?: string | null
           id?: string
-          judge_name?: string | null
-          lawyer_id?: string | null
-          notes?: string | null
-          start_time: string
           status?: string | null
         }
         Update: {
           case_id?: string | null
-          courtroom?: string | null
+          court_name?: string | null
           created_at?: string | null
-          end_time?: string | null
-          hearing_date?: string
+          hearing_date?: string | null
           id?: string
-          judge_name?: string | null
-          lawyer_id?: string | null
-          notes?: string | null
-          start_time?: string
           status?: string | null
         }
         Relationships: [
@@ -1664,20 +1556,6 @@ export type Database = {
             columns: ["case_id"]
             isOneToOne: false
             referencedRelation: "cases"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "court_hearings_lawyer_id_fkey"
-            columns: ["lawyer_id"]
-            isOneToOne: false
-            referencedRelation: "firm_statistics"
-            referencedColumns: ["admin_id"]
-          },
-          {
-            foreignKeyName: "court_hearings_lawyer_id_fkey"
-            columns: ["lawyer_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -2076,54 +1954,54 @@ export type Database = {
           bench: string | null
           case_id: string | null
           coram: string | null
-          court_name: string
-          created_at: string
+          court_name: string | null
+          created_at: string | null
           created_by: string | null
           firm_id: string | null
           hearing_date: string
           hearing_time: string | null
-          hearing_type: Database["public"]["Enums"]["hearing_type"]
+          hearing_type: string | null
           id: string
-          next_hearing_date: string | null
           notes: string | null
           outcome: string | null
-          status: Database["public"]["Enums"]["hearing_status"]
+          status: string | null
+          updated_at: string | null
         }
         Insert: {
           assigned_to?: string | null
           bench?: string | null
           case_id?: string | null
           coram?: string | null
-          court_name: string
-          created_at?: string
+          court_name?: string | null
+          created_at?: string | null
           created_by?: string | null
           firm_id?: string | null
           hearing_date: string
           hearing_time?: string | null
-          hearing_type: Database["public"]["Enums"]["hearing_type"]
+          hearing_type?: string | null
           id?: string
-          next_hearing_date?: string | null
           notes?: string | null
           outcome?: string | null
-          status?: Database["public"]["Enums"]["hearing_status"]
+          status?: string | null
+          updated_at?: string | null
         }
         Update: {
           assigned_to?: string | null
           bench?: string | null
           case_id?: string | null
           coram?: string | null
-          court_name?: string
-          created_at?: string
+          court_name?: string | null
+          created_at?: string | null
           created_by?: string | null
           firm_id?: string | null
           hearing_date?: string
           hearing_time?: string | null
-          hearing_type?: Database["public"]["Enums"]["hearing_type"]
+          hearing_type?: string | null
           id?: string
-          next_hearing_date?: string | null
           notes?: string | null
           outcome?: string | null
-          status?: Database["public"]["Enums"]["hearing_status"]
+          status?: string | null
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -2186,92 +2064,42 @@ export type Database = {
           },
         ]
       }
-      instruction_replies: {
-        Row: {
-          created_at: string
-          created_by: string
-          id: string
-          instruction_id: string
-          is_from_lawyer: boolean
-          is_status_update: boolean
-          new_status: string | null
-          old_status: string | null
-          reply_message: string
-          tagged_user_id: string | null
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          created_by: string
-          id?: string
-          instruction_id: string
-          is_from_lawyer?: boolean
-          is_status_update?: boolean
-          new_status?: string | null
-          old_status?: string | null
-          reply_message: string
-          tagged_user_id?: string | null
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          created_by?: string
-          id?: string
-          instruction_id?: string
-          is_from_lawyer?: boolean
-          is_status_update?: boolean
-          new_status?: string | null
-          old_status?: string | null
-          reply_message?: string
-          tagged_user_id?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "instruction_replies_instruction_id_fkey"
-            columns: ["instruction_id"]
-            isOneToOne: false
-            referencedRelation: "instructions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       instructions: {
         Row: {
-          case_id: string | null
-          created_at: string
+          assigned_to: string | null
+          created_at: string | null
+          created_by: string | null
           deadline: string | null
+          firm_id: string | null
           id: string
-          lawyer_id: string
           message: string
-          priority: string
-          staff_id: string | null
-          status: string
-          updated_at: string
+          priority: string | null
+          status: string | null
+          updated_at: string | null
         }
         Insert: {
-          case_id?: string | null
-          created_at?: string
+          assigned_to?: string | null
+          created_at?: string | null
+          created_by?: string | null
           deadline?: string | null
+          firm_id?: string | null
           id?: string
-          lawyer_id: string
           message: string
-          priority?: string
-          staff_id?: string | null
-          status?: string
-          updated_at?: string
+          priority?: string | null
+          status?: string | null
+          updated_at?: string | null
         }
         Update: {
-          case_id?: string | null
-          created_at?: string
+          assigned_to?: string | null
+          created_at?: string | null
+          created_by?: string | null
           deadline?: string | null
+          firm_id?: string | null
           id?: string
-          lawyer_id?: string
           message?: string
-          priority?: string
-          staff_id?: string | null
-          status?: string
-          updated_at?: string
+          priority?: string | null
+          status?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -2779,6 +2607,60 @@ export type Database = {
           },
         ]
       }
+      legalkart_case_searches_archive: {
+        Row: {
+          case_id: string | null
+          cnr_number: string
+          created_at: string
+          created_by: string
+          error_message: string | null
+          firm_id: string
+          id: string
+          processing_duration_ms: number | null
+          queue_item_id: string | null
+          request_data: Json | null
+          response_data: Json | null
+          retry_attempt: number | null
+          search_type: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          case_id?: string | null
+          cnr_number: string
+          created_at?: string
+          created_by: string
+          error_message?: string | null
+          firm_id: string
+          id?: string
+          processing_duration_ms?: number | null
+          queue_item_id?: string | null
+          request_data?: Json | null
+          response_data?: Json | null
+          retry_attempt?: number | null
+          search_type: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          case_id?: string | null
+          cnr_number?: string
+          created_at?: string
+          created_by?: string
+          error_message?: string | null
+          firm_id?: string
+          id?: string
+          processing_duration_ms?: number | null
+          queue_item_id?: string | null
+          request_data?: Json | null
+          response_data?: Json | null
+          retry_attempt?: number | null
+          search_type?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       legalkart_cases: {
         Row: {
           before_me_part_heard: string | null
@@ -2859,72 +2741,35 @@ export type Database = {
       }
       message_threads: {
         Row: {
-          created_at: string
-          created_by: string
-          firm_id: string
+          created_at: string | null
           id: string
-          is_private: boolean
+          is_private: boolean | null
           related_case_id: string | null
-          related_hearing_id: string | null
-          related_task_id: string | null
           title: string | null
+          updated_at: string | null
         }
         Insert: {
-          created_at?: string
-          created_by: string
-          firm_id: string
+          created_at?: string | null
           id?: string
-          is_private?: boolean
+          is_private?: boolean | null
           related_case_id?: string | null
-          related_hearing_id?: string | null
-          related_task_id?: string | null
           title?: string | null
+          updated_at?: string | null
         }
         Update: {
-          created_at?: string
-          created_by?: string
-          firm_id?: string
+          created_at?: string | null
           id?: string
-          is_private?: boolean
+          is_private?: boolean | null
           related_case_id?: string | null
-          related_hearing_id?: string | null
-          related_task_id?: string | null
           title?: string | null
+          updated_at?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "message_threads_firm_id_fkey"
-            columns: ["firm_id"]
-            isOneToOne: false
-            referencedRelation: "firm_statistics"
-            referencedColumns: ["firm_id"]
-          },
-          {
-            foreignKeyName: "message_threads_firm_id_fkey"
-            columns: ["firm_id"]
-            isOneToOne: false
-            referencedRelation: "law_firms"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "message_threads_related_case_id_fkey"
             columns: ["related_case_id"]
             isOneToOne: false
             referencedRelation: "cases"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "message_threads_related_hearing_id_fkey"
-            columns: ["related_hearing_id"]
-            isOneToOne: false
-            referencedRelation: "hearings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "message_threads_related_task_id_fkey"
-            columns: ["related_task_id"]
-            isOneToOne: false
-            referencedRelation: "tasks"
             referencedColumns: ["id"]
           },
         ]
@@ -2954,61 +2799,7 @@ export type Database = {
           sender_id?: string
           thread_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "messages_thread_id_fkey"
-            columns: ["thread_id"]
-            isOneToOne: false
-            referencedRelation: "message_threads"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      notes: {
-        Row: {
-          author_id: string | null
-          case_id: string | null
-          created_at: string | null
-          id: string
-          note: string
-        }
-        Insert: {
-          author_id?: string | null
-          case_id?: string | null
-          created_at?: string | null
-          id?: string
-          note: string
-        }
-        Update: {
-          author_id?: string | null
-          case_id?: string | null
-          created_at?: string | null
-          id?: string
-          note?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "notes_author_id_fkey"
-            columns: ["author_id"]
-            isOneToOne: false
-            referencedRelation: "firm_statistics"
-            referencedColumns: ["admin_id"]
-          },
-          {
-            foreignKeyName: "notes_author_id_fkey"
-            columns: ["author_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "notes_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "cases"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       notes_v2: {
         Row: {
@@ -3733,45 +3524,6 @@ export type Database = {
           },
         ]
       }
-      team_member_notes: {
-        Row: {
-          created_at: string
-          created_by: string
-          id: string
-          note: string | null
-          team_member_id: string
-        }
-        Insert: {
-          created_at?: string
-          created_by: string
-          id?: string
-          note?: string | null
-          team_member_id: string
-        }
-        Update: {
-          created_at?: string
-          created_by?: string
-          id?: string
-          note?: string | null
-          team_member_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "team_member_notes_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "team_members"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "team_member_notes_team_member_id_fkey"
-            columns: ["team_member_id"]
-            isOneToOne: false
-            referencedRelation: "team_members"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       team_members: {
         Row: {
           added_by: string | null
@@ -3840,21 +3592,21 @@ export type Database = {
       }
       thread_participants: {
         Row: {
-          created_at: string
           id: string
-          thread_id: string
+          joined_at: string | null
+          thread_id: string | null
           user_id: string
         }
         Insert: {
-          created_at?: string
           id?: string
-          thread_id: string
+          joined_at?: string | null
+          thread_id?: string | null
           user_id: string
         }
         Update: {
-          created_at?: string
           id?: string
-          thread_id?: string
+          joined_at?: string | null
+          thread_id?: string | null
           user_id?: string
         }
         Relationships: [
