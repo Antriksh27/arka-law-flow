@@ -137,7 +137,8 @@ export const useLegalkartCaseDetails = (caseId: string) => {
         .from('case_orders')
         .select('*')
         .eq('case_id', caseId)
-        .order('hearing_date', { ascending: false });
+        .order('hearing_date', { ascending: false })
+        .limit(200);
       
       if (error) {
         console.error('Error fetching orders:', error);
