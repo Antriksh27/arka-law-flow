@@ -60,7 +60,7 @@ const fetchDashboardData = async (firmId: string, userId: string, role: string) 
     supabase.from('invoices').select('status, total_amount').eq('firm_id', firmId),
     supabase.from('documents').select('file_name, file_type, uploaded_at, id').eq('firm_id', firmId).order('uploaded_at', { ascending: false }).limit(2),
     supabase.from('appointments').select('id, appointment_date, appointment_time, status, title, clients(full_name)').eq('firm_id', firmId).eq('appointment_date', format(today, 'yyyy-MM-dd')).order('appointment_time', { ascending: true }).limit(50),
-    supabase.from('case_hearings').select('id, hearing_date, judge, cases!inner(case_title, firm_id)').eq('cases.firm_id', firmId).gte('hearing_date', format(startOfToday, 'yyyy-MM-dd')).lte('hearing_date', format(endOfToday, 'yyyy-MM-dd')).order('hearing_date', { ascending: true }).limit(50),
+    supabase.from('case_hearings').select('id, hearing_date, hearing_time, judge, cases!inner(case_title, firm_id)').eq('cases.firm_id', firmId).gte('hearing_date', format(startOfToday, 'yyyy-MM-dd')).lte('hearing_date', format(endOfToday, 'yyyy-MM-dd')).order('hearing_date', { ascending: true }).limit(50),
     supabase.from('clients').select('id, full_name, email, phone, status, created_at').eq('firm_id', firmId).order('created_at', { ascending: false }).limit(5),
     supabase.from('contacts').select('id, name, phone, last_visited_at').eq('firm_id', firmId).order('last_visited_at', { ascending: false, nullsFirst: false }).limit(5),
     supabase.from('cases').select('id, case_title, case_number, status, case_hearings(hearing_date)').eq('firm_id', firmId).in('status', ['open', 'in_court']).order('created_at', { ascending: false }).limit(5),
@@ -126,10 +126,10 @@ const fetchDashboardData = async (firmId: string, userId: string, role: string) 
     title: a.title,
   }));
 
-  // Format upcoming hearings
   const formattedUpcomingHearings = (upcomingHearings || []).map(h => ({
     id: h.id,
     hearing_date: h.hearing_date,
+    hearing_time: h.hearing_time || '12:00:00',
     court_name: h.judge || 'Court',
     case_title: h.cases?.case_title || 'Unknown Case',
   }));
@@ -149,15 +149,15 @@ const fetchDashboardData = async (firmId: string, userId: string, role: string) 
     ...(formattedUpcomingHearings || []).filter(h => {
       const hearingDate = new Date(h.hearing_date);
       return hearingDate >= startOfToday && hearingDate <= endOfToday;
-    }).map(h => ({
-      id: h.id,
-      type: 'hearing' as const,
-      title: h.case_title,
-      subtitle: h.court_name,
-      time: format(new Date(h.hearing_date), 'h:mm a'),
-      court_name: h.court_name,
-      case_title: h.case_title,
-    })),
+  }).map(h => ({
+    id: h.id,
+    type: 'hearing' as const,
+    title: h.case_title,
+    subtitle: h.court_name,
+    time: format(new Date(`${h.hearing_date}T${h.hearing_time || '12:00:00'}`), 'h:mm a'),
+    court_name: h.court_name,
+    case_title: h.case_title,
+  })),
     ...(myTasks || []).filter(t => t.due_date && new Date(t.due_date) >= startOfToday && new Date(t.due_date) <= endOfToday).map(t => ({
       id: t.title,
       type: 'task' as const,
