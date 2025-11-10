@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { SkeletonList } from '@/components/ui/skeleton-list';
 import { useToast } from '@/hooks/use-toast';
 import { AddClientDialog } from './AddClientDialog';
 import { EditClientDialog } from './EditClientDialog';
@@ -380,13 +381,20 @@ export const ClientList = () => {
 
       {/* Clients Table */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200">
-        {isLoading ? <div className="text-center py-8">Loading clients...</div> : clients.length === 0 ? <div className="text-center py-12">
+        {isLoading ? (
+          <div className="p-6">
+            <SkeletonList count={5} />
+          </div>
+        ) : clients.length === 0 ? (
+          <div className="text-center py-12">
             <p className="text-gray-500 mb-4">No clients found matching your criteria.</p>
             <Button onClick={() => setShowAddDialog(true)} className="bg-slate-800 hover:bg-slate-700">
               <Plus className="w-4 h-4 mr-2" />
               Add Your First Client
             </Button>
-          </div> : <Table>
+          </div>
+        ) : (
+          <Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="bg-slate-800 text-white">
@@ -474,7 +482,8 @@ export const ClientList = () => {
                   </TableCell>
                 </TableRow>)}
             </TableBody>
-          </Table>}
+          </Table>
+        )}
         
         {/* Pagination */}
         {!isLoading && Math.ceil(displayCount / pageSize) > 1 && <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200">
@@ -626,11 +635,18 @@ export const ClientList = () => {
 
           {/* VIP Clients Table */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200">
-            {isLoading ? <div className="text-center py-8">Loading VIP clients...</div> : clients.length === 0 ? <div className="text-center py-12">
+            {isLoading ? (
+              <div className="p-6">
+                <SkeletonList count={5} />
+              </div>
+            ) : clients.length === 0 ? (
+              <div className="text-center py-12">
                 <Star className="w-12 h-12 mx-auto mb-4 text-yellow-400 fill-yellow-400" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No VIP clients yet</h3>
                 <p className="text-gray-500 mb-4">Mark important clients as VIP to see them here.</p>
-              </div> : <Table>
+              </div>
+            ) : (
+              <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead className="bg-yellow-600 text-white">
@@ -716,7 +732,8 @@ export const ClientList = () => {
                       </TableCell>
                     </TableRow>)}
                 </TableBody>
-              </Table>}
+              </Table>
+            )}
             
             {/* Pagination */}
             {!isLoading && Math.ceil(displayCount / pageSize) > 1 && <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200">

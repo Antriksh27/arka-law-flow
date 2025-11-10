@@ -153,27 +153,63 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       };
 
       console.log('Creating task with data:', taskData);
-      const { error } = await supabase.from('tasks').insert([taskData]);
+      const { data: createdTask, error } = await supabase
+        .from('tasks')
+        .insert([taskData])
+        .select()
+        .single();
+      
       if (error) throw error;
+      return createdTask;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['case-tasks'] });
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
-      if (clientId) {
-        queryClient.invalidateQueries({ queryKey: ['client-tasks', clientId] });
+    onMutate: async (newTask) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['tasks'] });
+      
+      // Snapshot previous value
+      const previousTasks = queryClient.getQueryData(['tasks']);
+      
+      // Optimistically update to cache
+      queryClient.setQueryData(['tasks'], (old: any) => {
+        if (!old) return [{ ...newTask, id: 'temp-' + Date.now() }];
+        return [{ ...newTask, id: 'temp-' + Date.now(), created_at: new Date().toISOString() }, ...old];
+      });
+      
+      // Also update dashboard if needed
+      await queryClient.cancelQueries({ queryKey: ['dashboard-data'] });
+      const previousDashboard = queryClient.getQueryData(['dashboard-data']);
+      
+      return { previousTasks, previousDashboard };
+    },
+    onError: (error, _variables, context: any) => {
+      // Rollback on error
+      if (context?.previousTasks) {
+        queryClient.setQueryData(['tasks'], context.previousTasks);
       }
-      toast({ title: "Task created successfully" });
-      reset();
-      onClose();
-    },
-    onError: (error) => {
+      if (context?.previousDashboard) {
+        queryClient.setQueryData(['dashboard-data'], context.previousDashboard);
+      }
       console.error('Task creation error:', error);
       toast({
         title: "Failed to create task",
         description: error.message,
         variant: "destructive"
       });
+    },
+    onSuccess: () => {
+      toast({ title: "Task created successfully" });
+      reset();
+      onClose();
+    },
+    onSettled: () => {
+      // Always refetch after error or success
+      queryClient.invalidateQueries({ queryKey: ['case-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-data-optimized'] });
+      if (clientId) {
+        queryClient.invalidateQueries({ queryKey: ['client-tasks', clientId] });
+      }
     }
   });
 

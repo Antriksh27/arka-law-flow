@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { defaultQueryConfig } from '@/lib/queryConfig';
 import { CaseCard } from './CaseCard';
+import { SkeletonGrid } from '@/components/ui/skeleton-list';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -258,8 +259,11 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
         </div>
       )}
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {cases.map((caseItem) => (
+      {isLoading ? (
+        <SkeletonGrid count={9} />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {cases.map((caseItem) => (
           <div key={caseItem.id} className="relative">
             <div className="absolute top-4 left-4 z-10">
               <Checkbox
@@ -271,7 +275,8 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
             <CaseCard case={caseItem} />
           </div>
         ))}
-      </div>
+        </div>
+      )}
 
       {/* Pagination Controls */}
       {totalPages > 1 && (

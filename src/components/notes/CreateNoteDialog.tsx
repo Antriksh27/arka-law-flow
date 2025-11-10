@@ -80,12 +80,15 @@ export const CreateNoteDialog: React.FC<CreateNoteDialogProps> = ({
       if (!user.data.user) throw new Error('Not authenticated');
 
       const noteData: any = {
+        id: crypto.randomUUID(), // Generate temporary ID for optimistic update
         title: data.title,
         content: data.content || null,
         case_id: data.case_id === 'none' ? null : data.case_id || null,
         visibility: data.visibility,
         color: data.color,
-        tags: data.tags
+        tags: data.tags,
+        created_at: new Date().toISOString(),
+        created_by: user.data.user.id,
       };
 
       // Attach client_id if provided
@@ -93,25 +96,66 @@ export const CreateNoteDialog: React.FC<CreateNoteDialogProps> = ({
         noteData.client_id = clientId;
       }
 
-      const { error } = await supabase.from('notes_v2').insert(noteData);
+      const { data: createdNote, error } = await supabase
+        .from('notes_v2')
+        .insert(noteData)
+        .select()
+        .single();
+      
       if (error) throw error;
+      return createdNote;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notes'] });
+    onMutate: async (newNote) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['notes'] });
+      
+      // Snapshot previous value
+      const previousNotes = queryClient.getQueryData(['notes']);
+      
+      // Optimistically update the cache
+      queryClient.setQueryData(['notes'], (old: any) => {
+        if (!old) return [{ ...newNote, id: 'temp-' + Date.now() }];
+        return [{ ...newNote, id: 'temp-' + Date.now(), created_at: new Date().toISOString() }, ...old];
+      });
+      
       if (clientId) {
-        queryClient.invalidateQueries({ queryKey: ['client-notes-v2', clientId] });
+        await queryClient.cancelQueries({ queryKey: ['client-notes-v2', clientId] });
+        const previousClientNotes = queryClient.getQueryData(['client-notes-v2', clientId]);
+        queryClient.setQueryData(['client-notes-v2', clientId], (old: any) => {
+          if (!old) return [{ ...newNote, id: 'temp-' + Date.now() }];
+          return [{ ...newNote, id: 'temp-' + Date.now(), created_at: new Date().toISOString() }, ...old];
+        });
+        return { previousNotes, previousClientNotes };
       }
-      toast({ title: "Note created successfully" });
-      reset();
-      onClose();
+      
+      return { previousNotes };
     },
-    onError: (error) => {
+    onError: (error, _variables, context: any) => {
+      // Rollback on error
+      if (context?.previousNotes) {
+        queryClient.setQueryData(['notes'], context.previousNotes);
+      }
+      if (context?.previousClientNotes && clientId) {
+        queryClient.setQueryData(['client-notes-v2', clientId], context.previousClientNotes);
+      }
       console.error('Note creation error:', error);
       toast({
         title: "Failed to create note",
         description: (error as any).message,
         variant: "destructive"
       });
+    },
+    onSuccess: () => {
+      toast({ title: "Note created successfully" });
+      reset();
+      onClose();
+    },
+    onSettled: () => {
+      // Always refetch after error or success
+      queryClient.invalidateQueries({ queryKey: ['notes'] });
+      if (clientId) {
+        queryClient.invalidateQueries({ queryKey: ['client-notes-v2', clientId] });
+      }
     }
   });
 

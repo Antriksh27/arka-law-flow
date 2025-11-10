@@ -14,6 +14,7 @@ export const dashboardQueryConfig = {
   ...defaultQueryConfig,
   staleTime: 2 * 60 * 1000, // 2 minutes for frequently updated dashboard data
   gcTime: 5 * 60 * 1000, // 5 minutes cache
+  refetchOnMount: true, // Always refetch dashboard on mount for fresh data
 };
 
 export const staticDataQueryConfig = {
@@ -27,6 +28,7 @@ export const realtimeQueryConfig = {
   gcTime: 2 * 60 * 1000, // 2 minutes cache
   refetchOnWindowFocus: true, // Refetch on focus for real-time data
   retry: 2,
+  refetchInterval: 30 * 1000, // Auto-refresh every 30 seconds
 };
 
 export const filterQueryConfig = {
