@@ -1,5 +1,5 @@
 import { useAuth } from '@/contexts/AuthContext';
-import { useDashboardData } from '@/hooks/use-dashboard-data';
+import { useDashboardDataOptimized } from '@/hooks/use-dashboard-data-optimized';
 import { TimeUtils } from '@/lib/timeUtils';
 import { TodayFlow } from './workspace/TodayFlow';
 import { PinnedNotes } from './workspace/PinnedNotes';
@@ -15,7 +15,7 @@ import { MyTasks } from './workspace/MyTasks';
 
 const WorkspaceDashboard = () => {
   const { user } = useAuth();
-  const { data, isLoading } = useDashboardData();
+  const { data, isLoading } = useDashboardDataOptimized();
 
   const getGreeting = () => {
     const hour = new Date().getHours();

@@ -13,7 +13,7 @@ interface Task {
   id?: string;
   title: string;
   due_date?: string;
-  priority: 'low' | 'medium' | 'high';
+  priority: 'low' | 'medium' | 'high' | 'critical';
   status?: string;
 }
 interface MyTasksProps {

@@ -1,8 +1,8 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { startOfWeek, endOfWeek, startOfDay, endOfDay, format, formatDistanceToNow, addDays } from 'date-fns';
+import { dashboardQueryConfig } from '@/lib/queryConfig';
 
 const getFirmId = async (userId: string) => {
   const { data, error } = await supabase
@@ -240,12 +240,14 @@ export const useDashboardData = () => {
     queryKey: ['firmId', user?.id],
     queryFn: () => getFirmId(user!.id),
     enabled: !!user,
+    ...dashboardQueryConfig,
   });
   
   const queryResult = useQuery({
     queryKey: ['dashboard-data', firmId, role],
     queryFn: () => fetchDashboardData(firmId!, user!.id, role || 'admin'),
     enabled: !!firmId && !!user && !isFirmIdError && !!role,
+    ...dashboardQueryConfig,
   });
 
   return {

@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { useEffect, lazy, Suspense } from 'react';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { DialogProvider } from './hooks/use-dialog';
 import RoleBasedRouter from './components/routing/RoleBasedRouter';
@@ -9,8 +10,11 @@ import { BookingPage } from './pages/BookingPage';
 import { LawyerSelection } from './pages/LawyerSelection';
 import { Toaster } from './components/ui/toaster';
 import { BookRedirect } from './pages/BookRedirect';
-import CaseDetailEnhanced from './pages/CaseDetailEnhanced';
 import ZohoCallback from './pages/ZohoCallback';
+
+// Lazy load heavy components for better performance
+const CaseDetailEnhanced = lazy(() => import('./pages/CaseDetailEnhanced'));
+const Documents = lazy(() => import('./pages/Documents'));
 import { defaultQueryConfig } from './lib/queryConfig';
 import { useAuth } from './contexts/AuthContext';
 import { supabase } from './integrations/supabase/client';
@@ -89,7 +93,9 @@ function AppContent() {
               {/* Enhanced case details route */}
               <Route path="/cases/:id/legalkart-details" element={
                 <ProtectedRoute>
-                  <CaseDetailEnhanced />
+                  <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+                    <CaseDetailEnhanced />
+                  </Suspense>
                 </ProtectedRoute>
               } />
               
@@ -101,6 +107,7 @@ function AppContent() {
               } />
               </Routes>
               <Toaster />
+              <ReactQueryDevtools initialIsOpen={false} />
             </DialogProvider>
           </QueryClientProvider>
         </Router>

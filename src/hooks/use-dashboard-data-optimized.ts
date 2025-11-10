@@ -2,6 +2,33 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { format, formatDistanceToNow, addDays, startOfWeek, endOfWeek, startOfDay, endOfDay } from 'date-fns';
+import { dashboardQueryConfig } from '@/lib/queryConfig';
+
+interface DashboardData {
+  userProfile: any;
+  legalNews: any[];
+  role: string;
+  metrics: {
+    activeCases: number;
+    hearings: number;
+    appointments: number;
+    tasks: number;
+  };
+  schedule: { [key: string]: number };
+  myTasks: any[];
+  myNotes: any[];
+  teamMembers: any[];
+  recentActivity: any[];
+  revenue: { outstanding: number; collected: number; total: number };
+  recentDocuments: any[];
+  todayAppointments: any[];
+  upcomingHearings: any[];
+  recentClients: any[];
+  recentContacts: any[];
+  caseHighlights: any[];
+  timelineEvents: any[];
+  weekEvents: any[];
+}
 
 const getFirmId = async (userId: string) => {
   const { data, error } = await supabase
@@ -244,16 +271,14 @@ export const useDashboardDataOptimized = () => {
     queryKey: ['firmId', user?.id],
     queryFn: () => getFirmId(user!.id),
     enabled: !!user,
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes (formerly cacheTime)
+    ...dashboardQueryConfig,
   });
 
-  const queryResult = useQuery({
+  const queryResult = useQuery<DashboardData>({
     queryKey: ['dashboard-data-optimized', firmId, role],
     queryFn: () => fetchDashboardData(firmId!, user!.id, role || 'admin'),
     enabled: !!firmId && !!user && !isFirmIdError && !!role,
-    staleTime: 2 * 60 * 1000, // 2 minutes
-    gcTime: 5 * 60 * 1000, // 5 minutes (formerly cacheTime)
+    ...dashboardQueryConfig,
   });
 
   return {
