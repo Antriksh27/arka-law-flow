@@ -1051,6 +1051,27 @@ async function performCaseSearch(token: string, cnr: string, searchType: string)
 
     const data = await response.json();
     console.log(`Search completed for ${searchType}, CNR: ${cnr}`);
+    console.log('API Response data:', JSON.stringify(data, null, 2));
+
+    // Check if LegalKart API returned success in the response body
+    if (data && typeof data === 'object' && 'success' in data && data.success === false) {
+      console.warn('LegalKart API returned success: false in response body');
+      return { 
+        success: false, 
+        error: data.error || data.message || 'Case not found in LegalKart API',
+        data: null 
+      };
+    }
+
+    // Check if data is empty or null
+    if (!data || (typeof data === 'object' && Object.keys(data).length === 0)) {
+      console.warn('LegalKart API returned empty data');
+      return { 
+        success: false, 
+        error: 'No case data found for the provided CNR',
+        data: null 
+      };
+    }
 
     return { success: true, data, error: null };
   } catch (error) {
