@@ -53,12 +53,12 @@ export const TodayFlow = ({ events, isLoading }: TodayFlowProps) => {
 
   if (isLoading) {
     return (
-      <Card className="p-6 sticky top-6 flex flex-col max-h-[calc(100vh-8rem)]">
+      <Card className="p-6 h-fit sticky top-6">
         <div className="flex items-center gap-3 mb-6">
           <Calendar className="w-6 h-6 text-primary" />
           <h2 className="text-xl font-semibold">Today's Flow</h2>
         </div>
-        <div className="space-y-4 overflow-y-auto flex-1">
+        <div className="space-y-4">
           {[1, 2, 3].map((i) => (
             <div key={i} className="h-24 bg-gray-100 rounded-lg animate-pulse" />
           ))}
@@ -68,8 +68,8 @@ export const TodayFlow = ({ events, isLoading }: TodayFlowProps) => {
   }
 
   return (
-    <Card className="p-6 sticky top-6 flex flex-col max-h-[calc(100vh-8rem)]">
-      <div className="flex items-center gap-3 mb-6 flex-shrink-0">
+    <Card className="p-6 h-fit sticky top-6">
+      <div className="flex items-center gap-3 mb-6">
         <Calendar className="w-6 h-6 text-primary" />
         <h2 className="text-xl font-semibold">Today's Flow</h2>
       </div>
@@ -80,7 +80,7 @@ export const TodayFlow = ({ events, isLoading }: TodayFlowProps) => {
           <p className="text-sm text-muted-foreground">No events scheduled for today</p>
         </div>
       ) : (
-        <div className="space-y-4 relative overflow-y-auto flex-1 pr-2">
+        <div className="space-y-4 relative">
           {/* Vertical timeline line */}
           <div className="absolute left-6 top-8 bottom-8 w-0.5 bg-gray-200" />
           
