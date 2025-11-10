@@ -1237,7 +1237,8 @@ function mapLegalkartDataToCRM(data: any, searchType: string = 'unknown'): any {
 
   // BASIC CASE INFORMATION (15 fields)
   // District courts use data.case_details for basic info
-  mappedData.cnr_number = cleanText(
+  // Normalize CNR by removing hyphens and spaces
+  const rawCnr = cleanText(
     caseDetails.cnr_number || 
     caseInfo.cnr_number || 
     rd.cnr_number || 
@@ -1245,6 +1246,7 @@ function mapLegalkartDataToCRM(data: any, searchType: string = 'unknown'): any {
     data.cnr || 
     data.CNR
   );
+  mappedData.cnr_number = rawCnr ? rawCnr.replace(/[-\s]/g, '') : rawCnr;
   mappedData.case_number = cleanText(
     caseDetails.filing_number || 
     caseInfo.filing_number || 
@@ -1275,7 +1277,6 @@ function mapLegalkartDataToCRM(data: any, searchType: string = 'unknown'): any {
     data.natureOfDisposal ||
     data.disposal_nature ||
     caseStatus.nature_of_disposal ||
-    caseStatusDetails.nature_of_disposal ||
     data.description || 
     data.case_summary || 
     data.nature_of_case
@@ -1447,11 +1448,13 @@ function mapLegalkartDataToCRM(data: any, searchType: string = 'unknown'): any {
     data.listing_date
   );
   mappedData.disposal_date = parseDate(
+    caseStatus.disposal_date ||
     caseDetails.disposal_date || 
     data.disposal_date || 
     data.date_of_disposal
   );
   mappedData.decision_date = parseDate(
+    caseStatus.decision_date ||
     caseDetails.decision_date || 
     data.decision_date || 
     data.judgment_date
@@ -1468,7 +1471,6 @@ function mapLegalkartDataToCRM(data: any, searchType: string = 'unknown'): any {
     data.natureOfDisposal ||
     data.disposal_nature ||
     caseStatus.nature_of_disposal ||
-    caseStatusDetails.nature_of_disposal ||
     data.description || 
     data.case_summary || 
     data.nature_of_case
