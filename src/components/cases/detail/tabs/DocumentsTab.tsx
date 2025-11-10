@@ -27,7 +27,8 @@ export const DocumentsTab: React.FC<DocumentsTabProps> = ({
         ascending: false
       });
       if (error) throw error;
-      return data;
+      // Filter out documents without proper data
+      return data?.filter(doc => doc.file_name && doc.file_url) || [];
     }
   });
   const {
