@@ -1,9 +1,25 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
+
+// Allowed file types
+const ALLOWED_EXTENSIONS = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'png', 'jpg', 'jpeg', 'gif']
+const MAX_FILE_SIZE_MB = 10
+const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
+
+// Input validation schema
+const uploadSchema = z.object({
+  clientName: z.string().trim().min(1).max(255).regex(/^[a-zA-Z0-9\s.-]+$/, "Invalid client name format"),
+  caseName: z.string().trim().min(1).max(255).regex(/^[a-zA-Z0-9\s.-]+$/, "Invalid case name format"),
+  category: z.string().trim().min(1).max(100).regex(/^[a-zA-Z0-9\s-]+$/, "Invalid category format"),
+  docType: z.string().trim().min(1).max(100).regex(/^[a-zA-Z0-9\s-]+$/, "Invalid document type format"),
+  fileName: z.string().trim().min(1).max(255),
+  fileContent: z.string().min(1)
+})
 
 interface StructuredUploadParams {
   clientName: string;
@@ -163,11 +179,59 @@ serve(async (req) => {
 
   try {
     // Parse the request body
-    const { operation, filename, content, filePath, clientName, caseName, category, docType, fileName, fileContent } = await req.json()
+    const body = await req.json()
+    const { operation, filename, content, filePath } = body
     console.log(`📋 Operation: ${operation || 'hierarchical-upload'}`);
     
     // Handle new hierarchical structured upload format with category
-    if (clientName && caseName && category && docType && fileName && fileContent) {
+    if (body.clientName && body.caseName && body.category && body.docType && body.fileName && body.fileContent) {
+      // Validate input
+      const validation = uploadSchema.safeParse(body)
+      
+      if (!validation.success) {
+        console.error('Validation failed:', validation.error.flatten())
+        return new Response(JSON.stringify({
+          success: false,
+          error: 'Invalid input',
+          details: validation.error.flatten().fieldErrors
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        });
+      }
+
+      const { clientName, caseName, category, docType, fileName, fileContent } = validation.data
+
+      // Validate file extension
+      const fileExt = fileName.split('.').pop()?.toLowerCase()
+      if (!fileExt || !ALLOWED_EXTENSIONS.includes(fileExt)) {
+        console.error('Invalid file type:', fileExt)
+        return new Response(JSON.stringify({
+          success: false,
+          error: 'Invalid file type',
+          details: `Allowed types: ${ALLOWED_EXTENSIONS.join(', ')}`,
+          receivedExtension: fileExt
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        });
+      }
+
+      // Validate file size
+      const fileSize = fileContent.length
+      if (fileSize > MAX_FILE_SIZE_BYTES) {
+        console.error('File too large:', fileSize, 'bytes')
+        return new Response(JSON.stringify({
+          success: false,
+          error: 'File too large',
+          details: `Maximum file size: ${MAX_FILE_SIZE_MB}MB`,
+          receivedSize: Math.round(fileSize / 1024 / 1024 * 100) / 100 + 'MB'
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 413,
+        });
+      }
+
       console.log(`📁 Hierarchical upload: /${clientName}/${caseName}/${category}/${docType}/${fileName}`);
       
       const webdavUrl = Deno.env.get('WEBDAV_URL');

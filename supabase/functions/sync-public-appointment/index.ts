@@ -1,10 +1,16 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
+
+// Input validation schema
+const syncAppointmentSchema = z.object({
+  publicAppointmentId: z.string().uuid({ message: "Invalid appointment ID format" })
+})
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -17,17 +23,25 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { publicAppointmentId } = await req.json()
-
-    if (!publicAppointmentId) {
+    // Parse and validate input
+    const body = await req.json()
+    const validation = syncAppointmentSchema.safeParse(body)
+    
+    if (!validation.success) {
+      console.error('Validation failed:', validation.error.flatten())
       return new Response(
-        JSON.stringify({ error: 'Missing publicAppointmentId' }),
+        JSON.stringify({ 
+          error: 'Invalid input',
+          details: validation.error.flatten().fieldErrors
+        }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       )
     }
+
+    const { publicAppointmentId } = validation.data
 
     // Get the public appointment
     const { data: publicAppointment, error: fetchError } = await supabaseClient
@@ -37,6 +51,7 @@ serve(async (req) => {
       .single()
 
     if (fetchError || !publicAppointment) {
+      console.error('Public appointment not found:', publicAppointmentId)
       return new Response(
         JSON.stringify({ error: 'Public appointment not found' }),
         { 
@@ -45,6 +60,57 @@ serve(async (req) => {
         }
       )
     }
+
+    // Check rate limit using the new database function
+    const sourceIp = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip')
+    const { data: rateLimitOk, error: rateLimitError } = await supabaseClient
+      .rpc('check_public_appointment_rate_limit', {
+        p_email: publicAppointment.client_email,
+        p_ip: sourceIp
+      })
+
+    if (rateLimitError) {
+      console.error('Rate limit check error:', rateLimitError)
+    }
+
+    if (rateLimitOk === false) {
+      console.warn('Rate limit exceeded for:', publicAppointment.client_email, sourceIp)
+      return new Response(
+        JSON.stringify({ 
+          error: 'Rate limit exceeded. Please try again later.',
+          retryAfter: 3600 // 1 hour in seconds
+        }),
+        { 
+          status: 429, 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json',
+            'Retry-After': '3600'
+          } 
+        }
+      )
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(publicAppointment.client_email)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid email format' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    // Sanitize text inputs to prevent XSS
+    const sanitize = (str: string | null): string => {
+      if (!str) return ''
+      return str.replace(/[<>'"]/g, '').trim().substring(0, 255)
+    }
+
+    const sanitizedName = sanitize(publicAppointment.client_name)
+    const sanitizedPhone = sanitize(publicAppointment.client_phone)
 
     // Get lawyer's firm_id
     const { data: teamMember, error: teamError } = await supabaseClient
@@ -76,13 +142,13 @@ serve(async (req) => {
     if (existingClient) {
       clientId = existingClient.id
     } else {
-      // Create new client
+      // Create new client with sanitized data
       const { data: newClient, error: clientError } = await supabaseClient
         .from('clients')
         .insert({
-          full_name: publicAppointment.client_name,
+          full_name: sanitizedName,
           email: publicAppointment.client_email,
-          phone: publicAppointment.client_phone,
+          phone: sanitizedPhone,
           firm_id: teamMember.firm_id,
           status: 'lead'
         })

@@ -1,11 +1,30 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { parseECourtsData, type ParsedCaseData } from "./dataParser.ts";
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Input validation schemas
+const searchTypeEnum = z.enum(['high_court', 'district_court', 'supreme_court', 'gujarat_display_board', 'district_cause_list'])
+
+const caseSearchSchema = z.object({
+  cnr: z.string().trim().min(1).max(50).regex(/^[A-Z0-9]+$/, "CNR must contain only uppercase letters and numbers"),
+  searchType: searchTypeEnum,
+  caseId: z.string().uuid().optional()
+})
+
+const batchSearchSchema = z.object({
+  cnrs: z.array(z.string().trim().min(1).max(50).regex(/^[A-Z0-9]+$/)).min(1).max(100)
+})
+
+const authSchema = z.object({
+  username: z.string().trim().min(1).max(100),
+  password: z.string().min(1)
+})
 
 interface LegalkartAuthResponse {
   success: boolean;
@@ -342,6 +361,8 @@ serve(async (req) => {
     const requestBody = await req.json();
     const { action } = requestBody;
 
+    console.log(`📨 Request action: ${action}`);
+
     // Detect call type: internal (from another edge function) vs user (from frontend)
     const authHeader = req.headers.get('Authorization') || req.headers.get('authorization') || '';
     const apikeyHeader = req.headers.get('apikey') || req.headers.get('x-api-key') || '';
@@ -526,17 +547,25 @@ serve(async (req) => {
     if (action === 'search') {
       const { cnr, searchType, caseId, isSystemTriggered }: LegalkartCaseSearchRequest & { isSystemTriggered?: boolean } = requestBody;
       
-      if (!cnr || !searchType) {
+      // Validate input using Zod
+      const validation = caseSearchSchema.safeParse({ cnr, searchType, caseId })
+      
+      if (!validation.success) {
+        console.error('Validation failed for search:', validation.error.flatten())
         return new Response(
-          JSON.stringify({ error: 'CNR and search type are required' }),
+          JSON.stringify({ 
+            error: 'Invalid input',
+            details: validation.error.flatten().fieldErrors
+          }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
-      console.log(`Starting Legalkart search for CNR: ${cnr}, Type: ${searchType}, System: ${isSystemTriggered || false}`);
+      const validatedData = validation.data
+      console.log(`Starting Legalkart search for CNR: ${validatedData.cnr}, Type: ${validatedData.searchType}, System: ${isSystemTriggered || false}`);
       
       // Normalize CNR: remove hyphens and spaces before searching
-      const normalizedCnr = cnr.replace(/[-\s]/g, '');
+      const normalizedCnr = validatedData.cnr.replace(/[-\s]/g, '');
       console.log('Normalized CNR for API:', normalizedCnr);
 
       // First authenticate
@@ -556,10 +585,10 @@ serve(async (req) => {
           .from('legalkart_case_searches')
           .insert({
             firm_id: teamMember.firm_id,
-            case_id: caseId || null,
+            case_id: validatedData.caseId || null,
             cnr_number: normalizedCnr,
-            search_type: searchType,
-            request_data: { cnr, searchType },
+            search_type: validatedData.searchType,
+            request_data: { cnr: validatedData.cnr, searchType: validatedData.searchType },
             created_by: userId,
           })
           .select()
@@ -575,7 +604,7 @@ serve(async (req) => {
       }
 
       // Perform the search using normalized CNR
-      const searchResult = await performCaseSearch(authResult.token, normalizedCnr, searchType);
+      const searchResult = await performCaseSearch(authResult.token, normalizedCnr, validatedData.searchType);
 
       // Update search record with results (if one was created)
       if (searchRecord) {
@@ -616,7 +645,7 @@ serve(async (req) => {
 
       // Update case with fetched data if successful and a case_id is available
       if (searchResult.success && effectiveCaseId && searchResult.data) {
-        const mappedData = mapLegalkartDataToCRM(searchResult.data, searchType);
+        const mappedData = mapLegalkartDataToCRM(searchResult.data, validatedData.searchType);
         
         // Log the mapped data fields for debugging
         console.log('📊 Mapped Data Summary:');
@@ -861,15 +890,21 @@ serve(async (req) => {
     }
 
     if (action === 'batch_search') {
-      const { cnrs }: { cnrs: string[] } = requestBody;
+      // Validate input
+      const validation = batchSearchSchema.safeParse(requestBody)
       
-      if (!cnrs || !Array.isArray(cnrs) || cnrs.length === 0) {
+      if (!validation.success) {
+        console.error('Validation failed for batch_search:', validation.error.flatten())
         return new Response(
-          JSON.stringify({ error: 'CNRs array is required' }),
+          JSON.stringify({ 
+            error: 'Invalid input',
+            details: validation.error.flatten().fieldErrors
+          }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
+      const { cnrs } = validation.data;
       console.log(`Starting batch search for ${cnrs.length} CNRs`);
 
       // First authenticate
