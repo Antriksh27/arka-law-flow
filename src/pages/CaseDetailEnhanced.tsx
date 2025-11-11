@@ -124,10 +124,6 @@ export default function CaseDetailEnhanced() {
     label: 'Details',
     icon: FileText
   }, {
-    value: 'lawyers',
-    label: 'Lawyers',
-    icon: Users
-  }, {
     value: 'contacts',
     label: 'Contacts',
     icon: File
@@ -159,6 +155,10 @@ export default function CaseDetailEnhanced() {
     value: 'timeline',
     label: 'Timeline',
     icon: Calendar
+  }, {
+    value: 'lawyers',
+    label: 'Lawyers',
+    icon: Users
   }, {
     value: 'related',
     label: 'Related Matters',
@@ -265,9 +265,6 @@ export default function CaseDetailEnhanced() {
             <TabsContent value="details" className="m-0">
               <DetailsTab caseData={caseData} legalkartData={legalkartCase} petitioners={petitioners} respondents={respondents} iaDetails={iaDetails} documents={documents} orders={orders} hearings={hearings} objections={objections} />
             </TabsContent>
-            <TabsContent value="lawyers" className="m-0">
-              <LawyersTab caseId={id!} />
-            </TabsContent>
             <TabsContent value="contacts" className="m-0">
               <ContactTab caseId={id!} />
             </TabsContent>
@@ -291,6 +288,9 @@ export default function CaseDetailEnhanced() {
             </TabsContent>
             <TabsContent value="timeline" className="m-0">
               <TimelineTab caseId={id!} caseData={caseData} legalkartData={legalkartCase} hearings={hearings} />
+            </TabsContent>
+            <TabsContent value="lawyers" className="m-0">
+              <LawyersTab caseId={id!} />
             </TabsContent>
             <TabsContent value="related" className="m-0">
               <RelatedMattersTab caseId={id!} />
