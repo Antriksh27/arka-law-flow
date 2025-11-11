@@ -65,7 +65,7 @@ export function AppSidebar() {
   return <Sidebar collapsible="icon" className="bg-slate-900 border-r border-slate-700 shadow-sm z-50">
       <SidebarHeader className="border-b border-slate-700 p-4 bg-slate-900">
         <div className="flex items-center justify-center bg-slate-900">
-          <img src="/lovable-uploads/89ea18cf-8c73-4793-9dcc-1a192855a630.png" alt="HRU Legal" className={open ? "h-15 w-auto" : "h-11 w-11 object-contain"} />
+          <img src="/lovable-uploads/89ea18cf-8c73-4793-9dcc-1a192855a630.png" alt="HRU Legal" className={open ? "h-12 w-auto" : "h-9 w-9 object-contain"} />
         </div>
       </SidebarHeader>
 
