@@ -79,11 +79,16 @@ export function AppSidebar() {
               {navigationItems.map(item => {
               const active = isActive(item.url);
               return <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild isActive={active} tooltip={item.title} className={`
-                        flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
-                        ${active ? 'bg-white/10 text-white font-medium shadow-sm' : 'text-slate-300 hover:bg-white/5 hover:text-white'}
-                      `}>
-                      <NavLink to={item.url} end={item.url === "/"} className="flex items-center gap-3 w-full" activeClassName="">
+                    <SidebarMenuButton asChild isActive={active} tooltip={item.title}>
+                      <NavLink 
+                        to={item.url} 
+                        end={item.url === "/"} 
+                        className={`
+                          flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 w-full
+                          ${active ? 'bg-white/10 text-white font-medium shadow-sm' : 'text-slate-300 hover:bg-white/5 hover:text-white'}
+                        `}
+                        activeClassName=""
+                      >
                         <item.icon className="h-5 w-5 flex-shrink-0" />
                         {open && <span className="text-sm">{item.title}</span>}
                       </NavLink>
