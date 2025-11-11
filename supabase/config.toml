@@ -47,7 +47,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.pydio-webdav]
-verify_jwt = false
+verify_jwt = true
 
 [functions.legalkart-api]
 verify_jwt = true
@@ -62,10 +62,10 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.notify-knock]
-verify_jwt = false
+verify_jwt = true
 
 [functions.fetch-legal-news]
 verify_jwt = false
 
 [functions.process-fetch-queue]
-verify_jwt = false
+verify_jwt = true

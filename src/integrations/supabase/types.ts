@@ -1954,71 +1954,6 @@ export type Database = {
         }
         Relationships: []
       }
-      hearings: {
-        Row: {
-          assigned_to: string | null
-          bench: string | null
-          case_id: string | null
-          coram: string | null
-          court_name: string | null
-          created_at: string | null
-          created_by: string | null
-          firm_id: string | null
-          hearing_date: string
-          hearing_time: string | null
-          hearing_type: string | null
-          id: string
-          notes: string | null
-          outcome: string | null
-          status: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          assigned_to?: string | null
-          bench?: string | null
-          case_id?: string | null
-          coram?: string | null
-          court_name?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          firm_id?: string | null
-          hearing_date: string
-          hearing_time?: string | null
-          hearing_type?: string | null
-          id?: string
-          notes?: string | null
-          outcome?: string | null
-          status?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          assigned_to?: string | null
-          bench?: string | null
-          case_id?: string | null
-          coram?: string | null
-          court_name?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          firm_id?: string | null
-          hearing_date?: string
-          hearing_time?: string | null
-          hearing_type?: string | null
-          id?: string
-          notes?: string | null
-          outcome?: string | null
-          status?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "hearings_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "cases"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       ia_details: {
         Row: {
           case_id: string | null
@@ -4038,6 +3973,15 @@ export type Database = {
       is_task_creator: {
         Args: { task_id: string; user_id: string }
         Returns: boolean
+      }
+      log_audit_event: {
+        Args: {
+          p_action: string
+          p_details?: Json
+          p_entity_id: string
+          p_entity_type: string
+        }
+        Returns: undefined
       }
       normalize_timestamp: {
         Args: { input_timestamp: string }
