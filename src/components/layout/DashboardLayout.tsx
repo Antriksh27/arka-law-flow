@@ -2,18 +2,17 @@ import React from 'react';
 import Header from './Header';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from './AppSidebar';
-
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
-
-const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
-  return (
-    <SidebarProvider defaultOpen={true}>
+const DashboardLayout: React.FC<DashboardLayoutProps> = ({
+  children
+}) => {
+  return <SidebarProvider defaultOpen={true}>
       <div className="flex min-h-screen w-full bg-[#F9FAFB]">
         <AppSidebar />
         <div className="flex-1 flex flex-col w-full overflow-hidden">
-          <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-[#E5E7EB] bg-white shadow-sm px-4 md:px-6">
+          <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-[#E5E7EB] shadow-sm px-4 md:px-6 bg-slate-900">
             <SidebarTrigger className="-ml-1 hover:bg-[#F9FAFB] rounded-md p-2 transition-colors" />
             <div className="flex-1">
               <Header />
@@ -24,8 +23,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           </main>
         </div>
       </div>
-    </SidebarProvider>
-  );
+    </SidebarProvider>;
 };
-
 export default DashboardLayout;
