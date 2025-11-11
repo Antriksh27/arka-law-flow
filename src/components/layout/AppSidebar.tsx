@@ -96,9 +96,7 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="border-t border-slate-700 p-4 bg-slate-900">
-        {open && <p className="text-xs text-slate-400">
-            © 2024 HRU Legal
-          </p>}
+        {open && <p className="text-xs text-slate-400">© 2025 HRU Legal</p>}
       </SidebarFooter>
     </Sidebar>;
 }
