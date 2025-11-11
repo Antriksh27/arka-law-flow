@@ -28,7 +28,7 @@ const WorkspaceDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 overflow-x-hidden">
-      {/* Header */}
+      {/* Page Header */}
       <div className="bg-white border-b border-gray-200 px-4 py-4 md:px-8 md:py-6">
         <div className="max-w-[1800px] mx-auto w-full">
           <div className="flex items-center justify-between mb-4">

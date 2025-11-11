@@ -1,25 +1,30 @@
 import React from 'react';
 import Header from './Header';
-import NavHeader from '../ui/nav-header';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { AppSidebar } from './AppSidebar';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
-
   return (
-    <div className="min-h-screen bg-legal-background">
-      <Header />
-      <div className="border-b border-gray-200 py-4">
-        <NavHeader />
-      </div>
-      <main className="flex-1">
-        <div>
-          {children}
+    <SidebarProvider defaultOpen={true}>
+      <div className="flex min-h-screen w-full bg-legal-background">
+        <AppSidebar />
+        <div className="flex-1 flex flex-col w-full overflow-hidden">
+          <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b border-border bg-background px-4 md:px-6">
+            <SidebarTrigger className="-ml-1" />
+            <div className="flex-1">
+              <Header />
+            </div>
+          </header>
+          <main className="flex-1 overflow-auto">
+            {children}
+          </main>
         </div>
-      </main>
-    </div>
+      </div>
+    </SidebarProvider>
   );
 };
 

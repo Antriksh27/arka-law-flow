@@ -6,14 +6,7 @@ import KnockNotificationInbox from '@/components/notifications/KnockNotification
 import { ChatDropdown } from '@/components/messages/ChatDropdown';
 const Header = () => {
   const { user, signOut } = useAuth();
-  return <header className="border-b border-[#E5E7EB] px-8 py-4 bg-slate-900">
-      <div className="flex items-center justify-between">
-        {/* Logo Section */}
-        <div className="flex items-center gap-4">
-          <img src="/lovable-uploads/89ea18cf-8c73-4793-9dcc-1a192855a630.png" alt="HRU Legal" className="h-[4.125rem] w-auto" />
-        </div>
-        {/* Right Side Actions */}
-        <div className="flex items-center gap-3">
+  return <div className="flex items-center justify-end gap-3 w-full">
           <ChatDropdown />
           <KnockNotificationInbox />
           
@@ -39,8 +32,6 @@ const Header = () => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
-      </div>
-    </header>;
+    </div>;
 };
 export default Header;
