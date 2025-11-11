@@ -263,7 +263,14 @@ export const LawyersTab: React.FC<LawyersTabProps> = ({ caseId }) => {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {assignedLawyers.map((lawyer: any) => {
+          {assignedLawyers
+            .sort((a: any, b: any) => {
+              // Admins first
+              if (a.role === 'admin' && b.role !== 'admin') return -1;
+              if (a.role !== 'admin' && b.role === 'admin') return 1;
+              return 0;
+            })
+            .map((lawyer: any) => {
             const profile = lawyer.profiles;
             const isPrimary = lawyer.user_id === caseData?.assigned_to;
             
@@ -278,7 +285,7 @@ export const LawyersTab: React.FC<LawyersTabProps> = ({ caseId }) => {
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <p className="font-medium text-foreground truncate">
                             {profile?.full_name || 'Unknown'}
                           </p>
@@ -287,13 +294,13 @@ export const LawyersTab: React.FC<LawyersTabProps> = ({ caseId }) => {
                               Primary
                             </Badge>
                           )}
+                          <Badge variant="outline" className="text-xs">
+                            {lawyer.role}
+                          </Badge>
                         </div>
                         <p className="text-sm text-muted-foreground truncate">
                           {profile?.email || 'No email'}
                         </p>
-                        <Badge variant="outline" className="text-xs mt-1">
-                          {lawyer.role}
-                        </Badge>
                       </div>
                     </div>
                     <Button
@@ -322,9 +329,15 @@ export const LawyersTab: React.FC<LawyersTabProps> = ({ caseId }) => {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-2 py-4">
+          <div className="space-y-2 py-4 max-h-[400px] overflow-y-auto">
             {availableLawyers
               .filter((lawyer: any) => !assignedLawyerIds.has(lawyer.user_id))
+              .sort((a: any, b: any) => {
+                // Admins first
+                if (a.role === 'admin' && b.role !== 'admin') return -1;
+                if (a.role !== 'admin' && b.role === 'admin') return 1;
+                return 0;
+              })
               .map((lawyer: any) => {
                 const profile = lawyer.profiles;
                 
@@ -344,15 +357,17 @@ export const LawyersTab: React.FC<LawyersTabProps> = ({ caseId }) => {
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">
-                        {profile?.full_name || 'Unknown'}
-                      </p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-medium text-sm truncate">
+                          {profile?.full_name || 'Unknown'}
+                        </p>
+                        <Badge variant="outline" className="text-xs">
+                          {lawyer.role}
+                        </Badge>
+                      </div>
                       <p className="text-xs text-muted-foreground truncate">
                         {profile?.email || 'No email'}
                       </p>
-                      <Badge variant="outline" className="text-xs mt-1">
-                        {lawyer.role}
-                      </Badge>
                     </div>
                   </div>
                 );
