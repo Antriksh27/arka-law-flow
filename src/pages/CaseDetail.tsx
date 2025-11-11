@@ -22,6 +22,7 @@ import { ObjectionsTable } from '@/components/cases/enhanced/ObjectionsTable';
 import { InvoicesTab } from '@/components/cases/detail/tabs/InvoicesTab';
 import { ExpensesTab } from '@/components/cases/detail/tabs/ExpensesTab';
 import { PaymentsTab } from '@/components/cases/detail/tabs/PaymentsTab';
+import { LawyersTab } from '@/components/cases/detail/tabs/LawyersTab';
 
 const CaseDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -346,8 +347,9 @@ const CaseDetail = () => {
 
         {/* Tabs Section */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-9 mb-6">
+          <TabsList className="grid w-full grid-cols-10 mb-6">
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="lawyers">👨‍⚖️ Lawyers</TabsTrigger>
             <TabsTrigger value="documents">📄 Documents</TabsTrigger>
             <TabsTrigger value="orders">⚖️ Orders</TabsTrigger>
             <TabsTrigger value="hearings">📅 Hearings</TabsTrigger>
@@ -374,6 +376,10 @@ const CaseDetail = () => {
                   </div>
                 )}
               </div>
+            </TabsContent>
+
+            <TabsContent value="lawyers" className="mt-0">
+              <LawyersTab caseId={id!} />
             </TabsContent>
 
             <TabsContent value="documents" className="mt-0">
