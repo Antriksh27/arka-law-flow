@@ -50,7 +50,7 @@ const WorkspaceDashboard = () => {
       <div className="max-w-[1800px] mx-auto px-4 py-4 md:px-8 md:py-6 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
           {/* Left Column - Today's Flow */}
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-3 order-2 lg:order-none">
             <TodayFlow 
               events={data?.timelineEvents || []} 
               isLoading={isLoading}
@@ -58,7 +58,7 @@ const WorkspaceDashboard = () => {
           </div>
 
           {/* Center Column - My Workspace */}
-          <div className="lg:col-span-6">
+          <div className="lg:col-span-6 order-3 lg:order-none">
             <MyActiveCases
               cases={(data?.caseHighlights || []).map(c => ({
                 ...c,
@@ -100,7 +100,7 @@ const WorkspaceDashboard = () => {
           </div>
 
           {/* Right Column - Insights & Tools */}
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-3 order-1 lg:order-none">
             <TodaysSummary 
               summary={{
                 hearings: (data?.timelineEvents || []).filter(e => e.type === 'hearing').length,
