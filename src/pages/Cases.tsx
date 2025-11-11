@@ -40,12 +40,16 @@ const Cases = () => {
       />
       
       <Tabs value={casesTab} onValueChange={(value) => setCasesTab(value as 'all' | 'my')} className="w-full">
-        <TabsList className="mb-4">
-          <TabsTrigger value="all">All Cases</TabsTrigger>
-          <TabsTrigger value="my">My Cases</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 bg-white rounded-2xl shadow-sm border border-gray-200 mb-6">
+          <TabsTrigger value="all" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white">
+            All Cases
+          </TabsTrigger>
+          <TabsTrigger value="my" className="data-[state=active]:bg-blue-700 data-[state=active]:text-white">
+            My Cases
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="all" className="space-y-6">
+        <TabsContent value="all" className="space-y-6 mt-0">
           <CasesFilters
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
@@ -85,7 +89,7 @@ const Cases = () => {
           )}
         </TabsContent>
 
-        <TabsContent value="my" className="space-y-6">
+        <TabsContent value="my" className="space-y-6 mt-0">
           <CasesFilters
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
