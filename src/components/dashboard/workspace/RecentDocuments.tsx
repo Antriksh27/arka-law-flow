@@ -18,11 +18,11 @@ export const RecentDocuments = ({
   isLoading
 }: RecentDocumentsProps) => {
   if (isLoading) {
-    return <div className="mb-6">
+    return <div className="mb-4 md:mb-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <span className="text-xl">📁</span>
-            <h2 className="text-xl font-semibold">Recent Documents</h2>
+            <span className="text-lg md:text-xl">📁</span>
+            <h2 className="text-lg md:text-xl font-semibold">Recent Documents</h2>
           </div>
         </div>
         <div className="space-y-3">
@@ -39,31 +39,31 @@ export const RecentDocuments = ({
       return <FileText className="w-8 h-8 text-green-500" />;
     }
   };
-  return <div className="mb-6">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
+  return <div className="mb-4 md:mb-6">
+      <div className="flex items-center justify-between mb-4 gap-2">
+        <div className="flex items-center gap-2 min-w-0">
           
-          <h2 className="text-xl font-semibold">Recent Documents</h2>
+          <h2 className="text-lg md:text-xl font-semibold truncate">Recent Documents</h2>
         </div>
-        <Button size="sm" className="bg-slate-900 hover:bg-slate-800">
-          + Upload New
+        <Button size="sm" className="bg-slate-900 hover:bg-slate-800 flex-shrink-0 text-xs md:text-sm">
+          + Upload
         </Button>
       </div>
 
-      {documents.length === 0 ? <Card className="p-8 text-center border-dashed">
+      {documents.length === 0 ? <Card className="p-6 md:p-8 text-center border-dashed">
           <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
           <p className="text-sm text-muted-foreground">No recent documents</p>
         </Card> : <div className="space-y-3">
-          {documents.slice(0, 3).map(doc => <Card key={doc.id} className="p-4 hover:shadow-md transition-shadow">
+          {documents.slice(0, 3).map(doc => <Card key={doc.id} className="p-3 md:p-4 hover:shadow-md transition-shadow">
               <div className="flex items-center gap-3">
-                {getFileIcon(doc.file_name)}
+                <div className="flex-shrink-0">{getFileIcon(doc.file_name)}</div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-medium text-sm truncate">{doc.file_name}</h3>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground truncate">
                     {doc.case_title} • Uploaded {TimeUtils.formatRelative(doc.uploaded_at)}
                   </p>
                 </div>
-                <button className="text-muted-foreground hover:text-foreground">
+                <button className="text-muted-foreground hover:text-foreground flex-shrink-0">
                   <Download className="w-4 h-4" />
                 </button>
               </div>

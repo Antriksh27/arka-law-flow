@@ -51,14 +51,14 @@ export const PinnedNotes = ({
     }
   };
   if (isLoading) {
-    return <div className="mb-6">
+    return <div className="mb-4 md:mb-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <span className="text-xl">📌</span>
-            <h2 className="text-xl font-semibold">Pinned Notes</h2>
+            <span className="text-lg md:text-xl">📌</span>
+            <h2 className="text-lg md:text-xl font-semibold">Pinned Notes</h2>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
           {[1, 2].map(i => <div key={i} className="h-32 bg-gray-100 rounded-lg animate-pulse" />)}
         </div>
       </div>;
@@ -68,29 +68,29 @@ export const PinnedNotes = ({
     return colors[index % colors.length];
   };
   return <>
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
+      <div className="mb-4 md:mb-6">
+        <div className="flex items-center justify-between mb-4 gap-2">
+          <div className="flex items-center gap-2 min-w-0">
             
-            <h2 className="text-xl font-semibold">Pinned Notes</h2>
+            <h2 className="text-lg md:text-xl font-semibold truncate">Pinned Notes</h2>
           </div>
-          <Button size="sm" onClick={() => setShowCreateDialog(true)} className="bg-slate-900 hover:bg-slate-800 text-slate-50">
-            + Add Note
+          <Button size="sm" onClick={() => setShowCreateDialog(true)} className="bg-slate-900 hover:bg-slate-800 text-slate-50 flex-shrink-0 text-xs md:text-sm">
+            + Add
           </Button>
         </div>
 
-        {notes.length === 0 ? <Card className="p-8 text-center border-dashed">
+        {notes.length === 0 ? <Card className="p-6 md:p-8 text-center border-dashed">
             <p className="text-sm text-muted-foreground mb-3">No pinned notes yet</p>
             <Button size="sm" variant="outline" onClick={() => setShowCreateDialog(true)}>
               <Plus className="w-4 h-4 mr-2" />
               Create your first note
             </Button>
-          </Card> : <div className="grid grid-cols-2 gap-4">
-            {notes.slice(0, 4).map((note, index) => <Card key={note.id} className={`p-4 border-2 ${getNoteColor(index)} relative group cursor-pointer hover:shadow-md transition-shadow`}>
+          </Card> : <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+            {notes.slice(0, 4).map((note, index) => <Card key={note.id} className={`p-3 md:p-4 border-2 ${getNoteColor(index)} relative group cursor-pointer hover:shadow-md transition-shadow`}>
                 <button onClick={() => setNoteToDelete(note.id)} className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <X className="w-4 h-4 text-muted-foreground hover:text-foreground" />
+                  <X className="w-3 h-3 md:w-4 md:h-4 text-muted-foreground hover:text-foreground" />
                 </button>
-                <h3 className="font-medium text-sm mb-2 pr-6">{note.title}</h3>
+                <h3 className="font-medium text-sm mb-2 pr-6 truncate">{note.title}</h3>
                 <p className="text-xs text-muted-foreground line-clamp-3">
                   {note.content}
                 </p>

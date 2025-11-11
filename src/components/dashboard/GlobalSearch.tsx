@@ -72,7 +72,7 @@ export const GlobalSearch = () => {
   return (
     <div className="w-full max-w-2xl relative">
       <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <Search className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-gray-400" />
         <Input
           ref={inputRef}
           type="text"
@@ -80,25 +80,25 @@ export const GlobalSearch = () => {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => query.length >= 2 && setOpen(true)}
-          className="w-full pl-12 pr-10 py-3 bg-white border-gray-200 rounded-xl shadow-sm hover:border-primary focus:border-primary transition-colors"
+          className="w-full pl-10 md:pl-12 pr-10 py-2.5 md:py-3 bg-white border-gray-200 rounded-xl shadow-sm hover:border-primary focus:border-primary transition-colors text-sm md:text-base"
         />
         {query && (
           <button
             onClick={clearSearch}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            className="absolute right-3 md:right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
           >
-            <X className="w-4 h-4" />
+            <X className="w-3 h-3 md:w-4 md:h-4" />
           </button>
         )}
         {loading && (
-          <div className="absolute right-12 top-1/2 -translate-y-1/2">
-            <Loader2 className="w-4 h-4 animate-spin text-primary" />
+          <div className="absolute right-10 md:right-12 top-1/2 -translate-y-1/2">
+            <Loader2 className="w-3 h-3 md:w-4 md:h-4 animate-spin text-primary" />
           </div>
         )}
       </div>
 
       {open && query.length >= 2 && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-96 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-[60vh] md:max-h-96 overflow-y-auto">
           {!loading && totalResults === 0 && (
             <div className="px-4 py-8 text-center text-sm text-muted-foreground">
               No results found for "{query}"

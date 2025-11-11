@@ -23,8 +23,8 @@ export const UpcomingWeek = ({ events, isLoading }: UpcomingWeekProps) => {
 
   if (isLoading) {
     return (
-      <Card className="p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Upcoming Week</h2>
+      <Card className="p-4 md:p-6 mb-4 md:mb-6">
+        <h2 className="text-lg md:text-xl font-semibold mb-4">Upcoming Week</h2>
         <div className="space-y-3">
           {[1, 2, 3, 4, 5].map((i) => (
             <div key={i} className="h-12 bg-gray-100 rounded animate-pulse" />
@@ -48,8 +48,8 @@ export const UpcomingWeek = ({ events, isLoading }: UpcomingWeekProps) => {
   };
 
   return (
-    <Card className="p-6 mb-6">
-      <h2 className="text-xl font-semibold mb-4">Upcoming Week</h2>
+    <Card className="p-4 md:p-6 mb-4 md:mb-6">
+      <h2 className="text-lg md:text-xl font-semibold mb-4">Upcoming Week</h2>
       
       <div className="space-y-3">
         {weekDays.map((day, index) => {

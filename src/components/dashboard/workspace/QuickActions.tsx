@@ -39,18 +39,18 @@ export const QuickActions = () => {
 
   return (
     <>
-      <Card className="p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
+      <Card className="p-4 md:p-6 mb-4 md:mb-6">
+        <h2 className="text-lg md:text-xl font-semibold mb-4">Quick Actions</h2>
         
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2 md:gap-3">
           {actions.map((action, index) => (
             <button
               key={index}
               onClick={action.onClick}
-              className="flex flex-col items-center justify-center p-4 rounded-lg border border-gray-200 hover:border-primary hover:bg-gray-50 transition-all group"
+              className="flex flex-col items-center justify-center p-3 md:p-4 rounded-lg border border-gray-200 hover:border-primary hover:bg-gray-50 transition-all group"
             >
-              <div className="w-12 h-12 rounded-lg bg-gray-100 group-hover:bg-primary/10 flex items-center justify-center mb-2 transition-colors">
-                <action.icon className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-gray-100 group-hover:bg-primary/10 flex items-center justify-center mb-2 transition-colors">
+                <action.icon className="w-5 h-5 md:w-6 md:h-6 text-muted-foreground group-hover:text-primary transition-colors" />
               </div>
               <span className="text-xs font-medium">{action.label}</span>
             </button>

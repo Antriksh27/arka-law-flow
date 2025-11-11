@@ -27,13 +27,13 @@ const WorkspaceDashboard = () => {
   const userName = data?.userProfile?.full_name || user?.user_metadata?.full_name || 'User';
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-8 py-6">
-        <div className="max-w-[1800px] mx-auto">
+      <div className="bg-white border-b border-gray-200 px-4 py-4 md:px-8 md:py-6">
+        <div className="max-w-[1800px] mx-auto w-full">
           <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-2xl font-semibold">
+            <div className="min-w-0">
+              <h1 className="text-xl md:text-2xl font-semibold truncate">
                 {getGreeting()}, {userName}
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
@@ -47,8 +47,8 @@ const WorkspaceDashboard = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-[1800px] mx-auto px-8 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="max-w-[1800px] mx-auto px-4 py-4 md:px-8 md:py-6 w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
           {/* Left Column - Today's Flow */}
           <div className="lg:col-span-3">
             <TodayFlow 

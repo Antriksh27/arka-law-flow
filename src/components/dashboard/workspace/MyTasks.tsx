@@ -44,14 +44,14 @@ export const MyTasks = ({
     setShowDeleteDialog(true);
   };
   if (isLoading) {
-    return <div className="mb-6">
+    return <div className="mb-4 md:mb-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <span className="text-xl">✓</span>
-            <h2 className="text-xl font-semibold">My Tasks</h2>
+            <span className="text-lg md:text-xl">✓</span>
+            <h2 className="text-lg md:text-xl font-semibold">My Tasks</h2>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
           {[1, 2].map(i => <div key={i} className="h-32 bg-gray-100 rounded-lg animate-pulse" />)}
         </div>
       </div>;
@@ -81,36 +81,36 @@ export const MyTasks = ({
     }
   };
   return <>
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
+      <div className="mb-4 md:mb-6">
+        <div className="flex items-center justify-between mb-4 gap-2">
+          <div className="flex items-center gap-2 min-w-0">
             
-            <h2 className="text-xl font-semibold">My Tasks</h2>
+            <h2 className="text-lg md:text-xl font-semibold truncate">My Tasks</h2>
           </div>
-          <Button size="sm" onClick={() => setShowCreateDialog(true)} className="bg-slate-900 hover:bg-slate-800">
-            + Add Task
+          <Button size="sm" onClick={() => setShowCreateDialog(true)} className="bg-slate-900 hover:bg-slate-800 flex-shrink-0 text-xs md:text-sm">
+            + Add
           </Button>
         </div>
 
-        {tasks.length === 0 ? <Card className="p-8 text-center border-dashed">
+        {tasks.length === 0 ? <Card className="p-6 md:p-8 text-center border-dashed">
             <CheckCircle2 className="w-12 h-12 text-gray-300 mx-auto mb-3" />
             <p className="text-sm text-muted-foreground mb-3">No tasks yet</p>
             <Button size="sm" variant="outline" onClick={() => setShowCreateDialog(true)}>
               <Plus className="w-4 h-4 mr-2" />
               Create your first task
             </Button>
-          </Card> : <div className="grid grid-cols-2 gap-4">
-            {tasks.slice(0, 4).map((task, index) => <Card key={task.id || index} className={`p-4 border-2 ${getPriorityColor(task.priority)} relative group cursor-pointer hover:shadow-md transition-shadow`} onClick={() => task.id && handleViewTask(task.id)}>
-                <div className="flex items-start gap-3">
-                  <Checkbox className="mt-1" onClick={e => e.stopPropagation()} />
+          </Card> : <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+            {tasks.slice(0, 4).map((task, index) => <Card key={task.id || index} className={`p-3 md:p-4 border-2 ${getPriorityColor(task.priority)} relative group cursor-pointer hover:shadow-md transition-shadow`} onClick={() => task.id && handleViewTask(task.id)}>
+                <div className="flex items-start gap-2 md:gap-3">
+                  <Checkbox className="mt-1 flex-shrink-0" onClick={e => e.stopPropagation()} />
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-medium text-sm flex-1">{task.title}</h3>
-                      <Badge className={`text-xs px-2 py-0 h-5 ${getPriorityBadge(task.priority)}`}>
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <h3 className="font-medium text-sm flex-1 min-w-0 truncate">{task.title}</h3>
+                      <Badge className={`text-xs px-2 py-0 h-5 flex-shrink-0 ${getPriorityBadge(task.priority)}`}>
                         {task.priority}
                       </Badge>
                     </div>
-                    {task.due_date && <p className="text-xs text-muted-foreground">
+                    {task.due_date && <p className="text-xs text-muted-foreground truncate">
                         Due: {TimeUtils.formatDate(task.due_date, 'MMM d, yyyy')}
                       </p>}
                   </div>
