@@ -84,8 +84,8 @@ export function AppSidebar() {
                           flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 w-full text-white
                           ${active ? 'bg-white/10 font-medium shadow-sm' : 'hover:bg-white/5'}
                         `} activeClassName="">
-                        <item.icon className="h-5 w-5 flex-shrink-0" />
-                        {open && <span className="text-sm text-slate-50">{item.title}</span>}
+                        <item.icon className="h-5 w-5 flex-shrink-0 text-white" />
+                        {open && <span className="text-sm text-white font-medium">{item.title}</span>}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>;
