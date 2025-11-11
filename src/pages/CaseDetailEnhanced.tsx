@@ -19,6 +19,7 @@ import { InvoicesTab } from '@/components/cases/detail/tabs/InvoicesTab';
 import { PaymentsTab } from '@/components/cases/detail/tabs/PaymentsTab';
 import { TimelineTab } from '@/components/cases/detail/tabs/TimelineTab';
 import { RelatedMattersTab } from '@/components/cases/detail/tabs/RelatedMattersTab';
+import { LawyersTab } from '@/components/cases/detail/tabs/LawyersTab';
 import { DocumentsTable } from '@/components/cases/enhanced/DocumentsTable';
 import { OrdersTable } from '@/components/cases/enhanced/OrdersTable';
 import { HearingsTable } from '@/components/cases/enhanced/HearingsTable';
@@ -122,6 +123,10 @@ export default function CaseDetailEnhanced() {
     value: 'details',
     label: 'Details',
     icon: FileText
+  }, {
+    value: 'lawyers',
+    label: 'Lawyers',
+    icon: Users
   }, {
     value: 'contacts',
     label: 'Contacts',
@@ -259,6 +264,9 @@ export default function CaseDetailEnhanced() {
           <div className="p-6">
             <TabsContent value="details" className="m-0">
               <DetailsTab caseData={caseData} legalkartData={legalkartCase} petitioners={petitioners} respondents={respondents} iaDetails={iaDetails} documents={documents} orders={orders} hearings={hearings} objections={objections} />
+            </TabsContent>
+            <TabsContent value="lawyers" className="m-0">
+              <LawyersTab caseId={id!} />
             </TabsContent>
             <TabsContent value="contacts" className="m-0">
               <ContactTab caseId={id!} />
