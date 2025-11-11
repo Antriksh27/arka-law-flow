@@ -691,7 +691,7 @@ export type Database = {
           court_name: string | null
           created_at: string | null
           created_by: string | null
-          firm_id: string | null
+          firm_id: string
           hearing_date: string | null
           hearing_time: string | null
           hearing_type: string | null
@@ -714,7 +714,7 @@ export type Database = {
           court_name?: string | null
           created_at?: string | null
           created_by?: string | null
-          firm_id?: string | null
+          firm_id: string
           hearing_date?: string | null
           hearing_time?: string | null
           hearing_type?: string | null
@@ -737,7 +737,7 @@ export type Database = {
           court_name?: string | null
           created_at?: string | null
           created_by?: string | null
-          firm_id?: string | null
+          firm_id?: string
           hearing_date?: string | null
           hearing_time?: string | null
           hearing_type?: string | null
