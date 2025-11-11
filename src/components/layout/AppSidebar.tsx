@@ -85,7 +85,7 @@ export function AppSidebar() {
                           ${active ? 'bg-white/10 font-medium shadow-sm' : 'hover:bg-white/5'}
                         `} activeClassName="">
                         <item.icon className="h-5 w-5 flex-shrink-0" />
-                        {open && <span className="text-sm">{item.title}</span>}
+                        {open && <span className="text-sm text-slate-50">{item.title}</span>}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>;
