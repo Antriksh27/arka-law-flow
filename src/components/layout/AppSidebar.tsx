@@ -62,16 +62,16 @@ export function AppSidebar() {
     }
     return location.pathname.startsWith(path);
   };
-  return <Sidebar collapsible="icon" className="bg-white border-r border-[#E5E7EB] shadow-sm z-50">
-      <SidebarHeader className="border-b border-[#E5E7EB] p-4 bg-slate-900">
+  return <Sidebar collapsible="icon" className="bg-slate-900 border-r border-slate-700 shadow-sm z-50">
+      <SidebarHeader className="border-b border-slate-700 p-4 bg-slate-900">
         <div className="flex items-center bg-slate-900">
           <img src="/lovable-uploads/89ea18cf-8c73-4793-9dcc-1a192855a630.png" alt="HRU Legal" className={open ? "h-12 w-auto" : "h-9 w-9 object-contain"} />
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="bg-white">
+      <SidebarContent className="bg-slate-900">
         <SidebarGroup>
-          {open && <SidebarGroupLabel className="text-xs font-medium text-[#6B7280] uppercase tracking-wider px-3 py-2">
+          {open && <SidebarGroupLabel className="text-xs font-medium text-slate-400 uppercase tracking-wider px-3 py-2">
               Navigation
             </SidebarGroupLabel>}
           <SidebarGroupContent>
@@ -81,7 +81,7 @@ export function AppSidebar() {
               return <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild isActive={active} tooltip={item.title} className={`
                         flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
-                        ${active ? 'bg-[#E0E7FF] text-[#1E3A8A] font-medium shadow-sm' : 'text-[#111827] hover:bg-[#F9FAFB] hover:text-[#1E3A8A]'}
+                        ${active ? 'bg-white/10 text-white font-medium shadow-sm' : 'text-slate-300 hover:bg-white/5 hover:text-white'}
                       `}>
                       <NavLink to={item.url} end={item.url === "/"} className="flex items-center gap-3 w-full">
                         <item.icon className="h-5 w-5 flex-shrink-0" />
@@ -95,8 +95,8 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-[#E5E7EB] p-4 bg-white">
-        {open && <p className="text-xs text-[#6B7280]">
+      <SidebarFooter className="border-t border-slate-700 p-4 bg-slate-900">
+        {open && <p className="text-xs text-slate-400">
             © 2024 HRU Legal
           </p>}
       </SidebarFooter>
