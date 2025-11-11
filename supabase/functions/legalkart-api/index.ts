@@ -524,7 +524,7 @@ serve(async (req) => {
     }
 
     if (action === 'search') {
-      const { cnr, searchType, caseId }: LegalkartCaseSearchRequest = requestBody;
+      const { cnr, searchType, caseId, isSystemTriggered }: LegalkartCaseSearchRequest & { isSystemTriggered?: boolean } = requestBody;
       
       if (!cnr || !searchType) {
         return new Response(
@@ -533,7 +533,7 @@ serve(async (req) => {
         );
       }
 
-      console.log(`Starting Legalkart search for CNR: ${cnr}, Type: ${searchType}`);
+      console.log(`Starting Legalkart search for CNR: ${cnr}, Type: ${searchType}, System: ${isSystemTriggered || false}`);
       
       // Normalize CNR: remove hyphens and spaces before searching
       const normalizedCnr = cnr.replace(/[-\s]/g, '');
@@ -549,43 +549,48 @@ serve(async (req) => {
         );
       }
 
-      // Create search record
-      const { data: searchRecord, error: insertError } = await supabase
-        .from('legalkart_case_searches')
-        .insert({
-          firm_id: teamMember.firm_id,
-          case_id: caseId || null,
-          cnr_number: normalizedCnr, // Store normalized CNR
-          search_type: searchType,
-          request_data: { cnr, searchType },
-          created_by: userId,
-        })
-        .select()
-        .single();
+      // Create search record (skip if system-triggered to avoid user_id issues)
+      let searchRecord: any = null;
+      if (!isSystemTriggered) {
+        const { data: sr, error: insertError } = await supabase
+          .from('legalkart_case_searches')
+          .insert({
+            firm_id: teamMember.firm_id,
+            case_id: caseId || null,
+            cnr_number: normalizedCnr,
+            search_type: searchType,
+            request_data: { cnr, searchType },
+            created_by: userId,
+          })
+          .select()
+          .single();
 
-      if (insertError) {
-        console.error('Error creating search record:', insertError);
-        return new Response(
-          JSON.stringify({ error: 'Failed to create search record' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        if (insertError) {
+          console.error('Error creating search record:', insertError);
+        } else {
+          searchRecord = sr;
+        }
+      } else {
+        console.log('⚙️ System-triggered search - skipping search record creation');
       }
 
       // Perform the search using normalized CNR
       const searchResult = await performCaseSearch(authResult.token, normalizedCnr, searchType);
 
-      // Update search record with results
-      const { error: updateError } = await supabase
-        .from('legalkart_case_searches')
-        .update({
-          response_data: searchResult.data,
-          status: searchResult.success ? 'success' : 'failed',
-          error_message: searchResult.error || null,
-        })
-        .eq('id', searchRecord.id);
+      // Update search record with results (if one was created)
+      if (searchRecord) {
+        const { error: updateError } = await supabase
+          .from('legalkart_case_searches')
+          .update({
+            response_data: searchResult.data,
+            status: searchResult.success ? 'success' : 'failed',
+            error_message: searchResult.error || null,
+          })
+          .eq('id', searchRecord.id);
 
-      if (updateError) {
-        console.error('Error updating search record:', updateError);
+        if (updateError) {
+          console.error('Error updating search record:', updateError);
+        }
       }
 
       // Resolve caseId if not provided by finding a case with the same CNR in user's firm
@@ -599,11 +604,13 @@ serve(async (req) => {
           .maybeSingle();
         if (foundCase?.id) {
           effectiveCaseId = foundCase.id;
-          // Link the search record to the found case
-          await supabase
-            .from('legalkart_case_searches')
-            .update({ case_id: effectiveCaseId })
-            .eq('id', searchRecord.id);
+          // Link the search record to the found case (if one was created)
+          if (searchRecord) {
+            await supabase
+              .from('legalkart_case_searches')
+              .update({ case_id: effectiveCaseId })
+              .eq('id', searchRecord.id);
+          }
         }
       }
 

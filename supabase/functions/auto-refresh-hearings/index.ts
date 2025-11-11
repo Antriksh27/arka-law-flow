@@ -53,6 +53,19 @@ async function refreshCaseViaLegalkart(
   
   console.log(`Refreshing case ${caseData.case_id} (${caseData.case_title}) with CNR: ${caseData.cnr_number}, type: ${searchType}`);
   
+  // Call legalkart-api with upsert_from_json action instead of search
+  // This avoids the user_id requirement issue
+  const { error: caseError } = await supabase
+    .from('cases')
+    .select('fetched_data')
+    .eq('id', caseData.case_id)
+    .single();
+    
+  if (caseError) {
+    throw new Error(`Failed to get case data: ${caseError.message}`);
+  }
+  
+  // Call the legalkart-api to perform a fresh search
   const { data, error } = await supabase.functions.invoke('legalkart-api', {
     body: {
       action: 'search',
@@ -60,6 +73,7 @@ async function refreshCaseViaLegalkart(
       searchType,
       caseId: caseData.case_id,
       firmId: caseData.firm_id,
+      isSystemTriggered: true,
     },
   });
 
@@ -79,9 +93,19 @@ Deno.serve(async (req) => {
   }
 
   const startTime = Date.now();
-  const todayIST = getTodayIST();
+  
+  // Parse request body for custom date
+  let targetDate = getTodayIST();
+  try {
+    const body = await req.json();
+    if (body.date) {
+      targetDate = body.date;
+    }
+  } catch {
+    // Use default date if no body
+  }
 
-  console.log(`Auto-refresh triggered for date: ${todayIST}`);
+  console.log(`Auto-refresh triggered for date: ${targetDate}`);
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -101,7 +125,7 @@ Deno.serve(async (req) => {
           firm_id
         )
       `)
-      .eq('hearing_date', todayIST)
+      .eq('hearing_date', targetDate)
       .not('cases.cnr_number', 'is', null)
       .neq('cases.cnr_number', '');
 
@@ -114,7 +138,7 @@ Deno.serve(async (req) => {
     if (!hearings || hearings.length === 0) {
       const response = {
         success: true,
-        date: todayIST,
+        date: targetDate,
         total_hearings: 0,
         cases_processed: 0,
         results: { success: [], failed: [], skipped: [] },
@@ -124,7 +148,7 @@ Deno.serve(async (req) => {
 
       // Log execution
       await supabase.from('auto_refresh_logs').insert({
-        execution_date: todayIST,
+        execution_date: targetDate,
         total_hearings: 0,
         cases_processed: 0,
         cases_succeeded: 0,
@@ -222,7 +246,7 @@ Deno.serve(async (req) => {
 
     // Log execution to database
     await supabase.from('auto_refresh_logs').insert({
-      execution_date: todayIST,
+      execution_date: targetDate,
       total_hearings: hearings.length,
       cases_processed: results.success.length + results.failed.length,
       cases_succeeded: results.success.length,
@@ -237,7 +261,7 @@ Deno.serve(async (req) => {
 
     const response = {
       success: true,
-      date: todayIST,
+      date: targetDate,
       total_hearings: hearings.length,
       cases_processed: results.success.length + results.failed.length,
       results,
@@ -258,7 +282,7 @@ Deno.serve(async (req) => {
       const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
       await supabase.from('auto_refresh_logs').insert({
-        execution_date: todayIST,
+        execution_date: targetDate,
         total_hearings: 0,
         cases_processed: 0,
         cases_succeeded: 0,
@@ -275,7 +299,7 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: false,
         error: error.message,
-        date: todayIST,
+        date: targetDate,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
