@@ -1,20 +1,10 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Calendar, FileText, Users, MoreHorizontal } from 'lucide-react';
 import { TimeUtils } from '@/lib/timeUtils';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 
 interface CaseCardProps {
   case: any;
@@ -43,38 +33,6 @@ const getDisplayStatus = (caseItem: any) => {
 };
 
 export const CaseCard: React.FC<CaseCardProps> = ({ case: caseItem }) => {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-
-  const updatePriorityMutation = useMutation({
-    mutationFn: async ({ caseId, priority }: { caseId: string; priority: 'low' | 'medium' | 'high' }) => {
-      const { error } = await supabase
-        .from('cases')
-        .update({ priority })
-        .eq('id', caseId);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["cases"] });
-      toast({
-        title: "Priority updated",
-        description: "Case priority has been updated successfully",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update priority",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handlePriorityChange = (priority: string) => {
-    updatePriorityMutation.mutate({ caseId: caseItem.id, priority: priority as 'low' | 'medium' | 'high' });
-  };
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'open':
@@ -87,19 +45,6 @@ export const CaseCard: React.FC<CaseCardProps> = ({ case: caseItem }) => {
         return 'bg-gray-100 text-gray-700 border-gray-200';
       case 'on_hold':
         return 'bg-orange-100 text-orange-700 border-orange-200';
-      default:
-        return 'bg-gray-100 text-gray-700 border-gray-200';
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high':
-        return 'bg-red-100 text-red-700 border-red-200';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-      case 'low':
-        return 'bg-green-100 text-green-700 border-green-200';
       default:
         return 'bg-gray-100 text-gray-700 border-gray-200';
     }
@@ -142,21 +87,6 @@ export const CaseCard: React.FC<CaseCardProps> = ({ case: caseItem }) => {
         <Badge className={`${getStatusColor(getDisplayStatus(caseItem))} rounded-full text-xs`}>
           {getDisplayStatus(caseItem)?.replace('_', ' ')}
         </Badge>
-        <div onClick={(e) => e.stopPropagation()}>
-          <Select
-            value={caseItem.priority || 'medium'}
-            onValueChange={handlePriorityChange}
-          >
-            <SelectTrigger className="w-[100px] h-7 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="low">Low</SelectItem>
-              <SelectItem value="medium">Medium</SelectItem>
-              <SelectItem value="high">High</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
       </div>
 
       <div className="flex items-center justify-between text-sm text-gray-600">

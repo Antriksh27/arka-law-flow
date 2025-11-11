@@ -161,42 +161,12 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
     },
   });
 
-  const setPriorityMutation = useMutation({
-    mutationFn: async (caseIds: string[]) => {
-      const { error } = await supabase
-        .from('cases')
-        .update({ priority: 'medium' })
-        .in('id', caseIds);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["cases"] });
-      toast({
-        title: "Priority updated",
-        description: `${selectedCases.size} case(s) set to medium priority`,
-      });
-      setSelectedCases(new Set());
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update priority",
-        variant: "destructive",
-      });
-    },
-  });
-
   const handleDeleteSelected = () => {
     setShowDeleteDialog(true);
   };
 
   const confirmDelete = () => {
     deleteCasesMutation.mutate(Array.from(selectedCases));
-  };
-
-  const handleSetPrioritySelected = () => {
-    setPriorityMutation.mutate(Array.from(selectedCases));
   };
 
   if (isLoading) {
@@ -227,22 +197,11 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
               onCheckedChange={handleSelectAll}
             />
             <span className="text-sm text-muted-foreground">
-              {selectedCases.size} case(s) selected
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSetPrioritySelected}
-              disabled={setPriorityMutation.isPending}
-            >
-              {setPriorityMutation.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : null}
-              Set Medium Priority
-            </Button>
-            <Button
+            {selectedCases.size} case(s) selected
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
               variant="destructive"
               size="sm"
               onClick={handleDeleteSelected}

@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Calendar, MapPin, Scale, FileText, Users, Gavel, Building, 
-  RefreshCw, Hash, Clock, Briefcase, User, BookOpen, Flag,
+  RefreshCw, Hash, Clock, Briefcase, User, BookOpen,
   CheckCircle, AlertCircle, Archive
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -139,15 +139,6 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
                 {case_type && (
                   <Badge variant="outline" className="px-3 py-1 bg-background/50">
                     {case_type}
-                  </Badge>
-                )}
-                {priority && (
-                  <Badge 
-                    variant={priority === 'high' ? 'error' : 'outline'}
-                    className="px-3 py-1"
-                  >
-                    <Flag className="w-3 h-3 mr-1" />
-                    {priority}
                   </Badge>
                 )}
               </div>

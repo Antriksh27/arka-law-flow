@@ -23,7 +23,6 @@ interface CaseFormData {
   assigned_users?: string[];
   case_type: string;
   status: string;
-  priority: string;
   by_against?: string;
   reference_number?: string;
   case_number?: string;
@@ -57,7 +56,6 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
     defaultValues: {
       case_type: 'civil',
       status: 'open',
-      priority: 'medium',
       client_id: preSelectedClientId || ''
     }
   });
@@ -126,7 +124,6 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
         client_id: data.client_id || null,
         case_type: data.case_type as any,
         status: data.status as any,
-        priority: data.priority as any,
         by_against: data.by_against ? data.by_against as any : null,
         reference_number: data.reference_number || null,
         case_number: data.case_number || null,
@@ -282,19 +279,6 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
                 <option value="in_court">In Court</option>
                 <option value="on_hold">On Hold</option>
                 <option value="closed">Closed</option>
-              </select>
-            </div>
-
-            <div>
-              <Label htmlFor="priority">Priority</Label>
-              <select
-                id="priority"
-                {...register('priority')}
-                className="w-full px-3 py-2 mt-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white"
-              >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
               </select>
             </div>
 
