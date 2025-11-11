@@ -1954,6 +1954,74 @@ export type Database = {
         }
         Relationships: []
       }
+      hearings: {
+        Row: {
+          assigned_to: string | null
+          bench: string | null
+          case_id: string | null
+          coram: string | null
+          court_name: string | null
+          created_at: string | null
+          created_by: string | null
+          firm_id: string
+          hearing_date: string
+          hearing_time: string | null
+          hearing_type: string | null
+          id: string
+          next_hearing_date: string | null
+          notes: string | null
+          outcome: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          bench?: string | null
+          case_id?: string | null
+          coram?: string | null
+          court_name?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          firm_id: string
+          hearing_date: string
+          hearing_time?: string | null
+          hearing_type?: string | null
+          id?: string
+          next_hearing_date?: string | null
+          notes?: string | null
+          outcome?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          bench?: string | null
+          case_id?: string | null
+          coram?: string | null
+          court_name?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          firm_id?: string
+          hearing_date?: string
+          hearing_time?: string | null
+          hearing_type?: string | null
+          id?: string
+          next_hearing_date?: string | null
+          notes?: string | null
+          outcome?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hearings_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ia_details: {
         Row: {
           case_id: string | null

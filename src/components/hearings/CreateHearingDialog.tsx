@@ -53,6 +53,17 @@ export const CreateHearingDialog: React.FC = () => {
     mutationFn: async (data: HearingFormData) => {
       const { data: userData } = await supabase.auth.getUser();
       
+      // Get user's firm_id
+      const { data: teamMember } = await supabase
+        .from('team_members')
+        .select('firm_id')
+        .eq('user_id', userData.user?.id)
+        .single();
+
+      if (!teamMember?.firm_id) {
+        throw new Error('Unable to determine firm');
+      }
+      
       const hearingData = {
         case_id: data.case_id,
         hearing_date: typeof data.hearing_date === 'string' 
@@ -67,6 +78,7 @@ export const CreateHearingDialog: React.FC = () => {
         outcome: data.outcome || null,
         notes: data.notes || null,
         created_by: userData.user?.id,
+        firm_id: teamMember.firm_id,
       };
 
       const { data: result, error } = await supabase
