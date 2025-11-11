@@ -88,9 +88,9 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Query hearings scheduled for today (IST)
+    // Query hearings scheduled for today (IST) from case_hearings table
     const { data: hearings, error: hearingsError } = await supabase
-      .from('hearings')
+      .from('case_hearings')
       .select(`
         case_id,
         cases!inner(
@@ -102,7 +102,6 @@ Deno.serve(async (req) => {
         )
       `)
       .eq('hearing_date', todayIST)
-      .in('status', ['scheduled', 'adjourned'])
       .not('cases.cnr_number', 'is', null)
       .neq('cases.cnr_number', '');
 
