@@ -61,13 +61,32 @@ export const LawyersTab: React.FC<LawyersTabProps> = ({ caseId }) => {
     queryFn: async () => {
       if (assignedLawyerIds.size === 0) return [];
       
-      const { data, error } = await supabase
+      // Fetch team members
+      const { data: teamData, error: teamError } = await supabase
         .from('team_members')
-        .select('id, user_id, role, profiles(id, full_name, email)')
+        .select('id, user_id, role')
         .in('user_id', Array.from(assignedLawyerIds));
       
-      if (error) throw error;
-      return data || [];
+      if (teamError) throw teamError;
+      if (!teamData || teamData.length === 0) return [];
+
+      // Fetch profiles for these users
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .in('id', Array.from(assignedLawyerIds));
+      
+      if (profilesError) throw profilesError;
+
+      // Combine data
+      return teamData.map(tm => ({
+        ...tm,
+        profiles: profilesData?.find(p => p.id === tm.user_id) || {
+          id: tm.user_id,
+          full_name: 'Unknown',
+          email: 'No email'
+        }
+      }));
     },
     enabled: assignedLawyerIds.size > 0
   });
@@ -76,14 +95,34 @@ export const LawyersTab: React.FC<LawyersTabProps> = ({ caseId }) => {
   const { data: availableLawyers = [] } = useQuery({
     queryKey: ['firm-lawyers', firmId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Fetch team members
+      const { data: teamData, error: teamError } = await supabase
         .from('team_members')
-        .select('id, user_id, role, profiles(id, full_name, email)')
+        .select('id, user_id, role')
         .eq('firm_id', firmId)
         .in('role', ['admin', 'lawyer']);
       
-      if (error) throw error;
-      return data || [];
+      if (teamError) throw teamError;
+      if (!teamData || teamData.length === 0) return [];
+
+      // Fetch profiles for these users
+      const userIds = teamData.map(tm => tm.user_id);
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .in('id', userIds);
+      
+      if (profilesError) throw profilesError;
+
+      // Combine data
+      return teamData.map(tm => ({
+        ...tm,
+        profiles: profilesData?.find(p => p.id === tm.user_id) || {
+          id: tm.user_id,
+          full_name: 'Unknown',
+          email: 'No email'
+        }
+      }));
     },
     enabled: !!firmId
   });
