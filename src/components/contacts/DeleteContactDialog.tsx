@@ -61,19 +61,19 @@ export const DeleteContactDialog = ({ open, onOpenChange, contact }: DeleteConta
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="max-w-full sm:max-w-[500px] max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-red-600">
+          <DialogTitle className="flex items-center gap-2 text-red-600 text-lg sm:text-xl">
             <Trash2 className="h-5 w-5" />
             Delete Contact
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-sm">
             Are you sure you want to delete this contact? This action cannot be undone.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          <div className="bg-red-50 rounded-lg p-4 space-y-3">
+          <div className="bg-red-50 rounded-lg p-3 sm:p-4 space-y-3">
             <div className="flex items-center space-x-3">
               <div className="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center">
                 <span className="text-red-600 font-medium">
@@ -120,11 +120,12 @@ export const DeleteContactDialog = ({ open, onOpenChange, contact }: DeleteConta
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
           <Button
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
+            className="w-full sm:w-auto order-2 sm:order-1"
           >
             Cancel
           </Button>
@@ -133,6 +134,7 @@ export const DeleteContactDialog = ({ open, onOpenChange, contact }: DeleteConta
             variant="destructive"
             onClick={() => deleteContactMutation.mutate()}
             disabled={deleteContactMutation.isPending}
+            className="w-full sm:w-auto order-1 sm:order-2"
           >
             {deleteContactMutation.isPending ? 'Deleting...' : 'Delete Contact'}
           </Button>

@@ -62,29 +62,30 @@ export const ContactsTable = ({
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="bg-slate-800 text-white">Contact</TableHead>
-            <TableHead className="bg-slate-800 text-white">Organization</TableHead>
-            <TableHead className="bg-slate-800 text-white">Contact Info</TableHead>
-            <TableHead className="bg-slate-800 text-white">Location</TableHead>
-            <TableHead className="bg-slate-800 text-white text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
+      <div className="overflow-x-auto">
+        <Table className="min-w-[800px]">
+          <TableHeader>
+            <TableRow>
+              <TableHead className="bg-slate-800 text-white sticky left-0 z-10">Contact</TableHead>
+              <TableHead className="bg-slate-800 text-white">Organization</TableHead>
+              <TableHead className="bg-slate-800 text-white">Contact Info</TableHead>
+              <TableHead className="bg-slate-800 text-white">Location</TableHead>
+              <TableHead className="bg-slate-800 text-white text-right sticky right-0 z-10">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
         <TableBody>
           {contacts.map((contact) => (
             <TableRow 
               key={contact.id} 
               className="hover:bg-gray-50"
             >
-              <TableCell>
+              <TableCell className="sticky left-0 bg-white z-10">
                 <div className="flex items-center space-x-3">
-              <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
-                <span className="text-slate-600 font-medium text-sm">
-                  {contact.name?.charAt(0)?.toUpperCase()}
-                </span>
-              </div>
+                  <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
+                    <span className="text-slate-600 font-medium text-sm">
+                      {contact.name?.charAt(0)?.toUpperCase()}
+                    </span>
+                  </div>
                   <div>
                     <div className="font-medium text-gray-900">
                       {contact.name}
@@ -135,7 +136,7 @@ export const ContactsTable = ({
                 )}
               </TableCell>
               
-              <TableCell>
+              <TableCell className="sticky right-0 bg-white z-10">
                 <div className="flex items-center justify-end gap-1">
                   <Button 
                     variant="ghost" 
@@ -144,9 +145,9 @@ export const ContactsTable = ({
                       e.stopPropagation();
                       onViewContact?.(contact);
                     }}
-                    className="text-gray-600 hover:text-blue-600"
+                    className="text-gray-600 hover:text-blue-600 h-11 w-11 sm:h-8 sm:w-8 p-0"
                   >
-                    <Eye className="w-4 h-4" />
+                    <Eye className="w-5 h-5 sm:w-4 sm:h-4" />
                   </Button>
                   <Button 
                     variant="ghost" 
@@ -155,9 +156,9 @@ export const ContactsTable = ({
                       e.stopPropagation();
                       onEditContact(contact);
                     }}
-                    className="text-gray-600 hover:text-blue-600"
+                    className="text-gray-600 hover:text-blue-600 h-11 w-11 sm:h-8 sm:w-8 p-0"
                   >
-                    <Pencil className="w-4 h-4" />
+                    <Pencil className="w-5 h-5 sm:w-4 sm:h-4" />
                   </Button>
                   <Button 
                     variant="ghost" 
@@ -166,24 +167,25 @@ export const ContactsTable = ({
                       e.stopPropagation();
                       onDeleteContact(contact);
                     }}
-                    className="text-gray-600 hover:text-red-600"
+                    className="text-gray-600 hover:text-red-600 h-11 w-11 sm:h-8 sm:w-8 p-0"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-5 h-5 sm:w-4 sm:h-4" />
                   </Button>
                 </div>
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
-      </Table>
+        </Table>
+      </div>
       
       {/* Pagination */}
       {onPageChange && Math.ceil(totalCount / pageSize) > 1 && (
-        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200">
-          <div className="text-sm text-muted-foreground">
-            Page {page} of {Math.ceil(totalCount / pageSize)} (Total: {totalCount} contacts)
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-3 sm:px-4 py-3 border-t border-gray-200">
+          <div className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
+            Page {page} of {Math.ceil(totalCount / pageSize)} ({totalCount} contacts)
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 flex-wrap justify-center">
             <Button
               variant="outline"
               size="sm"
@@ -198,12 +200,13 @@ export const ContactsTable = ({
               size="sm"
               onClick={() => onPageChange(page - 1)}
               disabled={page === 1}
+              className="h-11 sm:h-9"
             >
-              <ChevronLeft className="h-4 w-4" />
-              <span className="hidden sm:inline ml-1">Previous</span>
+              <ChevronLeft className="h-5 w-5 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline ml-1">Prev</span>
             </Button>
             
-            <div className="flex items-center gap-1">
+            <div className="hidden sm:flex items-center gap-1">
               {Array.from({ length: Math.min(Math.ceil(totalCount / pageSize), 5) }, (_, i) => {
                 const totalPages = Math.ceil(totalCount / pageSize);
                 let pageNum: number;
@@ -236,16 +239,17 @@ export const ContactsTable = ({
               size="sm"
               onClick={() => onPageChange(page + 1)}
               disabled={page === Math.ceil(totalCount / pageSize)}
+              className="h-11 sm:h-9"
             >
               <span className="hidden sm:inline mr-1">Next</span>
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-5 w-5 sm:h-4 sm:w-4" />
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => onPageChange(Math.ceil(totalCount / pageSize))}
               disabled={page === Math.ceil(totalCount / pageSize)}
-              className="hidden sm:flex"
+              className="hidden sm:flex h-9"
             >
               Last
             </Button>

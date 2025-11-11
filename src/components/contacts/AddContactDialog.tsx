@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Plus } from 'lucide-react';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 interface AddContactDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -236,16 +237,16 @@ export const AddContactDialog = ({
     addDistrictMutation.mutate(newDistrictName.trim());
   };
   return <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto p-6">
+      <DialogContent className="max-w-full sm:max-w-[700px] max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle>Add New Contact</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-lg sm:text-xl">Add New Contact</DialogTitle>
+          <DialogDescription className="text-sm">
             Add a new contact to your contact management system.
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 mt-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6 mt-4">
             {/* Contact Type */}
             <FormField control={form.control} name="type" render={({
             field
@@ -267,19 +268,19 @@ export const AddContactDialog = ({
                 </FormItem>} />
 
             {/* Basic Information */}
-            <div className="space-y-4">
-              <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3 mb-4">Basic Information</h3>
+            <div className="space-y-3 sm:space-y-4">
+              <h3 className="text-sm sm:text-base font-semibold text-foreground border-b-2 border-border pb-2 sm:pb-3 mb-3 sm:mb-4">Basic Information</h3>
               
               <FormField control={form.control} name="name" rules={{
               required: "Name is required"
             }} render={({
               field
             }) => <FormItem>
-                    <FormLabel>
+                    <FormLabel className="text-sm">
                       {form.watch('type') === 'Organization' ? 'Contact Person Name' : 'Name'} *
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter contact name" {...field} />
+                      <Input placeholder="Enter contact name" {...field} className="h-12 text-base" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>} />
@@ -287,214 +288,230 @@ export const AddContactDialog = ({
 
             {/* Organization Details - Only for Organization */}
             {form.watch('type') === 'Organization' && (
-              <div className="space-y-4">
-                <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3 mb-4">Organization Details</h3>
-                
-                <FormField control={form.control} name="organization" rules={{
-                  required: form.watch('type') === 'Organization' ? "Organization name is required" : false
-                }} render={({
-                  field
-                }) => <FormItem>
-                      <FormLabel>Organization Name *</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter organization/company name" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>} />
+              <Accordion type="single" collapsible className="border rounded-lg">
+                <AccordionItem value="organization" className="border-0">
+                  <AccordionTrigger className="px-4 text-sm sm:text-base font-semibold hover:no-underline">
+                    Organization Details
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4 space-y-3 sm:space-y-4">
+                    <FormField control={form.control} name="organization" rules={{
+                      required: form.watch('type') === 'Organization' ? "Organization name is required" : false
+                    }} render={({
+                      field
+                    }) => <FormItem>
+                          <FormLabel className="text-sm">Organization Name *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter organization/company name" {...field} className="h-12 text-base" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>} />
 
-                <FormField control={form.control} name="designation" render={({
-                  field
-                }) => <FormItem>
-                      <FormLabel>Designation</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter designation in company" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>} />
+                    <FormField control={form.control} name="designation" render={({
+                      field
+                    }) => <FormItem>
+                          <FormLabel className="text-sm">Designation</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter designation in company" {...field} className="h-12 text-base" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>} />
 
-                <FormField control={form.control} name="company_address" render={({
-                  field
-                }) => <FormItem>
-                      <FormLabel>Company Address</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter company address" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>} />
+                    <FormField control={form.control} name="company_address" render={({
+                      field
+                    }) => <FormItem>
+                          <FormLabel className="text-sm">Company Address</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter company address" {...field} className="h-12 text-base" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>} />
 
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField control={form.control} name="company_phone" render={({
-                    field
-                  }) => <FormItem>
-                        <FormLabel>Company Phone</FormLabel>
-                        <FormControl>
-                          <Input type="tel" placeholder="Enter company phone number" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>} />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                      <FormField control={form.control} name="company_phone" render={({
+                        field
+                      }) => <FormItem>
+                            <FormLabel className="text-sm">Company Phone</FormLabel>
+                            <FormControl>
+                              <Input type="tel" placeholder="Enter company phone number" {...field} className="h-12 text-base" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>} />
 
-                  <FormField control={form.control} name="company_email" render={({
-                    field
-                  }) => <FormItem>
-                        <FormLabel>Company Email</FormLabel>
-                        <FormControl>
-                          <Input type="email" placeholder="Enter company email address" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>} />
-                </div>
-              </div>
+                      <FormField control={form.control} name="company_email" render={({
+                        field
+                      }) => <FormItem>
+                            <FormLabel className="text-sm">Company Email</FormLabel>
+                            <FormControl>
+                              <Input type="email" placeholder="Enter company email address" {...field} className="h-12 text-base" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>} />
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
             )}
 
             {/* Contact Details */}
-            <div className="space-y-4">
-              <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3 mb-4">
-                {form.watch('type') === 'Organization' ? 'Contact Person Details' : 'Contact Details'}
-              </h3>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <FormField control={form.control} name="email" render={({
-                field
-              }) => <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input type="email" placeholder="Enter email address" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>} />
+            <Accordion type="single" collapsible defaultValue="contact" className="border rounded-lg">
+              <AccordionItem value="contact" className="border-0">
+                <AccordionTrigger className="px-4 text-sm sm:text-base font-semibold hover:no-underline">
+                  {form.watch('type') === 'Organization' ? 'Contact Person Details' : 'Contact Details'}
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-4 space-y-3 sm:space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <FormField control={form.control} name="email" render={({
+                    field
+                  }) => <FormItem>
+                          <FormLabel className="text-sm">Email</FormLabel>
+                          <FormControl>
+                            <Input type="email" placeholder="Enter email address" {...field} className="h-12 text-base" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>} />
 
-                <FormField control={form.control} name="phone" render={({
-                field
-              }) => <FormItem>
-                      <FormLabel>Phone</FormLabel>
-                      <FormControl>
-                        <Input type="tel" placeholder="Enter phone number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>} />
-              </div>
-            </div>
+                    <FormField control={form.control} name="phone" render={({
+                    field
+                  }) => <FormItem>
+                          <FormLabel className="text-sm">Phone</FormLabel>
+                          <FormControl>
+                            <Input type="tel" placeholder="Enter phone number" {...field} className="h-12 text-base" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>} />
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
 
             {/* Address Information */}
-            <div className="space-y-4">
-              <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3 mb-4">Address Information</h3>
-              
-              <FormField control={form.control} name="address_line_1" render={({
-              field
-            }) => <FormItem>
-                    <FormLabel>Address Line 1</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter address line 1" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>} />
-
-              <FormField control={form.control} name="address_line_2" render={({
-              field
-            }) => <FormItem>
-                    <FormLabel>Address Line 2</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter address line 2 (optional)" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>} />
-
-              <div className="grid grid-cols-3 gap-4">
-                <FormField control={form.control} name="pin_code" render={({
-                field
-              }) => <FormItem>
-                      <FormLabel>PIN Code</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter PIN code" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>} />
-
-                <FormField control={form.control} name="state_id" render={({
-                field
-              }) => <FormItem>
-                      <FormLabel>State</FormLabel>
-                      <Select onValueChange={value => {
-                  field.onChange(value);
-                  setSelectedStateId(value);
-                  form.setValue('district_id', '');
-                }} value={field.value}>
+            <Accordion type="single" collapsible className="border rounded-lg">
+              <AccordionItem value="address" className="border-0">
+                <AccordionTrigger className="px-4 text-sm sm:text-base font-semibold hover:no-underline">
+                  Address Information
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-4 space-y-3 sm:space-y-4">
+                  <FormField control={form.control} name="address_line_1" render={({
+                  field
+                }) => <FormItem>
+                        <FormLabel className="text-sm">Address Line 1</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select state" />
-                          </SelectTrigger>
+                          <Input placeholder="Enter address line 1" {...field} className="h-12 text-base" />
                         </FormControl>
-                        <SelectContent>
-                          {states.map(state => <SelectItem key={state.id} value={state.id}>
-                              {state.name}
-                            </SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>} />
+                        <FormMessage />
+                      </FormItem>} />
 
-                <FormField control={form.control} name="district_id" render={({
-                field
-              }) => <FormItem>
-                      <FormLabel>District</FormLabel>
-                      {showAddDistrict ? <div className="space-y-2">
-                          <div className="flex gap-2">
-                            <Input placeholder="Enter new district name" value={newDistrictName} onChange={e => setNewDistrictName(e.target.value)} onKeyPress={e => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleAddDistrict();
-                      }
-                    }} />
-                            <Button type="button" onClick={handleAddDistrict} disabled={addDistrictMutation.isPending} size="sm">
-                              {addDistrictMutation.isPending ? 'Adding...' : 'Add'}
-                            </Button>
-                            <Button type="button" variant="outline" onClick={() => {
-                      setShowAddDistrict(false);
-                      setNewDistrictName('');
-                    }} size="sm">
-                              Cancel
-                            </Button>
-                          </div>
-                        </div> : <Select onValueChange={value => {
-                if (value === 'add_new') {
-                  setShowAddDistrict(true);
-                } else {
-                  field.onChange(value);
-                }
-              }} value={field.value} disabled={!selectedStateId}>
+                  <FormField control={form.control} name="address_line_2" render={({
+                  field
+                }) => <FormItem>
+                        <FormLabel className="text-sm">Address Line 2</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter address line 2 (optional)" {...field} className="h-12 text-base" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>} />
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                    <FormField control={form.control} name="pin_code" render={({
+                    field
+                  }) => <FormItem>
+                          <FormLabel className="text-sm">PIN Code</FormLabel>
                           <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder={!selectedStateId ? "Select state first" : "Select district"} />
-                            </SelectTrigger>
+                            <Input placeholder="Enter PIN code" {...field} className="h-12 text-base" />
                           </FormControl>
-                          <SelectContent>
-                            {districts.map(district => <SelectItem key={district.id} value={district.id}>
-                                {district.name}
-                              </SelectItem>)}
-                            {selectedStateId && <SelectItem value="add_new" className="border-t">
-                                <div className="flex items-center gap-2">
-                                  <Plus className="h-4 w-4" />
-                                  Add New District
-                                </div>
-                              </SelectItem>}
-                          </SelectContent>
-                        </Select>}
-                      <FormMessage />
-                    </FormItem>} />
-              </div>
-            </div>
+                          <FormMessage />
+                        </FormItem>} />
+
+                    <FormField control={form.control} name="state_id" render={({
+                    field
+                  }) => <FormItem>
+                          <FormLabel className="text-sm">State</FormLabel>
+                          <Select onValueChange={value => {
+                      field.onChange(value);
+                      setSelectedStateId(value);
+                      form.setValue('district_id', '');
+                    }} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="h-12">
+                                <SelectValue placeholder="Select state" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {states.map(state => <SelectItem key={state.id} value={state.id}>
+                                  {state.name}
+                                </SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>} />
+
+                    <FormField control={form.control} name="district_id" render={({
+                    field
+                  }) => <FormItem>
+                          <FormLabel className="text-sm">District</FormLabel>
+                          {showAddDistrict ? <div className="space-y-2">
+                              <div className="flex gap-2">
+                                <Input placeholder="Enter new district name" value={newDistrictName} onChange={e => setNewDistrictName(e.target.value)} className="h-12 text-base" onKeyPress={e => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddDistrict();
+                          }
+                        }} />
+                                <Button type="button" onClick={handleAddDistrict} disabled={addDistrictMutation.isPending} size="sm" className="h-12">
+                                  {addDistrictMutation.isPending ? 'Adding...' : 'Add'}
+                                </Button>
+                                <Button type="button" variant="outline" onClick={() => {
+                          setShowAddDistrict(false);
+                          setNewDistrictName('');
+                        }} size="sm" className="h-12">
+                                  Cancel
+                                </Button>
+                              </div>
+                            </div> : <Select onValueChange={value => {
+                    if (value === 'add_new') {
+                      setShowAddDistrict(true);
+                    } else {
+                      field.onChange(value);
+                    }
+                  }} value={field.value} disabled={!selectedStateId}>
+                              <FormControl>
+                                <SelectTrigger className="h-12">
+                                  <SelectValue placeholder={!selectedStateId ? "Select state first" : "Select district"} />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {districts.map(district => <SelectItem key={district.id} value={district.id}>
+                                    {district.name}
+                                  </SelectItem>)}
+                                {selectedStateId && <SelectItem value="add_new" className="border-t">
+                                    <div className="flex items-center gap-2">
+                                      <Plus className="h-4 w-4" />
+                                      Add New District
+                                    </div>
+                                  </SelectItem>}
+                              </SelectContent>
+                            </Select>}
+                          <FormMessage />
+                        </FormItem>} />
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
 
             {/* Referral Information */}
-            <div className="space-y-4">
-              <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3 mb-4">Referral Information</h3>
-              
-              <div className="grid grid-cols-2 gap-4">
+            <Accordion type="single" collapsible className="border rounded-lg">
+              <AccordionItem value="referral" className="border-0">
+                <AccordionTrigger className="px-4 text-sm sm:text-base font-semibold hover:no-underline">
+                  Referral Information
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-4 space-y-3 sm:space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <FormField control={form.control} name="referred_by_name" render={({
                 field
               }) => <FormItem>
-                      <FormLabel>Referred By (Name)</FormLabel>
+                      <FormLabel className="text-sm">Referred By (Name)</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter referrer's name" {...field} />
+                        <Input placeholder="Enter referrer's name" {...field} className="h-12 text-base" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>} />
@@ -502,35 +519,42 @@ export const AddContactDialog = ({
                 <FormField control={form.control} name="referred_by_phone" render={({
                 field
               }) => <FormItem>
-                      <FormLabel>Referred By (Phone)</FormLabel>
+                      <FormLabel className="text-sm">Referred By (Phone)</FormLabel>
                       <FormControl>
-                        <Input type="tel" placeholder="Enter referrer's phone" {...field} />
+                        <Input type="tel" placeholder="Enter referrer's phone" {...field} className="h-12 text-base" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>} />
               </div>
-            </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
 
-            {/* Additional Notes */}
-            <div className="space-y-4">
-              <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3 mb-4">Additional Notes</h3>
-              
+        {/* Additional Notes */}
+        <Accordion type="single" collapsible className="border rounded-lg">
+          <AccordionItem value="notes" className="border-0">
+            <AccordionTrigger className="px-4 text-sm sm:text-base font-semibold hover:no-underline">
+              Additional Notes
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4">
               <FormField control={form.control} name="notes" render={({
               field
             }) => <FormItem>
-                    <FormLabel>Notes</FormLabel>
+                    <FormLabel className="text-sm">Notes</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Additional notes about the contact" rows={3} {...field} />
+                      <Textarea placeholder="Additional notes about the contact" rows={3} {...field} className="text-base" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>} />
-            </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
 
-            <div className="flex justify-end gap-3 pt-4 border-t">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-4 border-t sticky bottom-0 bg-white pb-2">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto h-11 sm:h-10">
                 Cancel
               </Button>
-              <Button type="submit" disabled={addContactMutation.isPending}>
+              <Button type="submit" disabled={addContactMutation.isPending} className="w-full sm:w-auto h-11 sm:h-10">
                 {addContactMutation.isPending ? 'Adding...' : 'Add Contact'}
               </Button>
             </div>
