@@ -278,7 +278,7 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
 
         if (hearingsToInsert.length > 0) {
           const { error: hearingsError } = await supabase
-            .from('hearings')
+            .from('case_hearings')
             .insert(hearingsToInsert);
           
           if (hearingsError) {

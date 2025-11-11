@@ -37,7 +37,7 @@ export const CreateHearingDialogWrapper: React.FC<CreateHearingDialogWrapperProp
   const createHearingMutation = useMutation({
     mutationFn: async (data: any) => {
       const { error } = await supabase
-        .from('hearings')
+        .from('case_hearings')
         .insert({
           ...data,
           case_id: caseId,

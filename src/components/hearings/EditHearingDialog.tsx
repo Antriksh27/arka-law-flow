@@ -43,7 +43,7 @@ export const EditHearingDialog: React.FC<EditHearingDialogProps> = ({ hearingId 
     queryKey: ['hearing', hearingId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('hearings')
+        .from('case_hearings')
         .select('id, case_id, hearing_date, hearing_time, court_name, bench, coram, hearing_type, status, outcome, notes, created_by, created_at, assigned_to, firm_id')
         .eq('id', hearingId)
         .single();
@@ -103,7 +103,7 @@ export const EditHearingDialog: React.FC<EditHearingDialogProps> = ({ hearingId 
       };
 
       const { data: result, error } = await supabase
-        .from('hearings')
+        .from('case_hearings')
         .update(hearingData)
         .eq('id', hearingId)
         .select()
@@ -113,7 +113,7 @@ export const EditHearingDialog: React.FC<EditHearingDialogProps> = ({ hearingId 
       return result;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['hearings'] });
+      queryClient.invalidateQueries({ queryKey: ['case-hearings'] });
       queryClient.invalidateQueries({ queryKey: ['case-hearings'] });
       queryClient.invalidateQueries({ queryKey: ['hearing', hearingId] });
       toast({

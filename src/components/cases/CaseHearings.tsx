@@ -29,9 +29,9 @@ export const CaseHearings: React.FC<CaseHearingsProps> = ({
       const {
         data,
         error
-      } = await supabase.from('hearings').select(`
+      } = await supabase.from('case_hearings').select(`
           *,
-          profiles!hearings_created_by_fkey(full_name)
+          profiles!case_hearings_created_by_fkey(full_name)
         `).eq('case_id', caseId).order('hearing_date', {
         ascending: true
       });

@@ -82,7 +82,7 @@ export const CreateHearingDialog: React.FC = () => {
       };
 
       const { data: result, error } = await supabase
-        .from('hearings')
+        .from('case_hearings')
         .insert(hearingData)
         .select()
         .single();
@@ -91,7 +91,7 @@ export const CreateHearingDialog: React.FC = () => {
       return result;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['hearings'] });
+      queryClient.invalidateQueries({ queryKey: ['case-hearings'] });
       queryClient.invalidateQueries({ queryKey: ['case-hearings'] });
       toast({
         title: "Success",

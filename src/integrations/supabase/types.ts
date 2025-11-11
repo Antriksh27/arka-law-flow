@@ -682,39 +682,72 @@ export type Database = {
       }
       case_hearings: {
         Row: {
+          assigned_to: string | null
+          bench: string | null
           business_on_date: string | null
           case_id: string
           cause_list_type: string | null
+          coram: string | null
+          court_name: string | null
           created_at: string | null
+          created_by: string | null
+          firm_id: string | null
           hearing_date: string | null
           hearing_time: string | null
+          hearing_type: string | null
           id: string
           judge: string | null
+          next_hearing_date: string | null
+          notes: string | null
+          outcome: string | null
           purpose_of_hearing: string | null
+          status: string | null
           updated_at: string | null
         }
         Insert: {
+          assigned_to?: string | null
+          bench?: string | null
           business_on_date?: string | null
           case_id: string
           cause_list_type?: string | null
+          coram?: string | null
+          court_name?: string | null
           created_at?: string | null
+          created_by?: string | null
+          firm_id?: string | null
           hearing_date?: string | null
           hearing_time?: string | null
+          hearing_type?: string | null
           id?: string
           judge?: string | null
+          next_hearing_date?: string | null
+          notes?: string | null
+          outcome?: string | null
           purpose_of_hearing?: string | null
+          status?: string | null
           updated_at?: string | null
         }
         Update: {
+          assigned_to?: string | null
+          bench?: string | null
           business_on_date?: string | null
           case_id?: string
           cause_list_type?: string | null
+          coram?: string | null
+          court_name?: string | null
           created_at?: string | null
+          created_by?: string | null
+          firm_id?: string | null
           hearing_date?: string | null
           hearing_time?: string | null
+          hearing_type?: string | null
           id?: string
           judge?: string | null
+          next_hearing_date?: string | null
+          notes?: string | null
+          outcome?: string | null
           purpose_of_hearing?: string | null
+          status?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -1953,74 +1986,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
-      }
-      hearings: {
-        Row: {
-          assigned_to: string | null
-          bench: string | null
-          case_id: string | null
-          coram: string | null
-          court_name: string | null
-          created_at: string | null
-          created_by: string | null
-          firm_id: string
-          hearing_date: string
-          hearing_time: string | null
-          hearing_type: string | null
-          id: string
-          next_hearing_date: string | null
-          notes: string | null
-          outcome: string | null
-          status: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          assigned_to?: string | null
-          bench?: string | null
-          case_id?: string | null
-          coram?: string | null
-          court_name?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          firm_id: string
-          hearing_date: string
-          hearing_time?: string | null
-          hearing_type?: string | null
-          id?: string
-          next_hearing_date?: string | null
-          notes?: string | null
-          outcome?: string | null
-          status?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          assigned_to?: string | null
-          bench?: string | null
-          case_id?: string | null
-          coram?: string | null
-          court_name?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          firm_id?: string
-          hearing_date?: string
-          hearing_time?: string | null
-          hearing_type?: string | null
-          id?: string
-          next_hearing_date?: string | null
-          notes?: string | null
-          outcome?: string | null
-          status?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "hearings_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "cases"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       ia_details: {
         Row: {
