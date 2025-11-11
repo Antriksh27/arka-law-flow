@@ -55,24 +55,33 @@ export function AppSidebar() {
     return location.pathname.startsWith(path);
   };
 
-  const isExpanded = navigationItems.some((item) => isActive(item.url));
-
   return (
-    <Sidebar collapsible="icon" className="border-r border-border">
-      <SidebarHeader className="border-b border-border p-4">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+    <Sidebar 
+      collapsible="icon" 
+      className="bg-white border-r border-[#E5E7EB] shadow-sm z-50"
+    >
+      <SidebarHeader className="border-b border-[#E5E7EB] p-4 bg-white">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#1E3A8A] text-white shadow-sm">
             <Gavel className="h-5 w-5" />
           </div>
-          {open && <span className="font-semibold text-lg">HRU Legal</span>}
+          {open && (
+            <span className="font-semibold text-lg text-[#111827]">
+              HRU Legal
+            </span>
+          )}
         </div>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="bg-white">
         <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          {open && (
+            <SidebarGroupLabel className="text-xs font-medium text-[#6B7280] uppercase tracking-wider px-3 py-2">
+              Navigation
+            </SidebarGroupLabel>
+          )}
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="space-y-1 px-2">
               {navigationItems.map((item) => {
                 const active = isActive(item.url);
                 return (
@@ -81,14 +90,21 @@ export function AppSidebar() {
                       asChild 
                       isActive={active}
                       tooltip={item.title}
+                      className={`
+                        flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
+                        ${active 
+                          ? 'bg-[#E0E7FF] text-[#1E3A8A] font-medium shadow-sm' 
+                          : 'text-[#111827] hover:bg-[#F9FAFB] hover:text-[#1E3A8A]'
+                        }
+                      `}
                     >
                       <NavLink 
                         to={item.url} 
                         end={item.url === "/"}
-                        className="flex items-center gap-3"
+                        className="flex items-center gap-3 w-full"
                       >
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
+                        <item.icon className="h-5 w-5 flex-shrink-0" />
+                        {open && <span className="text-sm">{item.title}</span>}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -99,9 +115,9 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-border p-4">
+      <SidebarFooter className="border-t border-[#E5E7EB] p-4 bg-white">
         {open && (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-[#6B7280]">
             © 2024 HRU Legal
           </p>
         )}
