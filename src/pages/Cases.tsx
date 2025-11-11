@@ -44,7 +44,7 @@ const Cases = () => {
           <TabsTrigger value="all" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white">
             All Cases
           </TabsTrigger>
-          <TabsTrigger value="my" className="data-[state=active]:bg-blue-700 data-[state=active]:text-white">
+          <TabsTrigger value="my" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white">
             My Cases
           </TabsTrigger>
         </TabsList>
