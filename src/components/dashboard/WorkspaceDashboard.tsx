@@ -29,16 +29,24 @@ const WorkspaceDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50 overflow-x-hidden">
       {/* Page Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-4 md:px-8 md:py-6">
+      <div className="bg-white border-b border-gray-200 px-4 py-3 md:px-8 md:py-6">
         <div className="max-w-[1800px] mx-auto w-full">
-          <div className="flex items-center justify-between mb-4">
-            <div className="min-w-0">
-              <h1 className="text-xl md:text-2xl font-semibold truncate">
-                {getGreeting()}, {userName}
-              </h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                {TimeUtils.formatDateTime(new Date(), "EEEE, MMMM d, yyyy • h:mm a")}
-              </p>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-3 md:mb-4 gap-2">
+            {/* Mobile: Single line layout */}
+            <div className="flex flex-col md:min-w-0">
+              <div className="flex items-baseline gap-2 flex-wrap">
+                <h1 className="text-lg md:text-2xl font-semibold">
+                  {getGreeting()}, {userName}
+                </h1>
+                <p className="text-xs md:text-sm text-muted-foreground">
+                  <span className="md:hidden">
+                    {TimeUtils.formatDateTime(new Date(), "MMM d • h:mm a")}
+                  </span>
+                  <span className="hidden md:inline">
+                    {TimeUtils.formatDateTime(new Date(), "EEEE, MMMM d, yyyy • h:mm a")}
+                  </span>
+                </p>
+              </div>
             </div>
           </div>
           
