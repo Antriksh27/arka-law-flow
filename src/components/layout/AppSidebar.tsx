@@ -61,15 +61,12 @@ export function AppSidebar() {
       className="bg-white border-r border-[#E5E7EB] shadow-sm z-50"
     >
       <SidebarHeader className="border-b border-[#E5E7EB] p-4 bg-white">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#1E3A8A] text-white shadow-sm">
-            <Gavel className="h-5 w-5" />
-          </div>
-          {open && (
-            <span className="font-semibold text-lg text-[#111827]">
-              HRU Legal
-            </span>
-          )}
+        <div className="flex items-center">
+          <img 
+            src="/lovable-uploads/89ea18cf-8c73-4793-9dcc-1a192855a630.png" 
+            alt="HRU Legal" 
+            className={open ? "h-12 w-auto" : "h-9 w-9 object-contain"}
+          />
         </div>
       </SidebarHeader>
 
