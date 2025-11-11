@@ -26,13 +26,15 @@ interface CasesGridProps {
   statusFilter: string;
   typeFilter: string;
   assignedFilter: string;
+  showOnlyMyCases?: boolean;
 }
 
 export const CasesGrid: React.FC<CasesGridProps> = ({
   searchQuery,
   statusFilter,
   typeFilter,
-  assignedFilter
+  assignedFilter,
+  showOnlyMyCases = false
 }) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -42,28 +44,23 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
   const pageSize = 20;
   
   const { data: queryResult, isLoading } = useQuery({
-    queryKey: ['cases', searchQuery, statusFilter, typeFilter, assignedFilter, page],
+    queryKey: ['cases', searchQuery, statusFilter, typeFilter, assignedFilter, showOnlyMyCases, page],
     queryFn: async () => {
       // Get current user info
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      // Get user's role and firm membership
-      const { data: userProfile } = await supabase
-        .from('profiles')
-        .select(`
-          role,
-          law_firm_members(role, law_firm_id)
-        `)
-        .eq('id', user.id)
-        .single();
+      // Get user's role from team_members
+      const { data: teamMember } = await supabase
+        .from('team_members')
+        .select('role, firm_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-      // Check if user is admin or lawyer (can see all firm cases)
-      const isAdminOrLawyer = userProfile?.role === 'admin' || 
-                              userProfile?.role === 'lawyer' || 
-                              userProfile?.role === 'partner' ||
-                              userProfile?.role === 'associate' ||
-                              userProfile?.role === 'junior';
+      // Check if user is admin, lawyer, or office staff (can see all firm cases)
+      const isAdminOrLawyer = teamMember?.role === 'admin' || 
+                              teamMember?.role === 'lawyer' || 
+                              teamMember?.role === 'office_staff';
 
       // Build query with count
       let query = supabase
@@ -71,8 +68,9 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
         .select('*', { count: 'exact' })
         .order('created_at', { ascending: false });
 
-      // Apply role-based filtering
-      if (!isAdminOrLawyer) {
+      // Apply role-based filtering or My Cases filter
+      if (showOnlyMyCases || !isAdminOrLawyer) {
+        // Filter to only cases assigned to current user
         query = query.or(`assigned_to.eq.${user.id},assigned_users.cs.{${user.id}}`);
       }
 

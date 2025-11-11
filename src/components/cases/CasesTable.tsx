@@ -28,12 +28,14 @@ interface CasesTableProps {
   statusFilter: string;
   typeFilter: string;
   assignedFilter: string;
+  showOnlyMyCases?: boolean;
 }
 export const CasesTable: React.FC<CasesTableProps> = ({
   searchQuery,
   statusFilter,
   typeFilter,
-  assignedFilter
+  assignedFilter,
+  showOnlyMyCases = false
 }) => {
   const navigate = useNavigate();
   const { role } = useAuth();
@@ -50,7 +52,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
     data: queryResult,
     isLoading
   } = useQuery({
-    queryKey: ['cases-table', searchQuery, statusFilter, typeFilter, assignedFilter, page, sortField, sortOrder],
+    queryKey: ['cases-table', searchQuery, statusFilter, typeFilter, assignedFilter, showOnlyMyCases, page, sortField, sortOrder],
     queryFn: async () => {
       // Get current user info
       const { data: { user } } = await supabase.auth.getUser();
@@ -70,7 +72,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
                               teamMember?.role === 'lawyer' || 
                               teamMember?.role === 'office_staff';
 
-      console.log('Fetching cases for user:', user.id, 'isAdminOrLawyer:', isAdminOrLawyer);
+      console.log('Fetching cases for user:', user.id, 'isAdminOrLawyer:', isAdminOrLawyer, 'showOnlyMyCases:', showOnlyMyCases);
       
       const startIndex = (page - 1) * pageSize;
       const endIndex = startIndex + pageSize - 1;
@@ -95,9 +97,9 @@ export const CasesTable: React.FC<CasesTableProps> = ({
       .order(sortField, { ascending: sortOrder === 'asc' })
       .range(startIndex, endIndex);
 
-      // Apply role-based filtering
-      if (!isAdminOrLawyer) {
-        // Non-admin users only see cases they're assigned to
+      // Apply role-based filtering or My Cases filter
+      if (showOnlyMyCases || !isAdminOrLawyer) {
+        // Filter to only cases assigned to current user
         query = query.or(`assigned_to.eq.${user.id},assigned_users.cs.{${user.id}}`);
       }
 
