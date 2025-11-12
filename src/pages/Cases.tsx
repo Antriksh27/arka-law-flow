@@ -168,10 +168,10 @@ const Cases = () => {
 
       <PullToRefresh onRefresh={handleRefresh}>
         <div className="max-w-7xl mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6 pb-24 sm:pb-6">
-          {/* Desktop Header */}
-          <div className="hidden sm:block">
+          {/* Desktop Header - only show on desktop */}
+          {!isMobile && (
             <CasesHeader onAddCase={() => setShowAddDialog(true)} />
-          </div>
+          )}
 
           {/* Mobile Search Bar */}
           {isMobile && (
@@ -220,6 +220,26 @@ const Cases = () => {
                 </div>
               </Card>
             ) : null
+          )}
+
+          {/* Mobile Tabs */}
+          {isMobile && (
+            <Tabs value={casesTab} onValueChange={(value) => setCasesTab(value as 'all' | 'in_court' | 'disposed' | 'my')} className="w-full">
+              <TabsList className="grid w-full grid-cols-4 bg-white rounded-2xl shadow-sm border border-gray-200 h-11">
+                <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs">
+                  All
+                </TabsTrigger>
+                <TabsTrigger value="in_court" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs">
+                  In Court
+                </TabsTrigger>
+                <TabsTrigger value="disposed" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs">
+                  Disposed
+                </TabsTrigger>
+                <TabsTrigger value="my" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs">
+                  My Cases
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
           )}
 
           {/* Desktop Tabs and Filters */}
@@ -326,11 +346,11 @@ const Cases = () => {
             </Tabs>
           )}
 
-          {/* Mobile: Always show grid view */}
+          {/* Mobile: Show grid based on active tab */}
           {isMobile && (
             <CasesGrid 
               searchQuery={searchQuery}
-              statusFilter={statusFilter}
+              statusFilter={casesTab === 'all' ? 'all' : casesTab === 'in_court' ? 'in_court' : casesTab === 'disposed' ? 'disposed' : 'all'}
               typeFilter={typeFilter}
               assignedFilter={assignedFilter}
               showOnlyMyCases={casesTab === 'my'}
