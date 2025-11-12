@@ -13,6 +13,7 @@ interface CasesFiltersProps {
   onTypeChange: (value: string) => void;
   assignedFilter: string;
   onAssignedChange: (value: string) => void;
+  statusOptions?: string[];
 }
 
 export const CasesFilters: React.FC<CasesFiltersProps> = ({
@@ -23,7 +24,8 @@ export const CasesFilters: React.FC<CasesFiltersProps> = ({
   typeFilter,
   onTypeChange,
   assignedFilter,
-  onAssignedChange
+  onAssignedChange,
+  statusOptions
 }) => {
   return (
     <div className="sticky top-16 z-30 bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-200">
@@ -44,11 +46,9 @@ export const CasesFilters: React.FC<CasesFiltersProps> = ({
           </SelectTrigger>
           <SelectContent className="bg-white z-50">
             <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="open">Open</SelectItem>
-            <SelectItem value="in_court">In Court</SelectItem>
-            <SelectItem value="disposed">Disposed</SelectItem>
-            <SelectItem value="closed">Closed</SelectItem>
-            <SelectItem value="on_hold">On Hold</SelectItem>
+            {statusOptions?.map((s) => (
+              <SelectItem key={s} value={s}>{s.replace('_', ' ')}</SelectItem>
+            ))}
           </SelectContent>
         </Select>
 

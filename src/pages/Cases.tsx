@@ -17,7 +17,7 @@ import { MobileHeader } from '@/components/mobile/MobileHeader';
 import { MobileSearchBar } from '@/components/cases/MobileSearchBar';
 import { MobileFiltersSheet } from '@/components/cases/MobileFiltersSheet';
 import { BottomNavBar } from '@/components/mobile/BottomNavBar';
-import { SegmentedControl } from '@/components/mobile/SegmentedControl';
+//
 import { BottomSheet } from '@/components/mobile/BottomSheet';
 import { PullToRefresh } from '@/components/mobile/PullToRefresh';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -42,6 +42,20 @@ const Cases = () => {
   const [showLinkClientsDialog, setShowLinkClientsDialog] = useState(false);
   const [showMobileActions, setShowMobileActions] = useState(false);
   const [showFiltersSheet, setShowFiltersSheet] = useState(false);
+  // Fetch distinct case statuses for filters (from DB)
+  const { data: statusOptions = [] } = useQuery({
+    queryKey: ['case-status-options', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('cases')
+        .select('status')
+        .not('status', 'is', null);
+      if (error) throw error;
+      const unique = Array.from(new Set((data || []).map((d: any) => d.status).filter(Boolean)));
+      return unique as string[];
+    },
+    enabled: !!user,
+  });
 
   // Fetch case stats for mobile hero section with proper logic
   const { data: caseStats, isLoading: isLoadingStats } = useQuery({
@@ -202,22 +216,17 @@ const Cases = () => {
             ) : null
           )}
 
-          {/* Mobile Segmented Filter */}
           {isMobile ? (
-            <SegmentedControl
-              segments={filterSegments}
-              value={statusFilter === 'all' && casesTab === 'all' ? 'all' : 
-                     statusFilter === 'in_court' ? 'in_court' :
-                     statusFilter === 'disposed' ? 'disposed' : 'my'}
-              onChange={(value) => {
-                if (value === 'my') {
-                  setCasesTab('my');
-                  setStatusFilter('all');
-                } else {
-                  setCasesTab('all');
-                  setStatusFilter(value);
-                }
-              }}
+            <CasesFilters
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              statusFilter={statusFilter}
+              onStatusChange={setStatusFilter}
+              typeFilter={typeFilter}
+              onTypeChange={setTypeFilter}
+              assignedFilter={assignedFilter}
+              onAssignedChange={setAssignedFilter}
+              statusOptions={statusOptions}
             />
           ) : (
             // Desktop Tabs
@@ -241,6 +250,7 @@ const Cases = () => {
                   onTypeChange={setTypeFilter}
                   assignedFilter={assignedFilter}
                   onAssignedChange={setAssignedFilter}
+                  statusOptions={statusOptions}
                 />
                 <CasesTable 
                   searchQuery={searchQuery}
@@ -261,6 +271,7 @@ const Cases = () => {
                   onTypeChange={setTypeFilter}
                   assignedFilter={assignedFilter}
                   onAssignedChange={setAssignedFilter}
+                  statusOptions={statusOptions}
                 />
                 <CasesTable 
                   searchQuery={searchQuery}

@@ -107,7 +107,9 @@ export const CasesTable: React.FC<CasesTableProps> = ({
       if (searchQuery) {
         query = query.or(`case_title.ilike.%${searchQuery}%,petitioner.ilike.%${searchQuery}%,respondent.ilike.%${searchQuery}%,case_number.ilike.%${searchQuery}%,cnr_number.ilike.%${searchQuery}%,filing_number.ilike.%${searchQuery}%,reference_number.ilike.%${searchQuery}%`);
       }
-      // Note: Status filter applied after data transformation to work with displayStatus
+      if (statusFilter !== 'all') {
+        query = query.eq('status', statusFilter as any);
+      }
       if (typeFilter !== 'all') {
         query = query.eq('case_type', typeFilter as any);
       }
@@ -122,19 +124,6 @@ export const CasesTable: React.FC<CasesTableProps> = ({
       }
       console.log('Cases query result:', { data, error, count });
       
-      // Transform the data to match the expected structure
-      const mapToLegalkartStatus = (text?: string | null) => {
-        const s = (text || '').toLowerCase();
-        if (!s) return 'in_court';
-        if (
-          s.includes('disposed') || s.includes('dismiss') || s.includes('withdraw') ||
-          s.includes('decid') || s.includes('complete') || s.includes('settled') || s.includes('close')
-        ) {
-          return 'disposed';
-        }
-        return 'in_court';
-      };
-
       const transformedData = data?.map((caseItem: any) => {
         // Prefer the case_title field; fallback to generated "Petitioner Vs Respondent"
         let displayTitle = caseItem.case_title;
@@ -145,30 +134,16 @@ export const CasesTable: React.FC<CasesTableProps> = ({
           displayTitle = `${cleanPetitioner} Vs ${cleanRespondent}`;
         }
         
-        // Determine display status: if linked to Legalkart, map to pending/disposed; otherwise show actual status
-        const isLinkedToLegalkart = caseItem.cnr_number && caseItem.last_fetched_at;
-        const displayStatus = isLinkedToLegalkart 
-          ? mapToLegalkartStatus(caseItem.status)
-          : caseItem.status || 'open';
-        
         return {
           ...caseItem,
           displayTitle,
-          displayStatus,
           client_name: caseItem.clients?.full_name
         };
       }) || [];
       
-      // Apply status filter after transformation to work with displayStatus
-      const filteredData = statusFilter !== 'all' 
-        ? transformedData.filter(c => c.displayStatus === statusFilter)
-        : transformedData;
-      
-      console.log('Transformed and filtered cases:', filteredData);
-      
       return {
-        cases: filteredData,
-        totalCount: statusFilter !== 'all' ? filteredData.length : count || 0
+        cases: transformedData,
+        totalCount: count || 0
       };
     },
     ...defaultQueryConfig,
@@ -379,8 +354,8 @@ export const CasesTable: React.FC<CasesTableProps> = ({
                 {formatCaseType(caseItem.case_type)}
               </TableCell>
               <TableCell>
-                <Badge className={`${getStatusColor(caseItem.displayStatus)} rounded-full text-xs`}>
-                  {caseItem.displayStatus?.replace('_', ' ')}
+                <Badge className={`${getStatusColor(caseItem.status)} rounded-full text-xs`}>
+                  {caseItem.status?.replace('_', ' ')}
                 </Badge>
               </TableCell>
               <TableCell>
