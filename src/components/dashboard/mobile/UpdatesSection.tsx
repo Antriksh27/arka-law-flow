@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, FileText, Newspaper, MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { format } from 'date-fns';
+import { format, isValid, parseISO } from 'date-fns';
 
 interface Document {
   id: string;
@@ -37,6 +37,21 @@ export const UpdatesSection: React.FC<UpdatesSectionProps> = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const navigate = useNavigate();
+
+  // Helper function to safely format dates
+  const formatDate = (dateString: string | undefined, formatString: string): string => {
+    if (!dateString) return 'Date unavailable';
+    
+    try {
+      const date = typeof dateString === 'string' ? parseISO(dateString) : new Date(dateString);
+      if (isValid(date)) {
+        return format(date, formatString);
+      }
+    } catch (error) {
+      console.error('Invalid date format:', dateString, error);
+    }
+    return 'Date unavailable';
+  };
 
   if (isLoading) {
     return (
@@ -90,7 +105,7 @@ export const UpdatesSection: React.FC<UpdatesSectionProps> = ({
                   >
                     <p className="text-sm font-medium text-foreground truncate mb-1">{doc.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {format(new Date(doc.uploaded_at), 'MMM d, h:mm a')}
+                      {formatDate(doc.uploaded_at, 'MMM d, h:mm a')}
                     </p>
                   </button>
                 ))}
@@ -117,7 +132,7 @@ export const UpdatesSection: React.FC<UpdatesSectionProps> = ({
                       {item.title}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {format(new Date(item.published_at), 'MMM d, yyyy')}
+                      {formatDate(item.published_at, 'MMM d, yyyy')}
                     </p>
                   </div>
                 ))}
