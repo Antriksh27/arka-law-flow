@@ -26,23 +26,23 @@ export const CasesFilters: React.FC<CasesFiltersProps> = ({
   onAssignedChange
 }) => {
   return (
-    <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-200">
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+    <div className="sticky top-16 z-30 bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-200">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 sm:w-4 sm:h-4" />
           <Input
             placeholder="Search cases by title or client..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-10 border-slate-900"
+            className="pl-10 border-slate-900 h-12 sm:h-10 text-base"
           />
         </div>
 
         <Select value={statusFilter} onValueChange={onStatusChange}>
-          <SelectTrigger className="w-32 bg-white border-slate-900">
+          <SelectTrigger className="w-full sm:w-32 bg-white border-slate-900 h-12 sm:h-10 text-base sm:text-sm">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
-          <SelectContent className="bg-white">
+          <SelectContent className="bg-white z-50">
             <SelectItem value="all">All Status</SelectItem>
             <SelectItem value="open">Open</SelectItem>
             <SelectItem value="in_court">In Court</SelectItem>
@@ -53,10 +53,10 @@ export const CasesFilters: React.FC<CasesFiltersProps> = ({
         </Select>
 
         <Select value={typeFilter} onValueChange={onTypeChange}>
-          <SelectTrigger className="w-36 bg-white border-slate-900">
+          <SelectTrigger className="w-full sm:w-36 bg-white border-slate-900 h-12 sm:h-10 text-base sm:text-sm">
             <SelectValue placeholder="Case Type" />
           </SelectTrigger>
-          <SelectContent className="bg-white">
+          <SelectContent className="bg-white z-50">
             <SelectItem value="all">All Types</SelectItem>
             <SelectItem value="civil">Civil</SelectItem>
             <SelectItem value="criminal">Criminal</SelectItem>
@@ -70,10 +70,10 @@ export const CasesFilters: React.FC<CasesFiltersProps> = ({
         </Select>
 
         <Select value={assignedFilter} onValueChange={onAssignedChange}>
-          <SelectTrigger className="w-36 bg-white border-slate-900">
+          <SelectTrigger className="w-full sm:w-36 bg-white border-slate-900 h-12 sm:h-10 text-base sm:text-sm">
             <SelectValue placeholder="Assigned To" />
           </SelectTrigger>
-          <SelectContent className="bg-white">
+          <SelectContent className="bg-white z-50">
             <SelectItem value="all">All Users</SelectItem>
             <SelectItem value="me">Assigned to Me</SelectItem>
             <SelectItem value="unassigned">Unassigned</SelectItem>

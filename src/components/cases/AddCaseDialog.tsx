@@ -16,7 +16,7 @@ export const AddCaseDialog: React.FC<AddCaseDialogProps> = ({
 }) => {
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-full h-screen p-0 bg-slate-50 m-0 rounded-none">
+      <DialogContent className="max-w-full h-screen p-0 bg-slate-50 m-0 rounded-none pt-safe pb-safe">
         <NewCaseForm 
           onSuccess={onClose}
           onCancel={onClose}

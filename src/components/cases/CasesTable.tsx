@@ -400,31 +400,23 @@ export const CasesTable: React.FC<CasesTableProps> = ({
       </Table>
       
       {totalPages > 1 && (
-        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200">
-          <div className="text-sm text-muted-foreground">
-            Page {page} of {totalPages} (Total: {totalCount} cases)
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 py-3 border-t border-gray-200">
+          <div className="text-sm text-muted-foreground text-center sm:text-left">
+            Page {page} of {totalPages} <span className="hidden sm:inline">(Total: {totalCount} cases)</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage(1)}
-              disabled={page === 1}
-              className="hidden sm:flex"
-            >
-              First
-            </Button>
+          <div className="flex items-center justify-center gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setPage(p => p - 1)}
               disabled={page === 1}
+              className="h-11 sm:h-9 px-4"
             >
-              <ChevronLeft className="h-4 w-4" />
-              <span className="hidden sm:inline ml-1">Previous</span>
+              <ChevronLeft className="h-5 w-5 sm:h-4 sm:w-4" />
+              <span className="ml-1">Prev</span>
             </Button>
             
-            <div className="flex items-center gap-1">
+            <div className="hidden sm:flex items-center gap-1">
               {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
                 let pageNum: number;
                 if (totalPages <= 5) {
@@ -443,7 +435,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
                     variant={page === pageNum ? "default" : "ghost"}
                     size="sm"
                     onClick={() => setPage(pageNum)}
-                    className="min-w-[32px]"
+                    className="min-w-[36px] h-9"
                   >
                     {pageNum}
                   </Button>
@@ -456,18 +448,10 @@ export const CasesTable: React.FC<CasesTableProps> = ({
               size="sm"
               onClick={() => setPage(p => p + 1)}
               disabled={page === totalPages}
+              className="h-11 sm:h-9 px-4"
             >
-              <span className="hidden sm:inline mr-1">Next</span>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage(totalPages)}
-              disabled={page === totalPages}
-              className="hidden sm:flex"
-            >
-              Last
+              <span className="mr-1">Next</span>
+              <ChevronRight className="h-5 w-5 sm:h-4 sm:w-4" />
             </Button>
           </div>
         </div>

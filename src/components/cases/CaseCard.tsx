@@ -82,11 +82,11 @@ export const CaseCard: React.FC<CaseCardProps> = ({ case: caseItem }) => {
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow p-6">
+    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md active:scale-[0.98] transition-all p-5 sm:p-6">
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
           <Link to={`/cases/${caseItem.id}`}>
-            <h3 className="font-semibold text-gray-900 hover:text-blue-600 cursor-pointer mb-2">
+            <h3 className="font-semibold text-lg sm:text-base text-gray-900 hover:text-blue-600 cursor-pointer mb-2 leading-tight">
               {getDisplayTitle()}
             </h3>
           </Link>
@@ -94,17 +94,17 @@ export const CaseCard: React.FC<CaseCardProps> = ({ case: caseItem }) => {
             {caseItem.description || 'No description provided'}
           </p>
         </div>
-        <Button variant="ghost" size="sm">
-          <MoreHorizontal className="w-4 h-4" />
+        <Button variant="ghost" size="sm" className="h-10 w-10 -mr-2 -mt-1">
+          <MoreHorizontal className="w-5 h-5 sm:w-4 sm:h-4" />
         </Button>
       </div>
 
       <div className="flex flex-wrap gap-2 mb-4">
-        <Badge className={`${getStatusColor(getDisplayStatus(caseItem))} rounded-full text-xs`}>
+        <Badge className={`${getStatusColor(getDisplayStatus(caseItem))} rounded-full text-xs px-3 py-1.5`}>
           {getDisplayStatus(caseItem)?.replace('_', ' ')}
         </Badge>
         {caseItem.stage && (
-          <Badge variant={getStageBadgeVariant(caseItem.stage) as any}>
+          <Badge variant={getStageBadgeVariant(caseItem.stage) as any} className="px-3 py-1.5">
             {caseItem.stage}
           </Badge>
         )}
@@ -112,15 +112,15 @@ export const CaseCard: React.FC<CaseCardProps> = ({ case: caseItem }) => {
 
       <div className="flex items-center justify-between text-sm text-gray-600">
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             <FileText className="w-4 h-4" />
             <span>0</span>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             <Calendar className="w-4 h-4" />
             <span>0</span>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             <Users className="w-4 h-4" />
             <span>0</span>
           </div>

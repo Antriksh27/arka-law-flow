@@ -9,6 +9,7 @@ import { BulkImportCasesDialog } from '../components/cases/BulkImportCasesDialog
 import { BulkImportDisposedCasesDialog } from '../components/cases/BulkImportDisposedCasesDialog';
 import { StandardizeCNRDialog } from '../components/cases/StandardizeCNRDialog';
 import { LinkClientsDialog } from '../components/cases/LinkClientsDialog';
+import { CaseMobileFAB } from '../components/cases/CaseMobileFAB';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 const Cases = () => {
@@ -34,22 +35,22 @@ const Cases = () => {
   }, [statusFilter, typeFilter, assignedFilter]);
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-6">
+    <div className="max-w-7xl mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6 pb-safe">
       <CasesHeader 
         onAddCase={() => setShowAddDialog(true)}
       />
       
       <Tabs value={casesTab} onValueChange={(value) => setCasesTab(value as 'all' | 'my')} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 bg-white rounded-2xl shadow-sm border border-gray-200 mb-6">
-          <TabsTrigger value="all" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white">
+        <TabsList className="grid w-full grid-cols-2 bg-white rounded-2xl shadow-sm border border-gray-200 mb-4 sm:mb-6 h-12 sm:h-10">
+          <TabsTrigger value="all" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-base sm:text-sm">
             All Cases
           </TabsTrigger>
-          <TabsTrigger value="my" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white">
+          <TabsTrigger value="my" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-base sm:text-sm">
             My Cases
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="all" className="space-y-6 mt-0">
+        <TabsContent value="all" className="space-y-4 sm:space-y-6 mt-0">
           <CasesFilters
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
@@ -89,7 +90,7 @@ const Cases = () => {
           )}
         </TabsContent>
 
-        <TabsContent value="my" className="space-y-6 mt-0">
+        <TabsContent value="my" className="space-y-4 sm:space-y-6 mt-0">
           <CasesFilters
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
@@ -168,6 +169,8 @@ const Cases = () => {
           console.log('Clients linked successfully');
         }}
       />
+
+      <CaseMobileFAB onClick={() => setShowAddDialog(true)} />
     </div>
   );
 };
