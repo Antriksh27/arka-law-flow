@@ -2,6 +2,7 @@ import { Home, Users, UserPlus, Briefcase, Calendar, Gavel, StickyNote, CheckSqu
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar, SidebarHeader, SidebarFooter } from "@/components/ui/sidebar";
+import { useEffect, useRef } from "react";
 const navigationItems = [{
   title: "Dashboard",
   url: "/",
@@ -53,16 +54,57 @@ const navigationItems = [{
 }];
 export function AppSidebar() {
   const {
-    open
+    open,
+    setOpen
   } = useSidebar();
   const location = useLocation();
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  const touchStartX = useRef<number>(0);
+  const touchEndX = useRef<number>(0);
+
   const isActive = (path: string) => {
     if (path === "/") {
       return location.pathname === "/";
     }
     return location.pathname.startsWith(path);
   };
+
+  // Swipe-to-close gesture handler
+  useEffect(() => {
+    const sidebar = sidebarRef.current;
+    if (!sidebar || !open) return;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartX.current = e.touches[0].clientX;
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      touchEndX.current = e.touches[0].clientX;
+    };
+
+    const handleTouchEnd = () => {
+      // Detect left-to-right swipe (swipe from left edge)
+      const swipeDistance = touchEndX.current - touchStartX.current;
+      const minSwipeDistance = 50; // Minimum swipe distance in pixels
+
+      // If swiped left (negative distance) more than threshold, close sidebar
+      if (swipeDistance < -minSwipeDistance && touchStartX.current < 280) {
+        setOpen(false);
+      }
+    };
+
+    sidebar.addEventListener('touchstart', handleTouchStart);
+    sidebar.addEventListener('touchmove', handleTouchMove);
+    sidebar.addEventListener('touchend', handleTouchEnd);
+
+    return () => {
+      sidebar.removeEventListener('touchstart', handleTouchStart);
+      sidebar.removeEventListener('touchmove', handleTouchMove);
+      sidebar.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [open, setOpen]);
   return <Sidebar 
+      ref={sidebarRef}
       collapsible="offcanvas" 
       className="bg-slate-900 border-r border-slate-700 shadow-sm z-50 sm:hidden"
       side="left"
