@@ -39,7 +39,7 @@ import { useLegalkartCaseDetails } from '@/hooks/useLegalkartCaseDetails';
 import { FetchCaseDetailsDialog } from '@/components/cases/FetchCaseDetailsDialog';
 import { CaseFAB } from '@/components/cases/detail/CaseFAB';
 import { UploadDocumentDialog } from '@/components/documents/UploadDocumentDialog';
-import { CreateHearingDialog } from '@/components/hearings/CreateHearingDialog';
+import { CreateHearingDialogWrapper } from '@/components/cases/CreateHearingDialogWrapper';
 export default function CaseDetailEnhanced() {
   const {
     id
@@ -47,7 +47,7 @@ export default function CaseDetailEnhanced() {
     id: string;
   }>();
   const isMobile = useIsMobile();
-  const [activeTab, setActiveTab] = useState('details');
+  const [activeTab, setActiveTab] = useState('overview');
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -174,51 +174,14 @@ export default function CaseDetailEnhanced() {
   const displayStatus = getDisplayStatus();
 
   // Refresh handled by useLegalkartCaseDetails.refreshCaseData
-  const tabs = [{
-    value: 'details',
-    label: 'Details',
-    icon: FileText
-  }, {
-    value: 'contacts',
-    label: 'Contacts',
-    icon: File
-  }, {
-    value: 'notes',
-    label: 'Notes',
-    icon: StickyNote
-  }, {
-    value: 'tasks',
-    label: 'Tasks',
-    icon: CheckSquare
-  }, {
-    value: 'documents',
-    label: 'Documents',
-    icon: File
-  }, {
-    value: 'expenses',
-    label: 'Expenses',
-    icon: FileText
-  }, {
-    value: 'invoices',
-    label: 'Invoices',
-    icon: FileText
-  }, {
-    value: 'payments',
-    label: 'Payments',
-    icon: FileText
-  }, {
-    value: 'timeline',
-    label: 'Timeline',
-    icon: Calendar
-  }, {
-    value: 'lawyers',
-    label: 'Lawyers',
-    icon: Users
-  }, {
-    value: 'related',
-    label: 'Related Matters',
-    icon: Scale
-  }];
+  const tabs = [
+    { value: 'overview', label: 'Overview', icon: FileText },
+    { value: 'hearings', label: 'Hearings', icon: Calendar },
+    { value: 'documents', label: 'Documents', icon: File },
+    { value: 'tasks', label: 'Tasks', icon: CheckSquare },
+    { value: 'notes', label: 'Notes', icon: StickyNote },
+    { value: 'finance', label: 'Finance', icon: DollarSign },
+  ];
   if (caseLoading || legalkartLoading) {
     return <div className="min-h-screen bg-gray-50">
       <div className="space-y-4">
@@ -414,6 +377,16 @@ export default function CaseDetailEnhanced() {
               </div>
             </Tabs>
           </div>
+
+          {/* Mobile FAB for Quick Actions */}
+          {isMobile && (
+            <CaseFAB
+              onAddNote={() => setIsNoteModalOpen(true)}
+              onAddTask={() => setIsTaskModalOpen(true)}
+              onUploadDocument={() => setIsUploadDocModalOpen(true)}
+              onCreateHearing={() => setIsCreateHearingOpen(true)}
+            />
+          )}
         </div>
       </PullToRefresh>
 
@@ -436,6 +409,22 @@ export default function CaseDetailEnhanced() {
             setIsFetchDialogOpen(false);
             refreshCaseData();
           }}
+        />
+      )}
+
+      {isUploadDocModalOpen && (
+        <UploadDocumentDialog
+          open={isUploadDocModalOpen}
+          onClose={() => setIsUploadDocModalOpen(false)}
+          caseId={id!}
+        />
+      )}
+
+      {isCreateHearingOpen && (
+        <CreateHearingDialogWrapper
+          open={isCreateHearingOpen}
+          onClose={() => setIsCreateHearingOpen(false)}
+          caseId={id!}
         />
       )}
     </>
