@@ -159,88 +159,66 @@ const Cases = () => {
           ) : (
             // Desktop Tabs
             <Tabs value={casesTab} onValueChange={(value) => setCasesTab(value as 'all' | 'my')} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 bg-white rounded-2xl shadow-sm border border-gray-200 mb-4 sm:mb-6 h-12 sm:h-10">
-                <TabsTrigger value="all" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-base sm:text-sm">
+              <TabsList className="grid w-full grid-cols-2 bg-white rounded-2xl shadow-sm border border-gray-200 mb-4 sm:mb-6 h-10">
+                <TabsTrigger value="all" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-sm">
                   All Cases
                 </TabsTrigger>
-                <TabsTrigger value="my" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-base sm:text-sm">
+                <TabsTrigger value="my" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-sm">
                   My Cases
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="all" className="space-y-4 sm:space-y-6 mt-0">
-                {!isMobile && (
-                  <CasesFilters
-                    searchQuery={searchQuery}
-                    onSearchChange={setSearchQuery}
-                    statusFilter={statusFilter}
-                    onStatusChange={setStatusFilter}
-                    typeFilter={typeFilter}
-                    onTypeChange={setTypeFilter}
-                    assignedFilter={assignedFilter}
-                    onAssignedChange={setAssignedFilter}
-                  />
-                )}
-
-                {viewMode === 'grid' || isMobile ? (
-                  <CasesGrid 
-                    searchQuery={searchQuery}
-                    statusFilter={statusFilter}
-                    typeFilter={typeFilter}
-                    assignedFilter={assignedFilter}
-                    showOnlyMyCases={false}
-                  />
-                ) : (
-                  <CasesTable 
-                    searchQuery={searchQuery}
-                    statusFilter={statusFilter}
-                    typeFilter={typeFilter}
-                    assignedFilter={assignedFilter}
-                    showOnlyMyCases={false}
-                  />
-                )}
+              <TabsContent value="all" className="space-y-6 mt-0">
+                <CasesFilters
+                  searchQuery={searchQuery}
+                  onSearchChange={setSearchQuery}
+                  statusFilter={statusFilter}
+                  onStatusChange={setStatusFilter}
+                  typeFilter={typeFilter}
+                  onTypeChange={setTypeFilter}
+                  assignedFilter={assignedFilter}
+                  onAssignedChange={setAssignedFilter}
+                />
+                <CasesTable 
+                  searchQuery={searchQuery}
+                  statusFilter={statusFilter}
+                  typeFilter={typeFilter}
+                  assignedFilter={assignedFilter}
+                  showOnlyMyCases={false}
+                />
               </TabsContent>
 
-              <TabsContent value="my" className="space-y-4 sm:space-y-6 mt-0">
-                {!isMobile && (
-                  <CasesFilters
-                    searchQuery={searchQuery}
-                    onSearchChange={setSearchQuery}
-                    statusFilter={statusFilter}
-                    onStatusChange={setStatusFilter}
-                    typeFilter={typeFilter}
-                    onTypeChange={setTypeFilter}
-                    assignedFilter={assignedFilter}
-                    onAssignedChange={setAssignedFilter}
-                  />
-                )}
-
-                {viewMode === 'grid' || isMobile ? (
-                  <CasesGrid 
-                    searchQuery={searchQuery}
-                    statusFilter={statusFilter}
-                    typeFilter={typeFilter}
-                    assignedFilter={assignedFilter}
-                    showOnlyMyCases={true}
-                  />
-                ) : (
-                  <CasesTable 
-                    searchQuery={searchQuery}
-                    statusFilter={statusFilter}
-                    typeFilter={typeFilter}
-                    assignedFilter={assignedFilter}
-                    showOnlyMyCases={true}
-                  />
-                )}
+              <TabsContent value="my" className="space-y-6 mt-0">
+                <CasesFilters
+                  searchQuery={searchQuery}
+                  onSearchChange={setSearchQuery}
+                  statusFilter={statusFilter}
+                  onStatusChange={setStatusFilter}
+                  typeFilter={typeFilter}
+                  onTypeChange={setTypeFilter}
+                  assignedFilter={assignedFilter}
+                  onAssignedChange={setAssignedFilter}
+                />
+                <CasesTable 
+                  searchQuery={searchQuery}
+                  statusFilter={statusFilter}
+                  typeFilter={typeFilter}
+                  assignedFilter={assignedFilter}
+                  showOnlyMyCases={true}
+                />
               </TabsContent>
             </Tabs>
           )}
 
-          {/* Desktop Filters (when not using tabs) */}
-          {!isMobile && casesTab === 'all' && (
-            <div className="hidden sm:block">
-              {/* Filters are already rendered inside tabs */}
-            </div>
+          {/* Mobile: Always show grid view */}
+          {isMobile && (
+            <CasesGrid 
+              searchQuery={searchQuery}
+              statusFilter={statusFilter}
+              typeFilter={typeFilter}
+              assignedFilter={assignedFilter}
+              showOnlyMyCases={casesTab === 'my'}
+            />
           )}
 
           {/* Mobile FAB with Bottom Sheet */}
