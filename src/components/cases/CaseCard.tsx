@@ -50,6 +50,22 @@ export const CaseCard: React.FC<CaseCardProps> = ({ case: caseItem }) => {
     }
   };
 
+  const getStageBadgeVariant = (stage: string | undefined) => {
+    if (!stage) return "default";
+    const stageLower = stage.toLowerCase();
+    
+    if (stageLower.includes('disposed') || stageLower.includes('decided') || stageLower.includes('completed')) {
+      return "disposed";
+    }
+    if (stageLower.includes('hearing') || stageLower.includes('listed') || stageLower.includes('returnable')) {
+      return "active";
+    }
+    if (stageLower.includes('pending') || stageLower.includes('admission') || stageLower.includes('adjourned')) {
+      return "warning";
+    }
+    return "default";
+  };
+
   // Generate proper case title display
   const getDisplayTitle = () => {
     // Prioritize the title field (actual Case Title)
@@ -87,6 +103,11 @@ export const CaseCard: React.FC<CaseCardProps> = ({ case: caseItem }) => {
         <Badge className={`${getStatusColor(getDisplayStatus(caseItem))} rounded-full text-xs`}>
           {getDisplayStatus(caseItem)?.replace('_', ' ')}
         </Badge>
+        {caseItem.stage && (
+          <Badge variant={getStageBadgeVariant(caseItem.stage) as any}>
+            {caseItem.stage}
+          </Badge>
+        )}
       </div>
 
       <div className="flex items-center justify-between text-sm text-gray-600">

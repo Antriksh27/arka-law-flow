@@ -84,6 +84,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
         respondent,
         case_type,
         status,
+        stage,
         reference_number,
         created_at,
         updated_at,
@@ -187,6 +188,22 @@ export const CasesTable: React.FC<CasesTableProps> = ({
       default:
         return 'bg-gray-100 text-gray-700 border-gray-200';
     }
+  };
+
+  const getStageBadgeVariant = (stage: string | undefined) => {
+    if (!stage) return "default";
+    const stageLower = stage.toLowerCase();
+    
+    if (stageLower.includes('disposed') || stageLower.includes('decided') || stageLower.includes('completed')) {
+      return "disposed";
+    }
+    if (stageLower.includes('hearing') || stageLower.includes('listed') || stageLower.includes('returnable')) {
+      return "active";
+    }
+    if (stageLower.includes('pending') || stageLower.includes('admission') || stageLower.includes('adjourned')) {
+      return "warning";
+    }
+    return "default";
   };
   const formatCaseType = (type: string) => {
     return type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
@@ -325,6 +342,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
               <TableHead className="bg-slate-800 text-white">Client</TableHead>
               <TableHead className="bg-slate-800 text-white">Type</TableHead>
               <TableHead className="bg-slate-800 text-white">Status</TableHead>
+              <TableHead className="bg-slate-800 text-white">Stage</TableHead>
               <TableHead
                 className="bg-slate-800 text-white cursor-pointer hover:bg-slate-700 select-none"
                 onClick={() => handleSort('created_at')}
@@ -364,6 +382,15 @@ export const CasesTable: React.FC<CasesTableProps> = ({
                 <Badge className={`${getStatusColor(caseItem.displayStatus)} rounded-full text-xs`}>
                   {caseItem.displayStatus?.replace('_', ' ')}
                 </Badge>
+              </TableCell>
+              <TableCell>
+                {caseItem.stage ? (
+                  <Badge variant={getStageBadgeVariant(caseItem.stage) as any}>
+                    {caseItem.stage}
+                  </Badge>
+                ) : (
+                  '-'
+                )}
               </TableCell>
               <TableCell>
                 {TimeUtils.formatDate(caseItem.updated_at, 'MMM d, yyyy')}

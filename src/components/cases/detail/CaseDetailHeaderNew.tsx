@@ -4,6 +4,22 @@ import { Badge } from '@/components/ui/badge';
 import { FileText, StickyNote, CheckSquare, RefreshCw } from 'lucide-react';
 import { formatDateLong } from '@/lib/caseDataFormatter';
 
+const getStageBadgeVariant = (stage: string | undefined) => {
+  if (!stage) return "default";
+  const stageLower = stage.toLowerCase();
+  
+  if (stageLower.includes('disposed') || stageLower.includes('decided') || stageLower.includes('completed')) {
+    return "disposed";
+  }
+  if (stageLower.includes('hearing') || stageLower.includes('listed') || stageLower.includes('returnable')) {
+    return "active";
+  }
+  if (stageLower.includes('pending') || stageLower.includes('admission') || stageLower.includes('adjourned')) {
+    return "warning";
+  }
+  return "default";
+};
+
 interface CaseDetailHeaderNewProps {
   caseData: any;
   onRefresh: () => void;
@@ -53,9 +69,9 @@ export const CaseDetailHeaderNew = ({
                   Next Hearing: {formatDateLong(caseData.next_hearing_date)}
                 </Badge>
               )}
-              {caseData?.stage_of_case && (
-                <Badge variant="outline">
-                  {caseData.stage_of_case}
+              {(caseData?.stage_of_case || caseData?.stage) && (
+                <Badge variant={getStageBadgeVariant(caseData.stage_of_case || caseData.stage) as any}>
+                  {caseData.stage_of_case || caseData.stage}
                 </Badge>
               )}
               {caseData?.status && (
