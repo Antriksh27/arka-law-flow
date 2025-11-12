@@ -3,7 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, FileText, Users, MoreHorizontal } from 'lucide-react';
+import { Calendar, FileText, Users, MoreHorizontal, Scale } from 'lucide-react';
 import { TimeUtils } from '@/lib/timeUtils';
 
 interface CaseCardProps {
@@ -82,53 +82,58 @@ export const CaseCard: React.FC<CaseCardProps> = ({ case: caseItem }) => {
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md active:scale-[0.98] transition-all p-5 sm:p-6">
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex-1">
-          <Link to={`/cases/${caseItem.id}`}>
-            <h3 className="font-semibold text-lg sm:text-base text-gray-900 hover:text-blue-600 cursor-pointer mb-2 leading-tight">
-              {getDisplayTitle()}
-            </h3>
-          </Link>
-          <p className="text-gray-600 text-sm line-clamp-2 mb-3">
-            {caseItem.description || 'No description provided'}
-          </p>
+    <Link to={`/cases/${caseItem.id}`} className="block">
+      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md active:scale-[0.98] transition-all p-5">
+        {/* Title Section */}
+        <div className="mb-3">
+          <h3 className="font-semibold text-base text-gray-900 mb-1.5 leading-tight line-clamp-2">
+            {getDisplayTitle()}
+          </h3>
+          {caseItem.court && (
+            <p className="text-xs text-gray-600 flex items-center gap-1.5">
+              <Scale className="w-3.5 h-3.5" />
+              {caseItem.court}
+            </p>
+          )}
         </div>
-        <Button variant="ghost" size="sm" className="h-10 w-10 -mr-2 -mt-1">
-          <MoreHorizontal className="w-5 h-5 sm:w-4 sm:h-4" />
-        </Button>
-      </div>
 
-      <div className="flex flex-wrap gap-2 mb-4">
-        <Badge className={`${getStatusColor(getDisplayStatus(caseItem))} rounded-full text-xs px-3 py-1.5`}>
-          {getDisplayStatus(caseItem)?.replace('_', ' ')}
-        </Badge>
-        {caseItem.stage && (
-          <Badge variant={getStageBadgeVariant(caseItem.stage) as any} className="px-3 py-1.5">
-            {caseItem.stage}
-          </Badge>
+        {/* Next Hearing Badge */}
+        {caseItem.next_hearing_date && (
+          <div className="mb-3 inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary rounded-full text-xs font-medium">
+            <Calendar className="w-3.5 h-3.5" />
+            Next: {TimeUtils.formatDate(caseItem.next_hearing_date, 'MMM dd, yyyy')}
+          </div>
         )}
-      </div>
 
-      <div className="flex items-center justify-between text-sm text-gray-600">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1.5">
-            <FileText className="w-4 h-4" />
-            <span>0</span>
+        {/* Status Badges */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          <Badge className={`${getStatusColor(getDisplayStatus(caseItem))} rounded-full text-xs px-3 py-1`}>
+            {getDisplayStatus(caseItem)?.replace('_', ' ')}
+          </Badge>
+          {caseItem.stage && (
+            <Badge variant={getStageBadgeVariant(caseItem.stage) as any} className="rounded-full px-3 py-1 text-xs">
+              {caseItem.stage}
+            </Badge>
+          )}
+        </div>
+
+        {/* Bottom Section */}
+        <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+          <div className="flex items-center gap-4 text-xs text-gray-500">
+            <div className="flex items-center gap-1">
+              <FileText className="w-4 h-4" />
+              <span>Docs</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Calendar className="w-4 h-4" />
+              <span>Events</span>
+            </div>
           </div>
-          <div className="flex items-center gap-1.5">
-            <Calendar className="w-4 h-4" />
-            <span>0</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Users className="w-4 h-4" />
-            <span>0</span>
+          <div className="text-xs text-gray-400">
+            {TimeUtils.formatDate(caseItem.updated_at, 'MMM d')}
           </div>
         </div>
-        <span className="text-xs">
-          {TimeUtils.formatDate(caseItem.updated_at, 'MMM d')}
-        </span>
       </div>
-    </div>
+    </Link>
   );
 };

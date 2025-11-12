@@ -77,6 +77,15 @@
   .text-muted { color: #475569; }
   .bg-soft { background-color: #DBEAFE; }
   .whitespace-block { @apply p-4 md:p-6; }
+  
+  /* Hide scrollbar but keep scrolling functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari, Opera */
+  }
 }
 
 /* Capacitor Safe Area Support */
