@@ -69,7 +69,7 @@ export const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
       <motion.nav
         ref={ref}
         className={cn(
-          "p-2 rounded-2xl bg-gradient-to-b from-background/80 to-background/40 backdrop-blur-lg border border-border/40 shadow-lg relative overflow-hidden",
+          "p-1.5 rounded-2xl bg-gradient-to-b from-background/80 to-background/40 backdrop-blur-lg border border-border/40 shadow-lg relative overflow-hidden max-w-full",
           className,
         )}
         initial="initial"
@@ -83,13 +83,13 @@ export const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
           } to-transparent rounded-3xl z-0 pointer-events-none`}
           variants={navGlowVariants}
         />
-        <ul className="flex items-center gap-2 relative z-10">
+        <ul className="flex items-center gap-0.5 relative z-10 overflow-x-auto scrollbar-hide">
           {items.map((item) => {
             const Icon = item.icon
             const isActive = item.label === activeItem
 
             return (
-              <motion.li key={item.label} className="relative">
+              <motion.li key={item.label} className="relative flex-shrink-0">
                 <button
                   onClick={() => onItemClick?.(item.label)}
                   className="block w-full"
@@ -112,7 +112,7 @@ export const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
                     />
                     <motion.div
                       className={cn(
-                        "flex items-center gap-2 px-4 py-2 relative z-10 bg-transparent transition-colors rounded-xl",
+                        "flex items-center gap-1.5 px-2.5 py-2 relative z-10 bg-transparent transition-colors rounded-xl text-sm",
                         isActive
                           ? "text-foreground"
                           : "text-muted-foreground group-hover:text-foreground",
@@ -131,13 +131,13 @@ export const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
                           `group-hover:${item.iconColor}`,
                         )}
                       >
-                        <Icon className="h-5 w-5" />
+                        <Icon className="h-4 w-4" />
                       </span>
-                      <span>{item.label}</span>
+                      <span className="whitespace-nowrap">{item.label}</span>
                     </motion.div>
                     <motion.div
                       className={cn(
-                        "flex items-center gap-2 px-4 py-2 absolute inset-0 z-10 bg-transparent transition-colors rounded-xl",
+                        "flex items-center gap-1.5 px-2.5 py-2 absolute inset-0 z-10 bg-transparent transition-colors rounded-xl text-sm",
                         isActive
                           ? "text-foreground"
                           : "text-muted-foreground group-hover:text-foreground",
@@ -157,9 +157,9 @@ export const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
                           `group-hover:${item.iconColor}`,
                         )}
                       >
-                        <Icon className="h-5 w-5" />
+                        <Icon className="h-4 w-4" />
                       </span>
-                      <span>{item.label}</span>
+                      <span className="whitespace-nowrap">{item.label}</span>
                     </motion.div>
                   </motion.div>
                 </button>
