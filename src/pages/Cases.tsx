@@ -25,7 +25,12 @@ import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SlidersHorizontal, Plus, Upload, Link as LinkIcon, CheckCircle } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { haptics } from '@/lib/haptics';
+// Haptics utility - optional for mobile
+const haptics = {
+  light: async () => { try { const { Haptics, ImpactStyle } = await import('@capacitor/haptics'); await Haptics.impact({ style: ImpactStyle.Light }); } catch (e) {} },
+  medium: async () => { try { const { Haptics, ImpactStyle } = await import('@capacitor/haptics'); await Haptics.impact({ style: ImpactStyle.Medium }); } catch (e) {} },
+  heavy: async () => { try { const { Haptics, ImpactStyle } = await import('@capacitor/haptics'); await Haptics.impact({ style: ImpactStyle.Heavy }); } catch (e) {} },
+};
 
 const Cases = () => {
   const { user } = useAuth();
@@ -118,10 +123,10 @@ const Cases = () => {
     assignedFilter !== 'all'
   ].filter(Boolean).length;
 
-  // Mobile segmented filter options
+  // Mobile segmented filter options - use valid status values
   const filterSegments = [
     { value: 'all', label: 'All' },
-    { value: 'active', label: 'Active' },
+    { value: 'open', label: 'Open' },
     { value: 'disposed', label: 'Disposed' },
     { value: 'my', label: 'My Cases' },
   ];
@@ -179,26 +184,12 @@ const Cases = () => {
               <Card className="p-4 bg-gradient-to-br from-primary/20 via-blue-100 to-accent/20 border-border shadow-md">
                 <h3 className="text-sm font-medium text-muted-foreground mb-3">Quick Overview</h3>
                 <div className="grid grid-cols-2 gap-3">
-                  <button
-                    onClick={async () => {
-                      await haptics.light();
-                      setStatusFilter('all');
-                      setCasesTab('all');
-                    }}
-                    className="flex flex-col items-center p-3 bg-white/80 rounded-xl active:scale-95 transition-transform"
-                  >
+                  <div className="flex flex-col items-center p-3 bg-white/80 rounded-xl">
                     <div className="text-2xl font-bold text-foreground">{caseStats.active}</div>
                     <div className="text-xs text-muted-foreground">Active Cases</div>
-                  </button>
+                  </div>
                   
-                  <button
-                    onClick={async () => {
-                      await haptics.light();
-                      setStatusFilter('urgent');
-                      setCasesTab('all');
-                    }}
-                    className="flex flex-col items-center p-3 bg-white/80 rounded-xl active:scale-95 transition-transform"
-                  >
+                  <div className="flex flex-col items-center p-3 bg-white/80 rounded-xl">
                     <div className="text-2xl font-bold text-destructive">{caseStats.urgent}</div>
                     {caseStats.urgent === 0 ? (
                       <div className="text-xs text-green-600 flex items-center gap-1">
@@ -206,33 +197,19 @@ const Cases = () => {
                         All clear!
                       </div>
                     ) : (
-                      <div className="text-xs text-muted-foreground">Urgent</div>
+                      <div className="text-xs text-muted-foreground">Urgent Today</div>
                     )}
-                  </button>
+                  </div>
                   
-                  <button
-                    onClick={async () => {
-                      await haptics.light();
-                      setStatusFilter('next_week');
-                      setCasesTab('all');
-                    }}
-                    className="flex flex-col items-center p-3 bg-white/80 rounded-xl active:scale-95 transition-transform"
-                  >
+                  <div className="flex flex-col items-center p-3 bg-white/80 rounded-xl">
                     <div className="text-2xl font-bold text-primary">{caseStats.nextWeek}</div>
                     <div className="text-xs text-muted-foreground">Next 7 Days</div>
-                  </button>
+                  </div>
                   
-                  <button
-                    onClick={async () => {
-                      await haptics.light();
-                      setStatusFilter('high_priority');
-                      setCasesTab('all');
-                    }}
-                    className="flex flex-col items-center p-3 bg-white/80 rounded-xl active:scale-95 transition-transform"
-                  >
+                  <div className="flex flex-col items-center p-3 bg-white/80 rounded-xl">
                     <div className="text-2xl font-bold text-amber-600">{caseStats.highPriority}</div>
                     <div className="text-xs text-muted-foreground">High Priority</div>
-                  </button>
+                  </div>
                 </div>
               </Card>
             ) : null
@@ -243,7 +220,7 @@ const Cases = () => {
             <SegmentedControl
               segments={filterSegments}
               value={statusFilter === 'all' && casesTab === 'all' ? 'all' : 
-                     statusFilter === 'active' ? 'active' :
+                     statusFilter === 'open' ? 'open' :
                      statusFilter === 'disposed' ? 'disposed' : 'my'}
               onChange={(value) => {
                 if (value === 'my') {
