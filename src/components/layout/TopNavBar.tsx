@@ -29,8 +29,8 @@ export function TopNavBar() {
   };
 
   return (
-    <nav className="hidden sm:flex h-12 bg-white border-b border-border shadow-sm">
-      <div className="flex items-center gap-1 px-4 w-full overflow-x-auto scrollbar-hide">
+    <nav className="hidden sm:flex h-12 bg-slate-900 border-b border-slate-700 shadow-sm">
+      <div className="flex items-center gap-2 px-4 w-full overflow-x-auto scrollbar-hide">
         {navigationItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.url);
@@ -42,8 +42,9 @@ export function TopNavBar() {
               end={item.url === "/"}
               className={cn(
                 "flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium transition-all whitespace-nowrap",
-                "hover:bg-accent/50",
-                active ? "text-primary bg-primary/10 border-b-2 border-primary" : "text-muted-foreground"
+                active 
+                  ? "bg-yellow-500 text-slate-900" 
+                  : "bg-slate-900 text-white hover:bg-slate-800"
               )}
               activeClassName=""
             >
