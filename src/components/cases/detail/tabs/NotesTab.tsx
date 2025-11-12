@@ -13,6 +13,7 @@ import { StickyNote, Plus, Shield, FileText, Trash2, Loader2, Share2 } from 'luc
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { TimeUtils } from '@/lib/timeUtils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface NotesTabProps {
   caseId: string;
@@ -183,6 +184,12 @@ export const NotesTab: React.FC<NotesTabProps> = ({ caseId }) => {
     return <div className="text-center py-8">Loading notes...</div>;
   }
 
+  const isMobile = useIsMobile();
+
+  // Separate pinned and regular notes
+  const pinnedNotes = notes?.filter(note => note.is_pinned) || [];
+  const regularNotes = notes?.filter(note => !note.is_pinned) || [];
+
   return (
     <div className="space-y-6">
       {/* Internal Office Notes - Visible based on role */}
@@ -328,42 +335,70 @@ export const NotesTab: React.FC<NotesTabProps> = ({ caseId }) => {
       {/* Regular Notes */}
       <div className="space-y-4">
         <div className="flex justify-between items-center">
-          <h3 className="text-xl font-semibold">Notes</h3>
+          <h3 className="text-lg font-semibold">Notes</h3>
           <Button 
             onClick={() => setShowCreateDialog(true)}
+            size={isMobile ? "sm" : "default"}
           >
             <Plus className="w-4 h-4 mr-2" />
-            Add Note
+            {isMobile ? 'Add' : 'Add Note'}
           </Button>
         </div>
 
         {notes && notes.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {notes.map((note) => (
-              <NoteCard
-                key={note.id}
-                note={note}
-                onEdit={() => setEditingNote(note)}
-                onDelete={() => {
-                  // Handle delete - this will be handled by the NoteCard component
-                }}
-                onTogglePin={() => {
-                  // Handle toggle pin - this will be handled by the NoteCard component
-                }}
-                onView={() => setViewingNote(note)}
-              />
-            ))}
+          <div className="space-y-4">
+            {/* Pinned Notes */}
+            {pinnedNotes.length > 0 && (
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+                  <span className="text-yellow-500">📌</span> Pinned
+                </h4>
+                <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'} gap-3`}>
+                  {pinnedNotes.map((note) => (
+                    <NoteCard
+                      key={note.id}
+                      note={note}
+                      onEdit={() => setEditingNote(note)}
+                      onDelete={() => {}}
+                      onTogglePin={() => {}}
+                      onView={() => setViewingNote(note)}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Regular Notes */}
+            {regularNotes.length > 0 && (
+              <div className="space-y-3">
+                {pinnedNotes.length > 0 && (
+                  <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">All Notes</h4>
+                )}
+                <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'} gap-3`}>
+                  {regularNotes.map((note) => (
+                    <NoteCard
+                      key={note.id}
+                      note={note}
+                      onEdit={() => setEditingNote(note)}
+                      onDelete={() => {}}
+                      onTogglePin={() => {}}
+                      onView={() => setViewingNote(note)}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         ) : (
-          <div className="text-center py-12 text-muted">
-            <StickyNote className="w-12 h-12 mx-auto mb-4 text-muted" />
-            <p>No notes created yet</p>
+          <div className="text-center py-12 text-muted-foreground">
+            <StickyNote className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
+            <p className="text-sm">No notes yet. Tap + to create your first note.</p>
             <Button 
               onClick={() => setShowCreateDialog(true)} 
               className="mt-4"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Create First Note
+              Create Note
             </Button>
           </div>
         )}

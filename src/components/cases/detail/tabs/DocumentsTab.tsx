@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { FileText, Upload, Download, Trash2 } from 'lucide-react';
+import { FileText, Upload, Download, Trash2, Plus } from 'lucide-react';
 import TimeUtils from '@/lib/timeUtils';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { UploadDocumentDialog } from '@/components/documents/UploadDocumentDialog';
+import { LegalkartDocumentsTable } from '@/components/cases/legalkart/LegalkartDocumentsTable';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
 interface DocumentsTabProps {
   caseId: string;
@@ -32,7 +35,8 @@ export const DocumentsTab: React.FC<DocumentsTabProps> = ({
     }
   });
   const {
-    data: legalkartDocuments
+    data: legalkartDocuments,
+    isLoading: isLoadingLegalkart
   } = useQuery({
     queryKey: ['legalkart-documents', caseId],
     queryFn: async () => {
@@ -61,17 +65,17 @@ export const DocumentsTab: React.FC<DocumentsTabProps> = ({
       toast.error('Failed to delete document');
     }
   });
-  const handleDownload = async (document: any) => {
+  const handleDownload = async (filePath: string, fileName: string) => {
     try {
       const {
         data,
         error
-      } = await supabase.storage.from('documents').download(document.file_url);
+      } = await supabase.storage.from('documents').download(filePath);
       if (error) throw error;
       const url = URL.createObjectURL(data);
       const a = document.createElement('a');
       a.href = url;
-      a.download = document.file_name;
+      a.download = fileName;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -94,64 +98,100 @@ export const DocumentsTab: React.FC<DocumentsTabProps> = ({
     toast.success('Document uploaded successfully');
     setShowUploadDialog(false);
   };
-  return <div className="space-y-6">
-      {/* Create Document Upload Form */}
-      <div className="p-4 rounded-lg bg-slate-50">
-        
-        <Button onClick={() => setShowUploadDialog(true)}>
-          <Upload className="w-4 h-4 mr-2" />
-          Upload Document
+  const isMobile = useIsMobile();
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-semibold">Documents</h3>
+        <Button onClick={() => setShowUploadDialog(true)} size={isMobile ? "sm" : "default"}>
+          <Plus className="w-4 h-4 mr-2" />
+          Upload
         </Button>
       </div>
 
-      {/* Documents List */}
-      <div className="space-y-3">
-        {isLoading ? <div className="text-center py-8">
-            <p className="text-muted-foreground">Loading documents...</p>
-          </div> : documents && documents.length > 0 ? documents.map((doc: any) => <div key={doc.id} className="flex items-start justify-between p-4 border border-border rounded-lg hover:bg-muted/30 transition-colors">
-              <div className="flex items-start gap-3 flex-1">
-                <FileText className="w-5 h-5 text-primary mt-1" />
-                <div className="flex-1">
-                  <p className="font-medium">{doc.file_name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {formatFileSize(doc.file_size)} • {doc.uploaded_at ? TimeUtils.formatDate(doc.uploaded_at, 'dd/MM/yyyy') : 'N/A'}
-                  </p>
-                  {doc.notes && <p className="text-sm text-muted-foreground mt-1">{doc.notes}</p>}
-                  <div className="text-xs text-muted-foreground mt-1">
-                    Uploaded by {doc.profiles?.full_name || 'Unknown'}
-                  </div>
-                </div>
+      {isLoading ? (
+        <div className="text-center py-8">Loading documents...</div>
+      ) : (
+        <>
+          {documents && documents.length > 0 && (
+            <div className="space-y-3">
+              <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Uploaded Documents</h4>
+              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'} gap-3`}>
+                {documents.map((doc) => (
+                  <Card key={doc.id} className="p-4 hover:shadow-md transition-shadow bg-card border-border">
+                    <div className="flex items-start gap-3">
+                      <div className="bg-primary/10 rounded-lg p-2.5">
+                        <FileText className="w-5 h-5 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate text-foreground">{doc.file_name}</p>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                          <span>{formatFileSize(doc.file_size)}</span>
+                          <span>•</span>
+                          <span>{TimeUtils.formatDate(doc.uploaded_at, 'dd MMM')}</span>
+                        </div>
+                        <div className="flex gap-2 mt-3">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDownload(doc.file_url, doc.file_name)}
+                            className="h-8 text-xs"
+                          >
+                            <Download className="w-3 h-3 mr-1" />
+                            Download
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              if (confirm('Delete this document?')) {
+                                deleteDocument.mutate(doc.id);
+                              }
+                            }}
+                            disabled={deleteDocument.isPending}
+                            className="h-8 text-xs text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
               </div>
-              <div className="flex gap-2">
-                <Button variant="ghost" size="sm" onClick={() => handleDownload(doc)}>
-                  <Download className="w-4 h-4" />
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => deleteDocument.mutate(doc.id)}>
-                  <Trash2 className="w-4 h-4 text-destructive" />
-                </Button>
+            </div>
+          )}
+
+          {isLoadingLegalkart ? (
+            <div className="text-center py-4">Loading court documents...</div>
+          ) : (
+            legalkartDocuments && legalkartDocuments.length > 0 && (
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Court Documents</h4>
+                <div className="text-sm text-muted-foreground">{legalkartDocuments.length} court documents</div>
               </div>
-            </div>) : <div className="text-center py-8">
-            <p className="text-muted-foreground">No documents yet. Upload your first document above.</p>
-          </div>}
-      </div>
+            )
+          )}
 
-      {/* Legalkart Documents */}
-      {legalkartDocuments && legalkartDocuments.length > 0 && <div>
-          <h3 className="text-lg font-semibold mb-4">Court Documents (Legalkart)</h3>
-          <div className="space-y-2">
-            {legalkartDocuments.map((doc: any) => <div key={doc.id} className="flex items-center gap-3 p-4 border border-border rounded-lg hover:bg-muted/30 transition-colors">
-                <FileText className="w-5 h-5 text-primary" />
-                <div>
-                  <p className="font-medium">{doc.document_filed || 'Court Document'}</p>
-                  <p className="text-sm text-muted-foreground">
-                    Filed: {doc.document_filed_date ? TimeUtils.formatDate(doc.document_filed_date, 'dd/MM/yyyy') : 'Date not available'}
-                  </p>
-                </div>
-              </div>)}
-          </div>
-        </div>}
+          {!isLoading && !isLoadingLegalkart && 
+           (!documents || documents.length === 0) && 
+           (!legalkartDocuments || legalkartDocuments.length === 0) && (
+            <div className="text-center py-12 text-muted-foreground">
+              <FileText className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
+              <p className="text-sm">No documents yet. Tap + to upload.</p>
+            </div>
+          )}
+        </>
+      )}
 
-      {/* Upload Document Dialog */}
-      <UploadDocumentDialog open={showUploadDialog} onClose={() => setShowUploadDialog(false)} caseId={caseId} onUploadSuccess={handleUploadSuccess} />
-    </div>;
+      {showUploadDialog && (
+        <UploadDocumentDialog
+          open={showUploadDialog}
+          onClose={handleUploadSuccess}
+          caseId={caseId}
+        />
+      )}
+    </div>
+  );
 };
