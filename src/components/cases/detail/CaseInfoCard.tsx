@@ -14,6 +14,7 @@ export const CaseInfoCard = ({ caseData }: CaseInfoCardProps) => {
   const infoItems = [
     { label: 'Reference Number', value: caseData?.reference_number },
     { label: 'By/Against', value: caseData?.by_against ? caseData.by_against.charAt(0).toUpperCase() + caseData.by_against.slice(1) : null },
+    { label: 'Stage', value: caseData?.stage },
     { label: 'Filing Number', value: caseData?.filing_number },
     { label: 'Filing Date', value: formatDateDisplay(caseData?.filing_date) },
     { label: 'Registration Number', value: caseData?.registration_number },
