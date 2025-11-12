@@ -1,38 +1,32 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar, FileText, Users, MoreHorizontal, Scale } from 'lucide-react';
 import { TimeUtils } from '@/lib/timeUtils';
-
 interface CaseCardProps {
   case: any;
 }
-
 const getDisplayStatus = (caseItem: any) => {
   // If linked to Legalkart (has CNR and has been fetched), show actual status mapped to in_court/disposed
   const isLinkedToLegalkart = caseItem.cnr_number && caseItem.last_fetched_at;
   const mapToLegalkartStatus = (text?: string | null) => {
     const s = (text || '').toLowerCase();
     if (!s) return 'in_court';
-    if (
-      s.includes('disposed') || s.includes('dismiss') || s.includes('withdraw') ||
-      s.includes('decid') || s.includes('complete') || s.includes('settled') || s.includes('close')
-    ) {
+    if (s.includes('disposed') || s.includes('dismiss') || s.includes('withdraw') || s.includes('decid') || s.includes('complete') || s.includes('settled') || s.includes('close')) {
       return 'disposed';
     }
     return 'in_court';
   };
-
   if (isLinkedToLegalkart) {
     return mapToLegalkartStatus(caseItem.status);
   }
   // Otherwise, show "open"
   return 'open';
 };
-
-export const CaseCard: React.FC<CaseCardProps> = ({ case: caseItem }) => {
+export const CaseCard: React.FC<CaseCardProps> = ({
+  case: caseItem
+}) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'open':
@@ -49,11 +43,9 @@ export const CaseCard: React.FC<CaseCardProps> = ({ case: caseItem }) => {
         return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
-
   const getStageBadgeVariant = (stage: string | undefined) => {
     if (!stage) return "default";
     const stageLower = stage.toLowerCase();
-    
     if (stageLower.includes('disposed') || stageLower.includes('decided') || stageLower.includes('completed')) {
       return "disposed";
     }
@@ -87,52 +79,42 @@ export const CaseCard: React.FC<CaseCardProps> = ({ case: caseItem }) => {
     }
     return 'Untitled Case';
   };
-
-  return (
-    <Link to={`/cases/${caseItem.id}`} className="block">
+  return <Link to={`/cases/${caseItem.id}`} className="block">
       <div className="group bg-white border border-border rounded-2xl shadow-sm hover:shadow-lg hover:border-primary/30 active:scale-[0.98] transition-all p-5 h-full">
         {/* Reference Number Badge */}
-        {caseItem.reference_number && (
-          <div className="mb-3">
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-muted text-muted-foreground">
+        {caseItem.reference_number && <div className="mb-3">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-muted text-muted-foreground text-slate-50">
               {caseItem.reference_number}
             </span>
-          </div>
-        )}
+          </div>}
 
         {/* Title Section */}
         <div className="mb-4">
           <h3 className="font-semibold text-lg text-foreground mb-2 leading-tight line-clamp-2 group-hover:text-primary transition-colors">
             {getDisplayTitle()}
           </h3>
-          {caseItem.court_name && (
-            <p className="text-sm text-muted-foreground flex items-center gap-1.5 line-clamp-1">
+          {caseItem.court_name && <p className="text-sm text-muted-foreground flex items-center gap-1.5 line-clamp-1">
               <Scale className="w-4 h-4 flex-shrink-0" />
               <span className="truncate">{caseItem.court_name}</span>
-            </p>
-          )}
+            </p>}
         </div>
 
         {/* Next Hearing Badge */}
-        {caseItem.next_hearing_date && (
-          <div className="mb-3">
+        {caseItem.next_hearing_date && <div className="mb-3">
             <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary rounded-lg text-xs font-medium">
               <Calendar className="w-3.5 h-3.5" />
               Next: {TimeUtils.formatDate(caseItem.next_hearing_date, 'MMM dd, yyyy')}
             </div>
-          </div>
-        )}
+          </div>}
 
         {/* Status Badges */}
         <div className="flex flex-wrap gap-2 mb-4">
           <Badge className={`${getStatusColor(getDisplayStatus(caseItem))} rounded-full text-xs px-3 py-1 border`}>
             {getDisplayStatus(caseItem)?.replace('_', ' ').toUpperCase()}
           </Badge>
-          {caseItem.stage && (
-            <Badge variant={getStageBadgeVariant(caseItem.stage) as any} className="rounded-full px-3 py-1 text-xs">
+          {caseItem.stage && <Badge variant={getStageBadgeVariant(caseItem.stage) as any} className="rounded-full px-3 py-1 text-xs">
               {caseItem.stage}
-            </Badge>
-          )}
+            </Badge>}
         </div>
 
         {/* Bottom Section */}
@@ -152,6 +134,5 @@ export const CaseCard: React.FC<CaseCardProps> = ({ case: caseItem }) => {
           </div>
         </div>
       </div>
-    </Link>
-  );
+    </Link>;
 };
