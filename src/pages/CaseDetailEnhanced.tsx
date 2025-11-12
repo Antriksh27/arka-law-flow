@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { RefreshCw, FileText, File, Scale, Calendar, XCircle, StickyNote, CheckSquare, Pencil, Users, MoreVertical, DollarSign } from 'lucide-react';
+import { RefreshCw, FileText, File, Scale, Calendar, XCircle, StickyNote, CheckSquare, Pencil, Users, MoreVertical } from 'lucide-react';
 import { format } from 'date-fns';
 import TimeUtils from '@/lib/timeUtils';
 import { EditCaseDialog } from '@/components/cases/EditCaseDialog';
@@ -22,12 +22,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { OverviewTab } from '@/components/cases/detail/tabs/OverviewTab';
-import { HearingsTab } from '@/components/cases/detail/tabs/HearingsTab';
+import { DetailsTab } from '@/components/cases/detail/tabs/DetailsTab';
 import { DocumentsTab } from '@/components/cases/detail/tabs/DocumentsTab';
 import { NotesTab } from '@/components/cases/detail/tabs/NotesTab';
 import { TasksTab } from '@/components/cases/detail/tabs/TasksTab';
-import { FinanceTab } from '@/components/cases/detail/tabs/FinanceTab';
+import { ContactTab } from '@/components/cases/detail/tabs/CaseContactsTab';
+import { ExpensesTab } from '@/components/cases/detail/tabs/ExpensesTab';
+import { InvoicesTab } from '@/components/cases/detail/tabs/InvoicesTab';
+import { PaymentsTab } from '@/components/cases/detail/tabs/PaymentsTab';
+import { TimelineTab } from '@/components/cases/detail/tabs/TimelineTab';
+import { RelatedMattersTab } from '@/components/cases/detail/tabs/RelatedMattersTab';
+import { LawyersTab } from '@/components/cases/detail/tabs/LawyersTab';
 import { DocumentsTable } from '@/components/cases/enhanced/DocumentsTable';
 import { OrdersTable } from '@/components/cases/enhanced/OrdersTable';
 import { HearingsTable } from '@/components/cases/enhanced/HearingsTable';
@@ -37,9 +42,6 @@ import { CreateNoteMultiModal } from '@/components/notes/CreateNoteMultiModal';
 import { CreateTaskDialog } from '@/components/tasks/CreateTaskDialog';
 import { useLegalkartCaseDetails } from '@/hooks/useLegalkartCaseDetails';
 import { FetchCaseDetailsDialog } from '@/components/cases/FetchCaseDetailsDialog';
-import { CaseFAB } from '@/components/cases/detail/CaseFAB';
-import { UploadDocumentDialog } from '@/components/documents/UploadDocumentDialog';
-import { CreateHearingDialogWrapper } from '@/components/cases/CreateHearingDialogWrapper';
 export default function CaseDetailEnhanced() {
   const {
     id
@@ -47,7 +49,7 @@ export default function CaseDetailEnhanced() {
     id: string;
   }>();
   const isMobile = useIsMobile();
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('details');
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -174,14 +176,51 @@ export default function CaseDetailEnhanced() {
   const displayStatus = getDisplayStatus();
 
   // Refresh handled by useLegalkartCaseDetails.refreshCaseData
-  const tabs = [
-    { value: 'overview', label: 'Overview', icon: FileText },
-    { value: 'hearings', label: 'Hearings', icon: Calendar },
-    { value: 'documents', label: 'Documents', icon: File },
-    { value: 'tasks', label: 'Tasks', icon: CheckSquare },
-    { value: 'notes', label: 'Notes', icon: StickyNote },
-    { value: 'finance', label: 'Finance', icon: DollarSign },
-  ];
+  const tabs = [{
+    value: 'details',
+    label: 'Details',
+    icon: FileText
+  }, {
+    value: 'contacts',
+    label: 'Contacts',
+    icon: File
+  }, {
+    value: 'notes',
+    label: 'Notes',
+    icon: StickyNote
+  }, {
+    value: 'tasks',
+    label: 'Tasks',
+    icon: CheckSquare
+  }, {
+    value: 'documents',
+    label: 'Documents',
+    icon: File
+  }, {
+    value: 'expenses',
+    label: 'Expenses',
+    icon: FileText
+  }, {
+    value: 'invoices',
+    label: 'Invoices',
+    icon: FileText
+  }, {
+    value: 'payments',
+    label: 'Payments',
+    icon: FileText
+  }, {
+    value: 'timeline',
+    label: 'Timeline',
+    icon: Calendar
+  }, {
+    value: 'lawyers',
+    label: 'Lawyers',
+    icon: Users
+  }, {
+    value: 'related',
+    label: 'Related Matters',
+    icon: Scale
+  }];
   if (caseLoading || legalkartLoading) {
     return <div className="min-h-screen bg-gray-50">
       <div className="space-y-4">
@@ -377,16 +416,6 @@ export default function CaseDetailEnhanced() {
               </div>
             </Tabs>
           </div>
-
-          {/* Mobile FAB for Quick Actions */}
-          {isMobile && (
-            <CaseFAB
-              onAddNote={() => setIsNoteModalOpen(true)}
-              onAddTask={() => setIsTaskModalOpen(true)}
-              onUploadDocument={() => setIsUploadDocModalOpen(true)}
-              onCreateHearing={() => setIsCreateHearingOpen(true)}
-            />
-          )}
         </div>
       </PullToRefresh>
 
@@ -409,22 +438,6 @@ export default function CaseDetailEnhanced() {
             setIsFetchDialogOpen(false);
             refreshCaseData();
           }}
-        />
-      )}
-
-      {isUploadDocModalOpen && (
-        <UploadDocumentDialog
-          open={isUploadDocModalOpen}
-          onClose={() => setIsUploadDocModalOpen(false)}
-          caseId={id!}
-        />
-      )}
-
-      {isCreateHearingOpen && (
-        <CreateHearingDialogWrapper
-          open={isCreateHearingOpen}
-          onClose={() => setIsCreateHearingOpen(false)}
-          caseId={id!}
         />
       )}
     </>

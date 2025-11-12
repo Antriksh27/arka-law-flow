@@ -180,11 +180,11 @@ export const NotesTab: React.FC<NotesTabProps> = ({ caseId }) => {
     addInternalNoteMutation.mutate(newInternalNote);
   };
 
-  const isMobile = useIsMobile();
-
   if (isLoading) {
     return <div className="text-center py-8">Loading notes...</div>;
   }
+
+  const isMobile = useIsMobile();
 
   // Separate pinned and regular notes
   const pinnedNotes = notes?.filter(note => note.is_pinned) || [];

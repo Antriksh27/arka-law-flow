@@ -104,11 +104,11 @@ export const TasksTab: React.FC<TasksTabProps> = ({ caseId }) => {
     }
   };
 
-  const isMobile = useIsMobile();
-
   if (isLoading) {
     return <div className="text-center py-8">Loading tasks...</div>;
   }
+
+  const isMobile = useIsMobile();
 
   // Progress calculation
   const completedTasks = tasks?.filter(t => t.status === 'completed').length || 0;
