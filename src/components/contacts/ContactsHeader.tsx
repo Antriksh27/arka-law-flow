@@ -19,7 +19,7 @@ export const ContactsHeader = ({
       <div className="flex items-center gap-3 w-full sm:w-auto">
         <Button onClick={onAddContact} className="bg-slate-800 hover:bg-slate-700 w-full sm:w-auto h-11 sm:h-10">
           <Plus className="h-5 w-5 sm:h-4 sm:w-4 mr-2" />
-          <span className="text-sm sm:text-base">New Contact</span>
+          <span className="text-sm sm:text-base text-slate-50">New Contact</span>
         </Button>
       </div>
     </div>;
