@@ -106,18 +106,18 @@ export function AppSidebar() {
   return <Sidebar 
       ref={sidebarRef}
       collapsible="offcanvas" 
-      className="bg-slate-900 border-r border-slate-700 shadow-sm z-50 sm:hidden"
+      className="bg-slate-900 border-r border-white/20 shadow-sm z-50 sm:hidden"
       side="left"
     >
-      <SidebarHeader className="border-b border-slate-700 h-16 flex items-center justify-center bg-slate-900">
+      <SidebarHeader className="border-b border-white/20 h-16 flex items-center justify-center bg-slate-900">
         <div className="flex items-center justify-center bg-slate-900">
-          <img src="/lovable-uploads/89ea18cf-8c73-4793-9dcc-1a192855a630.png" alt="HRU Legal" className={open ? "h-12 w-auto" : "h-9 w-9 object-contain"} />
+          <img src="/lovable-uploads/89ea18cf-8c73-4793-9dcc-1a192855a630.png" alt="HRU Legal" className="h-12 w-auto" />
         </div>
       </SidebarHeader>
 
       <SidebarContent className="bg-slate-900">
         <SidebarGroup>
-          {open && <SidebarGroupLabel className="text-xs font-medium text-slate-400 uppercase tracking-wider px-3 py-2">
+          {open && <SidebarGroupLabel className="text-xs font-medium text-white/70 uppercase tracking-wider px-3 py-2">
               Navigation
             </SidebarGroupLabel>}
           <SidebarGroupContent>
@@ -127,11 +127,13 @@ export function AppSidebar() {
               return <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild isActive={active} tooltip={item.title}>
                       <NavLink to={item.url} end={item.url === "/"} className={`
-                          flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 w-full text-white
-                          ${active ? 'bg-white/10 font-medium shadow-sm' : 'hover:bg-white/5'}
+                          flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 w-full border
+                          ${active 
+                            ? 'bg-yellow-500 text-slate-900 border-white font-medium shadow-[0_0_15px_rgba(234,179,8,0.5)]' 
+                            : 'bg-slate-900 text-white border-white/30 hover:bg-slate-800 hover:border-white/50'}
                         `} activeClassName="">
-                        <item.icon className="h-5 w-5 flex-shrink-0 text-white" />
-                        {open && <span className="text-sm text-white font-medium">{item.title}</span>}
+                        <item.icon className="h-5 w-5 flex-shrink-0" />
+                        {open && <span className="text-sm font-medium">{item.title}</span>}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>;
@@ -141,8 +143,8 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-slate-700 p-4 bg-slate-900">
-        {open && <p className="text-xs text-slate-400">© 2025 HRU Legal</p>}
+      <SidebarFooter className="border-t border-white/20 p-4 bg-slate-900">
+        {open && <p className="text-xs text-white/70">© 2025 HRU Legal</p>}
       </SidebarFooter>
     </Sidebar>;
 }

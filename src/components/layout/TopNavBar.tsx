@@ -29,7 +29,7 @@ export function TopNavBar() {
   };
 
   return (
-    <nav className="hidden sm:flex h-12 bg-slate-900 border-b border-slate-700 shadow-sm">
+    <nav className="hidden sm:flex h-12 bg-slate-900 border-b border-white/20 shadow-sm">
       <div className="flex items-center gap-2 px-4 w-full overflow-x-auto scrollbar-hide">
         {navigationItems.map((item) => {
           const Icon = item.icon;
@@ -41,10 +41,10 @@ export function TopNavBar() {
               to={item.url}
               end={item.url === "/"}
               className={cn(
-                "flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium transition-all whitespace-nowrap",
+                "flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium transition-all whitespace-nowrap border",
                 active 
-                  ? "bg-yellow-500 text-slate-900" 
-                  : "bg-slate-900 text-white hover:bg-slate-800"
+                  ? "bg-yellow-500 text-slate-900 border-white shadow-[0_0_15px_rgba(234,179,8,0.5)]" 
+                  : "bg-slate-900 text-white border-white/30 hover:bg-slate-800 hover:border-white/50"
               )}
               activeClassName=""
             >
