@@ -1,74 +1,123 @@
 import { Home, Users, UserPlus, Briefcase, Calendar, Gavel, StickyNote, CheckSquare, FileText, Receipt, UsersRound, MessageSquare } from "lucide-react";
-import { NavLink } from "@/components/NavLink";
-import { useLocation } from "react-router-dom";
-import { cn } from "@/lib/utils";
-const navigationItems = [{
-  title: "Dashboard",
-  url: "/",
-  icon: Home
-}, {
-  title: "Contacts",
-  url: "/contacts",
-  icon: Users
-}, {
-  title: "Clients",
-  url: "/clients",
-  icon: UserPlus
-}, {
-  title: "Cases",
-  url: "/cases",
-  icon: Briefcase
-}, {
-  title: "Appointments",
-  url: "/appointments",
-  icon: Calendar
-}, {
-  title: "Hearings",
-  url: "/hearings",
-  icon: Gavel
-}, {
-  title: "Notes",
-  url: "/notes",
-  icon: StickyNote
-}, {
-  title: "Tasks",
-  url: "/tasks",
-  icon: CheckSquare
-}, {
-  title: "Documents",
-  url: "/documents",
-  icon: FileText
-}, {
-  title: "Invoices",
-  url: "/invoices",
-  icon: Receipt
-}, {
-  title: "Team",
-  url: "/team",
-  icon: UsersRound
-}, {
-  title: "Chat",
-  url: "/chat",
-  icon: MessageSquare
-}];
+import { useLocation, useNavigate } from "react-router-dom";
+import { MenuBar } from "@/components/ui/glow-menu";
+
+const navigationItems = [
+  {
+    label: "Dashboard",
+    href: "/",
+    icon: Home,
+    gradient: "radial-gradient(circle, rgba(234,179,8,0.4) 0%, rgba(234,179,8,0.2) 50%, rgba(234,179,8,0) 100%)",
+    iconColor: "text-slate-900",
+  },
+  {
+    label: "Contacts",
+    href: "/contacts",
+    icon: Users,
+    gradient: "radial-gradient(circle, rgba(234,179,8,0.4) 0%, rgba(234,179,8,0.2) 50%, rgba(234,179,8,0) 100%)",
+    iconColor: "text-slate-900",
+  },
+  {
+    label: "Clients",
+    href: "/clients",
+    icon: UserPlus,
+    gradient: "radial-gradient(circle, rgba(234,179,8,0.4) 0%, rgba(234,179,8,0.2) 50%, rgba(234,179,8,0) 100%)",
+    iconColor: "text-slate-900",
+  },
+  {
+    label: "Cases",
+    href: "/cases",
+    icon: Briefcase,
+    gradient: "radial-gradient(circle, rgba(234,179,8,0.4) 0%, rgba(234,179,8,0.2) 50%, rgba(234,179,8,0) 100%)",
+    iconColor: "text-slate-900",
+  },
+  {
+    label: "Appointments",
+    href: "/appointments",
+    icon: Calendar,
+    gradient: "radial-gradient(circle, rgba(234,179,8,0.4) 0%, rgba(234,179,8,0.2) 50%, rgba(234,179,8,0) 100%)",
+    iconColor: "text-slate-900",
+  },
+  {
+    label: "Hearings",
+    href: "/hearings",
+    icon: Gavel,
+    gradient: "radial-gradient(circle, rgba(234,179,8,0.4) 0%, rgba(234,179,8,0.2) 50%, rgba(234,179,8,0) 100%)",
+    iconColor: "text-slate-900",
+  },
+  {
+    label: "Notes",
+    href: "/notes",
+    icon: StickyNote,
+    gradient: "radial-gradient(circle, rgba(234,179,8,0.4) 0%, rgba(234,179,8,0.2) 50%, rgba(234,179,8,0) 100%)",
+    iconColor: "text-slate-900",
+  },
+  {
+    label: "Tasks",
+    href: "/tasks",
+    icon: CheckSquare,
+    gradient: "radial-gradient(circle, rgba(234,179,8,0.4) 0%, rgba(234,179,8,0.2) 50%, rgba(234,179,8,0) 100%)",
+    iconColor: "text-slate-900",
+  },
+  {
+    label: "Documents",
+    href: "/documents",
+    icon: FileText,
+    gradient: "radial-gradient(circle, rgba(234,179,8,0.4) 0%, rgba(234,179,8,0.2) 50%, rgba(234,179,8,0) 100%)",
+    iconColor: "text-slate-900",
+  },
+  {
+    label: "Invoices",
+    href: "/invoices",
+    icon: Receipt,
+    gradient: "radial-gradient(circle, rgba(234,179,8,0.4) 0%, rgba(234,179,8,0.2) 50%, rgba(234,179,8,0) 100%)",
+    iconColor: "text-slate-900",
+  },
+  {
+    label: "Team",
+    href: "/team",
+    icon: UsersRound,
+    gradient: "radial-gradient(circle, rgba(234,179,8,0.4) 0%, rgba(234,179,8,0.2) 50%, rgba(234,179,8,0) 100%)",
+    iconColor: "text-slate-900",
+  },
+  {
+    label: "Chat",
+    href: "/chat",
+    icon: MessageSquare,
+    gradient: "radial-gradient(circle, rgba(234,179,8,0.4) 0%, rgba(234,179,8,0.2) 50%, rgba(234,179,8,0) 100%)",
+    iconColor: "text-slate-900",
+  },
+];
+
 export function TopNavBar() {
   const location = useLocation();
-  const isActive = (path: string) => {
-    if (path === "/") {
-      return location.pathname === "/";
-    }
-    return location.pathname.startsWith(path);
+  const navigate = useNavigate();
+
+  const getActiveItem = () => {
+    const currentPath = location.pathname;
+    const activeNav = navigationItems.find((item) => {
+      if (item.href === "/") {
+        return currentPath === "/";
+      }
+      return currentPath.startsWith(item.href);
+    });
+    return activeNav?.label || "Dashboard";
   };
-  return <nav className="hidden sm:flex h-12 bg-slate-900 border-b border-white/20 shadow-sm">
-      <div className="flex items-center gap-2 px-4 w-full overflow-x-auto scrollbar-hide bg-slate-50">
-        {navigationItems.map(item => {
-        const Icon = item.icon;
-        const active = isActive(item.url);
-        return <NavLink key={item.url} to={item.url} end={item.url === "/"} className={cn("flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium transition-all whitespace-nowrap border", active ? "bg-yellow-500 text-slate-900 border-white shadow-[0_0_15px_rgba(234,179,8,0.5)]" : "bg-slate-900 text-white border-white/30 hover:bg-slate-800 hover:border-white/50")} activeClassName="">
-              <Icon className="w-4 h-4 flex-shrink-0" />
-              <span className="text-slate-50">{item.title}</span>
-            </NavLink>;
-      })}
-      </div>
-    </nav>;
+
+  const handleItemClick = (label: string) => {
+    const item = navigationItems.find((nav) => nav.label === label);
+    if (item) {
+      navigate(item.href);
+    }
+  };
+
+  return (
+    <div className="hidden sm:flex h-16 bg-slate-900 border-b border-white/20 shadow-sm items-center justify-center px-4">
+      <MenuBar
+        items={navigationItems}
+        activeItem={getActiveItem()}
+        onItemClick={handleItemClick}
+      />
+    </div>
+  );
 }

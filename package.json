@@ -53,7 +53,7 @@
     "date-fns-tz": "^3.2.0",
     "docx-preview": "^0.3.6",
     "embla-carousel-react": "^8.3.0",
-    "framer-motion": "^12.12.2",
+    "framer-motion": "^12.23.24",
     "input-otp": "^1.2.4",
     "lucide-react": "^0.462.0",
     "mammoth": "^1.10.0",
