@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { motion } from "framer-motion"
+import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
 import { LucideIcon } from "lucide-react"
 
@@ -13,11 +14,10 @@ interface MenuItem {
   iconColor: string
 }
 
-interface MenuBarProps {
+interface MenuBarProps extends React.HTMLAttributes<HTMLDivElement> {
   items: MenuItem[]
   activeItem?: string
   onItemClick?: (label: string) => void
-  className?: string
 }
 
 const itemVariants = {
@@ -62,18 +62,25 @@ const sharedTransition = {
 
 export const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
   ({ className, items, activeItem, onItemClick }, ref) => {
+    const { theme } = useTheme()
+    const isDarkTheme = theme === "dark"
+
     return (
       <motion.nav
         ref={ref}
         className={cn(
-          "p-2 rounded-2xl bg-slate-900 backdrop-blur-lg border border-white/20 shadow-lg relative overflow-hidden",
+          "p-2 rounded-2xl bg-gradient-to-b from-background/80 to-background/40 backdrop-blur-lg border border-border/40 shadow-lg relative overflow-hidden",
           className,
         )}
         initial="initial"
         whileHover="hover"
       >
         <motion.div
-          className="absolute -inset-2 bg-gradient-radial from-transparent via-yellow-500/30 via-50% to-transparent rounded-3xl z-0 pointer-events-none"
+          className={`absolute -inset-2 bg-gradient-radial from-transparent ${
+            isDarkTheme
+              ? "via-blue-400/30 via-30% via-purple-400/30 via-60% via-red-400/30 via-90%"
+              : "via-blue-400/20 via-30% via-purple-400/20 via-60% via-red-400/20 via-90%"
+          } to-transparent rounded-3xl z-0 pointer-events-none`}
           variants={navGlowVariants}
         />
         <ul className="flex items-center gap-2 relative z-10">
@@ -107,8 +114,8 @@ export const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
                       className={cn(
                         "flex items-center gap-2 px-4 py-2 relative z-10 bg-transparent transition-colors rounded-xl",
                         isActive
-                          ? "text-slate-900"
-                          : "text-white group-hover:text-white",
+                          ? "text-foreground"
+                          : "text-muted-foreground group-hover:text-foreground",
                       )}
                       variants={itemVariants}
                       transition={sharedTransition}
@@ -120,7 +127,7 @@ export const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
                       <span
                         className={cn(
                           "transition-colors duration-300",
-                          isActive ? item.iconColor : "text-white",
+                          isActive ? item.iconColor : "text-foreground",
                           `group-hover:${item.iconColor}`,
                         )}
                       >
@@ -132,8 +139,8 @@ export const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
                       className={cn(
                         "flex items-center gap-2 px-4 py-2 absolute inset-0 z-10 bg-transparent transition-colors rounded-xl",
                         isActive
-                          ? "text-slate-900"
-                          : "text-white group-hover:text-white",
+                          ? "text-foreground"
+                          : "text-muted-foreground group-hover:text-foreground",
                       )}
                       variants={backVariants}
                       transition={sharedTransition}
@@ -146,13 +153,13 @@ export const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
                       <span
                         className={cn(
                           "transition-colors duration-300",
-                          isActive ? item.iconColor : "text-white",
+                          isActive ? item.iconColor : "text-foreground",
                           `group-hover:${item.iconColor}`,
                         )}
                       >
                         <Icon className="h-5 w-5" />
                       </span>
-                      <span className="text-yellow-400">{item.label}</span>
+                      <span>{item.label}</span>
                     </motion.div>
                   </motion.div>
                 </button>
