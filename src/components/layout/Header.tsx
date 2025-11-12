@@ -1,12 +1,43 @@
-import { User, LogOut } from 'lucide-react';
+import { User, LogOut, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import KnockNotificationInbox from '@/components/notifications/KnockNotificationInbox';
 import { ChatDropdown } from '@/components/messages/ChatDropdown';
+import { useSidebar } from '@/components/ui/sidebar';
+import { useIsMobile } from '@/hooks/use-mobile';
+
 const Header = () => {
   const { user, signOut } = useAuth();
-  return <div className="flex items-center justify-end gap-3 w-full">
+  const isMobile = useIsMobile();
+  const sidebar = isMobile ? useSidebar() : null;
+
+  return <div className="flex items-center justify-between gap-3 w-full">
+          {/* Mobile: Hamburger Menu */}
+          {isMobile && sidebar && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => sidebar.toggleSidebar()}
+              className="text-foreground hover:bg-accent sm:hidden"
+            >
+              <Menu className="w-5 h-5" />
+            </Button>
+          )}
+
+          {/* Desktop: Logo */}
+          {!isMobile && (
+            <div className="flex items-center">
+              <img 
+                src="/lovable-uploads/89ea18cf-8c73-4793-9dcc-1a192855a630.png" 
+                alt="HRU Legal" 
+                className="h-10 w-auto"
+              />
+            </div>
+          )}
+
+          {/* Right Side Actions */}
+          <div className="flex items-center gap-3 ml-auto">
           <ChatDropdown />
           <KnockNotificationInbox />
           
@@ -29,8 +60,9 @@ const Header = () => {
                 <LogOut className="w-4 h-4 mr-2" />
                 Sign Out
               </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
     </div>;
 };
 export default Header;

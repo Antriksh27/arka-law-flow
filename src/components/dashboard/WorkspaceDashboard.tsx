@@ -13,7 +13,6 @@ import { LegalUpdates } from './workspace/LegalUpdates';
 import { GlobalSearch } from './GlobalSearch';
 import { MyTasks } from './workspace/MyTasks';
 import { MobileHeader } from '@/components/mobile/MobileHeader';
-import { BottomNavBar } from '@/components/mobile/BottomNavBar';
 import { PullToRefresh } from '@/components/mobile/PullToRefresh';
 import { DashboardMobileFAB } from './DashboardMobileFAB';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -114,7 +113,7 @@ const WorkspaceDashboard = () => {
       )}
 
       <PullToRefresh onRefresh={handleRefresh}>
-        <div className={`bg-gray-50 overflow-x-hidden ${isMobile ? 'pb-24' : 'min-h-screen'}`}>
+        <div className="bg-gray-50 overflow-x-hidden min-h-screen">
           {/* Desktop Header */}
           {!isMobile && (
             <div className="bg-white border-b border-gray-200 px-4 py-3 md:px-8 md:py-6">
@@ -294,9 +293,6 @@ const WorkspaceDashboard = () => {
 
       {/* Mobile FAB */}
       {isMobile && <DashboardMobileFAB />}
-
-      {/* Mobile Bottom Nav */}
-      {isMobile && <BottomNavBar />}
     </>
   );
 };

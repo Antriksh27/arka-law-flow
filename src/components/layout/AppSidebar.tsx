@@ -62,7 +62,11 @@ export function AppSidebar() {
     }
     return location.pathname.startsWith(path);
   };
-  return <Sidebar collapsible="icon" className="bg-slate-900 border-r border-slate-700 shadow-sm z-50">
+  return <Sidebar 
+      collapsible="offcanvas" 
+      className="bg-slate-900 border-r border-slate-700 shadow-sm z-50 sm:hidden"
+      side="left"
+    >
       <SidebarHeader className="border-b border-slate-700 h-16 flex items-center justify-center bg-slate-900">
         <div className="flex items-center justify-center bg-slate-900">
           <img src="/lovable-uploads/89ea18cf-8c73-4793-9dcc-1a192855a630.png" alt="HRU Legal" className={open ? "h-12 w-auto" : "h-9 w-9 object-contain"} />
