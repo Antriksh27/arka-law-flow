@@ -98,8 +98,8 @@ export const CasesTable: React.FC<CasesTableProps> = ({
       .order(sortField, { ascending: sortOrder === 'asc' })
       .range(startIndex, endIndex);
 
-      // Apply role-based filtering or My Cases filter
-      if (showOnlyMyCases || !isAdminOrLawyer) {
+      // Apply "My Cases" filter only when explicitly requested
+      if (showOnlyMyCases) {
         // Filter to only cases assigned to current user
         query = query.or(`assigned_to.eq.${user.id},assigned_users.cs.{${user.id}}`);
       }
