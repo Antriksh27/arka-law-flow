@@ -85,7 +85,7 @@ export const PinnedNotes = ({
               <Plus className="w-4 h-4 mr-2" />
               Create your first note
             </Button>
-          </Card> : <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+          </Card> : <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
             {notes.slice(0, 4).map((note, index) => <Card key={note.id} className={`p-3 md:p-4 border-2 ${getNoteColor(index)} relative group cursor-pointer hover:shadow-md transition-shadow`}>
                 <button onClick={() => setNoteToDelete(note.id)} className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <X className="w-3 h-3 md:w-4 md:h-4 text-muted-foreground hover:text-foreground" />
