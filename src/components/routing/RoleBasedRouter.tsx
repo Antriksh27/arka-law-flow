@@ -11,7 +11,7 @@ import NotFound from '@/pages/NotFound';
 
 // Lazy load heavy pages
 const Contacts = lazy(() => import('@/pages/Contacts'));
-const Cases = lazy(() => import('@/pages/Cases'));
+import Cases from '@/pages/Cases';
 const CaseDetailEnhanced = lazy(() => import('@/pages/CaseDetailEnhanced'));
 const Clients = lazy(() => import('@/pages/Clients'));
 const ClientInfo = lazy(() => import('@/pages/ClientInfo'));
