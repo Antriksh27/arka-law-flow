@@ -25,13 +25,6 @@ import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SlidersHorizontal, Plus, Upload, Link as LinkIcon, CheckCircle } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
-// Haptics utility - optional for mobile
-const haptics = {
-  light: async () => { try { const { Haptics, ImpactStyle } = await import('@capacitor/haptics'); await Haptics.impact({ style: ImpactStyle.Light }); } catch (e) {} },
-  medium: async () => { try { const { Haptics, ImpactStyle } = await import('@capacitor/haptics'); await Haptics.impact({ style: ImpactStyle.Medium }); } catch (e) {} },
-  heavy: async () => { try { const { Haptics, ImpactStyle } = await import('@capacitor/haptics'); await Haptics.impact({ style: ImpactStyle.Heavy }); } catch (e) {} },
-};
-
 const Cases = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -139,10 +132,7 @@ const Cases = () => {
           title="Cases"
           actions={
             <button
-              onClick={() => {
-                haptics.light();
-                setShowFiltersSheet(true);
-              }}
+              onClick={() => setShowFiltersSheet(true)}
               className="p-2 rounded-lg active:scale-95 transition-transform relative"
             >
               <SlidersHorizontal className="w-5 h-5" />
@@ -168,10 +158,7 @@ const Cases = () => {
             <MobileSearchBar
               value={searchQuery}
               onChange={setSearchQuery}
-              onFilterClick={() => {
-                haptics.light();
-                setShowFiltersSheet(true);
-              }}
+              onFilterClick={() => setShowFiltersSheet(true)}
               activeFiltersCount={activeFiltersCount}
             />
           )}
@@ -300,10 +287,7 @@ const Cases = () => {
           {/* Mobile FAB with Bottom Sheet - Only on Mobile */}
           {isMobile && (
             <>
-              <CaseMobileFAB onClick={() => {
-                haptics.medium();
-                setShowMobileActions(true);
-              }} />
+              <CaseMobileFAB onClick={() => setShowMobileActions(true)} />
               <BottomSheet
                 open={showMobileActions}
                 onClose={() => setShowMobileActions(false)}
@@ -311,8 +295,7 @@ const Cases = () => {
               >
                 <div className="space-y-3 pb-6">
                   <button
-                    onClick={async () => {
-                      await haptics.light();
+                    onClick={() => {
                       setShowMobileActions(false);
                       setShowAddDialog(true);
                     }}
@@ -322,8 +305,7 @@ const Cases = () => {
                     <span className="font-medium">Add New Case</span>
                   </button>
                   <button
-                    onClick={async () => {
-                      await haptics.light();
+                    onClick={() => {
                       setShowMobileActions(false);
                       setShowBulkImportDialog(true);
                     }}
@@ -333,8 +315,7 @@ const Cases = () => {
                     <span className="font-medium">Import Cases</span>
                   </button>
                   <button
-                    onClick={async () => {
-                      await haptics.light();
+                    onClick={() => {
                       setShowMobileActions(false);
                       setShowLinkClientsDialog(true);
                     }}
@@ -406,7 +387,6 @@ const Cases = () => {
             setStatusFilter('all');
             setTypeFilter('all');
             setAssignedFilter('all');
-            haptics.light();
           }}
         />
       )}
