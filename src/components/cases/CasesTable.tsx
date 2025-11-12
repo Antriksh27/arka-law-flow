@@ -50,7 +50,9 @@ export const CasesTable: React.FC<CasesTableProps> = ({
   
   const {
     data: queryResult,
-    isLoading
+    isLoading,
+    isError,
+    error
   } = useQuery({
     queryKey: ['cases-table', searchQuery, statusFilter, typeFilter, assignedFilter, showOnlyMyCases, page, sortField, sortOrder],
     queryFn: async () => {
@@ -98,10 +100,24 @@ export const CasesTable: React.FC<CasesTableProps> = ({
       .order(sortField, { ascending: sortOrder === 'asc' })
       .range(startIndex, endIndex);
 
+      // Add firm scoping
+      if (teamMember?.firm_id) {
+        query = query.eq('firm_id', teamMember.firm_id);
+      }
+
       // Apply "My Cases" filter only when explicitly requested
       if (showOnlyMyCases) {
         // Filter to only cases assigned to current user
         query = query.or(`assigned_to.eq.${user.id},assigned_users.cs.{${user.id}}`);
+      }
+
+      // Apply assigned filter (for dropdown)
+      if (assignedFilter === 'me') {
+        query = query.eq('assigned_to', user.id);
+      } else if (assignedFilter === 'unassigned') {
+        query = query.is('assigned_to', null);
+      } else if (assignedFilter !== 'all') {
+        query = query.eq('assigned_to', assignedFilter);
       }
 
       if (searchQuery) {
@@ -263,6 +279,18 @@ export const CasesTable: React.FC<CasesTableProps> = ({
 
   if (isLoading) {
     return <div className="text-center py-8">Loading cases...</div>;
+  }
+
+  if (isError) {
+    return (
+      <div className="text-center py-8 space-y-4">
+        <div className="text-red-600 font-medium">Couldn't load cases</div>
+        <div className="text-sm text-muted-foreground">{(error as any)?.message || 'Unknown error'}</div>
+        <Button onClick={() => queryClient.invalidateQueries({ queryKey: ['cases-table'] })}>
+          Retry
+        </Button>
+      </div>
+    );
   }
 
   const totalPages = Math.ceil(totalCount / pageSize);

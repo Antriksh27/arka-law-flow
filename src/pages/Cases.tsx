@@ -26,7 +26,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { SlidersHorizontal, Plus, Upload, Link as LinkIcon, CheckCircle } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 const Cases = () => {
-  const { user } = useAuth();
+  const { user, firmId } = useAuth();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
@@ -44,17 +44,23 @@ const Cases = () => {
   const [showFiltersSheet, setShowFiltersSheet] = useState(false);
   // Fetch distinct case statuses for filters (from DB)
   const { data: statusOptions = [] } = useQuery({
-    queryKey: ['case-status-options', user?.id],
+    queryKey: ['case-status-options', user?.id, firmId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('cases')
         .select('status')
         .not('status', 'is', null);
+      
+      if (firmId) {
+        query = query.eq('firm_id', firmId);
+      }
+      
+      const { data, error } = await query;
       if (error) throw error;
       const unique = Array.from(new Set((data || []).map((d: any) => d.status).filter(Boolean)));
       return unique as string[];
     },
-    enabled: !!user,
+    enabled: !!user && !!firmId,
   });
 
   // Fetch case stats for mobile hero section with proper logic

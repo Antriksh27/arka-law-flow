@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { defaultQueryConfig } from '@/lib/queryConfig';
 import { CaseCard } from './CaseCard';
 import { SkeletonGrid } from '@/components/ui/skeleton-list';
@@ -36,6 +37,7 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
   assignedFilter,
   showOnlyMyCases = false
 }) => {
+  const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedCases, setSelectedCases] = useState<Set<string>>(new Set());
@@ -43,7 +45,7 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
   const [page, setPage] = useState(1);
   const pageSize = 20;
   
-  const { data: queryResult, isLoading } = useQuery({
+  const { data: queryResult, isLoading, isError, error } = useQuery({
     queryKey: ['cases', searchQuery, statusFilter, typeFilter, assignedFilter, showOnlyMyCases, page],
     queryFn: async () => {
       // Get current user info
@@ -66,16 +68,28 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
       let query = supabase
         .from('cases')
         .select(`
-          *,
-          documents(count),
-          hearings(count)
+          *
         `, { count: 'exact' })
         .order('created_at', { ascending: false });
+
+      // Add firm scoping
+      if (teamMember?.firm_id) {
+        query = query.eq('firm_id', teamMember.firm_id);
+      }
 
       // Apply "My Cases" filter only when explicitly requested
       if (showOnlyMyCases) {
         // Filter to only cases assigned to current user
         query = query.or(`assigned_to.eq.${user.id},assigned_users.cs.{${user.id}}`);
+      }
+
+      // Apply assigned filter (for dropdown)
+      if (assignedFilter === 'me') {
+        query = query.eq('assigned_to', user.id);
+      } else if (assignedFilter === 'unassigned') {
+        query = query.is('assigned_to', null);
+      } else if (assignedFilter !== 'all') {
+        query = query.eq('assigned_to', assignedFilter);
       }
 
       // Apply search filter
@@ -91,11 +105,6 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
       // Apply type filter
       if (typeFilter !== 'all') {
         query = query.eq('case_type', typeFilter as any);
-      }
-
-      // Apply assigned filter
-      if (assignedFilter !== 'all') {
-        query = query.eq('assigned_to', assignedFilter);
       }
 
       // Apply pagination at DB level
@@ -177,6 +186,18 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
         {[...Array(6)].map((_, i) => (
           <Skeleton key={i} className="h-56 sm:h-48 rounded-2xl" />
         ))}
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="text-center py-12 space-y-4">
+        <div className="text-red-600 font-medium">Couldn't load cases</div>
+        <div className="text-sm text-muted-foreground">{(error as any)?.message || 'Unknown error'}</div>
+        <Button onClick={() => queryClient.invalidateQueries({ queryKey: ['cases'] })}>
+          Retry
+        </Button>
       </div>
     );
   }
