@@ -62,10 +62,14 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
                               teamMember?.role === 'lawyer' || 
                               teamMember?.role === 'office_staff';
 
-      // Build query with count
+      // Build query with count and related data
       let query = supabase
         .from('cases')
-        .select('*', { count: 'exact' })
+        .select(`
+          *,
+          documents(count),
+          hearings(count)
+        `, { count: 'exact' })
         .order('created_at', { ascending: false });
 
       // Apply role-based filtering or My Cases filter

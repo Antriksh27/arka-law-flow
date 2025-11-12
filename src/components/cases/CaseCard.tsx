@@ -122,11 +122,11 @@ export const CaseCard: React.FC<CaseCardProps> = ({ case: caseItem }) => {
           <div className="flex items-center gap-4 text-xs text-gray-500">
             <div className="flex items-center gap-1">
               <FileText className="w-4 h-4" />
-              <span>Docs</span>
+              <span>{caseItem.documents?.[0]?.count || 0}</span>
             </div>
             <div className="flex items-center gap-1">
               <Calendar className="w-4 h-4" />
-              <span>Events</span>
+              <span>{caseItem.hearings?.[0]?.count || 0}</span>
             </div>
           </div>
           <div className="text-xs text-gray-400">

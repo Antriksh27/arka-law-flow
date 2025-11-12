@@ -11,6 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@capacitor/haptics": "^7.0.2",
     "@cometchat/chat-sdk-javascript": "^4.1.2",
     "@cometchat/chat-uikit-react": "^6.3.1",
     "@hookform/resolvers": "^3.9.0",

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { CasesHeader } from '../components/cases/CasesHeader';
@@ -14,17 +14,22 @@ import { StandardizeCNRDialog } from '../components/cases/StandardizeCNRDialog';
 import { LinkClientsDialog } from '../components/cases/LinkClientsDialog';
 import { CaseMobileFAB } from '../components/cases/CaseMobileFAB';
 import { MobileHeader } from '@/components/mobile/MobileHeader';
+import { MobileSearchBar } from '@/components/cases/MobileSearchBar';
+import { MobileFiltersSheet } from '@/components/cases/MobileFiltersSheet';
 import { BottomNavBar } from '@/components/mobile/BottomNavBar';
 import { SegmentedControl } from '@/components/mobile/SegmentedControl';
 import { BottomSheet } from '@/components/mobile/BottomSheet';
 import { PullToRefresh } from '@/components/mobile/PullToRefresh';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Search, Plus, Upload, Link as LinkIcon } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { SlidersHorizontal, Plus, Upload, Link as LinkIcon, CheckCircle } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { haptics } from '@/lib/haptics';
 
 const Cases = () => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
   const [searchQuery, setSearchQuery] = useState('');
@@ -38,33 +43,54 @@ const Cases = () => {
   const [showStandardizeCNRDialog, setShowStandardizeCNRDialog] = useState(false);
   const [showLinkClientsDialog, setShowLinkClientsDialog] = useState(false);
   const [showMobileActions, setShowMobileActions] = useState(false);
+  const [showFiltersSheet, setShowFiltersSheet] = useState(false);
 
-  // Fetch case stats for mobile hero section
-  const { data: caseStats } = useQuery({
+  // Fetch case stats for mobile hero section with proper logic
+  const { data: caseStats, isLoading: isLoadingStats } = useQuery({
     queryKey: ['case-stats', user?.id],
     queryFn: async () => {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const endOfToday = new Date(today);
+      endOfToday.setHours(23, 59, 59, 999);
+      const next7Days = new Date(now);
+      next7Days.setDate(next7Days.getDate() + 7);
+      const thirtyDaysAgo = new Date(now);
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      // Active cases (all non-disposed)
       const { count: activeCount } = await supabase
         .from('cases')
         .select('*', { count: 'exact', head: true })
         .neq('status', 'disposed');
       
-      const { count: overdueCount } = await supabase
+      // Urgent: Hearings today or overdue (within last 30 days)
+      const { count: urgentCount } = await supabase
         .from('cases')
         .select('*', { count: 'exact', head: true })
-        .lt('next_hearing_date', new Date().toISOString())
+        .lte('next_hearing_date', endOfToday.toISOString())
+        .gte('next_hearing_date', thirtyDaysAgo.toISOString())
         .neq('status', 'disposed');
 
-      const startOfWeek = new Date();
-      startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
-      const { count: thisWeekCount } = await supabase
+      // Next 7 days: Hearings in next week
+      const { count: nextWeekCount } = await supabase
         .from('cases')
         .select('*', { count: 'exact', head: true })
-        .gte('next_hearing_date', startOfWeek.toISOString());
+        .gte('next_hearing_date', now.toISOString())
+        .lte('next_hearing_date', next7Days.toISOString());
+
+      // High Priority cases
+      const { count: highPriorityCount } = await supabase
+        .from('cases')
+        .select('*', { count: 'exact', head: true })
+        .eq('priority', 'high')
+        .neq('status', 'disposed');
 
       return {
         active: activeCount || 0,
-        overdue: overdueCount || 0,
-        thisWeek: thisWeekCount || 0,
+        urgent: urgentCount || 0,
+        nextWeek: nextWeekCount || 0,
+        highPriority: highPriorityCount || 0,
       };
     },
     enabled: !!user && isMobile,
@@ -80,9 +106,17 @@ const Cases = () => {
   }, [statusFilter, typeFilter, assignedFilter]);
 
   const handleRefresh = async () => {
-    // Placeholder for refresh logic
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['cases'] }),
+      queryClient.invalidateQueries({ queryKey: ['case-stats', user?.id] }),
+    ]);
   };
+
+  const activeFiltersCount = [
+    statusFilter !== 'all',
+    typeFilter !== 'all',
+    assignedFilter !== 'all'
+  ].filter(Boolean).length;
 
   // Mobile segmented filter options
   const filterSegments = [
@@ -100,10 +134,18 @@ const Cases = () => {
           title="Cases"
           actions={
             <button
-              onClick={() => setShowAddDialog(true)}
-              className="p-2 rounded-lg active:scale-95 transition-transform"
+              onClick={() => {
+                haptics.light();
+                setShowFiltersSheet(true);
+              }}
+              className="p-2 rounded-lg active:scale-95 transition-transform relative"
             >
-              <Search className="w-5 h-5" />
+              <SlidersHorizontal className="w-5 h-5" />
+              {activeFiltersCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-white text-xs rounded-full flex items-center justify-center">
+                  {activeFiltersCount}
+                </span>
+              )}
             </button>
           }
         />
@@ -116,27 +158,84 @@ const Cases = () => {
             <CasesHeader onAddCase={() => setShowAddDialog(true)} />
           </div>
 
+          {/* Mobile Search Bar */}
+          {isMobile && (
+            <MobileSearchBar
+              value={searchQuery}
+              onChange={setSearchQuery}
+              onFilterClick={() => {
+                haptics.light();
+                setShowFiltersSheet(true);
+              }}
+              activeFiltersCount={activeFiltersCount}
+            />
+          )}
+
           {/* Mobile Hero Stats Card */}
-          {isMobile && caseStats && (
-            <Card className="p-4 bg-gradient-to-br from-primary/10 via-accent/10 to-secondary/20 border-border">
-              <h3 className="text-sm font-medium text-muted-foreground mb-3">Quick Stats</h3>
-              <div className="flex justify-between gap-3">
-                <div className="flex-1 text-center">
-                  <div className="text-2xl font-bold text-foreground">{caseStats.active}</div>
-                  <div className="text-xs text-muted-foreground">Active</div>
+          {isMobile && (
+            isLoadingStats ? (
+              <Skeleton className="h-32 rounded-2xl" />
+            ) : caseStats ? (
+              <Card className="p-4 bg-gradient-to-br from-primary/20 via-blue-100 to-accent/20 border-border shadow-md">
+                <h3 className="text-sm font-medium text-muted-foreground mb-3">Quick Overview</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={async () => {
+                      await haptics.light();
+                      setStatusFilter('all');
+                      setCasesTab('all');
+                    }}
+                    className="flex flex-col items-center p-3 bg-white/80 rounded-xl active:scale-95 transition-transform"
+                  >
+                    <div className="text-2xl font-bold text-foreground">{caseStats.active}</div>
+                    <div className="text-xs text-muted-foreground">Active Cases</div>
+                  </button>
+                  
+                  <button
+                    onClick={async () => {
+                      await haptics.light();
+                      setStatusFilter('urgent');
+                      setCasesTab('all');
+                    }}
+                    className="flex flex-col items-center p-3 bg-white/80 rounded-xl active:scale-95 transition-transform"
+                  >
+                    <div className="text-2xl font-bold text-destructive">{caseStats.urgent}</div>
+                    {caseStats.urgent === 0 ? (
+                      <div className="text-xs text-green-600 flex items-center gap-1">
+                        <CheckCircle className="w-3 h-3" />
+                        All clear!
+                      </div>
+                    ) : (
+                      <div className="text-xs text-muted-foreground">Urgent</div>
+                    )}
+                  </button>
+                  
+                  <button
+                    onClick={async () => {
+                      await haptics.light();
+                      setStatusFilter('next_week');
+                      setCasesTab('all');
+                    }}
+                    className="flex flex-col items-center p-3 bg-white/80 rounded-xl active:scale-95 transition-transform"
+                  >
+                    <div className="text-2xl font-bold text-primary">{caseStats.nextWeek}</div>
+                    <div className="text-xs text-muted-foreground">Next 7 Days</div>
+                  </button>
+                  
+                  <button
+                    onClick={async () => {
+                      await haptics.light();
+                      setStatusFilter('high_priority');
+                      setCasesTab('all');
+                    }}
+                    className="flex flex-col items-center p-3 bg-white/80 rounded-xl active:scale-95 transition-transform"
+                  >
+                    <div className="text-2xl font-bold text-amber-600">{caseStats.highPriority}</div>
+                    <div className="text-xs text-muted-foreground">High Priority</div>
+                  </button>
                 </div>
-                <div className="w-px bg-border" />
-                <div className="flex-1 text-center">
-                  <div className="text-2xl font-bold text-destructive">{caseStats.overdue}</div>
-                  <div className="text-xs text-muted-foreground">Overdue</div>
-                </div>
-                <div className="w-px bg-border" />
-                <div className="flex-1 text-center">
-                  <div className="text-2xl font-bold text-primary">{caseStats.thisWeek}</div>
-                  <div className="text-xs text-muted-foreground">This Week</div>
-                </div>
-              </div>
-            </Card>
+              </Card>
+            ) : null
           )}
 
           {/* Mobile Segmented Filter */}
@@ -221,10 +320,13 @@ const Cases = () => {
             />
           )}
 
-          {/* Mobile FAB with Bottom Sheet */}
-          {isMobile ? (
+          {/* Mobile FAB with Bottom Sheet - Only on Mobile */}
+          {isMobile && (
             <>
-              <CaseMobileFAB onClick={() => setShowMobileActions(true)} />
+              <CaseMobileFAB onClick={() => {
+                haptics.medium();
+                setShowMobileActions(true);
+              }} />
               <BottomSheet
                 open={showMobileActions}
                 onClose={() => setShowMobileActions(false)}
@@ -232,7 +334,8 @@ const Cases = () => {
               >
                 <div className="space-y-3 pb-6">
                   <button
-                    onClick={() => {
+                    onClick={async () => {
+                      await haptics.light();
                       setShowMobileActions(false);
                       setShowAddDialog(true);
                     }}
@@ -242,7 +345,8 @@ const Cases = () => {
                     <span className="font-medium">Add New Case</span>
                   </button>
                   <button
-                    onClick={() => {
+                    onClick={async () => {
+                      await haptics.light();
                       setShowMobileActions(false);
                       setShowBulkImportDialog(true);
                     }}
@@ -252,7 +356,8 @@ const Cases = () => {
                     <span className="font-medium">Import Cases</span>
                   </button>
                   <button
-                    onClick={() => {
+                    onClick={async () => {
+                      await haptics.light();
                       setShowMobileActions(false);
                       setShowLinkClientsDialog(true);
                     }}
@@ -264,8 +369,6 @@ const Cases = () => {
                 </div>
               </BottomSheet>
             </>
-          ) : (
-            <CaseMobileFAB onClick={() => setShowAddDialog(true)} />
           )}
         </div>
       </PullToRefresh>
@@ -310,6 +413,26 @@ const Cases = () => {
           console.log('Clients linked successfully');
         }}
       />
+
+      {/* Mobile Filters Bottom Sheet */}
+      {isMobile && (
+        <MobileFiltersSheet
+          open={showFiltersSheet}
+          onClose={() => setShowFiltersSheet(false)}
+          statusFilter={statusFilter}
+          onStatusChange={setStatusFilter}
+          typeFilter={typeFilter}
+          onTypeChange={setTypeFilter}
+          assignedFilter={assignedFilter}
+          onAssignedChange={setAssignedFilter}
+          onClearFilters={() => {
+            setStatusFilter('all');
+            setTypeFilter('all');
+            setAssignedFilter('all');
+            haptics.light();
+          }}
+        />
+      )}
     </>
   );
 };
