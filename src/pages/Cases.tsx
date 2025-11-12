@@ -119,7 +119,7 @@ const Cases = () => {
   // Mobile segmented filter options - use valid status values
   const filterSegments = [
     { value: 'all', label: 'All' },
-    { value: 'open', label: 'Open' },
+    { value: 'in_court', label: 'In Court' },
     { value: 'disposed', label: 'Disposed' },
     { value: 'my', label: 'My Cases' },
   ];
@@ -207,7 +207,7 @@ const Cases = () => {
             <SegmentedControl
               segments={filterSegments}
               value={statusFilter === 'all' && casesTab === 'all' ? 'all' : 
-                     statusFilter === 'open' ? 'open' :
+                     statusFilter === 'in_court' ? 'in_court' :
                      statusFilter === 'disposed' ? 'disposed' : 'my'}
               onChange={(value) => {
                 if (value === 'my') {
