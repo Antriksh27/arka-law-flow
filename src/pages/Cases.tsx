@@ -222,20 +222,8 @@ const Cases = () => {
             ) : null
           )}
 
-          {isMobile ? (
-            <CasesFilters
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-              statusFilter={statusFilter}
-              onStatusChange={setStatusFilter}
-              typeFilter={typeFilter}
-              onTypeChange={setTypeFilter}
-              assignedFilter={assignedFilter}
-              onAssignedChange={setAssignedFilter}
-              statusOptions={statusOptions}
-            />
-          ) : (
-            // Desktop Tabs
+          {/* Desktop Tabs and Filters */}
+          {!isMobile && (
             <Tabs value={casesTab} onValueChange={(value) => setCasesTab(value as 'all' | 'my')} className="w-full">
               <TabsList className="grid w-full grid-cols-2 bg-white rounded-2xl shadow-sm border border-gray-200 mb-4 sm:mb-6 h-10">
                 <TabsTrigger value="all" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-sm">

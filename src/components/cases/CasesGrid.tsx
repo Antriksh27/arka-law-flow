@@ -9,6 +9,7 @@ import { SkeletonGrid } from '@/components/ui/skeleton-list';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,6 +41,7 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   const [selectedCases, setSelectedCases] = useState<Set<string>>(new Set());
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [page, setPage] = useState(1);
@@ -212,7 +214,8 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
 
   return (
     <>
-      {selectedCases.size > 0 && (
+      {/* Only show selection UI on desktop */}
+      {!isMobile && selectedCases.size > 0 && (
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 mb-4 bg-white rounded-2xl shadow-sm border border-gray-200">
           <div className="flex items-center gap-4">
             <Checkbox
@@ -249,13 +252,16 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {cases.map((caseItem) => (
           <div key={caseItem.id} className="relative">
-            <div className="absolute top-5 left-5 z-10">
-              <Checkbox
-                checked={selectedCases.has(caseItem.id)}
-                onCheckedChange={(checked) => handleSelectCase(caseItem.id, checked as boolean)}
-                className="bg-white border-2 w-5 h-5"
-              />
-            </div>
+            {/* Only show checkbox on desktop */}
+            {!isMobile && (
+              <div className="absolute top-5 left-5 z-10">
+                <Checkbox
+                  checked={selectedCases.has(caseItem.id)}
+                  onCheckedChange={(checked) => handleSelectCase(caseItem.id, checked as boolean)}
+                  className="bg-white border-2 w-5 h-5"
+                />
+              </div>
+            )}
             <CaseCard case={caseItem} />
           </div>
         ))}
