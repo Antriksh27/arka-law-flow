@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { RefreshCw, FileText, File, Scale, Calendar, XCircle, StickyNote, CheckSquare, Pencil, Users, MoreVertical, DollarSign } from 'lucide-react';
+import { RefreshCw, FileText, File, Scale, Calendar, XCircle, StickyNote, CheckSquare, Pencil, Users, MoreVertical } from 'lucide-react';
 import { format } from 'date-fns';
 import TimeUtils from '@/lib/timeUtils';
 import { EditCaseDialog } from '@/components/cases/EditCaseDialog';
@@ -22,12 +22,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { OverviewTab } from '@/components/cases/detail/tabs/OverviewTab';
-import { HearingsTab } from '@/components/cases/detail/tabs/HearingsTab';
+import { DetailsTab } from '@/components/cases/detail/tabs/DetailsTab';
 import { DocumentsTab } from '@/components/cases/detail/tabs/DocumentsTab';
 import { NotesTab } from '@/components/cases/detail/tabs/NotesTab';
 import { TasksTab } from '@/components/cases/detail/tabs/TasksTab';
-import { FinanceTab } from '@/components/cases/detail/tabs/FinanceTab';
+import { ContactTab } from '@/components/cases/detail/tabs/CaseContactsTab';
+import { ExpensesTab } from '@/components/cases/detail/tabs/ExpensesTab';
+import { InvoicesTab } from '@/components/cases/detail/tabs/InvoicesTab';
+import { PaymentsTab } from '@/components/cases/detail/tabs/PaymentsTab';
+import { TimelineTab } from '@/components/cases/detail/tabs/TimelineTab';
+import { RelatedMattersTab } from '@/components/cases/detail/tabs/RelatedMattersTab';
+import { LawyersTab } from '@/components/cases/detail/tabs/LawyersTab';
 import { DocumentsTable } from '@/components/cases/enhanced/DocumentsTable';
 import { OrdersTable } from '@/components/cases/enhanced/OrdersTable';
 import { HearingsTable } from '@/components/cases/enhanced/HearingsTable';
@@ -37,9 +42,6 @@ import { CreateNoteMultiModal } from '@/components/notes/CreateNoteMultiModal';
 import { CreateTaskDialog } from '@/components/tasks/CreateTaskDialog';
 import { useLegalkartCaseDetails } from '@/hooks/useLegalkartCaseDetails';
 import { FetchCaseDetailsDialog } from '@/components/cases/FetchCaseDetailsDialog';
-import { CaseFAB } from '@/components/cases/detail/CaseFAB';
-import { UploadDocumentDialog } from '@/components/documents/UploadDocumentDialog';
-import { CreateHearingDialog } from '@/components/hearings/CreateHearingDialog';
 export default function CaseDetailEnhanced() {
   const {
     id
@@ -52,8 +54,6 @@ export default function CaseDetailEnhanced() {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isFetchDialogOpen, setIsFetchDialogOpen] = useState(false);
-  const [isUploadDocModalOpen, setIsUploadDocModalOpen] = useState(false);
-  const [isCreateHearingOpen, setIsCreateHearingOpen] = useState(false);
 
   // Fetch case data
   const {
@@ -106,32 +106,6 @@ export default function CaseDetailEnhanced() {
     enabled: !!id
   });
 
-  // Fetch assigned lawyers
-  const { data: assignedLawyers = [] } = useQuery({
-    queryKey: ['case-assigned-lawyers', id],
-    queryFn: async () => {
-      if (!caseData?.assigned_users || caseData.assigned_users.length === 0) return [];
-      
-      const { data: teamData } = await supabase
-        .from('team_members')
-        .select('id, user_id, role')
-        .in('user_id', caseData.assigned_users);
-      
-      if (!teamData) return [];
-      
-      const { data: profilesData } = await supabase
-        .from('profiles')
-        .select('id, full_name, email')
-        .in('id', caseData.assigned_users);
-      
-      return teamData.map(tm => ({
-        ...tm,
-        profiles: profilesData?.find(p => p.id === tm.user_id)
-      }));
-    },
-    enabled: !!caseData?.assigned_users
-  });
-  
   // Unified LegalKart/eCourt data via hook
   const {
     legalkartCase,
@@ -393,23 +367,38 @@ export default function CaseDetailEnhanced() {
               </TabsList>
 
               <div className={isMobile ? 'p-4' : 'p-6'}>
-                <TabsContent value="overview" className="m-0">
-                  <OverviewTab caseData={caseData} legalkartData={legalkartCase} petitioners={petitioners} respondents={respondents} hearings={hearings} assignedLawyers={assignedLawyers} />
+                <TabsContent value="details" className="m-0">
+                  <DetailsTab caseData={caseData} legalkartData={legalkartCase} petitioners={petitioners} respondents={respondents} iaDetails={iaDetails} documents={documents} orders={orders} hearings={hearings} objections={objections} />
                 </TabsContent>
-                <TabsContent value="hearings" className="m-0">
-                  <HearingsTab hearings={hearings} caseData={caseData} />
-                </TabsContent>
-                <TabsContent value="documents" className="m-0">
-                  <DocumentsTab caseId={id!} />
-                </TabsContent>
-                <TabsContent value="tasks" className="m-0">
-                  <TasksTab caseId={id!} />
-                </TabsContent>
-                <TabsContent value="notes" className="m-0">
-                  <NotesTab caseId={id!} />
-                </TabsContent>
-                <TabsContent value="finance" className="m-0">
-                  <FinanceTab caseId={id!} />
+            <TabsContent value="contacts" className="m-0">
+              <ContactTab caseId={id!} />
+            </TabsContent>
+            <TabsContent value="notes" className="m-0">
+              <NotesTab caseId={id!} />
+            </TabsContent>
+            <TabsContent value="tasks" className="m-0">
+              <TasksTab caseId={id!} />
+            </TabsContent>
+            <TabsContent value="documents" className="m-0">
+              <DocumentsTab caseId={id!} />
+            </TabsContent>
+            <TabsContent value="expenses" className="m-0">
+              <ExpensesTab caseId={id!} />
+            </TabsContent>
+            <TabsContent value="invoices" className="m-0">
+              <InvoicesTab caseId={id!} />
+            </TabsContent>
+            <TabsContent value="payments" className="m-0">
+              <PaymentsTab caseId={id!} />
+            </TabsContent>
+            <TabsContent value="timeline" className="m-0">
+              <TimelineTab caseId={id!} caseData={caseData} legalkartData={legalkartCase} hearings={hearings} />
+            </TabsContent>
+            <TabsContent value="lawyers" className="m-0">
+              <LawyersTab caseId={id!} />
+            </TabsContent>
+                <TabsContent value="related" className="m-0">
+                  <RelatedMattersTab caseId={id!} />
                 </TabsContent>
               </div>
             </Tabs>

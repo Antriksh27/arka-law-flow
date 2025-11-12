@@ -8,7 +8,6 @@ import { CheckSquare, Plus, Calendar, User, Tag } from 'lucide-react';
 import { TimeUtils } from '@/lib/timeUtils';
 import { CreateTaskDialog } from '@/components/tasks/CreateTaskDialog';
 import { useToast } from '@/hooks/use-toast';
-import { useIsMobile } from '@/hooks/use-mobile';
 
 interface TasksTabProps {
   caseId: string;
@@ -104,184 +103,112 @@ export const TasksTab: React.FC<TasksTabProps> = ({ caseId }) => {
     }
   };
 
-  const isMobile = useIsMobile();
-
   if (isLoading) {
     return <div className="text-center py-8">Loading tasks...</div>;
   }
 
-  // Progress calculation
-  const completedTasks = tasks?.filter(t => t.status === 'completed').length || 0;
-  const totalTasks = tasks?.length || 0;
-  const progressPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <div>
-          <h3 className="text-lg font-semibold">Tasks</h3>
-          {totalTasks > 0 && (
-            <p className="text-xs text-muted-foreground mt-1">
-              {completedTasks} of {totalTasks} completed ({progressPercent}%)
-            </p>
-          )}
-        </div>
-        <Button onClick={() => setShowCreateDialog(true)} size={isMobile ? "sm" : "default"}>
+        <h3 className="text-xl font-semibold">Tasks</h3>
+        <Button onClick={() => setShowCreateDialog(true)}>
           <Plus className="w-4 h-4 mr-2" />
-          {isMobile ? 'Add' : 'Add Task'}
+          Add Task
         </Button>
       </div>
 
-      {/* Progress Bar */}
-      {totalTasks > 0 && (
-        <div className="bg-muted rounded-full h-2 overflow-hidden">
-          <div 
-            className="bg-primary h-full transition-all duration-300"
-            style={{ width: `${progressPercent}%` }}
-          />
-        </div>
-      )}
-
       {tasks && tasks.length > 0 ? (
-        isMobile ? (
-          // Mobile: Vertical List
-          <div className="space-y-3">
-            {tasks.map(task => (
-              <Card key={task.id} className="p-4 hover:shadow-md transition-shadow bg-card border-border">
-                <div className="space-y-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <h4 className="font-medium text-sm text-foreground flex-1 line-clamp-2">{task.title}</h4>
-                    <div className="flex gap-2 flex-shrink-0">
-                      <Badge className={`${getPriorityColor(task.priority)} text-xs`}>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {Object.entries(tasksByStatus).map(([status, statusTasks]) => (
+            <Card key={status} className="h-fit bg-white border-gray-200 shadow-sm">
+              <CardHeader className="pb-3 bg-gray-50 border-b border-gray-100">
+                <CardTitle className="text-sm font-medium text-gray-700 uppercase tracking-wide">
+                  {getStatusDisplayName(status)} ({statusTasks.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 p-4">
+                {statusTasks.map(task => (
+                  <div key={task.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200 shadow-sm hover:shadow-md transition-shadow hover:bg-white">
+                    <div className="flex items-start justify-between mb-3">
+                      <h4 className="font-medium text-sm text-gray-900 line-clamp-2">{task.title}</h4>
+                      <Badge className={`${getPriorityColor(task.priority)} text-xs rounded-full border`}>
                         {task.priority}
                       </Badge>
-                      <Badge className={`${getStatusColor(task.status)} text-xs`}>
-                        {getStatusDisplayName(task.status)}
-                      </Badge>
                     </div>
-                  </div>
-                  
-                  {task.description && (
-                    <p className="text-xs text-muted-foreground line-clamp-2">{task.description}</p>
-                  )}
-                  
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <User className="w-3 h-3" />
-                      <span className="truncate">{task.assigned_user?.full_name || 'Unassigned'}</span>
-                    </div>
-                    {task.due_date && (
+                    
+                    {task.description && (
+                      <p className="text-xs text-gray-600 mb-3 line-clamp-2">{task.description}</p>
+                    )}
+                    
+                    <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
                       <div className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        {TimeUtils.formatDate(task.due_date, 'dd MMM')}
+                        <User className="w-3 h-3" />
+                        <span className="truncate">{task.assigned_user?.full_name || 'Unassigned'}</span>
+                      </div>
+                      {task.due_date && (
+                        <div className="flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          {TimeUtils.formatDate(task.due_date, 'MMM d')}
+                        </div>
+                      )}
+                    </div>
+
+                    {task.tags && task.tags.length > 0 && (
+                      <div className="flex items-center gap-1 mb-3">
+                        <Tag className="w-3 h-3 text-gray-400" />
+                        <div className="flex flex-wrap gap-1">
+                          {task.tags.slice(0, 2).map((tag: string) => (
+                            <span key={tag} className="text-xs bg-white text-gray-600 px-2 py-1 rounded border border-gray-200">
+                              {tag}
+                            </span>
+                          ))}
+                          {task.tags.length > 2 && (
+                            <span className="text-xs text-gray-400">+{task.tags.length - 2}</span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {status !== 'completed' && (
+                      <div className="flex gap-2 mt-3">
+                        {status === 'todo' && (
+                          <button
+                            onClick={() => handleStatusChange(task.id, 'in_progress')}
+                            className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-b from-green-400 to-green-600 border border-green-600 rounded-lg shadow-lg hover:from-green-500 hover:to-green-700 hover:shadow-xl active:scale-95 transition-all duration-150 transform hover:-translate-y-0.5"
+                          >
+                            Start
+                          </button>
+                        )}
+                        {status === 'in_progress' && (
+                          <button
+                            onClick={() => handleStatusChange(task.id, 'completed')}
+                            className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-b from-red-400 to-red-600 border border-red-600 rounded-lg shadow-lg hover:from-red-500 hover:to-red-700 hover:shadow-xl active:scale-95 transition-all duration-150 transform hover:-translate-y-0.5"
+                          >
+                            Complete
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
-
-                  {task.status !== 'completed' && (
-                    <div className="flex gap-2 pt-2">
-                      {task.status === 'todo' && (
-                        <Button
-                          size="sm"
-                          onClick={() => handleStatusChange(task.id, 'in_progress')}
-                          className="flex-1 h-9"
-                        >
-                          Start
-                        </Button>
-                      )}
-                      {task.status === 'in_progress' && (
-                        <Button
-                          size="sm"
-                          onClick={() => handleStatusChange(task.id, 'completed')}
-                          className="flex-1 h-9"
-                        >
-                          Complete
-                        </Button>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          // Desktop: 3-column Kanban
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {Object.entries(tasksByStatus).map(([status, statusTasks]) => (
-              <Card key={status} className="h-fit bg-card border-border shadow-sm">
-                <div className="p-4 bg-muted/50 border-b border-border">
-                  <h4 className="text-sm font-medium text-foreground uppercase tracking-wide">
-                    {getStatusDisplayName(status)} ({statusTasks.length})
-                  </h4>
-                </div>
-                <div className="space-y-3 p-4">
-                  {statusTasks.map(task => (
-                    <div key={task.id} className="bg-background rounded-lg p-4 border border-border shadow-sm hover:shadow-md transition-shadow">
-                      <div className="flex items-start justify-between mb-3">
-                        <h4 className="font-medium text-sm text-foreground line-clamp-2">{task.title}</h4>
-                        <Badge className={`${getPriorityColor(task.priority)} text-xs rounded-full border`}>
-                          {task.priority}
-                        </Badge>
-                      </div>
-                      
-                      {task.description && (
-                        <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{task.description}</p>
-                      )}
-                      
-                      <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
-                        <div className="flex items-center gap-1">
-                          <User className="w-3 h-3" />
-                          <span className="truncate">{task.assigned_user?.full_name || 'Unassigned'}</span>
-                        </div>
-                        {task.due_date && (
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
-                            {TimeUtils.formatDate(task.due_date, 'MMM d')}
-                          </div>
-                        )}
-                      </div>
-
-                      {status !== 'completed' && (
-                        <div className="flex gap-2 mt-3">
-                          {status === 'todo' && (
-                            <button
-                              onClick={() => handleStatusChange(task.id, 'in_progress')}
-                              className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-b from-green-400 to-green-600 border border-green-600 rounded-lg shadow-lg hover:from-green-500 hover:to-green-700 hover:shadow-xl active:scale-95 transition-all duration-150 transform hover:-translate-y-0.5"
-                            >
-                              Start
-                            </button>
-                          )}
-                          {status === 'in_progress' && (
-                            <button
-                              onClick={() => handleStatusChange(task.id, 'completed')}
-                              className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-b from-red-400 to-red-600 border border-red-600 rounded-lg shadow-lg hover:from-red-500 hover:to-red-700 hover:shadow-xl active:scale-95 transition-all duration-150 transform hover:-translate-y-0.5"
-                            >
-                              Complete
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                  
-                  {statusTasks.length === 0 && (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <CheckSquare className="w-8 h-8 mx-auto mb-2" />
-                      <p className="text-xs">No {getStatusDisplayName(status).toLowerCase()} tasks</p>
-                    </div>
-                  )}
-                </div>
-              </Card>
-            ))}
-          </div>
-        )
+                ))}
+                
+                {statusTasks.length === 0 && (
+                  <div className="text-center py-8 text-gray-400">
+                    <CheckSquare className="w-8 h-8 mx-auto mb-2" />
+                    <p className="text-xs">No {getStatusDisplayName(status).toLowerCase()} tasks</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       ) : (
-        <div className="text-center py-12 text-muted-foreground">
-          <CheckSquare className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
-          <p className="text-sm">No tasks yet. Tap + to create your first task.</p>
+        <div className="text-center py-12 text-muted">
+          <CheckSquare className="w-12 h-12 mx-auto mb-4 text-muted" />
+          <p>No tasks created yet</p>
           <Button onClick={() => setShowCreateDialog(true)} className="mt-4">
             <Plus className="w-4 h-4 mr-2" />
-            Create Task
+            Create First Task
           </Button>
         </div>
       )}
