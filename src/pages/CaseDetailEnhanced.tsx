@@ -247,7 +247,7 @@ export default function CaseDetailEnhanced() {
       )}
 
       <PullToRefresh onRefresh={handleFetchDetails}>
-        <div className="min-h-screen bg-gray-50 pb-24 sm:pb-8">
+        <div className={`bg-gray-50 ${isMobile ? 'pb-24' : 'min-h-screen pb-8'}`}>
           {/* Mobile Hero Card */}
           {isMobile && (
             <div className="p-4">
