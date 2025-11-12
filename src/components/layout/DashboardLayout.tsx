@@ -4,18 +4,14 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from './AppSidebar';
 import { TopNavBar } from './TopNavBar';
 import { useIsMobile } from '@/hooks/use-mobile';
-
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
-
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   children
 }) => {
   const isMobile = useIsMobile();
-
-  return (
-    <SidebarProvider defaultOpen={false}>
+  return <SidebarProvider defaultOpen={false}>
       <div className="flex min-h-screen w-full bg-[#F9FAFB]">
         {/* Mobile only: Render sidebar */}
         {isMobile && <AppSidebar />}
@@ -28,15 +24,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           </header>
           
           {/* Desktop only: Render top nav bar */}
-          {!isMobile && <TopNavBar />}
+          {!isMobile && <TopNavBar className="bg-slate-50" />}
           
           <main className="flex-1 overflow-auto bg-[#F9FAFB]">
             {children}
           </main>
         </div>
       </div>
-    </SidebarProvider>
-  );
+    </SidebarProvider>;
 };
-
 export default DashboardLayout;
