@@ -96,7 +96,7 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
 
       // Apply search filter
       if (searchQuery) {
-        query = query.or(`case_title.ilike.%${searchQuery}%,client_name.ilike.%${searchQuery}%,petitioner.ilike.%${searchQuery}%,respondent.ilike.%${searchQuery}%,vs.ilike.%${searchQuery}%,case_number.ilike.%${searchQuery}%,cnr_number.ilike.%${searchQuery}%,filing_number.ilike.%${searchQuery}%`);
+        query = query.or(`case_title.ilike.%${searchQuery}%,petitioner.ilike.%${searchQuery}%,respondent.ilike.%${searchQuery}%,vs.ilike.%${searchQuery}%,case_number.ilike.%${searchQuery}%,cnr_number.ilike.%${searchQuery}%,filing_number.ilike.%${searchQuery}%,reference_number.ilike.%${searchQuery}%`);
       }
 
       // Apply status filter at DB level
