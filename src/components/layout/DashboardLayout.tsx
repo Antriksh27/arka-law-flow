@@ -24,7 +24,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           </header>
           
           {/* Desktop only: Render top nav bar */}
-          {!isMobile && <TopNavBar />}
+          {!isMobile && <TopNavBar className="bg-slate-50" />}
           
           <main className="flex-1 overflow-auto bg-[#F9FAFB]">
             {children}
