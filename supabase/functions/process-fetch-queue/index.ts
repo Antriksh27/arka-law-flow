@@ -38,9 +38,8 @@ const mapCourtTypeToSearchType = (courtType: string): string => {
 };
 
 const calculateRetryDelay = (retryCount: number): number => {
-  // Exponential backoff: 1min, 5min, 15min, 1hr
-  const delays = [60, 300, 900, 3600];
-  return delays[Math.min(retryCount, delays.length - 1)];
+  // Immediate retry every 2 seconds for automation failures
+  return 2;
 };
 
 const getErrorMessage = (error: any): string => {

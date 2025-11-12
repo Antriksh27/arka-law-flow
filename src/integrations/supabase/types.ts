@@ -4090,8 +4090,11 @@ export type Database = {
               p_documents?: Json
               p_firm_id: string
               p_history?: Json
+              p_ia_details?: Json
               p_objections?: Json
               p_orders?: Json
+              p_petitioners?: Json
+              p_respondents?: Json
             }
             Returns: string
           }
@@ -4103,11 +4106,8 @@ export type Database = {
               p_documents?: Json
               p_firm_id: string
               p_history?: Json
-              p_ia_details?: Json
               p_objections?: Json
               p_orders?: Json
-              p_petitioners?: Json
-              p_respondents?: Json
             }
             Returns: string
           }
