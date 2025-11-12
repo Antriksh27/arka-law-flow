@@ -3,6 +3,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { ChevronDown, FileText } from 'lucide-react';
 import { formatDateDisplay } from '@/lib/caseDataFormatter';
 import { useState } from 'react';
+import { Badge } from '@/components/ui/badge';
 
 interface CaseInfoCardProps {
   caseData: any;
@@ -10,6 +11,22 @@ interface CaseInfoCardProps {
 
 export const CaseInfoCard = ({ caseData }: CaseInfoCardProps) => {
   const [isOpen, setIsOpen] = useState(true);
+
+  const getStageBadgeVariant = (stage: string | undefined) => {
+    if (!stage) return "default";
+    const stageLower = stage.toLowerCase();
+    
+    if (stageLower.includes('disposed') || stageLower.includes('decided') || stageLower.includes('completed')) {
+      return "disposed";
+    }
+    if (stageLower.includes('hearing') || stageLower.includes('listed') || stageLower.includes('returnable')) {
+      return "active";
+    }
+    if (stageLower.includes('pending') || stageLower.includes('admission') || stageLower.includes('adjourned')) {
+      return "warning";
+    }
+    return "default";
+  };
 
   const infoItems = [
     { label: 'Reference Number', value: caseData?.reference_number },
@@ -56,7 +73,13 @@ export const CaseInfoCard = ({ caseData }: CaseInfoCardProps) => {
                 <div key={index} className="space-y-1">
                   <div className="text-sm text-[#6B7280]">{item.label}</div>
                   <div className="text-base font-medium text-[#111827]">
-                    {item.value || 'N/A'}
+                    {item.label === 'Stage' && item.value ? (
+                      <Badge variant={getStageBadgeVariant(item.value) as any}>
+                        {item.value}
+                      </Badge>
+                    ) : (
+                      item.value || 'N/A'
+                    )}
                   </div>
                 </div>
               ))}
