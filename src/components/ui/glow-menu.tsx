@@ -69,21 +69,17 @@ export const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
       <motion.nav
         ref={ref}
         className={cn(
-          "p-1.5 rounded-2xl bg-gradient-to-b from-background/80 to-background/40 backdrop-blur-lg border border-border/40 shadow-lg relative overflow-hidden max-w-full",
+          "w-full px-6 py-3 rounded-2xl bg-slate-900 border border-slate-800 shadow-lg relative overflow-hidden",
           className,
         )}
         initial="initial"
         whileHover="hover"
       >
         <motion.div
-          className={`absolute -inset-2 bg-gradient-radial from-transparent ${
-            isDarkTheme
-              ? "via-blue-400/30 via-30% via-purple-400/30 via-60% via-red-400/30 via-90%"
-              : "via-blue-400/20 via-30% via-purple-400/20 via-60% via-red-400/20 via-90%"
-          } to-transparent rounded-3xl z-0 pointer-events-none`}
+          className="absolute -inset-2 bg-gradient-radial from-transparent via-yellow-400/20 via-50% to-transparent rounded-3xl z-0 pointer-events-none"
           variants={navGlowVariants}
         />
-        <ul className="flex items-center gap-0.5 relative z-10 overflow-x-auto scrollbar-hide">
+        <ul className="flex items-center justify-center gap-2 relative z-10 overflow-x-auto scrollbar-hide">
           {items.map((item) => {
             const Icon = item.icon
             const isActive = item.label === activeItem
@@ -101,22 +97,16 @@ export const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
                     initial="initial"
                   >
                     <motion.div
-                      className="absolute inset-0 z-0 pointer-events-none"
+                      className="absolute inset-0 z-0 pointer-events-none rounded-xl"
                       variants={glowVariants}
                       animate={isActive ? "hover" : "initial"}
                       style={{
-                        background: item.gradient,
+                        background: "radial-gradient(circle, rgba(234,179,8,0.3) 0%, rgba(234,179,8,0.1) 50%, rgba(234,179,8,0) 100%)",
                         opacity: isActive ? 1 : 0,
-                        borderRadius: "16px",
                       }}
                     />
                     <motion.div
-                      className={cn(
-                        "flex items-center gap-1.5 px-2.5 py-2 relative z-10 bg-transparent transition-colors rounded-xl text-sm",
-                        isActive
-                          ? "text-foreground"
-                          : "text-muted-foreground group-hover:text-foreground",
-                      )}
+                      className="flex items-center gap-2 px-4 py-2.5 relative z-10 bg-transparent transition-colors rounded-xl text-white"
                       variants={itemVariants}
                       transition={sharedTransition}
                       style={{
@@ -124,24 +114,11 @@ export const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
                         transformOrigin: "center bottom",
                       }}
                     >
-                      <span
-                        className={cn(
-                          "transition-colors duration-300",
-                          isActive ? item.iconColor : "text-foreground",
-                          `group-hover:${item.iconColor}`,
-                        )}
-                      >
-                        <Icon className="h-4 w-4" />
-                      </span>
-                      <span className="whitespace-nowrap">{item.label}</span>
+                      <Icon className="h-5 w-5" />
+                      <span className="whitespace-nowrap font-medium">{item.label}</span>
                     </motion.div>
                     <motion.div
-                      className={cn(
-                        "flex items-center gap-1.5 px-2.5 py-2 absolute inset-0 z-10 bg-transparent transition-colors rounded-xl text-sm",
-                        isActive
-                          ? "text-foreground"
-                          : "text-muted-foreground group-hover:text-foreground",
-                      )}
+                      className="flex items-center gap-2 px-4 py-2.5 absolute inset-0 z-10 bg-transparent transition-colors rounded-xl text-white"
                       variants={backVariants}
                       transition={sharedTransition}
                       style={{
@@ -150,16 +127,8 @@ export const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
                         rotateX: 90,
                       }}
                     >
-                      <span
-                        className={cn(
-                          "transition-colors duration-300",
-                          isActive ? item.iconColor : "text-foreground",
-                          `group-hover:${item.iconColor}`,
-                        )}
-                      >
-                        <Icon className="h-4 w-4" />
-                      </span>
-                      <span className="whitespace-nowrap">{item.label}</span>
+                      <Icon className="h-5 w-5" />
+                      <span className="whitespace-nowrap font-medium">{item.label}</span>
                     </motion.div>
                   </motion.div>
                 </button>
