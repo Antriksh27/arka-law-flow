@@ -38,8 +38,13 @@ const mapCourtTypeToSearchType = (courtType: string): string => {
 };
 
 const calculateRetryDelay = (retryCount: number): number => {
-  // Immediate retry every 2 seconds for automation failures
-  return 2;
+  // Progressive delay: starts at 10 seconds, then gradually increases
+  // 10s, 30s, 60s, 120s, then caps at 300s (5 min)
+  if (retryCount <= 3) return 10;
+  if (retryCount <= 10) return 30;
+  if (retryCount <= 30) return 60;
+  if (retryCount <= 50) return 120;
+  return 300; // Max 5 minute delay for very high retry counts
 };
 
 const getErrorMessage = (error: any): string => {
@@ -49,7 +54,11 @@ const getErrorMessage = (error: any): string => {
     'API_TIMEOUT': 'eCourts API timed out',
     'RATE_LIMIT': 'API rate limit reached',
     'NETWORK_ERROR': 'Network connection issue',
-    'COURT_TYPE_MISMATCH': 'Court type doesn\'t match CNR format'
+    'COURT_TYPE_MISMATCH': 'Court type doesn\'t match CNR format',
+    'Edge Function returned a non-2xx status code': 'API authentication or configuration error',
+    'FunctionsHttpError': 'Edge function invocation error - check authentication',
+    'FunctionsRelayError': 'Network communication error with edge function',
+    'FunctionsFetchError': 'Failed to connect to edge function'
   };
 
   const errorStr = error?.message || JSON.stringify(error);
@@ -101,6 +110,7 @@ serve(async (req) => {
         .from('case_fetch_queue')
         .select('*')
         .eq('status', 'failed')
+        .not('next_retry_at', 'is', null) // Only retry items that haven't exceeded max retries
         .lte('next_retry_at', new Date().toISOString())
         .order('priority', { ascending: true })
         .order('queued_at', { ascending: true })
@@ -109,9 +119,13 @@ serve(async (req) => {
       if (failedError) {
         console.error('[Queue Processor] Error fetching failed items:', failedError);
       } else if (failedItems) {
-        // Filter items where retry_count < max_retries
-        const retryableItems = failedItems.filter(item => item.retry_count < item.max_retries);
+        // Double check retry limits (safety check)
+        const retryableItems = failedItems.filter(item => 
+          item.retry_count < item.max_retries && item.next_retry_at !== null
+        );
         queueItems = [...queueItems, ...retryableItems];
+        
+        console.log(`[Queue Processor] Found ${retryableItems.length} retryable failed items`);
       }
     }
 
@@ -170,8 +184,16 @@ serve(async (req) => {
         const processingDuration = Date.now() - startTime;
 
         // Check response
-        if (apiError || apiResponse?.status === 'failed' || apiResponse?.error) {
-          throw new Error(apiResponse?.error || apiResponse?.message || apiError?.message || 'API call failed');
+        if (apiError) {
+          const errorMsg = apiError?.message || 'Edge Function returned a non-2xx status code';
+          console.error(`[Queue Processor] Edge function error for ${item.id}:`, apiError);
+          throw new Error(errorMsg);
+        }
+        
+        if (apiResponse?.status === 'failed' || apiResponse?.error) {
+          const errorMsg = apiResponse?.error || apiResponse?.message || 'API call failed';
+          console.error(`[Queue Processor] API response error for ${item.id}:`, errorMsg);
+          throw new Error(errorMsg);
         }
 
         // Success - mark as completed
@@ -209,11 +231,13 @@ serve(async (req) => {
         const retryDelaySeconds = calculateRetryDelay(newRetryCount);
         const nextRetryAt = new Date(Date.now() + retryDelaySeconds * 1000).toISOString();
 
+        console.log(`[Queue Processor] Retry ${newRetryCount}/${item.max_retries} for ${item.id}. Next retry: ${maxRetriesReached ? 'NONE (max reached)' : nextRetryAt}`);
+
         // Update queue item
         await supabase
           .from('case_fetch_queue')
           .update({
-            status: maxRetriesReached ? 'failed' : 'failed',
+            status: 'failed',
             retry_count: newRetryCount,
             last_error: friendlyError,
             last_error_at: new Date().toISOString(),
@@ -224,7 +248,7 @@ serve(async (req) => {
         result.failed++;
         result.errors.push({
           queue_id: item.id,
-          error: friendlyError
+          error: `${friendlyError} (Retry ${newRetryCount}/${item.max_retries})`
         });
       }
 

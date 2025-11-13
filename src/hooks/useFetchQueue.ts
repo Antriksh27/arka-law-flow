@@ -115,6 +115,7 @@ export const useFetchQueue = () => {
         firm_id: firmId,
         created_by: user.id,
         priority: item.priority || 5,
+        max_retries: 100, // High retry limit for automated queue processing
       }));
 
       const { error } = await supabase
@@ -207,23 +208,35 @@ export const useFetchQueue = () => {
         .filter(item => item.status === 'failed' && item.retry_count < item.max_retries)
         .map(item => item.id);
 
-      if (failedIds.length === 0) return;
+      if (failedIds.length === 0) {
+        throw new Error('No retryable failed items found');
+      }
 
       const { error } = await supabase
         .from('case_fetch_queue')
         .update({ 
           status: 'queued',
-          next_retry_at: new Date().toISOString()
+          next_retry_at: new Date().toISOString(),
+          last_error: null,
+          last_error_at: null
         })
         .in('id', failedIds);
 
       if (error) throw error;
+      return failedIds.length;
     },
-    onSuccess: () => {
+    onSuccess: (count) => {
       queryClient.invalidateQueries({ queryKey: ['fetch-queue'] });
       toast({
         title: "Failed items queued for retry",
-        description: "Processing will begin shortly",
+        description: `${count} item(s) will be retried within 1 minute`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Retry failed",
+        description: error.message,
+        variant: "destructive",
       });
     },
   });
@@ -322,6 +335,7 @@ export const useFetchQueue = () => {
         firm_id: firmId,
         created_by: user.id,
         priority: 5,
+        max_retries: 100, // High retry limit for automated queue processing
         metadata: { triggered_by: 'queue_all_eligible' }
       }));
 
