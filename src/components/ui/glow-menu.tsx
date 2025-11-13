@@ -87,15 +87,15 @@ export const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(({
     theme
   } = useTheme();
   const isDarkTheme = theme === "dark";
-  return <motion.nav ref={ref} className={cn("w-full px-6 py-2 rounded-full bg-background border border-border shadow-sm relative overflow-hidden", className)} initial="initial" whileHover="hover">
-        <ul className="flex items-center justify-center gap-1 relative z-10 overflow-x-auto scrollbar-hide">
+  return <motion.nav ref={ref} className={cn("w-full px-4 py-2 rounded-full bg-slate-900 border border-slate-800 shadow-sm relative overflow-hidden", className)} initial="initial" whileHover="hover">
+        <ul className="flex items-center justify-center gap-1 relative z-10 overflow-x-auto scrollbar-hide px-2">
           {items.map(item => {
         const Icon = item.icon;
         const isActive = item.label === activeItem;
         return <motion.li key={item.label} className="relative flex-shrink-0">
-                <button onClick={() => onItemClick?.(item.label)} className={cn("flex items-center gap-2 px-5 py-2 rounded-full transition-all duration-200", isActive ? "bg-[#1E293B] text-white shadow-md" : "text-muted-foreground hover:text-foreground hover:bg-muted/50")}>
+                <button onClick={() => onItemClick?.(item.label)} className={cn("flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200", isActive ? "bg-white/10 text-white shadow-md" : "text-white/70 hover:text-white hover:bg-white/5")}>
                   <Icon className="h-4 w-4" />
-                  <span className="whitespace-nowrap text-sm font-medium text-slate-50">{item.label}</span>
+                  <span className="whitespace-nowrap text-sm font-medium">{item.label}</span>
                 </button>
               </motion.li>;
       })}
