@@ -95,7 +95,7 @@ export const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(({
         return <motion.li key={item.label} className="relative flex-shrink-0">
                 <button onClick={() => onItemClick?.(item.label)} className={cn("flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200", isActive ? "bg-white/10 text-white shadow-md" : "text-white/70 hover:text-white hover:bg-white/5")}>
                   <Icon className="h-4 w-4" />
-                  <span className="whitespace-nowrap text-sm font-medium">{item.label}</span>
+                  <span className="whitespace-nowrap text-sm font-medium text-[#ebde90]">{item.label}</span>
                 </button>
               </motion.li>;
       })}
