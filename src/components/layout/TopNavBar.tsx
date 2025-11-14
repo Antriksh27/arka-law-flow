@@ -90,7 +90,7 @@ const navigationItems = [
 
 export function TopNavBar() {
   return (
-    <div className="hidden sm:flex h-16 bg-slate-900 border-b border-white/20 shadow-sm items-center justify-center px-4">
+    <div className="hidden sm:flex h-16 bg-white border-b border-slate-900/20 shadow-sm items-center justify-center px-4">
       <SlideTabs items={navigationItems} />
     </div>
   );
