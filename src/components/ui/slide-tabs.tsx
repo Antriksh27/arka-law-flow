@@ -62,7 +62,7 @@ export const SlideTabs: React.FC<SlideTabsProps> = ({ items }) => {
           });
         }
       }}
-      className="relative mx-auto flex w-fit rounded-full border-2 border-white/20 bg-slate-800 p-1"
+      className="relative mx-auto flex w-fit rounded-full border-2 border-slate-900 bg-white p-1"
     >
       {items.map((tab, i) => (
         <Tab
@@ -109,7 +109,7 @@ const Tab = React.forwardRef<HTMLLIElement, TabProps>(
       >
         <Link
           to={href}
-          className="block px-3 py-1.5 text-xs uppercase text-white mix-blend-difference md:px-5 md:py-3 md:text-base font-medium"
+          className="block px-3 py-1.5 text-xs uppercase text-slate-900 mix-blend-difference md:px-5 md:py-3 md:text-base font-medium"
         >
           {children}
         </Link>
@@ -134,7 +134,7 @@ const Cursor: React.FC<CursorProps> = ({ position }) => {
       animate={{
         ...position,
       }}
-      className="absolute z-0 h-7 rounded-full bg-white md:h-12"
+      className="absolute z-0 h-7 rounded-full bg-slate-900 md:h-12"
     />
   );
 };
