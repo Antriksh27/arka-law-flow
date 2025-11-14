@@ -1,6 +1,5 @@
 import { Home, Users, UserPlus, Briefcase, Calendar, Gavel, StickyNote, CheckSquare, FileText, Receipt, UsersRound, MessageSquare } from "lucide-react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { MenuBar } from "@/components/ui/glow-menu";
+import { SlideTabs } from "@/components/ui/slide-tabs";
 
 const navigationItems = [
   {
@@ -90,34 +89,9 @@ const navigationItems = [
 ];
 
 export function TopNavBar() {
-  const location = useLocation();
-  const navigate = useNavigate();
-
-  const getActiveItem = () => {
-    const currentPath = location.pathname;
-    const activeNav = navigationItems.find((item) => {
-      if (item.href === "/") {
-        return currentPath === "/";
-      }
-      return currentPath.startsWith(item.href);
-    });
-    return activeNav?.label || "Dashboard";
-  };
-
-  const handleItemClick = (label: string) => {
-    const item = navigationItems.find((nav) => nav.label === label);
-    if (item) {
-      navigate(item.href);
-    }
-  };
-
   return (
     <div className="hidden sm:flex h-16 bg-slate-900 border-b border-white/20 shadow-sm items-center justify-center px-4">
-      <MenuBar
-        items={navigationItems}
-        activeItem={getActiveItem()}
-        onItemClick={handleItemClick}
-      />
+      <SlideTabs items={navigationItems} />
     </div>
   );
 }
