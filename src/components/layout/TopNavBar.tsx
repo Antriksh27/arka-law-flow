@@ -105,12 +105,12 @@ export function TopNavBar() {
   };
 
   return (
-    <div className="hidden sm:flex h-14 bg-background border-b border-border/40 shadow-sm items-center justify-center px-4 overflow-x-auto">
+    <div className="hidden sm:flex h-16 bg-background border-b border-border/40 shadow-sm items-center justify-center px-6 overflow-x-auto">
       <MenuBar
         items={navigationItems}
         activeItem={activeItem}
         onItemClick={handleItemClick}
-        className="w-auto"
+        className="w-auto max-w-full"
       />
     </div>
   );

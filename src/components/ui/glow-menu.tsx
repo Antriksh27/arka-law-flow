@@ -69,7 +69,7 @@ export const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
       <motion.nav
         ref={ref}
         className={cn(
-          "p-1 rounded-xl bg-gradient-to-b from-background/80 to-background/40 backdrop-blur-lg border border-border/40 shadow-sm relative overflow-visible",
+          "p-1.5 rounded-xl bg-gradient-to-b from-background/80 to-background/40 backdrop-blur-lg border border-border/40 shadow-sm relative overflow-visible",
           className,
         )}
         initial="initial"
@@ -83,7 +83,7 @@ export const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
           } to-transparent rounded-2xl z-0 pointer-events-none`}
           variants={navGlowVariants}
         />
-        <ul className="flex items-center gap-1 relative z-10 overflow-x-auto scrollbar-hide">
+        <ul className="flex items-center gap-1.5 relative z-10 overflow-x-auto scrollbar-hide">
           {items.map((item) => {
             const Icon = item.icon
             const isActive = item.label === activeItem
@@ -112,7 +112,7 @@ export const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
                     />
                     <motion.div
                       className={cn(
-                        "flex items-center gap-1.5 px-2.5 py-1.5 relative z-10 bg-transparent transition-colors rounded-lg whitespace-nowrap",
+                        "flex items-center gap-2 px-3.5 py-2 relative z-10 bg-transparent transition-colors rounded-lg whitespace-nowrap",
                         isActive
                           ? "text-foreground"
                           : "text-muted-foreground group-hover:text-foreground",
@@ -137,7 +137,7 @@ export const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
                     </motion.div>
                     <motion.div
                       className={cn(
-                        "flex items-center gap-1.5 px-2.5 py-1.5 absolute inset-0 z-10 bg-transparent transition-colors rounded-lg whitespace-nowrap",
+                        "flex items-center gap-2 px-3.5 py-2 absolute inset-0 z-10 bg-transparent transition-colors rounded-lg whitespace-nowrap",
                         isActive
                           ? "text-foreground"
                           : "text-muted-foreground group-hover:text-foreground",
