@@ -48,10 +48,21 @@ export const HearingsCalendarView: React.FC<HearingsCalendarViewProps> = ({ filt
           )
         `);
 
+      // Apply date range filter or default to 3 months back to 6 months ahead
       if (filters.dateRange.from && filters.dateRange.to) {
         query = query
           .gte('hearing_date', format(filters.dateRange.from, 'yyyy-MM-dd'))
           .lte('hearing_date', format(filters.dateRange.to, 'yyyy-MM-dd'));
+      } else {
+        // Default range: 3 months back to 6 months ahead
+        const threeMonthsAgo = new Date();
+        threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+        const sixMonthsAhead = new Date();
+        sixMonthsAhead.setMonth(sixMonthsAhead.getMonth() + 6);
+        
+        query = query
+          .gte('hearing_date', format(threeMonthsAgo, 'yyyy-MM-dd'))
+          .lte('hearing_date', format(sixMonthsAhead, 'yyyy-MM-dd'));
       }
 
       if (filters.case && filters.case !== 'all') {
