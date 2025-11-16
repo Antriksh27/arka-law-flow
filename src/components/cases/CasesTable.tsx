@@ -199,14 +199,6 @@ export const CasesTable: React.FC<CasesTableProps> = ({
   const formatCaseType = (type: string) => {
     return type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
-  
-  const handleCaseClick = (caseId: string, e: React.MouseEvent) => {
-    // Don't navigate if clicking checkbox
-    if ((e.target as HTMLElement).closest('[role="checkbox"]')) {
-      return;
-    }
-    navigate(`/cases/${caseId}`);
-  };
 
   const cases = queryResult?.cases || [];
   const totalCount = queryResult?.totalCount || 0;
@@ -362,8 +354,8 @@ export const CasesTable: React.FC<CasesTableProps> = ({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {cases?.map(caseItem => <TableRow key={caseItem.id} className="cursor-pointer hover:bg-gray-50" onClick={(e) => handleCaseClick(caseItem.id, e)}>
-                <TableCell onClick={(e) => e.stopPropagation()}>
+            {cases?.map(caseItem => <TableRow key={caseItem.id} className="hover:bg-gray-50">
+                <TableCell>
                   <Checkbox
                     checked={selectedCases.has(caseItem.id)}
                     onCheckedChange={(checked) => handleSelectCase(caseItem.id, checked as boolean)}
@@ -372,11 +364,23 @@ export const CasesTable: React.FC<CasesTableProps> = ({
                 <TableCell className="text-sm text-muted-foreground">
                   {caseItem.reference_number || '-'}
                 </TableCell>
-                <TableCell className="font-medium">
+                <TableCell 
+                  className="font-medium text-primary cursor-pointer hover:underline"
+                  onClick={() => navigate(`/cases/${caseItem.id}`)}
+                >
                   {caseItem.displayTitle || caseItem.case_title}
                 </TableCell>
               <TableCell>
-                {caseItem.client_name || 'No client assigned'}
+                {caseItem.client_id ? (
+                  <span
+                    className="text-primary cursor-pointer hover:underline"
+                    onClick={() => navigate(`/clients/${caseItem.client_id}`)}
+                  >
+                    {caseItem.client_name}
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground">No client assigned</span>
+                )}
               </TableCell>
               <TableCell>
                 {formatCaseType(caseItem.case_type)}
