@@ -274,7 +274,7 @@ const Cases = () => {
                 />
                 <CasesTable 
                   searchQuery={searchQuery}
-                  statusFilter="all"
+                  statusFilter={statusFilter}
                   typeFilter={typeFilter}
                   assignedFilter={assignedFilter}
                   showOnlyMyCases={false}
@@ -295,7 +295,7 @@ const Cases = () => {
                 />
                 <CasesTable 
                   searchQuery={searchQuery}
-                  statusFilter="in_court"
+                  statusFilter={statusFilter === 'all' ? 'in_court' : statusFilter}
                   typeFilter={typeFilter}
                   assignedFilter={assignedFilter}
                   showOnlyMyCases={false}
@@ -316,7 +316,7 @@ const Cases = () => {
                 />
                 <CasesTable 
                   searchQuery={searchQuery}
-                  statusFilter="disposed"
+                  statusFilter={statusFilter === 'all' ? 'disposed' : statusFilter}
                   typeFilter={typeFilter}
                   assignedFilter={assignedFilter}
                   showOnlyMyCases={false}
@@ -337,7 +337,7 @@ const Cases = () => {
                 />
                 <CasesTable 
                   searchQuery={searchQuery}
-                  statusFilter="all"
+                  statusFilter={statusFilter}
                   typeFilter={typeFilter}
                   assignedFilter={assignedFilter}
                   showOnlyMyCases={true}
@@ -350,7 +350,17 @@ const Cases = () => {
           {isMobile && (
             <CasesGrid 
               searchQuery={searchQuery}
-              statusFilter={casesTab === 'all' ? 'all' : casesTab === 'in_court' ? 'in_court' : casesTab === 'disposed' ? 'disposed' : 'all'}
+              statusFilter={
+                statusFilter !== 'all' 
+                  ? statusFilter 
+                  : casesTab === 'all' 
+                    ? 'all' 
+                    : casesTab === 'in_court' 
+                      ? 'in_court' 
+                      : casesTab === 'disposed' 
+                        ? 'disposed' 
+                        : 'all'
+              }
               typeFilter={typeFilter}
               assignedFilter={assignedFilter}
               showOnlyMyCases={casesTab === 'my'}
