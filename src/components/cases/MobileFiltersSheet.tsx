@@ -43,10 +43,8 @@ export const MobileFiltersSheet: React.FC<MobileFiltersSheetProps> = ({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="open">Open</SelectItem>
-              <SelectItem value="in_court">In Court</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
               <SelectItem value="disposed">Disposed</SelectItem>
-              <SelectItem value="closed">Closed</SelectItem>
             </SelectContent>
           </Select>
         </div>

@@ -3698,15 +3698,18 @@ export type Database = {
       }
       client_stats: {
         Row: {
-          active_case_count: number | null
-          client_portal_enabled: boolean | null
+          active_cases_count: number | null
+          closed_cases_count: number | null
           created_at: string | null
           email: string | null
           firm_id: string | null
           full_name: string | null
           id: string | null
+          organization: string | null
           phone: string | null
           status: Database["public"]["Enums"]["client_status_enum"] | null
+          total_cases_count: number | null
+          updated_at: string | null
         }
         Relationships: [
           {
@@ -4135,13 +4138,7 @@ export type Database = {
       case_by_against_enum: "by" | "against"
       case_priority_enum: "low" | "medium" | "high"
       case_stage: "new" | "hearing" | "judgment" | "closed"
-      case_status_enum:
-        | "open"
-        | "in_court"
-        | "on_hold"
-        | "closed"
-        | "pending"
-        | "disposed"
+      case_status_enum: "pending" | "disposed"
       case_type_enum:
         | "civil"
         | "criminal"
@@ -4348,14 +4345,7 @@ export const Constants = {
       case_by_against_enum: ["by", "against"],
       case_priority_enum: ["low", "medium", "high"],
       case_stage: ["new", "hearing", "judgment", "closed"],
-      case_status_enum: [
-        "open",
-        "in_court",
-        "on_hold",
-        "closed",
-        "pending",
-        "disposed",
-      ],
+      case_status_enum: ["pending", "disposed"],
       case_type_enum: [
         "civil",
         "criminal",

@@ -135,7 +135,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
       const { data, error } = await supabase
         .from('cases')
         .select('id, case_title')
-        .eq('status', 'open')
+        .eq('status', 'pending')
         .order('case_title');
       if (error) throw error;
       return data || [];

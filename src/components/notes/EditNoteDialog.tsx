@@ -79,7 +79,7 @@ export const EditNoteDialog: React.FC<EditNoteDialogProps> = ({
       const {
         data,
         error
-      } = await supabase.from('cases').select('id, case_title').eq('status', 'open').order('case_title');
+      } = await supabase.from('cases').select('id, case_title').eq('status', 'pending').order('case_title');
       if (error) throw error;
       return data || [];
     }

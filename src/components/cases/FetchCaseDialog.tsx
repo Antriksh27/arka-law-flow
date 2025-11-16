@@ -196,7 +196,6 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
       const insertData = {
         // Basic info
         case_title: caseData.case_title,
-        title: caseData.case_title,
         case_number: caseData.case_number,
         cnr_number: caseData.cnr_number,
         filing_number: caseData.filing_number,

@@ -24,7 +24,7 @@ export const ClientOverview: React.FC<ClientOverviewProps> = ({
         supabase.from('documents').select('id').eq('client_id', clientId),
         supabase.from('invoices').select('id, total_amount, status').eq('client_id', clientId)
       ]);
-      const activeCases = casesResult.data?.filter(c => c.status === 'open').length || 0;
+      const activeCases = casesResult.data?.filter(c => c.status === 'pending').length || 0;
       const totalCases = casesResult.data?.length || 0;
       const upcomingAppointments = appointmentsResult.data?.filter(a => a.status === 'upcoming' || a.status === 'confirmed').length || 0;
       const totalDocuments = documentsResult.data?.length || 0;

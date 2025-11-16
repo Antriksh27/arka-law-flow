@@ -61,10 +61,10 @@ export const NotesHeader: React.FC<NotesHeaderProps> = ({
   const { data: cases = [] } = useQuery({
     queryKey: ['cases-for-notes'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error} = await supabase
         .from('cases')
         .select('id, case_title')
-        .eq('status', 'open')
+        .eq('status', 'pending')
         .order('title');
       
       if (error) throw error;
