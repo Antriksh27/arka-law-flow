@@ -48,9 +48,6 @@ export const HearingsCalendarView: React.FC<HearingsCalendarViewProps> = ({ filt
           )
         `);
 
-      const today = format(new Date(), 'yyyy-MM-dd');
-      query = query.gte('hearing_date', today);
-
       if (filters.dateRange.from && filters.dateRange.to) {
         query = query
           .gte('hearing_date', format(filters.dateRange.from, 'yyyy-MM-dd'))
@@ -163,12 +160,18 @@ export const HearingsCalendarView: React.FC<HearingsCalendarViewProps> = ({ filt
       });
   }, [hearings]);
 
-  const eventStyleGetter = (event: CalendarEvent) => {
+  const eventStyleGetter = (event: any) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const eventDate = new Date(event.start);
+    eventDate.setHours(0, 0, 0, 0);
+    const isPast = eventDate < today;
+
     return {
       style: {
-        backgroundColor: '#1E3A8A',
+        backgroundColor: isPast ? '#9CA3AF' : '#1E3A8A',
         borderRadius: '6px',
-        opacity: 0.9,
+        opacity: isPast ? 0.6 : 0.9,
         color: 'white',
         border: '0px',
         display: 'block',
