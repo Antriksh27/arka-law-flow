@@ -5,7 +5,7 @@ import { Calendar, momentLocalizer, Event } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { FilterState } from './types';
-import { format, parseISO, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { useDialog } from '@/hooks/use-dialog';
 import { HearingDetailsModal } from './HearingDetailsModal';
 import { DayHearingsDialog } from './DayHearingsDialog';
