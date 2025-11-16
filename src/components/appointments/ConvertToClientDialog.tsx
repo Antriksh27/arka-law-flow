@@ -125,7 +125,6 @@ export const ConvertToClientDialog: React.FC<ConvertToClientDialogProps> = ({
         const { data: caseData, error: caseError } = await supabase
           .from('cases')
           .insert({
-            title: formData.case_title,
             case_title: formData.case_title,
             description: formData.case_description,
             case_type: formData.case_type,

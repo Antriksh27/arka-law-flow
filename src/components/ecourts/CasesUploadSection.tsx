@@ -138,8 +138,6 @@ export const CasesUploadSection = ({ onUploadComplete }: CasesUploadSectionProps
             .from("cases")
             .insert({
               case_title: row.case_title || `Case ${rowNum}`,
-              reference_number: row.reference_number || null,
-              cnr_number: row.cnr_number || null,
               court_type: courtType,
               court_name: courtType,
               case_number: row.case_number || null,

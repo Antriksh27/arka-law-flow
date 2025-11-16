@@ -131,7 +131,7 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
             <div className="flex-1 space-y-3">
               <div className="flex items-center gap-3 flex-wrap">
                 <Badge 
-                  variant={status === 'closed' ? 'outline' : 'default'} 
+                  variant={status === 'disposed' ? 'outline' : 'default'} 
                   className="px-3 py-1"
                 >
                   {status || 'Active'}

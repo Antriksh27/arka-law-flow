@@ -192,8 +192,8 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
       const { data, error } = await supabase
         .from('cases')
         .select('id, case_title, client_id')
-        .eq('status', 'open')
-        .order('title');
+        .eq('status', 'pending')
+        .order('case_title');
       if (error) throw error;
       return data || [];
     }

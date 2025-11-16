@@ -66,7 +66,7 @@ export const CreateNoteDialog: React.FC<CreateNoteDialogProps> = ({
       const { data, error } = await supabase
         .from('cases')
         .select('id, case_title')
-        .eq('status', 'open')
+        .eq('status', 'pending')
         .order('title');
       
       if (error) throw error;

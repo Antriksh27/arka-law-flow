@@ -163,7 +163,7 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
         .from('cases')
         .select('id, case_title, case_number')
         .eq('client_id', clientId)
-        .eq('status', 'open')
+        .eq('status', 'pending')
         .order('case_title');
       if (error) throw error;
       return data || [];
