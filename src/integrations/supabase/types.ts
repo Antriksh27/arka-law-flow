@@ -2900,6 +2900,120 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_history: {
+        Row: {
+          archived_at: string | null
+          category: string | null
+          delivered_at: string | null
+          id: string
+          message: string | null
+          notification_type: string | null
+          priority: string | null
+          read_at: string | null
+          recipient_id: string | null
+          title: string | null
+        }
+        Insert: {
+          archived_at?: string | null
+          category?: string | null
+          delivered_at?: string | null
+          id: string
+          message?: string | null
+          notification_type?: string | null
+          priority?: string | null
+          read_at?: string | null
+          recipient_id?: string | null
+          title?: string | null
+        }
+        Update: {
+          archived_at?: string | null
+          category?: string | null
+          delivered_at?: string | null
+          id?: string
+          message?: string | null
+          notification_type?: string | null
+          priority?: string | null
+          read_at?: string | null
+          recipient_id?: string | null
+          title?: string | null
+        }
+        Relationships: []
+      }
+      notification_preferences: {
+        Row: {
+          categories: Json | null
+          created_at: string | null
+          delivery_preferences: Json | null
+          digest_frequency: string | null
+          digest_time: string | null
+          enabled: boolean | null
+          event_preferences: Json | null
+          firm_id: string | null
+          id: string
+          muted_cases: string[] | null
+          muted_clients: string[] | null
+          muted_users: string[] | null
+          quiet_hours_enabled: boolean | null
+          quiet_hours_end: string | null
+          quiet_hours_start: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          categories?: Json | null
+          created_at?: string | null
+          delivery_preferences?: Json | null
+          digest_frequency?: string | null
+          digest_time?: string | null
+          enabled?: boolean | null
+          event_preferences?: Json | null
+          firm_id?: string | null
+          id?: string
+          muted_cases?: string[] | null
+          muted_clients?: string[] | null
+          muted_users?: string[] | null
+          quiet_hours_enabled?: boolean | null
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          categories?: Json | null
+          created_at?: string | null
+          delivery_preferences?: Json | null
+          digest_frequency?: string | null
+          digest_time?: string | null
+          enabled?: boolean | null
+          event_preferences?: Json | null
+          firm_id?: string | null
+          id?: string
+          muted_cases?: string[] | null
+          muted_clients?: string[] | null
+          muted_users?: string[] | null
+          quiet_hours_enabled?: boolean | null
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_preferences_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firm_statistics"
+            referencedColumns: ["firm_id"]
+          },
+          {
+            foreignKeyName: "notification_preferences_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "law_firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_reminders: {
         Row: {
           created_at: string
@@ -2935,7 +3049,12 @@ export type Database = {
           action_url: string | null
           category: string | null
           created_at: string | null
+          delivery_channel: string[] | null
+          delivery_status: string | null
+          digest_batch_id: string | null
+          dismissed: boolean | null
           expires_at: string | null
+          grouped_with: string | null
           id: string
           message: string
           metadata: Json | null
@@ -2946,13 +3065,19 @@ export type Database = {
           read: boolean | null
           recipient_id: string | null
           reference_id: string | null
+          snoozed_until: string | null
           title: string
         }
         Insert: {
           action_url?: string | null
           category?: string | null
           created_at?: string | null
+          delivery_channel?: string[] | null
+          delivery_status?: string | null
+          digest_batch_id?: string | null
+          dismissed?: boolean | null
           expires_at?: string | null
+          grouped_with?: string | null
           id?: string
           message: string
           metadata?: Json | null
@@ -2963,13 +3088,19 @@ export type Database = {
           read?: boolean | null
           recipient_id?: string | null
           reference_id?: string | null
+          snoozed_until?: string | null
           title: string
         }
         Update: {
           action_url?: string | null
           category?: string | null
           created_at?: string | null
+          delivery_channel?: string[] | null
+          delivery_status?: string | null
+          digest_batch_id?: string | null
+          dismissed?: boolean | null
           expires_at?: string | null
+          grouped_with?: string | null
           id?: string
           message?: string
           metadata?: Json | null
@@ -2980,9 +3111,17 @@ export type Database = {
           read?: boolean | null
           recipient_id?: string | null
           reference_id?: string | null
+          snoozed_until?: string | null
           title?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "notifications_grouped_with_fkey"
+            columns: ["grouped_with"]
+            isOneToOne: false
+            referencedRelation: "notifications"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "notifications_recipient_id_fkey"
             columns: ["recipient_id"]
@@ -3993,6 +4132,10 @@ export type Database = {
             Returns: undefined
           }
         | { Args: { payload: Json; url: string }; Returns: undefined }
+      initialize_notification_preferences: {
+        Args: { p_role: string; p_user_id: string }
+        Returns: undefined
+      }
       is_admin: { Args: { user_id: string }; Returns: boolean }
       is_admin_or_lawyer: { Args: never; Returns: boolean }
       is_assigned_to_hearing: { Args: { hearing_id: string }; Returns: boolean }
