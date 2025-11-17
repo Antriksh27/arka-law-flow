@@ -34,7 +34,7 @@ const Cases = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
   const [assignedFilter, setAssignedFilter] = useState('all');
-  const [casesTab, setCasesTab] = useState<'all' | 'in_court' | 'disposed' | 'my'>('all');
+  const [casesTab, setCasesTab] = useState<'all' | 'my'>('all');
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showBulkImportDialog, setShowBulkImportDialog] = useState(false);
   const [showBulkImportDisposedDialog, setShowBulkImportDisposedDialog] = useState(false);
@@ -224,16 +224,10 @@ const Cases = () => {
 
           {/* Mobile Tabs */}
           {isMobile && (
-            <Tabs value={casesTab} onValueChange={(value) => setCasesTab(value as 'all' | 'in_court' | 'disposed' | 'my')} className="w-full">
-              <TabsList className="grid w-full grid-cols-4 bg-white rounded-2xl shadow-sm border border-gray-200 h-11">
+            <Tabs value={casesTab} onValueChange={(value) => setCasesTab(value as 'all' | 'my')} className="w-full">
+              <TabsList className="grid w-full grid-cols-2 bg-white rounded-2xl shadow-sm border border-gray-200 h-11">
                 <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs">
                   All
-                </TabsTrigger>
-                <TabsTrigger value="in_court" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs">
-                  In Court
-                </TabsTrigger>
-                <TabsTrigger value="disposed" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs">
-                  Disposed
                 </TabsTrigger>
                 <TabsTrigger value="my" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs">
                   My Cases
@@ -244,16 +238,10 @@ const Cases = () => {
 
           {/* Desktop Tabs and Filters */}
           {!isMobile && (
-            <Tabs value={casesTab} onValueChange={(value) => setCasesTab(value as 'all' | 'in_court' | 'disposed' | 'my')} className="w-full">
-              <TabsList className="grid w-full grid-cols-4 bg-white rounded-2xl shadow-sm border border-gray-200 mb-4 sm:mb-6 h-10">
+            <Tabs value={casesTab} onValueChange={(value) => setCasesTab(value as 'all' | 'my')} className="w-full">
+              <TabsList className="grid w-full grid-cols-2 bg-white rounded-2xl shadow-sm border border-gray-200 mb-4 sm:mb-6 h-10">
                 <TabsTrigger value="all" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-sm">
                   All Cases
-                </TabsTrigger>
-                <TabsTrigger value="in_court" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-sm">
-                  In Court
-                </TabsTrigger>
-                <TabsTrigger value="disposed" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-sm">
-                  Disposed
                 </TabsTrigger>
                 <TabsTrigger value="my" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-sm">
                   My Cases
@@ -275,48 +263,6 @@ const Cases = () => {
                 <CasesTable 
                   searchQuery={searchQuery}
                   statusFilter={statusFilter}
-                  typeFilter={typeFilter}
-                  assignedFilter={assignedFilter}
-                  showOnlyMyCases={false}
-                />
-              </TabsContent>
-
-              <TabsContent value="in_court" className="space-y-6 mt-0">
-                <CasesFilters
-                  searchQuery={searchQuery}
-                  onSearchChange={setSearchQuery}
-                  statusFilter={statusFilter}
-                  onStatusChange={setStatusFilter}
-                  typeFilter={typeFilter}
-                  onTypeChange={setTypeFilter}
-                  assignedFilter={assignedFilter}
-                  onAssignedChange={setAssignedFilter}
-                  statusOptions={statusOptions}
-                />
-                <CasesTable 
-                  searchQuery={searchQuery}
-                  statusFilter={statusFilter === 'all' ? 'in_court' : statusFilter}
-                  typeFilter={typeFilter}
-                  assignedFilter={assignedFilter}
-                  showOnlyMyCases={false}
-                />
-              </TabsContent>
-
-              <TabsContent value="disposed" className="space-y-6 mt-0">
-                <CasesFilters
-                  searchQuery={searchQuery}
-                  onSearchChange={setSearchQuery}
-                  statusFilter={statusFilter}
-                  onStatusChange={setStatusFilter}
-                  typeFilter={typeFilter}
-                  onTypeChange={setTypeFilter}
-                  assignedFilter={assignedFilter}
-                  onAssignedChange={setAssignedFilter}
-                  statusOptions={statusOptions}
-                />
-                <CasesTable 
-                  searchQuery={searchQuery}
-                  statusFilter={statusFilter === 'all' ? 'disposed' : statusFilter}
                   typeFilter={typeFilter}
                   assignedFilter={assignedFilter}
                   showOnlyMyCases={false}
@@ -350,17 +296,7 @@ const Cases = () => {
           {isMobile && (
             <CasesGrid 
               searchQuery={searchQuery}
-              statusFilter={
-                statusFilter !== 'all' 
-                  ? statusFilter 
-                  : casesTab === 'all' 
-                    ? 'all' 
-                    : casesTab === 'in_court' 
-                      ? 'in_court' 
-                      : casesTab === 'disposed' 
-                        ? 'disposed' 
-                        : 'all'
-              }
+              statusFilter={statusFilter}
               typeFilter={typeFilter}
               assignedFilter={assignedFilter}
               showOnlyMyCases={casesTab === 'my'}
