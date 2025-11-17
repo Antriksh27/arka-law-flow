@@ -132,7 +132,7 @@ export const ConvertToClientDialog: React.FC<ConvertToClientDialogProps> = ({
             assigned_to: formData.assigned_lawyer_id,
             firm_id: teamMember.firm_id,
             created_by: user?.id,
-            status: 'open',
+            status: 'pending',
             priority: 'medium'
           })
           .select()

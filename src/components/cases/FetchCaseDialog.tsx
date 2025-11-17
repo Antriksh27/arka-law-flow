@@ -159,20 +159,14 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
       const firmId = teamMember.firm_id;
       const rawData = caseData.raw?.data || {};
 
-      // Map status to valid enum values (open, closed, in_court, on_hold)
-      const mapStatus = (status: string | undefined): 'open' | 'closed' | 'in_court' | 'on_hold' => {
-        if (!status) return 'open';
+      // Map status to valid enum values (pending, disposed)
+      const mapStatus = (status: string | undefined): 'pending' | 'disposed' => {
+        if (!status) return 'pending';
         const normalized = status.toLowerCase();
         if (normalized.includes('close') || normalized.includes('disposed') || normalized.includes('decided')) {
-          return 'closed';
+          return 'disposed';
         }
-        if (normalized.includes('court') || normalized.includes('hearing') || normalized.includes('trial')) {
-          return 'in_court';
-        }
-        if (normalized.includes('pending') || normalized.includes('await') || normalized.includes('hold')) {
-          return 'on_hold';
-        }
-        return 'open';
+        return 'pending';
       };
 
       // Map case_type to valid enum values
