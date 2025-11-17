@@ -146,7 +146,7 @@ export const CasesUploadSection = ({ onUploadComplete }: CasesUploadSectionProps
               client_id: clientId,
               firm_id: teamMember.firm_id,
               created_by: user.id,
-              status: 'open'
+              status: 'pending'
             })
             .select('id')
             .single();
