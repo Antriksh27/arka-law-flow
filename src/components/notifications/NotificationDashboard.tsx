@@ -72,3 +72,5 @@ export const NotificationDashboard = () => {
     </div>
   );
 };
+
+export default NotificationDashboard;

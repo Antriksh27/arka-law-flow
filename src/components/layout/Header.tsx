@@ -1,4 +1,5 @@
-import { User, LogOut, Menu } from 'lucide-react';
+import { User, LogOut, Menu, Settings } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
@@ -11,6 +12,7 @@ const Header = () => {
     user,
     signOut
   } = useAuth();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const sidebar = isMobile ? useSidebar() : null;
   return <div className="flex items-center justify-between gap-3 w-full">
@@ -40,6 +42,11 @@ const Header = () => {
               <div className="px-3 py-2 text-sm text-[#6B7280] border-b border-[#E5E7EB]">
                 {user?.email}
               </div>
+              <DropdownMenuItem onClick={() => navigate('/notifications')} className="hover:bg-accent focus:bg-accent cursor-pointer">
+                <Settings className="w-4 h-4 mr-2" />
+                Notification Settings
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
               <DropdownMenuItem onClick={signOut} className="text-red-600 hover:text-red-700 hover:bg-red-50 focus:text-red-600 focus:bg-red-50 cursor-pointer">
                 <LogOut className="w-4 h-4 mr-2" />
                 Sign Out
