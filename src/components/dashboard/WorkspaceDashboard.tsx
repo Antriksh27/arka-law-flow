@@ -120,13 +120,13 @@ const WorkspaceDashboard = () => {
               <div className="max-w-[1800px] mx-auto w-full">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-3 md:mb-4 gap-2">
                   <div className="flex flex-col md:min-w-0">
-                    <div className="flex items-baseline gap-2 flex-wrap">
-                      <h1 className="text-2xl font-semibold">
-                        {getGreeting()}, {userName}
-                      </h1>
+                    <div className="flex flex-col gap-1">
                       <p className="text-sm text-muted-foreground">
                         {TimeUtils.formatDateTime(new Date(), "EEEE, MMMM d, yyyy • h:mm a")}
                       </p>
+                      <h1 className="text-2xl font-semibold">
+                        {getGreeting()}, {userName}
+                      </h1>
                     </div>
                   </div>
                 </div>
