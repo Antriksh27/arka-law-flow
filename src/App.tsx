@@ -21,6 +21,7 @@ const Clients = lazy(() => import('./pages/Clients'));
 const Tasks = lazy(() => import('./pages/Tasks'));
 const Notes = lazy(() => import('./pages/Notes'));
 const Team = lazy(() => import('./pages/Team'));
+const NotificationDashboard = lazy(() => import('./components/notifications/NotificationDashboard'));
 
 import { defaultQueryConfig } from './lib/queryConfig';
 import { useAuth } from './contexts/AuthContext';
@@ -102,6 +103,15 @@ function AppContent() {
                 <ProtectedRoute>
                   <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
                     <CaseDetailEnhanced />
+                  </Suspense>
+                </ProtectedRoute>
+              } />
+              
+              {/* Notification Dashboard */}
+              <Route path="/notifications" element={
+                <ProtectedRoute>
+                  <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+                    <NotificationDashboard />
                   </Suspense>
                 </ProtectedRoute>
               } />

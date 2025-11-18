@@ -11,6 +11,7 @@ import {
   Clock,
   FileCode,
   Activity,
+  Bell,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -40,6 +41,9 @@ const getNavigationForRole = (role: string | null) => {
     baseNavigation.push({ name: 'Team', href: '/team', icon: Users });
     baseNavigation.push({ name: 'Notifications', href: '/notifications/monitoring', icon: Activity });
   }
+  
+  // All users can access notification preferences
+  baseNavigation.push({ name: 'Notification Settings', href: '/notifications', icon: Bell });
 
   return baseNavigation;
 };
