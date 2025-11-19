@@ -259,6 +259,19 @@ export const useLegalkartCaseDetails = (caseId: string) => {
         console.error('Error calling legalkart-api:', error);
         throw error;
       }
+
+      // Check if the response itself indicates an error
+      if (data && !data.success) {
+        const errorMessage = data.error || data.message || 'Failed to fetch case details';
+        console.error('Legalkart API returned error:', errorMessage);
+        throw new Error(errorMessage);
+      }
+
+      // Check if we actually got case data
+      if (!data || !data.data) {
+        throw new Error('No case data returned from Legalkart API');
+      }
+
       console.log('Refresh completed successfully');
       return data;
     },
