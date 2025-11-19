@@ -71,10 +71,11 @@ const prefetchCommonQueries = async () => {
 const BUILD_INFO = new Date().toISOString();
 console.log('App build:', BUILD_INFO);
 
-function AppContent() {
+// Inner component that uses React Query hooks
+function AppRoutes() {
   const { user } = useAuth();
 
-  // Initialize real-time notifications
+  // Initialize real-time notifications (inside QueryClientProvider)
   useRealtimeNotifications();
 
   useEffect(() => {
@@ -85,10 +86,7 @@ function AppContent() {
   }, [user]);
 
   return (
-    <div className="min-h-screen bg-gray-50" data-build={BUILD_INFO}>
-        <Router>
-          <QueryClientProvider client={queryClient}>
-            <DialogProvider>
+    <DialogProvider>
               <Routes>
               {/* Public booking routes - completely public, no authentication */}
               <Route path="/b/:code" element={<BookRedirect />} />
@@ -127,12 +125,21 @@ function AppContent() {
                 </ProtectedRoute>
               } />
               </Routes>
-              <Toaster />
-              <ReactQueryDevtools initialIsOpen={false} />
-            </DialogProvider>
-          </QueryClientProvider>
-        </Router>
-      </div>
+            <Toaster />
+            <ReactQueryDevtools initialIsOpen={false} />
+          </DialogProvider>
+  );
+}
+
+function AppContent() {
+  return (
+    <div className="min-h-screen bg-gray-50" data-build={BUILD_INFO}>
+      <Router>
+        <QueryClientProvider client={queryClient}>
+          <AppRoutes />
+        </QueryClientProvider>
+      </Router>
+    </div>
   );
 }
 
