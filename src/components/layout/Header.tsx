@@ -1,20 +1,23 @@
-import { User, LogOut, Menu, Settings } from 'lucide-react';
+import { User, LogOut, Menu, Settings, Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import KnockNotificationInbox from '@/components/notifications/KnockNotificationInbox';
 import { ChatDropdown } from '@/components/messages/ChatDropdown';
 import { useSidebar } from '@/components/ui/sidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useNotifications } from '@/hooks/useNotifications';
+import { NotificationPanel } from '@/components/notifications/NotificationPanel';
+
 const Header = () => {
-  const {
-    user,
-    signOut
-  } = useAuth();
+  const [showNotifications, setShowNotifications] = useState(false);
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const sidebar = isMobile ? useSidebar() : null;
+  const { unreadCount } = useNotifications();
   return <div className="flex items-center justify-between gap-3 w-full">
           {/* Mobile: Hamburger Menu */}
           {isMobile && sidebar && <Button variant="ghost" size="icon" onClick={() => sidebar.toggleSidebar()} className="text-foreground hover:bg-accent sm:hidden">
@@ -29,7 +32,30 @@ const Header = () => {
           {/* Right Side Actions */}
           <div className="flex items-center gap-3 ml-auto">
           <ChatDropdown />
-          <KnockNotificationInbox />
+          
+          {/* Notification Bell */}
+          <div className="relative">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="relative bg-gray-50 hover:bg-gray-200 text-gray-900"
+            >
+              <Bell className="w-5 h-5" />
+              {unreadCount > 0 && (
+                <Badge 
+                  variant="error" 
+                  className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                >
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </Badge>
+              )}
+            </Button>
+            <NotificationPanel 
+              isOpen={showNotifications} 
+              onClose={() => setShowNotifications(false)} 
+            />
+          </div>
           
           {/* User Profile Dropdown */}
           <DropdownMenu>
