@@ -26,6 +26,7 @@ const NotificationDashboard = lazy(() => import('./components/notifications/Noti
 import { defaultQueryConfig } from './lib/queryConfig';
 import { useAuth } from './contexts/AuthContext';
 import { supabase } from './integrations/supabase/client';
+import { useRealtimeNotifications } from './hooks/useRealtimeNotifications';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -72,6 +73,9 @@ console.log('App build:', BUILD_INFO);
 
 function AppContent() {
   const { user } = useAuth();
+
+  // Initialize real-time notifications
+  useRealtimeNotifications();
 
   useEffect(() => {
     // Prefetch when user logs in
