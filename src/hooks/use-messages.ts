@@ -2,18 +2,34 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+export type MessageReaction = {
+  emoji: string;
+  count: number;
+  users: Array<{ id: string; name: string }>;
+  hasUserReacted: boolean;
+};
+
+export type FileAttachment = {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  url: string;
+};
+
 export type MessageWithSender = {
   id: string;
   created_at: string;
   message_text: string;
   sender_id: string;
-  attachments?: any;
+  attachments?: FileAttachment[];
   thread_id: string;
   sender?: {
     id: string;
     full_name: string | null;
     profile_pic: string | null;
   };
+  reactions?: MessageReaction[];
 };
 
 export const useMessages = (threadId: string | null) => {
@@ -46,7 +62,7 @@ export const useMessages = (threadId: string | null) => {
 
   return useQuery<MessageWithSender[]>({
     queryKey,
-    queryFn: async () => {
+    queryFn: async (): Promise<MessageWithSender[]> => {
       if (!threadId) return [];
       
       // Fetch messages and participants in parallel
@@ -71,7 +87,11 @@ export const useMessages = (threadId: string | null) => {
       const userIds = (participantsData || []).map(p => p.user_id);
 
       if (userIds.length === 0) {
-        return (messagesData || []).map(message => ({ ...message, sender: undefined }));
+        return (messagesData || []).map(message => ({ 
+          ...message, 
+          sender: undefined,
+          attachments: message.attachments ? (message.attachments as any as FileAttachment[]) : undefined,
+        }));
       }
       
       const { data: profilesData, error: profilesError } = await supabase
@@ -85,6 +105,7 @@ export const useMessages = (threadId: string | null) => {
 
       return (messagesData || []).map(message => ({
         ...message,
+        attachments: message.attachments ? (message.attachments as any as FileAttachment[]) : undefined,
         sender: participantsMap.get(message.sender_id),
       }));
     },

@@ -2,14 +2,20 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { type MessageWithSender } from '@/hooks/use-messages';
+import { type MessageWithSender, type FileAttachment } from '@/hooks/use-messages';
 
 export const useSendMessage = (threadId: string | null) => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async (messageText: string) => {
+    mutationFn: async ({ 
+      messageText, 
+      attachments 
+    }: { 
+      messageText: string; 
+      attachments?: FileAttachment[] 
+    }) => {
       if (!threadId || !user) {
         throw new Error('User or thread not available');
       }
@@ -20,13 +26,14 @@ export const useSendMessage = (threadId: string | null) => {
           thread_id: threadId,
           sender_id: user.id,
           message_text: messageText,
+          attachments: attachments || null,
         });
 
       if (error) {
         throw error;
       }
     },
-    onMutate: async (newMessageText: string) => {
+    onMutate: async ({ messageText, attachments }) => {
       if (!user || !threadId) return;
       const queryKey = ['messages', threadId];
 
@@ -37,10 +44,10 @@ export const useSendMessage = (threadId: string | null) => {
       const optimisticMessage: MessageWithSender = {
         id: `optimistic-${Date.now()}`,
         created_at: new Date().toISOString(),
-        message_text: newMessageText,
+        message_text: messageText,
         sender_id: user.id,
         thread_id: threadId,
-        attachments: null,
+        attachments: attachments || undefined,
       };
 
       queryClient.setQueryData<MessageWithSender[]>(queryKey, (old = []) => [...old, optimisticMessage]);
