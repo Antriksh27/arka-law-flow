@@ -184,8 +184,49 @@ Deno.serve(async (req) => {
       }
     });
 
-    const casesToProcess = Array.from(uniqueCasesMap.values());
-    console.log(`Processing ${casesToProcess.length} unique cases`);
+    let casesToProcess = Array.from(uniqueCasesMap.values());
+    
+    // Fetch yesterday's failed cases and prepend them for retry (priority)
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+    const { data: yesterdayLog } = await supabase
+      .from('auto_refresh_logs')
+      .select('error_details')
+      .eq('execution_date', yesterday)
+      .single();
+
+    if (yesterdayLog?.error_details && Array.isArray(yesterdayLog.error_details)) {
+      const failedCaseIds = yesterdayLog.error_details
+        .map((e: any) => e.case_id)
+        .filter((id: string) => id && id !== 'unknown');
+      
+      if (failedCaseIds.length > 0) {
+        console.log(`Found ${failedCaseIds.length} failed cases from yesterday to retry`);
+        
+        const { data: failedCases } = await supabase
+          .from('cases')
+          .select('id, cnr_number, court_type, case_title, firm_id')
+          .in('id', failedCaseIds)
+          .not('cnr_number', 'is', null)
+          .neq('cnr_number', '');
+        
+        if (failedCases && failedCases.length > 0) {
+          const retryCases: CaseToRefresh[] = failedCases.map(c => ({
+            case_id: c.id,
+            cnr_number: c.cnr_number,
+            court_type: c.court_type,
+            case_title: c.case_title,
+            firm_id: c.firm_id,
+            hearing_count: 0, // Mark as retry
+          }));
+          
+          // Prepend retry cases to prioritize them
+          casesToProcess = [...retryCases, ...casesToProcess];
+          console.log(`Added ${retryCases.length} retry cases to the beginning of queue`);
+        }
+      }
+    }
+    
+    console.log(`Processing ${casesToProcess.length} unique cases (including retries)`);
 
     const results: RefreshResult = {
       success: [],
@@ -196,9 +237,10 @@ Deno.serve(async (req) => {
     // Process cases in batches with rate limiting
     const BATCH_SIZE = 5;
     const DELAY_MS = 1500;
-    const MAX_CASES = 50;
+    const MAX_SUCCESSFUL = 35; // Hard limit on successful fetches per day
+    let successfulFetches = 0;
 
-    const limitedCases = casesToProcess.slice(0, MAX_CASES);
+    const limitedCases = casesToProcess.slice(0, 100); // Allow more attempts but stop at 35 successful
 
     for (let i = 0; i < limitedCases.length; i += BATCH_SIZE) {
       const batch = limitedCases.slice(i, i + BATCH_SIZE);
@@ -221,6 +263,7 @@ Deno.serve(async (req) => {
       batchResults.forEach((result) => {
         if (result.status === 'fulfilled') {
           if (result.value.success) {
+            successfulFetches++;
             results.success.push(result.value.case_id);
           } else {
             results.failed.push({
@@ -235,6 +278,22 @@ Deno.serve(async (req) => {
           });
         }
       });
+
+      // Stop if we reached the daily limit of successful fetches
+      if (successfulFetches >= MAX_SUCCESSFUL) {
+        console.log(`✅ Reached daily limit of ${MAX_SUCCESSFUL} successful fetches. Stopping.`);
+        
+        // Mark remaining cases as skipped
+        const remaining = limitedCases.length - (i + BATCH_SIZE);
+        if (remaining > 0) {
+          console.log(`⏭️ Skipping ${remaining} remaining cases due to daily limit`);
+          results.skipped.push({
+            case_id: 'batch',
+            reason: `Daily limit of ${MAX_SUCCESSFUL} successful fetches reached`,
+          });
+        }
+        break;
+      }
 
       // Delay between batches
       if (i + BATCH_SIZE < limitedCases.length) {
