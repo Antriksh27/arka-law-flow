@@ -3899,6 +3899,39 @@ export type Database = {
           },
         ]
       }
+      daily_fetch_summary: {
+        Row: {
+          created_at: string | null
+          execution_date: string | null
+          execution_duration_ms: number | null
+          failed_fetches: number | null
+          status: string | null
+          successful_fetches: number | null
+          total_attempted: number | null
+          total_hearings: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          execution_date?: string | null
+          execution_duration_ms?: number | null
+          failed_fetches?: number | null
+          status?: never
+          successful_fetches?: number | null
+          total_attempted?: number | null
+          total_hearings?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          execution_date?: string | null
+          execution_duration_ms?: number | null
+          failed_fetches?: number | null
+          status?: never
+          successful_fetches?: number | null
+          total_attempted?: number | null
+          total_hearings?: number | null
+        }
+        Relationships: []
+      }
       firm_statistics: {
         Row: {
           admin_email: string | null
