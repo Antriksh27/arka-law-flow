@@ -184,49 +184,8 @@ Deno.serve(async (req) => {
       }
     });
 
-    let casesToProcess = Array.from(uniqueCasesMap.values());
-    
-    // Fetch yesterday's failed cases and prepend them for retry (priority)
-    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-    const { data: yesterdayLog } = await supabase
-      .from('auto_refresh_logs')
-      .select('error_details')
-      .eq('execution_date', yesterday)
-      .single();
-
-    if (yesterdayLog?.error_details && Array.isArray(yesterdayLog.error_details)) {
-      const failedCaseIds = yesterdayLog.error_details
-        .map((e: any) => e.case_id)
-        .filter((id: string) => id && id !== 'unknown');
-      
-      if (failedCaseIds.length > 0) {
-        console.log(`Found ${failedCaseIds.length} failed cases from yesterday to retry`);
-        
-        const { data: failedCases } = await supabase
-          .from('cases')
-          .select('id, cnr_number, court_type, case_title, firm_id')
-          .in('id', failedCaseIds)
-          .not('cnr_number', 'is', null)
-          .neq('cnr_number', '');
-        
-        if (failedCases && failedCases.length > 0) {
-          const retryCases: CaseToRefresh[] = failedCases.map(c => ({
-            case_id: c.id,
-            cnr_number: c.cnr_number,
-            court_type: c.court_type,
-            case_title: c.case_title,
-            firm_id: c.firm_id,
-            hearing_count: 0, // Mark as retry
-          }));
-          
-          // Prepend retry cases to prioritize them
-          casesToProcess = [...retryCases, ...casesToProcess];
-          console.log(`Added ${retryCases.length} retry cases to the beginning of queue`);
-        }
-      }
-    }
-    
-    console.log(`Processing ${casesToProcess.length} unique cases (including retries)`);
+    const casesToProcess = Array.from(uniqueCasesMap.values());
+    console.log(`Processing ${casesToProcess.length} unique cases`);
 
     const results: RefreshResult = {
       success: [],
@@ -302,6 +261,52 @@ Deno.serve(async (req) => {
     }
 
     const executionTime = Date.now() - startTime;
+
+    // Queue failed cases for retry in 2 minutes
+    if (results.failed.length > 0) {
+      console.log(`⏰ Queueing ${results.failed.length} failed cases for retry in 2 minutes`);
+      
+      const failedCaseIds = results.failed
+        .map(f => f.case_id)
+        .filter(id => id && id !== 'unknown');
+      
+      if (failedCaseIds.length > 0) {
+        // Get case details for failed cases
+        const { data: failedCaseDetails } = await supabase
+          .from('cases')
+          .select('id, cnr_number, court_type, firm_id, created_by')
+          .in('id', failedCaseIds);
+        
+        if (failedCaseDetails && failedCaseDetails.length > 0) {
+          const queueItems = failedCaseDetails.map(c => ({
+            case_id: c.id,
+            cnr_number: c.cnr_number,
+            court_type: c.court_type || detectCourtType(c.cnr_number),
+            firm_id: c.firm_id,
+            created_by: c.created_by,
+            status: 'queued',
+            priority: 8, // High priority for retries
+            next_retry_at: new Date(Date.now() + 2 * 60 * 1000).toISOString(), // 2 minutes from now
+            retry_count: 0,
+            max_retries: 100,
+          }));
+          
+          // Insert into queue (on conflict, update next_retry_at)
+          const { error: queueError } = await supabase
+            .from('case_fetch_queue')
+            .upsert(queueItems, {
+              onConflict: 'case_id',
+              ignoreDuplicates: false,
+            });
+          
+          if (queueError) {
+            console.error('Failed to queue retry items:', queueError);
+          } else {
+            console.log(`✅ Queued ${queueItems.length} cases for retry`);
+          }
+        }
+      }
+    }
 
     // Log execution to database
     await supabase.from('auto_refresh_logs').insert({
