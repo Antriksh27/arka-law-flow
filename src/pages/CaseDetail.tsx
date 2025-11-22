@@ -23,6 +23,14 @@ import { InvoicesTab } from '@/components/cases/detail/tabs/InvoicesTab';
 import { ExpensesTab } from '@/components/cases/detail/tabs/ExpensesTab';
 import { PaymentsTab } from '@/components/cases/detail/tabs/PaymentsTab';
 import { LawyersTab } from '@/components/cases/detail/tabs/LawyersTab';
+import { SCDiaryBenchCard } from '@/components/cases/supreme/SCDiaryBenchCard';
+import { SCEarlierCourtsTable } from '@/components/cases/supreme/SCEarlierCourtsTable';
+import { SCTaggedMattersTable } from '@/components/cases/supreme/SCTaggedMattersTable';
+import { SCListingHistoryTimeline } from '@/components/cases/supreme/SCListingHistoryTimeline';
+import { SCNoticesTable } from '@/components/cases/supreme/SCNoticesTable';
+import { SCDefectsTable } from '@/components/cases/supreme/SCDefectsTable';
+import { SCJudgementOrdersTable } from '@/components/cases/supreme/SCJudgementOrdersTable';
+import { SCOfficeReportsTable } from '@/components/cases/supreme/SCOfficeReportsTable';
 
 const CaseDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -321,6 +329,15 @@ const CaseDetail = () => {
     );
   }
 
+  // Detect if this is a Supreme Court case
+  const isSupremeCourt = 
+    legalkartCase?.diary_number || 
+    legalkartCase?.bench_composition?.length > 0 ||
+    caseData?.court_name?.toLowerCase().includes('supreme') ||
+    caseData?.cnr_number?.toUpperCase().startsWith('SCIN');
+
+  console.log('🏛️ Is Supreme Court case:', isSupremeCourt);
+
   return (
     <div className="min-h-screen bg-[#F8F9FB]">
       <div className="max-w-7xl mx-auto p-6 space-y-6">
@@ -334,9 +351,14 @@ const CaseDetail = () => {
           isRefreshing={refreshMutation.isPending}
         />
 
+        {/* SC Diary & Bench Card - Prominent Display for Supreme Court Cases */}
+        {isSupremeCourt && legalkartCase && (
+          <SCDiaryBenchCard caseData={caseData} legalkartCase={legalkartCase} />
+        )}
+
         {/* Main Details Cards */}
         <div className="space-y-6">
-          <CaseInfoCard caseData={caseData} />
+          <CaseInfoCard caseData={caseData} legalkartCase={legalkartCase} isSupremeCourt={isSupremeCourt} />
           
           {(petitioners.length > 0 || respondents.length > 0) && (
             <PartiesInfoCard petitioners={petitioners} respondents={respondents} />
@@ -347,16 +369,26 @@ const CaseDetail = () => {
 
         {/* Tabs Section */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-10 mb-6">
+          <TabsList className={`grid w-full ${isSupremeCourt ? 'grid-cols-12 text-xs' : 'grid-cols-10'} mb-6`}>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="lawyers">👨‍⚖️ Lawyers</TabsTrigger>
-            <TabsTrigger value="documents">📄 Documents</TabsTrigger>
+            <TabsTrigger value="documents">📄 Docs</TabsTrigger>
             <TabsTrigger value="orders">⚖️ Orders</TabsTrigger>
             <TabsTrigger value="hearings">📅 Hearings</TabsTrigger>
-            <TabsTrigger value="objections">🚫 Objections</TabsTrigger>
-            <TabsTrigger value="invoices">💰 Invoices</TabsTrigger>
-            <TabsTrigger value="expenses">💳 Expenses</TabsTrigger>
-            <TabsTrigger value="payments">💵 Payments</TabsTrigger>
+            <TabsTrigger value="objections">🚫 Obj</TabsTrigger>
+            {isSupremeCourt && (
+              <>
+                <TabsTrigger value="sc-earlier-courts">🏛️ Lower</TabsTrigger>
+                <TabsTrigger value="sc-tagged">🔗 Tagged</TabsTrigger>
+                <TabsTrigger value="sc-listing">📋 Listings</TabsTrigger>
+                <TabsTrigger value="sc-notices">📬 Notices</TabsTrigger>
+                <TabsTrigger value="sc-defects">⚠️ Defects</TabsTrigger>
+                <TabsTrigger value="sc-orders">📜 SC Orders</TabsTrigger>
+              </>
+            )}
+            <TabsTrigger value="invoices">💰 Inv</TabsTrigger>
+            <TabsTrigger value="expenses">💳 Exp</TabsTrigger>
+            <TabsTrigger value="payments">💵 Pay</TabsTrigger>
           </TabsList>
 
           <div className="bg-white rounded-2xl shadow-sm border border-[#E5E7EB] p-6">
@@ -409,6 +441,35 @@ const CaseDetail = () => {
             <TabsContent value="payments" className="mt-0">
               <PaymentsTab caseId={id!} />
             </TabsContent>
+
+            {/* Supreme Court Specific Tabs */}
+            {isSupremeCourt && (
+              <>
+                <TabsContent value="sc-earlier-courts" className="mt-0">
+                  <SCEarlierCourtsTable caseId={id!} />
+                </TabsContent>
+                
+                <TabsContent value="sc-tagged" className="mt-0">
+                  <SCTaggedMattersTable caseId={id!} />
+                </TabsContent>
+                
+                <TabsContent value="sc-listing" className="mt-0">
+                  <SCListingHistoryTimeline caseId={id!} />
+                </TabsContent>
+                
+                <TabsContent value="sc-notices" className="mt-0">
+                  <SCNoticesTable caseId={id!} />
+                </TabsContent>
+                
+                <TabsContent value="sc-defects" className="mt-0">
+                  <SCDefectsTable caseId={id!} />
+                </TabsContent>
+                
+                <TabsContent value="sc-orders" className="mt-0">
+                  <SCJudgementOrdersTable caseId={id!} />
+                </TabsContent>
+              </>
+            )}
 
           </div>
         </Tabs>
