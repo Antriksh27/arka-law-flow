@@ -7,9 +7,11 @@ import { Badge } from '@/components/ui/badge';
 
 interface CaseInfoCardProps {
   caseData: any;
+  legalkartCase?: any;
+  isSupremeCourt?: boolean;
 }
 
-export const CaseInfoCard = ({ caseData }: CaseInfoCardProps) => {
+export const CaseInfoCard = ({ caseData, legalkartCase, isSupremeCourt }: CaseInfoCardProps) => {
   const [isOpen, setIsOpen] = useState(true);
 
   const getStageBadgeVariant = (stage: string | undefined) => {
@@ -29,6 +31,11 @@ export const CaseInfoCard = ({ caseData }: CaseInfoCardProps) => {
   };
 
   const infoItems = [
+    // SC-specific fields first
+    ...(isSupremeCourt && legalkartCase?.diary_number ? [
+      { label: 'Diary Number', value: legalkartCase.diary_number },
+      { label: 'Diary Section', value: legalkartCase.diary_section },
+    ] : []),
     { label: 'Reference Number', value: caseData?.reference_number },
     { label: 'By/Against', value: caseData?.by_against ? caseData.by_against.charAt(0).toUpperCase() + caseData.by_against.slice(1) : null },
     { label: 'Stage', value: caseData?.stage },
