@@ -44,7 +44,7 @@ export const SCDefectsTable = ({ caseId }: SCDefectsTableProps) => {
                     Notified: {defect.notification_date ? format(new Date(defect.notification_date), 'dd MMM yyyy') : 'N/A'}
                   </div>
                 </div>
-                <Badge variant="destructive" className="bg-destructive text-destructive-foreground">Active</Badge>
+                <Badge variant="error">Active</Badge>
               </div>
             </Card>
           ))}
@@ -64,7 +64,7 @@ export const SCDefectsTable = ({ caseId }: SCDefectsTableProps) => {
                     Resolved: {defect.removed_on_date ? format(new Date(defect.removed_on_date), 'dd MMM yyyy') : 'N/A'}
                   </div>
                 </div>
-                <Badge variant="secondary" className="bg-secondary text-secondary-foreground">Resolved</Badge>
+                <Badge variant="success">Resolved</Badge>
               </div>
             </Card>
           ))}
