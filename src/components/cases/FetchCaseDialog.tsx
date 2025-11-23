@@ -79,27 +79,29 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
       if (result?.success && result?.data) {
         const rawData = result.data;
         
-        // Detect if this is a Supreme Court case
+        // Detect if this is a Supreme Court case (API returns lowercase fields)
         const isSupremeCourt = searchType === 'supreme_court' || 
-                               rawData["Diary Number"] || 
-                               rawData["Case Details"]?.["Diary Info"];
+                               rawData.diary_number || 
+                               rawData.case_details?.["Diary Info"];
         
         let parsedData;
         
         if (isSupremeCourt) {
-          // Parse Supreme Court data structure
-          const caseDetails = rawData["Case Details"] || {};
-          const diaryInfo = caseDetails["Diary Info"] || "";
-          const diaryMatch = diaryInfo.match(/Diary No\.\s*-\s*(\S+)/);
-          const diaryNumber = diaryMatch ? diaryMatch[1] : null;
+          // Parse Supreme Court data structure (API returns lowercase at root level)
+          const diaryNumber = rawData.diary_number || null;
+          const caseDetails = rawData.case_details || {};
+          const cnrNumber = caseDetails["CNR Number"] || null;
+          const caseNumber = rawData.case_numbers?.[0]?.number || caseDetails["Case Number"] || null;
           
-          const caseNumber = rawData["Case Numbers"]?.Number || null;
-          const cnrNumber = caseDetails["CNR Number"] || rawData.CNR || '';
-          const category = rawData["Category"] || null;
-          const stage = rawData["Status/Stage"] || rawData.Status || null;
+          // Extract status/stage
+          const statusStage = caseDetails["Status/Stage"] || rawData.status || null;
+          const stage = statusStage?.split(']')[0]?.replace('[', '').trim() || rawData.status || 'Pending';
           
-          // Parse bench composition
-          const presentListed = rawData["Present/Last Listed On"] || "";
+          // Extract category
+          const category = caseDetails["Category"] || null;
+          
+          // Parse bench composition from Present/Last Listed On
+          const presentListed = caseDetails["Present/Last Listed On"] || "";
           const benchMatch = presentListed.match(/\[(.*?)\]/);
           const benchComposition = benchMatch 
             ? benchMatch[1].split(/,?\s*and\s*/).map((s: string) => s.trim())
@@ -107,9 +109,9 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
           
           parsedData = {
             raw: rawData,
-            case_title: `${rawData.Petitioner} vs ${rawData.Respondent}`,
+            case_title: `${rawData.petitioner} vs ${rawData.respondent}`,
             case_number: caseNumber,
-            cnr_number: cnrNumber.replace(/[-\s]/g, ''),
+            cnr_number: (cnrNumber || '').replace(/[-\s]/g, ''),
             filing_number: null,
             registration_number: caseNumber,
             court: 'Supreme Court of India',
@@ -117,17 +119,17 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
             court_type: 'supreme_court',
             district: null,
             state: null,
-            filing_date: rawData["Registered On"] || null,
-            registration_date: rawData["Registered On"] || null,
+            filing_date: rawData.case_numbers?.[0]?.registered_on || caseDetails["Registered On"] || null,
+            registration_date: rawData.case_numbers?.[0]?.registered_on || caseDetails["Registered On"] || null,
             first_hearing_date: null,
             next_hearing_date: null,
             status: stage || 'Pending',
             stage: stage,
             case_type: 'civil',
-            petitioner: rawData.Petitioner || null,
-            petitioner_advocate: rawData["Petitioner Advocate(S)"] || null,
-            respondent: rawData.Respondent || null,
-            respondent_advocate: rawData["Respondent Advocate(S)"] || null,
+            petitioner: rawData.petitioner || null,
+            petitioner_advocate: caseDetails["Petitioner Advocate(s)"] || null,
+            respondent: rawData.respondent || null,
+            respondent_advocate: caseDetails["Respondent Advocate(s)"] || null,
             bench_type: null,
             court_complex: null,
             coram: benchComposition.join(', '),
