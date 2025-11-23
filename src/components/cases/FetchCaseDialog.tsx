@@ -77,55 +77,117 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
       });
 
       if (result?.success && result?.data) {
-        // Parse the nested Legalkart response structure
         const rawData = result.data;
-        const caseInfo = rawData.data?.case_info || {};
-        const caseStatus = rawData.data?.case_status || {};
         
-        const petitionerInfo = parsePartyInfo(rawData.data?.petitioner_and_advocate);
-        const respondentInfo = parsePartyInfo(rawData.data?.respondent_and_advocate);
+        // Detect if this is a Supreme Court case
+        const isSupremeCourt = searchType === 'supreme_court' || 
+                               rawData["Diary Number"] || 
+                               rawData["Case Details"]?.["Diary Info"];
         
-        // Create case title without numbers
-        const petitionerName = petitionerInfo.name.replace(/^\d+\)\s*/g, '').trim();
-        const respondentName = respondentInfo.name.replace(/^\d+\)\s*/g, '').trim();
-        const caseTitle = petitionerName && respondentName 
-          ? `${petitionerName} vs ${respondentName}` 
-          : rawData.case_title || rawData.title || caseInfo.filing_number || 'Case Details';
+        let parsedData;
         
-        // Map to a flatter structure for display
-        const parsedData = {
-          raw: rawData, // Keep raw for later use
-          case_title: caseTitle,
-          case_number: caseInfo.registration_number || rawData.registration_number || caseInfo.filing_number || rawData.case_number,
-          cnr_number: (caseInfo.cnr_number || rawData.cnr_number || rawData.cnr || rawData.CNR || '').replace(/[-\s]/g, ''),
-          filing_number: caseInfo.filing_number || rawData.filing_number,
-          registration_number: caseInfo.registration_number || rawData.registration_number,
-          court: caseStatus.court || rawData.court || rawData.court_name,
-          court_name: caseStatus.court || rawData.court_name || rawData.court,
-          district: caseStatus.district || rawData.district,
-          state: caseStatus.state || rawData.state,
-          filing_date: caseInfo.date_of_filing || rawData.filing_date,
-          registration_date: caseInfo.date_of_registration || rawData.registration_date,
-          first_hearing_date: caseInfo.date_of_first_hearing || rawData.first_hearing_date,
-          next_hearing_date: caseInfo.date_next_hearing || rawData.next_hearing_date,
-          status: caseStatus.stage_of_case || rawData.status || 'Open',
-          stage: caseStatus.stage_of_case || rawData.stage,
-          case_type: rawData.case_type || rawData.matter_type || caseInfo.case_type,
-          petitioner: petitionerInfo.name,
-          petitioner_advocate: petitionerInfo.advocate,
-          respondent: respondentInfo.name,
-          respondent_advocate: respondentInfo.advocate,
-          bench_type: caseStatus.bench_type || rawData.bench_type,
-          court_complex: rawData.court_complex,
-          coram: caseStatus.coram || rawData.coram,
-          under_act: rawData.under_act || caseInfo.under_act,
-          under_section: rawData.under_section || caseInfo.under_section,
-        };
+        if (isSupremeCourt) {
+          // Parse Supreme Court data structure
+          const caseDetails = rawData["Case Details"] || {};
+          const diaryInfo = caseDetails["Diary Info"] || "";
+          const diaryMatch = diaryInfo.match(/Diary No\.\s*-\s*(\S+)/);
+          const diaryNumber = diaryMatch ? diaryMatch[1] : null;
+          
+          const caseNumber = rawData["Case Numbers"]?.Number || null;
+          const cnrNumber = caseDetails["CNR Number"] || rawData.CNR || '';
+          const category = rawData["Category"] || null;
+          const stage = rawData["Status/Stage"] || rawData.Status || null;
+          
+          // Parse bench composition
+          const presentListed = rawData["Present/Last Listed On"] || "";
+          const benchMatch = presentListed.match(/\[(.*?)\]/);
+          const benchComposition = benchMatch 
+            ? benchMatch[1].split(/,?\s*and\s*/).map((s: string) => s.trim())
+            : [];
+          
+          parsedData = {
+            raw: rawData,
+            case_title: `${rawData.Petitioner} vs ${rawData.Respondent}`,
+            case_number: caseNumber,
+            cnr_number: cnrNumber.replace(/[-\s]/g, ''),
+            filing_number: null,
+            registration_number: caseNumber,
+            court: 'Supreme Court of India',
+            court_name: 'Supreme Court of India',
+            court_type: 'supreme_court',
+            district: null,
+            state: null,
+            filing_date: rawData["Registered On"] || null,
+            registration_date: rawData["Registered On"] || null,
+            first_hearing_date: null,
+            next_hearing_date: null,
+            status: stage || 'Pending',
+            stage: stage,
+            case_type: 'civil',
+            petitioner: rawData.Petitioner || null,
+            petitioner_advocate: rawData["Petitioner Advocate(S)"] || null,
+            respondent: rawData.Respondent || null,
+            respondent_advocate: rawData["Respondent Advocate(S)"] || null,
+            bench_type: null,
+            court_complex: null,
+            coram: benchComposition.join(', '),
+            under_act: null,
+            under_section: null,
+            // SC-specific fields
+            diary_number: diaryNumber,
+            category: category,
+            bench_composition: benchComposition,
+            is_supreme_court: true,
+          };
+        } else {
+          // Parse HC/DC data structure (existing logic)
+          const caseInfo = rawData.data?.case_info || {};
+          const caseStatus = rawData.data?.case_status || {};
+          
+          const petitionerInfo = parsePartyInfo(rawData.data?.petitioner_and_advocate);
+          const respondentInfo = parsePartyInfo(rawData.data?.respondent_and_advocate);
+          
+          const petitionerName = petitionerInfo.name.replace(/^\d+\)\s*/g, '').trim();
+          const respondentName = respondentInfo.name.replace(/^\d+\)\s*/g, '').trim();
+          const caseTitle = petitionerName && respondentName 
+            ? `${petitionerName} vs ${respondentName}` 
+            : rawData.case_title || rawData.title || caseInfo.filing_number || 'Case Details';
+          
+          parsedData = {
+            raw: rawData,
+            case_title: caseTitle,
+            case_number: caseInfo.registration_number || rawData.registration_number || caseInfo.filing_number || rawData.case_number,
+            cnr_number: (caseInfo.cnr_number || rawData.cnr_number || rawData.cnr || rawData.CNR || '').replace(/[-\s]/g, ''),
+            filing_number: caseInfo.filing_number || rawData.filing_number,
+            registration_number: caseInfo.registration_number || rawData.registration_number,
+            court: caseStatus.court || rawData.court || rawData.court_name,
+            court_name: caseStatus.court || rawData.court_name || rawData.court,
+            district: caseStatus.district || rawData.district,
+            state: caseStatus.state || rawData.state,
+            filing_date: caseInfo.date_of_filing || rawData.filing_date,
+            registration_date: caseInfo.date_of_registration || rawData.registration_date,
+            first_hearing_date: caseInfo.date_of_first_hearing || rawData.first_hearing_date,
+            next_hearing_date: caseInfo.date_next_hearing || rawData.next_hearing_date,
+            status: caseStatus.stage_of_case || rawData.status || 'Open',
+            stage: caseStatus.stage_of_case || rawData.stage,
+            case_type: rawData.case_type || rawData.matter_type || caseInfo.case_type,
+            petitioner: petitionerInfo.name,
+            petitioner_advocate: petitionerInfo.advocate,
+            respondent: respondentInfo.name,
+            respondent_advocate: respondentInfo.advocate,
+            bench_type: caseStatus.bench_type || rawData.bench_type,
+            court_complex: rawData.court_complex,
+            coram: caseStatus.coram || rawData.coram,
+            under_act: rawData.under_act || caseInfo.under_act,
+            under_section: rawData.under_section || caseInfo.under_section,
+            is_supreme_court: false,
+          };
+        }
 
         setFetchedData(parsedData);
         toast({
           title: "Case Details Fetched",
-          description: "Successfully retrieved case details from eCourts.",
+          description: `Successfully retrieved case details from ${isSupremeCourt ? 'Supreme Court' : 'eCourts'}.`,
         });
       } else {
         throw new Error(result?.error || 'Failed to fetch case details');
@@ -157,7 +219,7 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
       if (!teamMember) throw new Error('User is not part of any firm');
 
       const firmId = teamMember.firm_id;
-      const rawData = caseData.raw?.data || {};
+      const rawData = caseData.is_supreme_court ? caseData.raw : (caseData.raw?.data || {});
 
       // Map status to valid enum values (pending, disposed)
       const mapStatus = (status: string | undefined): 'pending' | 'disposed' => {
@@ -198,6 +260,7 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
         // Court info
         court: caseData.court,
         court_name: caseData.court_name,
+        court_type: caseData.court_type || null,
         court_complex: caseData.court_complex,
         district: caseData.district,
         state: caseData.state,
@@ -393,7 +456,9 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
     <Dialog open={open} onOpenChange={handleCancel}>
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Fetch Case Details from eCourts</DialogTitle>
+          <DialogTitle>
+            Fetch Case Details from {searchType === 'supreme_court' ? 'Supreme Court' : 'eCourts'}
+          </DialogTitle>
         </DialogHeader>
         
         {!fetchedData ? (
@@ -585,6 +650,29 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
                   <div className="space-y-1 col-span-1 md:col-span-2">
                     <p className="text-[#6B7280]">Under Section</p>
                     <p className="font-medium text-[#111827]">{fetchedData.under_section}</p>
+                  </div>
+                )}
+                {/* Supreme Court specific fields */}
+                {fetchedData.is_supreme_court && fetchedData.diary_number && (
+                  <div className="space-y-1">
+                    <p className="text-[#6B7280]">Diary Number</p>
+                    <p className="font-medium text-[#111827]">{fetchedData.diary_number}</p>
+                  </div>
+                )}
+                {fetchedData.is_supreme_court && fetchedData.category && (
+                  <div className="space-y-1 col-span-1 md:col-span-2">
+                    <p className="text-[#6B7280]">Category</p>
+                    <p className="font-medium text-[#111827] text-xs">{fetchedData.category}</p>
+                  </div>
+                )}
+                {fetchedData.is_supreme_court && fetchedData.bench_composition?.length > 0 && (
+                  <div className="space-y-1 col-span-1 md:col-span-2">
+                    <p className="text-[#6B7280]">Bench Composition</p>
+                    <div className="space-y-1">
+                      {fetchedData.bench_composition.map((judge: string, idx: number) => (
+                        <p key={idx} className="font-medium text-[#111827] text-xs">{judge}</p>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
