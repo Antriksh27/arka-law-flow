@@ -42,10 +42,10 @@ export const SCTaggedMattersTable = ({ caseId }: SCTaggedMattersTableProps) => {
                 {tm.ia_info && <div className="text-xs text-muted-foreground mt-1">IA: {tm.ia_info}</div>}
               </div>
               <div className="flex gap-2">
-                <Badge variant={tm.list_status === 'Y' ? 'default' : 'secondary'}>
+                <Badge variant={tm.list_status === 'Y' ? 'active' : 'outline'}>
                   {tm.list_status === 'Y' ? 'Listed' : 'Not Listed'}
                 </Badge>
-                <Badge variant={tm.matter_status === 'P' ? 'outline' : 'secondary'}>
+                <Badge variant={tm.matter_status === 'P' ? 'warning' : 'disposed'}>
                   {tm.matter_status === 'P' ? 'Pending' : 'Disposed'}
                 </Badge>
               </div>

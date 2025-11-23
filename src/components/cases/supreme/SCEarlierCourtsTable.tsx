@@ -56,7 +56,7 @@ export const SCEarlierCourtsTable = ({ caseId }: SCEarlierCourtsTableProps) => {
               <TableCell>{court.order_date ? format(new Date(court.order_date), 'dd MMM yyyy') : '-'}</TableCell>
               <TableCell className="max-w-xs truncate" title={court.judge1 || ''}>{court.judge1}</TableCell>
               <TableCell>
-                <Badge variant={court.judgment_challenged ? "destructive" : "secondary"}>
+                <Badge variant={court.judgment_challenged ? "error" : "success"}>
                   {court.judgment_challenged ? 'Challenged' : 'Not Challenged'}
                 </Badge>
               </TableCell>

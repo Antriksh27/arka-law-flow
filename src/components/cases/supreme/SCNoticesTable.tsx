@@ -58,7 +58,7 @@ export const SCNoticesTable = ({ caseId }: SCNoticesTableProps) => {
                 {notice.dispatch_date ? (
                   <Badge variant="default">Dispatched</Badge>
                 ) : (
-                  <Badge variant="secondary">Pending</Badge>
+                  <Badge variant="warning">Pending</Badge>
                 )}
               </TableCell>
             </TableRow>
