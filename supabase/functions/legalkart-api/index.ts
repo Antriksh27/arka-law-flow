@@ -338,7 +338,41 @@ async function upsertSupremeCourtData(
   
   const parsedData: ParsedSupremeCourtData = parseSupremeCourtData(rawData);
   
-  // 1. Update legalkart_cases with SC-specific fields
+  // 1. Update the main cases table with basic SC info
+  const { error: caseUpdateError } = await supabase
+    .from('cases')
+    .update({
+      case_title: parsedData.case.caseTitle,
+      case_number: parsedData.case.caseNumber,
+      filing_date: parsedData.case.filingDate,
+      registration_date: parsedData.case.registrationDate,
+      cnr_number: parsedData.case.cnrNumber,
+      court_name: 'Supreme Court of India',
+      court_type: 'supreme_court',
+      stage: parsedData.case.stageOfCase,
+      status: 'pending',
+      category: parsedData.case.category,
+      coram: parsedData.case.coram,
+      petitioner: rawData.Petitioner || null,
+      respondent: rawData.Respondent || null,
+      petitioner_advocate: rawData["Petitioner Advocate(S)"] || null,
+      respondent_advocate: rawData["Respondent Advocate(S)"] || null,
+      is_auto_fetched: true,
+      fetch_status: 'success',
+      fetch_message: `SC case fetched on ${new Date().toISOString()}`,
+      last_fetched_at: new Date().toISOString(),
+      fetched_data: rawData,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', caseId);
+  
+  if (caseUpdateError) {
+    console.error('❌ Error updating cases table:', caseUpdateError);
+  } else {
+    console.log('✅ Updated main cases table with SC data');
+  }
+  
+  // 2. Update legalkart_cases with SC-specific fields
   const { data: legalkartCase, error: lkError } = await supabase
     .from('legalkart_cases')
     .upsert({
@@ -367,7 +401,7 @@ async function upsertSupremeCourtData(
     .single();
   
   if (lkError) {
-    console.error('Error upserting legalkart_cases:', lkError);
+    console.error('❌ Error upserting legalkart_cases:', lkError);
     throw lkError;
   }
   
