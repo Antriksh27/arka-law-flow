@@ -79,23 +79,29 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
       if (result?.success && result?.data) {
         const rawData = result.data;
         
-        // Detect if this is a Supreme Court case (API returns lowercase fields)
+        // Detect if this is a Supreme Court case (API returns capitalized fields)
         const isSupremeCourt = searchType === 'supreme_court' || 
-                               rawData.diary_number || 
-                               rawData.case_details?.["Diary Info"];
+                               rawData["Diary Number"] || 
+                               rawData["Case Details"];
         
         let parsedData;
         
         if (isSupremeCourt) {
-          // Parse Supreme Court data structure (API returns lowercase at root level)
-          const diaryNumber = rawData.diary_number || null;
-          const caseDetails = rawData.case_details || {};
+          console.log('SC Raw Data:', rawData);
+          
+          // Parse Supreme Court data structure (API returns capitalized fields)
+          const diaryNumber = rawData["Diary Number"] || null;
+          const caseDetails = rawData["Case Details"] || {};
           const cnrNumber = caseDetails["CNR Number"] || null;
-          const caseNumber = rawData.case_numbers?.[0]?.number || caseDetails["Case Number"] || null;
+          
+          // Case Numbers is an array
+          const caseNumbers = rawData["Case Numbers"] || [];
+          const caseNumber = caseNumbers[0]?.number || caseNumbers[0]?.Number || null;
+          const registeredOn = caseNumbers[0]?.registered_on || caseNumbers[0]?.["Registered On"] || null;
           
           // Extract status/stage
-          const statusStage = caseDetails["Status/Stage"] || rawData.status || null;
-          const stage = statusStage?.split(']')[0]?.replace('[', '').trim() || rawData.status || 'Pending';
+          const statusStage = caseDetails["Status/Stage"] || rawData.Status || null;
+          const stage = statusStage?.split(']')[0]?.replace('[', '').trim() || rawData.Status || 'Pending';
           
           // Extract category
           const category = caseDetails["Category"] || null;
@@ -109,7 +115,7 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
           
           parsedData = {
             raw: rawData,
-            case_title: `${rawData.petitioner} vs ${rawData.respondent}`,
+            case_title: `${rawData.Petitioner || rawData.petitioner} vs ${rawData.Respondent || rawData.respondent}`,
             case_number: caseNumber,
             cnr_number: (cnrNumber || '').replace(/[-\s]/g, ''),
             filing_number: null,
@@ -119,16 +125,16 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
             court_type: 'supreme_court',
             district: null,
             state: null,
-            filing_date: rawData.case_numbers?.[0]?.registered_on || caseDetails["Registered On"] || null,
-            registration_date: rawData.case_numbers?.[0]?.registered_on || caseDetails["Registered On"] || null,
+            filing_date: registeredOn,
+            registration_date: registeredOn,
             first_hearing_date: null,
             next_hearing_date: null,
             status: stage || 'Pending',
             stage: stage,
             case_type: 'civil',
-            petitioner: rawData.petitioner || null,
+            petitioner: rawData.Petitioner || rawData.petitioner || null,
             petitioner_advocate: caseDetails["Petitioner Advocate(s)"] || null,
-            respondent: rawData.respondent || null,
+            respondent: rawData.Respondent || rawData.respondent || null,
             respondent_advocate: caseDetails["Respondent Advocate(s)"] || null,
             bench_type: null,
             court_complex: null,
