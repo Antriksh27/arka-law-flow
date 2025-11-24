@@ -80,42 +80,49 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
         const rawData = result.data;
         
         // Detect if this is a Supreme Court case (API returns capitalized fields)
+        // Detect if this is a Supreme Court case (lowercase root-level fields)
         const isSupremeCourt = searchType === 'supreme_court' || 
-                               rawData["Diary Number"] || 
-                               rawData["Case Details"];
+                               rawData.diary_number || 
+                               rawData.case_details;
         
         let parsedData;
         
         if (isSupremeCourt) {
           console.log('SC Raw Data:', rawData);
           
-          // Parse Supreme Court data structure (API returns capitalized fields)
-          const diaryNumber = rawData["Diary Number"] || null;
-          const caseDetails = rawData["Case Details"] || {};
+          // Root-level fields are lowercase
+          const diaryNumber = rawData.diary_number || null;
+          const petitioner = rawData.petitioner || null;
+          const respondent = rawData.respondent || null;
+          const status = rawData.status || 'PENDING';
+          
+          // Nested case_details has capitalized fields
+          const caseDetails = rawData.case_details || {};
           const cnrNumber = caseDetails["CNR Number"] || null;
-          
-          // Case Numbers is an array
-          const caseNumbers = rawData["Case Numbers"] || [];
-          const caseNumber = caseNumbers[0]?.number || caseNumbers[0]?.Number || null;
-          const registeredOn = caseNumbers[0]?.registered_on || caseNumbers[0]?.["Registered On"] || null;
-          
-          // Extract status/stage
-          const statusStage = caseDetails["Status/Stage"] || rawData.Status || null;
-          const stage = statusStage?.split(']')[0]?.replace('[', '').trim() || rawData.Status || 'Pending';
-          
-          // Extract category
+          const caseTitle = caseDetails["Case Title"] || `${petitioner} vs ${respondent}`;
+          const caseNumber = caseDetails["Case Number"] || null;
           const category = caseDetails["Category"] || null;
+          const statusStage = caseDetails["Status/Stage"] || status;
+          const petitionerAdvocate = caseDetails["Petitioner Advocate(s)"] || null;
+          const respondentAdvocate = caseDetails["Respondent Advocate(s)"] || null;
           
-          // Parse bench composition from Present/Last Listed On
+          // Parse bench composition from "Present/Last Listed On"
           const presentListed = caseDetails["Present/Last Listed On"] || "";
           const benchMatch = presentListed.match(/\[(.*?)\]/);
           const benchComposition = benchMatch 
             ? benchMatch[1].split(/,?\s*and\s*/).map((s: string) => s.trim())
             : [];
           
+          // Root-level case_numbers array
+          const caseNumbers = rawData.case_numbers || [];
+          const registeredOn = caseNumbers[0]?.registered_on || null;
+          
+          // Extract stage from Status/Stage field
+          const stage = statusStage?.split(']')[0]?.replace('[', '').trim() || status || 'Pending';
+          
           parsedData = {
             raw: rawData,
-            case_title: `${rawData.Petitioner || rawData.petitioner} vs ${rawData.Respondent || rawData.respondent}`,
+            case_title: caseTitle,
             case_number: caseNumber,
             cnr_number: (cnrNumber || '').replace(/[-\s]/g, ''),
             filing_number: null,
@@ -132,10 +139,10 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
             status: stage || 'Pending',
             stage: stage,
             case_type: 'civil',
-            petitioner: rawData.Petitioner || rawData.petitioner || null,
-            petitioner_advocate: caseDetails["Petitioner Advocate(s)"] || null,
-            respondent: rawData.Respondent || rawData.respondent || null,
-            respondent_advocate: caseDetails["Respondent Advocate(s)"] || null,
+            petitioner: petitioner,
+            petitioner_advocate: petitionerAdvocate,
+            respondent: respondent,
+            respondent_advocate: respondentAdvocate,
             bench_type: null,
             court_complex: null,
             coram: benchComposition.join(', '),
