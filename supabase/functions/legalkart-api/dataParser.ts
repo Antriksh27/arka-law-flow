@@ -374,54 +374,63 @@ export function parseECourtsData(rawData: any): ParsedCaseData {
  */
 export function parseSupremeCourtData(rawData: any): ParsedSupremeCourtData {
   console.log('🏛️ Parsing Supreme Court data...');
+  console.log('📦 Raw Data Keys:', Object.keys(rawData));
   
-  const caseDetails = rawData["Case Details"] || {};
-  const diaryInfo = caseDetails["Diary Info"] || "";
+  // Handle both structures: direct data or nested in .data
+  const data = rawData.data || rawData;
   
-  // Parse Diary Number
-  const diaryMatch = diaryInfo.match(/Diary No\.\s*-\s*(\S+)/);
-  const diaryNumber = diaryMatch ? diaryMatch[1] : null;
+  // Access case_details (lowercase) or "Case Details" (capitalized)
+  const caseDetails = data.case_details || data["Case Details"] || {};
+  console.log('📦 Case Details Keys:', Object.keys(caseDetails));
   
-  // Parse Filed On
-  const filedOnMatch = diaryInfo.match(/Filed on\s+(\S+)/);
-  const diaryFiledOn = filedOnMatch ? parseDate(filedOnMatch[1]) : null;
+  // Extract root-level fields (lowercase from API)
+  const petitioner = data.petitioner || data.Petitioner || "";
+  const respondent = data.respondent || data.Respondent || "";
+  const diaryNumber = data.diary_number || data["Diary Number"] || null;
+  const status = data.status || data.Status || caseDetails["Status/Stage"] || "PENDING";
+  const category = caseDetails.Category || caseDetails["Category"] || data.category || null;
   
-  // Parse Section
-  const sectionMatch = diaryInfo.match(/SECTION:\s*([^\]]+)/);
-  const diarySection = sectionMatch ? sectionMatch[1].trim() : null;
+  // Extract case numbers
+  const caseNumbers = data.case_numbers || data["Case Numbers"] || [];
+  const caseNumberStr = Array.isArray(caseNumbers) && caseNumbers.length > 0
+    ? caseNumbers[0]?.number || caseNumbers[0]?.Number
+    : caseDetails["Case Number"]?.split(' Registered')[0] || null;
   
-  // Parse Status
-  const statusMatch = diaryInfo.match(/\]\s+(\w+)$/);
-  const diaryStatus = statusMatch ? statusMatch[1] : null;
+  const registeredOn = Array.isArray(caseNumbers) && caseNumbers.length > 0
+    ? caseNumbers[0]?.registered_on || caseNumbers[0]?.["Registered On"]
+    : data["Registered On"] || null;
   
-  // Parse Bench Composition
-  const presentListed = rawData["Present/Last Listed On"] || "";
+  // Parse bench composition from nested case_details
+  const presentListed = caseDetails["Present/Last Listed On"] || "";
   const benchMatch = presentListed.match(/\[(.*?)\]/);
   const benchComposition = benchMatch 
     ? benchMatch[1].split(/,?\s*and\s*/).map((s: string) => s.trim())
     : [];
   
-  // Parse Present Last Listed date
-  const dateMatch = presentListed.match(/^(\d{2}-\d{2}-\d{4})/);
-  const presentLastListedOn = dateMatch ? parseDate(dateMatch[1]) : null;
+  // Parse CNR from case_details
+  const cnrNumber = caseDetails["CNR Number"] || data.cnr_number || null;
   
-  const categoryCode = rawData["Category"] || null;
+  // Parse diary info
+  const diaryInfo = caseDetails["Diary Info"] || "";
+  const diaryFiledOnMatch = diaryInfo.match(/Filed on\s+(\S+)/);
+  const diaryFiledOn = diaryFiledOnMatch ? parseDate(diaryFiledOnMatch[1]) : parseDate(registeredOn);
   
-  // Parse Verification Date
-  const regInfo = caseDetails["Case Number"] || "";
-  const verificationMatch = regInfo.match(/Verified On\s+(\S+)/);
-  const verificationDate = verificationMatch ? parseDate(verificationMatch[1]) : null;
+  const sectionMatch = diaryInfo.match(/SECTION:\s*([^\]]+)/);
+  const diarySection = sectionMatch ? sectionMatch[1].trim() : null;
+  
+  const statusMatch = diaryInfo.match(/\]\s+(\w+)$/);
+  const diaryStatus = statusMatch ? statusMatch[1] : status;
   
   // Build SC case
   const scCase: ParsedSupremeCourtCase = {
-    caseTitle: `${rawData.Petitioner} vs. ${rawData.Respondent}`,
-    caseNumber: rawData["Case Numbers"]?.Number || null,
+    caseTitle: caseDetails["Case Title"] || `${petitioner} vs. ${respondent}`,
+    caseNumber: caseNumberStr,
     filingNumber: null,
-    registrationNumber: rawData["Case Numbers"]?.Number || null,
-    filingDate: parseDate(diaryFiledOn),
-    registrationDate: parseDate(rawData["Registered On"]),
-    cnrNumber: caseDetails["CNR Number"] || null,
-    stageOfCase: rawData["Status/Stage"] || null,
+    registrationNumber: caseNumberStr,
+    filingDate: diaryFiledOn,
+    registrationDate: parseDate(registeredOn),
+    cnrNumber: cnrNumber,
+    stageOfCase: caseDetails["Status/Stage"] || status,
     nextHearingDate: null,
     firstHearingDate: null,
     coram: benchComposition.join(', '),
@@ -429,118 +438,147 @@ export function parseSupremeCourtData(rawData: any): ParsedSupremeCourtData {
     judicialBranch: null,
     state: null,
     district: null,
-    category: rawData["Category"] || null,
+    category: category,
     subCategory: null,
-    caseType: null,
+    caseType: 'civil',
     courtNumberAndJudge: null,
-    diaryNumber,
-    diaryFiledOn,
-    diarySection,
-    diaryStatus,
-    presentLastListedOn,
+    diaryNumber: diaryNumber,
+    diaryFiledOn: diaryFiledOn,
+    diarySection: diarySection,
+    diaryStatus: diaryStatus,
+    presentLastListedOn: presentListed ? parseDate(presentListed.split('[')[0].trim()) : null,
     benchComposition,
-    caseStatusDetail: rawData["Status/Stage"] || null,
-    categoryCode,
-    verificationDate,
+    caseStatusDetail: caseDetails["Status/Stage"] || status,
+    categoryCode: category,
+    verificationDate: null,
   };
   
-  // Parse parties
-  const petitioners = parsePartyList(rawData["Petitioner(S)"] || "");
-  const respondents = parsePartyList(rawData["Respondent(S)"] || "");
+  // Parse parties from case_details
+  const petitionersList = caseDetails["Petitioner(s)"] || caseDetails["Petitioner(S)"] || "";
+  const respondentsList = caseDetails["Respondent(s)"] || caseDetails["Respondent(S)"] || "";
   
-  // Parse Earlier Court Details
-  const earlierCourts = caseDetails["Earlier Court Details"] || [];
-  const earlierCourtDetails = earlierCourts.map((court: any) => ({
-    srNo: court["S.No."] || null,
-    courtType: court.Court || null,
-    agencyState: court["Agency State"] || null,
-    agencyCode: court["Agency Code"] || null,
-    caseNo: court["Case No."] || null,
-    orderDate: parseDate(court["Order Date"]),
-    cnrNo: court["CNR No. / Designation"] || null,
-    designation: court["CNR No. / Designation"] || null,
-    judge1: court["Judge1 / Judge2 / Judge3"] || null,
-    judge2: null,
-    judge3: null,
-    policeStation: court["Police Station"] || null,
-    crimeNo: court["Crime No./ Year"]?.split('/')[0] || null,
-    crimeYear: court["Crime No./ Year"]?.split('/')[1] ? parseInt(court["Crime No./ Year"].split('/')[1]) : null,
-    judgmentChallenged: court["Judgment Challenged"] === "Yes",
-    judgmentType: court["Judgment Type"] !== "-" ? court["Judgment Type"] : null,
-    judgmentCoveredIn: court["Judgment Covered In"] || null,
+  const petitioners = parsePartyList(petitionersList);
+  const respondents = parsePartyList(respondentsList);
+  
+  // If no detailed party list, create from root fields
+  if (petitioners.length === 0 && petitioner) {
+    petitioners.push({
+      name: petitioner,
+      advocate: caseDetails["Petitioner Advocate(s)"] || caseDetails["Petitioner Advocate(S)"] || null
+    });
+  }
+  
+  if (respondents.length === 0 && respondent) {
+    respondents.push({
+      name: respondent,
+      advocate: caseDetails["Respondent Advocate(s)"] || caseDetails["Respondent Advocate(S)"] || null
+    });
+  }
+  
+  // Parse Earlier Court Details - handle both array and object structures
+  const earlierCourtsRaw = caseDetails["Earlier Court Details"] || [];
+  const earlierCourtDetails = (Array.isArray(earlierCourtsRaw) ? earlierCourtsRaw : []).map((court: any) => ({
+    srNo: court["S.No."] || court.sr_no || null,
+    courtType: court.Court || court.court || null,
+    agencyState: court["Agency State"] || court.agency_state || null,
+    agencyCode: court["Agency Code"] || court.agency_code || null,
+    caseNo: court["Case No."] || court.case_no || null,
+    orderDate: parseDate(court["Order Date"] || court.order_date),
+    cnrNo: court["CNR No. / Designation"] || court.cnr_no || null,
+    designation: court["CNR No. / Designation"] || court.designation || null,
+    judge1: court["Judge1 / Judge2 / Judge3"] || court.judge1 || null,
+    judge2: court.judge2 || null,
+    judge3: court.judge3 || null,
+    policeStation: court["Police Station"] || court.police_station || null,
+    crimeNo: (court["Crime No./ Year"] || court.crime_no || "").split('/')[0] || null,
+    crimeYear: (court["Crime No./ Year"] || court.crime_year || "").split('/')[1] ? parseInt((court["Crime No./ Year"] || "").split('/')[1]) : null,
+    judgmentChallenged: court["Judgment Challenged"] === "Yes" || court.judgment_challenged === true,
+    judgmentType: (court["Judgment Type"] !== "-" && court["Judgment Type"]) ? court["Judgment Type"] : (court.judgment_type || null),
+    judgmentCoveredIn: court["Judgment Covered In"] || court.judgment_covered_in || null,
   }));
   
   // Parse Tagged Matters
-  const taggedMatters = (caseDetails["Tagged Matters"] || []).map((tm: any) => ({
-    type: tm.Type || null,
-    caseNumber: tm["Case Number"] || null,
-    registeredOn: tm["Case Number"]?.match(/\(([^)]+)\)/)?.[1] || null,
-    petitionerVsRespondent: tm["Petitioner Vs. Respondent"] || null,
-    listStatus: tm.List || null,
-    status: tm.Status || null,
-    statInfo: tm["Stat. Info."] || null,
-    iaInfo: tm.IA || null,
-    entryDate: parseDate(tm["Entry Date"]),
+  const taggedMattersRaw = caseDetails["Tagged Matters"] || [];
+  const taggedMatters = (Array.isArray(taggedMattersRaw) ? taggedMattersRaw : []).map((tm: any) => ({
+    type: tm.Type || tm.type || null,
+    caseNumber: tm["Case Number"] || tm.case_number || null,
+    registeredOn: (tm["Case Number"] || tm.case_number || "").match(/\(([^)]+)\)/)?.[1] || null,
+    petitionerVsRespondent: tm["Petitioner Vs. Respondent"] || tm.petitioner_vs_respondent || null,
+    listStatus: tm.List || tm.list || null,
+    status: tm.Status || tm.status || null,
+    statInfo: tm["Stat. Info."] || tm.stat_info || null,
+    iaInfo: tm.IA || tm.ia || null,
+    entryDate: parseDate(tm["Entry Date"] || tm.entry_date),
   }));
   
   // Parse Listing Dates
-  const listingDates = (caseDetails["Listing Dates"] || []).map((ld: any) => ({
-    clDate: parseDate(ld["CL Date"]),
-    miscOrRegular: ld["Misc./Regular"] || null,
-    stage: ld.Stage || null,
-    purpose: ld.Purpose || null,
-    judges: ld.Judges ? ld.Judges.split(',').map((s: string) => s.trim()) : [],
-    remarks: ld.Remarks || null,
-    listedStatus: ld.Listed || null,
+  const listingDatesRaw = caseDetails["Listing Dates"] || [];
+  const listingDates = (Array.isArray(listingDatesRaw) ? listingDatesRaw : []).map((ld: any) => ({
+    clDate: parseDate(ld["CL Date"] || ld.cl_date),
+    miscOrRegular: ld["Misc./Regular"] || ld.misc_regular || null,
+    stage: ld.Stage || ld.stage || null,
+    purpose: ld.Purpose || ld.purpose || null,
+    judges: (ld.Judges || ld.judges) ? (ld.Judges || ld.judges).split(',').map((s: string) => s.trim()) : [],
+    remarks: ld.Remarks || ld.remarks || null,
+    listedStatus: ld.Listed || ld.listed || null,
   }));
   
   // Parse Notices
-  const notices = (caseDetails["Notices"] || []).map((n: any) => ({
-    srNo: n["Serial Number"] || null,
-    processId: n["Process Id"] || null,
-    noticeType: n["Notice Type"] || null,
-    name: n.Name || null,
-    state: n["State / District"]?.split('/')[0]?.trim() || null,
-    district: n["State / District"]?.split('/')[1]?.trim() || null,
-    station: n.Station || null,
-    issueDate: parseDate(n["Issue Date"]),
-    returnableDate: parseDate(n["Returnable Date"]),
-    dispatchDate: n["Dispatch Date"] || null,
+  const noticesRaw = caseDetails["Notices"] || [];
+  const notices = (Array.isArray(noticesRaw) ? noticesRaw : []).map((n: any) => ({
+    srNo: n["Serial Number"] || n.serial_number || null,
+    processId: n["Process Id"] || n.process_id || null,
+    noticeType: n["Notice Type"] || n.notice_type || null,
+    name: n.Name || n.name || null,
+    state: (n["State / District"] || n.state_district || "").split('/')[0]?.trim() || null,
+    district: (n["State / District"] || n.state_district || "").split('/')[1]?.trim() || null,
+    station: n.Station || n.station || null,
+    issueDate: parseDate(n["Issue Date"] || n.issue_date),
+    returnableDate: parseDate(n["Returnable Date"] || n.returnable_date),
+    dispatchDate: n["Dispatch Date"] || n.dispatch_date || null,
   }));
   
   // Parse Defects
-  const defects = (caseDetails["Defects"] || []).map((d: any) => ({
-    srNo: d["S.No."] || null,
-    defaultType: d.Default || null,
-    remarks: d.Remarks || null,
-    notificationDate: parseDate(d["Notification Date"]),
-    removedOnDate: parseDate(d["Removed On Date"]),
+  const defectsRaw = caseDetails["Defects"] || [];
+  const defects = (Array.isArray(defectsRaw) ? defectsRaw : []).map((d: any) => ({
+    srNo: d["S.No."] || d.sr_no || null,
+    defaultType: d.Default || d.default || null,
+    remarks: d.Remarks || d.remarks || null,
+    notificationDate: parseDate(d["Notification Date"] || d.notification_date),
+    removedOnDate: parseDate(d["Removed On Date"] || d.removed_on_date),
   }));
   
   // Parse Judgement Orders
-  const judgementOrders = (caseDetails["Judgement Orders"] || []).map((jo: any) => ({
-    date: parseDate(jo.Date),
-    url: jo.Url || null,
-    type: jo.Type || null,
+  const judgementOrdersRaw = caseDetails["Judgement Orders"] || [];
+  const judgementOrders = (Array.isArray(judgementOrdersRaw) ? judgementOrdersRaw : []).map((jo: any) => ({
+    date: parseDate(jo.Date || jo.date),
+    url: jo.Url || jo.url || null,
+    type: jo.Type || jo.type || null,
   }));
   
   // Parse Office Reports
-  const officeReports = (caseDetails["Office Report"] || []).map((or: any) => ({
-    srNo: or["Serial Number"] || null,
-    processId: or["Process Id"] || null,
-    orderDate: parseDate(or["Order Date"]?.Text),
-    htmlUrl: or["Pdf Url"] || null,
-    receivingDate: or["Receiving Date"] || null,
+  const officeReportsRaw = caseDetails["Office Report"] || [];
+  const officeReports = (Array.isArray(officeReportsRaw) ? officeReportsRaw : []).map((or: any) => ({
+    srNo: or["Serial Number"] || or.serial_number || null,
+    processId: or["Process Id"] || or.process_id || null,
+    orderDate: parseDate(or["Order Date"]?.Text || or.order_date?.text || or.order_date),
+    htmlUrl: or["Pdf Url"] || or.pdf_url || null,
+    receivingDate: or["Receiving Date"] || or.receiving_date || null,
   }));
   
   // Parse Similarities
-  const similarities = caseDetails["Similarities"] || [];
+  const similarities = caseDetails["Similarities"] || caseDetails.similarities || [];
   
   console.log('✅ Supreme Court data parsed');
   console.log(`   - Petitioners: ${petitioners.length}`);
   console.log(`   - Respondents: ${respondents.length}`);
   console.log(`   - Earlier Courts: ${earlierCourtDetails.length}`);
   console.log(`   - Tagged Matters: ${taggedMatters.length}`);
+  console.log(`   - Listing Dates: ${listingDates.length}`);
+  console.log(`   - Notices: ${notices.length}`);
+  console.log(`   - Defects: ${defects.length}`);
+  console.log(`   - Judgement Orders: ${judgementOrders.length}`);
+  console.log(`   - Office Reports: ${officeReports.length}`);
   
   return {
     case: scCase,
