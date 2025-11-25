@@ -153,6 +153,8 @@ export interface ParsedSupremeCourtData {
   judgementOrders: ParsedJudgementOrder[];
   officeReports: ParsedOfficeReport[];
   similarities: any[];
+  iaDocuments: any[];
+  courtFees: any[];
 }
 
 /**
@@ -569,6 +571,27 @@ export function parseSupremeCourtData(rawData: any): ParsedSupremeCourtData {
   // Parse Similarities
   const similarities = caseDetails["Similarities"] || caseDetails.similarities || [];
   
+  // Parse IA Documents
+  const iaDocumentsRaw = caseDetails["interlocutory_application_documents"] || 
+                         caseDetails.interlocutory_application_documents || [];
+  const iaDocuments = (Array.isArray(iaDocumentsRaw) ? iaDocumentsRaw : []).map((ia: any) => ({
+    iaNumber: ia.ia_number || ia["IA Number"] || null,
+    documentType: ia.document_type || ia["Document Type"] || null,
+    filedBy: ia.filed_by || ia["Filed By"] || null,
+    filingDate: parseDate(ia.filing_date || ia["Filing Date"]),
+    documentUrl: ia.document_url || ia["Document URL"] || null,
+    status: ia.status || ia.Status || null,
+  }));
+
+  // Parse Court Fees
+  const courtFeesRaw = caseDetails["court_fees"] || caseDetails.court_fees || [];
+  const courtFees = (Array.isArray(courtFeesRaw) ? courtFeesRaw : []).map((cf: any) => ({
+    feeType: cf.fee_type || cf["Fee Type"] || null,
+    amount: cf.amount || cf.Amount || null,
+    paidDate: parseDate(cf.paid_date || cf["Paid Date"]),
+    challanNumber: cf.challan_number || cf["Challan Number"] || null,
+  }));
+  
   console.log('✅ Supreme Court data parsed');
   console.log(`   - Petitioners: ${petitioners.length}`);
   console.log(`   - Respondents: ${respondents.length}`);
@@ -579,6 +602,8 @@ export function parseSupremeCourtData(rawData: any): ParsedSupremeCourtData {
   console.log(`   - Defects: ${defects.length}`);
   console.log(`   - Judgement Orders: ${judgementOrders.length}`);
   console.log(`   - Office Reports: ${officeReports.length}`);
+  console.log(`   - IA Documents: ${iaDocuments.length}`);
+  console.log(`   - Court Fees: ${courtFees.length}`);
   
   return {
     case: scCase,
@@ -592,6 +617,8 @@ export function parseSupremeCourtData(rawData: any): ParsedSupremeCourtData {
     judgementOrders,
     officeReports,
     similarities,
+    iaDocuments,
+    courtFees,
   };
 }
 

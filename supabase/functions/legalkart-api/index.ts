@@ -373,6 +373,7 @@ async function upsertSupremeCourtData(
   }
   
   // 2. Update legalkart_cases with SC-specific fields
+  const caseDetails = rawData.case_details || rawData["Case Details"] || {};
   const { data: legalkartCase, error: lkError } = await supabase
     .from('legalkart_cases')
     .upsert({
@@ -394,6 +395,11 @@ async function upsertSupremeCourtData(
       case_status_detail: parsedData.case.caseStatusDetail,
       category_code: parsedData.case.categoryCode,
       verification_date: parsedData.case.verificationDate,
+      argument_transcripts: caseDetails.argument_transcripts || null,
+      indexing: caseDetails.indexing || null,
+      mention_memo: caseDetails.mention_memo || null,
+      drop_note: caseDetails.drop_note || null,
+      caveat: caseDetails.caveat || null,
       raw_data: rawData,
       last_synced_at: new Date().toISOString(),
     }, { onConflict: 'case_id' })
@@ -419,6 +425,8 @@ async function upsertSupremeCourtData(
     supabase.from('sc_judgement_orders').delete().eq('case_id', caseId),
     supabase.from('sc_office_reports').delete().eq('case_id', caseId),
     supabase.from('sc_similarities').delete().eq('case_id', caseId),
+    supabase.from('sc_ia_documents').delete().eq('case_id', caseId),
+    supabase.from('sc_court_fees').delete().eq('case_id', caseId),
   ]);
   
   // 3. Insert petitioners
@@ -573,6 +581,36 @@ async function upsertSupremeCourtData(
         legalkart_case_id: legalkartCaseId,
         category: sim.Category,
         similarity_data: sim.Data,
+      }))
+    );
+  }
+  
+  // 13. Insert IA Documents
+  if (parsedData.iaDocuments && parsedData.iaDocuments.length > 0) {
+    await supabase.from('sc_ia_documents').insert(
+      parsedData.iaDocuments.map((ia: any) => ({
+        case_id: caseId,
+        legalkart_case_id: legalkartCaseId,
+        ia_number: ia.iaNumber,
+        document_type: ia.documentType,
+        filed_by: ia.filedBy,
+        filing_date: ia.filingDate,
+        document_url: ia.documentUrl,
+        status: ia.status,
+      }))
+    );
+  }
+
+  // 14. Insert Court Fees
+  if (parsedData.courtFees && parsedData.courtFees.length > 0) {
+    await supabase.from('sc_court_fees').insert(
+      parsedData.courtFees.map((cf: any) => ({
+        case_id: caseId,
+        legalkart_case_id: legalkartCaseId,
+        fee_type: cf.feeType,
+        amount: cf.amount,
+        paid_date: cf.paidDate,
+        challan_number: cf.challanNumber,
       }))
     );
   }

@@ -3539,6 +3539,54 @@ export type Database = {
           },
         ]
       }
+      sc_court_fees: {
+        Row: {
+          amount: number | null
+          case_id: string
+          challan_number: string | null
+          created_at: string | null
+          fee_type: string | null
+          id: string
+          legalkart_case_id: string | null
+          paid_date: string | null
+        }
+        Insert: {
+          amount?: number | null
+          case_id: string
+          challan_number?: string | null
+          created_at?: string | null
+          fee_type?: string | null
+          id?: string
+          legalkart_case_id?: string | null
+          paid_date?: string | null
+        }
+        Update: {
+          amount?: number | null
+          case_id?: string
+          challan_number?: string | null
+          created_at?: string | null
+          fee_type?: string | null
+          id?: string
+          legalkart_case_id?: string | null
+          paid_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sc_court_fees_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sc_court_fees_legalkart_case_id_fkey"
+            columns: ["legalkart_case_id"]
+            isOneToOne: false
+            referencedRelation: "legalkart_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sc_defects: {
         Row: {
           case_id: string
@@ -3727,6 +3775,60 @@ export type Database = {
           },
           {
             foreignKeyName: "sc_earlier_court_details_legalkart_case_id_fkey"
+            columns: ["legalkart_case_id"]
+            isOneToOne: false
+            referencedRelation: "legalkart_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sc_ia_documents: {
+        Row: {
+          case_id: string
+          created_at: string | null
+          document_type: string | null
+          document_url: string | null
+          filed_by: string | null
+          filing_date: string | null
+          ia_number: string | null
+          id: string
+          legalkart_case_id: string | null
+          status: string | null
+        }
+        Insert: {
+          case_id: string
+          created_at?: string | null
+          document_type?: string | null
+          document_url?: string | null
+          filed_by?: string | null
+          filing_date?: string | null
+          ia_number?: string | null
+          id?: string
+          legalkart_case_id?: string | null
+          status?: string | null
+        }
+        Update: {
+          case_id?: string
+          created_at?: string | null
+          document_type?: string | null
+          document_url?: string | null
+          filed_by?: string | null
+          filing_date?: string | null
+          ia_number?: string | null
+          id?: string
+          legalkart_case_id?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sc_ia_documents_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sc_ia_documents_legalkart_case_id_fkey"
             columns: ["legalkart_case_id"]
             isOneToOne: false
             referencedRelation: "legalkart_cases"
