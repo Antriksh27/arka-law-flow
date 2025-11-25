@@ -90,32 +90,39 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
         if (isSupremeCourt) {
           console.log('🔍 SC Raw Data:', rawData);
           
-          // ✅ CORRECT: Access root-level CAPITALIZED fields
-          const petitioner = rawData.Petitioner || "";
-          const respondent = rawData.Respondent || "";
-          const diaryNumber = rawData["Diary Number"] || null;
-          const status = rawData["Status/Stage"] || rawData.Status || 'PENDING';
+          // Root-level fields are LOWERCASE (petitioner, respondent, diary_number)
+          const petitioner = rawData.petitioner || "";
+          const respondent = rawData.respondent || "";
+          const diaryNumber = rawData.diary_number || null;
+          const status = rawData.status || 'PENDING';
           
-          // ✅ CORRECT: Access nested "Case Details" (capitalized)
-          const caseDetails = rawData["Case Details"] || {};
+          // Nested case_details has CAPITALIZED fields ("Case Title", "CNR Number")
+          const caseDetails = rawData.case_details || {};
           const cnrNumber = caseDetails["CNR Number"] || null;
-          const category = rawData["Category"] || null;
+          const category = caseDetails["Category"] || null;
+          const statusStage = caseDetails["Status/Stage"] || status;
           
           console.log('🔍 Extracted SC Data:', {
             petitioner,
             respondent,
             diaryNumber,
             status,
+            statusStage,
             category,
-            cnrNumber
+            cnrNumber,
+            caseTitle: caseDetails["Case Title"]
           });
           
-          // ✅ CORRECT: Construct case title from root-level fields
-          let caseTitle = petitioner && respondent ? `${petitioner} vs. ${respondent}` : null;
+          // Construct case title - prioritize from case_details, fallback to constructing
+          let caseTitle = caseDetails["Case Title"];
+          if (!caseTitle && petitioner && respondent) {
+            caseTitle = `${petitioner} vs. ${respondent}`;
+            console.log('⚠️ Case title constructed from root fields:', caseTitle);
+          }
           
-          // ✅ Extract detailed party lists for database
-          const petitionerList = rawData["Petitioner(S)"] || "";
-          const respondentList = rawData["Respondent(S)"] || "";
+          // Extract detailed party lists (capitalized fields in case_details)
+          const petitionerList = caseDetails["Petitioner(s)"] || "";
+          const respondentList = caseDetails["Respondent(s)"] || "";
           
           // Clean party lists - remove leading numbers
           const cleanParty = (party: string) => {
@@ -127,9 +134,8 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
           const respondentCleaned = cleanParty(respondentList) || respondent;
           
           const caseNumber = caseDetails["Case Number"] || null;
-          const statusStage = status;
-          const petitionerAdvocate = rawData["Petitioner Advocate(S)"] || null;
-          const respondentAdvocate = rawData["Respondent Advocate(S)"] || null;
+          const petitionerAdvocate = caseDetails["Petitioner Advocate(s)"] || null;
+          const respondentAdvocate = caseDetails["Respondent Advocate(s)"] || null;
           
           // Parse bench composition from "Present/Last Listed On"
           const presentListed = rawData["Present/Last Listed On"] || "";
