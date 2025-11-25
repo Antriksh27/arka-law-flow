@@ -88,7 +88,8 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
         let parsedData;
         
         if (isSupremeCourt) {
-          console.log('SC Raw Data:', rawData);
+          console.log('🔍 SC Raw Data:', rawData);
+          console.log('🔍 SC case_details:', rawData.case_details);
           
           // Root-level fields are lowercase
           const diaryNumber = rawData.diary_number || null;
@@ -98,9 +99,13 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
           
           // Nested case_details has capitalized fields
           const caseDetails = rawData.case_details || {};
+          console.log('🔍 Case Title from API:', caseDetails["Case Title"]);
+          console.log('🔍 Petitioner from API:', petitionerRaw, caseDetails["Petitioner(s)"]);
+          console.log('🔍 Respondent from API:', respondentRaw, caseDetails["Respondent(s)"]);
           
           // Clean party names - remove leading numbers like "1 " and get first line only
           const cleanParty = (party: string) => {
+            if (!party) return '';
             return party.replace(/^\d+\s+/, '').split('\n')[0].trim();
           };
           
@@ -112,10 +117,23 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
           const petitioner = petitionerRaw || cleanParty(petitionerFromDetails);
           const respondent = respondentRaw || cleanParty(respondentFromDetails);
           
+          console.log('🔍 Cleaned parties:', { petitioner, respondent });
+          
           const cnrNumber = caseDetails["CNR Number"] || null;
-          const caseTitleFromDetails = caseDetails["Case Title"] || "";
-          const caseTitle = caseTitleFromDetails || 
-                           (petitioner && respondent ? `${petitioner} vs ${respondent}` : "Case Details");
+          
+          // CRITICAL: Extract case title with proper priority
+          let caseTitle = caseDetails["Case Title"];
+          if (!caseTitle || caseTitle.trim() === '') {
+            if (petitioner && respondent) {
+              caseTitle = `${petitioner} vs ${respondent}`;
+              console.log('⚠️ Case title constructed from parties:', caseTitle);
+            } else {
+              console.error('❌ No case title or party names found!');
+              caseTitle = null; // Let validation handle this
+            }
+          } else {
+            console.log('✅ Case title from API:', caseTitle);
+          }
           const caseNumber = caseDetails["Case Number"] || null;
           const category = caseDetails["Category"] || null;
           const statusStage = caseDetails["Status/Stage"] || status;
@@ -170,6 +188,17 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
             bench_composition: benchComposition,
             is_supreme_court: true,
           };
+          
+          console.log('✅ Parsed SC Case Data:', {
+            title: parsedData.case_title,
+            diary_number: parsedData.diary_number,
+            petitioner: parsedData.petitioner,
+            respondent: parsedData.respondent,
+            category: parsedData.category,
+            bench_composition: parsedData.bench_composition,
+            status: parsedData.status,
+            stage: parsedData.stage
+          });
         } else {
           // Parse HC/DC data structure (existing logic)
           const caseInfo = rawData.data?.case_info || {};
@@ -215,12 +244,18 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
           };
         }
 
-        // Validate before setting
-        if (!parsedData.case_title || parsedData.case_title === 'null vs null') {
-          console.warn('Invalid case title detected:', parsedData);
-          parsedData.case_title = 'Case Details (Title Not Available)';
+        // Validate case title - throw error if missing instead of using fallback
+        if (!parsedData.case_title) {
+          console.error('❌ No case title found in parsed data:', parsedData);
+          throw new Error('Failed to extract case title from API response. Please check the CNR number and try again.');
         }
         
+        if (parsedData.case_title === 'null vs null') {
+          console.error('❌ Invalid case title "null vs null":', parsedData);
+          throw new Error('Invalid party names in API response. Please verify the case details.');
+        }
+        
+        console.log('✅ Setting fetched data:', parsedData);
         setFetchedData(parsedData);
         toast({
           title: "Case Details Fetched",
