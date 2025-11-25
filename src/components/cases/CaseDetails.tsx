@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Calendar, MapPin, Scale, FileText, Users, Gavel, Building, 
   RefreshCw, Hash, Clock, Briefcase, User, BookOpen,
-  CheckCircle, AlertCircle, Archive, Bell, AlertTriangle, FileCheck
+  CheckCircle, AlertCircle, Archive
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -15,11 +15,6 @@ import { LegalkartDocumentsTable } from './legalkart/LegalkartDocumentsTable';
 import { LegalkartObjectionsTable } from './legalkart/LegalkartObjectionsTable';
 import { LegalkartOrdersTable } from './legalkart/LegalkartOrdersTable';
 import { LegalkartHistoryTable } from './legalkart/LegalkartHistoryTable';
-import { SCListingHistoryTimeline } from './supreme/SCListingHistoryTimeline';
-import { SCNoticesTable } from './supreme/SCNoticesTable';
-import { SCDefectsTable } from './supreme/SCDefectsTable';
-import { SCJudgementOrdersTable } from './supreme/SCJudgementOrdersTable';
-import { SCOfficeReportsTable } from './supreme/SCOfficeReportsTable';
 import { TimeUtils } from '@/lib/timeUtils';
 
 interface CaseDetailsProps {
@@ -95,7 +90,6 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
     sub_category,
     court_name,
     court,
-    court_type,
     petitioner,
     petitioner_advocate,
     respondent,
@@ -112,40 +106,12 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
     fetched_data,
   } = caseData;
 
-  // Check if this is a Supreme Court case
-  const isSupremeCourt = court_type === 'supreme_court' || 
-                         court_name?.toLowerCase().includes('supreme court');
-
-  // Extract nested data - handle both old and new structure
-  const fetchedDataRoot = (fetched_data as any) || {};
-  const caseDetailsNested = fetchedDataRoot?.case_details || fetchedDataRoot?.["Case Details"] || {};
-  const apiData = fetchedDataRoot;
+  // Extract nested data for the tabs (documents, objections, etc.)
+  const apiData = (fetched_data as any)?.data || {};
   const documents = apiData?.documents || [];
   const objections = apiData?.objections || [];
   const orderDetails = apiData?.order_details || [];
   const historyData = apiData?.history_of_case_hearing || [];
-  
-  console.log('SC Data Extraction:', {
-    isSupremeCourt,
-    court_type,
-    fetchedDataRoot: Object.keys(fetchedDataRoot),
-    caseDetailsKeys: Object.keys(caseDetailsNested),
-    diaryNumber: fetchedDataRoot?.diary_number || fetchedDataRoot?.["Diary Number"]
-  });
-  
-  // Extract Supreme Court specific data from root level and nested "Case Details"
-  const scData = isSupremeCourt ? {
-    diaryNumber: fetchedDataRoot?.diary_number || fetchedDataRoot?.["Diary Number"] || null,
-    scCategory: category || caseDetailsNested?.Category || caseDetailsNested?.["Category"] || null,
-    benchComposition: coram || null,
-    earlierCourtDetails: caseDetailsNested?.["Earlier Court Details"] || [],
-    taggedMatters: caseDetailsNested?.["Tagged Matters"] || [],
-    defects: caseDetailsNested?.["Defects"] || [],
-    listingDates: caseDetailsNested?.["Listing Dates"] || [],
-    judgementOrders: caseDetailsNested?.["Judgement Orders"] || [],
-    notices: caseDetailsNested?.["Notices"] || [],
-    officeReport: caseDetailsNested?.["Office Report"] || [],
-  } : null;
 
   // Parse petitioner data to separate party name from any embedded text
   const petitionerName = petitioner?.split('Vs')[0]?.trim() || petitioner;
@@ -270,42 +236,6 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
         </Card>
       </div>
 
-      {/* Supreme Court Specific Section */}
-      {isSupremeCourt && scData && (
-        <Card className="rounded-2xl border-l-4 border-l-primary">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2.5 text-lg">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Scale className="w-5 h-5 text-primary" />
-              </div>
-              Supreme Court Details
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {scData.diaryNumber && (
-                <div className="space-y-1.5">
-                  <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Diary Number</p>
-                  <p className="text-base font-mono font-semibold">{scData.diaryNumber}</p>
-                </div>
-              )}
-              {scData.scCategory && (
-                <div className="space-y-1.5 md:col-span-2">
-                  <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Category</p>
-                  <p className="text-sm font-medium">{scData.scCategory}</p>
-                </div>
-              )}
-              {scData.benchComposition && (
-                <div className="space-y-1.5 md:col-span-2">
-                  <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Bench Composition</p>
-                  <p className="text-sm font-medium leading-relaxed whitespace-pre-line">{scData.benchComposition}</p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList className="inline-flex h-12 items-center justify-start rounded-xl bg-muted/50 p-1.5 gap-1">
           <TabsTrigger value="overview" className="rounded-lg px-6">Overview</TabsTrigger>
@@ -314,17 +244,6 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
           <TabsTrigger value="objections" className="rounded-lg px-6">Objections</TabsTrigger>
           <TabsTrigger value="orders" className="rounded-lg px-6">Orders</TabsTrigger>
           <TabsTrigger value="history" className="rounded-lg px-6">History</TabsTrigger>
-          {isSupremeCourt && (
-            <>
-              <TabsTrigger value="sc-earlier-courts" className="rounded-lg px-6">Earlier Courts</TabsTrigger>
-              <TabsTrigger value="sc-tagged" className="rounded-lg px-6">Tagged Matters</TabsTrigger>
-              <TabsTrigger value="sc-listings" className="rounded-lg px-6">Listing History</TabsTrigger>
-              <TabsTrigger value="sc-notices" className="rounded-lg px-6">Notices</TabsTrigger>
-              <TabsTrigger value="sc-defects" className="rounded-lg px-6">Defects</TabsTrigger>
-              <TabsTrigger value="sc-judgements" className="rounded-lg px-6">Judgements</TabsTrigger>
-              <TabsTrigger value="sc-office-reports" className="rounded-lg px-6">Office Reports</TabsTrigger>
-            </>
-          )}
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -759,161 +678,6 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
             </CardContent>
           </Card>
         </TabsContent>
-
-        {/* Supreme Court Specific Tabs */}
-        {isSupremeCourt && scData && (
-          <>
-            <TabsContent value="sc-earlier-courts" className="space-y-6 mt-6">
-              <Card className="rounded-2xl shadow-sm">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-xl">
-                    <Building className="w-5 h-5 text-primary" />
-                    Earlier Court Details
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {scData.earlierCourtDetails.length > 0 ? (
-                    <div className="space-y-4">
-                      {scData.earlierCourtDetails.map((court: any, idx: number) => (
-                        <div key={idx} className="p-4 border rounded-lg space-y-2">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <p className="font-semibold">{court.court_name || 'Court Name Not Available'}</p>
-                              <p className="text-sm text-muted-foreground">{court.case_no || 'Case Number Not Available'}</p>
-                            </div>
-                            {court.judgement && (
-                              <Badge variant={court.judgement.toLowerCase().includes('allow') ? 'default' : 'outline'}>
-                                {court.judgement}
-                              </Badge>
-                            )}
-                          </div>
-                          {court.order_date && (
-                            <p className="text-sm text-muted-foreground">Order Date: {court.order_date}</p>
-                          )}
-                          {court.judges && (
-                            <p className="text-sm">Judges: {court.judges}</p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-muted-foreground text-center py-8">No earlier court details available</p>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="sc-tagged" className="space-y-6 mt-6">
-              <Card className="rounded-2xl shadow-sm">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-xl">
-                    <FileText className="w-5 h-5 text-primary" />
-                    Tagged/Related Matters
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {scData.taggedMatters.length > 0 ? (
-                    <div className="space-y-3">
-                      {scData.taggedMatters.map((matter: any, idx: number) => (
-                        <div key={idx} className="p-4 border rounded-lg">
-                          <div className="flex justify-between items-start mb-2">
-                            <div>
-                              <p className="font-mono text-sm text-muted-foreground">{matter.tagged_case_number || matter.case_no}</p>
-                              <p className="font-medium mt-1">{matter.petitioner_vs_respondent || matter.case_title}</p>
-                            </div>
-                            <Badge variant={matter.matter_status === 'P' ? 'default' : 'outline'}>
-                              {matter.matter_status === 'P' ? 'Pending' : 'Disposed'}
-                            </Badge>
-                          </div>
-                          {matter.ia_info && (
-                            <p className="text-xs text-muted-foreground mt-2">IA: {matter.ia_info}</p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-muted-foreground text-center py-8">No tagged matters available</p>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Listing History Tab */}
-            <TabsContent value="sc-listings" className="space-y-6 mt-6">
-              <Card className="rounded-2xl shadow-sm">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-xl">
-                    <Calendar className="w-5 h-5 text-primary" />
-                    Listing History
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <SCListingHistoryTimeline caseId={caseId} />
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Notices Tab */}
-            <TabsContent value="sc-notices" className="space-y-6 mt-6">
-              <Card className="rounded-2xl shadow-sm">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-xl">
-                    <Bell className="w-5 h-5 text-primary" />
-                    Notices
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <SCNoticesTable caseId={caseId} />
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Defects Tab */}
-            <TabsContent value="sc-defects" className="space-y-6 mt-6">
-              <Card className="rounded-2xl shadow-sm">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-xl">
-                    <AlertTriangle className="w-5 h-5 text-primary" />
-                    Defects
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <SCDefectsTable caseId={caseId} />
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Judgements Tab */}
-            <TabsContent value="sc-judgements" className="space-y-6 mt-6">
-              <Card className="rounded-2xl shadow-sm">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-xl">
-                    <Gavel className="w-5 h-5 text-primary" />
-                    Judgement Orders
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <SCJudgementOrdersTable caseId={caseId} />
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Office Reports Tab */}
-            <TabsContent value="sc-office-reports" className="space-y-6 mt-6">
-              <Card className="rounded-2xl shadow-sm">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-xl">
-                    <FileCheck className="w-5 h-5 text-primary" />
-                    Office Reports
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <SCOfficeReportsTable caseId={caseId} />
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </>
-        )}
       </Tabs>
     </div>
   );

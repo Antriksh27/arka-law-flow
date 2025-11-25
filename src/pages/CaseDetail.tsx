@@ -23,23 +23,8 @@ import { InvoicesTab } from '@/components/cases/detail/tabs/InvoicesTab';
 import { ExpensesTab } from '@/components/cases/detail/tabs/ExpensesTab';
 import { PaymentsTab } from '@/components/cases/detail/tabs/PaymentsTab';
 import { LawyersTab } from '@/components/cases/detail/tabs/LawyersTab';
-import { SCDiaryBenchCard } from '@/components/cases/supreme/SCDiaryBenchCard';
-import { SCEarlierCourtsTable } from '@/components/cases/supreme/SCEarlierCourtsTable';
-import { SCTaggedMattersTable } from '@/components/cases/supreme/SCTaggedMattersTable';
-import { SCListingHistoryTimeline } from '@/components/cases/supreme/SCListingHistoryTimeline';
-import { SCNoticesTable } from '@/components/cases/supreme/SCNoticesTable';
-import { SCDefectsTable } from '@/components/cases/supreme/SCDefectsTable';
-import { SCJudgementOrdersTable } from '@/components/cases/supreme/SCJudgementOrdersTable';
-import { SCOfficeReportsTable } from '@/components/cases/supreme/SCOfficeReportsTable';
-import { SCCaseDetailView } from '@/components/cases/supreme/SCCaseDetailView';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
-
-// DEBUG MARKER - Version 3.0
-console.log('🔴🔴🔴 CASEDETAIL.TSX FILE LOADED - VERSION 3.0 🔴🔴🔴');
 
 const CaseDetail = () => {
-  console.log('🚀 CaseDetail component RENDERING NOW');
-  
   const { id } = useParams<{ id: string }>();
   const [activeTab, setActiveTab] = useState('overview');
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
@@ -336,102 +321,9 @@ const CaseDetail = () => {
     );
   }
 
-  // Detect if this is a Supreme Court case
-  const fetchedData = caseData?.fetched_data as any;
-  
-  // Detailed logging for each detection check
-  console.log('🔍 SC Detection - Step-by-step Analysis:');
-  console.log('  1️⃣ Court field:', caseData?.court);
-  console.log('     → Court includes "supreme"?', caseData?.court?.toLowerCase().includes('supreme'));
-  console.log('  2️⃣ CNR field:', caseData?.cnr_number);
-  console.log('     → CNR starts with "SCIN"?', caseData?.cnr_number?.toUpperCase().startsWith('SCIN'));
-  console.log('  3️⃣ Legalkart diary:', legalkartCase?.diary_number);
-  console.log('     → Has diary number?', !!legalkartCase?.diary_number);
-  console.log('  4️⃣ Legalkart bench:', legalkartCase?.bench_composition);
-  console.log('     → Has bench composition?', !!legalkartCase?.bench_composition?.length);
-  console.log('  5️⃣ Fetched data diary:', fetchedData?.diary_number);
-  console.log('     → Has fetched_data.diary_number?', !!fetchedData?.diary_number);
-  console.log('  6️⃣ Fetched data.data diary:', fetchedData?.data?.diary_number);
-  console.log('     → Has fetched_data.data.diary_number?', !!fetchedData?.data?.diary_number);
-
-  // Ultra-robust detection checking ALL possible indicators
-  const checkLegalkartDiary = !!legalkartCase?.diary_number;
-  const checkLegalkartBench = !!(legalkartCase?.bench_composition?.length);
-  const checkCourtField = !!(caseData?.court && caseData.court.toLowerCase().includes('supreme'));
-  const checkCNRPrefix = !!(caseData?.cnr_number && caseData.cnr_number.toUpperCase().startsWith('SCIN'));
-  const checkFetchedDiary = !!fetchedData?.diary_number;
-  const checkFetchedDataDiary = !!fetchedData?.data?.diary_number;
-  const checkCourtSCI = !!(caseData?.court && caseData.court.toLowerCase().includes('sci'));
-
-  const isSupremeCourt = 
-    checkLegalkartDiary || 
-    checkLegalkartBench ||
-    checkCourtField ||
-    checkCNRPrefix ||
-    checkFetchedDiary ||
-    checkFetchedDataDiary ||
-    checkCourtSCI;
-
-  console.log('🏛️ SC Detection Results:', {
-    checkLegalkartDiary,
-    checkLegalkartBench,
-    checkCourtField,
-    checkCNRPrefix,
-    checkFetchedDiary,
-    checkFetchedDataDiary,
-    checkCourtSCI,
-    FINAL_RESULT: isSupremeCourt
-  });
-
-  // If Supreme Court, show dedicated SC view
-  if (isSupremeCourt) {
-    console.log('✅ Rendering Supreme Court view for case:', id);
-    return (
-      <ErrorBoundary
-        fallback={
-          <div className="min-h-screen bg-[#F8F9FB] flex items-center justify-center p-6">
-            <div className="bg-white rounded-2xl shadow-sm border border-[#E5E7EB] p-6 max-w-2xl">
-              <h2 className="text-xl font-semibold text-red-600 mb-4">Error Loading Supreme Court View</h2>
-              <p className="text-[#6B7280]">
-                There was an error loading the Supreme Court case view. Please try refreshing the page.
-              </p>
-            </div>
-          </div>
-        }
-      >
-        <div className="min-h-screen bg-[#F8F9FB]">
-          <SCCaseDetailView 
-            caseData={caseData}
-            legalkartCase={legalkartCase}
-            rawData={caseData?.fetched_data}
-          />
-        </div>
-      </ErrorBoundary>
-    );
-  }
-
-  console.log('ℹ️ Rendering standard High Court/District Court view for case:', id);
-
   return (
     <div className="min-h-screen bg-[#F8F9FB]">
-      {/* DEBUG: If you see this banner, new code is loaded */}
-      <div style={{ 
-        position: 'fixed', 
-        top: 0, 
-        left: 0, 
-        right: 0, 
-        background: 'red', 
-        color: 'white', 
-        padding: '20px', 
-        textAlign: 'center', 
-        zIndex: 9999,
-        fontSize: '24px',
-        fontWeight: 'bold'
-      }}>
-        ⚠️ NEW CODE LOADED - VERSION 3.0 ⚠️
-      </div>
-      
-      <div className="max-w-7xl mx-auto p-6 space-y-6" style={{ marginTop: '80px' }}>
+      <div className="max-w-7xl mx-auto p-6 space-y-6">
         {/* Header with Quick Actions */}
         <CaseDetailHeaderNew
           caseData={caseData}
@@ -442,14 +334,9 @@ const CaseDetail = () => {
           isRefreshing={refreshMutation.isPending}
         />
 
-        {/* SC Diary & Bench Card - Prominent Display for Supreme Court Cases */}
-        {isSupremeCourt && legalkartCase && (
-          <SCDiaryBenchCard caseData={caseData} legalkartCase={legalkartCase} />
-        )}
-
         {/* Main Details Cards */}
         <div className="space-y-6">
-          <CaseInfoCard caseData={caseData} legalkartCase={legalkartCase} isSupremeCourt={isSupremeCourt} />
+          <CaseInfoCard caseData={caseData} />
           
           {(petitioners.length > 0 || respondents.length > 0) && (
             <PartiesInfoCard petitioners={petitioners} respondents={respondents} />
@@ -460,26 +347,16 @@ const CaseDetail = () => {
 
         {/* Tabs Section */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className={`grid w-full ${isSupremeCourt ? 'grid-cols-12 text-xs' : 'grid-cols-10'} mb-6`}>
+          <TabsList className="grid w-full grid-cols-10 mb-6">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="lawyers">👨‍⚖️ Lawyers</TabsTrigger>
-            <TabsTrigger value="documents">📄 Docs</TabsTrigger>
+            <TabsTrigger value="documents">📄 Documents</TabsTrigger>
             <TabsTrigger value="orders">⚖️ Orders</TabsTrigger>
             <TabsTrigger value="hearings">📅 Hearings</TabsTrigger>
-            <TabsTrigger value="objections">🚫 Obj</TabsTrigger>
-            {isSupremeCourt && (
-              <>
-                <TabsTrigger value="sc-earlier-courts">🏛️ Lower</TabsTrigger>
-                <TabsTrigger value="sc-tagged">🔗 Tagged</TabsTrigger>
-                <TabsTrigger value="sc-listing">📋 Listings</TabsTrigger>
-                <TabsTrigger value="sc-notices">📬 Notices</TabsTrigger>
-                <TabsTrigger value="sc-defects">⚠️ Defects</TabsTrigger>
-                <TabsTrigger value="sc-orders">📜 SC Orders</TabsTrigger>
-              </>
-            )}
-            <TabsTrigger value="invoices">💰 Inv</TabsTrigger>
-            <TabsTrigger value="expenses">💳 Exp</TabsTrigger>
-            <TabsTrigger value="payments">💵 Pay</TabsTrigger>
+            <TabsTrigger value="objections">🚫 Objections</TabsTrigger>
+            <TabsTrigger value="invoices">💰 Invoices</TabsTrigger>
+            <TabsTrigger value="expenses">💳 Expenses</TabsTrigger>
+            <TabsTrigger value="payments">💵 Payments</TabsTrigger>
           </TabsList>
 
           <div className="bg-white rounded-2xl shadow-sm border border-[#E5E7EB] p-6">
@@ -532,35 +409,6 @@ const CaseDetail = () => {
             <TabsContent value="payments" className="mt-0">
               <PaymentsTab caseId={id!} />
             </TabsContent>
-
-            {/* Supreme Court Specific Tabs */}
-            {isSupremeCourt && (
-              <>
-                <TabsContent value="sc-earlier-courts" className="mt-0">
-                  <SCEarlierCourtsTable caseId={id!} />
-                </TabsContent>
-                
-                <TabsContent value="sc-tagged" className="mt-0">
-                  <SCTaggedMattersTable caseId={id!} />
-                </TabsContent>
-                
-                <TabsContent value="sc-listing" className="mt-0">
-                  <SCListingHistoryTimeline caseId={id!} />
-                </TabsContent>
-                
-                <TabsContent value="sc-notices" className="mt-0">
-                  <SCNoticesTable caseId={id!} />
-                </TabsContent>
-                
-                <TabsContent value="sc-defects" className="mt-0">
-                  <SCDefectsTable caseId={id!} />
-                </TabsContent>
-                
-                <TabsContent value="sc-orders" className="mt-0">
-                  <SCJudgementOrdersTable caseId={id!} />
-                </TabsContent>
-              </>
-            )}
 
           </div>
         </Tabs>

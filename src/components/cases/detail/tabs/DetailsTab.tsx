@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ChevronDown, ChevronUp, FileText, Users, AlertCircle, File, Scale, Calendar, XCircle, CheckSquare, Receipt, Database, GitCompare } from 'lucide-react';
+import { ChevronDown, ChevronUp, FileText, Users, AlertCircle, File, Scale, Calendar, XCircle, CheckSquare } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { formatDateDisplay, formatAdvocateName, formatPartyName } from '@/lib/caseDataFormatter';
 import { DocumentsTable } from '@/components/cases/enhanced/DocumentsTable';
@@ -10,10 +10,6 @@ import { OrdersTable } from '@/components/cases/enhanced/OrdersTable';
 import { HearingsTable } from '@/components/cases/enhanced/HearingsTable';
 import { ObjectionsTable } from '@/components/cases/enhanced/ObjectionsTable';
 import { IADetailsTable } from '@/components/cases/enhanced/IADetailsTable';
-import { SCIADocumentsTable } from '@/components/cases/supreme/SCIADocumentsTable';
-import { SCCourtFeesTable } from '@/components/cases/supreme/SCCourtFeesTable';
-import { SCSimilaritiesDisplay } from '@/components/cases/supreme/SCSimilaritiesDisplay';
-import { SCMetadataCard } from '@/components/cases/supreme/SCMetadataCard';
 interface DetailsTabProps {
   caseData: any;
   legalkartData: any;
@@ -38,12 +34,6 @@ export const DetailsTab: React.FC<DetailsTabProps> = ({
 }) => {
   const [caseInfoOpen, setCaseInfoOpen] = useState(true);
   const [nestedTab, setNestedTab] = useState('parties');
-  
-  // Detect if this is a Supreme Court case
-  const isSupremeCourtCase = legalkartData?.diary_number || 
-                              caseData?.cnr_number?.startsWith('SCIN') ||
-                              legalkartData?.cnr_number?.startsWith('SCIN');
-  
   const formatDate = (date: string | null) => {
     if (!date) return 'N/A';
     return formatDateDisplay(date);
@@ -64,13 +54,6 @@ export const DetailsTab: React.FC<DetailsTabProps> = ({
     { value: 'hearings', label: 'Hearings', icon: Calendar },
     { value: 'objections', label: 'Objections', icon: XCircle },
     { value: 'ia-details', label: 'IA Details', icon: CheckSquare },
-    // Supreme Court specific tabs
-    ...(isSupremeCourtCase ? [
-      { value: 'sc-ia-docs', label: 'SC IA Documents', icon: FileText },
-      { value: 'sc-court-fees', label: 'Court Fees', icon: Receipt },
-      { value: 'sc-similarities', label: 'Similarities', icon: GitCompare },
-      { value: 'sc-metadata', label: 'Metadata', icon: Database },
-    ] : [])
   ];
 
   return <div className="space-y-6">
@@ -276,27 +259,6 @@ export const DetailsTab: React.FC<DetailsTabProps> = ({
               <TabsContent value="ia-details" className="m-0">
                 <IADetailsTable iaDetails={iaDetails} />
               </TabsContent>
-
-              {/* Supreme Court specific tabs */}
-              {isSupremeCourtCase && (
-                <>
-                  <TabsContent value="sc-ia-docs" className="m-0">
-                    <SCIADocumentsTable caseId={caseData.id} />
-                  </TabsContent>
-
-                  <TabsContent value="sc-court-fees" className="m-0">
-                    <SCCourtFeesTable caseId={caseData.id} />
-                  </TabsContent>
-
-                  <TabsContent value="sc-similarities" className="m-0">
-                    <SCSimilaritiesDisplay caseId={caseData.id} />
-                  </TabsContent>
-
-                  <TabsContent value="sc-metadata" className="m-0">
-                    <SCMetadataCard legalkartCase={legalkartData} />
-                  </TabsContent>
-                </>
-              )}
             </div>
           </Tabs>
         </CardContent>

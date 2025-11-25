@@ -165,10 +165,7 @@ export const ClientList = () => {
         console.error('Error fetching clients:', err);
         throw err;
       }
-    },
-    retry: 2,
-    retryDelay: 1000,
-    staleTime: 30000,
+    }
   });
   const clients = queryResult?.clients || [];
   const totalCount = queryResult?.totalCount || 0;

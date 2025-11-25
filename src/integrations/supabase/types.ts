@@ -2637,36 +2637,21 @@ export type Database = {
       }
       legalkart_cases: {
         Row: {
-          argument_transcripts: Json | null
           before_me_part_heard: string | null
-          bench_composition: string[] | null
           bench_type: string | null
           case_id: string | null
-          case_number: string | null
-          case_status_detail: string | null
-          case_title: string | null
           category: string | null
-          category_code: string | null
-          caveat: Json | null
           cnr_number: string
           coram: string | null
           created_at: string
-          diary_filed_on: string | null
-          diary_number: string | null
-          diary_section: string | null
-          diary_status: string | null
           district: string | null
-          drop_note: Json | null
           filing_date: string | null
           filing_number: string | null
           firm_id: string | null
           id: string
-          indexed_data: Json | null
           judicial_branch: string | null
-          mention_memo: Json | null
           next_hearing_date: string | null
           petitioner_and_advocate: string | null
-          present_last_listed_on: string | null
           raw_api_response: Json | null
           registration_date: string | null
           registration_number: string | null
@@ -2675,39 +2660,23 @@ export type Database = {
           state: string | null
           sub_category: string | null
           updated_at: string
-          verification_date: string | null
         }
         Insert: {
-          argument_transcripts?: Json | null
           before_me_part_heard?: string | null
-          bench_composition?: string[] | null
           bench_type?: string | null
           case_id?: string | null
-          case_number?: string | null
-          case_status_detail?: string | null
-          case_title?: string | null
           category?: string | null
-          category_code?: string | null
-          caveat?: Json | null
           cnr_number: string
           coram?: string | null
           created_at?: string
-          diary_filed_on?: string | null
-          diary_number?: string | null
-          diary_section?: string | null
-          diary_status?: string | null
           district?: string | null
-          drop_note?: Json | null
           filing_date?: string | null
           filing_number?: string | null
           firm_id?: string | null
           id?: string
-          indexed_data?: Json | null
           judicial_branch?: string | null
-          mention_memo?: Json | null
           next_hearing_date?: string | null
           petitioner_and_advocate?: string | null
-          present_last_listed_on?: string | null
           raw_api_response?: Json | null
           registration_date?: string | null
           registration_number?: string | null
@@ -2716,39 +2685,23 @@ export type Database = {
           state?: string | null
           sub_category?: string | null
           updated_at?: string
-          verification_date?: string | null
         }
         Update: {
-          argument_transcripts?: Json | null
           before_me_part_heard?: string | null
-          bench_composition?: string[] | null
           bench_type?: string | null
           case_id?: string | null
-          case_number?: string | null
-          case_status_detail?: string | null
-          case_title?: string | null
           category?: string | null
-          category_code?: string | null
-          caveat?: Json | null
           cnr_number?: string
           coram?: string | null
           created_at?: string
-          diary_filed_on?: string | null
-          diary_number?: string | null
-          diary_section?: string | null
-          diary_status?: string | null
           district?: string | null
-          drop_note?: Json | null
           filing_date?: string | null
           filing_number?: string | null
           firm_id?: string | null
           id?: string
-          indexed_data?: Json | null
           judicial_branch?: string | null
-          mention_memo?: Json | null
           next_hearing_date?: string | null
           petitioner_and_advocate?: string | null
-          present_last_listed_on?: string | null
           raw_api_response?: Json | null
           registration_date?: string | null
           registration_number?: string | null
@@ -2757,7 +2710,6 @@ export type Database = {
           state?: string | null
           sub_category?: string | null
           updated_at?: string
-          verification_date?: string | null
         }
         Relationships: []
       }
@@ -3532,654 +3484,6 @@ export type Database = {
           },
           {
             foreignKeyName: "respondents_legalkart_case_id_fkey"
-            columns: ["legalkart_case_id"]
-            isOneToOne: false
-            referencedRelation: "legalkart_cases"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      sc_court_fees: {
-        Row: {
-          amount: number | null
-          case_id: string
-          challan_number: string | null
-          created_at: string | null
-          fee_type: string | null
-          id: string
-          legalkart_case_id: string | null
-          paid_date: string | null
-        }
-        Insert: {
-          amount?: number | null
-          case_id: string
-          challan_number?: string | null
-          created_at?: string | null
-          fee_type?: string | null
-          id?: string
-          legalkart_case_id?: string | null
-          paid_date?: string | null
-        }
-        Update: {
-          amount?: number | null
-          case_id?: string
-          challan_number?: string | null
-          created_at?: string | null
-          fee_type?: string | null
-          id?: string
-          legalkart_case_id?: string | null
-          paid_date?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "sc_court_fees_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "cases"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "sc_court_fees_legalkart_case_id_fkey"
-            columns: ["legalkart_case_id"]
-            isOneToOne: false
-            referencedRelation: "legalkart_cases"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      sc_defects: {
-        Row: {
-          case_id: string
-          created_at: string | null
-          default_type: string | null
-          id: string
-          legalkart_case_id: string | null
-          notification_date: string | null
-          remarks: string | null
-          removed_on_date: string | null
-          sr_no: number | null
-          updated_at: string | null
-        }
-        Insert: {
-          case_id: string
-          created_at?: string | null
-          default_type?: string | null
-          id?: string
-          legalkart_case_id?: string | null
-          notification_date?: string | null
-          remarks?: string | null
-          removed_on_date?: string | null
-          sr_no?: number | null
-          updated_at?: string | null
-        }
-        Update: {
-          case_id?: string
-          created_at?: string | null
-          default_type?: string | null
-          id?: string
-          legalkart_case_id?: string | null
-          notification_date?: string | null
-          remarks?: string | null
-          removed_on_date?: string | null
-          sr_no?: number | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "sc_defects_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "cases"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "sc_defects_legalkart_case_id_fkey"
-            columns: ["legalkart_case_id"]
-            isOneToOne: false
-            referencedRelation: "legalkart_cases"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      sc_earlier_court_details: {
-        Row: {
-          agency_code: string | null
-          agency_state: string | null
-          authority_organisation: string | null
-          case_id: string
-          case_no: string | null
-          cnr_no: string | null
-          court_type: string | null
-          created_at: string | null
-          crime_no: string | null
-          crime_year: number | null
-          designation: string | null
-          govt_notification_date: string | null
-          govt_notification_no: string | null
-          govt_notification_state: string | null
-          id: string
-          impugned_order_no: string | null
-          judge1: string | null
-          judge2: string | null
-          judge3: string | null
-          judgment_challenged: boolean | null
-          judgment_covered_in: string | null
-          judgment_type: string | null
-          legalkart_case_id: string | null
-          order_date: string | null
-          police_station: string | null
-          reference_court: string | null
-          reference_district: string | null
-          reference_no: string | null
-          reference_state: string | null
-          relied_upon_court: string | null
-          relied_upon_district: string | null
-          relied_upon_no: string | null
-          relied_upon_state: string | null
-          sr_no: number | null
-          transfer_to_district: string | null
-          transfer_to_no: string | null
-          transfer_to_state: string | null
-          updated_at: string | null
-          vehicle_number: string | null
-        }
-        Insert: {
-          agency_code?: string | null
-          agency_state?: string | null
-          authority_organisation?: string | null
-          case_id: string
-          case_no?: string | null
-          cnr_no?: string | null
-          court_type?: string | null
-          created_at?: string | null
-          crime_no?: string | null
-          crime_year?: number | null
-          designation?: string | null
-          govt_notification_date?: string | null
-          govt_notification_no?: string | null
-          govt_notification_state?: string | null
-          id?: string
-          impugned_order_no?: string | null
-          judge1?: string | null
-          judge2?: string | null
-          judge3?: string | null
-          judgment_challenged?: boolean | null
-          judgment_covered_in?: string | null
-          judgment_type?: string | null
-          legalkart_case_id?: string | null
-          order_date?: string | null
-          police_station?: string | null
-          reference_court?: string | null
-          reference_district?: string | null
-          reference_no?: string | null
-          reference_state?: string | null
-          relied_upon_court?: string | null
-          relied_upon_district?: string | null
-          relied_upon_no?: string | null
-          relied_upon_state?: string | null
-          sr_no?: number | null
-          transfer_to_district?: string | null
-          transfer_to_no?: string | null
-          transfer_to_state?: string | null
-          updated_at?: string | null
-          vehicle_number?: string | null
-        }
-        Update: {
-          agency_code?: string | null
-          agency_state?: string | null
-          authority_organisation?: string | null
-          case_id?: string
-          case_no?: string | null
-          cnr_no?: string | null
-          court_type?: string | null
-          created_at?: string | null
-          crime_no?: string | null
-          crime_year?: number | null
-          designation?: string | null
-          govt_notification_date?: string | null
-          govt_notification_no?: string | null
-          govt_notification_state?: string | null
-          id?: string
-          impugned_order_no?: string | null
-          judge1?: string | null
-          judge2?: string | null
-          judge3?: string | null
-          judgment_challenged?: boolean | null
-          judgment_covered_in?: string | null
-          judgment_type?: string | null
-          legalkart_case_id?: string | null
-          order_date?: string | null
-          police_station?: string | null
-          reference_court?: string | null
-          reference_district?: string | null
-          reference_no?: string | null
-          reference_state?: string | null
-          relied_upon_court?: string | null
-          relied_upon_district?: string | null
-          relied_upon_no?: string | null
-          relied_upon_state?: string | null
-          sr_no?: number | null
-          transfer_to_district?: string | null
-          transfer_to_no?: string | null
-          transfer_to_state?: string | null
-          updated_at?: string | null
-          vehicle_number?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "sc_earlier_court_details_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "cases"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "sc_earlier_court_details_legalkart_case_id_fkey"
-            columns: ["legalkart_case_id"]
-            isOneToOne: false
-            referencedRelation: "legalkart_cases"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      sc_ia_documents: {
-        Row: {
-          case_id: string
-          created_at: string | null
-          document_type: string | null
-          document_url: string | null
-          filed_by: string | null
-          filing_date: string | null
-          ia_number: string | null
-          id: string
-          legalkart_case_id: string | null
-          status: string | null
-        }
-        Insert: {
-          case_id: string
-          created_at?: string | null
-          document_type?: string | null
-          document_url?: string | null
-          filed_by?: string | null
-          filing_date?: string | null
-          ia_number?: string | null
-          id?: string
-          legalkart_case_id?: string | null
-          status?: string | null
-        }
-        Update: {
-          case_id?: string
-          created_at?: string | null
-          document_type?: string | null
-          document_url?: string | null
-          filed_by?: string | null
-          filing_date?: string | null
-          ia_number?: string | null
-          id?: string
-          legalkart_case_id?: string | null
-          status?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "sc_ia_documents_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "cases"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "sc_ia_documents_legalkart_case_id_fkey"
-            columns: ["legalkart_case_id"]
-            isOneToOne: false
-            referencedRelation: "legalkart_cases"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      sc_judgement_orders: {
-        Row: {
-          case_id: string
-          created_at: string | null
-          id: string
-          legalkart_case_id: string | null
-          order_date: string | null
-          order_type: string | null
-          pdf_url: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          case_id: string
-          created_at?: string | null
-          id?: string
-          legalkart_case_id?: string | null
-          order_date?: string | null
-          order_type?: string | null
-          pdf_url?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          case_id?: string
-          created_at?: string | null
-          id?: string
-          legalkart_case_id?: string | null
-          order_date?: string | null
-          order_type?: string | null
-          pdf_url?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "sc_judgement_orders_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "cases"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "sc_judgement_orders_legalkart_case_id_fkey"
-            columns: ["legalkart_case_id"]
-            isOneToOne: false
-            referencedRelation: "legalkart_cases"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      sc_listing_dates: {
-        Row: {
-          case_id: string
-          cl_date: string | null
-          created_at: string | null
-          ia: string | null
-          id: string
-          judge: string | null
-          judges: string[] | null
-          legalkart_case_id: string | null
-          listed_status: string | null
-          misc_or_regular: string | null
-          proposed_list_in: string | null
-          purpose: string | null
-          remarks: string | null
-          stage: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          case_id: string
-          cl_date?: string | null
-          created_at?: string | null
-          ia?: string | null
-          id?: string
-          judge?: string | null
-          judges?: string[] | null
-          legalkart_case_id?: string | null
-          listed_status?: string | null
-          misc_or_regular?: string | null
-          proposed_list_in?: string | null
-          purpose?: string | null
-          remarks?: string | null
-          stage?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          case_id?: string
-          cl_date?: string | null
-          created_at?: string | null
-          ia?: string | null
-          id?: string
-          judge?: string | null
-          judges?: string[] | null
-          legalkart_case_id?: string | null
-          listed_status?: string | null
-          misc_or_regular?: string | null
-          proposed_list_in?: string | null
-          purpose?: string | null
-          remarks?: string | null
-          stage?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "sc_listing_dates_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "cases"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "sc_listing_dates_legalkart_case_id_fkey"
-            columns: ["legalkart_case_id"]
-            isOneToOne: false
-            referencedRelation: "legalkart_cases"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      sc_notices: {
-        Row: {
-          case_id: string
-          created_at: string | null
-          dispatch_date: string | null
-          district: string | null
-          id: string
-          issue_date: string | null
-          legalkart_case_id: string | null
-          name: string | null
-          notice_type: string | null
-          process_id: string | null
-          returnable_date: string | null
-          sr_no: number | null
-          state: string | null
-          station: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          case_id: string
-          created_at?: string | null
-          dispatch_date?: string | null
-          district?: string | null
-          id?: string
-          issue_date?: string | null
-          legalkart_case_id?: string | null
-          name?: string | null
-          notice_type?: string | null
-          process_id?: string | null
-          returnable_date?: string | null
-          sr_no?: number | null
-          state?: string | null
-          station?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          case_id?: string
-          created_at?: string | null
-          dispatch_date?: string | null
-          district?: string | null
-          id?: string
-          issue_date?: string | null
-          legalkart_case_id?: string | null
-          name?: string | null
-          notice_type?: string | null
-          process_id?: string | null
-          returnable_date?: string | null
-          sr_no?: number | null
-          state?: string | null
-          station?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "sc_notices_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "cases"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "sc_notices_legalkart_case_id_fkey"
-            columns: ["legalkart_case_id"]
-            isOneToOne: false
-            referencedRelation: "legalkart_cases"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      sc_office_reports: {
-        Row: {
-          case_id: string
-          created_at: string | null
-          html_url: string | null
-          id: string
-          legalkart_case_id: string | null
-          order_date: string | null
-          process_id: string | null
-          receiving_date: string | null
-          sr_no: number | null
-          updated_at: string | null
-        }
-        Insert: {
-          case_id: string
-          created_at?: string | null
-          html_url?: string | null
-          id?: string
-          legalkart_case_id?: string | null
-          order_date?: string | null
-          process_id?: string | null
-          receiving_date?: string | null
-          sr_no?: number | null
-          updated_at?: string | null
-        }
-        Update: {
-          case_id?: string
-          created_at?: string | null
-          html_url?: string | null
-          id?: string
-          legalkart_case_id?: string | null
-          order_date?: string | null
-          process_id?: string | null
-          receiving_date?: string | null
-          sr_no?: number | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "sc_office_reports_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "cases"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "sc_office_reports_legalkart_case_id_fkey"
-            columns: ["legalkart_case_id"]
-            isOneToOne: false
-            referencedRelation: "legalkart_cases"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      sc_similarities: {
-        Row: {
-          case_id: string
-          category: string | null
-          created_at: string | null
-          id: string
-          legalkart_case_id: string | null
-          similarity_data: Json | null
-          updated_at: string | null
-        }
-        Insert: {
-          case_id: string
-          category?: string | null
-          created_at?: string | null
-          id?: string
-          legalkart_case_id?: string | null
-          similarity_data?: Json | null
-          updated_at?: string | null
-        }
-        Update: {
-          case_id?: string
-          category?: string | null
-          created_at?: string | null
-          id?: string
-          legalkart_case_id?: string | null
-          similarity_data?: Json | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "sc_similarities_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "cases"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "sc_similarities_legalkart_case_id_fkey"
-            columns: ["legalkart_case_id"]
-            isOneToOne: false
-            referencedRelation: "legalkart_cases"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      sc_tagged_matters: {
-        Row: {
-          case_id: string
-          created_at: string | null
-          entry_date: string | null
-          ia_info: string | null
-          id: string
-          legalkart_case_id: string | null
-          list_status: string | null
-          matter_status: string | null
-          matter_type: string | null
-          petitioner_vs_respondent: string | null
-          stat_info: string | null
-          tagged_case_number: string | null
-          tagged_case_registered_on: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          case_id: string
-          created_at?: string | null
-          entry_date?: string | null
-          ia_info?: string | null
-          id?: string
-          legalkart_case_id?: string | null
-          list_status?: string | null
-          matter_status?: string | null
-          matter_type?: string | null
-          petitioner_vs_respondent?: string | null
-          stat_info?: string | null
-          tagged_case_number?: string | null
-          tagged_case_registered_on?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          case_id?: string
-          created_at?: string | null
-          entry_date?: string | null
-          ia_info?: string | null
-          id?: string
-          legalkart_case_id?: string | null
-          list_status?: string | null
-          matter_status?: string | null
-          matter_type?: string | null
-          petitioner_vs_respondent?: string | null
-          stat_info?: string | null
-          tagged_case_number?: string | null
-          tagged_case_registered_on?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "sc_tagged_matters_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "cases"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "sc_tagged_matters_legalkart_case_id_fkey"
             columns: ["legalkart_case_id"]
             isOneToOne: false
             referencedRelation: "legalkart_cases"
