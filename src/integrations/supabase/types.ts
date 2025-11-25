@@ -2642,7 +2642,9 @@ export type Database = {
           bench_composition: string[] | null
           bench_type: string | null
           case_id: string | null
+          case_number: string | null
           case_status_detail: string | null
+          case_title: string | null
           category: string | null
           category_code: string | null
           caveat: Json | null
@@ -2681,7 +2683,9 @@ export type Database = {
           bench_composition?: string[] | null
           bench_type?: string | null
           case_id?: string | null
+          case_number?: string | null
           case_status_detail?: string | null
+          case_title?: string | null
           category?: string | null
           category_code?: string | null
           caveat?: Json | null
@@ -2720,7 +2724,9 @@ export type Database = {
           bench_composition?: string[] | null
           bench_type?: string | null
           case_id?: string | null
+          case_number?: string | null
           case_status_detail?: string | null
+          case_title?: string | null
           category?: string | null
           category_code?: string | null
           caveat?: Json | null
