@@ -971,9 +971,24 @@ serve(async (req) => {
           console.log('✅ Successfully updated case with all mapped fields');
         }
 
-        // Upsert relational data using helper function
+        // Upsert relational data using helper function - detect court type first
         try {
-          await upsertCaseRelationalData(supabase, effectiveCaseId, teamMember.firm_id, searchResult.data);
+          // Detect court type from search results
+          const searchData = searchResult.data?.data || searchResult.data;
+          const searchCaseDetails = searchData?.case_details || searchData?.["Case Details"] || {};
+          const searchCnr = searchCaseDetails["CNR Number"] || searchData?.cnr_number || '';
+          
+          const isSearchSC = 
+            !!searchData?.diary_number ||
+            !!searchData?.["Diary Number"] ||
+            searchCnr.toUpperCase().startsWith('SCIN');
+          
+          if (isSearchSC) {
+            console.log('🏛️ Search result is SC case, using SC parser');
+            await upsertSupremeCourtData(supabase, effectiveCaseId, teamMember.firm_id, searchResult.data);
+          } else {
+            await upsertCaseRelationalData(supabase, effectiveCaseId, teamMember.firm_id, searchResult.data);
+          }
           
           // Also populate legalkart_* tables via RPC
           console.log('📦 Calling upsert_legalkart_case_data RPC...');
@@ -1122,9 +1137,24 @@ serve(async (req) => {
           .single();
 
         if (existingCase?.fetched_data) {
-          console.log('✅ Found existing fetched_data, upserting relational data...');
+          console.log('✅ Found existing fetched_data, detecting court type and upserting...');
           try {
-            await upsertCaseRelationalData(supabase, effectiveCaseId, teamMember.firm_id, existingCase.fetched_data);
+            // Detect court type from existing fetched_data
+            const existingData = existingCase.fetched_data?.data || existingCase.fetched_data;
+            const existingCaseDetails = existingData?.case_details || existingData?.["Case Details"] || {};
+            const existingCnr = existingCaseDetails["CNR Number"] || existingData?.cnr_number || '';
+            
+            const isExistingSC = 
+              !!existingData?.diary_number ||
+              !!existingData?.["Diary Number"] ||
+              existingCnr.toUpperCase().startsWith('SCIN');
+            
+            if (isExistingSC) {
+              console.log('🏛️ Existing data is SC case, using SC parser');
+              await upsertSupremeCourtData(supabase, effectiveCaseId, teamMember.firm_id, existingCase.fetched_data);
+            } else {
+              await upsertCaseRelationalData(supabase, effectiveCaseId, teamMember.firm_id, existingCase.fetched_data);
+            }
           } catch (upsertErr) {
             console.error('Failed to upsert from existing fetched_data:', upsertErr);
           }
