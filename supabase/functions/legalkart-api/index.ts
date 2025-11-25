@@ -912,7 +912,20 @@ serve(async (req) => {
 
       // Update case with fetched data if successful and a case_id is available
       if (searchResult.success && effectiveCaseId && searchResult.data) {
-        const mappedData = mapLegalkartDataToCRM(searchResult.data, validatedData.searchType);
+        // Detect court type before mapping
+        const searchData = searchResult.data?.data || searchResult.data;
+        const searchCaseDetails = searchData?.case_details || searchData?.["Case Details"] || {};
+        const searchCnr = searchCaseDetails["CNR Number"] || searchData?.cnr_number || '';
+        
+        const isSearchTypeSC = 
+          !!searchData?.diary_number ||
+          !!searchData?.["Diary Number"] ||
+          searchCnr.toUpperCase().startsWith('SCIN');
+        
+        // Use appropriate mapper based on court type
+        const mappedData = isSearchTypeSC 
+          ? mapSupremeCourtDataToCRM(searchResult.data, validatedData.searchType)
+          : mapLegalkartDataToCRM(searchResult.data, validatedData.searchType);
         
         // Log the mapped data fields for debugging
         console.log('📊 Mapped Data Summary:');
@@ -1456,6 +1469,189 @@ async function getGujaratDisplayBoard(token: string) {
       data: null 
     };
   }
+}
+
+// Supreme Court data mapping function - extracts SC-specific fields
+function mapSupremeCourtDataToCRM(data: any, searchType: string = 'supreme_court'): any {
+  if (!data || typeof data !== 'object') {
+    return null;
+  }
+
+  console.log(`Mapping Supreme Court data:`, JSON.stringify(data, null, 2));
+
+  // Base mapping object
+  const mappedData: any = {
+    fetched_data: data,
+    is_auto_fetched: true,
+    fetch_status: 'success',
+    fetch_message: `Data fetched from ${searchType} on ${new Date().toISOString()}`,
+    last_fetched_at: new Date().toISOString(),
+  };
+
+  // Helper functions
+  const parseDate = (dateStr: string | null | undefined): string | null => {
+    if (!dateStr) return null;
+    try {
+      const raw = dateStr.toString().trim();
+      const lower = raw.toLowerCase();
+      const nullTokens = new Set(['', '-', '--', '—', '#', 'n/a', 'na', 'nil', 'null', 'undefined']);
+      if (nullTokens.has(lower)) return null;
+
+      // DD/MM/YYYY
+      if (raw.includes('/')) {
+        const [day, month, year] = raw.split('/');
+        if (year && month && day) return `${year}-${month.padStart(2,'0')}-${day.padStart(2,'0')}`;
+      }
+      // DD-MM-YYYY or DD.MM.YYYY
+      if ((raw.includes('-') || raw.includes('.')) && raw.split(/[\-.]/)[0].length === 2) {
+        const [day, month, year] = raw.split(/[\-.]/);
+        if (year && month && day) return `${year}-${month.padStart(2,'0')}-${day.padStart(2,'0')}`;
+      }
+      // Formats like "19th November 2025"
+      if (/(th|st|nd|rd)\s/i.test(raw) || /[A-Za-z]/.test(raw)) {
+        const monthMap: { [key: string]: string } = {
+          'january': '01', 'february': '02', 'march': '03', 'april': '04',
+          'may': '05', 'june': '06', 'july': '07', 'august': '08',
+          'september': '09', 'october': '10', 'november': '11', 'december': '12',
+          'jan': '01','feb': '02','mar': '03','apr': '04','jun': '06','jul': '07','aug': '08','sep': '09','sept': '09','oct': '10','nov': '11','dec': '12'
+        };
+        const cleaned = raw.toLowerCase().replace(/(\d+)(th|st|nd|rd)/, '$1').replace(/\./g,'');
+        const parts = cleaned.split(/\s+/);
+        if (parts.length >= 3) {
+          const day = parts[0].padStart(2,'0');
+          const mon = monthMap[parts[1]];
+          const year = parts[2];
+          if (mon && /^(19|20)\d{2}$/.test(year)) return `${year}-${mon}-${day}`;
+        }
+      }
+      // ISO with time
+      if (/^\d{4}-\d{2}-\d{2}T/.test(raw)) return raw.slice(0,10);
+      // ISO date
+      if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+
+      const d = new Date(raw);
+      if (!isNaN(d.getTime())) return d.toISOString().slice(0,10);
+      return null;
+    } catch {
+      return null;
+    }
+  };
+
+  const cleanText = (text: string | null | undefined): string | null => {
+    if (!text) return null;
+    return text.toString().trim().replace(/\s+/g, ' ');
+  };
+
+  // Extract data from nested SC response structure
+  const apiData = data.data || data;
+  const caseDetails = apiData.case_details || apiData["Case Details"] || {};
+
+  // SC-SPECIFIC FIELDS
+  // Diary number (unique to SC)
+  mappedData.docket_number = cleanText(
+    apiData.diary_number || 
+    apiData["Diary Number"] ||
+    caseDetails["Diary Number"]
+  );
+
+  // CNR Number
+  const rawCnr = cleanText(
+    caseDetails["CNR Number"] || 
+    apiData.cnr_number ||
+    apiData.CNR
+  );
+  mappedData.cnr_number = rawCnr ? rawCnr.replace(/[-\s]/g, '') : rawCnr;
+
+  // Case Title
+  mappedData.case_title = cleanText(
+    caseDetails["Case Title"] ||
+    apiData.case_title ||
+    `${apiData.petitioner || 'Petitioner'} vs ${apiData.respondent || 'Respondent'}`
+  );
+
+  // Category
+  mappedData.category = cleanText(
+    caseDetails["Category"] ||
+    apiData.category
+  );
+
+  // Status/Stage
+  const statusStr = cleanText(
+    caseDetails["Status/Stage"] ||
+    apiData.status ||
+    apiData.stage
+  );
+  if (statusStr) {
+    const lower = statusStr.toLowerCase();
+    if (lower.includes('disposed') || lower.includes('dismissed')) {
+      mappedData.status = 'disposed';
+    } else {
+      mappedData.status = 'pending';
+    }
+    mappedData.stage = statusStr;
+  }
+
+  // Bench Composition (Coram)
+  mappedData.coram = cleanText(
+    caseDetails["Bench"] ||
+    apiData.bench ||
+    apiData.coram
+  );
+
+  // Petitioner(s)
+  mappedData.petitioner = cleanText(
+    caseDetails["Petitioner(s)"] ||
+    apiData.petitioner
+  );
+
+  // Respondent(s)
+  mappedData.respondent = cleanText(
+    caseDetails["Respondent(s)"] ||
+    apiData.respondent
+  );
+
+  // Construct vs field
+  if (mappedData.petitioner && mappedData.respondent) {
+    mappedData.vs = `${mappedData.petitioner} vs ${mappedData.respondent}`;
+  }
+
+  // Dates
+  mappedData.filing_date = parseDate(
+    caseDetails["Date of Filing"] ||
+    apiData.filing_date
+  );
+
+  mappedData.registration_date = parseDate(
+    caseDetails["Date of Registration"] ||
+    apiData.registration_date
+  );
+
+  const nextListingDate = parseDate(
+    caseDetails["Present/Last Listed On"] ||
+    caseDetails["Next Listing Date"] ||
+    apiData.next_listing_date
+  );
+  mappedData.next_hearing_date = nextListingDate;
+  mappedData.listed_date = nextListingDate;
+
+  // Court information
+  mappedData.court = 'Supreme Court of India';
+  mappedData.court_name = 'Supreme Court of India';
+  mappedData.court_type = 'supreme_court';
+
+  // Case type (default to civil for SC cases)
+  mappedData.case_type = 'civil';
+
+  console.log('✅ SC data mapped successfully:', {
+    cnr: mappedData.cnr_number,
+    diary: mappedData.docket_number,
+    title: mappedData.case_title,
+    petitioner: mappedData.petitioner,
+    respondent: mappedData.respondent,
+    bench: mappedData.coram
+  });
+
+  return mappedData;
 }
 
 // Enhanced Legalkart data mapping function - maps 50+ fields comprehensively
