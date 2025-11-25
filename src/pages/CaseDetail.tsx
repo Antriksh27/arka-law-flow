@@ -331,11 +331,22 @@ const CaseDetail = () => {
   }
 
   // Detect if this is a Supreme Court case
+  const fetchedData = caseData?.fetched_data as any;
+  console.log('🔍 SC Detection Values:', {
+    court: caseData?.court,
+    cnr: caseData?.cnr_number,
+    legalkartDiary: legalkartCase?.diary_number,
+    legalkartBench: legalkartCase?.bench_composition,
+    hasFetchedData: !!caseData?.fetched_data,
+    fetchedDataDiary: fetchedData?.diary_number
+  });
+
   const isSupremeCourt = Boolean(
     legalkartCase?.diary_number || 
     legalkartCase?.bench_composition?.length > 0 ||
     caseData?.court?.toLowerCase().includes('supreme') ||
-    caseData?.cnr_number?.toUpperCase().startsWith('SCIN')
+    caseData?.cnr_number?.toUpperCase().startsWith('SCIN') ||
+    fetchedData?.diary_number  // Direct check on fetched_data
   );
 
   console.log('🏛️ Is Supreme Court case:', isSupremeCourt);
