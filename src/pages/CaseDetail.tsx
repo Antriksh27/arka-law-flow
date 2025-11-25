@@ -34,8 +34,11 @@ import { SCOfficeReportsTable } from '@/components/cases/supreme/SCOfficeReports
 import { SCCaseDetailView } from '@/components/cases/supreme/SCCaseDetailView';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
+// DEBUG MARKER - Version 3.0
+console.log('🔴🔴🔴 CASEDETAIL.TSX FILE LOADED - VERSION 3.0 🔴🔴🔴');
+
 const CaseDetail = () => {
-  console.log('🚀 CaseDetail component loaded - Version 2.0 with Enhanced SC Detection');
+  console.log('🚀 CaseDetail component RENDERING NOW');
   
   const { id } = useParams<{ id: string }>();
   const [activeTab, setActiveTab] = useState('overview');
