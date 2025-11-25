@@ -89,19 +89,23 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
         
         if (isSupremeCourt) {
           console.log('🔍 SC Raw Data:', rawData);
-          console.log('🔍 Root petitioner:', rawData.petitioner);
-          console.log('🔍 Root respondent:', rawData.respondent);
-          console.log('🔍 Root diary_number:', rawData.diary_number);
-          console.log('🔍 case_details object:', rawData.case_details);
+          
+          // Access the actual data from rawData.data
+          const apiData = rawData.data || rawData;
+          console.log('🔍 API Data:', apiData);
+          console.log('🔍 Root petitioner:', apiData.petitioner);
+          console.log('🔍 Root respondent:', apiData.respondent);
+          console.log('🔍 Root diary_number:', apiData.diary_number);
+          console.log('🔍 case_details object:', apiData.case_details);
           
           // Root-level fields are LOWERCASE (petitioner, respondent, diary_number)
-          const petitioner = rawData.petitioner || "";
-          const respondent = rawData.respondent || "";
-          const diaryNumber = rawData.diary_number || null;
-          const status = rawData.status || 'PENDING';
+          const petitioner = apiData.petitioner || "";
+          const respondent = apiData.respondent || "";
+          const diaryNumber = apiData.diary_number || null;
+          const status = apiData.status || 'PENDING';
           
           // Nested case_details has CAPITALIZED fields ("Case Title", "CNR Number")
-          const caseDetails = rawData.case_details || {};
+          const caseDetails = apiData.case_details || {};
           const cnrNumber = caseDetails["CNR Number"] || null;
           const category = caseDetails["Category"] || null;
           const statusStage = caseDetails["Status/Stage"] || status;
@@ -150,21 +154,21 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
           const respondentAdvocate = caseDetails["Respondent Advocate(s)"] || null;
           
           // Parse bench composition from "Present/Last Listed On"
-          const presentListed = rawData["Present/Last Listed On"] || "";
+          const presentListed = caseDetails["Present/Last Listed On"] || "";
           const benchMatch = presentListed.match(/\[(.*?)\]/);
           const benchComposition = benchMatch 
             ? benchMatch[1].split(/,?\s*and\s*/).map((s: string) => s.trim())
             : [];
           
           // Root-level case_numbers array
-          const caseNumbers = rawData.case_numbers || [];
+          const caseNumbers = apiData.case_numbers || [];
           const registeredOn = caseNumbers[0]?.registered_on || null;
           
           // Extract stage from Status/Stage field
           const stage = statusStage?.split(']')[0]?.replace('[', '').trim() || statusStage || 'Pending';
           
           parsedData = {
-            raw: rawData,
+            raw: apiData,
             case_title: caseTitle,
             case_number: caseNumber,
             cnr_number: (cnrNumber || '').replace(/[-\s]/g, ''),
