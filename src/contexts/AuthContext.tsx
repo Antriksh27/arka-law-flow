@@ -41,6 +41,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setFirmId(undefined);
       setRole(null);
       setFirmError("No userId present.");
+      setLoading(false);
       return;
     }
     try {
@@ -59,6 +60,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setFirmId(undefined);
         setRole(null);
         setFirmError(error.message || "Unknown error fetching firm_id and role.");
+        setLoading(false);
         console.log(`AuthContext: END (error): firm_id and role fetch failed for user: ${userId}`);
         return;
       }
@@ -67,6 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setFirmId(undefined);
         setRole(null);
         setFirmError('No firm_id found for user.');
+        setLoading(false);
         console.log(`AuthContext: END (no data): No firm_id found for user: ${userId}`);
         return;
       }
@@ -74,12 +77,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setFirmId(data.firm_id);
       setRole(data.role);
       setFirmError(null);
+      setLoading(false);
       console.log(`AuthContext: END (success): firm_id set to ${data.firm_id} and role set to ${data.role} for user: ${userId}`);
     } catch (e: any) {
       console.error('AuthContext: Exception fetching firm_id and role:', e.message);
       setFirmId(undefined);
       setRole(null);
       setFirmError('Exception: ' + (e.message || 'Unknown'));
+      setLoading(false);
       console.log(`AuthContext: END (exception): firm_id and role fetch failed for user: ${userId}`);
     }
   };
@@ -89,27 +94,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('AuthContext: useEffect mounting. Subscribing to onAuthStateChange and checking initial session.');
 
     // 1) Subscribe to auth changes FIRST (sync callback only)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
       console.log('AuthContext: onAuthStateChange event:', event, 'Session:', !!currentSession);
       setSession(currentSession);
       const currentUser = currentSession?.user ?? null;
       setUser(currentUser);
 
       if (currentUser) {
-        // Defer additional Supabase calls to avoid deadlocks
-        setTimeout(async () => {
-          await fetchFirmIdAndRole(currentUser.id);
-          initializeSessionSecurity();
-        }, 0);
+        await fetchFirmIdAndRole(currentUser.id);
+        initializeSessionSecurity();
       } else {
         setFirmId(undefined);
         setRole(null);
         setFirmError(null);
+        setLoading(false);
       }
     });
 
     // 2) THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+    supabase.auth.getSession().then(async ({ data: { session: currentSession } }) => {
       console.log('AuthContext: Initial session check:', !!currentSession);
 
       setSession(currentSession);
@@ -117,18 +120,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(currentUser);
 
       if (currentUser) {
-        // Defer fetch to avoid doing async work directly here
-        setTimeout(async () => {
-          await fetchFirmIdAndRole(currentUser.id);
-          initializeSessionSecurity();
-        }, 0);
+        await fetchFirmIdAndRole(currentUser.id);
+        initializeSessionSecurity();
       } else {
         setFirmId(undefined);
         setRole(null);
         setFirmError(null);
+        setLoading(false);
       }
-
-      setLoading(false);
     });
 
     return () => {
