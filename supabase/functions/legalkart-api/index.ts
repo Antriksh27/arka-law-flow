@@ -750,13 +750,14 @@ serve(async (req) => {
         }
 
         // 2) Upsert child/relational tables - detect SC vs HC/DC
+        const data = rawData.data || rawData;
+        const caseDetails = data.case_details || data["Case Details"] || {};
+        const cnrNumber = caseDetails["CNR Number"] || data.cnr_number || '';
+
         const isSupremeCourt = 
-          rawData.diary_number || 
-          rawData["Diary Number"] || 
-          rawData.case_details ||
-          rawData["Case Details"] ||
-          rawData.case_details?.["CNR Number"]?.toUpperCase().startsWith('SCIN') ||
-          rawData["Case Details"]?.["CNR Number"]?.toUpperCase().startsWith('SCIN');
+          !!data.diary_number ||  // SC has diary_number at root level
+          !!data["Diary Number"] ||  // Fallback capitalized
+          cnrNumber.toUpperCase().startsWith('SCIN');  // CNR prefix check
         
         if (isSupremeCourt) {
           console.log('🏛️ Detected Supreme Court case, using SC parser');
