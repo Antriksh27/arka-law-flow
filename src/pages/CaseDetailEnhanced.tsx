@@ -23,6 +23,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { DetailsTab } from '@/components/cases/detail/tabs/DetailsTab';
+import { SCDetailsTab } from '@/components/cases/detail/tabs/SCDetailsTab';
 import { DocumentsTab } from '@/components/cases/detail/tabs/DocumentsTab';
 import { NotesTab } from '@/components/cases/detail/tabs/NotesTab';
 import { TasksTab } from '@/components/cases/detail/tabs/TasksTab';
@@ -146,6 +147,11 @@ export default function CaseDetailEnhanced() {
   };
 
   const displayStatus = getDisplayStatus();
+
+  // Detect if this is a Supreme Court case
+  const isSupremeCourt = 
+    !!legalkartCase?.diary_number || 
+    caseData?.cnr_number?.toUpperCase().startsWith('SCIN');
 
   // Refresh handled by useLegalkartCaseDetails.refreshCaseData
   const tabs = [{
@@ -368,7 +374,27 @@ export default function CaseDetailEnhanced() {
 
               <div className={isMobile ? 'p-4' : 'p-6'}>
                 <TabsContent value="details" className="m-0">
-                  <DetailsTab caseData={caseData} legalkartData={legalkartCase} petitioners={petitioners} respondents={respondents} iaDetails={iaDetails} documents={documents} orders={orders} hearings={hearings} objections={objections} />
+                  {isSupremeCourt ? (
+                    <SCDetailsTab 
+                      caseId={id!} 
+                      caseData={caseData} 
+                      legalkartCase={legalkartCase} 
+                      petitioners={petitioners} 
+                      respondents={respondents} 
+                    />
+                  ) : (
+                    <DetailsTab 
+                      caseData={caseData} 
+                      legalkartData={legalkartCase} 
+                      petitioners={petitioners} 
+                      respondents={respondents} 
+                      iaDetails={iaDetails} 
+                      documents={documents} 
+                      orders={orders} 
+                      hearings={hearings} 
+                      objections={objections} 
+                    />
+                  )}
                 </TabsContent>
             <TabsContent value="contacts" className="m-0">
               <ContactTab caseId={id!} />
