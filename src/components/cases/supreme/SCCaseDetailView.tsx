@@ -23,6 +23,11 @@ interface SCCaseDetailViewProps {
 }
 
 export const SCCaseDetailView = ({ caseData, legalkartCase, rawData }: SCCaseDetailViewProps) => {
+  console.log('🏛️ SUPREME COURT VIEW IS RENDERING NOW! 🏛️');
+  console.log('Case ID:', caseData?.id);
+  console.log('Court:', caseData?.court);
+  console.log('CNR:', caseData?.cnr_number);
+  
   // Parse the raw fetched data
   const fetchedRawData = rawData || caseData?.fetched_data;
   const parsedData = parseSupremeCourtData(fetchedRawData);
@@ -34,6 +39,19 @@ export const SCCaseDetailView = ({ caseData, legalkartCase, rawData }: SCCaseDet
 
   return (
     <div className="container max-w-7xl mx-auto p-6 space-y-6">
+      {/* VISUAL MARKER - REMOVE AFTER DEBUGGING */}
+      <div className="bg-yellow-400 border-4 border-red-600 p-8 rounded-lg text-center">
+        <h1 className="text-4xl font-bold text-red-900 mb-2">
+          🏛️ SUPREME COURT VIEW 🏛️
+        </h1>
+        <p className="text-xl text-red-800">
+          Diary Number: {parsedData.diaryNumber || 'Not found'} | CNR: {parsedData.cnrNumber || 'Not found'}
+        </p>
+        <p className="text-sm text-red-700 mt-2">
+          (This banner is for debugging - it will be removed)
+        </p>
+      </div>
+
       {/* Header Section */}
       <SCCaseHeader data={parsedData} />
 
