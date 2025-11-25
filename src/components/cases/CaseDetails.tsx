@@ -108,31 +108,38 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
   } = caseData;
 
   // Check if this is a Supreme Court case
-  const isSupremeCourt = court_type === 'Supreme Court' || 
-                         court_type === 'supreme_court' || 
+  const isSupremeCourt = court_type === 'supreme_court' || 
                          court_name?.toLowerCase().includes('supreme court');
 
   // Extract nested data - handle both old and new structure
   const fetchedDataRoot = (fetched_data as any)?.data || (fetched_data as any) || {};
-  const caseDetailsNested = fetchedDataRoot?.case_details || {};
+  const caseDetailsNested = fetchedDataRoot?.case_details || fetchedDataRoot?.["Case Details"] || {};
   const apiData = fetchedDataRoot;
   const documents = apiData?.documents || [];
   const objections = apiData?.objections || [];
   const orderDetails = apiData?.order_details || [];
   const historyData = apiData?.history_of_case_hearing || [];
   
-  // Extract Supreme Court specific data from the correct path
+  console.log('SC Data Extraction:', {
+    isSupremeCourt,
+    court_type,
+    fetchedDataRoot,
+    caseDetailsNested,
+    diaryNumber: fetchedDataRoot?.["Diary Number"]
+  });
+  
+  // Extract Supreme Court specific data from root level and nested "Case Details"
   const scData = isSupremeCourt ? {
-    diaryNumber: fetchedDataRoot?.diary_number || caseDetailsNested?.["Diary Number"]?.toString().replace(/^Diary Number:?\s*/i, '').trim(),
-    scCategory: category || caseDetailsNested?.["Category"],
-    benchComposition: coram || caseDetailsNested?.["Bench"],
-    earlierCourtDetails: caseDetailsNested?.earlier_court_details || [],
-    taggedMatters: caseDetailsNested?.tagged_matters || [],
-    defects: caseDetailsNested?.defects || [],
-    listingDates: caseDetailsNested?.listing_dates || [],
-    judgementOrders: caseDetailsNested?.judgement_orders || [],
-    notices: caseDetailsNested?.notices || [],
-    officeReport: caseDetailsNested?.office_report || [],
+    diaryNumber: fetchedDataRoot?.["Diary Number"] || null,
+    scCategory: category || fetchedDataRoot?.["Category"] || null,
+    benchComposition: coram || null,
+    earlierCourtDetails: caseDetailsNested?.["Earlier Court Details"] || [],
+    taggedMatters: caseDetailsNested?.["Tagged Matters"] || [],
+    defects: caseDetailsNested?.["Defects"] || [],
+    listingDates: caseDetailsNested?.["Listing Dates"] || [],
+    judgementOrders: caseDetailsNested?.["Judgement Orders"] || [],
+    notices: caseDetailsNested?.["Notices"] || [],
+    officeReport: caseDetailsNested?.["Office Report"] || [],
   } : null;
 
   // Parse petitioner data to separate party name from any embedded text
