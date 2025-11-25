@@ -2,14 +2,15 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 
 interface SCEarlierCourtsTableProps {
   caseId: string;
+  data?: any[];
 }
 
-export const SCEarlierCourtsTable = ({ caseId }: SCEarlierCourtsTableProps) => {
-  const { data: earlierCourts = [], isLoading } = useQuery({
+export const SCEarlierCourtsTable = ({ caseId, data: propData }: SCEarlierCourtsTableProps) => {
+  const { data: dbData = [], isLoading } = useQuery({
     queryKey: ['sc-earlier-courts', caseId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -20,10 +21,13 @@ export const SCEarlierCourtsTable = ({ caseId }: SCEarlierCourtsTableProps) => {
       if (error) throw error;
       return data as any[];
     },
-    enabled: !!caseId
+    enabled: !!caseId && !propData
   });
   
-  if (isLoading) {
+  // Use prop data if provided, otherwise use DB data
+  const earlierCourts = propData || dbData;
+  
+  if (isLoading && !propData) {
     return <div className="text-muted-foreground">Loading earlier court details...</div>;
   }
   
@@ -33,7 +37,6 @@ export const SCEarlierCourtsTable = ({ caseId }: SCEarlierCourtsTableProps) => {
   
   return (
     <div className="space-y-4">
-      <h3 className="text-xl font-semibold text-foreground">Earlier Court Details</h3>
       <Table>
         <TableHeader>
           <TableRow>
@@ -43,22 +46,22 @@ export const SCEarlierCourtsTable = ({ caseId }: SCEarlierCourtsTableProps) => {
             <TableHead>Case No.</TableHead>
             <TableHead>Order Date</TableHead>
             <TableHead>Judge(s)</TableHead>
-            <TableHead>Judgment</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {earlierCourts.map((court) => (
-            <TableRow key={court.id}>
-              <TableCell>{court.sr_no}</TableCell>
-              <TableCell>{court.court_type}</TableCell>
-              <TableCell>{court.agency_state}</TableCell>
-              <TableCell className="font-mono text-sm">{court.case_no}</TableCell>
-              <TableCell>{court.order_date ? format(new Date(court.order_date), 'dd MMM yyyy') : '-'}</TableCell>
-              <TableCell className="max-w-xs truncate" title={court.judge1 || ''}>{court.judge1}</TableCell>
+          {earlierCourts.map((court, idx) => (
+            <TableRow key={court.id || idx}>
+              <TableCell>{court.sr_no || court['S. No.'] || idx + 1}</TableCell>
+              <TableCell>{court.court_type || court['Court Type'] || '-'}</TableCell>
+              <TableCell>{court.agency_state || court['Agency/State'] || '-'}</TableCell>
+              <TableCell className="font-mono text-sm">{court.case_no || court['Case No.'] || '-'}</TableCell>
               <TableCell>
-                <Badge variant={court.judgment_challenged ? "error" : "success"}>
-                  {court.judgment_challenged ? 'Challenged' : 'Not Challenged'}
-                </Badge>
+                {court.order_date || court['Order Date'] 
+                  ? format(parseISO(court.order_date || court['Order Date']), 'dd MMM yyyy')
+                  : '-'}
+              </TableCell>
+              <TableCell className="max-w-xs truncate" title={court.judge1 || court['Judge1'] || ''}>
+                {court.judge1 || court['Judge1'] || '-'}
               </TableCell>
             </TableRow>
           ))}

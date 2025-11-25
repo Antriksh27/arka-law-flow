@@ -2,14 +2,15 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 
 interface SCNoticesTableProps {
   caseId: string;
+  data?: any[];
 }
 
-export const SCNoticesTable = ({ caseId }: SCNoticesTableProps) => {
-  const { data: notices = [], isLoading } = useQuery({
+export const SCNoticesTable = ({ caseId, data: propData }: SCNoticesTableProps) => {
+  const { data: dbData = [], isLoading } = useQuery({
     queryKey: ['sc-notices', caseId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -19,10 +20,13 @@ export const SCNoticesTable = ({ caseId }: SCNoticesTableProps) => {
         .order('issue_date', { ascending: false });
       if (error) throw error;
       return data as any[];
-    }
+    },
+    enabled: !!caseId && !propData
   });
   
-  if (isLoading) {
+  const notices = propData || dbData;
+  
+  if (isLoading && !propData) {
     return <div className="text-muted-foreground">Loading notices...</div>;
   }
   
@@ -32,7 +36,6 @@ export const SCNoticesTable = ({ caseId }: SCNoticesTableProps) => {
   
   return (
     <div className="space-y-4">
-      <h3 className="text-xl font-semibold text-foreground">Notices</h3>
       <Table>
         <TableHeader>
           <TableRow>
@@ -41,25 +44,31 @@ export const SCNoticesTable = ({ caseId }: SCNoticesTableProps) => {
             <TableHead>Name</TableHead>
             <TableHead>Location</TableHead>
             <TableHead>Issue Date</TableHead>
-            <TableHead>Returnable</TableHead>
-            <TableHead>Dispatched</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {notices.map((notice) => (
-            <TableRow key={notice.id}>
-              <TableCell className="font-mono text-xs">{notice.process_id}</TableCell>
-              <TableCell><Badge variant="outline">{notice.notice_type}</Badge></TableCell>
-              <TableCell className="max-w-xs truncate">{notice.name}</TableCell>
-              <TableCell>{notice.state}, {notice.district}</TableCell>
-              <TableCell>{notice.issue_date ? format(new Date(notice.issue_date), 'dd MMM yyyy') : '-'}</TableCell>
-              <TableCell>{notice.returnable_date ? format(new Date(notice.returnable_date), 'dd MMM yyyy') : '-'}</TableCell>
+          {notices.map((notice, idx) => (
+            <TableRow key={notice.id || idx}>
+              <TableCell className="font-mono text-xs">
+                {notice.process_id || notice['Process ID'] || 'N/A'}
+              </TableCell>
               <TableCell>
-                {notice.dispatch_date ? (
-                  <Badge variant="default">Dispatched</Badge>
-                ) : (
-                  <Badge variant="warning">Pending</Badge>
-                )}
+                <Badge variant="outline">
+                  {notice.notice_type || notice['Type'] || 'N/A'}
+                </Badge>
+              </TableCell>
+              <TableCell className="max-w-xs truncate">
+                {notice.name || notice['Name'] || 'N/A'}
+              </TableCell>
+              <TableCell>
+                {(notice.state || notice['State']) && (notice.district || notice['District'])
+                  ? `${notice.state || notice['State']}, ${notice.district || notice['District']}`
+                  : notice.state || notice['State'] || notice.district || notice['District'] || 'N/A'}
+              </TableCell>
+              <TableCell>
+                {notice.issue_date || notice['Issue Date']
+                  ? format(parseISO(notice.issue_date || notice['Issue Date']), 'dd MMM yyyy')
+                  : '-'}
               </TableCell>
             </TableRow>
           ))}

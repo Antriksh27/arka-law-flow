@@ -2,17 +2,24 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileText } from 'lucide-react';
 
 interface SCMetadataCardProps {
-  legalkartCase: any;
+  legalkartCase?: any;
+  rawData?: any;
 }
 
-export const SCMetadataCard = ({ legalkartCase }: SCMetadataCardProps) => {
-  if (!legalkartCase) return null;
+export const SCMetadataCard = ({ legalkartCase, rawData }: SCMetadataCardProps) => {
+  // Try to get metadata from legalkart case or parse from raw data
+  const caseDetails = rawData?.data?.case_details || {};
   
-  const hasMetadata = legalkartCase.argument_transcripts || 
-                      legalkartCase.indexing || 
-                      legalkartCase.mention_memo || 
-                      legalkartCase.drop_note || 
-                      legalkartCase.caveat;
+  const hasMetadata = legalkartCase?.argument_transcripts || 
+                      legalkartCase?.indexing || 
+                      legalkartCase?.mention_memo || 
+                      legalkartCase?.drop_note || 
+                      legalkartCase?.caveat ||
+                      caseDetails['Argument Transcripts'] ||
+                      caseDetails['Indexing'] ||
+                      caseDetails['Mention Memo'] ||
+                      caseDetails['Drop Note'] ||
+                      caseDetails['Caveat'];
   
   if (!hasMetadata) {
     return (
@@ -50,11 +57,11 @@ export const SCMetadataCard = ({ legalkartCase }: SCMetadataCardProps) => {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {renderMetadataItem('Argument Transcripts', legalkartCase.argument_transcripts)}
-        {renderMetadataItem('Indexing', legalkartCase.indexing)}
-        {renderMetadataItem('Mention Memo', legalkartCase.mention_memo)}
-        {renderMetadataItem('Drop Note', legalkartCase.drop_note)}
-        {renderMetadataItem('Caveat', legalkartCase.caveat)}
+        {renderMetadataItem('Argument Transcripts', legalkartCase?.argument_transcripts || caseDetails['Argument Transcripts'])}
+        {renderMetadataItem('Indexing', legalkartCase?.indexing || caseDetails['Indexing'])}
+        {renderMetadataItem('Mention Memo', legalkartCase?.mention_memo || caseDetails['Mention Memo'])}
+        {renderMetadataItem('Drop Note', legalkartCase?.drop_note || caseDetails['Drop Note'])}
+        {renderMetadataItem('Caveat', legalkartCase?.caveat || caseDetails['Caveat'])}
       </CardContent>
     </Card>
   );

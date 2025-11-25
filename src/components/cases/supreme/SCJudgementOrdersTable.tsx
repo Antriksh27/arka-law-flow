@@ -4,14 +4,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { FileText, ExternalLink } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 
 interface SCJudgementOrdersTableProps {
   caseId: string;
+  data?: any[];
 }
 
-export const SCJudgementOrdersTable = ({ caseId }: SCJudgementOrdersTableProps) => {
-  const { data: orders = [], isLoading } = useQuery({
+export const SCJudgementOrdersTable = ({ caseId, data: propData }: SCJudgementOrdersTableProps) => {
+  const { data: dbData = [], isLoading } = useQuery({
     queryKey: ['sc-judgement-orders', caseId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -21,10 +22,13 @@ export const SCJudgementOrdersTable = ({ caseId }: SCJudgementOrdersTableProps) 
         .order('order_date', { ascending: false });
       if (error) throw error;
       return data as any[];
-    }
+    },
+    enabled: !!caseId && !propData
   });
   
-  if (isLoading) {
+  const orders = propData || dbData;
+  
+  if (isLoading && !propData) {
     return <div className="text-muted-foreground">Loading SC orders...</div>;
   }
   
@@ -44,20 +48,22 @@ export const SCJudgementOrdersTable = ({ caseId }: SCJudgementOrdersTableProps) 
           </TableRow>
         </TableHeader>
         <TableBody>
-          {orders.map((order) => (
-            <TableRow key={order.id}>
+          {orders.map((order, idx) => (
+            <TableRow key={order.id || idx}>
               <TableCell className="font-medium">
-                {order.order_date ? format(new Date(order.order_date), 'dd MMM yyyy') : 'N/A'}
+                {order.order_date || order['Order Date']
+                  ? format(parseISO(order.order_date || order['Order Date']), 'dd MMM yyyy')
+                  : 'N/A'}
               </TableCell>
               <TableCell>
-                <Badge variant="outline">{order.order_type}</Badge>
+                <Badge variant="outline">{order.order_type || order['Order Type'] || 'N/A'}</Badge>
               </TableCell>
               <TableCell>
-                {order.pdf_url ? (
+                {(order.pdf_url || order['PDF Url']) ? (
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={() => window.open(order.pdf_url!, '_blank')}
+                    onClick={() => window.open(order.pdf_url || order['PDF Url'], '_blank')}
                     className="flex items-center gap-2"
                   >
                     <FileText className="w-4 h-4" />
