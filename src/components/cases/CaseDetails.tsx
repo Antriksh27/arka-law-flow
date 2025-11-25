@@ -90,6 +90,7 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
     sub_category,
     court_name,
     court,
+    court_type,
     petitioner,
     petitioner_advocate,
     respondent,
@@ -106,12 +107,31 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
     fetched_data,
   } = caseData;
 
+  // Check if this is a Supreme Court case
+  const isSupremeCourt = court_type === 'supreme_court' || 
+                         court_name?.toLowerCase().includes('supreme court') ||
+                         (fetched_data as any)?.diary_number;
+
   // Extract nested data for the tabs (documents, objections, etc.)
   const apiData = (fetched_data as any)?.data || {};
   const documents = apiData?.documents || [];
   const objections = apiData?.objections || [];
   const orderDetails = apiData?.order_details || [];
   const historyData = apiData?.history_of_case_hearing || [];
+  
+  // Extract Supreme Court specific data
+  const scData = isSupremeCourt ? {
+    diaryNumber: (fetched_data as any)?.diary_number || category,
+    scCategory: category || (fetched_data as any)?.case_details?.["Category"],
+    benchComposition: coram,
+    earlierCourtDetails: (fetched_data as any)?.case_details?.earlier_court_details || [],
+    taggedMatters: (fetched_data as any)?.case_details?.tagged_matters || [],
+    defects: (fetched_data as any)?.case_details?.defects || [],
+    listingDates: (fetched_data as any)?.case_details?.listing_dates || [],
+    judgementOrders: (fetched_data as any)?.case_details?.judgement_orders || [],
+    notices: (fetched_data as any)?.case_details?.notices || [],
+    officeReport: (fetched_data as any)?.case_details?.office_report || [],
+  } : null;
 
   // Parse petitioner data to separate party name from any embedded text
   const petitionerName = petitioner?.split('Vs')[0]?.trim() || petitioner;
@@ -236,6 +256,42 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
         </Card>
       </div>
 
+      {/* Supreme Court Specific Section */}
+      {isSupremeCourt && scData && (
+        <Card className="rounded-2xl border-l-4 border-l-primary">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2.5 text-lg">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Scale className="w-5 h-5 text-primary" />
+              </div>
+              Supreme Court Details
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {scData.diaryNumber && (
+                <div className="space-y-1.5">
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Diary Number</p>
+                  <p className="text-base font-mono font-semibold">{scData.diaryNumber}</p>
+                </div>
+              )}
+              {scData.scCategory && (
+                <div className="space-y-1.5 md:col-span-2">
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Category</p>
+                  <p className="text-sm font-medium">{scData.scCategory}</p>
+                </div>
+              )}
+              {scData.benchComposition && (
+                <div className="space-y-1.5 md:col-span-2">
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Bench Composition</p>
+                  <p className="text-sm font-medium leading-relaxed whitespace-pre-line">{scData.benchComposition}</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList className="inline-flex h-12 items-center justify-start rounded-xl bg-muted/50 p-1.5 gap-1">
           <TabsTrigger value="overview" className="rounded-lg px-6">Overview</TabsTrigger>
@@ -244,6 +300,12 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
           <TabsTrigger value="objections" className="rounded-lg px-6">Objections</TabsTrigger>
           <TabsTrigger value="orders" className="rounded-lg px-6">Orders</TabsTrigger>
           <TabsTrigger value="history" className="rounded-lg px-6">History</TabsTrigger>
+          {isSupremeCourt && (
+            <>
+              <TabsTrigger value="sc-earlier-courts" className="rounded-lg px-6">Earlier Courts</TabsTrigger>
+              <TabsTrigger value="sc-tagged" className="rounded-lg px-6">Tagged Matters</TabsTrigger>
+            </>
+          )}
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -678,6 +740,86 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Supreme Court Specific Tabs */}
+        {isSupremeCourt && scData && (
+          <>
+            <TabsContent value="sc-earlier-courts" className="space-y-6 mt-6">
+              <Card className="rounded-2xl shadow-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <Building className="w-5 h-5 text-primary" />
+                    Earlier Court Details
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {scData.earlierCourtDetails.length > 0 ? (
+                    <div className="space-y-4">
+                      {scData.earlierCourtDetails.map((court: any, idx: number) => (
+                        <div key={idx} className="p-4 border rounded-lg space-y-2">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="font-semibold">{court.court_name || 'Court Name Not Available'}</p>
+                              <p className="text-sm text-muted-foreground">{court.case_no || 'Case Number Not Available'}</p>
+                            </div>
+                            {court.judgement && (
+                              <Badge variant={court.judgement.toLowerCase().includes('allow') ? 'default' : 'outline'}>
+                                {court.judgement}
+                              </Badge>
+                            )}
+                          </div>
+                          {court.order_date && (
+                            <p className="text-sm text-muted-foreground">Order Date: {court.order_date}</p>
+                          )}
+                          {court.judges && (
+                            <p className="text-sm">Judges: {court.judges}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground text-center py-8">No earlier court details available</p>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="sc-tagged" className="space-y-6 mt-6">
+              <Card className="rounded-2xl shadow-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <FileText className="w-5 h-5 text-primary" />
+                    Tagged/Related Matters
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {scData.taggedMatters.length > 0 ? (
+                    <div className="space-y-3">
+                      {scData.taggedMatters.map((matter: any, idx: number) => (
+                        <div key={idx} className="p-4 border rounded-lg">
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <p className="font-mono text-sm text-muted-foreground">{matter.tagged_case_number || matter.case_no}</p>
+                              <p className="font-medium mt-1">{matter.petitioner_vs_respondent || matter.case_title}</p>
+                            </div>
+                            <Badge variant={matter.matter_status === 'P' ? 'default' : 'outline'}>
+                              {matter.matter_status === 'P' ? 'Pending' : 'Disposed'}
+                            </Badge>
+                          </div>
+                          {matter.ia_info && (
+                            <p className="text-xs text-muted-foreground mt-2">IA: {matter.ia_info}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground text-center py-8">No tagged matters available</p>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </>
+        )}
       </Tabs>
     </div>
   );

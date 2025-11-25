@@ -92,14 +92,30 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
           
           // Root-level fields are lowercase
           const diaryNumber = rawData.diary_number || null;
-          const petitioner = rawData.petitioner || null;
-          const respondent = rawData.respondent || null;
+          const petitionerRaw = rawData.petitioner || null;
+          const respondentRaw = rawData.respondent || null;
           const status = rawData.status || 'PENDING';
           
           // Nested case_details has capitalized fields
           const caseDetails = rawData.case_details || {};
+          
+          // Clean party names - remove leading numbers like "1 " and get first line only
+          const cleanParty = (party: string) => {
+            return party.replace(/^\d+\s+/, '').split('\n')[0].trim();
+          };
+          
+          // Extract from nested case_details fields
+          const petitionerFromDetails = caseDetails["Petitioner(s)"] || "";
+          const respondentFromDetails = caseDetails["Respondent(s)"] || "";
+          
+          // Use root-level or clean nested data
+          const petitioner = petitionerRaw || cleanParty(petitionerFromDetails);
+          const respondent = respondentRaw || cleanParty(respondentFromDetails);
+          
           const cnrNumber = caseDetails["CNR Number"] || null;
-          const caseTitle = caseDetails["Case Title"] || `${petitioner} vs ${respondent}`;
+          const caseTitleFromDetails = caseDetails["Case Title"] || "";
+          const caseTitle = caseTitleFromDetails || 
+                           (petitioner && respondent ? `${petitioner} vs ${respondent}` : "Case Details");
           const caseNumber = caseDetails["Case Number"] || null;
           const category = caseDetails["Category"] || null;
           const statusStage = caseDetails["Status/Stage"] || status;
@@ -199,6 +215,12 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
           };
         }
 
+        // Validate before setting
+        if (!parsedData.case_title || parsedData.case_title === 'null vs null') {
+          console.warn('Invalid case title detected:', parsedData);
+          parsedData.case_title = 'Case Details (Title Not Available)';
+        }
+        
         setFetchedData(parsedData);
         toast({
           title: "Case Details Fetched",
@@ -281,6 +303,9 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
         state: caseData.state,
         bench_type: caseData.bench_type,
         coram: caseData.coram,
+        
+        // Supreme Court category stored in category field
+        category: caseData.category || null,
         
         // Dates
         filing_date: caseData.filing_date,
