@@ -89,6 +89,10 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
         
         if (isSupremeCourt) {
           console.log('🔍 SC Raw Data:', rawData);
+          console.log('🔍 Root petitioner:', rawData.petitioner);
+          console.log('🔍 Root respondent:', rawData.respondent);
+          console.log('🔍 Root diary_number:', rawData.diary_number);
+          console.log('🔍 case_details object:', rawData.case_details);
           
           // Root-level fields are LOWERCASE (petitioner, respondent, diary_number)
           const petitioner = rawData.petitioner || "";
@@ -102,22 +106,30 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
           const category = caseDetails["Category"] || null;
           const statusStage = caseDetails["Status/Stage"] || status;
           
-          console.log('🔍 Extracted SC Data:', {
+          console.log('🔍 case_details["Case Title"]:', caseDetails["Case Title"]);
+          console.log('🔍 Extracted data:', {
             petitioner,
             respondent,
             diaryNumber,
             status,
             statusStage,
             category,
-            cnrNumber,
-            caseTitle: caseDetails["Case Title"]
+            cnrNumber
           });
           
           // Construct case title - prioritize from case_details, fallback to constructing
           let caseTitle = caseDetails["Case Title"];
+          console.log('🔍 Case title from case_details:', caseTitle);
+          
           if (!caseTitle && petitioner && respondent) {
             caseTitle = `${petitioner} vs. ${respondent}`;
             console.log('⚠️ Case title constructed from root fields:', caseTitle);
+          }
+          
+          if (!caseTitle) {
+            console.error('❌ No case title available!');
+          } else {
+            console.log('✅ Final case title:', caseTitle);
           }
           
           // Extract detailed party lists (capitalized fields in case_details)
