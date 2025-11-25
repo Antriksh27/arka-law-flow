@@ -333,6 +333,22 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
         return 'civil';
       };
 
+      // Helper to safely format dates
+      const formatDateSafe = (dateVal: any): string | null => {
+        if (!dateVal) return null;
+        try {
+          const dateStr = typeof dateVal === 'string' ? dateVal : String(dateVal);
+          // If already ISO format, return as is
+          if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+          // Try to parse and convert to ISO
+          const parsed = new Date(dateStr);
+          if (isNaN(parsed.getTime())) return null;
+          return parsed.toISOString().split('T')[0];
+        } catch {
+          return null;
+        }
+      };
+
       // Prepare case data for insertion
       const insertData = {
         // Basic info
@@ -355,11 +371,11 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
         // Supreme Court category stored in category field
         category: caseData.category || null,
         
-        // Dates
-        filing_date: caseData.filing_date,
-        registration_date: caseData.registration_date,
-        first_hearing_date: caseData.first_hearing_date,
-        next_hearing_date: caseData.next_hearing_date,
+        // Dates - ensure proper ISO format
+        filing_date: formatDateSafe(caseData.filing_date),
+        registration_date: formatDateSafe(caseData.registration_date),
+        first_hearing_date: formatDateSafe(caseData.first_hearing_date),
+        next_hearing_date: formatDateSafe(caseData.next_hearing_date),
         
         // Status and type - mapped to valid enum values
         status: mapStatus(caseData.status),
@@ -406,19 +422,25 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
       if (Array.isArray(hearingHistory) && hearingHistory.length > 0) {
         const hearingsToInsert = hearingHistory
           .filter((h: any) => h.hearing_date || h.date)
-          .map((hearing: any) => ({
-            case_id: caseId,
-            firm_id: firmId,
-            hearing_date: hearing.hearing_date || hearing.date,
-            court_name: caseData.court_name || caseData.court,
-            judge_name: hearing.judge_name || hearing.coram || caseData.coram,
-            hearing_type: hearing.purpose_of_hearing || hearing.business || 'General Hearing',
-            status: hearing.status || 'completed',
-            outcome: hearing.outcome || hearing.business,
-            notes: hearing.purpose || hearing.listing_reason,
-            created_by: user.id,
-            assigned_to: user.id,
-          }));
+          .map((hearing: any) => {
+            const hearingDate = formatDateSafe(hearing.hearing_date || hearing.date);
+            if (!hearingDate) return null;
+            
+            return {
+              case_id: caseId,
+              firm_id: firmId,
+              hearing_date: hearingDate,
+              court_name: caseData.court_name || caseData.court,
+              judge_name: hearing.judge_name || hearing.coram || caseData.coram,
+              hearing_type: hearing.purpose_of_hearing || hearing.business || 'General Hearing',
+              status: hearing.status || 'completed',
+              outcome: hearing.outcome || hearing.business,
+              notes: hearing.purpose || hearing.listing_reason,
+              created_by: user.id,
+              assigned_to: user.id,
+            };
+          })
+          .filter(Boolean);
 
         if (hearingsToInsert.length > 0) {
           const { error: hearingsError } = await supabase
