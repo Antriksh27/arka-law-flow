@@ -440,7 +440,7 @@ export function parseSupremeCourtData(rawData: any): ParsedSupremeCourtData {
     district: null,
     category: category,
     subCategory: null,
-    caseType: 'civil',
+    caseType: null,
     courtNumberAndJudge: null,
     diaryNumber: diaryNumber,
     diaryFiledOn: diaryFiledOn,
