@@ -31,6 +31,7 @@ import { SCNoticesTable } from '@/components/cases/supreme/SCNoticesTable';
 import { SCDefectsTable } from '@/components/cases/supreme/SCDefectsTable';
 import { SCJudgementOrdersTable } from '@/components/cases/supreme/SCJudgementOrdersTable';
 import { SCOfficeReportsTable } from '@/components/cases/supreme/SCOfficeReportsTable';
+import { SCCaseDetailView } from '@/components/cases/supreme/SCCaseDetailView';
 
 const CaseDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -338,6 +339,19 @@ const CaseDetail = () => {
   );
 
   console.log('🏛️ Is Supreme Court case:', isSupremeCourt);
+
+  // If Supreme Court, show dedicated SC view
+  if (isSupremeCourt) {
+    return (
+      <div className="min-h-screen bg-[#F8F9FB]">
+        <SCCaseDetailView 
+          caseData={caseData}
+          legalkartCase={legalkartCase}
+          rawData={caseData?.fetched_data}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F8F9FB]">
