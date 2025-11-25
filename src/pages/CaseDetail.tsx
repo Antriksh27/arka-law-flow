@@ -32,6 +32,7 @@ import { SCDefectsTable } from '@/components/cases/supreme/SCDefectsTable';
 import { SCJudgementOrdersTable } from '@/components/cases/supreme/SCJudgementOrdersTable';
 import { SCOfficeReportsTable } from '@/components/cases/supreme/SCOfficeReportsTable';
 import { SCCaseDetailView } from '@/components/cases/supreme/SCCaseDetailView';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 const CaseDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -332,37 +333,79 @@ const CaseDetail = () => {
 
   // Detect if this is a Supreme Court case
   const fetchedData = caseData?.fetched_data as any;
-  console.log('🔍 SC Detection Values:', {
-    court: caseData?.court,
-    cnr: caseData?.cnr_number,
-    legalkartDiary: legalkartCase?.diary_number,
-    legalkartBench: legalkartCase?.bench_composition,
-    hasFetchedData: !!caseData?.fetched_data,
-    fetchedDataDiary: fetchedData?.diary_number
+  
+  // Detailed logging for each detection check
+  console.log('🔍 SC Detection - Step-by-step Analysis:');
+  console.log('  1️⃣ Court field:', caseData?.court);
+  console.log('     → Court includes "supreme"?', caseData?.court?.toLowerCase().includes('supreme'));
+  console.log('  2️⃣ CNR field:', caseData?.cnr_number);
+  console.log('     → CNR starts with "SCIN"?', caseData?.cnr_number?.toUpperCase().startsWith('SCIN'));
+  console.log('  3️⃣ Legalkart diary:', legalkartCase?.diary_number);
+  console.log('     → Has diary number?', !!legalkartCase?.diary_number);
+  console.log('  4️⃣ Legalkart bench:', legalkartCase?.bench_composition);
+  console.log('     → Has bench composition?', !!legalkartCase?.bench_composition?.length);
+  console.log('  5️⃣ Fetched data diary:', fetchedData?.diary_number);
+  console.log('     → Has fetched_data.diary_number?', !!fetchedData?.diary_number);
+  console.log('  6️⃣ Fetched data.data diary:', fetchedData?.data?.diary_number);
+  console.log('     → Has fetched_data.data.diary_number?', !!fetchedData?.data?.diary_number);
+
+  // Ultra-robust detection checking ALL possible indicators
+  const checkLegalkartDiary = !!legalkartCase?.diary_number;
+  const checkLegalkartBench = !!(legalkartCase?.bench_composition?.length);
+  const checkCourtField = !!(caseData?.court && caseData.court.toLowerCase().includes('supreme'));
+  const checkCNRPrefix = !!(caseData?.cnr_number && caseData.cnr_number.toUpperCase().startsWith('SCIN'));
+  const checkFetchedDiary = !!fetchedData?.diary_number;
+  const checkFetchedDataDiary = !!fetchedData?.data?.diary_number;
+  const checkCourtSCI = !!(caseData?.court && caseData.court.toLowerCase().includes('sci'));
+
+  const isSupremeCourt = 
+    checkLegalkartDiary || 
+    checkLegalkartBench ||
+    checkCourtField ||
+    checkCNRPrefix ||
+    checkFetchedDiary ||
+    checkFetchedDataDiary ||
+    checkCourtSCI;
+
+  console.log('🏛️ SC Detection Results:', {
+    checkLegalkartDiary,
+    checkLegalkartBench,
+    checkCourtField,
+    checkCNRPrefix,
+    checkFetchedDiary,
+    checkFetchedDataDiary,
+    checkCourtSCI,
+    FINAL_RESULT: isSupremeCourt
   });
-
-  const isSupremeCourt = Boolean(
-    legalkartCase?.diary_number || 
-    legalkartCase?.bench_composition?.length > 0 ||
-    caseData?.court?.toLowerCase().includes('supreme') ||
-    caseData?.cnr_number?.toUpperCase().startsWith('SCIN') ||
-    fetchedData?.diary_number  // Direct check on fetched_data
-  );
-
-  console.log('🏛️ Is Supreme Court case:', isSupremeCourt);
 
   // If Supreme Court, show dedicated SC view
   if (isSupremeCourt) {
+    console.log('✅ Rendering Supreme Court view for case:', id);
     return (
-      <div className="min-h-screen bg-[#F8F9FB]">
-        <SCCaseDetailView 
-          caseData={caseData}
-          legalkartCase={legalkartCase}
-          rawData={caseData?.fetched_data}
-        />
-      </div>
+      <ErrorBoundary
+        fallback={
+          <div className="min-h-screen bg-[#F8F9FB] flex items-center justify-center p-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-[#E5E7EB] p-6 max-w-2xl">
+              <h2 className="text-xl font-semibold text-red-600 mb-4">Error Loading Supreme Court View</h2>
+              <p className="text-[#6B7280]">
+                There was an error loading the Supreme Court case view. Please try refreshing the page.
+              </p>
+            </div>
+          </div>
+        }
+      >
+        <div className="min-h-screen bg-[#F8F9FB]">
+          <SCCaseDetailView 
+            caseData={caseData}
+            legalkartCase={legalkartCase}
+            rawData={caseData?.fetched_data}
+          />
+        </div>
+      </ErrorBoundary>
     );
   }
+
+  console.log('ℹ️ Rendering standard High Court/District Court view for case:', id);
 
   return (
     <div className="min-h-screen bg-[#F8F9FB]">
