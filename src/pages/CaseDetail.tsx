@@ -35,6 +35,8 @@ import { SCCaseDetailView } from '@/components/cases/supreme/SCCaseDetailView';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 const CaseDetail = () => {
+  console.log('🚀 CaseDetail component loaded - Version 2.0 with Enhanced SC Detection');
+  
   const { id } = useParams<{ id: string }>();
   const [activeTab, setActiveTab] = useState('overview');
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
