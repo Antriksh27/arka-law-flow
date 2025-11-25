@@ -30,6 +30,8 @@ export const SCCaseDetailView = ({ caseData, legalkartCase, rawData }: SCCaseDet
   // Use legalkart case ID if available, otherwise use case ID
   const effectiveCaseId = legalkartCase?.id || caseData?.id;
 
+  console.log('📊 Parsed SC Data:', parsedData);
+
   return (
     <div className="container max-w-7xl mx-auto p-6 space-y-6">
       {/* Header Section */}
@@ -66,57 +68,57 @@ export const SCCaseDetailView = ({ caseData, legalkartCase, rawData }: SCCaseDet
         <div className="mt-6">
           <TabsContent value="earlier-courts" className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">Earlier Court Details</h2>
-            <SCEarlierCourtsTable caseId={effectiveCaseId} />
+            <SCEarlierCourtsTable caseId={effectiveCaseId} data={parsedData.earlierCourts} />
           </TabsContent>
 
           <TabsContent value="tagged" className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">Tagged / Related Matters</h2>
-            <SCTaggedMattersTable caseId={effectiveCaseId} />
+            <SCTaggedMattersTable caseId={effectiveCaseId} data={parsedData.taggedMatters} />
           </TabsContent>
 
           <TabsContent value="listings" className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">Listing History</h2>
-            <SCListingHistoryTimeline caseId={effectiveCaseId} />
+            <SCListingHistoryTimeline caseId={effectiveCaseId} data={parsedData.listingDates} />
           </TabsContent>
 
           <TabsContent value="notices" className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">Notices</h2>
-            <SCNoticesTable caseId={effectiveCaseId} />
+            <SCNoticesTable caseId={effectiveCaseId} data={parsedData.notices} />
           </TabsContent>
 
           <TabsContent value="defects" className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">Defects</h2>
-            <SCDefectsTable caseId={effectiveCaseId} />
+            <SCDefectsTable caseId={effectiveCaseId} data={parsedData.defects} />
           </TabsContent>
 
           <TabsContent value="orders" className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">Judgement Orders</h2>
-            <SCJudgementOrdersTable caseId={effectiveCaseId} />
+            <SCJudgementOrdersTable caseId={effectiveCaseId} data={parsedData.orders} />
           </TabsContent>
 
           <TabsContent value="reports" className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">Office Reports</h2>
-            <SCOfficeReportsTable caseId={effectiveCaseId} />
+            <SCOfficeReportsTable caseId={effectiveCaseId} data={parsedData.officeReports} />
           </TabsContent>
 
           <TabsContent value="ia-docs" className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">Interlocutory Application Documents</h2>
-            <SCIADocumentsTable caseId={effectiveCaseId} />
+            <SCIADocumentsTable caseId={effectiveCaseId} data={parsedData.iaDocuments} />
           </TabsContent>
 
           <TabsContent value="fees" className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">Court Fees</h2>
-            <SCCourtFeesTable caseId={effectiveCaseId} />
+            <SCCourtFeesTable caseId={effectiveCaseId} data={parsedData.courtFees} />
           </TabsContent>
 
           <TabsContent value="similarities" className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">Similar Cases</h2>
-            <SCSimilaritiesDisplay caseId={effectiveCaseId} />
+            <SCSimilaritiesDisplay caseId={effectiveCaseId} data={parsedData.similarities} />
           </TabsContent>
 
           <TabsContent value="metadata" className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">Additional Metadata</h2>
-            <SCMetadataCard legalkartCase={legalkartCase} />
+            <SCMetadataCard legalkartCase={legalkartCase} rawData={fetchedRawData} />
           </TabsContent>
         </div>
       </Tabs>

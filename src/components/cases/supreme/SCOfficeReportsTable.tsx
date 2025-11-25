@@ -3,14 +3,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { ExternalLink } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 
 interface SCOfficeReportsTableProps {
   caseId: string;
+  data?: any[];
 }
 
-export const SCOfficeReportsTable = ({ caseId }: SCOfficeReportsTableProps) => {
-  const { data: reports = [], isLoading } = useQuery({
+export const SCOfficeReportsTable = ({ caseId, data: propData }: SCOfficeReportsTableProps) => {
+  const { data: dbData = [], isLoading } = useQuery({
     queryKey: ['sc-office-reports', caseId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -20,10 +21,13 @@ export const SCOfficeReportsTable = ({ caseId }: SCOfficeReportsTableProps) => {
         .order('order_date', { ascending: false });
       if (error) throw error;
       return data as any[];
-    }
+    },
+    enabled: !!caseId && !propData
   });
   
-  if (isLoading) {
+  const reports = propData || dbData;
+  
+  if (isLoading && !propData) {
     return <div className="text-muted-foreground">Loading office reports...</div>;
   }
   
@@ -33,32 +37,31 @@ export const SCOfficeReportsTable = ({ caseId }: SCOfficeReportsTableProps) => {
   
   return (
     <div className="space-y-4">
-      <h3 className="text-xl font-semibold text-foreground">Office Reports</h3>
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Process ID</TableHead>
             <TableHead>Order Date</TableHead>
-            <TableHead>Receiving Date</TableHead>
             <TableHead>Report</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {reports.map((report) => (
-            <TableRow key={report.id}>
-              <TableCell className="font-mono text-xs">{report.process_id}</TableCell>
-              <TableCell>
-                {report.order_date ? format(new Date(report.order_date), 'dd MMM yyyy') : '-'}
-              </TableCell>
-              <TableCell className="text-xs">
-                {report.receiving_date ? format(new Date(report.receiving_date), 'dd MMM yyyy HH:mm') : '-'}
+          {reports.map((report, idx) => (
+            <TableRow key={report.id || idx}>
+              <TableCell className="font-mono text-xs">
+                {report.process_id || report['Process ID'] || 'N/A'}
               </TableCell>
               <TableCell>
-                {report.html_url ? (
+                {report.order_date || report['Order Date']
+                  ? format(parseISO(report.order_date || report['Order Date']), 'dd MMM yyyy')
+                  : '-'}
+              </TableCell>
+              <TableCell>
+                {(report.html_url || report['HTML Url']) ? (
                   <Button 
                     variant="link" 
                     size="sm" 
-                    onClick={() => window.open(report.html_url!, '_blank')}
+                    onClick={() => window.open(report.html_url || report['HTML Url'], '_blank')}
                     className="flex items-center gap-1"
                   >
                     View Report <ExternalLink className="w-3 h-3" />

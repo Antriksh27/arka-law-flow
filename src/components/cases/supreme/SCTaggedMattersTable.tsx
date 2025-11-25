@@ -5,10 +5,11 @@ import { Badge } from '@/components/ui/badge';
 
 interface SCTaggedMattersTableProps {
   caseId: string;
+  data?: any[];
 }
 
-export const SCTaggedMattersTable = ({ caseId }: SCTaggedMattersTableProps) => {
-  const { data: taggedMatters = [], isLoading } = useQuery({
+export const SCTaggedMattersTable = ({ caseId, data: propData }: SCTaggedMattersTableProps) => {
+  const { data: dbData = [], isLoading } = useQuery({
     queryKey: ['sc-tagged-matters', caseId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -18,10 +19,13 @@ export const SCTaggedMattersTable = ({ caseId }: SCTaggedMattersTableProps) => {
         .order('entry_date', { ascending: false });
       if (error) throw error;
       return data as any[];
-    }
+    },
+    enabled: !!caseId && !propData
   });
   
-  if (isLoading) {
+  const taggedMatters = propData || dbData;
+  
+  if (isLoading && !propData) {
     return <div className="text-muted-foreground">Loading tagged matters...</div>;
   }
   
@@ -31,22 +35,29 @@ export const SCTaggedMattersTable = ({ caseId }: SCTaggedMattersTableProps) => {
   
   return (
     <div className="space-y-4">
-      <h3 className="text-xl font-semibold text-foreground">Tagged/Related Matters</h3>
       <div className="space-y-3">
-        {taggedMatters.map((tm) => (
-          <Card key={tm.id} className="p-4">
+        {taggedMatters.map((tm, idx) => (
+          <Card key={tm.id || idx} className="p-4">
             <div className="flex justify-between items-start">
               <div>
-                <div className="font-mono text-sm text-muted-foreground">{tm.tagged_case_number}</div>
-                <div className="font-medium mt-1">{tm.petitioner_vs_respondent}</div>
-                {tm.ia_info && <div className="text-xs text-muted-foreground mt-1">IA: {tm.ia_info}</div>}
+                <div className="font-mono text-sm text-muted-foreground">
+                  {tm.tagged_case_number || tm['Tagged Case Number'] || 'N/A'}
+                </div>
+                <div className="font-medium mt-1">
+                  {tm.petitioner_vs_respondent || tm['Petitioner Vs Respondent'] || 'N/A'}
+                </div>
+                {(tm.ia_info || tm['IA Information']) && (
+                  <div className="text-xs text-muted-foreground mt-1">
+                    IA: {tm.ia_info || tm['IA Information']}
+                  </div>
+                )}
               </div>
               <div className="flex gap-2">
-                <Badge variant={tm.list_status === 'Y' ? 'active' : 'outline'}>
-                  {tm.list_status === 'Y' ? 'Listed' : 'Not Listed'}
+                <Badge variant={(tm.list_status || tm['List Status']) === 'Y' ? 'default' : 'outline'}>
+                  {(tm.list_status || tm['List Status']) === 'Y' ? 'Listed' : 'Not Listed'}
                 </Badge>
-                <Badge variant={tm.matter_status === 'P' ? 'warning' : 'disposed'}>
-                  {tm.matter_status === 'P' ? 'Pending' : 'Disposed'}
+                <Badge variant={(tm.matter_status || tm['Matter Status']) === 'P' ? 'warning' : 'outline'}>
+                  {(tm.matter_status || tm['Matter Status']) === 'P' ? 'Pending' : 'Disposed'}
                 </Badge>
               </div>
             </div>

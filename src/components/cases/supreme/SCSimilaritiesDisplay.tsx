@@ -5,10 +5,11 @@ import { Badge } from '@/components/ui/badge';
 
 interface SCSimilaritiesDisplayProps {
   caseId: string;
+  data?: any[];
 }
 
-export const SCSimilaritiesDisplay = ({ caseId }: SCSimilaritiesDisplayProps) => {
-  const { data: similarities = [], isLoading } = useQuery({
+export const SCSimilaritiesDisplay = ({ caseId, data: propData }: SCSimilaritiesDisplayProps) => {
+  const { data: dbData = [], isLoading } = useQuery({
     queryKey: ['sc-similarities', caseId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -17,29 +18,32 @@ export const SCSimilaritiesDisplay = ({ caseId }: SCSimilaritiesDisplayProps) =>
         .eq('case_id', caseId);
       if (error) throw error;
       return data as any[];
-    }
+    },
+    enabled: !!caseId && !propData
   });
   
-  if (isLoading) return <div className="text-sm text-muted-foreground">Loading similarities...</div>;
+  const similarities = propData || dbData;
+  
+  if (isLoading && !propData) return <div className="text-sm text-muted-foreground">Loading similarities...</div>;
   if (similarities.length === 0) return <div className="text-sm text-muted-foreground">No similar cases found</div>;
   
   return (
     <Accordion type="multiple" className="space-y-3">
-      {similarities.map((sim) => (
-        <AccordionItem key={sim.id} value={sim.id} className="border rounded-lg bg-card">
+      {similarities.map((sim, idx) => (
+        <AccordionItem key={sim.id || idx} value={sim.id || `sim-${idx}`} className="border rounded-lg bg-card">
           <AccordionTrigger className="px-4 py-3 hover:bg-accent/50">
             <div className="flex items-center gap-2">
               <Badge variant="outline" className="text-xs">
                 {Array.isArray(sim.similarity_data) ? sim.similarity_data.length : 0} matches
               </Badge>
-              <span className="font-medium text-left">{sim.category}</span>
+              <span className="font-medium text-left">{sim.category || 'Unknown Category'}</span>
             </div>
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
             {Array.isArray(sim.similarity_data) ? (
               <div className="space-y-2">
-                {sim.similarity_data.map((item: any, idx: number) => (
-                  <div key={idx} className="text-sm bg-muted/50 p-3 rounded border border-border">
+                {sim.similarity_data.map((item: any, itemIdx: number) => (
+                  <div key={itemIdx} className="text-sm bg-muted/50 p-3 rounded border border-border">
                     {typeof item === 'string' ? (
                       <pre className="whitespace-pre-wrap font-sans">{item}</pre>
                     ) : (

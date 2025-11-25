@@ -28,6 +28,16 @@ export interface ParsedSCData {
     name: string;
     advocates?: string;
   }>;
+  earlierCourts?: any[];
+  taggedMatters?: any[];
+  listingDates?: any[];
+  notices?: any[];
+  defects?: any[];
+  orders?: any[];
+  officeReports?: any[];
+  iaDocuments?: any[];
+  courtFees?: any[];
+  similarities?: any[];
 }
 
 /**
@@ -48,10 +58,14 @@ export function parseDiaryNumber(diaryText?: string): {
   let filedOn: string | undefined;
   let verifiedOn: string | undefined;
 
+  // Extract section from bracket format: [\nSECTION:\nIII-B\n]
+  const sectionMatch = diaryText.match(/\[\s*SECTION:\s*([^\]]+)\]/i);
+  if (sectionMatch) {
+    section = sectionMatch[1].trim();
+  }
+
   lines.forEach(line => {
-    if (line.includes('Section:')) {
-      section = line.replace('Section:', '').trim();
-    } else if (line.includes('Filed on:')) {
+    if (line.includes('Filed on:')) {
       filedOn = line.replace('Filed on:', '').trim();
     } else if (line.includes('Verified on:')) {
       verifiedOn = line.replace('Verified on:', '').trim();
@@ -59,6 +73,25 @@ export function parseDiaryNumber(diaryText?: string): {
   });
 
   return { number, section, filedOn, verifiedOn };
+}
+
+/**
+ * Parse bench composition from "Present/Last Listed On" field
+ * Format: "02-03-2021 [\nJudge1\nJudge2\n]"
+ */
+export function parseBenchComposition(benchText?: string): string[] {
+  if (!benchText) return [];
+  
+  // Extract judges from bracket format
+  const bracketMatch = benchText.match(/\[([\s\S]*?)\]/);
+  if (bracketMatch) {
+    return bracketMatch[1]
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0 && line.toLowerCase().includes('justice'));
+  }
+  
+  return [];
 }
 
 /**
@@ -75,47 +108,24 @@ export function parseAdvocates(advocateText?: string): string {
 }
 
 /**
- * Parse petitioners/respondents array
+ * Parse petitioners/respondents array from text format: "1 NAME\n2 NAME"
  */
 export function parseParties(partiesText?: string): Array<{ name: string; advocates?: string }> {
   if (!partiesText) return [];
 
   const lines = partiesText.split('\n').filter(l => l.trim());
   const parties: Array<{ name: string; advocates?: string }> = [];
-  
-  let currentParty: { name: string; advocates?: string } | null = null;
 
   lines.forEach(line => {
     const trimmed = line.trim();
-    
-    if (/^\d+\./.test(trimmed)) {
-      // This is a party name line (starts with number)
-      if (currentParty) parties.push(currentParty);
-      currentParty = { name: trimmed.replace(/^\d+\.\s*/, '') };
-    } else if (trimmed.startsWith('Adv:') || trimmed.startsWith('Advocate:')) {
-      // This is an advocate line
-      if (currentParty) {
-        const advText = trimmed.replace(/^(Adv:|Advocate:)\s*/i, '');
-        currentParty.advocates = parseAdvocates(advText);
-      }
+    // Match pattern: "1 NAME" (number + space, no period)
+    const match = trimmed.match(/^(\d+)\s+(.+)$/);
+    if (match) {
+      parties.push({ name: match[2].trim() });
     }
   });
 
-  if (currentParty) parties.push(currentParty);
-
   return parties;
-}
-
-/**
- * Parse bench composition from text
- */
-export function parseBenchComposition(benchText?: string): string[] {
-  if (!benchText) return [];
-  
-  return benchText
-    .split('\n')
-    .map(line => line.trim())
-    .filter(line => line.length > 0 && line.toLowerCase().includes('justice'));
 }
 
 /**
@@ -132,11 +142,23 @@ export function parseSupremeCourtData(rawData?: any): ParsedSCData {
 
   // Parse bench from "Present/Last Listed On" field
   const lastListedText = caseDetails['Present/Last Listed On'] || '';
-  const benchComposition = parseBenchComposition(lastListedText.split('Before :')[1]);
+  const benchComposition = parseBenchComposition(lastListedText);
 
-  // Parse parties
+  // Parse parties - just names
   const petitioners = parseParties(caseDetails['Petitioner(s)']);
   const respondents = parseParties(caseDetails['Respondent(s)']);
+
+  // Extract advocates separately
+  const petitionerAdvocates = parseAdvocates(caseDetails['Petitioner Advocate(s)']);
+  const respondentAdvocates = parseAdvocates(caseDetails['Respondent Advocate(s)']);
+
+  // Attach advocates to first party if exists
+  if (petitioners.length > 0 && petitionerAdvocates) {
+    petitioners[0] = { ...petitioners[0], advocates: petitionerAdvocates };
+  }
+  if (respondents.length > 0 && respondentAdvocates) {
+    respondents[0] = { ...respondents[0], advocates: respondentAdvocates };
+  }
 
   return {
     diaryNumber: diaryInfo.number || apiData.diary_number,
@@ -150,9 +172,20 @@ export function parseSupremeCourtData(rawData?: any): ParsedSCData {
     cnrNumber: caseDetails['CNR Number'],
     category: caseDetails['Category'],
     statusStage: caseDetails['Status/Stage'],
-    lastListedOn: lastListedText.split('Before :')[0]?.trim(),
+    lastListedOn: lastListedText.split('[')[0]?.trim(),
     benchComposition,
     petitioners,
     respondents,
+    // Nested data arrays from case_details
+    earlierCourts: caseDetails['earlier_court_details'] || [],
+    taggedMatters: caseDetails['tagged_matters'] || [],
+    listingDates: caseDetails['listing_dates'] || [],
+    notices: caseDetails['notices'] || [],
+    defects: caseDetails['defects'] || [],
+    orders: caseDetails['judgement_orders'] || [],
+    officeReports: caseDetails['office_report'] || [],
+    iaDocuments: caseDetails['interlocutory_application_documents'] || [],
+    courtFees: caseDetails['court_fees'] || [],
+    similarities: caseDetails['similarities'] || [],
   };
 }

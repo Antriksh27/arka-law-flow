@@ -334,7 +334,7 @@ const CaseDetail = () => {
   const isSupremeCourt = Boolean(
     legalkartCase?.diary_number || 
     legalkartCase?.bench_composition?.length > 0 ||
-    caseData?.court_name?.toLowerCase().includes('supreme') ||
+    caseData?.court?.toLowerCase().includes('supreme') ||
     caseData?.cnr_number?.toUpperCase().startsWith('SCIN')
   );
 
