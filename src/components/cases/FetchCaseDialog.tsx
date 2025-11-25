@@ -297,7 +297,7 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
         // Court info
         court: caseData.court,
         court_name: caseData.court_name,
-        court_type: caseData.court_type || null,
+        court_type: caseData.is_supreme_court ? 'Supreme Court' : (caseData.court_type || null),
         court_complex: caseData.court_complex,
         district: caseData.district,
         state: caseData.state,
