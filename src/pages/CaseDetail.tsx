@@ -414,7 +414,24 @@ const CaseDetail = () => {
 
   return (
     <div className="min-h-screen bg-[#F8F9FB]">
-      <div className="max-w-7xl mx-auto p-6 space-y-6">
+      {/* DEBUG: If you see this banner, new code is loaded */}
+      <div style={{ 
+        position: 'fixed', 
+        top: 0, 
+        left: 0, 
+        right: 0, 
+        background: 'red', 
+        color: 'white', 
+        padding: '20px', 
+        textAlign: 'center', 
+        zIndex: 9999,
+        fontSize: '24px',
+        fontWeight: 'bold'
+      }}>
+        ⚠️ NEW CODE LOADED - VERSION 3.0 ⚠️
+      </div>
+      
+      <div className="max-w-7xl mx-auto p-6 space-y-6" style={{ marginTop: '80px' }}>
         {/* Header with Quick Actions */}
         <CaseDetailHeaderNew
           caseData={caseData}
