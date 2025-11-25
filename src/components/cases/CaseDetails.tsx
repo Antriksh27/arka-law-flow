@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Calendar, MapPin, Scale, FileText, Users, Gavel, Building, 
   RefreshCw, Hash, Clock, Briefcase, User, BookOpen,
-  CheckCircle, AlertCircle, Archive
+  CheckCircle, AlertCircle, Archive, Bell, AlertTriangle, FileCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -15,6 +15,11 @@ import { LegalkartDocumentsTable } from './legalkart/LegalkartDocumentsTable';
 import { LegalkartObjectionsTable } from './legalkart/LegalkartObjectionsTable';
 import { LegalkartOrdersTable } from './legalkart/LegalkartOrdersTable';
 import { LegalkartHistoryTable } from './legalkart/LegalkartHistoryTable';
+import { SCListingHistoryTimeline } from './supreme/SCListingHistoryTimeline';
+import { SCNoticesTable } from './supreme/SCNoticesTable';
+import { SCDefectsTable } from './supreme/SCDefectsTable';
+import { SCJudgementOrdersTable } from './supreme/SCJudgementOrdersTable';
+import { SCOfficeReportsTable } from './supreme/SCOfficeReportsTable';
 import { TimeUtils } from '@/lib/timeUtils';
 
 interface CaseDetailsProps {
@@ -112,7 +117,7 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
                          court_name?.toLowerCase().includes('supreme court');
 
   // Extract nested data - handle both old and new structure
-  const fetchedDataRoot = (fetched_data as any)?.data || (fetched_data as any) || {};
+  const fetchedDataRoot = (fetched_data as any) || {};
   const caseDetailsNested = fetchedDataRoot?.case_details || fetchedDataRoot?.["Case Details"] || {};
   const apiData = fetchedDataRoot;
   const documents = apiData?.documents || [];
@@ -123,15 +128,15 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
   console.log('SC Data Extraction:', {
     isSupremeCourt,
     court_type,
-    fetchedDataRoot,
-    caseDetailsNested,
-    diaryNumber: fetchedDataRoot?.["Diary Number"]
+    fetchedDataRoot: Object.keys(fetchedDataRoot),
+    caseDetailsKeys: Object.keys(caseDetailsNested),
+    diaryNumber: fetchedDataRoot?.diary_number || fetchedDataRoot?.["Diary Number"]
   });
   
   // Extract Supreme Court specific data from root level and nested "Case Details"
   const scData = isSupremeCourt ? {
-    diaryNumber: fetchedDataRoot?.["Diary Number"] || null,
-    scCategory: category || fetchedDataRoot?.["Category"] || null,
+    diaryNumber: fetchedDataRoot?.diary_number || fetchedDataRoot?.["Diary Number"] || null,
+    scCategory: category || caseDetailsNested?.Category || caseDetailsNested?.["Category"] || null,
     benchComposition: coram || null,
     earlierCourtDetails: caseDetailsNested?.["Earlier Court Details"] || [],
     taggedMatters: caseDetailsNested?.["Tagged Matters"] || [],
@@ -313,6 +318,11 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
             <>
               <TabsTrigger value="sc-earlier-courts" className="rounded-lg px-6">Earlier Courts</TabsTrigger>
               <TabsTrigger value="sc-tagged" className="rounded-lg px-6">Tagged Matters</TabsTrigger>
+              <TabsTrigger value="sc-listings" className="rounded-lg px-6">Listing History</TabsTrigger>
+              <TabsTrigger value="sc-notices" className="rounded-lg px-6">Notices</TabsTrigger>
+              <TabsTrigger value="sc-defects" className="rounded-lg px-6">Defects</TabsTrigger>
+              <TabsTrigger value="sc-judgements" className="rounded-lg px-6">Judgements</TabsTrigger>
+              <TabsTrigger value="sc-office-reports" className="rounded-lg px-6">Office Reports</TabsTrigger>
             </>
           )}
         </TabsList>
@@ -824,6 +834,81 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
                   ) : (
                     <p className="text-muted-foreground text-center py-8">No tagged matters available</p>
                   )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Listing History Tab */}
+            <TabsContent value="sc-listings" className="space-y-6 mt-6">
+              <Card className="rounded-2xl shadow-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <Calendar className="w-5 h-5 text-primary" />
+                    Listing History
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <SCListingHistoryTimeline caseId={caseId} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Notices Tab */}
+            <TabsContent value="sc-notices" className="space-y-6 mt-6">
+              <Card className="rounded-2xl shadow-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <Bell className="w-5 h-5 text-primary" />
+                    Notices
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <SCNoticesTable caseId={caseId} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Defects Tab */}
+            <TabsContent value="sc-defects" className="space-y-6 mt-6">
+              <Card className="rounded-2xl shadow-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <AlertTriangle className="w-5 h-5 text-primary" />
+                    Defects
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <SCDefectsTable caseId={caseId} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Judgements Tab */}
+            <TabsContent value="sc-judgements" className="space-y-6 mt-6">
+              <Card className="rounded-2xl shadow-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <Gavel className="w-5 h-5 text-primary" />
+                    Judgement Orders
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <SCJudgementOrdersTable caseId={caseId} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Office Reports Tab */}
+            <TabsContent value="sc-office-reports" className="space-y-6 mt-6">
+              <Card className="rounded-2xl shadow-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <FileCheck className="w-5 h-5 text-primary" />
+                    Office Reports
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <SCOfficeReportsTable caseId={caseId} />
                 </CardContent>
               </Card>
             </TabsContent>
