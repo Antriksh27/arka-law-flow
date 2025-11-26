@@ -19,7 +19,7 @@ interface SCCaseDetailViewProps {
 }
 
 export function SCCaseDetailView({ caseId, caseNumber: propCaseNumber }: SCCaseDetailViewProps) {
-  // Fetch Supreme Court case data
+  // Fetch Supreme Court case data from database tables AND fetched_data
   const { data: scData, isLoading } = useQuery({
     queryKey: ['supreme-court-case', caseId],
     queryFn: async () => {
@@ -33,6 +33,7 @@ export function SCCaseDetailView({ caseId, caseNumber: propCaseNumber }: SCCaseD
         reports,
         similarities,
         legalkartCase,
+        caseRecord,
       ] = await Promise.all([
         supabase.from('sc_earlier_court_details').select('*').eq('case_id', caseId),
         supabase.from('sc_tagged_matters').select('*').eq('case_id', caseId),
@@ -43,26 +44,173 @@ export function SCCaseDetailView({ caseId, caseNumber: propCaseNumber }: SCCaseD
         supabase.from('sc_office_reports').select('*').eq('case_id', caseId),
         supabase.from('sc_similarities').select('*').eq('case_id', caseId),
         supabase.from('legalkart_cases').select('*').eq('case_id', caseId).single(),
+        supabase.from('cases').select('fetched_data').eq('id', caseId).single(),
       ]);
       
+      // Parse from fetched_data if database tables are empty
+      const fetchedData = caseRecord.data?.fetched_data as any;
+      const rd = fetchedData?.data ?? fetchedData ?? {};
+      const caseDetails = rd.case_details || {};
+      
+      // Helper to parse dates
+      const parseDate = (dateStr: any): string | null => {
+        if (!dateStr) return null;
+        try {
+          const s = String(dateStr).trim();
+          if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+          if (/^\d{4}-\d{2}-\d{2}T/.test(s)) return s.slice(0, 10);
+          const m = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})$/);
+          if (m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+          const d = new Date(s);
+          return !isNaN(d.getTime()) ? d.toISOString().slice(0,10) : null;
+        } catch {
+          return null;
+        }
+      };
+
+      // Parse SC data from fetched_data if tables are empty (cast to any to avoid type issues)
+      let parsedEarlierCourts: any[] = earlierCourts.data || [];
+      if (parsedEarlierCourts.length === 0 && caseDetails['Earlier Court Details']) {
+        const ec = caseDetails['Earlier Court Details'] || [];
+        parsedEarlierCourts = Array.isArray(ec) ? ec.map((item: any) => ({
+          serial_no: item['S.No.'],
+          court: item.Court,
+          agency_state: item['Agency State'],
+          agency_code: item['Agency Code'],
+          case_no: item['Case No.'],
+          order_date: parseDate(item['Order Date']),
+          cnr_no: item['CNR No. / Designation'],
+          judge1: item['Judge1 / Judge2 / Judge3'],
+          judgment_challenged: item['Judgment Challenged'] === 'Yes',
+          judgment_type: item['Judgment Type'],
+        })) : [];
+      }
+      
+      let parsedTaggedMatters: any[] = taggedMatters.data || [];
+      if (parsedTaggedMatters.length === 0 && caseDetails['Tagged Matters']) {
+        const tm = caseDetails['Tagged Matters'] || [];
+        parsedTaggedMatters = Array.isArray(tm) ? tm.map((item: any) => ({
+          type: item.Type,
+          case_number: item['Case Number'],
+          petitioner_vs_respondent: item['Petitioner vs. Respondent'],
+          list: item.List,
+          status: item.Status,
+          ia: item.IA,
+          entry_date: parseDate(item['Entry Date']),
+        })) : [];
+      }
+      
+      let parsedListingDates: any[] = listingDates.data || [];
+      if (parsedListingDates.length === 0 && caseDetails['Listing Dates']) {
+        const ld = caseDetails['Listing Dates'] || [];
+        parsedListingDates = Array.isArray(ld) ? ld.map((item: any) => ({
+          cl_date: parseDate(item['CL Date']),
+          misc_regular: item['Misc./Regular'],
+          stage: item.Stage,
+          purpose: item.Purpose,
+          judges: item.Judges,
+          remarks: item.Remarks,
+          listed: item.Listed,
+        })) : [];
+      }
+      
+      let parsedNotices: any[] = notices.data || [];
+      if (parsedNotices.length === 0 && caseDetails['Notices']) {
+        const n = caseDetails['Notices'] || [];
+        parsedNotices = Array.isArray(n) ? n.map((item: any) => ({
+          serial_number: item['Serial Number'],
+          process_id: item['Process Id'],
+          notice_type: item['Notice Type'],
+          name: item.Name,
+          state_district: item['State / District'],
+          issue_date: parseDate(item['Issue Date']),
+          returnable_date: parseDate(item['Returnable Date']),
+        })) : [];
+      }
+      
+      let parsedDefects: any[] = defects.data || [];
+      if (parsedDefects.length === 0 && caseDetails['Defects']) {
+        const d = caseDetails['Defects'] || [];
+        parsedDefects = Array.isArray(d) ? d.map((item: any) => ({
+          serial_no: item['S.No.'],
+          defect: item.Default,
+          remarks: item.Remarks,
+          notification_date: parseDate(item['Notification Date']),
+          removed_on_date: parseDate(item['Removed On Date']),
+        })) : [];
+      }
+      
+      let parsedOrders: any[] = orders.data || [];
+      if (parsedOrders.length === 0 && caseDetails['Judgement Orders']) {
+        const o = caseDetails['Judgement Orders'] || [];
+        parsedOrders = Array.isArray(o) ? o.map((item: any) => ({
+          order_date: parseDate(item.date),
+          pdf_url: item.url,
+          order_type: item.type,
+        })) : [];
+      }
+      
+      let parsedReports: any[] = reports.data || [];
+      if (parsedReports.length === 0 && caseDetails['Office Report']) {
+        const r = caseDetails['Office Report'] || [];
+        parsedReports = Array.isArray(r) ? r.map((item: any) => ({
+          serial_number: item['Serial Number'],
+          process_id: item['Process Id'],
+          order_date: parseDate(item['Order Date']?.text || item['Order Date']),
+          html_url: item['Order Date']?.pdf_url || null,
+          receiving_date: item['Receiving Date'] ? new Date(item['Receiving Date']).toISOString() : null,
+        })) : [];
+      }
+      
+      let parsedSimilarities: any[] = similarities.data || [];
+      if (parsedSimilarities.length === 0 && caseDetails['Similarities']) {
+        const s = caseDetails['Similarities'] || [];
+        parsedSimilarities = Array.isArray(s) ? s.map((item: any) => ({
+          category: item.category,
+          similarity_data: item.data,
+        })) : [];
+      }
+      
       // Extract case number - handle array type
-      const caseNumberValue = legalkartCase.data?.case_number;
+      const caseNumberValue = legalkartCase.data?.case_number || caseDetails['Case Number'];
       const parsedCaseNumber = Array.isArray(caseNumberValue) 
         ? caseNumberValue[0] 
         : typeof caseNumberValue === 'string' 
         ? caseNumberValue 
         : null;
+        
+      // Helper to extract diary number
+      const extractDiaryNumber = (diaryInfo: string | null): string | null => {
+        if (!diaryInfo) return null;
+        const match = diaryInfo.match(/Diary No\.\s*-?\s*(\d+\/\d+)/i);
+        return match ? match[1] : diaryInfo.split('\n')[0]?.trim() || null;
+      };
+      
+      // Helper to extract bench composition
+      const extractBenchComposition = (presListedOn: string | null): string[] | null => {
+        if (!presListedOn) return null;
+        const match = presListedOn.match(/\[(.*?)\]/);
+        if (match) {
+          return match[1].split(/,\s*and\s*|,\s*/).map((j: string) => j.trim()).filter(Boolean);
+        }
+        return null;
+      };
 
       return {
-        earlierCourts: earlierCourts.data || [],
-        taggedMatters: taggedMatters.data || [],
-        listingDates: listingDates.data || [],
-        notices: notices.data || [],
-        defects: defects.data || [],
-        orders: orders.data || [],
-        reports: reports.data || [],
-        similarities: similarities.data || [],
-        legalkartCase: legalkartCase.data,
+        earlierCourts: parsedEarlierCourts,
+        taggedMatters: parsedTaggedMatters,
+        listingDates: parsedListingDates,
+        notices: parsedNotices,
+        defects: parsedDefects,
+        orders: parsedOrders,
+        reports: parsedReports,
+        similarities: parsedSimilarities,
+        legalkartCase: legalkartCase.data || {
+          diary_number: rd.diary_number || caseDetails['Diary Number'] || extractDiaryNumber(caseDetails['Diary Info']),
+          case_title: caseDetails['Case Title'] || (rd.petitioner && rd.respondent ? `${rd.petitioner} vs ${rd.respondent}` : null),
+          case_number: caseDetails['Case Number'],
+          bench_composition: extractBenchComposition(caseDetails['Present/Last Listed On']),
+        },
         caseNumber: (parsedCaseNumber || propCaseNumber) as string | string[] | null,
       };
     },

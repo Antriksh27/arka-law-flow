@@ -66,23 +66,44 @@ async function upsertSupremeCourtData(
     }
   };
   
-  // Update legalkart_cases table with SC-specific fields
-  const legalkartUpdate: any = {
-    diary_number: rd.diary_number || null,
-    case_title: caseDetails['Case Title'] || rd.petitioner + ' vs ' + rd.respondent || null,
+  // Helper to extract diary number from Diary Info field
+  const extractDiaryNumber = (diaryInfo: string | null): string | null => {
+    if (!diaryInfo) return null;
+    const match = diaryInfo.match(/Diary No\.\s*-?\s*(\d+\/\d+)/i);
+    return match ? match[1] : diaryInfo.split('\n')[0]?.trim() || null;
+  };
+  
+  // Helper to extract bench composition from Present/Last Listed On field
+  const extractBenchComposition = (presListedOn: string | null): string[] | null => {
+    if (!presListedOn) return null;
+    // Parse "02-03-2021 [HON'BLE THE CHIEF JUSTICE, HON'BLE MR. JUSTICE A.S. BOPANNA...]"
+    const match = presListedOn.match(/\[(.*?)\]/);
+    if (match) {
+      return match[1].split(/,\s*and\s*|,\s*/).map(j => j.trim()).filter(Boolean);
+    }
+    return null;
+  };
+  
+  // UPSERT legalkart_cases with SC-specific fields (insert or update)
+  const cnr = rd.cnr_number || caseDetails['CNR Number'];
+  const legalkartUpsert: any = {
+    case_id: caseId,
+    firm_id: firmId,
+    cnr_number: cnr,
+    diary_number: rd.diary_number || caseDetails['Diary Number'] || extractDiaryNumber(caseDetails['Diary Info']),
+    case_title: caseDetails['Case Title'] || (rd.petitioner && rd.respondent ? `${rd.petitioner} vs ${rd.respondent}` : null),
     case_number: caseDetails['Case Number'] || null,
-    bench_composition: caseDetails['Present/Last Listed On'] || null,
-    argument_transcripts: caseDetails.argument_transcripts || null,
-    indexing: caseDetails.indexing || null,
-    mention_memo: caseDetails.mention_memo || null,
-    drop_note: caseDetails.drop_note || null,
-    caveat: caseDetails.caveat || null,
+    bench_composition: extractBenchComposition(caseDetails['Present/Last Listed On']),
+    argument_transcripts: caseDetails['Argument Transcripts'] || caseDetails.argument_transcripts || null,
+    indexing: caseDetails['Indexing'] || caseDetails.indexing || null,
+    mention_memo: caseDetails['Mention Memo'] || caseDetails.mention_memo || null,
+    drop_note: caseDetails['Drop Note'] || caseDetails.drop_note || null,
+    caveat: caseDetails['Caveat'] || caseDetails.caveat || null,
   };
   
   const { error: lcError } = await supabase
     .from('legalkart_cases')
-    .update(legalkartUpdate)
-    .eq('cnr_number', rd.cnr_number || caseDetails['CNR Number']);
+    .upsert(legalkartUpsert, { onConflict: 'case_id' });
   
   if (lcError) console.error('Error updating legalkart_cases:', lcError);
   
@@ -98,8 +119,8 @@ async function upsertSupremeCourtData(
     supabase.from('sc_similarities').delete().eq('case_id', caseId),
   ]);
   
-  // Insert Earlier Court Details
-  const earlierCourts = caseDetails.earlier_court_details || [];
+  // Insert Earlier Court Details (use capitalized key)
+  const earlierCourts = caseDetails['Earlier Court Details'] || caseDetails.earlier_court_details || [];
   if (Array.isArray(earlierCourts) && earlierCourts.length > 0) {
     const { error } = await supabase.from('sc_earlier_court_details').insert(
       earlierCourts.map((ec: any) => ({
@@ -119,8 +140,8 @@ async function upsertSupremeCourtData(
     if (error) console.error('Error inserting SC earlier courts:', error);
   }
   
-  // Insert Tagged Matters
-  const taggedMatters = caseDetails.tagged_matters || [];
+  // Insert Tagged Matters (use capitalized key)
+  const taggedMatters = caseDetails['Tagged Matters'] || caseDetails.tagged_matters || [];
   if (Array.isArray(taggedMatters) && taggedMatters.length > 0) {
     const { error } = await supabase.from('sc_tagged_matters').insert(
       taggedMatters.map((tm: any) => ({
@@ -137,8 +158,8 @@ async function upsertSupremeCourtData(
     if (error) console.error('Error inserting SC tagged matters:', error);
   }
   
-  // Insert Listing Dates
-  const listingDates = caseDetails.listing_dates || [];
+  // Insert Listing Dates (use capitalized key)
+  const listingDates = caseDetails['Listing Dates'] || caseDetails.listing_dates || [];
   if (Array.isArray(listingDates) && listingDates.length > 0) {
     const { error } = await supabase.from('sc_listing_dates').insert(
       listingDates.map((ld: any) => ({
@@ -155,8 +176,8 @@ async function upsertSupremeCourtData(
     if (error) console.error('Error inserting SC listing dates:', error);
   }
   
-  // Insert Notices
-  const notices = caseDetails.notices || [];
+  // Insert Notices (use capitalized key)
+  const notices = caseDetails['Notices'] || caseDetails.notices || [];
   if (Array.isArray(notices) && notices.length > 0) {
     const { error } = await supabase.from('sc_notices').insert(
       notices.map((n: any) => ({
@@ -173,8 +194,8 @@ async function upsertSupremeCourtData(
     if (error) console.error('Error inserting SC notices:', error);
   }
   
-  // Insert Defects
-  const defects = caseDetails.defects || [];
+  // Insert Defects (use capitalized key)
+  const defects = caseDetails['Defects'] || caseDetails.defects || [];
   if (Array.isArray(defects) && defects.length > 0) {
     const { error } = await supabase.from('sc_defects').insert(
       defects.map((d: any) => ({
@@ -189,8 +210,8 @@ async function upsertSupremeCourtData(
     if (error) console.error('Error inserting SC defects:', error);
   }
   
-  // Insert Judgement Orders
-  const orders = caseDetails.judgement_orders || [];
+  // Insert Judgement Orders (use capitalized key)
+  const orders = caseDetails['Judgement Orders'] || caseDetails.judgement_orders || [];
   if (Array.isArray(orders) && orders.length > 0) {
     const { error } = await supabase.from('sc_judgement_orders').insert(
       orders.map((o: any) => ({
@@ -203,8 +224,8 @@ async function upsertSupremeCourtData(
     if (error) console.error('Error inserting SC orders:', error);
   }
   
-  // Insert Office Reports
-  const reports = caseDetails.office_report || [];
+  // Insert Office Reports (use capitalized key)
+  const reports = caseDetails['Office Report'] || caseDetails.office_report || [];
   if (Array.isArray(reports) && reports.length > 0) {
     const { error } = await supabase.from('sc_office_reports').insert(
       reports.map((r: any) => ({
@@ -219,8 +240,8 @@ async function upsertSupremeCourtData(
     if (error) console.error('Error inserting SC office reports:', error);
   }
   
-  // Insert Similarities
-  const similarities = caseDetails.similarities || [];
+  // Insert Similarities (use capitalized key)
+  const similarities = caseDetails['Similarities'] || caseDetails.similarities || [];
   if (Array.isArray(similarities) && similarities.length > 0) {
     const { error } = await supabase.from('sc_similarities').insert(
       similarities.map((s: any) => ({
@@ -658,6 +679,8 @@ serve(async (req) => {
         // Detect if Supreme Court case
         const isSupremeCourt = rawData?.diary_number || 
                                rawData?.data?.diary_number ||
+                               rawData?.case_details?.['CNR Number']?.startsWith('SCIN') ||
+                               rawData?.case_details?.['Diary Number'] ||
                                rawData?.cnr_number?.startsWith('SCIN') ||
                                rawData?.data?.case_details?.['CNR Number']?.startsWith('SCIN');
         
