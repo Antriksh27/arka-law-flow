@@ -300,7 +300,7 @@ Deno.serve(async (req) => {
             });
           
           if (queueError) {
-            console.error('Failed to queue retry items:', queueError);
+            console.error('Failed to queue retry items:', JSON.stringify(queueError));
           } else {
             console.log(`✅ Queued ${queueItems.length} cases for retry`);
           }

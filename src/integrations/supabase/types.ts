@@ -639,7 +639,7 @@ export type Database = {
           {
             foreignKeyName: "case_fetch_queue_case_id_fkey"
             columns: ["case_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "cases"
             referencedColumns: ["id"]
           },
