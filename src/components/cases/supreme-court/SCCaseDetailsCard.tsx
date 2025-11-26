@@ -11,10 +11,6 @@ interface SCCaseDetailsCardProps {
   presentLastListedOn?: string;
   statusStage?: string;
   category?: string;
-  petitioners?: string;
-  respondents?: string;
-  petitionerAdvocates?: string;
-  respondentAdvocates?: string;
   argumentTranscripts?: string | null;
   indexing?: string | null;
   isOpen?: boolean;
@@ -30,10 +26,6 @@ export function SCCaseDetailsCard({
   presentLastListedOn,
   statusStage,
   category,
-  petitioners,
-  respondents,
-  petitionerAdvocates,
-  respondentAdvocates,
   argumentTranscripts,
   indexing,
   isOpen = true,
@@ -63,13 +55,9 @@ export function SCCaseDetailsCard({
               { label: 'Present/Last Listed On', value: presentLastListedOn },
               { label: 'Status/Stage', value: statusStage },
               { label: 'Category', value: category },
-              { label: 'Petitioner(s)', value: petitioners },
-              { label: 'Respondent(s)', value: respondents },
-              { label: 'Petitioner Advocate(s)', value: petitionerAdvocates },
-              { label: 'Respondent Advocate(s)', value: respondentAdvocates },
               { label: 'Argument Transcripts', value: argumentTranscripts || 'N/A' },
               { label: 'Indexing', value: indexing || 'N/A' },
-            ].filter(item => item.value).map((item, index) => (
+            ].filter(item => item.value && item.value !== 'N/A').map((item, index) => (
               <div key={index}>
                 <p className="text-sm text-gray-500 mb-1">{item.label}</p>
                 <p className="text-sm font-medium text-gray-900">{item.value}</p>
