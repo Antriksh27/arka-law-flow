@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { RefreshCw, FileText, File, Scale, Calendar, XCircle, StickyNote, CheckSquare, Pencil, Users, MoreVertical } from 'lucide-react';
+import { RefreshCw, FileText, File, Scale, Calendar, XCircle, StickyNote, CheckSquare, Pencil, Users, MoreVertical, Edit } from 'lucide-react';
 import { format } from 'date-fns';
 import TimeUtils from '@/lib/timeUtils';
 import { EditCaseDialog } from '@/components/cases/EditCaseDialog';
@@ -42,6 +42,7 @@ import { CreateNoteMultiModal } from '@/components/notes/CreateNoteMultiModal';
 import { CreateTaskDialog } from '@/components/tasks/CreateTaskDialog';
 import { useLegalkartCaseDetails } from '@/hooks/useLegalkartCaseDetails';
 import { FetchCaseDetailsDialog } from '@/components/cases/FetchCaseDetailsDialog';
+import { SCCaseDetailView } from '@/components/cases/supreme-court/SCCaseDetailView';
 export default function CaseDetailEnhanced() {
   const {
     id
@@ -209,7 +210,7 @@ export default function CaseDetailEnhanced() {
       </div>;
   }
 
-  // TEMPORARY DEBUG - SC DETECTION
+  // Detect Supreme Court cases
   const isSupremeCourt = Boolean(
     caseData.court === 'Supreme Court of India' ||
     caseData.court_name === 'Supreme Court of India' ||
@@ -217,26 +218,38 @@ export default function CaseDetailEnhanced() {
     caseData.court_type === 'supreme_court'
   );
 
+  // Render Supreme Court specific view
+  if (isSupremeCourt) {
+    return (
+      <div className="min-h-screen bg-background">
+        {isMobile && (
+          <MobileHeader
+            title="Supreme Court Case"
+            showBack
+            actions={
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsEditDialogOpen(true)}
+              >
+                <Edit className="h-5 w-5" />
+              </Button>
+            }
+          />
+        )}
+        <div className={isMobile ? 'p-4 pb-24' : 'p-8'}>
+          <SCCaseDetailView 
+            caseId={id!} 
+            caseNumber={caseData.cnr_number}
+          />
+        </div>
+        {isMobile && <BottomNavBar />}
+      </div>
+    );
+  }
+
   return (
     <>
-      {/* 🔍 DEBUG BANNER - REMOVE AFTER FIXING */}
-      <div className="bg-yellow-400 border-4 border-red-500 p-6 sticky top-0 z-50 shadow-lg">
-        <h2 className="text-2xl font-bold text-red-900 mb-4">🔍 DEBUG - SC DETECTION (CaseDetailEnhanced.tsx)</h2>
-        <div className="space-y-2 font-mono text-sm">
-          <p><span className="font-bold">Case ID:</span> {id}</p>
-          <p><span className="font-bold">court:</span> "{caseData.court || 'null'}"</p>
-          <p><span className="font-bold">court_name:</span> "{caseData.court_name || 'null'}"</p>
-          <p><span className="font-bold">cnr_number:</span> "{caseData.cnr_number || 'null'}"</p>
-          <p><span className="font-bold">court_type:</span> "{caseData.court_type || 'null'}"</p>
-          <p className="text-xl font-bold mt-4">
-            <span>isSupremeCourt:</span> 
-            <span className={isSupremeCourt ? "text-green-700" : "text-red-700"}>
-              {isSupremeCourt ? " ✅ TRUE" : " ❌ FALSE"}
-            </span>
-          </p>
-        </div>
-      </div>
-
       {/* Mobile Header */}
       {isMobile && (
         <MobileHeader
