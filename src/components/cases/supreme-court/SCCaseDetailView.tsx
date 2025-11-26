@@ -53,7 +53,7 @@ export function SCCaseDetailView({
 }: SCCaseDetailViewProps) {
   const [activeTab, setActiveTab] = useState('details');
   const [caseInfoOpen, setCaseInfoOpen] = useState(true);
-  const [nestedTab, setNestedTab] = useState('earlier-courts');
+  const [nestedTab, setNestedTab] = useState('parties');
   
   // Fetch Supreme Court case data from database tables AND fetched_data (including raw fetched_data for card)
   const { data: scData, isLoading } = useQuery({
@@ -316,6 +316,7 @@ export function SCCaseDetailView({
 
   // Nested tabs for Details tab (SC-specific data)
   const nestedTabs = [
+    { value: 'parties', label: 'Parties & Advocates', icon: Users },
     { value: 'earlier-courts', label: 'Earlier Courts', icon: Scale },
     { value: 'listing-history', label: 'Listing History', icon: Calendar },
     { value: 'orders', label: 'Judgement Orders', icon: FileText },
@@ -449,10 +450,6 @@ export function SCCaseDetailView({
                       presentLastListedOn={presentLastListedOn}
                       statusStage={statusStage}
                       category={category}
-                      petitioners={petitioners}
-                      respondents={respondents}
-                      petitionerAdvocates={petitionerAdvocates}
-                      respondentAdvocates={respondentAdvocates}
                       argumentTranscripts={argumentTranscripts}
                       indexing={indexing}
                       isOpen={caseInfoOpen}
@@ -484,6 +481,70 @@ export function SCCaseDetailView({
 
                         {/* Nested Tab Contents */}
                         <div className="p-6">
+                          <TabsContent value="parties" className="m-0">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                              {/* Petitioners */}
+                              <div>
+                                <h4 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
+                                  Petitioners
+                                </h4>
+                                {petitioners && petitioners !== '—' ? (
+                                  <div className="space-y-4">
+                                    {petitioners.split('\n').filter(Boolean).map((petitioner, index) => (
+                                      <div key={index} className="border-l-2 border-blue-500 pl-3">
+                                        <p className="text-sm font-medium text-gray-900">
+                                          {petitioner.trim()}
+                                        </p>
+                                      </div>
+                                    ))}
+                                    {petitionerAdvocates && petitionerAdvocates !== '—' && (
+                                      <div className="mt-4 pt-4 border-t border-gray-200">
+                                        <p className="text-xs text-gray-500 mb-2 uppercase tracking-wide">Advocate(s)</p>
+                                        <div className="space-y-2">
+                                          {petitionerAdvocates.split('\n').filter(Boolean).map((advocate, index) => (
+                                            <p key={index} className="text-xs text-gray-600">{advocate.trim()}</p>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <p className="text-sm text-gray-400 italic">No petitioners listed</p>
+                                )}
+                              </div>
+
+                              {/* Respondents */}
+                              <div>
+                                <h4 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
+                                  Respondents
+                                </h4>
+                                {respondents && respondents !== '—' ? (
+                                  <div className="space-y-4">
+                                    {respondents.split('\n').filter(Boolean).map((respondent, index) => (
+                                      <div key={index} className="border-l-2 border-red-500 pl-3">
+                                        <p className="text-sm font-medium text-gray-900">
+                                          {respondent.trim()}
+                                        </p>
+                                      </div>
+                                    ))}
+                                    {respondentAdvocates && respondentAdvocates !== '—' && (
+                                      <div className="mt-4 pt-4 border-t border-gray-200">
+                                        <p className="text-xs text-gray-500 mb-2 uppercase tracking-wide">Advocate(s)</p>
+                                        <div className="space-y-2">
+                                          {respondentAdvocates.split('\n').filter(Boolean).map((advocate, index) => (
+                                            <p key={index} className="text-xs text-gray-600">{advocate.trim()}</p>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <p className="text-sm text-gray-400 italic">No respondents listed</p>
+                                )}
+                              </div>
+                            </div>
+                          </TabsContent>
+
                           <TabsContent value="earlier-courts" className="m-0">
                             {scData?.earlierCourts && scData.earlierCourts.length > 0 ? (
                               <SCEarlierCourtsTable data={scData.earlierCourts} />
