@@ -1,11 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { SCCaseDetailsCard } from './SCCaseDetailsCard';
 import { SCEarlierCourtsTable } from './SCEarlierCourtsTable';
 import { SCTaggedMattersTable } from './SCTaggedMattersTable';
@@ -25,10 +23,8 @@ import { PaymentsTab } from '../detail/tabs/PaymentsTab';
 import { TimelineTab } from '../detail/tabs/TimelineTab';
 import { LawyersTab } from '../detail/tabs/LawyersTab';
 import { RelatedMattersTab } from '../detail/tabs/RelatedMattersTab';
-import { HeroCard } from '@/components/mobile/HeroCard';
-import { FileText, File, Scale, StickyNote, CheckSquare, Users, Pencil, RefreshCw, MoreVertical, Calendar } from 'lucide-react';
-import TimeUtils from '@/lib/timeUtils';
-import { useState, useMemo } from 'react';
+import { FileText, File, Scale, StickyNote, CheckSquare, Users, Calendar, XCircle, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { useState } from 'react';
 
 interface SCCaseDetailViewProps {
   caseId: string;
@@ -54,6 +50,8 @@ export function SCCaseDetailView({
   onAddTask,
 }: SCCaseDetailViewProps) {
   const [activeTab, setActiveTab] = useState('details');
+  const [caseInfoOpen, setCaseInfoOpen] = useState(true);
+  const [nestedTab, setNestedTab] = useState('earlier-courts');
   
   // Fetch Supreme Court case data from database tables AND fetched_data (including raw fetched_data for card)
   const { data: scData, isLoading } = useQuery({
@@ -299,18 +297,7 @@ export function SCCaseDetailView({
   const argumentTranscripts = caseDetails['Argument Transcripts'];
   const indexing = caseDetails['Indexing'];
   
-  // Status badge
-  const getStatusColor = (status: string | null) => {
-    if (!status) return 'bg-gray-100 text-gray-800';
-    const s = status.toLowerCase();
-    if (s.includes('disposed') || s.includes('closed')) return 'bg-purple-100 text-purple-800';
-    if (s.includes('active') || s.includes('pending')) return 'bg-blue-100 text-blue-800';
-    return 'bg-gray-100 text-gray-800';
-  };
-
-  const displayStatus = caseData.status || 'Pending';
-  
-  // Tab configuration
+  // Main tab configuration
   const tabs = [
     { value: 'details', label: 'Details', icon: FileText },
     { value: 'contacts', label: 'Contacts', icon: Users },
@@ -325,123 +312,163 @@ export function SCCaseDetailView({
     { value: 'related', label: 'Related Matters', icon: Scale },
   ];
 
+  // Nested tabs for Details tab (SC-specific data)
+  const nestedTabs = [
+    { value: 'earlier-courts', label: 'Earlier Courts', icon: Scale },
+    { value: 'listing-history', label: 'Listing History', icon: Calendar },
+    { value: 'orders', label: 'Judgement Orders', icon: FileText },
+    { value: 'notices', label: 'Notices', icon: AlertCircle },
+    { value: 'defects', label: 'Defects', icon: XCircle },
+    { value: 'tagged-matters', label: 'Tagged Matters', icon: File },
+    { value: 'office-reports', label: 'Office Reports', icon: FileText },
+    { value: 'similarities', label: 'Similarities', icon: Users },
+  ];
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Case Details Card */}
-      <div className={isMobile ? 'p-4' : 'container mx-auto p-6 max-w-7xl'}>
-        <SCCaseDetailsCard
-          diaryInfo={diaryInfo}
-          caseTitle={caseTitle || caseData.case_title}
-          diaryNumber={diaryNumberFull}
-          caseNumber={caseNumberFull}
-          cnrNumber={caseData.cnr_number || undefined}
-          presentLastListedOn={presentLastListedOn}
-          statusStage={statusStage}
-          category={category}
-          petitioners={petitioners}
-          respondents={respondents}
-          petitionerAdvocates={petitionerAdvocates}
-          respondentAdvocates={respondentAdvocates}
-          argumentTranscripts={argumentTranscripts}
-          indexing={indexing}
-          onEdit={onEdit}
-          onFetchDetails={onFetchDetails}
-          isRefreshing={isRefreshing}
-        />
+      <div className={isMobile ? 'p-4' : 'container mx-auto px-6 pt-6 max-w-7xl'}>
+        <Collapsible open={caseInfoOpen} onOpenChange={setCaseInfoOpen}>
+          <SCCaseDetailsCard
+            diaryInfo={diaryInfo}
+            caseTitle={caseTitle || caseData.case_title}
+            diaryNumber={diaryNumberFull}
+            caseNumber={caseNumberFull}
+            cnrNumber={caseData.cnr_number || undefined}
+            presentLastListedOn={presentLastListedOn}
+            statusStage={statusStage}
+            category={category}
+            petitioners={petitioners}
+            respondents={respondents}
+            petitionerAdvocates={petitionerAdvocates}
+            respondentAdvocates={respondentAdvocates}
+            argumentTranscripts={argumentTranscripts}
+            indexing={indexing}
+            onEdit={onEdit}
+            onFetchDetails={onFetchDetails}
+            isRefreshing={isRefreshing}
+            isOpen={caseInfoOpen}
+            onToggle={setCaseInfoOpen}
+          />
+        </Collapsible>
       </div>
 
       {/* Tabs Layout */}
       <div className={isMobile ? '' : 'container mx-auto p-6 max-w-7xl'}>
         <div className={isMobile ? '' : 'bg-white border border-border rounded-2xl shadow-sm'}>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            {/* Horizontal Scroll Tabs */}
+            {/* Main Tabs */}
             <TabsList className={`w-full bg-white border-b border-border h-auto p-0 ${isMobile ? 'sticky top-14 z-30' : ''}`}>
-            <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide">
-              {tabs.map(tab => {
-                const IconComponent = tab.icon;
-                return (
-                  <TabsTrigger 
-                    key={tab.value} 
-                    value={tab.value} 
-                    className={`flex items-center gap-2 ${isMobile ? 'px-4 py-3' : 'px-4 py-3'} text-sm font-medium text-muted-foreground hover:text-foreground border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-primary/5 bg-transparent rounded-none whitespace-nowrap transition-colors snap-start flex-shrink-0`}
-                  >
-                    <IconComponent className="w-4 h-4" />
-                    {isMobile ? tab.label.split(' ')[0] : tab.label}
-                  </TabsTrigger>
-                );
-              })}
-            </div>
-          </TabsList>
-
-          <div className={isMobile ? 'p-4' : 'p-6'}>
-            {/* SC-Specific Details Tab */}
-            <TabsContent value="details" className="m-0">
-              <div className="space-y-6">
-                {/* Earlier Courts */}
-                {scData?.earlierCourts && scData.earlierCourts.length > 0 && (
-                  <Card className="p-5">
-                    <h3 className="text-lg font-semibold text-foreground mb-4">Earlier Court Details</h3>
-                    <SCEarlierCourtsTable data={scData.earlierCourts} />
-                  </Card>
-                )}
-
-                {/* Listing History */}
-                {scData?.listingDates && scData.listingDates.length > 0 && (
-                  <Card className="p-5">
-                    <h3 className="text-lg font-semibold text-foreground mb-4">Listing History</h3>
-                    <SCListingHistoryTimeline data={scData.listingDates} />
-                  </Card>
-                )}
-
-                {/* Judgement Orders */}
-                {scData?.orders && scData.orders.length > 0 && (
-                  <Card className="p-5">
-                    <h3 className="text-lg font-semibold text-foreground mb-4">Judgement Orders</h3>
-                    <SCJudgementOrdersTable data={scData.orders} />
-                  </Card>
-                )}
-
-                {/* Notices */}
-                {scData?.notices && scData.notices.length > 0 && (
-                  <Card className="p-5">
-                    <h3 className="text-lg font-semibold text-foreground mb-4">Notices</h3>
-                    <SCNoticesTable data={scData.notices} />
-                  </Card>
-                )}
-
-                {/* Defects */}
-                {scData?.defects && scData.defects.length > 0 && (
-                  <Card className="p-5">
-                    <h3 className="text-lg font-semibold text-foreground mb-4">Defects</h3>
-                    <SCDefectsTable data={scData.defects} />
-                  </Card>
-                )}
-
-                {/* Tagged Matters */}
-                {scData?.taggedMatters && scData.taggedMatters.length > 0 && (
-                  <Card className="p-5">
-                    <h3 className="text-lg font-semibold text-foreground mb-4">Tagged Matters</h3>
-                    <SCTaggedMattersTable data={scData.taggedMatters} />
-                  </Card>
-                )}
-
-                {/* Office Reports */}
-                {scData?.reports && scData.reports.length > 0 && (
-                  <Card className="p-5">
-                    <h3 className="text-lg font-semibold text-foreground mb-4">Office Reports</h3>
-                    <SCOfficeReportsTable data={scData.reports} />
-                  </Card>
-                )}
-
-                {/* Similarities */}
-                {scData?.similarities && scData.similarities.length > 0 && (
-                  <Card className="p-5">
-                    <h3 className="text-lg font-semibold text-foreground mb-4">Similarities</h3>
-                    <SCSimilaritiesAccordion data={scData.similarities} />
-                  </Card>
-                )}
+              <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide">
+                {tabs.map(tab => {
+                  const IconComponent = tab.icon;
+                  return (
+                    <TabsTrigger 
+                      key={tab.value} 
+                      value={tab.value} 
+                      className={`flex items-center gap-2 px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-primary/5 bg-transparent rounded-none whitespace-nowrap transition-colors snap-start flex-shrink-0`}
+                    >
+                      <IconComponent className="w-4 h-4" />
+                      {isMobile ? tab.label.split(' ')[0] : tab.label}
+                    </TabsTrigger>
+                  );
+                })}
               </div>
-            </TabsContent>
+            </TabsList>
+
+            <div className={isMobile ? '' : ''}>
+              {/* Details Tab with Nested Tabs */}
+              <TabsContent value="details" className="m-0">
+                <Card>
+                  <CardContent className="p-0">
+                    <Tabs value={nestedTab} onValueChange={setNestedTab} className="w-full">
+                      <TabsList className="w-full bg-gray-50 border-b border-gray-200 h-auto p-0 rounded-none">
+                        <div className="flex flex-wrap sm:flex-nowrap overflow-x-auto">
+                          {nestedTabs.map(tab => {
+                            const IconComponent = tab.icon;
+                            return (
+                              <TabsTrigger 
+                                key={tab.value} 
+                                value={tab.value} 
+                                className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-primary/5 bg-transparent rounded-none whitespace-nowrap transition-colors"
+                              >
+                                <IconComponent className="w-4 h-4" />
+                                {tab.label}
+                              </TabsTrigger>
+                            );
+                          })}
+                        </div>
+                      </TabsList>
+
+                      <div className="p-6">
+                        <TabsContent value="earlier-courts" className="m-0">
+                          {scData?.earlierCourts && scData.earlierCourts.length > 0 ? (
+                            <SCEarlierCourtsTable data={scData.earlierCourts} />
+                          ) : (
+                            <p className="text-sm text-gray-400 italic">No earlier court details available</p>
+                          )}
+                        </TabsContent>
+
+                        <TabsContent value="listing-history" className="m-0">
+                          {scData?.listingDates && scData.listingDates.length > 0 ? (
+                            <SCListingHistoryTimeline data={scData.listingDates} />
+                          ) : (
+                            <p className="text-sm text-gray-400 italic">No listing history available</p>
+                          )}
+                        </TabsContent>
+
+                        <TabsContent value="orders" className="m-0">
+                          {scData?.orders && scData.orders.length > 0 ? (
+                            <SCJudgementOrdersTable data={scData.orders} />
+                          ) : (
+                            <p className="text-sm text-gray-400 italic">No judgement orders available</p>
+                          )}
+                        </TabsContent>
+
+                        <TabsContent value="notices" className="m-0">
+                          {scData?.notices && scData.notices.length > 0 ? (
+                            <SCNoticesTable data={scData.notices} />
+                          ) : (
+                            <p className="text-sm text-gray-400 italic">No notices available</p>
+                          )}
+                        </TabsContent>
+
+                        <TabsContent value="defects" className="m-0">
+                          {scData?.defects && scData.defects.length > 0 ? (
+                            <SCDefectsTable data={scData.defects} />
+                          ) : (
+                            <p className="text-sm text-gray-400 italic">No defects available</p>
+                          )}
+                        </TabsContent>
+
+                        <TabsContent value="tagged-matters" className="m-0">
+                          {scData?.taggedMatters && scData.taggedMatters.length > 0 ? (
+                            <SCTaggedMattersTable data={scData.taggedMatters} />
+                          ) : (
+                            <p className="text-sm text-gray-400 italic">No tagged matters available</p>
+                          )}
+                        </TabsContent>
+
+                        <TabsContent value="office-reports" className="m-0">
+                          {scData?.reports && scData.reports.length > 0 ? (
+                            <SCOfficeReportsTable data={scData.reports} />
+                          ) : (
+                            <p className="text-sm text-gray-400 italic">No office reports available</p>
+                          )}
+                        </TabsContent>
+
+                        <TabsContent value="similarities" className="m-0">
+                          {scData?.similarities && scData.similarities.length > 0 ? (
+                            <SCSimilaritiesAccordion data={scData.similarities} />
+                          ) : (
+                            <p className="text-sm text-gray-400 italic">No similarities available</p>
+                          )}
+                        </TabsContent>
+                      </div>
+                    </Tabs>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
             {/* Common Tabs - Reuse existing components */}
             <TabsContent value="contacts" className="m-0">
