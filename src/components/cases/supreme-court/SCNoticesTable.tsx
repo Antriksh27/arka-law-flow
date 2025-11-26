@@ -3,11 +3,12 @@ import { format } from 'date-fns';
 
 interface Notice {
   id: string;
-  serial_number?: string | null;
+  sr_no?: string | null;
   process_id?: string | null;
   notice_type?: string | null;
   name?: string | null;
-  state_district?: string | null;
+  state?: string | null;
+  district?: string | null;
   issue_date?: string | null;
   returnable_date?: string | null;
 }
@@ -42,11 +43,11 @@ export function SCNoticesTable({ data }: SCNoticesTableProps) {
         <TableBody>
           {data.map((notice) => (
             <TableRow key={notice.id}>
-              <TableCell>{notice.serial_number}</TableCell>
+              <TableCell>{notice.sr_no}</TableCell>
               <TableCell className="font-medium">{notice.process_id}</TableCell>
               <TableCell>{notice.notice_type}</TableCell>
               <TableCell className="text-sm">{notice.name}</TableCell>
-              <TableCell className="text-sm">{notice.state_district}</TableCell>
+              <TableCell className="text-sm">{notice.state && notice.district ? `${notice.state} / ${notice.district}` : (notice.state || notice.district || '-')}</TableCell>
               <TableCell>
                 {notice.issue_date ? format(new Date(notice.issue_date), 'dd-MM-yyyy') : '-'}
               </TableCell>

@@ -4,11 +4,11 @@ import { format } from 'date-fns';
 
 interface TaggedMatter {
   id: string;
-  type?: string | null;
-  case_number?: string | null;
+  matter_type?: string | null;
+  tagged_case_number?: string | null;
   petitioner_vs_respondent?: string | null;
-  status?: string | null;
-  ia?: string | null;
+  matter_status?: string | null;
+  ia_info?: string | null;
   entry_date?: string | null;
 }
 
@@ -42,16 +42,16 @@ export function SCTaggedMattersTable({ data }: SCTaggedMattersTableProps) {
           {data.map((matter) => (
             <TableRow key={matter.id}>
               <TableCell>
-                <Badge variant="outline">{matter.type}</Badge>
+                <Badge variant="outline">{matter.matter_type}</Badge>
               </TableCell>
-              <TableCell className="font-medium">{matter.case_number}</TableCell>
+              <TableCell className="font-medium">{matter.tagged_case_number}</TableCell>
               <TableCell className="text-sm">{matter.petitioner_vs_respondent}</TableCell>
               <TableCell>
-                <Badge variant={matter.status === 'P' ? 'default' : 'outline'}>
-                  {matter.status === 'P' ? 'Pending' : matter.status}
+                <Badge variant={matter.matter_status === 'P' ? 'default' : 'outline'}>
+                  {matter.matter_status === 'P' ? 'Pending' : matter.matter_status}
                 </Badge>
               </TableCell>
-              <TableCell className="text-sm">{matter.ia || '-'}</TableCell>
+              <TableCell className="text-sm">{matter.ia_info || '-'}</TableCell>
               <TableCell>
                 {matter.entry_date ? format(new Date(matter.entry_date), 'dd-MM-yyyy') : '-'}
               </TableCell>

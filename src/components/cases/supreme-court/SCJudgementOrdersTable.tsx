@@ -6,7 +6,7 @@ import { FileText, ExternalLink } from 'lucide-react';
 interface JudgementOrder {
   id: string;
   order_date?: string | null;
-  order_url?: string | null;
+  pdf_url?: string | null;
   order_type?: string | null;
 }
 
@@ -41,11 +41,11 @@ export function SCJudgementOrdersTable({ data }: SCJudgementOrdersTableProps) {
               </TableCell>
               <TableCell className="text-sm">{order.order_type || 'Order'}</TableCell>
               <TableCell className="text-right">
-                {order.order_url && (
+                {order.pdf_url && (
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => window.open(order.order_url!, '_blank')}
+                    onClick={() => window.open(order.pdf_url!, '_blank')}
                   >
                     <FileText className="h-4 w-4 mr-2" />
                     View PDF
