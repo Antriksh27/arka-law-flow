@@ -4,8 +4,8 @@ import { format } from 'date-fns';
 
 interface Defect {
   id: string;
-  serial_no?: string | null;
-  defect?: string | null;
+  sr_no?: string | null;
+  default_type?: string | null;
   remarks?: string | null;
   notification_date?: string | null;
   removed_on_date?: string | null;
@@ -40,8 +40,8 @@ export function SCDefectsTable({ data }: SCDefectsTableProps) {
         <TableBody>
           {data.map((defect) => (
             <TableRow key={defect.id}>
-              <TableCell>{defect.serial_no}</TableCell>
-              <TableCell className="font-medium">{defect.defect}</TableCell>
+              <TableCell>{defect.sr_no}</TableCell>
+              <TableCell className="font-medium">{defect.default_type}</TableCell>
               <TableCell className="text-sm">{defect.remarks}</TableCell>
               <TableCell>
                 {defect.notification_date ? format(new Date(defect.notification_date), 'dd-MM-yyyy') : '-'}

@@ -5,10 +5,10 @@ import { FileText, ExternalLink } from 'lucide-react';
 
 interface OfficeReport {
   id: string;
-  serial_number?: string | null;
+  sr_no?: string | null;
   process_id?: string | null;
   order_date?: string | null;
-  order_url?: string | null;
+  html_url?: string | null;
   receiving_date?: string | null;
 }
 
@@ -40,7 +40,7 @@ export function SCOfficeReportsTable({ data }: SCOfficeReportsTableProps) {
         <TableBody>
           {data.map((report) => (
             <TableRow key={report.id}>
-              <TableCell>{report.serial_number}</TableCell>
+              <TableCell>{report.sr_no}</TableCell>
               <TableCell className="font-medium">{report.process_id}</TableCell>
               <TableCell>
                 {report.order_date ? format(new Date(report.order_date), 'dd-MM-yyyy') : '-'}
@@ -49,11 +49,11 @@ export function SCOfficeReportsTable({ data }: SCOfficeReportsTableProps) {
                 {report.receiving_date ? format(new Date(report.receiving_date), 'dd-MM-yyyy HH:mm') : '-'}
               </TableCell>
               <TableCell className="text-right">
-                {report.order_url && (
+                {report.html_url && (
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => window.open(report.order_url!, '_blank')}
+                    onClick={() => window.open(report.html_url!, '_blank')}
                   >
                     <FileText className="h-4 w-4 mr-2" />
                     View
