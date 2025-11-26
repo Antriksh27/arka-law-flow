@@ -101,9 +101,17 @@ async function upsertSupremeCourtData(
     caveat: caseDetails['Caveat'] || caseDetails.caveat || null,
   };
   
+  // Use insert with ON CONFLICT DO UPDATE since case_id is unique
   const { error: lcError } = await supabase
     .from('legalkart_cases')
-    .upsert(legalkartUpsert, { onConflict: 'case_id' });
+    .insert(legalkartUpsert)
+    .select()
+    .single()
+    .then(result => result.error ? supabase
+      .from('legalkart_cases')
+      .update(legalkartUpsert)
+      .eq('case_id', caseId)
+      : result);
   
   if (lcError) console.error('Error updating legalkart_cases:', lcError);
   
@@ -119,14 +127,14 @@ async function upsertSupremeCourtData(
     supabase.from('sc_similarities').delete().eq('case_id', caseId),
   ]);
   
-  // Insert Earlier Court Details (use capitalized key)
+  // Insert Earlier Court Details (use capitalized key and correct column names)
   const earlierCourts = caseDetails['Earlier Court Details'] || caseDetails.earlier_court_details || [];
   if (Array.isArray(earlierCourts) && earlierCourts.length > 0) {
     const { error } = await supabase.from('sc_earlier_court_details').insert(
       earlierCourts.map((ec: any) => ({
         case_id: caseId,
-        serial_no: ec['S.No.'],
-        court: ec.Court,
+        sr_no: ec['S.No.'] ? parseInt(ec['S.No.']) : null,
+        court_type: ec.Court,
         agency_state: ec['Agency State'],
         agency_code: ec['Agency Code'],
         case_no: ec['Case No.'],
@@ -140,68 +148,73 @@ async function upsertSupremeCourtData(
     if (error) console.error('Error inserting SC earlier courts:', error);
   }
   
-  // Insert Tagged Matters (use capitalized key)
+  // Insert Tagged Matters (use capitalized key and correct column names)
   const taggedMatters = caseDetails['Tagged Matters'] || caseDetails.tagged_matters || [];
   if (Array.isArray(taggedMatters) && taggedMatters.length > 0) {
     const { error } = await supabase.from('sc_tagged_matters').insert(
       taggedMatters.map((tm: any) => ({
         case_id: caseId,
-        type: tm.Type,
-        case_number: tm['Case Number'],
+        matter_type: tm.Type,
+        tagged_case_number: tm['Case Number'],
         petitioner_vs_respondent: tm['Petitioner vs. Respondent'],
-        list: tm.List,
-        status: tm.Status,
-        ia: tm.IA,
+        list_status: tm.List,
+        matter_status: tm.Status,
+        ia_info: tm.IA,
         entry_date: parseDate(tm['Entry Date']),
       }))
     );
     if (error) console.error('Error inserting SC tagged matters:', error);
   }
   
-  // Insert Listing Dates (use capitalized key)
+  // Insert Listing Dates (use capitalized key and correct column names)
   const listingDates = caseDetails['Listing Dates'] || caseDetails.listing_dates || [];
   if (Array.isArray(listingDates) && listingDates.length > 0) {
     const { error } = await supabase.from('sc_listing_dates').insert(
       listingDates.map((ld: any) => ({
         case_id: caseId,
         cl_date: parseDate(ld['CL Date']),
-        misc_regular: ld['Misc./Regular'],
+        misc_or_regular: ld['Misc./Regular'],
         stage: ld.Stage,
         purpose: ld.Purpose,
-        judges: ld.Judges,
+        judges: ld.Judges ? [ld.Judges] : [],
         remarks: ld.Remarks,
-        listed: ld.Listed,
+        listed_status: ld.Listed,
       }))
     );
     if (error) console.error('Error inserting SC listing dates:', error);
   }
   
-  // Insert Notices (use capitalized key)
+  // Insert Notices (use capitalized key and correct column names)
   const notices = caseDetails['Notices'] || caseDetails.notices || [];
   if (Array.isArray(notices) && notices.length > 0) {
     const { error } = await supabase.from('sc_notices').insert(
-      notices.map((n: any) => ({
-        case_id: caseId,
-        serial_number: n['Serial Number'],
-        process_id: n['Process Id'],
-        notice_type: n['Notice Type'],
-        name: n.Name,
-        state_district: n['State / District'],
-        issue_date: parseDate(n['Issue Date']),
-        returnable_date: parseDate(n['Returnable Date']),
-      }))
+      notices.map((n: any) => {
+        const stateDistrict = n['State / District'] || '';
+        const parts = stateDistrict.split('/').map((s: string) => s.trim());
+        return {
+          case_id: caseId,
+          sr_no: n['Serial Number'] ? parseInt(n['Serial Number']) : null,
+          process_id: n['Process Id'],
+          notice_type: n['Notice Type'],
+          name: n.Name,
+          state: parts[0] || null,
+          district: parts[1] || null,
+          issue_date: parseDate(n['Issue Date']),
+          returnable_date: parseDate(n['Returnable Date']),
+        };
+      })
     );
     if (error) console.error('Error inserting SC notices:', error);
   }
   
-  // Insert Defects (use capitalized key)
+  // Insert Defects (use capitalized key and correct column names)
   const defects = caseDetails['Defects'] || caseDetails.defects || [];
   if (Array.isArray(defects) && defects.length > 0) {
     const { error } = await supabase.from('sc_defects').insert(
       defects.map((d: any) => ({
         case_id: caseId,
-        serial_no: d['S.No.'],
-        defect: d.Default,
+        sr_no: d['S.No.'] ? parseInt(d['S.No.']) : null,
+        default_type: d.Default,
         remarks: d.Remarks,
         notification_date: parseDate(d['Notification Date']),
         removed_on_date: parseDate(d['Removed On Date']),
@@ -210,44 +223,44 @@ async function upsertSupremeCourtData(
     if (error) console.error('Error inserting SC defects:', error);
   }
   
-  // Insert Judgement Orders (use capitalized key)
+  // Insert Judgement Orders (use capitalized key and correct column names)
   const orders = caseDetails['Judgement Orders'] || caseDetails.judgement_orders || [];
   if (Array.isArray(orders) && orders.length > 0) {
     const { error } = await supabase.from('sc_judgement_orders').insert(
       orders.map((o: any) => ({
         case_id: caseId,
         order_date: parseDate(o.date),
-        order_url: o.url,
+        pdf_url: o.url,
         order_type: o.type,
       }))
     );
     if (error) console.error('Error inserting SC orders:', error);
   }
   
-  // Insert Office Reports (use capitalized key)
+  // Insert Office Reports (use capitalized key and correct column names)
   const reports = caseDetails['Office Report'] || caseDetails.office_report || [];
   if (Array.isArray(reports) && reports.length > 0) {
     const { error } = await supabase.from('sc_office_reports').insert(
       reports.map((r: any) => ({
         case_id: caseId,
-        serial_number: r['Serial Number'],
+        sr_no: r['Serial Number'] ? parseInt(r['Serial Number']) : null,
         process_id: r['Process Id'],
         order_date: parseDate(r['Order Date']?.text || r['Order Date']),
-        order_url: r['Order Date']?.pdf_url || null,
-        receiving_date: r['Receiving Date'] ? new Date(r['Receiving Date']).toISOString() : null,
+        html_url: r['Order Date']?.pdf_url || null,
+        receiving_date: r['Receiving Date'] ? parseDate(r['Receiving Date']) : null,
       }))
     );
     if (error) console.error('Error inserting SC office reports:', error);
   }
   
-  // Insert Similarities (use capitalized key)
+  // Insert Similarities (use capitalized key and correct column names)
   const similarities = caseDetails['Similarities'] || caseDetails.similarities || [];
   if (Array.isArray(similarities) && similarities.length > 0) {
     const { error } = await supabase.from('sc_similarities').insert(
       similarities.map((s: any) => ({
         case_id: caseId,
         category: s.category,
-        data: s.data,
+        similarity_data: s.data,
       }))
     );
     if (error) console.error('Error inserting SC similarities:', error);
