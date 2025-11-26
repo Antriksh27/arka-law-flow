@@ -63,7 +63,7 @@ export function SCCaseDetailView({ caseId, caseNumber: propCaseNumber }: SCCaseD
         reports: reports.data || [],
         similarities: similarities.data || [],
         legalkartCase: legalkartCase.data,
-        caseNumber: typeof parsedCaseNumber === 'string' ? parsedCaseNumber : (typeof propCaseNumber === 'string' ? propCaseNumber : null),
+        caseNumber: (parsedCaseNumber || propCaseNumber) as string | string[] | null,
       };
     },
   });
@@ -84,7 +84,7 @@ export function SCCaseDetailView({ caseId, caseNumber: propCaseNumber }: SCCaseD
         diaryNumber={scData?.legalkartCase?.diary_number}
         benchComposition={scData?.legalkartCase?.bench_composition}
         caseTitle={scData?.legalkartCase?.case_title}
-        caseNumber={scData?.caseNumber || null}
+        caseNumber={scData?.caseNumber ?? null}
       />
 
       {/* Tabbed Content */}

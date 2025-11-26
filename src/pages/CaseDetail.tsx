@@ -23,6 +23,7 @@ import { InvoicesTab } from '@/components/cases/detail/tabs/InvoicesTab';
 import { ExpensesTab } from '@/components/cases/detail/tabs/ExpensesTab';
 import { PaymentsTab } from '@/components/cases/detail/tabs/PaymentsTab';
 import { LawyersTab } from '@/components/cases/detail/tabs/LawyersTab';
+import { SCCaseDetailView } from '@/components/cases/supreme-court/SCCaseDetailView';
 
 const CaseDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -320,8 +321,8 @@ const CaseDetail = () => {
     caseData?.cnr_number?.startsWith('SCIN') ||
     (typeof caseData?.fetched_data === 'object' && caseData?.fetched_data !== null && 
       ('diary_number' in caseData.fetched_data || 
-       ('data' in caseData.fetched_data && typeof caseData.fetched_data.data === 'object' && 
-        caseData.fetched_data.data !== null && 'diary_number' in caseData.fetched_data.data)));
+       ('data' in caseData.fetched_data && typeof (caseData.fetched_data as any).data === 'object' && 
+        (caseData.fetched_data as any).data !== null && 'diary_number' in (caseData.fetched_data as any).data)));
 
   // If Supreme Court, render SC view
   if (isSupremeCourt && caseData) {
@@ -349,8 +350,9 @@ const CaseDetail = () => {
   const isSupremeCourt = 
     caseData.court === 'Supreme Court of India' ||
     caseData.cnr_number?.startsWith('SCIN') ||
-    caseData.fetched_data?.diary_number ||
-    caseData.fetched_data?.data?.diary_number;
+    (caseData.fetched_data && typeof caseData.fetched_data === 'object' && 'diary_number' in caseData.fetched_data) ||
+    (caseData.fetched_data && typeof caseData.fetched_data === 'object' && 'data' in caseData.fetched_data && 
+     typeof (caseData.fetched_data as any).data === 'object' && 'diary_number' in (caseData.fetched_data as any).data);
 
   // If Supreme Court, render SC view
   if (isSupremeCourt) {
