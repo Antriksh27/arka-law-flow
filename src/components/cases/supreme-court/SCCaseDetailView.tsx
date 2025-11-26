@@ -82,7 +82,11 @@ export function SCCaseDetailView({ caseId, caseNumber: propCaseNumber }: SCCaseD
       {/* Diary Number & Bench Composition */}
       <SCDiaryBenchCard 
         diaryNumber={scData?.legalkartCase?.diary_number}
-        benchComposition={scData?.legalkartCase?.bench_composition}
+        benchComposition={
+          Array.isArray(scData?.legalkartCase?.bench_composition) 
+            ? scData.legalkartCase.bench_composition.join(', ')
+            : scData?.legalkartCase?.bench_composition
+        }
         caseTitle={scData?.legalkartCase?.case_title}
         caseNumber={scData?.caseNumber ?? null}
       />
