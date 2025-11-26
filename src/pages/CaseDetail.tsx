@@ -339,20 +339,39 @@ const CaseDetail = () => {
     isSupremeCourt
   });
 
-  // If Supreme Court, render SC view
-  if (isSupremeCourt) {
-    return (
-      <div className="min-h-screen bg-[#F8F9FB]">
-        <div className="max-w-7xl mx-auto p-6 space-y-6">
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-foreground">{caseData.case_title}</h1>
-            <p className="text-muted-foreground mt-2">CNR: {caseData.cnr_number}</p>
-          </div>
-          <SCCaseDetailView caseId={id!} />
+  // TEMPORARY DEBUG BANNER - REMOVE AFTER DEBUGGING
+  return (
+    <div className="min-h-screen bg-[#F8F9FB] p-6">
+      <div className="bg-yellow-400 border-4 border-red-500 p-6 mb-6 rounded-lg shadow-lg">
+        <h2 className="text-2xl font-bold text-red-900 mb-4">🔍 DEBUG INFO - SC DETECTION</h2>
+        <div className="space-y-2 font-mono text-sm">
+          <p><span className="font-bold">Case ID:</span> {id}</p>
+          <p><span className="font-bold">court:</span> "{caseData.court || 'null'}"</p>
+          <p><span className="font-bold">court_name:</span> "{caseData.court_name || 'null'}"</p>
+          <p><span className="font-bold">cnr_number:</span> "{caseData.cnr_number || 'null'}"</p>
+          <p><span className="font-bold">court_type:</span> "{caseData.court_type || 'null'}"</p>
+          <p className="text-xl font-bold mt-4">
+            <span>isSupremeCourt:</span> 
+            <span className={isSupremeCourt ? "text-green-700" : "text-red-700"}>
+              {isSupremeCourt ? " ✅ TRUE" : " ❌ FALSE"}
+            </span>
+          </p>
         </div>
       </div>
-    );
-  }
+      
+      {isSupremeCourt ? (
+        <div>
+          <h3 className="text-xl font-bold mb-4 text-green-700">Rendering SC View:</h3>
+          <SCCaseDetailView caseId={id!} />
+        </div>
+      ) : (
+        <div>
+          <h3 className="text-xl font-bold mb-4 text-red-700">Would render REGULAR view (not SC)</h3>
+          <p className="text-muted-foreground">Regular case view components would appear here</p>
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-[#F8F9FB]">
