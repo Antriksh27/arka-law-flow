@@ -74,8 +74,8 @@ export function SCCaseDetailView({ caseId, caseNumber: propCaseNumber }: SCCaseD
         const ec = caseDetails['Earlier Court Details'] || [];
         parsedEarlierCourts = Array.isArray(ec) ? ec.map((item: any, index: number) => ({
           id: `ec-${index}`,
-          serial_no: item['S.No.'],
-          court: item.Court,
+          sr_no: item['S.No.'] ? parseInt(item['S.No.']) : null,
+          court_type: item.Court,
           agency_state: item['Agency State'],
           agency_code: item['Agency Code'],
           case_no: item['Case No.'],

@@ -9,7 +9,7 @@ interface ListingDate {
   purpose?: string | null;
   judges?: string | string[] | null;
   remarks?: string | null;
-  listed?: string | null;
+  listed_status?: string | null;
 }
 
 interface SCListingHistoryTimelineProps {
@@ -43,9 +43,9 @@ export function SCListingHistoryTimeline({ data }: SCListingHistoryTimelineProps
                   <p className="text-sm text-muted-foreground mt-1">{hearing.stage}</p>
                 )}
               </div>
-              {hearing.listed && (
-                <Badge variant={hearing.listed === 'LISTED' ? 'default' : 'outline'}>
-                  {hearing.listed}
+              {hearing.listed_status && (
+                <Badge variant={hearing.listed_status === 'LISTED' ? 'default' : 'outline'}>
+                  {hearing.listed_status}
                 </Badge>
               )}
             </div>
