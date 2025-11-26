@@ -43,8 +43,8 @@ export function SCCaseDetailView({ caseId, caseNumber: propCaseNumber }: SCCaseD
         supabase.from('sc_judgement_orders').select('*').eq('case_id', caseId).order('order_date', { ascending: false }),
         supabase.from('sc_office_reports').select('*').eq('case_id', caseId),
         supabase.from('sc_similarities').select('*').eq('case_id', caseId),
-        supabase.from('legalkart_cases').select('*').eq('case_id', caseId).single(),
-        supabase.from('cases').select('fetched_data').eq('id', caseId).single(),
+        supabase.from('legalkart_cases').select('*').eq('case_id', caseId).maybeSingle(),
+        supabase.from('cases').select('fetched_data').eq('id', caseId).maybeSingle(),
       ]);
       
       // Parse from fetched_data if database tables are empty
@@ -72,7 +72,8 @@ export function SCCaseDetailView({ caseId, caseNumber: propCaseNumber }: SCCaseD
       let parsedEarlierCourts: any[] = earlierCourts.data || [];
       if (parsedEarlierCourts.length === 0 && caseDetails['Earlier Court Details']) {
         const ec = caseDetails['Earlier Court Details'] || [];
-        parsedEarlierCourts = Array.isArray(ec) ? ec.map((item: any) => ({
+        parsedEarlierCourts = Array.isArray(ec) ? ec.map((item: any, index: number) => ({
+          id: `ec-${index}`,
           serial_no: item['S.No.'],
           court: item.Court,
           agency_state: item['Agency State'],
@@ -89,13 +90,14 @@ export function SCCaseDetailView({ caseId, caseNumber: propCaseNumber }: SCCaseD
       let parsedTaggedMatters: any[] = taggedMatters.data || [];
       if (parsedTaggedMatters.length === 0 && caseDetails['Tagged Matters']) {
         const tm = caseDetails['Tagged Matters'] || [];
-        parsedTaggedMatters = Array.isArray(tm) ? tm.map((item: any) => ({
-          type: item.Type,
-          case_number: item['Case Number'],
+        parsedTaggedMatters = Array.isArray(tm) ? tm.map((item: any, index: number) => ({
+          id: `tm-${index}`,
+          matter_type: item.Type,
+          tagged_case_number: item['Case Number'],
           petitioner_vs_respondent: item['Petitioner vs. Respondent'],
-          list: item.List,
-          status: item.Status,
-          ia: item.IA,
+          list_status: item.List,
+          matter_status: item.Status,
+          ia_info: item.IA,
           entry_date: parseDate(item['Entry Date']),
         })) : [];
       }
@@ -103,37 +105,45 @@ export function SCCaseDetailView({ caseId, caseNumber: propCaseNumber }: SCCaseD
       let parsedListingDates: any[] = listingDates.data || [];
       if (parsedListingDates.length === 0 && caseDetails['Listing Dates']) {
         const ld = caseDetails['Listing Dates'] || [];
-        parsedListingDates = Array.isArray(ld) ? ld.map((item: any) => ({
+        parsedListingDates = Array.isArray(ld) ? ld.map((item: any, index: number) => ({
+          id: `ld-${index}`,
           cl_date: parseDate(item['CL Date']),
-          misc_regular: item['Misc./Regular'],
+          misc_or_regular: item['Misc./Regular'],
           stage: item.Stage,
           purpose: item.Purpose,
-          judges: item.Judges,
+          judges: item.Judges ? [item.Judges] : null,
           remarks: item.Remarks,
-          listed: item.Listed,
+          listed_status: item.Listed,
         })) : [];
       }
       
       let parsedNotices: any[] = notices.data || [];
       if (parsedNotices.length === 0 && caseDetails['Notices']) {
         const n = caseDetails['Notices'] || [];
-        parsedNotices = Array.isArray(n) ? n.map((item: any) => ({
-          serial_number: item['Serial Number'],
-          process_id: item['Process Id'],
-          notice_type: item['Notice Type'],
-          name: item.Name,
-          state_district: item['State / District'],
-          issue_date: parseDate(item['Issue Date']),
-          returnable_date: parseDate(item['Returnable Date']),
-        })) : [];
+        parsedNotices = Array.isArray(n) ? n.map((item: any, index: number) => {
+          const stateDistrict = item['State / District'] || '';
+          const [state, district] = stateDistrict.split('/').map((s: string) => s.trim());
+          return {
+            id: `n-${index}`,
+            sr_no: item['Serial Number'],
+            process_id: item['Process Id'],
+            notice_type: item['Notice Type'],
+            name: item.Name,
+            state: state || null,
+            district: district || null,
+            issue_date: parseDate(item['Issue Date']),
+            returnable_date: parseDate(item['Returnable Date']),
+          };
+        }) : [];
       }
       
       let parsedDefects: any[] = defects.data || [];
       if (parsedDefects.length === 0 && caseDetails['Defects']) {
         const d = caseDetails['Defects'] || [];
-        parsedDefects = Array.isArray(d) ? d.map((item: any) => ({
-          serial_no: item['S.No.'],
-          defect: item.Default,
+        parsedDefects = Array.isArray(d) ? d.map((item: any, index: number) => ({
+          id: `d-${index}`,
+          sr_no: item['S.No.'],
+          default_type: item.Default,
           remarks: item.Remarks,
           notification_date: parseDate(item['Notification Date']),
           removed_on_date: parseDate(item['Removed On Date']),
@@ -143,7 +153,8 @@ export function SCCaseDetailView({ caseId, caseNumber: propCaseNumber }: SCCaseD
       let parsedOrders: any[] = orders.data || [];
       if (parsedOrders.length === 0 && caseDetails['Judgement Orders']) {
         const o = caseDetails['Judgement Orders'] || [];
-        parsedOrders = Array.isArray(o) ? o.map((item: any) => ({
+        parsedOrders = Array.isArray(o) ? o.map((item: any, index: number) => ({
+          id: `o-${index}`,
           order_date: parseDate(item.date),
           pdf_url: item.url,
           order_type: item.type,
@@ -153,19 +164,21 @@ export function SCCaseDetailView({ caseId, caseNumber: propCaseNumber }: SCCaseD
       let parsedReports: any[] = reports.data || [];
       if (parsedReports.length === 0 && caseDetails['Office Report']) {
         const r = caseDetails['Office Report'] || [];
-        parsedReports = Array.isArray(r) ? r.map((item: any) => ({
-          serial_number: item['Serial Number'],
+        parsedReports = Array.isArray(r) ? r.map((item: any, index: number) => ({
+          id: `r-${index}`,
+          sr_no: item['Serial Number'],
           process_id: item['Process Id'],
           order_date: parseDate(item['Order Date']?.text || item['Order Date']),
           html_url: item['Order Date']?.pdf_url || null,
-          receiving_date: item['Receiving Date'] ? new Date(item['Receiving Date']).toISOString() : null,
+          receiving_date: parseDate(item['Receiving Date']),
         })) : [];
       }
       
       let parsedSimilarities: any[] = similarities.data || [];
       if (parsedSimilarities.length === 0 && caseDetails['Similarities']) {
         const s = caseDetails['Similarities'] || [];
-        parsedSimilarities = Array.isArray(s) ? s.map((item: any) => ({
+        parsedSimilarities = Array.isArray(s) ? s.map((item: any, index: number) => ({
+          id: `s-${index}`,
           category: item.category,
           similarity_data: item.data,
         })) : [];
