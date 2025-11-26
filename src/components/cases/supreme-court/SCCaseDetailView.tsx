@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { SCCaseDetailsCard } from './SCCaseDetailsCard';
 import { SCEarlierCourtsTable } from './SCEarlierCourtsTable';
 import { SCTaggedMattersTable } from './SCTaggedMattersTable';
 import { SCListingHistoryTimeline } from './SCListingHistoryTimeline';
@@ -27,7 +28,7 @@ import { RelatedMattersTab } from '../detail/tabs/RelatedMattersTab';
 import { HeroCard } from '@/components/mobile/HeroCard';
 import { FileText, File, Scale, StickyNote, CheckSquare, Users, Pencil, RefreshCw, MoreVertical, Calendar } from 'lucide-react';
 import TimeUtils from '@/lib/timeUtils';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 
 interface SCCaseDetailViewProps {
   caseId: string;
@@ -53,7 +54,8 @@ export function SCCaseDetailView({
   onAddTask,
 }: SCCaseDetailViewProps) {
   const [activeTab, setActiveTab] = useState('details');
-  // Fetch Supreme Court case data from database tables AND fetched_data
+  
+  // Fetch Supreme Court case data from database tables AND fetched_data (including raw fetched_data for card)
   const { data: scData, isLoading } = useQuery({
     queryKey: ['supreme-court-case', caseId],
     queryFn: async () => {
@@ -259,6 +261,9 @@ export function SCCaseDetailView({
           bench_composition: extractBenchComposition(caseDetails['Present/Last Listed On']),
         },
         caseNumber: (parsedCaseNumber || propCaseNumber) as string | string[] | null,
+        // Include raw case details for card display
+        rawCaseDetails: caseDetails,
+        rawData: rd,
       };
     },
   });
@@ -278,6 +283,21 @@ export function SCCaseDetailView({
     ? scData.legalkartCase.bench_composition.join(', ')
     : scData?.legalkartCase?.bench_composition;
   const caseTitle = scData?.legalkartCase?.case_title || caseData.case_title;
+  
+  // Extract all case details for the card
+  const caseDetails = scData?.rawCaseDetails || {};
+  const diaryInfo = `Diary No. - ${diaryNumber || '—'}`;
+  const diaryNumberFull = caseDetails['Diary Number'] || '—';
+  const caseNumberFull = caseDetails['Case Number'] || scData?.caseNumber || caseData.case_number || '—';
+  const presentLastListedOn = caseDetails['Present/Last Listed On'] || '—';
+  const statusStage = caseDetails['Status/Stage'] || '—';
+  const category = caseDetails['Category'] || '—';
+  const petitioners = caseDetails['Petitioner(s)'] || '—';
+  const respondents = caseDetails['Respondent(s)'] || '—';
+  const petitionerAdvocates = caseDetails['Petitioner Advocate(s)'] || '—';
+  const respondentAdvocates = caseDetails['Respondent Advocate(s)'] || '—';
+  const argumentTranscripts = caseDetails['Argument Transcripts'];
+  const indexing = caseDetails['Indexing'];
   
   // Status badge
   const getStatusColor = (status: string | null) => {
@@ -306,148 +326,36 @@ export function SCCaseDetailView({
   ];
 
   return (
-    <>
-      {/* Mobile Hero Card */}
-      {isMobile && (
-        <div className="mb-4">
-          <HeroCard
-            title={caseTitle || `${caseData.petitioner || 'Petitioner'} vs ${caseData.respondent || 'Respondent'}`}
-            subtitle={`Diary No: ${diaryNumber || 'N/A'} • CNR: ${caseData.cnr_number || 'N/A'}`}
-            badges={
-              <>
-                <Badge className={`${getStatusColor(displayStatus)} rounded-full`}>
-                  {displayStatus}
-                </Badge>
-                {caseData.stage && (
-                  <Badge variant="outline" className="rounded-full">
-                    {caseData.stage}
-                  </Badge>
-                )}
-              </>
-            }
-            metrics={[
-              { label: 'Orders', value: scData?.orders?.length || 0 },
-              { label: 'Hearings', value: scData?.listingDates?.length || 0 },
-              { label: 'Notices', value: scData?.notices?.length || 0 },
-            ]}
-          />
-          
-          {/* Mobile Actions Dropdown */}
-          <div className="flex justify-end mt-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <MoreVertical className="w-4 h-4 mr-2" />
-                  Actions
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={onEdit}>
-                  <Pencil className="w-4 h-4 mr-2" />
-                  Edit Case
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={onFetchDetails} disabled={isRefreshing}>
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Fetch Details
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={onAddNote}>
-                  <StickyNote className="w-4 h-4 mr-2" />
-                  Add Note
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={onAddTask}>
-                  <CheckSquare className="w-4 h-4 mr-2" />
-                  Add Task
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      )}
+    <div className="min-h-screen bg-gray-50">
+      {/* Case Details Card */}
+      <div className={isMobile ? 'p-4' : 'container mx-auto p-6 max-w-7xl'}>
+        <SCCaseDetailsCard
+          diaryInfo={diaryInfo}
+          caseTitle={caseTitle || caseData.case_title}
+          diaryNumber={diaryNumberFull}
+          caseNumber={caseNumberFull}
+          cnrNumber={caseData.cnr_number || undefined}
+          presentLastListedOn={presentLastListedOn}
+          statusStage={statusStage}
+          category={category}
+          petitioners={petitioners}
+          respondents={respondents}
+          petitionerAdvocates={petitionerAdvocates}
+          respondentAdvocates={respondentAdvocates}
+          argumentTranscripts={argumentTranscripts}
+          indexing={indexing}
+          onEdit={onEdit}
+          onFetchDetails={onFetchDetails}
+          isRefreshing={isRefreshing}
+        />
+      </div>
 
-      {/* Desktop/Tablet Layout */}
-      <div className={isMobile ? '' : 'bg-white border border-border rounded-2xl shadow-sm'}>
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          {/* Header section - Desktop only */}
-          {!isMobile && (
-            <div className="p-6 pb-0">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <h1 className="text-2xl font-semibold text-foreground mb-2">
-                    {caseTitle || `${caseData.petitioner || 'Petitioner'} vs ${caseData.respondent || 'Respondent'}`}
-                  </h1>
-                  <div className="space-y-2">
-                    <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                      {diaryNumber && (
-                        <div>
-                          <span className="font-medium text-foreground">Diary No:</span> {diaryNumber}
-                        </div>
-                      )}
-                      <div>
-                        <span className="font-medium text-foreground">CNR:</span> {caseData.cnr_number || 'N/A'}
-                      </div>
-                      <div>
-                        <span className="font-medium text-foreground">Case No:</span> {scData?.caseNumber || caseData.case_number || 'N/A'}
-                      </div>
-                    </div>
-                    <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                      <div>
-                        <span className="font-medium text-foreground">Status:</span>{' '}
-                        <Badge className={`${getStatusColor(displayStatus)} ml-1`}>
-                          {displayStatus}
-                        </Badge>
-                      </div>
-                      {caseData.stage && (
-                        <div>
-                          <span className="font-medium text-foreground">Stage:</span>{' '}
-                          <Badge variant="outline" className="ml-1">
-                            {caseData.stage}
-                          </Badge>
-                        </div>
-                      )}
-                      {caseData.next_hearing_date && (
-                        <div>
-                          <span className="font-medium text-foreground">Next Hearing:</span>{' '}
-                          {TimeUtils.formatDate(caseData.next_hearing_date, 'dd/MM/yyyy')}
-                        </div>
-                      )}
-                    </div>
-                    {benchComposition && (
-                      <div className="text-sm text-muted-foreground">
-                        <span className="font-medium text-foreground">Bench:</span> {benchComposition}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={onEdit}>
-                    <Pencil className="w-4 h-4 mr-2" />
-                    Edit
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={onFetchDetails}
-                    disabled={isRefreshing}
-                  >
-                    {isRefreshing ? (
-                      <>
-                        <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                        Fetching...
-                      </>
-                    ) : (
-                      <>
-                        <RefreshCw className="w-4 h-4 mr-2" />
-                        Fetch Details
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Horizontal Scroll Tabs */}
-          <TabsList className={`w-full bg-white border-b border-border h-auto p-0 ${isMobile ? 'sticky top-14 z-30' : ''}`}>
+      {/* Tabs Layout */}
+      <div className={isMobile ? '' : 'container mx-auto p-6 max-w-7xl'}>
+        <div className={isMobile ? '' : 'bg-white border border-border rounded-2xl shadow-sm'}>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            {/* Horizontal Scroll Tabs */}
+            <TabsList className={`w-full bg-white border-b border-border h-auto p-0 ${isMobile ? 'sticky top-14 z-30' : ''}`}>
             <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide">
               {tabs.map(tab => {
                 const IconComponent = tab.icon;
@@ -583,6 +491,7 @@ export function SCCaseDetailView({
           </div>
         </Tabs>
       </div>
-    </>
+    </div>
+    </div>
   );
 }
