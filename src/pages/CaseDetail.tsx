@@ -362,7 +362,17 @@ const CaseDetail = () => {
       {isSupremeCourt ? (
         <div>
           <h3 className="text-xl font-bold mb-4 text-green-700">Rendering SC View:</h3>
-          <SCCaseDetailView caseId={id!} />
+          <SCCaseDetailView 
+            caseId={id!}
+            caseNumber={caseData.cnr_number}
+            caseData={caseData}
+            onEdit={() => {}}
+            onFetchDetails={() => {}}
+            isRefreshing={false}
+            isMobile={false}
+            onAddNote={() => setIsNoteModalOpen(true)}
+            onAddTask={() => setIsTaskModalOpen(true)}
+          />
         </div>
       ) : (
         <div>

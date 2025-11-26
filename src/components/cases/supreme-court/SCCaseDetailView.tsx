@@ -3,7 +3,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { SCDiaryBenchCard } from './SCDiaryBenchCard';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { SCEarlierCourtsTable } from './SCEarlierCourtsTable';
 import { SCTaggedMattersTable } from './SCTaggedMattersTable';
 import { SCListingHistoryTimeline } from './SCListingHistoryTimeline';
@@ -12,13 +14,45 @@ import { SCDefectsTable } from './SCDefectsTable';
 import { SCJudgementOrdersTable } from './SCJudgementOrdersTable';
 import { SCOfficeReportsTable } from './SCOfficeReportsTable';
 import { SCSimilaritiesAccordion } from './SCSimilaritiesAccordion';
+import { ContactTab } from '../detail/tabs/CaseContactsTab';
+import { NotesTab } from '../detail/tabs/NotesTab';
+import { TasksTab } from '../detail/tabs/TasksTab';
+import { DocumentsTab } from '../detail/tabs/DocumentsTab';
+import { ExpensesTab } from '../detail/tabs/ExpensesTab';
+import { InvoicesTab } from '../detail/tabs/InvoicesTab';
+import { PaymentsTab } from '../detail/tabs/PaymentsTab';
+import { TimelineTab } from '../detail/tabs/TimelineTab';
+import { LawyersTab } from '../detail/tabs/LawyersTab';
+import { RelatedMattersTab } from '../detail/tabs/RelatedMattersTab';
+import { HeroCard } from '@/components/mobile/HeroCard';
+import { FileText, File, Scale, StickyNote, CheckSquare, Users, Pencil, RefreshCw, MoreVertical, Calendar } from 'lucide-react';
+import TimeUtils from '@/lib/timeUtils';
+import { useState } from 'react';
 
 interface SCCaseDetailViewProps {
   caseId: string;
   caseNumber?: string | string[] | null;
+  caseData: any;
+  onEdit: () => void;
+  onFetchDetails: () => void;
+  isRefreshing: boolean;
+  isMobile: boolean;
+  onAddNote: () => void;
+  onAddTask: () => void;
 }
 
-export function SCCaseDetailView({ caseId, caseNumber: propCaseNumber }: SCCaseDetailViewProps) {
+export function SCCaseDetailView({ 
+  caseId, 
+  caseNumber: propCaseNumber,
+  caseData,
+  onEdit,
+  onFetchDetails,
+  isRefreshing,
+  isMobile,
+  onAddNote,
+  onAddTask,
+}: SCCaseDetailViewProps) {
+  const [activeTab, setActiveTab] = useState('details');
   // Fetch Supreme Court case data from database tables AND fetched_data
   const { data: scData, isLoading } = useQuery({
     queryKey: ['supreme-court-case', caseId],
@@ -238,67 +272,317 @@ export function SCCaseDetailView({ caseId, caseNumber: propCaseNumber }: SCCaseD
     );
   }
 
-  return (
-    <div className="space-y-6">
-      {/* Diary Number & Bench Composition */}
-      <SCDiaryBenchCard 
-        diaryNumber={scData?.legalkartCase?.diary_number}
-        benchComposition={
-          Array.isArray(scData?.legalkartCase?.bench_composition) 
-            ? scData.legalkartCase.bench_composition.join(', ')
-            : scData?.legalkartCase?.bench_composition
-        }
-        caseTitle={scData?.legalkartCase?.case_title}
-        caseNumber={scData?.caseNumber ?? null}
-      />
+  // Extract SC-specific data
+  const diaryNumber = scData?.legalkartCase?.diary_number;
+  const benchComposition = Array.isArray(scData?.legalkartCase?.bench_composition) 
+    ? scData.legalkartCase.bench_composition.join(', ')
+    : scData?.legalkartCase?.bench_composition;
+  const caseTitle = scData?.legalkartCase?.case_title || caseData.case_title;
+  
+  // Status badge
+  const getStatusColor = (status: string | null) => {
+    if (!status) return 'bg-gray-100 text-gray-800';
+    const s = status.toLowerCase();
+    if (s.includes('disposed') || s.includes('closed')) return 'bg-purple-100 text-purple-800';
+    if (s.includes('active') || s.includes('pending')) return 'bg-blue-100 text-blue-800';
+    return 'bg-gray-100 text-gray-800';
+  };
 
-      {/* Tabbed Content */}
-      <Card className="p-6">
-        <Tabs defaultValue="earlier-courts" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
-            <TabsTrigger value="earlier-courts">Earlier Courts</TabsTrigger>
-            <TabsTrigger value="orders">Orders</TabsTrigger>
-            <TabsTrigger value="hearings">Hearings</TabsTrigger>
-            <TabsTrigger value="notices">Notices</TabsTrigger>
-            <TabsTrigger value="defects">Defects</TabsTrigger>
-            <TabsTrigger value="tagged">Tagged Matters</TabsTrigger>
-            <TabsTrigger value="reports">Office Reports</TabsTrigger>
-            <TabsTrigger value="similarities">Similarities</TabsTrigger>
+  const displayStatus = caseData.status || 'Pending';
+  
+  // Tab configuration
+  const tabs = [
+    { value: 'details', label: 'Details', icon: FileText },
+    { value: 'contacts', label: 'Contacts', icon: Users },
+    { value: 'notes', label: 'Notes', icon: StickyNote },
+    { value: 'tasks', label: 'Tasks', icon: CheckSquare },
+    { value: 'documents', label: 'Documents', icon: File },
+    { value: 'expenses', label: 'Expenses', icon: FileText },
+    { value: 'invoices', label: 'Invoices', icon: FileText },
+    { value: 'payments', label: 'Payments', icon: FileText },
+    { value: 'timeline', label: 'Timeline', icon: Calendar },
+    { value: 'lawyers', label: 'Lawyers', icon: Users },
+    { value: 'related', label: 'Related Matters', icon: Scale },
+  ];
+
+  return (
+    <>
+      {/* Mobile Hero Card */}
+      {isMobile && (
+        <div className="mb-4">
+          <HeroCard
+            title={caseTitle || `${caseData.petitioner || 'Petitioner'} vs ${caseData.respondent || 'Respondent'}`}
+            subtitle={`Diary No: ${diaryNumber || 'N/A'} • CNR: ${caseData.cnr_number || 'N/A'}`}
+            badges={
+              <>
+                <Badge className={`${getStatusColor(displayStatus)} rounded-full`}>
+                  {displayStatus}
+                </Badge>
+                {caseData.stage && (
+                  <Badge variant="outline" className="rounded-full">
+                    {caseData.stage}
+                  </Badge>
+                )}
+              </>
+            }
+            metrics={[
+              { label: 'Orders', value: scData?.orders?.length || 0 },
+              { label: 'Hearings', value: scData?.listingDates?.length || 0 },
+              { label: 'Notices', value: scData?.notices?.length || 0 },
+            ]}
+          />
+          
+          {/* Mobile Actions Dropdown */}
+          <div className="flex justify-end mt-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <MoreVertical className="w-4 h-4 mr-2" />
+                  Actions
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={onEdit}>
+                  <Pencil className="w-4 h-4 mr-2" />
+                  Edit Case
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onFetchDetails} disabled={isRefreshing}>
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Fetch Details
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onAddNote}>
+                  <StickyNote className="w-4 h-4 mr-2" />
+                  Add Note
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onAddTask}>
+                  <CheckSquare className="w-4 h-4 mr-2" />
+                  Add Task
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      )}
+
+      {/* Desktop/Tablet Layout */}
+      <div className={isMobile ? '' : 'bg-white border border-border rounded-2xl shadow-sm'}>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          {/* Header section - Desktop only */}
+          {!isMobile && (
+            <div className="p-6 pb-0">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex-1">
+                  <h1 className="text-2xl font-semibold text-foreground mb-2">
+                    {caseTitle || `${caseData.petitioner || 'Petitioner'} vs ${caseData.respondent || 'Respondent'}`}
+                  </h1>
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                      {diaryNumber && (
+                        <div>
+                          <span className="font-medium text-foreground">Diary No:</span> {diaryNumber}
+                        </div>
+                      )}
+                      <div>
+                        <span className="font-medium text-foreground">CNR:</span> {caseData.cnr_number || 'N/A'}
+                      </div>
+                      <div>
+                        <span className="font-medium text-foreground">Case No:</span> {scData?.caseNumber || caseData.case_number || 'N/A'}
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                      <div>
+                        <span className="font-medium text-foreground">Status:</span>{' '}
+                        <Badge className={`${getStatusColor(displayStatus)} ml-1`}>
+                          {displayStatus}
+                        </Badge>
+                      </div>
+                      {caseData.stage && (
+                        <div>
+                          <span className="font-medium text-foreground">Stage:</span>{' '}
+                          <Badge variant="outline" className="ml-1">
+                            {caseData.stage}
+                          </Badge>
+                        </div>
+                      )}
+                      {caseData.next_hearing_date && (
+                        <div>
+                          <span className="font-medium text-foreground">Next Hearing:</span>{' '}
+                          {TimeUtils.formatDate(caseData.next_hearing_date, 'dd/MM/yyyy')}
+                        </div>
+                      )}
+                    </div>
+                    {benchComposition && (
+                      <div className="text-sm text-muted-foreground">
+                        <span className="font-medium text-foreground">Bench:</span> {benchComposition}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={onEdit}>
+                    <Pencil className="w-4 h-4 mr-2" />
+                    Edit
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={onFetchDetails}
+                    disabled={isRefreshing}
+                  >
+                    {isRefreshing ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                        Fetching...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="w-4 h-4 mr-2" />
+                        Fetch Details
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Horizontal Scroll Tabs */}
+          <TabsList className={`w-full bg-white border-b border-border h-auto p-0 ${isMobile ? 'sticky top-14 z-30' : ''}`}>
+            <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide">
+              {tabs.map(tab => {
+                const IconComponent = tab.icon;
+                return (
+                  <TabsTrigger 
+                    key={tab.value} 
+                    value={tab.value} 
+                    className={`flex items-center gap-2 ${isMobile ? 'px-4 py-3' : 'px-4 py-3'} text-sm font-medium text-muted-foreground hover:text-foreground border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-primary/5 bg-transparent rounded-none whitespace-nowrap transition-colors snap-start flex-shrink-0`}
+                  >
+                    <IconComponent className="w-4 h-4" />
+                    {isMobile ? tab.label.split(' ')[0] : tab.label}
+                  </TabsTrigger>
+                );
+              })}
+            </div>
           </TabsList>
 
-          <TabsContent value="earlier-courts" className="mt-6">
-            <SCEarlierCourtsTable data={scData?.earlierCourts || []} />
-          </TabsContent>
+          <div className={isMobile ? 'p-4' : 'p-6'}>
+            {/* SC-Specific Details Tab */}
+            <TabsContent value="details" className="m-0">
+              <div className="space-y-6">
+                {/* Earlier Courts */}
+                {scData?.earlierCourts && scData.earlierCourts.length > 0 && (
+                  <Card className="p-5">
+                    <h3 className="text-lg font-semibold text-foreground mb-4">Earlier Court Details</h3>
+                    <SCEarlierCourtsTable data={scData.earlierCourts} />
+                  </Card>
+                )}
 
-          <TabsContent value="orders" className="mt-6">
-            <SCJudgementOrdersTable data={scData?.orders || []} />
-          </TabsContent>
+                {/* Listing History */}
+                {scData?.listingDates && scData.listingDates.length > 0 && (
+                  <Card className="p-5">
+                    <h3 className="text-lg font-semibold text-foreground mb-4">Listing History</h3>
+                    <SCListingHistoryTimeline data={scData.listingDates} />
+                  </Card>
+                )}
 
-          <TabsContent value="hearings" className="mt-6">
-            <SCListingHistoryTimeline data={scData?.listingDates || []} />
-          </TabsContent>
+                {/* Judgement Orders */}
+                {scData?.orders && scData.orders.length > 0 && (
+                  <Card className="p-5">
+                    <h3 className="text-lg font-semibold text-foreground mb-4">Judgement Orders</h3>
+                    <SCJudgementOrdersTable data={scData.orders} />
+                  </Card>
+                )}
 
-          <TabsContent value="notices" className="mt-6">
-            <SCNoticesTable data={scData?.notices || []} />
-          </TabsContent>
+                {/* Notices */}
+                {scData?.notices && scData.notices.length > 0 && (
+                  <Card className="p-5">
+                    <h3 className="text-lg font-semibold text-foreground mb-4">Notices</h3>
+                    <SCNoticesTable data={scData.notices} />
+                  </Card>
+                )}
 
-          <TabsContent value="defects" className="mt-6">
-            <SCDefectsTable data={scData?.defects || []} />
-          </TabsContent>
+                {/* Defects */}
+                {scData?.defects && scData.defects.length > 0 && (
+                  <Card className="p-5">
+                    <h3 className="text-lg font-semibold text-foreground mb-4">Defects</h3>
+                    <SCDefectsTable data={scData.defects} />
+                  </Card>
+                )}
 
-          <TabsContent value="tagged" className="mt-6">
-            <SCTaggedMattersTable data={scData?.taggedMatters || []} />
-          </TabsContent>
+                {/* Tagged Matters */}
+                {scData?.taggedMatters && scData.taggedMatters.length > 0 && (
+                  <Card className="p-5">
+                    <h3 className="text-lg font-semibold text-foreground mb-4">Tagged Matters</h3>
+                    <SCTaggedMattersTable data={scData.taggedMatters} />
+                  </Card>
+                )}
 
-          <TabsContent value="reports" className="mt-6">
-            <SCOfficeReportsTable data={scData?.reports || []} />
-          </TabsContent>
+                {/* Office Reports */}
+                {scData?.reports && scData.reports.length > 0 && (
+                  <Card className="p-5">
+                    <h3 className="text-lg font-semibold text-foreground mb-4">Office Reports</h3>
+                    <SCOfficeReportsTable data={scData.reports} />
+                  </Card>
+                )}
 
-          <TabsContent value="similarities" className="mt-6">
-            <SCSimilaritiesAccordion data={scData?.similarities || []} />
-          </TabsContent>
+                {/* Similarities */}
+                {scData?.similarities && scData.similarities.length > 0 && (
+                  <Card className="p-5">
+                    <h3 className="text-lg font-semibold text-foreground mb-4">Similarities</h3>
+                    <SCSimilaritiesAccordion data={scData.similarities} />
+                  </Card>
+                )}
+              </div>
+            </TabsContent>
+
+            {/* Common Tabs - Reuse existing components */}
+            <TabsContent value="contacts" className="m-0">
+              <ContactTab caseId={caseId} />
+            </TabsContent>
+
+            <TabsContent value="notes" className="m-0">
+              <NotesTab caseId={caseId} />
+            </TabsContent>
+
+            <TabsContent value="tasks" className="m-0">
+              <TasksTab caseId={caseId} />
+            </TabsContent>
+
+            <TabsContent value="documents" className="m-0">
+              <DocumentsTab caseId={caseId} />
+            </TabsContent>
+
+            <TabsContent value="expenses" className="m-0">
+              <ExpensesTab caseId={caseId} />
+            </TabsContent>
+
+            <TabsContent value="invoices" className="m-0">
+              <InvoicesTab caseId={caseId} />
+            </TabsContent>
+
+            <TabsContent value="payments" className="m-0">
+              <PaymentsTab caseId={caseId} />
+            </TabsContent>
+
+            <TabsContent value="timeline" className="m-0">
+              <TimelineTab 
+                caseId={caseId} 
+                caseData={caseData} 
+                legalkartData={scData?.legalkartCase} 
+                hearings={scData?.listingDates || []} 
+              />
+            </TabsContent>
+
+            <TabsContent value="lawyers" className="m-0">
+              <LawyersTab caseId={caseId} />
+            </TabsContent>
+
+            <TabsContent value="related" className="m-0">
+              <RelatedMattersTab caseId={caseId} />
+            </TabsContent>
+          </div>
         </Tabs>
-      </Card>
-    </div>
+      </div>
+    </>
   );
 }

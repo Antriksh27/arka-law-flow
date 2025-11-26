@@ -221,26 +221,24 @@ export default function CaseDetailEnhanced() {
   // Render Supreme Court specific view
   if (isSupremeCourt) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-gray-50">
         {isMobile && (
           <MobileHeader
             title="Supreme Court Case"
             showBack
-            actions={
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsEditDialogOpen(true)}
-              >
-                <Edit className="h-5 w-5" />
-              </Button>
-            }
           />
         )}
         <div className={isMobile ? 'p-4 pb-24' : 'p-8'}>
           <SCCaseDetailView 
             caseId={id!} 
             caseNumber={caseData.cnr_number}
+            caseData={caseData}
+            onEdit={() => setIsEditDialogOpen(true)}
+            onFetchDetails={handleFetchDetails}
+            isRefreshing={isRefreshing}
+            isMobile={isMobile}
+            onAddNote={() => setIsNoteModalOpen(true)}
+            onAddTask={() => setIsTaskModalOpen(true)}
           />
         </div>
         {isMobile && <BottomNavBar />}
