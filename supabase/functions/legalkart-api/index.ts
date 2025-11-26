@@ -38,6 +38,203 @@ interface LegalkartCaseSearchRequest {
   caseId?: string;
 }
 
+// Helper function to upsert Supreme Court case data
+async function upsertSupremeCourtData(
+  supabase: any,
+  caseId: string,
+  firmId: string,
+  rawData: any
+) {
+  console.log('🏛️ Upserting Supreme Court case data for case:', caseId);
+  
+  const rd = rawData?.data ?? rawData ?? {};
+  const caseDetails = rd.case_details || {};
+  
+  // Helper to parse dates
+  const parseDate = (dateStr: any): string | null => {
+    if (!dateStr) return null;
+    try {
+      const s = String(dateStr).trim();
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+      if (/^\d{4}-\d{2}-\d{2}T/.test(s)) return s.slice(0, 10);
+      const m = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})$/);
+      if (m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+      const d = new Date(s);
+      return !isNaN(d.getTime()) ? d.toISOString().slice(0,10) : null;
+    } catch {
+      return null;
+    }
+  };
+  
+  // Update legalkart_cases table with SC-specific fields
+  const legalkartUpdate: any = {
+    diary_number: rd.diary_number || null,
+    case_title: caseDetails['Case Title'] || rd.petitioner + ' vs ' + rd.respondent || null,
+    case_number: caseDetails['Case Number'] || null,
+    bench_composition: caseDetails['Present/Last Listed On'] || null,
+    argument_transcripts: caseDetails.argument_transcripts || null,
+    indexing: caseDetails.indexing || null,
+    mention_memo: caseDetails.mention_memo || null,
+    drop_note: caseDetails.drop_note || null,
+    caveat: caseDetails.caveat || null,
+  };
+  
+  const { error: lcError } = await supabase
+    .from('legalkart_cases')
+    .update(legalkartUpdate)
+    .eq('cnr_number', rd.cnr_number || caseDetails['CNR Number']);
+  
+  if (lcError) console.error('Error updating legalkart_cases:', lcError);
+  
+  // Delete existing SC data
+  await Promise.all([
+    supabase.from('sc_earlier_court_details').delete().eq('case_id', caseId),
+    supabase.from('sc_tagged_matters').delete().eq('case_id', caseId),
+    supabase.from('sc_listing_dates').delete().eq('case_id', caseId),
+    supabase.from('sc_notices').delete().eq('case_id', caseId),
+    supabase.from('sc_defects').delete().eq('case_id', caseId),
+    supabase.from('sc_judgement_orders').delete().eq('case_id', caseId),
+    supabase.from('sc_office_reports').delete().eq('case_id', caseId),
+    supabase.from('sc_similarities').delete().eq('case_id', caseId),
+  ]);
+  
+  // Insert Earlier Court Details
+  const earlierCourts = caseDetails.earlier_court_details || [];
+  if (Array.isArray(earlierCourts) && earlierCourts.length > 0) {
+    const { error } = await supabase.from('sc_earlier_court_details').insert(
+      earlierCourts.map((ec: any) => ({
+        case_id: caseId,
+        serial_no: ec['S.No.'],
+        court: ec.Court,
+        agency_state: ec['Agency State'],
+        agency_code: ec['Agency Code'],
+        case_no: ec['Case No.'],
+        order_date: parseDate(ec['Order Date']),
+        cnr_no: ec['CNR No. / Designation'],
+        judge1: ec['Judge1 / Judge2 / Judge3'],
+        judgment_challenged: ec['Judgment Challenged'] === 'Yes',
+        judgment_type: ec['Judgment Type'],
+      }))
+    );
+    if (error) console.error('Error inserting SC earlier courts:', error);
+  }
+  
+  // Insert Tagged Matters
+  const taggedMatters = caseDetails.tagged_matters || [];
+  if (Array.isArray(taggedMatters) && taggedMatters.length > 0) {
+    const { error } = await supabase.from('sc_tagged_matters').insert(
+      taggedMatters.map((tm: any) => ({
+        case_id: caseId,
+        type: tm.Type,
+        case_number: tm['Case Number'],
+        petitioner_vs_respondent: tm['Petitioner vs. Respondent'],
+        list: tm.List,
+        status: tm.Status,
+        ia: tm.IA,
+        entry_date: parseDate(tm['Entry Date']),
+      }))
+    );
+    if (error) console.error('Error inserting SC tagged matters:', error);
+  }
+  
+  // Insert Listing Dates
+  const listingDates = caseDetails.listing_dates || [];
+  if (Array.isArray(listingDates) && listingDates.length > 0) {
+    const { error } = await supabase.from('sc_listing_dates').insert(
+      listingDates.map((ld: any) => ({
+        case_id: caseId,
+        cl_date: parseDate(ld['CL Date']),
+        misc_regular: ld['Misc./Regular'],
+        stage: ld.Stage,
+        purpose: ld.Purpose,
+        judges: ld.Judges,
+        remarks: ld.Remarks,
+        listed: ld.Listed,
+      }))
+    );
+    if (error) console.error('Error inserting SC listing dates:', error);
+  }
+  
+  // Insert Notices
+  const notices = caseDetails.notices || [];
+  if (Array.isArray(notices) && notices.length > 0) {
+    const { error } = await supabase.from('sc_notices').insert(
+      notices.map((n: any) => ({
+        case_id: caseId,
+        serial_number: n['Serial Number'],
+        process_id: n['Process Id'],
+        notice_type: n['Notice Type'],
+        name: n.Name,
+        state_district: n['State / District'],
+        issue_date: parseDate(n['Issue Date']),
+        returnable_date: parseDate(n['Returnable Date']),
+      }))
+    );
+    if (error) console.error('Error inserting SC notices:', error);
+  }
+  
+  // Insert Defects
+  const defects = caseDetails.defects || [];
+  if (Array.isArray(defects) && defects.length > 0) {
+    const { error } = await supabase.from('sc_defects').insert(
+      defects.map((d: any) => ({
+        case_id: caseId,
+        serial_no: d['S.No.'],
+        defect: d.Default,
+        remarks: d.Remarks,
+        notification_date: parseDate(d['Notification Date']),
+        removed_on_date: parseDate(d['Removed On Date']),
+      }))
+    );
+    if (error) console.error('Error inserting SC defects:', error);
+  }
+  
+  // Insert Judgement Orders
+  const orders = caseDetails.judgement_orders || [];
+  if (Array.isArray(orders) && orders.length > 0) {
+    const { error } = await supabase.from('sc_judgement_orders').insert(
+      orders.map((o: any) => ({
+        case_id: caseId,
+        order_date: parseDate(o.date),
+        order_url: o.url,
+        order_type: o.type,
+      }))
+    );
+    if (error) console.error('Error inserting SC orders:', error);
+  }
+  
+  // Insert Office Reports
+  const reports = caseDetails.office_report || [];
+  if (Array.isArray(reports) && reports.length > 0) {
+    const { error } = await supabase.from('sc_office_reports').insert(
+      reports.map((r: any) => ({
+        case_id: caseId,
+        serial_number: r['Serial Number'],
+        process_id: r['Process Id'],
+        order_date: parseDate(r['Order Date']?.text || r['Order Date']),
+        order_url: r['Order Date']?.pdf_url || null,
+        receiving_date: r['Receiving Date'] ? new Date(r['Receiving Date']).toISOString() : null,
+      }))
+    );
+    if (error) console.error('Error inserting SC office reports:', error);
+  }
+  
+  // Insert Similarities
+  const similarities = caseDetails.similarities || [];
+  if (Array.isArray(similarities) && similarities.length > 0) {
+    const { error } = await supabase.from('sc_similarities').insert(
+      similarities.map((s: any) => ({
+        case_id: caseId,
+        category: s.category,
+        data: s.data,
+      }))
+    );
+    if (error) console.error('Error inserting SC similarities:', error);
+  }
+  
+  console.log('✅ Supreme Court data upserted successfully');
+}
+
 // Helper function to upsert case relational data
 async function upsertCaseRelationalData(
   supabase: any,
@@ -458,6 +655,12 @@ serve(async (req) => {
       console.log('📥 Upserting case data from JSON for case:', caseId);
 
       try {
+        // Detect if Supreme Court case
+        const isSupremeCourt = rawData?.diary_number || 
+                               rawData?.data?.diary_number ||
+                               rawData?.cnr_number?.startsWith('SCIN') ||
+                               rawData?.data?.case_details?.['CNR Number']?.startsWith('SCIN');
+        
         // 1) Map and update case-level fields (dates, parties, status, etc.)
         const mapped = mapLegalkartDataToCRM(rawData, 'local_json') || {};
         const allowedKeys = [
@@ -496,8 +699,13 @@ serve(async (req) => {
           console.log(`✅ Updated case with ${updatedKeys.length} fields:`, updatedKeys);
         }
 
-        // 2) Upsert child/relational tables
-        await upsertCaseRelationalData(supabase, caseId, teamMember.firm_id, rawData);
+        // 2) Upsert child/relational tables based on court type
+        if (isSupremeCourt) {
+          console.log('🏛️ Routing to Supreme Court parser for upsert_from_json');
+          await upsertSupremeCourtData(supabase, caseId, teamMember.firm_id, rawData);
+        } else {
+          await upsertCaseRelationalData(supabase, caseId, teamMember.firm_id, rawData);
+        }
 
         // Prepare simple counts for debugging
         const rd = rawData?.data ?? rawData ?? {};
@@ -643,6 +851,11 @@ serve(async (req) => {
         }
       }
 
+      // Detect if this is a Supreme Court case
+      const isSupremeCourt = searchResult.data?.diary_number || 
+                             searchResult.data?.data?.diary_number ||
+                             normalizedCnr.startsWith('SCIN');
+      
       // Update case with fetched data if successful and a case_id is available
       if (searchResult.success && effectiveCaseId && searchResult.data) {
         const mappedData = mapLegalkartDataToCRM(searchResult.data, validatedData.searchType);
@@ -704,9 +917,14 @@ serve(async (req) => {
           console.log('✅ Successfully updated case with all mapped fields');
         }
 
-        // Upsert relational data using helper function
+        // Upsert data based on court type
         try {
-          await upsertCaseRelationalData(supabase, effectiveCaseId, teamMember.firm_id, searchResult.data);
+          if (isSupremeCourt) {
+            console.log('🏛️ Routing to Supreme Court parser');
+            await upsertSupremeCourtData(supabase, effectiveCaseId, teamMember.firm_id, searchResult.data);
+          } else {
+            await upsertCaseRelationalData(supabase, effectiveCaseId, teamMember.firm_id, searchResult.data);
+          }
           
           // Also populate legalkart_* tables via RPC
           console.log('📦 Calling upsert_legalkart_case_data RPC...');
@@ -1263,6 +1481,35 @@ function mapLegalkartDataToCRM(data: any, searchType: string = 'unknown'): any {
     return { name: cleaned, advocate: '' };
   };
 
+  // Detect Supreme Court cases
+  const isSupremeCourt = data?.diary_number || 
+                         data?.data?.diary_number ||
+                         data?.cnr_number?.startsWith('SCIN') ||
+                         data?.data?.case_details?.['CNR Number']?.startsWith('SCIN');
+  
+  // If Supreme Court, add SC-specific fields
+  if (isSupremeCourt) {
+    console.log('🏛️ Mapping Supreme Court case data');
+    const rd = data.data ?? data ?? {};
+    const caseDetails = rd.case_details || {};
+    
+    mappedData.diary_number = rd.diary_number || null;
+    mappedData.case_title = caseDetails['Case Title'] || (rd.petitioner && rd.respondent ? `${rd.petitioner} vs ${rd.respondent}` : null);
+    mappedData.case_number = caseDetails['Case Number'] || null;
+    mappedData.cnr_number = caseDetails['CNR Number'] || rd.cnr_number || null;
+    mappedData.court = 'Supreme Court of India';
+    mappedData.court_type = 'supreme_court';
+    mappedData.status = rd.status?.toLowerCase() === 'pending' ? 'pending' : 'disposed';
+    mappedData.petitioner = rd.petitioner || null;
+    mappedData.respondent = rd.respondent || null;
+    mappedData.petitioner_advocate = caseDetails['Petitioner Advocate(s)'] || null;
+    mappedData.respondent_advocate = caseDetails['Respondent Advocate(s)'] || null;
+    mappedData.category = caseDetails.Category || null;
+    mappedData.stage = caseDetails['Status/Stage'] || null;
+    
+    return mappedData;
+  }
+  
   // Extract data from nested Legalkart response structure
   // District courts use data.case_details, data.case_status_details, etc.
   const rd = data.data ?? data ?? {};
