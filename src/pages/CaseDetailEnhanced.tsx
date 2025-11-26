@@ -209,8 +209,34 @@ export default function CaseDetailEnhanced() {
       </div>;
   }
 
+  // TEMPORARY DEBUG - SC DETECTION
+  const isSupremeCourt = Boolean(
+    caseData.court === 'Supreme Court of India' ||
+    caseData.court_name === 'Supreme Court of India' ||
+    caseData.cnr_number?.startsWith('SCIN') ||
+    caseData.court_type === 'supreme_court'
+  );
+
   return (
     <>
+      {/* 🔍 DEBUG BANNER - REMOVE AFTER FIXING */}
+      <div className="bg-yellow-400 border-4 border-red-500 p-6 sticky top-0 z-50 shadow-lg">
+        <h2 className="text-2xl font-bold text-red-900 mb-4">🔍 DEBUG - SC DETECTION (CaseDetailEnhanced.tsx)</h2>
+        <div className="space-y-2 font-mono text-sm">
+          <p><span className="font-bold">Case ID:</span> {id}</p>
+          <p><span className="font-bold">court:</span> "{caseData.court || 'null'}"</p>
+          <p><span className="font-bold">court_name:</span> "{caseData.court_name || 'null'}"</p>
+          <p><span className="font-bold">cnr_number:</span> "{caseData.cnr_number || 'null'}"</p>
+          <p><span className="font-bold">court_type:</span> "{caseData.court_type || 'null'}"</p>
+          <p className="text-xl font-bold mt-4">
+            <span>isSupremeCourt:</span> 
+            <span className={isSupremeCourt ? "text-green-700" : "text-red-700"}>
+              {isSupremeCourt ? " ✅ TRUE" : " ❌ FALSE"}
+            </span>
+          </p>
+        </div>
+      </div>
+
       {/* Mobile Header */}
       {isMobile && (
         <MobileHeader
