@@ -315,44 +315,29 @@ const CaseDetail = () => {
   }
 
   if (!caseData) {
-  // Detect Supreme Court case
-  const isSupremeCourt = 
-    caseData?.court === 'Supreme Court of India' ||
-    caseData?.cnr_number?.startsWith('SCIN') ||
-    (typeof caseData?.fetched_data === 'object' && caseData?.fetched_data !== null && 
-      ('diary_number' in caseData.fetched_data || 
-       ('data' in caseData.fetched_data && typeof (caseData.fetched_data as any).data === 'object' && 
-        (caseData.fetched_data as any).data !== null && 'diary_number' in (caseData.fetched_data as any).data)));
-
-  // If Supreme Court, render SC view
-  if (isSupremeCourt && caseData) {
     return (
-      <div className="min-h-screen bg-[#F8F9FB]">
-        <div className="max-w-7xl mx-auto p-6 space-y-6">
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-foreground">{caseData.case_title}</h1>
-            <p className="text-muted-foreground mt-2">CNR: {caseData.cnr_number}</p>
-          </div>
-          <SCCaseDetailView caseId={id!} />
-        </div>
-      </div>
-    );
-  }
-
-  return (
       <div className="min-h-screen bg-[#F8F9FB] flex items-center justify-center">
         <p className="text-lg text-[#6B7280]">Case not found</p>
       </div>
     );
   }
 
-  // Detect Supreme Court case
+  // Detect Supreme Court case - simplified and reliable
   const isSupremeCourt = 
     caseData.court === 'Supreme Court of India' ||
+    caseData.court_name === 'Supreme Court of India' ||
     caseData.cnr_number?.startsWith('SCIN') ||
-    (caseData.fetched_data && typeof caseData.fetched_data === 'object' && 'diary_number' in caseData.fetched_data) ||
-    (caseData.fetched_data && typeof caseData.fetched_data === 'object' && 'data' in caseData.fetched_data && 
-     typeof (caseData.fetched_data as any).data === 'object' && 'diary_number' in (caseData.fetched_data as any).data);
+    caseData.court_type === 'supreme_court';
+
+  // Debug logging to verify detection
+  console.log('🔍 SC Detection Debug:', {
+    caseId: id,
+    court: caseData.court,
+    court_name: caseData.court_name,
+    cnr_number: caseData.cnr_number,
+    court_type: caseData.court_type,
+    isSupremeCourt
+  });
 
   // If Supreme Court, render SC view
   if (isSupremeCourt) {
