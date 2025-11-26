@@ -34,6 +34,15 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
   const { register, handleSubmit, formState: { errors }, reset } = useForm<FetchFormData>();
   const { searchCase } = useLegalkartIntegration();
 
+  // Supreme Court case detection
+  const isSupremeCourtCase = (data: any): boolean => {
+    return !!(
+      data?.diary_number ||
+      data?.data?.diary_number ||
+      (data?.cnr_number || data?.data?.case_details?.['CNR Number'] || '').startsWith('SCIN')
+    );
+  };
+
   const parsePartyInfo = (partyStr: string | undefined) => {
     if (!partyStr) return { name: '', advocate: '' };
     
@@ -77,52 +86,100 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
       });
 
       if (result?.success && result?.data) {
-        // Parse the nested Legalkart response structure
         const rawData = result.data;
-        const caseInfo = rawData.data?.case_info || {};
-        const caseStatus = rawData.data?.case_status || {};
         
-        const petitionerInfo = parsePartyInfo(rawData.data?.petitioner_and_advocate);
-        const respondentInfo = parsePartyInfo(rawData.data?.respondent_and_advocate);
-        
-        // Create case title without numbers
-        const petitionerName = petitionerInfo.name.replace(/^\d+\)\s*/g, '').trim();
-        const respondentName = respondentInfo.name.replace(/^\d+\)\s*/g, '').trim();
-        const caseTitle = petitionerName && respondentName 
-          ? `${petitionerName} vs ${respondentName}` 
-          : rawData.case_title || rawData.title || caseInfo.filing_number || 'Case Details';
-        
-        // Map to a flatter structure for display
-        const parsedData = {
-          raw: rawData, // Keep raw for later use
-          case_title: caseTitle,
-          case_number: caseInfo.registration_number || rawData.registration_number || caseInfo.filing_number || rawData.case_number,
-          cnr_number: (caseInfo.cnr_number || rawData.cnr_number || rawData.cnr || rawData.CNR || '').replace(/[-\s]/g, ''),
-          filing_number: caseInfo.filing_number || rawData.filing_number,
-          registration_number: caseInfo.registration_number || rawData.registration_number,
-          court: caseStatus.court || rawData.court || rawData.court_name,
-          court_name: caseStatus.court || rawData.court_name || rawData.court,
-          district: caseStatus.district || rawData.district,
-          state: caseStatus.state || rawData.state,
-          filing_date: caseInfo.date_of_filing || rawData.filing_date,
-          registration_date: caseInfo.date_of_registration || rawData.registration_date,
-          first_hearing_date: caseInfo.date_of_first_hearing || rawData.first_hearing_date,
-          next_hearing_date: caseInfo.date_next_hearing || rawData.next_hearing_date,
-          status: caseStatus.stage_of_case || rawData.status || 'Open',
-          stage: caseStatus.stage_of_case || rawData.stage,
-          case_type: rawData.case_type || rawData.matter_type || caseInfo.case_type,
-          petitioner: petitionerInfo.name,
-          petitioner_advocate: petitionerInfo.advocate,
-          respondent: respondentInfo.name,
-          respondent_advocate: respondentInfo.advocate,
-          bench_type: caseStatus.bench_type || rawData.bench_type,
-          court_complex: rawData.court_complex,
-          coram: caseStatus.coram || rawData.coram,
-          under_act: rawData.under_act || caseInfo.under_act,
-          under_section: rawData.under_section || caseInfo.under_section,
-        };
+        // Check if this is a Supreme Court case
+        if (isSupremeCourtCase(rawData)) {
+          // Supreme Court specific parsing
+          const apiData = rawData.data || rawData;
+          const caseDetails = apiData.case_details || {};
+          
+          const parsedData = {
+            raw: rawData,
+            is_supreme_court: true,
+            
+            // SC-specific fields from root level (lowercase)
+            diary_number: apiData.diary_number || caseDetails['Diary Number'],
+            case_numbers: apiData.case_numbers || [],
+            
+            // Core case info from case_details (capitalized field names)
+            case_title: caseDetails['Case Title'] || apiData.case_title || 'Supreme Court Case',
+            cnr_number: (caseDetails['CNR Number'] || apiData.cnr_number || '').replace(/[-\s]/g, ''),
+            category: caseDetails['Category'] || caseDetails['Sub Category'],
+            status: caseDetails['Status/Stage'] || apiData.status || 'Pending',
+            
+            // Parties from case_details
+            petitioner: caseDetails['Petitioner(s)'] || apiData.petitioner || '',
+            petitioner_advocate: caseDetails['Petitioner Advocate(s)'] || '',
+            respondent: caseDetails['Respondent(s)'] || apiData.respondent || '',
+            respondent_advocate: caseDetails['Respondent Advocate(s)'] || '',
+            
+            // Bench composition from "Present/Last Listed On"
+            bench_composition: caseDetails['Present/Last Listed On'] || '',
+            
+            // Court info
+            court: 'Supreme Court of India',
+            court_name: 'Supreme Court of India',
+            
+            // SC-specific nested data counts
+            earlier_courts_count: Array.isArray(caseDetails['Earlier Court Details']) ? caseDetails['Earlier Court Details'].length : 0,
+            tagged_matters_count: Array.isArray(caseDetails['Tagged Matters']) ? caseDetails['Tagged Matters'].length : 0,
+            listing_dates_count: Array.isArray(caseDetails['Listing Dates']) ? caseDetails['Listing Dates'].length : 0,
+            notices_count: Array.isArray(caseDetails['Notices']) ? caseDetails['Notices'].length : 0,
+            defects_count: Array.isArray(caseDetails['Defects']) ? caseDetails['Defects'].length : 0,
+            orders_count: Array.isArray(caseDetails['Judgement Orders']) ? caseDetails['Judgement Orders'].length : 0,
+            office_reports_count: Array.isArray(caseDetails['Office Report']) ? caseDetails['Office Report'].length : 0,
+          };
+          
+          setFetchedData(parsedData);
+        } else {
+          // High Court / District Court parsing (existing logic)
+          const caseInfo = rawData.data?.case_info || {};
+          const caseStatus = rawData.data?.case_status || {};
+          
+          const petitionerInfo = parsePartyInfo(rawData.data?.petitioner_and_advocate);
+          const respondentInfo = parsePartyInfo(rawData.data?.respondent_and_advocate);
+          
+          // Create case title without numbers
+          const petitionerName = petitionerInfo.name.replace(/^\d+\)\s*/g, '').trim();
+          const respondentName = respondentInfo.name.replace(/^\d+\)\s*/g, '').trim();
+          const caseTitle = petitionerName && respondentName 
+            ? `${petitionerName} vs ${respondentName}` 
+            : rawData.case_title || rawData.title || caseInfo.filing_number || 'Case Details';
+          
+          // Map to a flatter structure for display
+          const parsedData = {
+            raw: rawData,
+            is_supreme_court: false,
+            case_title: caseTitle,
+            case_number: caseInfo.registration_number || rawData.registration_number || caseInfo.filing_number || rawData.case_number,
+            cnr_number: (caseInfo.cnr_number || rawData.cnr_number || rawData.cnr || rawData.CNR || '').replace(/[-\s]/g, ''),
+            filing_number: caseInfo.filing_number || rawData.filing_number,
+            registration_number: caseInfo.registration_number || rawData.registration_number,
+            court: caseStatus.court || rawData.court || rawData.court_name,
+            court_name: caseStatus.court || rawData.court_name || rawData.court,
+            district: caseStatus.district || rawData.district,
+            state: caseStatus.state || rawData.state,
+            filing_date: caseInfo.date_of_filing || rawData.filing_date,
+            registration_date: caseInfo.date_of_registration || rawData.registration_date,
+            first_hearing_date: caseInfo.date_of_first_hearing || rawData.first_hearing_date,
+            next_hearing_date: caseInfo.date_next_hearing || rawData.next_hearing_date,
+            status: caseStatus.stage_of_case || rawData.status || 'Open',
+            stage: caseStatus.stage_of_case || rawData.stage,
+            case_type: rawData.case_type || rawData.matter_type || caseInfo.case_type,
+            petitioner: petitionerInfo.name,
+            petitioner_advocate: petitionerInfo.advocate,
+            respondent: respondentInfo.name,
+            respondent_advocate: respondentInfo.advocate,
+            bench_type: caseStatus.bench_type || rawData.bench_type,
+            court_complex: rawData.court_complex,
+            coram: caseStatus.coram || rawData.coram,
+            under_act: rawData.under_act || caseInfo.under_act,
+            under_section: rawData.under_section || caseInfo.under_section,
+          };
 
-        setFetchedData(parsedData);
+          setFetchedData(parsedData);
+        }
         toast({
           title: "Case Details Fetched",
           description: "Successfully retrieved case details from eCourts.",
@@ -187,7 +244,7 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
       };
 
       // Prepare case data for insertion
-      const insertData = {
+      const insertData: any = {
         // Basic info
         case_title: caseData.case_title,
         case_number: caseData.case_number,
@@ -198,22 +255,11 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
         // Court info
         court: caseData.court,
         court_name: caseData.court_name,
-        court_complex: caseData.court_complex,
-        district: caseData.district,
-        state: caseData.state,
-        bench_type: caseData.bench_type,
-        coram: caseData.coram,
-        
-        // Dates
-        filing_date: caseData.filing_date,
-        registration_date: caseData.registration_date,
-        first_hearing_date: caseData.first_hearing_date,
-        next_hearing_date: caseData.next_hearing_date,
         
         // Status and type - mapped to valid enum values
         status: mapStatus(caseData.status),
         stage: caseData.stage,
-        case_type: mapCaseType(caseData.case_type),
+        case_type: caseData.is_supreme_court ? 'other' : mapCaseType(caseData.case_type),
         
         // Parties
         petitioner: caseData.petitioner,
@@ -223,10 +269,6 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
         vs: caseData.petitioner && caseData.respondent 
           ? `${caseData.petitioner} vs ${caseData.respondent}` 
           : null,
-        
-        // Acts and sections
-        under_act: caseData.under_act,
-        under_section: caseData.under_section,
         
         // Client link
         client_id: preSelectedClientId || null,
@@ -239,6 +281,21 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
         last_fetched_at: new Date().toISOString(),
         fetch_status: 'success',
       };
+
+      // Add HC/DC specific fields only if not SC case
+      if (!caseData.is_supreme_court) {
+        insertData.court_complex = caseData.court_complex;
+        insertData.district = caseData.district;
+        insertData.state = caseData.state;
+        insertData.bench_type = caseData.bench_type;
+        insertData.coram = caseData.coram;
+        insertData.filing_date = caseData.filing_date;
+        insertData.registration_date = caseData.registration_date;
+        insertData.first_hearing_date = caseData.first_hearing_date;
+        insertData.next_hearing_date = caseData.next_hearing_date;
+        insertData.under_act = caseData.under_act;
+        insertData.under_section = caseData.under_section;
+      }
 
       // Insert the case
       const { data: insertedCase, error: caseError } = await supabase
@@ -442,9 +499,133 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
           </form>
         ) : (
           <div className="space-y-6">
-            <div className="bg-[#F9FAFB] rounded-lg p-4 space-y-4">
-              <h3 className="text-lg font-bold text-[#1F2937]">Basic Case Details</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            {/* Supreme Court Specific Display */}
+            {fetchedData.is_supreme_court ? (
+              <div className="bg-[#E0E7FF] rounded-lg p-4 space-y-4 border-2 border-[#1E3A8A]">
+                <h3 className="text-lg font-bold text-[#1E3A8A]">Supreme Court Case Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  {fetchedData.diary_number && (
+                    <div className="space-y-1 col-span-1 md:col-span-2 bg-white rounded p-3">
+                      <p className="text-[#6B7280] font-semibold">Diary Number</p>
+                      <p className="font-bold text-[#1E3A8A] text-lg">{fetchedData.diary_number}</p>
+                    </div>
+                  )}
+                  {fetchedData.case_title && (
+                    <div className="space-y-1 col-span-1 md:col-span-2">
+                      <p className="text-[#6B7280]">Case Title</p>
+                      <p className="font-medium text-[#111827]">{fetchedData.case_title}</p>
+                    </div>
+                  )}
+                  {fetchedData.cnr_number && (
+                    <div className="space-y-1">
+                      <p className="text-[#6B7280]">CNR Number</p>
+                      <p className="font-medium text-[#111827]">{fetchedData.cnr_number}</p>
+                    </div>
+                  )}
+                  {fetchedData.category && (
+                    <div className="space-y-1">
+                      <p className="text-[#6B7280]">Category</p>
+                      <p className="font-medium text-[#111827]">{fetchedData.category}</p>
+                    </div>
+                  )}
+                  {fetchedData.bench_composition && (
+                    <div className="space-y-1 col-span-1 md:col-span-2">
+                      <p className="text-[#6B7280]">Bench Composition</p>
+                      <p className="font-medium text-[#111827]">{fetchedData.bench_composition}</p>
+                    </div>
+                  )}
+                  {fetchedData.case_numbers && fetchedData.case_numbers.length > 0 && (
+                    <div className="space-y-1 col-span-1 md:col-span-2">
+                      <p className="text-[#6B7280]">Case Numbers</p>
+                      <p className="font-medium text-[#111827]">{fetchedData.case_numbers.join(', ')}</p>
+                    </div>
+                  )}
+                  {fetchedData.status && (
+                    <div className="space-y-1">
+                      <p className="text-[#6B7280]">Status</p>
+                      <p className="font-medium text-[#111827]">{fetchedData.status}</p>
+                    </div>
+                  )}
+                  {fetchedData.petitioner && (
+                    <div className="space-y-1 col-span-1 md:col-span-2">
+                      <p className="text-[#6B7280]">Petitioner(s)</p>
+                      <p className="font-medium text-[#111827]">{fetchedData.petitioner}</p>
+                    </div>
+                  )}
+                  {fetchedData.petitioner_advocate && (
+                    <div className="space-y-1 col-span-1 md:col-span-2">
+                      <p className="text-[#6B7280]">Petitioner Advocate(s)</p>
+                      <p className="font-medium text-[#111827]">{fetchedData.petitioner_advocate}</p>
+                    </div>
+                  )}
+                  {fetchedData.respondent && (
+                    <div className="space-y-1 col-span-1 md:col-span-2">
+                      <p className="text-[#6B7280]">Respondent(s)</p>
+                      <p className="font-medium text-[#111827]">{fetchedData.respondent}</p>
+                    </div>
+                  )}
+                  {fetchedData.respondent_advocate && (
+                    <div className="space-y-1 col-span-1 md:col-span-2">
+                      <p className="text-[#6B7280]">Respondent Advocate(s)</p>
+                      <p className="font-medium text-[#111827]">{fetchedData.respondent_advocate}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* SC-specific nested data counts */}
+                <div className="bg-white rounded p-3 space-y-2">
+                  <p className="text-[#6B7280] font-semibold">Additional Data Available:</p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                    {fetchedData.earlier_courts_count > 0 && (
+                      <div className="bg-[#F9FAFB] rounded p-2">
+                        <span className="font-bold text-[#1E3A8A]">{fetchedData.earlier_courts_count}</span>
+                        <span className="text-[#6B7280]"> Earlier Courts</span>
+                      </div>
+                    )}
+                    {fetchedData.tagged_matters_count > 0 && (
+                      <div className="bg-[#F9FAFB] rounded p-2">
+                        <span className="font-bold text-[#1E3A8A]">{fetchedData.tagged_matters_count}</span>
+                        <span className="text-[#6B7280]"> Tagged Matters</span>
+                      </div>
+                    )}
+                    {fetchedData.listing_dates_count > 0 && (
+                      <div className="bg-[#F9FAFB] rounded p-2">
+                        <span className="font-bold text-[#1E3A8A]">{fetchedData.listing_dates_count}</span>
+                        <span className="text-[#6B7280]"> Listing Dates</span>
+                      </div>
+                    )}
+                    {fetchedData.notices_count > 0 && (
+                      <div className="bg-[#F9FAFB] rounded p-2">
+                        <span className="font-bold text-[#1E3A8A]">{fetchedData.notices_count}</span>
+                        <span className="text-[#6B7280]"> Notices</span>
+                      </div>
+                    )}
+                    {fetchedData.defects_count > 0 && (
+                      <div className="bg-[#F9FAFB] rounded p-2">
+                        <span className="font-bold text-[#1E3A8A]">{fetchedData.defects_count}</span>
+                        <span className="text-[#6B7280]"> Defects</span>
+                      </div>
+                    )}
+                    {fetchedData.orders_count > 0 && (
+                      <div className="bg-[#F9FAFB] rounded p-2">
+                        <span className="font-bold text-[#1E3A8A]">{fetchedData.orders_count}</span>
+                        <span className="text-[#6B7280]"> Judgement Orders</span>
+                      </div>
+                    )}
+                    {fetchedData.office_reports_count > 0 && (
+                      <div className="bg-[#F9FAFB] rounded p-2">
+                        <span className="font-bold text-[#1E3A8A]">{fetchedData.office_reports_count}</span>
+                        <span className="text-[#6B7280]"> Office Reports</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* High Court / District Court Display (existing) */
+              <div className="bg-[#F9FAFB] rounded-lg p-4 space-y-4">
+                <h3 className="text-lg font-bold text-[#1F2937]">Basic Case Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div className="space-y-1">
                   <p className="text-[#6B7280]">Case Title</p>
                   <p className="font-medium text-[#111827]">{fetchedData.case_title || '-'}</p>
@@ -588,7 +769,8 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
                   </div>
                 )}
               </div>
-            </div>
+              </div>
+            )}
 
             <div className="flex justify-end gap-3 pt-4">
               <Button type="button" variant="outline" onClick={handleCancel} disabled={addCaseMutation.isPending}>
