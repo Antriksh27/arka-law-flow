@@ -3,7 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Collapsible } from '@/components/ui/collapsible';
+import { Button } from '@/components/ui/button';
 import { SCCaseDetailsCard } from './SCCaseDetailsCard';
 import { SCEarlierCourtsTable } from './SCEarlierCourtsTable';
 import { SCTaggedMattersTable } from './SCTaggedMattersTable';
@@ -23,7 +24,8 @@ import { PaymentsTab } from '../detail/tabs/PaymentsTab';
 import { TimelineTab } from '../detail/tabs/TimelineTab';
 import { LawyersTab } from '../detail/tabs/LawyersTab';
 import { RelatedMattersTab } from '../detail/tabs/RelatedMattersTab';
-import { FileText, File, Scale, StickyNote, CheckSquare, Users, Calendar, XCircle, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { MobileHeader } from '@/components/mobile/MobileHeader';
+import { FileText, File, Scale, StickyNote, CheckSquare, Users, Calendar, XCircle, AlertCircle, Pencil, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 
 interface SCCaseDetailViewProps {
@@ -326,36 +328,92 @@ export function SCCaseDetailView({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Case Details Card */}
-      <div className={isMobile ? 'p-4' : 'container mx-auto px-6 pt-6 max-w-7xl'}>
-        <Collapsible open={caseInfoOpen} onOpenChange={setCaseInfoOpen}>
-          <SCCaseDetailsCard
-            diaryInfo={diaryInfo}
-            caseTitle={caseTitle || caseData.case_title}
-            diaryNumber={diaryNumberFull}
-            caseNumber={caseNumberFull}
-            cnrNumber={caseData.cnr_number || undefined}
-            presentLastListedOn={presentLastListedOn}
-            statusStage={statusStage}
-            category={category}
-            petitioners={petitioners}
-            respondents={respondents}
-            petitionerAdvocates={petitionerAdvocates}
-            respondentAdvocates={respondentAdvocates}
-            argumentTranscripts={argumentTranscripts}
-            indexing={indexing}
-            onEdit={onEdit}
-            onFetchDetails={onFetchDetails}
-            isRefreshing={isRefreshing}
-            isOpen={caseInfoOpen}
-            onToggle={setCaseInfoOpen}
-          />
-        </Collapsible>
-      </div>
+      {isMobile ? (
+        <MobileHeader title={caseTitle || caseData.case_title} showBack />
+      ) : null}
 
-      {/* Tabs Layout */}
       <div className={isMobile ? '' : 'container mx-auto p-6 max-w-7xl'}>
         <div className={isMobile ? '' : 'bg-white border border-border rounded-2xl shadow-sm'}>
+          {/* Header Section */}
+          {!isMobile && (
+            <div className="p-6 border-b border-border">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex-1">
+                  <h1 className="text-2xl font-semibold text-gray-900 mb-2">
+                    {caseTitle || caseData.case_title}
+                  </h1>
+                  <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
+                    {caseData.cnr_number && (
+                      <span className="flex items-center gap-1">
+                        <span className="font-medium">CNR:</span> {caseData.cnr_number}
+                      </span>
+                    )}
+                    {diaryNumber && (
+                      <span className="flex items-center gap-1">
+                        <span className="font-medium">Diary:</span> {diaryNumber}
+                      </span>
+                    )}
+                    {caseNumberFull && caseNumberFull !== '—' && (
+                      <span className="flex items-center gap-1">
+                        <span className="font-medium">Case No:</span> {caseNumberFull}
+                      </span>
+                    )}
+                    {presentLastListedOn && presentLastListedOn !== '—' && (
+                      <span className="flex items-center gap-1">
+                        <span className="font-medium">Last Listed:</span> {presentLastListedOn}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={onEdit}>
+                    <Pencil className="w-4 h-4 mr-2" />
+                    Edit
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={onFetchDetails}
+                    disabled={isRefreshing}
+                  >
+                    <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                    Fetch Details
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Mobile Header Card */}
+          {isMobile && (
+            <div className="p-4 border-b border-border">
+              <h1 className="text-xl font-semibold text-gray-900 mb-2">
+                {caseTitle || caseData.case_title}
+              </h1>
+              <div className="text-sm text-gray-600 mb-3">
+                <div>CNR: {caseData.cnr_number || '—'}</div>
+                {diaryNumber && <div>Diary: {diaryNumber}</div>}
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" className="flex-1" onClick={onEdit}>
+                  <Pencil className="w-4 h-4 mr-2" />
+                  Edit
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1"
+                  onClick={onFetchDetails}
+                  disabled={isRefreshing}
+                >
+                  <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  Fetch
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             {/* Main Tabs */}
             <TabsList className={`w-full bg-white border-b border-border h-auto p-0 ${isMobile ? 'sticky top-14 z-30' : ''}`}>
@@ -366,7 +424,7 @@ export function SCCaseDetailView({
                     <TabsTrigger 
                       key={tab.value} 
                       value={tab.value} 
-                      className={`flex items-center gap-2 px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-primary/5 bg-transparent rounded-none whitespace-nowrap transition-colors snap-start flex-shrink-0`}
+                      className={`flex items-center gap-2 px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 border-b-2 border-transparent data-[state=active]:border-blue-700 data-[state=active]:text-blue-800 data-[state=active]:bg-blue-50 bg-transparent rounded-none whitespace-nowrap transition-colors snap-start flex-shrink-0`}
                     >
                       <IconComponent className="w-4 h-4" />
                       {isMobile ? tab.label.split(' ')[0] : tab.label}
@@ -377,129 +435,155 @@ export function SCCaseDetailView({
             </TabsList>
 
             <div className={isMobile ? '' : ''}>
-              {/* Details Tab with Nested Tabs */}
-              <TabsContent value="details" className="m-0">
-                <Card>
-                  <CardContent className="p-0">
-                    <Tabs value={nestedTab} onValueChange={setNestedTab} className="w-full">
-                      <TabsList className="w-full bg-gray-50 border-b border-gray-200 h-auto p-0 rounded-none">
-                        <div className="flex flex-wrap sm:flex-nowrap overflow-x-auto">
-                          {nestedTabs.map(tab => {
-                            const IconComponent = tab.icon;
-                            return (
-                              <TabsTrigger 
-                                key={tab.value} 
-                                value={tab.value} 
-                                className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-primary/5 bg-transparent rounded-none whitespace-nowrap transition-colors"
-                              >
-                                <IconComponent className="w-4 h-4" />
-                                {tab.label}
-                              </TabsTrigger>
-                            );
-                          })}
+              {/* Details Tab with Case Info Card and Nested Tabs */}
+              <TabsContent value="details" className={isMobile ? 'p-4' : 'p-6'}>
+                <div className="space-y-6">
+                  {/* Case Information Card - Inside Details Tab */}
+                  <Collapsible open={caseInfoOpen} onOpenChange={setCaseInfoOpen}>
+                    <SCCaseDetailsCard
+                      diaryInfo={diaryInfo}
+                      caseTitle={caseTitle || caseData.case_title}
+                      diaryNumber={diaryNumberFull}
+                      caseNumber={caseNumberFull}
+                      cnrNumber={caseData.cnr_number || undefined}
+                      presentLastListedOn={presentLastListedOn}
+                      statusStage={statusStage}
+                      category={category}
+                      petitioners={petitioners}
+                      respondents={respondents}
+                      petitionerAdvocates={petitionerAdvocates}
+                      respondentAdvocates={respondentAdvocates}
+                      argumentTranscripts={argumentTranscripts}
+                      indexing={indexing}
+                      isOpen={caseInfoOpen}
+                      onToggle={setCaseInfoOpen}
+                    />
+                  </Collapsible>
+
+                  {/* SC-Specific Nested Tabs */}
+                  <Card>
+                    <CardContent className="p-0">
+                      <Tabs value={nestedTab} onValueChange={setNestedTab} className="w-full">
+                        <TabsList className="w-full bg-gray-50 border-b border-gray-200 h-auto p-0 rounded-none">
+                          <div className="flex flex-wrap sm:flex-nowrap overflow-x-auto">
+                            {nestedTabs.map(tab => {
+                              const IconComponent = tab.icon;
+                              return (
+                                <TabsTrigger 
+                                  key={tab.value} 
+                                  value={tab.value} 
+                                  className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 border-b-2 border-transparent data-[state=active]:border-blue-700 data-[state=active]:text-blue-800 data-[state=active]:bg-blue-50 bg-transparent rounded-none whitespace-nowrap transition-colors"
+                                >
+                                  <IconComponent className="w-4 h-4" />
+                                  {tab.label}
+                                </TabsTrigger>
+                              );
+                            })}
+                          </div>
+                        </TabsList>
+
+                        {/* Nested Tab Contents */}
+                        <div className="p-6">
+                          <TabsContent value="earlier-courts" className="m-0">
+                            {scData?.earlierCourts && scData.earlierCourts.length > 0 ? (
+                              <SCEarlierCourtsTable data={scData.earlierCourts} />
+                            ) : (
+                              <p className="text-sm text-gray-400 italic">No earlier court details available</p>
+                            )}
+                          </TabsContent>
+
+                          <TabsContent value="listing-history" className="m-0">
+                            {scData?.listingDates && scData.listingDates.length > 0 ? (
+                              <SCListingHistoryTimeline data={scData.listingDates} />
+                            ) : (
+                              <p className="text-sm text-gray-400 italic">No listing history available</p>
+                            )}
+                          </TabsContent>
+
+                          <TabsContent value="orders" className="m-0">
+                            {scData?.orders && scData.orders.length > 0 ? (
+                              <SCJudgementOrdersTable data={scData.orders} />
+                            ) : (
+                              <p className="text-sm text-gray-400 italic">No judgement orders available</p>
+                            )}
+                          </TabsContent>
+
+                          <TabsContent value="notices" className="m-0">
+                            {scData?.notices && scData.notices.length > 0 ? (
+                              <SCNoticesTable data={scData.notices} />
+                            ) : (
+                              <p className="text-sm text-gray-400 italic">No notices available</p>
+                            )}
+                          </TabsContent>
+
+                          <TabsContent value="defects" className="m-0">
+                            {scData?.defects && scData.defects.length > 0 ? (
+                              <SCDefectsTable data={scData.defects} />
+                            ) : (
+                              <p className="text-sm text-gray-400 italic">No defects available</p>
+                            )}
+                          </TabsContent>
+
+                          <TabsContent value="tagged-matters" className="m-0">
+                            {scData?.taggedMatters && scData.taggedMatters.length > 0 ? (
+                              <SCTaggedMattersTable data={scData.taggedMatters} />
+                            ) : (
+                              <p className="text-sm text-gray-400 italic">No tagged matters available</p>
+                            )}
+                          </TabsContent>
+
+                          <TabsContent value="office-reports" className="m-0">
+                            {scData?.reports && scData.reports.length > 0 ? (
+                              <SCOfficeReportsTable data={scData.reports} />
+                            ) : (
+                              <p className="text-sm text-gray-400 italic">No office reports available</p>
+                            )}
+                          </TabsContent>
+
+                          <TabsContent value="similarities" className="m-0">
+                            {scData?.similarities && scData.similarities.length > 0 ? (
+                              <SCSimilaritiesAccordion data={scData.similarities} />
+                            ) : (
+                              <p className="text-sm text-gray-400 italic">No similarities available</p>
+                            )}
+                          </TabsContent>
                         </div>
-                      </TabsList>
-
-                      <div className="p-6">
-                        <TabsContent value="earlier-courts" className="m-0">
-                          {scData?.earlierCourts && scData.earlierCourts.length > 0 ? (
-                            <SCEarlierCourtsTable data={scData.earlierCourts} />
-                          ) : (
-                            <p className="text-sm text-gray-400 italic">No earlier court details available</p>
-                          )}
-                        </TabsContent>
-
-                        <TabsContent value="listing-history" className="m-0">
-                          {scData?.listingDates && scData.listingDates.length > 0 ? (
-                            <SCListingHistoryTimeline data={scData.listingDates} />
-                          ) : (
-                            <p className="text-sm text-gray-400 italic">No listing history available</p>
-                          )}
-                        </TabsContent>
-
-                        <TabsContent value="orders" className="m-0">
-                          {scData?.orders && scData.orders.length > 0 ? (
-                            <SCJudgementOrdersTable data={scData.orders} />
-                          ) : (
-                            <p className="text-sm text-gray-400 italic">No judgement orders available</p>
-                          )}
-                        </TabsContent>
-
-                        <TabsContent value="notices" className="m-0">
-                          {scData?.notices && scData.notices.length > 0 ? (
-                            <SCNoticesTable data={scData.notices} />
-                          ) : (
-                            <p className="text-sm text-gray-400 italic">No notices available</p>
-                          )}
-                        </TabsContent>
-
-                        <TabsContent value="defects" className="m-0">
-                          {scData?.defects && scData.defects.length > 0 ? (
-                            <SCDefectsTable data={scData.defects} />
-                          ) : (
-                            <p className="text-sm text-gray-400 italic">No defects available</p>
-                          )}
-                        </TabsContent>
-
-                        <TabsContent value="tagged-matters" className="m-0">
-                          {scData?.taggedMatters && scData.taggedMatters.length > 0 ? (
-                            <SCTaggedMattersTable data={scData.taggedMatters} />
-                          ) : (
-                            <p className="text-sm text-gray-400 italic">No tagged matters available</p>
-                          )}
-                        </TabsContent>
-
-                        <TabsContent value="office-reports" className="m-0">
-                          {scData?.reports && scData.reports.length > 0 ? (
-                            <SCOfficeReportsTable data={scData.reports} />
-                          ) : (
-                            <p className="text-sm text-gray-400 italic">No office reports available</p>
-                          )}
-                        </TabsContent>
-
-                        <TabsContent value="similarities" className="m-0">
-                          {scData?.similarities && scData.similarities.length > 0 ? (
-                            <SCSimilaritiesAccordion data={scData.similarities} />
-                          ) : (
-                            <p className="text-sm text-gray-400 italic">No similarities available</p>
-                          )}
-                        </TabsContent>
-                      </div>
-                    </Tabs>
-                  </CardContent>
-                </Card>
+                      </Tabs>
+                    </CardContent>
+                  </Card>
+                </div>
               </TabsContent>
 
             {/* Common Tabs - Reuse existing components */}
-            <TabsContent value="contacts" className="m-0">
+            <TabsContent value="contacts" className={isMobile ? 'p-4' : 'p-6'}>
               <ContactTab caseId={caseId} />
             </TabsContent>
 
-            <TabsContent value="notes" className="m-0">
+            <TabsContent value="notes" className={isMobile ? 'p-4' : 'p-6'}>
               <NotesTab caseId={caseId} />
             </TabsContent>
 
-            <TabsContent value="tasks" className="m-0">
+            <TabsContent value="tasks" className={isMobile ? 'p-4' : 'p-6'}>
               <TasksTab caseId={caseId} />
             </TabsContent>
 
-            <TabsContent value="documents" className="m-0">
+            <TabsContent value="documents" className={isMobile ? 'p-4' : 'p-6'}>
               <DocumentsTab caseId={caseId} />
             </TabsContent>
 
-            <TabsContent value="expenses" className="m-0">
+            <TabsContent value="expenses" className={isMobile ? 'p-4' : 'p-6'}>
               <ExpensesTab caseId={caseId} />
             </TabsContent>
 
-            <TabsContent value="invoices" className="m-0">
+            <TabsContent value="invoices" className={isMobile ? 'p-4' : 'p-6'}>
               <InvoicesTab caseId={caseId} />
             </TabsContent>
 
-            <TabsContent value="payments" className="m-0">
+            <TabsContent value="payments" className={isMobile ? 'p-4' : 'p-6'}>
               <PaymentsTab caseId={caseId} />
             </TabsContent>
 
-            <TabsContent value="timeline" className="m-0">
+            <TabsContent value="timeline" className={isMobile ? 'p-4' : 'p-6'}>
               <TimelineTab 
                 caseId={caseId} 
                 caseData={caseData} 
@@ -508,11 +592,11 @@ export function SCCaseDetailView({
               />
             </TabsContent>
 
-            <TabsContent value="lawyers" className="m-0">
+            <TabsContent value="lawyers" className={isMobile ? 'p-4' : 'p-6'}>
               <LawyersTab caseId={caseId} />
             </TabsContent>
 
-            <TabsContent value="related" className="m-0">
+            <TabsContent value="related" className={isMobile ? 'p-4' : 'p-6'}>
               <RelatedMattersTab caseId={caseId} />
             </TabsContent>
           </div>
