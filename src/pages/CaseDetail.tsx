@@ -314,9 +314,55 @@ const CaseDetail = () => {
   }
 
   if (!caseData) {
+  // Detect Supreme Court case
+  const isSupremeCourt = 
+    caseData?.court === 'Supreme Court of India' ||
+    caseData?.cnr_number?.startsWith('SCIN') ||
+    (typeof caseData?.fetched_data === 'object' && caseData?.fetched_data !== null && 
+      ('diary_number' in caseData.fetched_data || 
+       ('data' in caseData.fetched_data && typeof caseData.fetched_data.data === 'object' && 
+        caseData.fetched_data.data !== null && 'diary_number' in caseData.fetched_data.data)));
+
+  // If Supreme Court, render SC view
+  if (isSupremeCourt && caseData) {
     return (
+      <div className="min-h-screen bg-[#F8F9FB]">
+        <div className="max-w-7xl mx-auto p-6 space-y-6">
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-foreground">{caseData.case_title}</h1>
+            <p className="text-muted-foreground mt-2">CNR: {caseData.cnr_number}</p>
+          </div>
+          <SCCaseDetailView caseId={id!} />
+        </div>
+      </div>
+    );
+  }
+
+  return (
       <div className="min-h-screen bg-[#F8F9FB] flex items-center justify-center">
         <p className="text-lg text-[#6B7280]">Case not found</p>
+      </div>
+    );
+  }
+
+  // Detect Supreme Court case
+  const isSupremeCourt = 
+    caseData.court === 'Supreme Court of India' ||
+    caseData.cnr_number?.startsWith('SCIN') ||
+    caseData.fetched_data?.diary_number ||
+    caseData.fetched_data?.data?.diary_number;
+
+  // If Supreme Court, render SC view
+  if (isSupremeCourt) {
+    return (
+      <div className="min-h-screen bg-[#F8F9FB]">
+        <div className="max-w-7xl mx-auto p-6 space-y-6">
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-foreground">{caseData.case_title}</h1>
+            <p className="text-muted-foreground mt-2">CNR: {caseData.cnr_number}</p>
+          </div>
+          <SCCaseDetailView caseId={id!} />
+        </div>
       </div>
     );
   }
