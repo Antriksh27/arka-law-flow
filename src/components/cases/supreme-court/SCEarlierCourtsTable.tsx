@@ -4,8 +4,8 @@ import { format } from 'date-fns';
 
 interface EarlierCourtDetail {
   id: string;
-  serial_no?: string | null;
-  court?: string | null;
+  sr_no?: number | null;
+  court_type?: string | null;
   agency_state?: string | null;
   case_no?: string | null;
   order_date?: string | null;
@@ -44,8 +44,8 @@ export function SCEarlierCourtsTable({ data }: SCEarlierCourtsTableProps) {
         <TableBody>
           {data.map((court) => (
             <TableRow key={court.id}>
-              <TableCell>{court.serial_no}</TableCell>
-              <TableCell className="font-medium">{court.court}</TableCell>
+              <TableCell>{court.sr_no}</TableCell>
+              <TableCell className="font-medium">{court.court_type}</TableCell>
               <TableCell>{court.agency_state}</TableCell>
               <TableCell>{court.case_no}</TableCell>
               <TableCell>
