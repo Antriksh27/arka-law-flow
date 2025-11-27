@@ -3,13 +3,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Calendar } from '../ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { CalendarIcon } from 'lucide-react';
@@ -22,37 +16,39 @@ import { toast } from '@/hooks/use-toast';
 import { SmartBookingCalendar } from '@/components/appointments/SmartBookingCalendar';
 import { ClientSelector } from '@/components/appointments/ClientSelector';
 import { CaseSelector } from '@/components/appointments/CaseSelector';
-
 interface Client {
   id: string;
   full_name: string;
 }
-
 interface Case {
   id: string;
   case_title: string;
   case_number: string;
 }
-
 interface User {
   id: string;
   full_name: string;
   role: string;
 }
-
 interface CreateAppointmentDialogProps {
   preSelectedDate?: Date;
   preSelectedClientId?: string;
 }
-
-export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = ({ preSelectedDate, preSelectedClientId }) => {
-  const { closeDialog } = useDialog();
-  const { firmId, user } = useAuth();
+export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = ({
+  preSelectedDate,
+  preSelectedClientId
+}) => {
+  const {
+    closeDialog
+  } = useDialog();
+  const {
+    firmId,
+    user
+  } = useAuth();
   const [loading, setLoading] = useState(false);
   const [clients, setClients] = useState<Client[]>([]);
   const [cases, setCases] = useState<Case[]>([]);
   const [users, setUsers] = useState<User[]>([]);
-  
   const [formData, setFormData] = useState({
     appointment_date: preSelectedDate || TimeUtils.nowDate(),
     appointment_time: '',
@@ -64,7 +60,6 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
     status: 'upcoming',
     type: 'in-person' as 'in-person' | 'other' | 'call' | 'video-call'
   });
-
   useEffect(() => {
     fetchClients();
     fetchCases(preSelectedClientId);
@@ -76,7 +71,10 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
     if (formData.client_id) {
       fetchCases(formData.client_id);
       // Reset case selection when client changes
-      setFormData(prev => ({ ...prev, case_id: '' }));
+      setFormData(prev => ({
+        ...prev,
+        case_id: ''
+      }));
     } else {
       fetchCases(); // Show all cases when no client selected
     }
@@ -87,63 +85,62 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
     if (user?.id && users.length > 0) {
       const currentUserInList = users.find(u => u.id === user.id);
       if (currentUserInList && !formData.lawyer_id) {
-        setFormData(prev => ({ ...prev, lawyer_id: user.id }));
+        setFormData(prev => ({
+          ...prev,
+          lawyer_id: user.id
+        }));
       }
     }
   }, [user?.id, users, formData.lawyer_id]);
-
   const fetchClients = async () => {
-    const { data } = await supabase
-      .from('clients')
-      .select('id, full_name')
-      .order('full_name');
+    const {
+      data
+    } = await supabase.from('clients').select('id, full_name').order('full_name');
     setClients(data || []);
   };
-
   const fetchCases = async (clientId?: string) => {
-    let query = supabase
-      .from('cases')
-      .select('id, case_title, case_number');
-    
+    let query = supabase.from('cases').select('id, case_title, case_number');
     if (clientId) {
       query = query.eq('client_id', clientId);
     }
-    
-    const { data } = await query.order('case_title');
+    const {
+      data
+    } = await query.order('case_title');
     setCases(data || []);
   };
-
   const fetchUsers = async () => {
-    const { data, error } = await supabase
-      .from('team_members')
-      .select(`
+    const {
+      data,
+      error
+    } = await supabase.from('team_members').select(`
         user_id,
         full_name,
         role
-      `)
-      .in('role', ['admin', 'lawyer', 'junior'])
-      .eq('firm_id', firmId);
-    
-    console.log('Fetching lawyers:', { data, error, firmId });
-    
+      `).in('role', ['admin', 'lawyer', 'junior']).eq('firm_id', firmId);
+    console.log('Fetching lawyers:', {
+      data,
+      error,
+      firmId
+    });
     if (error) {
       console.error('Error fetching lawyers:', error);
       return;
     }
-    
-    
+
     // Sort to always show "chitrajeet upadhyaya" first
     const sortedData = (data || []).sort((a, b) => {
       const nameA = a.full_name?.toLowerCase() || '';
       const nameB = b.full_name?.toLowerCase() || '';
-      
       if (nameA.includes('chitrajeet upadhyaya')) return -1;
       if (nameB.includes('chitrajeet upadhyaya')) return 1;
       return nameA.localeCompare(nameB);
     });
-    setUsers(sortedData.map(user => ({ id: user.user_id, full_name: user.full_name, role: user.role })));
+    setUsers(sortedData.map(user => ({
+      id: user.user_id,
+      full_name: user.full_name,
+      role: user.role
+    })));
   };
-
   const generateTitle = async () => {
     const client = clients.find(c => c.id === formData.client_id);
     const case_ = cases.find(c => c.id === formData.case_id);
@@ -153,90 +150,74 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
       'call': 'Phone Call',
       'other': 'Appointment'
     };
-    
     let title = typeMap[formData.type];
     let personName = '';
-    
     if (client) {
       personName = client.full_name;
     } else if (formData.client_id) {
       // Check if it's a contact
-      const { data: contactData } = await supabase
-        .from('contacts')
-        .select('name')
-        .eq('id', formData.client_id)
-        .single();
-      
+      const {
+        data: contactData
+      } = await supabase.from('contacts').select('name').eq('id', formData.client_id).single();
       if (contactData) {
         personName = contactData.name;
       }
     }
-    
     if (personName) {
       title = `${title} with ${personName}`;
     }
-    
     if (case_) {
       title = `${title} - ${case_.case_title}`;
     }
-    
     return title;
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
     try {
       // Determine if selected ID is a client or contact
       const isClient = clients.some(client => client.id === formData.client_id);
       const title = await generateTitle();
-      
+
       // Get contact name if it's a contact
       let contactName = '';
       if (!isClient && formData.client_id) {
-        const { data: contactData } = await supabase
-          .from('contacts')
-          .select('name')
-          .eq('id', formData.client_id)
-          .single();
-        
+        const {
+          data: contactData
+        } = await supabase.from('contacts').select('name').eq('id', formData.client_id).single();
         if (contactData) {
           contactName = contactData.name;
         }
       }
-      
       const appointmentData = {
         title,
-        appointment_date: typeof formData.appointment_date === 'string' 
-          ? formData.appointment_date 
-          : TimeUtils.formatDateInput(formData.appointment_date),
+        appointment_date: typeof formData.appointment_date === 'string' ? formData.appointment_date : TimeUtils.formatDateInput(formData.appointment_date),
         appointment_time: formData.appointment_time,
         duration_minutes: Number(formData.duration_minutes),
-        client_id: isClient ? formData.client_id : null, // Only set if it's a client
+        client_id: isClient ? formData.client_id : null,
+        // Only set if it's a client
         lawyer_id: formData.lawyer_id,
         case_id: formData.case_id || null,
         notes: formData.notes,
         status: formData.status,
         type: formData.type,
-        firm_id: firmId, // Use firmId from AuthContext instead of fetching
-        created_by: user?.id, // Use user.id from AuthContext
+        firm_id: firmId,
+        // Use firmId from AuthContext instead of fetching
+        created_by: user?.id,
+        // Use user.id from AuthContext
         created_at: TimeUtils.createTimestamp(),
         // Store contact information in notes or title for contacts
-        ...(contactName && { 
-          notes: formData.notes ? `Contact: ${contactName}\n\n${formData.notes}` : `Contact: ${contactName}` 
+        ...(contactName && {
+          notes: formData.notes ? `Contact: ${contactName}\n\n${formData.notes}` : `Contact: ${contactName}`
         })
       };
-
-      const { error } = await supabase
-        .from('appointments')
-        .insert([appointmentData]);
-
+      const {
+        error
+      } = await supabase.from('appointments').insert([appointmentData]);
       if (error) throw error;
-
       toast({
         title: "Success",
-        description: "Appointment created successfully",
+        description: "Appointment created successfully"
       });
       closeDialog();
     } catch (error) {
@@ -244,29 +225,24 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
       toast({
         title: "Error",
         description: "Failed to create appointment",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setLoading(false);
     }
   };
-
   const handleInputChange = (field: keyof typeof formData, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   // Check if required fields are filled
   const isFormValid = () => {
-    return (
-      formData.appointment_date &&
-      formData.appointment_time &&
-      formData.client_id &&
-      formData.lawyer_id
-    );
+    return formData.appointment_date && formData.appointment_time && formData.client_id && formData.lawyer_id;
   };
-
-  return (
-    <div className="flex flex-col h-full">
+  return <div className="flex flex-col h-full">
       {/* Header */}
       <div className="px-6 py-5 border-b border-border">
         <h2 className="text-2xl font-semibold text-foreground">New Appointment</h2>
@@ -288,20 +264,14 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
                 Assigned To <span className="text-destructive">*</span>
               </Label>
             </div>
-            <Select
-              value={formData.lawyer_id}
-              onValueChange={(value) => handleInputChange('lawyer_id', value)}
-              required
-            >
+            <Select value={formData.lawyer_id} onValueChange={value => handleInputChange('lawyer_id', value)} required>
               <SelectTrigger className="bg-background border-border text-foreground h-11">
                 <SelectValue placeholder="Select team member" />
               </SelectTrigger>
               <SelectContent className="bg-background border-border">
-                {users.map((user) => (
-                  <SelectItem key={user.id} value={user.id} className="text-foreground">
+                {users.map(user => <SelectItem key={user.id} value={user.id} className="text-foreground">
                     {user.full_name} <span className="text-muted-foreground">({user.role})</span>
-                  </SelectItem>
-                ))}
+                  </SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -317,27 +287,18 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
               <h3 className="text-base font-semibold text-foreground">Schedule</h3>
             </div>
             
-            <SmartBookingCalendar
-              selectedLawyer={formData.lawyer_id || null}
-              selectedDate={typeof formData.appointment_date === 'string' ? new Date(formData.appointment_date) : formData.appointment_date}
-              selectedTime={formData.appointment_time}
-              hideLawyerPicker
-              onTimeSlotSelect={(date, time, duration) => {
-                handleInputChange('appointment_date', date);
-                handleInputChange('appointment_time', time);
-                handleInputChange('duration_minutes', duration);
-              }}
-            />
+            <SmartBookingCalendar selectedLawyer={formData.lawyer_id || null} selectedDate={typeof formData.appointment_date === 'string' ? new Date(formData.appointment_date) : formData.appointment_date} selectedTime={formData.appointment_time} hideLawyerPicker onTimeSlotSelect={(date, time, duration) => {
+            handleInputChange('appointment_date', date);
+            handleInputChange('appointment_time', time);
+            handleInputChange('duration_minutes', duration);
+          }} />
           </div>
 
           {/* Duration & Type */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="duration_minutes" className="text-sm font-medium text-foreground">Duration</Label>
-              <Select
-                value={formData.duration_minutes.toString()}
-                onValueChange={(value) => handleInputChange('duration_minutes', parseInt(value))}
-              >
+              <Select value={formData.duration_minutes.toString()} onValueChange={value => handleInputChange('duration_minutes', parseInt(value))}>
                 <SelectTrigger className="bg-background border-border text-foreground h-11">
                   <SelectValue />
                 </SelectTrigger>
@@ -352,10 +313,7 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
             
             <div className="space-y-2">
               <Label htmlFor="type" className="text-sm font-medium text-foreground">Type</Label>
-              <Select
-                value={formData.type}
-                onValueChange={(value) => handleInputChange('type', value as 'in-person' | 'other' | 'call' | 'video-call')}
-              >
+              <Select value={formData.type} onValueChange={value => handleInputChange('type', value as 'in-person' | 'other' | 'call' | 'video-call')}>
                 <SelectTrigger className="bg-background border-border text-foreground h-11">
                   <SelectValue />
                 </SelectTrigger>
@@ -383,24 +341,14 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="client_id" className="text-sm font-medium text-foreground">Client/Contact</Label>
-                <ClientSelector
-                  value={formData.client_id}
-                  onValueChange={(value) => handleInputChange('client_id', value)}
-                  placeholder="Select or add client..."
-                  onClientAdded={(clientId) => {
-                    handleInputChange('client_id', clientId);
-                  }}
-                />
+                <ClientSelector value={formData.client_id} onValueChange={value => handleInputChange('client_id', value)} placeholder="Select or add client..." onClientAdded={clientId => {
+                handleInputChange('client_id', clientId);
+              }} />
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="case_id" className="text-sm font-medium text-foreground">Related Case</Label>
-                <CaseSelector
-                  value={formData.case_id}
-                  onValueChange={(value) => handleInputChange('case_id', value)}
-                  placeholder="Select case (optional)"
-                  clientId={formData.client_id}
-                />
+                <CaseSelector value={formData.case_id} onValueChange={value => handleInputChange('case_id', value)} placeholder="Select case (optional)" clientId={formData.client_id} />
               </div>
             </div>
           </div>
@@ -415,39 +363,21 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
               </div>
               <Label htmlFor="notes" className="text-base font-semibold text-foreground">Notes</Label>
             </div>
-            <Textarea
-              id="notes"
-              value={formData.notes}
-              onChange={(e) => handleInputChange('notes', e.target.value)}
-              placeholder="Add agenda items, discussion points, or any additional information..."
-              rows={4}
-              className="bg-background border-border text-foreground resize-none"
-            />
+            <Textarea id="notes" value={formData.notes} onChange={e => handleInputChange('notes', e.target.value)} placeholder="Add agenda items, discussion points, or any additional information..." rows={4} className="bg-background border-border text-foreground resize-none" />
           </div>
         </form>
       </div>
 
       {/* Footer Actions */}
-      <div className="px-6 py-4 border-t border-border bg-muted/30">
+      <div className="px-6 py-4 border-t border-border bg-slate-50">
         <div className="flex justify-end gap-3">
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={closeDialog}
-            className="min-w-[100px]"
-          >
+          <Button type="button" variant="outline" onClick={closeDialog} className="min-w-[100px]">
             Cancel
           </Button>
-          <Button 
-            type="submit" 
-            onClick={handleSubmit}
-            disabled={loading || !isFormValid()}
-            className="min-w-[140px] bg-primary hover:bg-primary/90"
-          >
+          <Button type="submit" onClick={handleSubmit} disabled={loading || !isFormValid()} className="min-w-[140px] bg-primary hover:bg-primary/90">
             {loading ? 'Creating...' : 'Create Appointment'}
           </Button>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
