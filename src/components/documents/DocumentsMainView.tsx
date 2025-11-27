@@ -31,7 +31,7 @@ export const DocumentsMainView: React.FC<DocumentsMainViewProps> = ({
         .select(`
           *,
           profiles!documents_uploaded_by_fkey(full_name),
-          cases!left(title)
+          cases!left(case_title)
         `)
         .order('uploaded_at', { ascending: false });
 
