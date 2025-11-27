@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { ClientSelector } from './ClientSelector';
+import { CaseSelector } from '@/components/appointments/CaseSelector';
 
 interface EditTaskDialogProps {
   open: boolean;
@@ -273,18 +274,11 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
               <Label htmlFor="case_id" className="text-sm font-medium text-gray-700">
                 Select Case
               </Label>
-              <Select onValueChange={(value) => setValue('case_id', value)} value={watch('case_id')}>
-                <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                  <SelectValue placeholder="Select a case..." />
-                </SelectTrigger>
-                <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                  {cases.map((caseItem) => (
-                    <SelectItem key={caseItem.id} value={caseItem.id} className="hover:bg-gray-50">
-                      {caseItem.case_title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <CaseSelector
+                value={watch('case_id') || ''}
+                onValueChange={(value) => setValue('case_id', value)}
+                placeholder="Search and select a case..."
+              />
             </div>
           )}
 
