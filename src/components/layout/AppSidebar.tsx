@@ -108,7 +108,7 @@ export function AppSidebar() {
   return <Sidebar 
       ref={sidebarRef}
       collapsible="offcanvas" 
-      className="glass-effect border-r border-white/10 shadow-2xl z-50 sm:hidden backdrop-blur-xl"
+      className="bg-slate-900 border-r border-white/10 shadow-2xl z-50 sm:hidden"
       side="left"
     >
       <SidebarHeader className="border-b border-white/10 h-20 flex items-center justify-center">
@@ -117,7 +117,7 @@ export function AppSidebar() {
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="bg-transparent">
+      <SidebarContent className="bg-slate-900">
         <SidebarGroup>
           {open && <SidebarGroupLabel className="text-xs font-medium text-white/70 uppercase tracking-wider px-3 py-2">
               Navigation
@@ -132,7 +132,7 @@ export function AppSidebar() {
                           nav-link flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 w-full
                           ${active 
                             ? 'active bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 text-white border border-yellow-500/50 font-medium shadow-[0_0_20px_rgba(234,179,8,0.3)]' 
-                            : 'text-gray-300 hover:bg-white/5 border border-transparent hover:border-white/20'}
+                            : 'text-slate-50 hover:bg-white/5 border border-transparent hover:border-white/20'}
                         `} activeClassName="">
                         <item.icon className="h-5 w-5 flex-shrink-0" />
                         {open && <span className="text-sm font-medium">{item.title}</span>}
