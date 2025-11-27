@@ -3,6 +3,7 @@ import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar, SidebarHeader, SidebarFooter } from "@/components/ui/sidebar";
 import { useEffect, useRef } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 const navigationItems = [{
   title: "Dashboard",
   url: "/",
@@ -61,6 +62,7 @@ export function AppSidebar() {
   const sidebarRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef<number>(0);
   const touchEndX = useRef<number>(0);
+  const { user } = useAuth();
 
   const isActive = (path: string) => {
     if (path === "/") {
@@ -106,31 +108,31 @@ export function AppSidebar() {
   return <Sidebar 
       ref={sidebarRef}
       collapsible="offcanvas" 
-      className="bg-slate-900 border-r border-white/20 shadow-sm z-50 sm:hidden"
+      className="glass-effect border-r border-white/10 shadow-2xl z-50 sm:hidden backdrop-blur-xl"
       side="left"
     >
-      <SidebarHeader className="border-b border-white/20 h-16 flex items-center justify-center bg-slate-900">
-        <div className="flex items-center justify-center bg-slate-900">
+      <SidebarHeader className="border-b border-white/10 h-20 flex items-center justify-center">
+        <div className="flex items-center justify-center">
           <img src="/lovable-uploads/89ea18cf-8c73-4793-9dcc-1a192855a630.png" alt="HRU Legal" className="h-12 w-auto" />
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="bg-slate-900">
+      <SidebarContent className="bg-transparent">
         <SidebarGroup>
           {open && <SidebarGroupLabel className="text-xs font-medium text-white/70 uppercase tracking-wider px-3 py-2">
               Navigation
             </SidebarGroupLabel>}
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-1 px-2">
+            <SidebarMenu className="space-y-2 px-2">
               {navigationItems.map(item => {
               const active = isActive(item.url);
               return <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild isActive={active} tooltip={item.title}>
                       <NavLink to={item.url} end={item.url === "/"} className={`
-                          flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 w-full border
+                          nav-link flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 w-full
                           ${active 
-                            ? 'bg-yellow-500 text-white border-white font-medium shadow-[0_0_15px_rgba(234,179,8,0.5)]' 
-                            : 'bg-slate-900 text-white border-white/30 hover:bg-slate-800 hover:border-white/50'}
+                            ? 'active bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 text-white border border-yellow-500/50 font-medium shadow-[0_0_20px_rgba(234,179,8,0.3)]' 
+                            : 'text-gray-300 hover:bg-white/5 border border-transparent hover:border-white/20'}
                         `} activeClassName="">
                         <item.icon className="h-5 w-5 flex-shrink-0" />
                         {open && <span className="text-sm font-medium">{item.title}</span>}
@@ -143,8 +145,18 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-white/20 p-4 bg-slate-900">
-        {open && <p className="text-xs text-white/70">© 2025 HRU Legal</p>}
+      <SidebarFooter className="border-t border-white/10 p-4">
+        {open && user && (
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-pink-400 flex items-center justify-center text-white font-semibold">
+              {user.email?.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <p className="font-semibold text-white text-sm">{user.email?.split('@')[0]}</p>
+              <p className="text-xs text-gray-400">User</p>
+            </div>
+          </div>
+        )}
       </SidebarFooter>
     </Sidebar>;
 }
