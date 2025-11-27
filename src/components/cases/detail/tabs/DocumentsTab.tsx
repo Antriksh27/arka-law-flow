@@ -27,8 +27,13 @@ export const DocumentsTab: React.FC<DocumentsTabProps> = ({
         ascending: false
       });
       if (error) throw error;
-      // Filter out documents without proper data
-      return data?.filter(doc => doc.file_name && doc.file_url) || [];
+      // Filter out documents without complete data
+      return data?.filter(doc => 
+        doc.file_name && 
+        doc.file_url && 
+        doc.file_size && 
+        doc.uploaded_at
+      ) || [];
     }
   });
   const {
