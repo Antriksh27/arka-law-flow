@@ -5,9 +5,6 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
-import { useDialog } from '@/hooks/use-dialog';
-import { HearingDetailsModal } from '@/components/hearings/HearingDetailsModal';
-import { ViewAppointmentDialog } from '@/components/appointments/ViewAppointmentDialog';
 import { supabase } from '@/integrations/supabase/client';
 
 interface TimelineEvent {
@@ -28,37 +25,27 @@ interface TodayFlowProps {
 
 export const TodayFlow = ({ events, isLoading }: TodayFlowProps) => {
   const navigate = useNavigate();
-  const { openDialog } = useDialog();
 
   const handleViewEvent = async (event: TimelineEvent) => {
     if (event.type === 'hearing') {
       const { data: hearing } = await supabase
         .from('case_hearings')
-        .select('*, cases(title, case_title)')
+        .select('case_id')
         .eq('id', event.id)
         .single();
       
-      if (hearing) {
-        openDialog(<HearingDetailsModal hearing={hearing} />);
+      if (hearing?.case_id) {
+        navigate(`/cases/${hearing.case_id}`);
       }
     } else if (event.type === 'appointment') {
       const { data: appointment } = await supabase
         .from('appointments')
-        .select('*, profiles!appointments_lawyer_id_fkey(full_name)')
+        .select('case_id')
         .eq('id', event.id)
         .single();
       
-      if (appointment) {
-        const profiles: any = appointment.profiles;
-        const lawyerName = Array.isArray(profiles) 
-          ? profiles[0]?.full_name || ''
-          : profiles?.full_name || '';
-        
-        const formattedAppointment = {
-          ...appointment,
-          lawyer_name: lawyerName
-        };
-        openDialog(<ViewAppointmentDialog appointment={formattedAppointment as any} />);
+      if (appointment?.case_id) {
+        navigate(`/cases/${appointment.case_id}`);
       }
     }
   };
