@@ -40,7 +40,7 @@ export const DocumentsHeader: React.FC<DocumentsHeaderProps> = ({
       const { data, error } = await supabase
         .from('cases')
         .select('id, case_title')
-        .order('title');
+        .order('case_title');
       if (error) throw error;
       return data || [];
     }
