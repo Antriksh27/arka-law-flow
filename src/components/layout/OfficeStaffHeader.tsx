@@ -1,16 +1,22 @@
-import { NavLink, useLocation } from 'react-router-dom';
-import { Settings, User, LogOut } from 'lucide-react';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { Settings, User, LogOut, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import KnockNotificationInbox from '@/components/notifications/KnockNotificationInbox';
 import { ChatDropdown } from '@/components/messages/ChatDropdown';
+import { useState } from 'react';
+import { useNotifications } from '@/hooks/useNotifications';
+import { NotificationPanel } from '@/components/notifications/NotificationPanel';
+import { Badge } from '@/components/ui/badge';
 const OfficeStaffHeader = () => {
   const {
     user,
     signOut
   } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+  const [showNotifications, setShowNotifications] = useState(false);
+  const { unreadCount } = useNotifications();
   const navItems = [{
     name: 'Dashboard',
     href: '/'
@@ -54,7 +60,30 @@ const OfficeStaffHeader = () => {
           {/* Right Side Actions */}
           <div className="flex items-center gap-3">
             <ChatDropdown />
-            <KnockNotificationInbox />
+            
+            {/* Notification Bell */}
+            <div className="relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="bg-gray-50 hover:bg-gray-200 text-gray-900 focus:ring-[#111827]"
+              >
+                <Bell className="w-5 h-5" />
+                {unreadCount > 0 && (
+                  <Badge 
+                    variant="error" 
+                    className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                  >
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </Badge>
+                )}
+              </Button>
+              <NotificationPanel 
+                isOpen={showNotifications} 
+                onClose={() => setShowNotifications(false)} 
+              />
+            </div>
             
             {/* User Profile Dropdown */}
             <DropdownMenu>
@@ -67,6 +96,11 @@ const OfficeStaffHeader = () => {
                 <div className="px-2 py-1.5 text-sm text-muted-foreground bg-slate-50">
                   {user?.email}
                 </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate('/notifications')} className="bg-slate-50">
+                  <Settings className="w-4 h-4 mr-2" />
+                  Notification Settings
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={signOut} className="text-red-600 focus:text-red-600 bg-slate-50">
                   <LogOut className="w-4 h-4 mr-2" />
