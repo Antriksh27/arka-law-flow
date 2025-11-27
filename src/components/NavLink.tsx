@@ -21,7 +21,7 @@ export function NavLink({
   return (
     <Link
       to={to}
-      className={cn(className, match ? activeClassName : '')}
+      className={cn(className, match ? activeClassName : 'text-white')}
       {...props}
     >
       {children}
