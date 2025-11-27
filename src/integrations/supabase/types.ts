@@ -5109,6 +5109,11 @@ export type Database = {
         | "security_alert"
         | "client"
         | "appointment"
+        | "task_assigned"
+        | "task_updated"
+        | "task_completed"
+        | "task_reminder"
+        | "task_overdue"
       pipeline_type: "litigation" | "advisory" | "corporate" | "regulatory"
       task_priority: "low" | "medium" | "high" | "critical"
       task_status: "todo" | "in_progress" | "completed"
@@ -5319,6 +5324,11 @@ export const Constants = {
         "security_alert",
         "client",
         "appointment",
+        "task_assigned",
+        "task_updated",
+        "task_completed",
+        "task_reminder",
+        "task_overdue",
       ],
       pipeline_type: ["litigation", "advisory", "corporate", "regulatory"],
       task_priority: ["low", "medium", "high", "critical"],
