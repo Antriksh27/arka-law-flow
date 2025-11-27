@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
-import { Upload, X, FileText, Plus } from 'lucide-react';
+import { Upload, X, FileText, Plus, Info } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { ClientSelector } from '@/components/appointments/ClientSelector';
@@ -737,6 +738,16 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                 <Label htmlFor="confidential" className="text-sm text-gray-600">
                   Confidential document
                 </Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p className="text-sm">Only you, admins, and office staff can view confidential documents</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox
