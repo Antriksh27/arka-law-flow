@@ -1,6 +1,6 @@
-
 import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import TimeUtils from '@/lib/timeUtils';
 
 interface ChatListProps {
   children: React.ReactNode;
@@ -36,7 +36,9 @@ const ChatListItem: React.FC<ChatListItemProps> = ({ avatar, name, message, time
     <div className="flex-1 min-w-0">
       <div className="flex justify-between items-center">
         <p className={`font-semibold text-sm truncate ${selected ? 'text-accent-foreground' : 'text-gray-900'}`}>{name}</p>
-        <p className="text-xs text-gray-500 flex-shrink-0 ml-2">{timestamp}</p>
+        <p className="text-xs text-gray-500 flex-shrink-0 ml-2">
+          {TimeUtils.isToday(timestamp) ? TimeUtils.formatTime(timestamp) : TimeUtils.formatDate(timestamp)}
+        </p>
       </div>
       <div className="flex justify-between items-center mt-1">
         <p className="text-sm text-gray-600 truncate">{message}</p>
