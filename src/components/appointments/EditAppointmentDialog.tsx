@@ -26,6 +26,7 @@ import { useDialog } from '@/hooks/use-dialog';
 import { toast } from 'sonner';
 import { SmartBookingCalendar } from '@/components/appointments/SmartBookingCalendar';
 import { ClientSelector } from '@/components/appointments/ClientSelector';
+import { CaseSelector } from '@/components/appointments/CaseSelector';
 
 interface Appointment {
   id: string;
@@ -293,21 +294,12 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
             
             <div className="space-y-2">
               <Label htmlFor="case_id" className="text-sm font-medium text-gray-900">Related Case (Optional)</Label>
-              <Select
+              <CaseSelector
                 value={formData.case_id}
                 onValueChange={(value) => handleInputChange('case_id', value)}
-              >
-                <SelectTrigger className="bg-white border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500">
-                  <SelectValue placeholder="Select case" />
-                </SelectTrigger>
-                <SelectContent className="bg-white border-gray-300">
-                  {cases.map((case_) => (
-                    <SelectItem key={case_.id} value={case_.id} className="text-gray-900">
-                      {case_.case_title} ({case_.case_number})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                placeholder="Select case (optional)"
+                clientId={formData.client_id}
+              />
             </div>
             
             <div className="space-y-2">

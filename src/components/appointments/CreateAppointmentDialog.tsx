@@ -21,6 +21,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { SmartBookingCalendar } from '@/components/appointments/SmartBookingCalendar';
 import { ClientSelector } from '@/components/appointments/ClientSelector';
+import { CaseSelector } from '@/components/appointments/CaseSelector';
 
 interface Client {
   id: string;
@@ -394,21 +395,12 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
               
               <div className="space-y-2">
                 <Label htmlFor="case_id" className="text-sm font-medium text-foreground">Related Case</Label>
-                <Select
+                <CaseSelector
                   value={formData.case_id}
                   onValueChange={(value) => handleInputChange('case_id', value)}
-                >
-                  <SelectTrigger className="bg-background border-border text-foreground h-11">
-                    <SelectValue placeholder="Select case (optional)" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background border-border">
-                    {cases.map((case_) => (
-                      <SelectItem key={case_.id} value={case_.id} className="text-foreground">
-                        {case_.case_title} <span className="text-muted-foreground">({case_.case_number})</span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  placeholder="Select case (optional)"
+                  clientId={formData.client_id}
+                />
               </div>
             </div>
           </div>
