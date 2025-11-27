@@ -129,7 +129,7 @@ export function AppSidebar() {
                       <NavLink to={item.url} end={item.url === "/"} className={`
                           flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 w-full border
                           ${active 
-                            ? 'bg-yellow-500 text-slate-900 border-white font-medium shadow-[0_0_15px_rgba(234,179,8,0.5)]' 
+                            ? 'bg-yellow-500 text-white border-white font-medium shadow-[0_0_15px_rgba(234,179,8,0.5)]' 
                             : 'bg-slate-900 text-white border-white/30 hover:bg-slate-800 hover:border-white/50'}
                         `} activeClassName="">
                         <item.icon className="h-5 w-5 flex-shrink-0" />
