@@ -4906,6 +4906,7 @@ export type Database = {
       is_current_user_active_member: { Args: never; Returns: boolean }
       is_current_user_admin_in_firm: { Args: never; Returns: boolean }
       is_current_user_admin_safe: { Args: never; Returns: boolean }
+      is_current_user_office_staff: { Args: never; Returns: boolean }
       is_lawyer: { Args: { user_id: string }; Returns: boolean }
       is_office_staff: { Args: { user_id: string }; Returns: boolean }
       is_participant: {
