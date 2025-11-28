@@ -85,22 +85,6 @@ export const HearingsCalendarView: React.FC<HearingsCalendarViewProps> = ({
     }
   });
 
-  // Auto-navigate to nearest upcoming hearing
-  useEffect(() => {
-    if (!hearings?.length) return;
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    const upcomingHearings = hearings.map(h => parseISO(h.hearing_date)).filter(d => d >= todayStart).sort((a, b) => a.getTime() - b.getTime());
-    if (upcomingHearings.length > 0) {
-      const nextHearing = upcomingHearings[0];
-      console.debug('📅 Next hearing date:', format(nextHearing, 'yyyy-MM-dd'));
-      const monthChanged = nextHearing.getFullYear() !== date.getFullYear() || nextHearing.getMonth() !== date.getMonth();
-      if (monthChanged) {
-        setDate(nextHearing);
-        console.debug('🔄 Calendar navigated to:', format(nextHearing, 'MMMM yyyy'));
-      }
-    }
-  }, [hearings]);
 
   // Real-time subscription
   useEffect(() => {
