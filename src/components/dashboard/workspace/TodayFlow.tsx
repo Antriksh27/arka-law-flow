@@ -26,11 +26,19 @@ interface TodayFlowProps {
 export const TodayFlow = ({ events, isLoading }: TodayFlowProps) => {
   const navigate = useNavigate();
 
-  const handleViewEvent = (event: TimelineEvent) => {
+  const handleViewEvent = async (event: TimelineEvent) => {
     if (event.type === 'appointment') {
       navigate('/appointments');
     } else if (event.type === 'hearing') {
-      navigate('/hearings');
+      const { data: hearing } = await supabase
+        .from('case_hearings')
+        .select('case_id')
+        .eq('id', event.id)
+        .single();
+      
+      if (hearing?.case_id) {
+        navigate(`/cases/${hearing.case_id}`);
+      }
     }
   };
 
