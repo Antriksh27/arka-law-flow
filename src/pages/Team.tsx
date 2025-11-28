@@ -195,7 +195,7 @@ function TeamDirectory() {
                       {/* Status */}
                       <TableCell>
                         <Badge className={`rounded-full px-3 py-1 text-xs font-medium ${member.status === "active" ? "bg-green-100 text-green-800" : member.status === "suspended" ? "bg-red-100 text-red-500" : "bg-blue-100 text-blue-800"}`}>
-                          {member.status.charAt(0).toUpperCase() + member.status.slice(1)}
+                          {member.status ? member.status.charAt(0).toUpperCase() + member.status.slice(1) : 'Unknown'}
                         </Badge>
                       </TableCell>
                       {/* Real Cases Count */}
@@ -441,7 +441,7 @@ function CaseCountCell({ memberId }: { memberId: string }) {
 // Utility: Initials from name
 function getInitials(name?: string): string {
   if (!name) return "";
-  return name.split(" ").map(s => s[0]).join("").substring(0, 2).toUpperCase();
+  return name.split(" ").filter(s => s.length > 0).map(s => s[0]).join("").substring(0, 2).toUpperCase();
 }
 function DataFieldHorizontal({
   icon,
