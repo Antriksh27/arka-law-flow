@@ -26,27 +26,11 @@ interface TodayFlowProps {
 export const TodayFlow = ({ events, isLoading }: TodayFlowProps) => {
   const navigate = useNavigate();
 
-  const handleViewEvent = async (event: TimelineEvent) => {
-    if (event.type === 'hearing') {
-      const { data: hearing } = await supabase
-        .from('case_hearings')
-        .select('case_id')
-        .eq('id', event.id)
-        .single();
-      
-      if (hearing?.case_id) {
-        navigate(`/cases/${hearing.case_id}`);
-      }
-    } else if (event.type === 'appointment') {
-      const { data: appointment } = await supabase
-        .from('appointments')
-        .select('case_id')
-        .eq('id', event.id)
-        .single();
-      
-      if (appointment?.case_id) {
-        navigate(`/cases/${appointment.case_id}`);
-      }
+  const handleViewEvent = (event: TimelineEvent) => {
+    if (event.type === 'appointment') {
+      navigate('/appointments');
+    } else if (event.type === 'hearing') {
+      navigate('/hearings');
     }
   };
 
@@ -148,11 +132,6 @@ export const TodayFlow = ({ events, isLoading }: TodayFlowProps) => {
                           >
                             View
                           </Button>
-                          {event.type === 'appointment' && (
-                            <Button size="sm" variant="ghost" className="h-7 text-xs">
-                              Reschedule
-                            </Button>
-                          )}
                         </>
                       )}
                     </div>
