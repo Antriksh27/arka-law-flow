@@ -48,20 +48,20 @@ export const HearingsCalendarView: React.FC<HearingsCalendarViewProps> = ({ filt
           )
         `);
 
-      // Apply date range filter or default to today onwards (6 months ahead)
+      // Apply date range filter or default to show all hearings (past and future)
       if (filters.dateRange.from && filters.dateRange.to) {
         query = query
           .gte('hearing_date', format(filters.dateRange.from, 'yyyy-MM-dd'))
           .lte('hearing_date', format(filters.dateRange.to, 'yyyy-MM-dd'));
       } else {
-        // Default range: today onwards to 6 months ahead
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        // Default range: show hearings from 6 months ago to 6 months ahead
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
         const sixMonthsAhead = new Date();
         sixMonthsAhead.setMonth(sixMonthsAhead.getMonth() + 6);
         
         query = query
-          .gte('hearing_date', format(today, 'yyyy-MM-dd'))
+          .gte('hearing_date', format(sixMonthsAgo, 'yyyy-MM-dd'))
           .lte('hearing_date', format(sixMonthsAhead, 'yyyy-MM-dd'));
       }
 
