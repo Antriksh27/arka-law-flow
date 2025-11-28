@@ -7,11 +7,12 @@ export function useTeamMemberStats(memberId: string) {
     queryFn: async () => {
       if (!memberId) return null;
 
-      // Get case count for this team member
+      // Get active (pending) case count for this team member
       const { data: casesData, error: casesError } = await supabase
         .from("cases")
         .select("id", { count: 'exact' })
-        .or(`assigned_to.eq.${memberId},created_by.eq.${memberId}`);
+        .or(`assigned_to.eq.${memberId},created_by.eq.${memberId}`)
+        .eq('status', 'pending');
 
       if (casesError) throw casesError;
 
@@ -23,11 +24,12 @@ export function useTeamMemberStats(memberId: string) {
 
       if (tasksError) throw tasksError;
 
-      // Get recent cases for this team member
+      // Get recent active (pending) cases for this team member
       const { data: recentCases, error: recentCasesError } = await supabase
         .from("cases")
         .select("id, case_title, status")
         .or(`assigned_to.eq.${memberId},created_by.eq.${memberId}`)
+        .eq('status', 'pending')
         .order("updated_at", { ascending: false })
         .limit(3);
 
