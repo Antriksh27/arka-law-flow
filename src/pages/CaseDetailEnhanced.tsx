@@ -9,6 +9,16 @@ import { Badge } from '@/components/ui/badge';
 import { RefreshCw, FileText, File, Scale, Calendar, XCircle, StickyNote, CheckSquare, Pencil, Users, MoreVertical, Edit } from 'lucide-react';
 import { format } from 'date-fns';
 import TimeUtils from '@/lib/timeUtils';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { EditCaseDialog } from '@/components/cases/EditCaseDialog';
 import { MobileHeader } from '@/components/mobile/MobileHeader';
 import { BottomNavBar } from '@/components/mobile/BottomNavBar';
@@ -56,6 +66,7 @@ export default function CaseDetailEnhanced() {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isFetchDialogOpen, setIsFetchDialogOpen] = useState(false);
+  const [isFetchConfirmOpen, setIsFetchConfirmOpen] = useState(false);
 
   // Scroll to top when component mounts
   useEffect(() => {
@@ -162,6 +173,10 @@ export default function CaseDetailEnhanced() {
 
   // Handler for Fetch Details button
   const handleFetchDetails = async () => {
+    setIsFetchConfirmOpen(true);
+  };
+
+  const confirmFetchDetails = async () => {
     if (!caseData?.cnr_number) {
       // No CNR - show dialog to input CNR
       setIsFetchDialogOpen(true);
@@ -169,6 +184,7 @@ export default function CaseDetailEnhanced() {
       // CNR exists - directly refresh
       await refreshCaseData();
     }
+    setIsFetchConfirmOpen(false);
   };
 
   const getDisplayStatus = () => {
@@ -491,6 +507,23 @@ export default function CaseDetailEnhanced() {
           }}
         />
       )}
+
+      <AlertDialog open={isFetchConfirmOpen} onOpenChange={setIsFetchConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Fetch Case Details</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will fetch the latest case details from eCourts. Any existing data will be updated. Do you want to continue?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmFetchDetails}>
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
