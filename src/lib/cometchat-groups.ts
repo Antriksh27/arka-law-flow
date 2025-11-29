@@ -3,11 +3,13 @@ import { loginCometChatUser, createCometChatUser } from './cometchat';
 
 /**
  * Get or create a CometChat group for a case
+ * If creating a new group, automatically adds the creator as the first member
  */
 export const getOrCreateCaseGroup = async (
   caseId: string,
   caseName: string,
-  creatorId: string
+  creatorId: string,
+  creatorName: string
 ): Promise<CometChat.Group> => {
   const GUID = `case_${caseId}`;
 
@@ -27,6 +29,18 @@ export const getOrCreateCaseGroup = async (
       group.setDescription(`Chat for case ${caseId}`);
 
       const createdGroup = await CometChat.createGroup(group);
+      
+      // Add creator as first member
+      try {
+        const creatorMember = new CometChat.GroupMember(
+          creatorId, 
+          CometChat.GROUP_MEMBER_SCOPE.ADMIN
+        );
+        await CometChat.addMembersToGroup(GUID, [creatorMember], []);
+      } catch (addError) {
+        console.error('Error adding creator to group:', addError);
+      }
+      
       return createdGroup;
     }
     throw error;
@@ -113,17 +127,28 @@ export const getCaseGroupMembers = async (
 };
 
 /**
- * Join a case group (for current user)
+ * Check if current user is a member of the group, if not add them
  */
-export const joinCaseGroup = async (
-  caseId: string
-): Promise<CometChat.Group> => {
+export const ensureUserIsMember = async (
+  caseId: string,
+  userId: string,
+  userName: string
+): Promise<void> => {
   const GUID = `case_${caseId}`;
+  
   try {
-    const group = await CometChat.joinGroup(GUID, CometChat.GROUP_TYPE.PRIVATE as any, '');
-    return group;
+    // Check if user is already a member
+    const members = await getCaseGroupMembers(caseId);
+    const isMember = members.some(m => m.getUid() === userId);
+    
+    if (!isMember) {
+      // Add user as member
+      await ensureCometChatUser(userId, userName);
+      const member = new CometChat.GroupMember(userId, CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT);
+      await CometChat.addMembersToGroup(GUID, [member], []);
+    }
   } catch (error) {
-    console.error('Error joining group:', error);
+    console.error('Error ensuring user is member:', error);
     throw error;
   }
 };

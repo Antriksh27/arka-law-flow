@@ -6,7 +6,7 @@ import {
   getCaseGroupMembers,
   addMembersToCaseGroup,
   removeMemberFromCaseGroup,
-  joinCaseGroup
+  ensureUserIsMember
 } from '@/lib/cometchat-groups';
 
 interface UseCaseGroupChatOptions {
@@ -21,7 +21,7 @@ export const useCaseGroupChat = ({ caseId, caseName }: UseCaseGroupChatOptions) 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  // Initialize group and join it
+  // Initialize group and ensure current user is a member
   const initializeGroup = useCallback(async () => {
     if (!isCometChatReady || !cometChatUser) {
       setIsLoading(false);
@@ -32,22 +32,20 @@ export const useCaseGroupChat = ({ caseId, caseName }: UseCaseGroupChatOptions) 
       setIsLoading(true);
       setError(null);
 
-      // Get or create the group
+      // Get or create the group (creator is auto-added if new)
       const caseGroup = await getOrCreateCaseGroup(
         caseId,
         caseName,
-        cometChatUser.getUid()
+        cometChatUser.getUid(),
+        cometChatUser.getName()
       );
 
-      // Try to join the group if we're not already a member
-      try {
-        await joinCaseGroup(caseId);
-      } catch (joinError: any) {
-        // If already a member, that's fine
-        if (joinError?.code !== 'ERR_ALREADY_JOINED') {
-          console.warn('Error joining group:', joinError);
-        }
-      }
+      // Ensure current user is a member (adds them if not)
+      await ensureUserIsMember(
+        caseId,
+        cometChatUser.getUid(),
+        cometChatUser.getName()
+      );
 
       setGroup(caseGroup);
 
