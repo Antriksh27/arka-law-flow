@@ -95,11 +95,10 @@ export function generateEngagementLetter(data: EngagementLetterData): string {
 
       <div class="recipient">
         <strong>To:</strong><br>
-        ${data.clientName}<br>
-        ${data.clientAddress.split('\n').join('<br>')}
+        ${data.clientName}${data.clientAddress ? '<br>' + data.clientAddress.split('\n').join('<br>') : ''}
       </div>
 
-      <div class="subject">
+      <div class="subject" style="text-align: center;">
         Subject: Engagement Letter for Legal Services
       </div>
 
@@ -134,7 +133,7 @@ export function generateEngagementLetter(data: EngagementLetterData): string {
         <p>
           To enable us to represent you effectively, we ask that you:
         </p>
-        <ul>
+        <ul style="list-style-type: disc; margin-left: 20px;">
           <li>Provide us with all relevant information and documents promptly</li>
           <li>Respond to our communications in a timely manner</li>
           <li>Keep us informed of any changes in your circumstances that may affect your case</li>
@@ -144,7 +143,7 @@ export function generateEngagementLetter(data: EngagementLetterData): string {
         <div class="section-title">4. Communication</div>
         <p>
           We will keep you informed about the progress of your matter and will respond to your inquiries promptly. 
-          You may contact us at any time during business hours at ${data.lawyerPhone} or via email at ${data.lawyerEmail}.
+          You may contact us at any time during business hours${data.lawyerPhone ? ' at ' + data.lawyerPhone : ''} or via email at ${data.lawyerEmail}.
         </p>
 
         <div class="section-title">5. Termination of Services</div>
@@ -175,8 +174,7 @@ export function generateEngagementLetter(data: EngagementLetterData): string {
             <strong>${data.lawyerName}</strong><br>
             ${data.firmName}<br>
             ${data.firmAddress.split('\n').join('<br>')}<br>
-            Phone: ${data.lawyerPhone}<br>
-            Email: ${data.lawyerEmail}
+            ${data.lawyerPhone ? 'Phone: ' + data.lawyerPhone + '<br>' : ''}Email: ${data.lawyerEmail}
           </p>
         </div>
 
