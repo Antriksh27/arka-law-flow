@@ -93,20 +93,20 @@ export const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
             const hasNotification = notificationCount > 0
 
             return (
-              <motion.li key={item.label} className="relative">
+              <motion.li key={item.label} className="relative overflow-visible">
                 <button
                   onClick={() => onItemClick?.(item.label)}
-                  className="block w-full"
+                  className="block w-full relative overflow-visible"
                 >
                   {hasNotification && (
                     <motion.div
-                      className="absolute -top-0.5 -right-0.5 z-20 h-2 w-2 rounded-full bg-primary"
+                      className="absolute -top-0.5 -right-0.5 z-20 h-2 w-2 rounded-full bg-destructive"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       exit={{ scale: 0 }}
                     >
                       <motion.div
-                        className="absolute inset-0 rounded-full bg-primary"
+                        className="absolute inset-0 rounded-full bg-destructive"
                         animate={{
                           scale: [1, 1.5, 1],
                           opacity: [1, 0, 1],
