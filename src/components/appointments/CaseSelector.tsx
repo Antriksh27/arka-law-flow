@@ -70,7 +70,7 @@ export const CaseSelector: React.FC<CaseSelectorProps> = ({
                     <Briefcase className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <div className="font-medium truncate">{caseItem.case_title}</div>
-                      {caseItem.case_number && <div className="text-xs text-gray-500 mt-0.5">{caseItem.case_number}</div>}
+                      {caseItem.case_number}
                     </div>
                     <Check className={cn("ml-auto h-4 w-4 flex-shrink-0", value === caseItem.id ? "opacity-100" : "opacity-0")} />
                   </CommandItem>)}
