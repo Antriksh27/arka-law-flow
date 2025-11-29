@@ -24,6 +24,8 @@ interface NoteFormData {
   title: string;
   content?: string;
   case_id?: string;
+  client_id?: string;
+  contact_id?: string;
   visibility: 'private' | 'team';
   color: 'yellow' | 'blue' | 'green' | 'red' | 'gray';
   tags: string[];
@@ -51,7 +53,9 @@ export const CreateNoteDialog: React.FC<CreateNoteDialogProps> = ({
       visibility: 'private',
       color: 'gray',
       tags: [],
-      case_id: caseId || ''
+      case_id: caseId || '',
+      client_id: clientId || '',
+      contact_id: ''
     }
   });
 
@@ -67,7 +71,35 @@ export const CreateNoteDialog: React.FC<CreateNoteDialogProps> = ({
         .from('cases')
         .select('id, case_title')
         .eq('status', 'pending')
-        .order('title');
+        .order('case_title');
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
+  // Fetch clients for linking
+  const { data: clients = [] } = useQuery({
+    queryKey: ['clients-for-notes'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('id, full_name')
+        .order('full_name');
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
+  // Fetch contacts for linking
+  const { data: contacts = [] } = useQuery({
+    queryKey: ['contacts-for-notes'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('contacts')
+        .select('id, name')
+        .order('name');
       
       if (error) throw error;
       return data || [];
@@ -84,17 +116,14 @@ export const CreateNoteDialog: React.FC<CreateNoteDialogProps> = ({
         title: data.title,
         content: data.content || null,
         case_id: data.case_id === 'none' ? null : data.case_id || null,
+        client_id: data.client_id === 'none' ? null : data.client_id || null,
+        contact_id: data.contact_id === 'none' ? null : data.contact_id || null,
         visibility: data.visibility,
         color: data.color,
         tags: data.tags,
         created_at: new Date().toISOString(),
         created_by: user.data.user.id,
       };
-
-      // Attach client_id if provided
-      if (clientId) {
-        noteData.client_id = clientId;
-      }
 
       const { data: createdNote, error } = await supabase
         .from('notes_v2')
@@ -260,19 +289,59 @@ export const CreateNoteDialog: React.FC<CreateNoteDialogProps> = ({
             </div>
           </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="case_id" className="text-sm font-medium text-gray-700">
+                Link to Case (Optional)
+              </Label>
+              <Select onValueChange={(value) => setValue('case_id', value)} defaultValue={caseId || 'none'}>
+                <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                  <SelectValue placeholder="Select a case..." />
+                </SelectTrigger>
+                <SelectContent className="bg-white border border-gray-200 shadow-lg max-h-60">
+                  <SelectItem value="none">No case</SelectItem>
+                  {cases.map((caseItem) => (
+                    <SelectItem key={caseItem.id} value={caseItem.id}>
+                      {caseItem.case_title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="client_id" className="text-sm font-medium text-gray-700">
+                Link to Client (Optional)
+              </Label>
+              <Select onValueChange={(value) => setValue('client_id', value)} defaultValue={clientId || 'none'}>
+                <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                  <SelectValue placeholder="Select a client..." />
+                </SelectTrigger>
+                <SelectContent className="bg-white border border-gray-200 shadow-lg max-h-60">
+                  <SelectItem value="none">No client</SelectItem>
+                  {clients.map((client) => (
+                    <SelectItem key={client.id} value={client.id}>
+                      {client.full_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
           <div className="space-y-2">
-            <Label htmlFor="case_id" className="text-sm font-medium text-gray-700">
-              Link to Case (Optional)
+            <Label htmlFor="contact_id" className="text-sm font-medium text-gray-700">
+              Link to Contact (Optional)
             </Label>
-            <Select onValueChange={(value) => setValue('case_id', value)} defaultValue={caseId || 'none'}>
+            <Select onValueChange={(value) => setValue('contact_id', value)} defaultValue="none">
               <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                <SelectValue placeholder="Select a case..." />
+                <SelectValue placeholder="Select a contact..." />
               </SelectTrigger>
               <SelectContent className="bg-white border border-gray-200 shadow-lg max-h-60">
-                <SelectItem value="none">No case</SelectItem>
-                {cases.map((caseItem) => (
-                  <SelectItem key={caseItem.id} value={caseItem.id}>
-                    {caseItem.case_title}
+                <SelectItem value="none">No contact</SelectItem>
+                {contacts.map((contact) => (
+                  <SelectItem key={contact.id} value={contact.id}>
+                    {contact.name}
                   </SelectItem>
                 ))}
               </SelectContent>
