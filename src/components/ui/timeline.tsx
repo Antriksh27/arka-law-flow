@@ -211,7 +211,7 @@ export function Timeline({
 }: TimelineProps) {
   const [showAll, setShowAll] = useState(false);
   const sortedItems = items.sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
   );
   const initialItems = sortedItems.slice(0, initialCount);
   const remainingItems = sortedItems.slice(initialCount);
