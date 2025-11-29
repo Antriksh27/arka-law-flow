@@ -110,9 +110,8 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       const user = await supabase.auth.getUser();
       if (!user.data.user) throw new Error('Not authenticated');
 
-      // Determine if client_contact_id is a client or contact
+      // Determine if client_contact_id is a client (contacts not supported in tasks table)
       let clientId = null;
-      let contactId = null;
       if (data.link_type === 'client_contact' && data.client_contact_id) {
         // Check if it's a client
         const { data: clientCheck } = await supabase
@@ -123,10 +122,8 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
         
         if (clientCheck) {
           clientId = data.client_contact_id;
-        } else {
-          // It's a contact
-          contactId = data.client_contact_id;
         }
+        // If not a client, we can't link to contacts (column doesn't exist)
       }
 
       const taskData: any = {
@@ -140,7 +137,6 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
         reminder_time: data.reminder_time ? new Date(data.reminder_time).toISOString() : null,
         case_id: data.link_type === 'case' ? data.case_id || null : null,
         client_id: clientId,
-        contact_id: contactId,
         created_by: user.data.user.id,
         firm_id: firmId,
         tags: data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(Boolean) : []
