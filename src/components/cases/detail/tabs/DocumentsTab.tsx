@@ -18,7 +18,7 @@ export const DocumentsTab: React.FC<DocumentsTabProps> = ({
     data: documents,
     isLoading
   } = useQuery({
-    queryKey: ['case-documents', caseId],
+    queryKey: ['uploaded-documents', caseId],
     queryFn: async () => {
       const {
         data,
@@ -94,7 +94,7 @@ export const DocumentsTab: React.FC<DocumentsTabProps> = ({
   };
   const handleUploadSuccess = () => {
     queryClient.invalidateQueries({
-      queryKey: ['case-documents', caseId]
+      queryKey: ['uploaded-documents', caseId]
     });
     toast.success('Document uploaded successfully');
     setShowUploadDialog(false);
