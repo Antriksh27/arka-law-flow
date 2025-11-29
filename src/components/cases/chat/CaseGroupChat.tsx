@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AlertCircle, Users, Settings, Send } from 'lucide-react';
+import { AlertCircle, Users, Settings, Send, MessageSquare } from 'lucide-react';
 import { ManageParticipantsDialog } from './ManageParticipantsDialog';
 import { MessageLoading } from '@/components/ui/message-loading';
 import { cn } from '@/lib/utils';
@@ -186,11 +186,11 @@ export const CaseGroupChat: React.FC<CaseGroupChatProps> = ({ caseId, caseName, 
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center h-96 text-center p-6">
-        <AlertCircle className="w-12 h-12 text-destructive mb-4" />
-        <h3 className="text-lg font-semibold mb-2">Failed to load chat</h3>
-        <p className="text-muted-foreground">
-          {error.message || 'Unable to create or load the case chat. Please try again.'}
-        </p>
+        <div className="w-16 h-16 mx-auto rounded-full bg-muted flex items-center justify-center mb-4">
+          <MessageSquare className="w-8 h-8 text-muted-foreground" />
+        </div>
+        <h3 className="text-lg font-semibold mb-2">You are not part of the group chat</h3>
+        <p className="text-muted-foreground">Ask an admin to add you</p>
       </div>
     );
   }
