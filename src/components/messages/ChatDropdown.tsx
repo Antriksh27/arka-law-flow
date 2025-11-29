@@ -21,6 +21,7 @@ interface Chat {
   unread?: boolean;
   lastMessageId?: string;
   lastMessageSenderId?: string;
+  conversationType?: 'user' | 'group';
 }
 
 export const ChatDropdown = () => {
@@ -52,6 +53,7 @@ export const ChatDropdown = () => {
         const conversationWith = conversation.getConversationWith();
         const lastMessage = conversation.getLastMessage();
         const unreadCount = conversation.getUnreadMessageCount();
+        const conversationType = conversation.getConversationType();
         totalUnread += unreadCount;
 
         return {
@@ -66,6 +68,7 @@ export const ChatDropdown = () => {
           unread: unreadCount > 0,
           lastMessageId: lastMessage?.getId(),
           lastMessageSenderId: lastMessage?.getSender()?.getUid(),
+          conversationType: conversationType,
         };
       });
 
@@ -162,16 +165,31 @@ export const ChatDropdown = () => {
     if (!user?.id || !isCometChatReady) return;
 
     try {
+      console.log('Marking all chat notifications as read...');
+      console.log('Chats to mark:', chats);
+      
       // Mark all CometChat conversations as read
       for (const chat of chats) {
         if (chat.unread && chat.lastMessageId && chat.lastMessageSenderId) {
           try {
             const currentUser = await CometChat.getLoggedinUser();
             if (currentUser) {
+              // Determine receiver type and ID
+              const receiverType = chat.conversationType || 'user';
+              let receiverId = chat.lastMessageSenderId;
+              
+              // For group chats, extract the group ID from the conversation ID
+              if (receiverType === 'group') {
+                // Group conversation IDs are like "group_case_xxx" or just "case_xxx"
+                receiverId = chat.id.replace('group_', '');
+              }
+              
+              console.log(`Marking as read - Type: ${receiverType}, Receiver: ${receiverId}, Message: ${chat.lastMessageId}`);
+              
               await CometChat.markAsRead(
                 chat.lastMessageId,
-                chat.lastMessageSenderId,
-                'user',
+                receiverId,
+                receiverType,
                 currentUser.getUid()
               );
             }
@@ -193,7 +211,7 @@ export const ChatDropdown = () => {
       queryClient.invalidateQueries({ queryKey: ['notifications-count'] });
       
       // Refresh chat list to update counts
-      await fetchRecentChats();
+      setTimeout(() => fetchRecentChats(), 1000);
       
       toast({
         title: "Success",
