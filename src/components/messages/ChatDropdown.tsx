@@ -159,9 +159,29 @@ export const ChatDropdown = () => {
   };
 
   const markAllChatNotificationsAsRead = async () => {
-    if (!user?.id) return;
+    if (!user?.id || !isCometChatReady) return;
 
     try {
+      // Mark all CometChat conversations as read
+      for (const chat of chats) {
+        if (chat.unread && chat.lastMessageId && chat.lastMessageSenderId) {
+          try {
+            const currentUser = await CometChat.getLoggedinUser();
+            if (currentUser) {
+              await CometChat.markAsRead(
+                chat.lastMessageId,
+                chat.lastMessageSenderId,
+                'user',
+                currentUser.getUid()
+              );
+            }
+          } catch (error) {
+            console.error('Error marking CometChat message as read:', error);
+          }
+        }
+      }
+
+      // Mark Supabase notifications as read
       await supabase
         .from('notifications')
         .update({ read: true })
@@ -171,6 +191,9 @@ export const ChatDropdown = () => {
 
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
       queryClient.invalidateQueries({ queryKey: ['notifications-count'] });
+      
+      // Refresh chat list to update counts
+      await fetchRecentChats();
       
       toast({
         title: "Success",
