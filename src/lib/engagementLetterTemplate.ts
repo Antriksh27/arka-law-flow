@@ -143,7 +143,7 @@ export function generateEngagementLetter(data: EngagementLetterData): string {
         <div class="section-title">4. Communication</div>
         <p>
           We will keep you informed about the progress of your matter and will respond to your inquiries promptly. 
-          You may contact us at any time during business hours${data.lawyerPhone ? ' at ' + data.lawyerPhone : ''} or via email at ${data.lawyerEmail}.
+          You may contact us at any time during business hours${data.lawyerPhone ? ' at ' + data.lawyerPhone + ' or' : ''} via email at ${data.lawyerEmail || 'our office'}.
         </p>
 
         <div class="section-title">5. Termination of Services</div>
@@ -173,8 +173,8 @@ export function generateEngagementLetter(data: EngagementLetterData): string {
           <p>
             <strong>${data.lawyerName}</strong><br>
             ${data.firmName}<br>
-            ${data.firmAddress.split('\n').join('<br>')}<br>
-            ${data.lawyerPhone ? 'Phone: ' + data.lawyerPhone + '<br>' : ''}Email: ${data.lawyerEmail}
+            ${data.firmAddress ? data.firmAddress.split('\n').join('<br>') + '<br>' : ''}
+            ${data.lawyerPhone ? 'Phone: ' + data.lawyerPhone + '<br>' : ''}${data.lawyerEmail ? 'Email: ' + data.lawyerEmail : ''}
           </p>
         </div>
 
