@@ -35,7 +35,9 @@ export default function KnockNotificationInbox() {
     setIsVisible(false);
 
     // Navigate based on module type
-    if (data?.module === 'cases' && data?.caseId) {
+    if (data?.module === 'case_chat' && data?.caseId) {
+      navigate(`/cases/${data.caseId}?tab=chat`);
+    } else if (data?.module === 'cases' && data?.caseId) {
       navigate(`/cases/${data.caseId}`);
     } else if (data?.module === 'clients' && data?.clientId) {
       navigate(`/client-info?id=${data.clientId}`);
