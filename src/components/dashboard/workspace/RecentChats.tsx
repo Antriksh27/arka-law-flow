@@ -92,7 +92,15 @@ export const RecentChats = ({
           <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-3" />
           <p className="text-sm text-muted-foreground">No recent chats</p>
         </Card> : <div className="space-y-3">
-          {chats.slice(0, 2).map(chat => <Card key={chat.id} className="p-4 hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/chat')}>
+          {chats.slice(0, 2).map(chat => <Card key={chat.id} className="p-4 hover:shadow-md transition-shadow cursor-pointer" onClick={() => {
+            // Check if this is a case group chat (format: group_case_{caseId})
+            if (chat.id.startsWith('group_case_')) {
+              const caseId = chat.id.replace('group_case_', '');
+              navigate(`/cases/${caseId}?tab=chat`);
+            } else {
+              navigate('/chat');
+            }
+          }}>
               <div className="flex items-start gap-3">
                 <Avatar className="w-10 h-10">
                   <AvatarFallback className="bg-primary text-primary-foreground">

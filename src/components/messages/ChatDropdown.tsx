@@ -137,9 +137,9 @@ export const ChatDropdown = () => {
     await markAsRead(chat);
     setOpen(false);
     
-    // Check if this is a case group chat (format: case_{caseId})
-    if (chat.id.startsWith('case_')) {
-      const caseId = chat.id.replace('case_', '');
+    // Check if this is a case group chat (format: group_case_{caseId})
+    if (chat.id.startsWith('group_case_')) {
+      const caseId = chat.id.replace('group_case_', '');
       navigate(`/cases/${caseId}?tab=chat`);
     } else {
       navigate('/chat');
