@@ -1,4 +1,4 @@
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, CheckCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -8,6 +8,10 @@ import { useEffect, useState } from 'react';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
 import { formatDistanceToNow } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useQueryClient } from '@tanstack/react-query';
+import { useToast } from '@/hooks/use-toast';
 
 interface Chat {
   id: string;
@@ -22,6 +26,9 @@ interface Chat {
 export const ChatDropdown = () => {
   const navigate = useNavigate();
   const { isCometChatReady } = useCometChat();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [chats, setChats] = useState<Chat[]>([]);
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -151,6 +158,34 @@ export const ChatDropdown = () => {
     navigate('/chat');
   };
 
+  const markAllChatNotificationsAsRead = async () => {
+    if (!user?.id) return;
+
+    try {
+      await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('recipient_id', user.id)
+        .eq('read', false)
+        .in('notification_type', ['message_received', 'message_mention']);
+
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications-count'] });
+      
+      toast({
+        title: "Success",
+        description: "All message notifications marked as read",
+      });
+    } catch (error) {
+      console.error('Error marking notifications as read:', error);
+      toast({
+        title: "Error",
+        description: "Failed to mark notifications as read",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -170,14 +205,25 @@ export const ChatDropdown = () => {
       <PopoverContent className="w-80 p-0" align="end">
         <div className="flex items-center justify-between px-4 py-3 border-b">
           <h3 className="font-semibold text-sm">Messages</h3>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-auto p-0 text-xs text-primary hover:text-primary/80"
-            onClick={handleViewAll}
-          >
-            View All
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-auto p-0 text-xs text-primary hover:text-primary/80"
+              onClick={markAllChatNotificationsAsRead}
+            >
+              <CheckCheck className="w-3.5 h-3.5 mr-1" />
+              Mark all read
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-auto p-0 text-xs text-primary hover:text-primary/80"
+              onClick={handleViewAll}
+            >
+              View All
+            </Button>
+          </div>
         </div>
         <ScrollArea className="h-[320px]">
           {loading ? (
