@@ -14,7 +14,7 @@ export const CaseChatTab: React.FC<CaseChatTabProps> = ({ caseId }) => {
     queryFn: async () => {
       const { data } = await supabase
         .from('cases')
-        .select('petitioner, respondent, case_title')
+        .select('petitioner, respondent, case_title, firm_id')
         .eq('id', caseId)
         .single();
       return data;
@@ -35,9 +35,17 @@ export const CaseChatTab: React.FC<CaseChatTabProps> = ({ caseId }) => {
   const caseName = caseData?.case_title || 
     `${caseData?.petitioner || ''} vs ${caseData?.respondent || ''}`;
 
+  if (!caseData?.firm_id) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <p className="text-muted-foreground">Loading case information...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="h-[calc(100vh-300px)] min-h-[500px]">
-      <CaseGroupChat caseId={caseId} caseName={caseName} />
+      <CaseGroupChat caseId={caseId} caseName={caseName} firmId={caseData.firm_id} />
     </div>
   );
 };

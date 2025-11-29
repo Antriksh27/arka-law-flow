@@ -10,12 +10,14 @@ import { ManageParticipantsDialog } from './ManageParticipantsDialog';
 interface CaseGroupChatProps {
   caseId: string;
   caseName: string;
+  firmId: string;
 }
 
-export const CaseGroupChat: React.FC<CaseGroupChatProps> = ({ caseId, caseName }) => {
-  const { group, members, isLoading, error, isReady } = useCaseGroupChat({
+export const CaseGroupChat: React.FC<CaseGroupChatProps> = ({ caseId, caseName, firmId }) => {
+  const { group, members, isLoading, error, isReady, isAdmin } = useCaseGroupChat({
     caseId,
-    caseName
+    caseName,
+    firmId
   });
   const [showParticipantsDialog, setShowParticipantsDialog] = useState(false);
 
@@ -66,15 +68,17 @@ export const CaseGroupChat: React.FC<CaseGroupChatProps> = ({ caseId, caseName }
               </p>
             </div>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowParticipantsDialog(true)}
-            className="gap-2"
-          >
-            <Settings className="w-4 h-4" />
-            Manage Participants
-          </Button>
+          {isAdmin && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowParticipantsDialog(true)}
+              className="gap-2"
+            >
+              <Settings className="w-4 h-4" />
+              Manage Participants
+            </Button>
+          )}
         </div>
       </Card>
 

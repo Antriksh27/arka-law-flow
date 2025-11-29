@@ -60,7 +60,8 @@ export const ManageParticipantsDialog: React.FC<ManageParticipantsDialogProps> =
 
   const { members, refreshMembers, addMember, removeMember } = useCaseGroupChat({
     caseId,
-    caseName
+    caseName,
+    firmId: caseData?.firm_id || ''
   });
 
   // Fetch team members from the same firm
@@ -72,13 +73,13 @@ export const ManageParticipantsDialog: React.FC<ManageParticipantsDialogProps> =
       const { data, error } = await supabase
         .from('team_members')
         .select('id, user_id, full_name, email, role')
-        .eq('firm_id', caseData.firm_id);
+        .eq('firm_id', caseData.firm_id)
+        .not('user_id', 'is', null);
       
       if (error) {
         console.error('Error fetching team members:', error);
         return [];
       }
-      console.log('Fetched team members:', data);
       return data || [];
     },
     enabled: open && !!caseData?.firm_id
@@ -86,13 +87,9 @@ export const ManageParticipantsDialog: React.FC<ManageParticipantsDialogProps> =
 
   // Filter out users who are already in the group
   const memberUserIds = members.map(m => m.getUid());
-  console.log('CometChat members:', memberUserIds);
-  console.log('Team members:', teamMembers.map(tm => tm.user_id));
-  
   const availableTeamMembers = teamMembers.filter(
     tm => tm.user_id && !memberUserIds.includes(tm.user_id)
   );
-  console.log('Available team members:', availableTeamMembers);
 
   const handleAddMember = async () => {
     if (!selectedUserId) return;

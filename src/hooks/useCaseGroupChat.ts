@@ -8,22 +8,42 @@ import {
   removeMemberFromCaseGroup,
   ensureUserIsMember
 } from '@/lib/cometchat-groups';
+import { supabase } from '@/integrations/supabase/client';
 
 interface UseCaseGroupChatOptions {
   caseId: string;
   caseName: string;
+  firmId: string;
 }
 
-export const useCaseGroupChat = ({ caseId, caseName }: UseCaseGroupChatOptions) => {
+export const useCaseGroupChat = ({ caseId, caseName, firmId }: UseCaseGroupChatOptions) => {
   const { isCometChatReady, cometChatUser } = useCometChat();
   const [group, setGroup] = useState<CometChat.Group | null>(null);
   const [members, setMembers] = useState<CometChat.GroupMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
-  // Initialize group and ensure current user is a member
+  // Check if current user is admin
+  useEffect(() => {
+    const checkAdmin = async () => {
+      if (!cometChatUser || !firmId) return;
+      
+      const { data } = await supabase
+        .from('team_members')
+        .select('role')
+        .eq('user_id', cometChatUser.getUid())
+        .eq('firm_id', firmId)
+        .single();
+      
+      setIsAdmin(data?.role === 'admin');
+    };
+    checkAdmin();
+  }, [cometChatUser, firmId]);
+
+  // Initialize group with admin-aware logic
   const initializeGroup = useCallback(async () => {
-    if (!isCometChatReady || !cometChatUser) {
+    if (!isCometChatReady || !cometChatUser || !firmId) {
       setIsLoading(false);
       return;
     }
@@ -32,33 +52,57 @@ export const useCaseGroupChat = ({ caseId, caseName }: UseCaseGroupChatOptions) 
       setIsLoading(true);
       setError(null);
 
-      // Get or create the group (creator is auto-added if new)
+      // Check current user's role
+      const { data: teamMember } = await supabase
+        .from('team_members')
+        .select('role')
+        .eq('user_id', cometChatUser.getUid())
+        .eq('firm_id', firmId)
+        .single();
+      
+      const userIsAdmin = teamMember?.role === 'admin';
+      
+      // Try to get or create group
       const caseGroup = await getOrCreateCaseGroup(
         caseId,
         caseName,
+        firmId,
         cometChatUser.getUid(),
-        cometChatUser.getName()
+        cometChatUser.getName(),
+        userIsAdmin
       );
 
-      // Ensure current user is a member (adds them if not)
-      await ensureUserIsMember(
-        caseId,
-        cometChatUser.getUid(),
-        cometChatUser.getName()
-      );
+      // Check if current user is a member
+      const groupMembers = await getCaseGroupMembers(caseId);
+      const isMember = groupMembers.some(m => m.getUid() === cometChatUser.getUid());
+      
+      if (!isMember) {
+        if (userIsAdmin) {
+          // Admin can add themselves
+          await ensureUserIsMember(
+            caseId,
+            cometChatUser.getUid(),
+            cometChatUser.getName()
+          );
+        } else {
+          setError(new Error('You are not a participant in this chat. Ask an admin to add you.'));
+          setIsLoading(false);
+          return;
+        }
+      }
 
       setGroup(caseGroup);
 
       // Fetch members
-      const groupMembers = await getCaseGroupMembers(caseId);
-      setMembers(groupMembers);
+      const updatedMembers = await getCaseGroupMembers(caseId);
+      setMembers(updatedMembers);
     } catch (err) {
       console.error('Error initializing case group:', err);
       setError(err instanceof Error ? err : new Error('Failed to initialize group'));
     } finally {
       setIsLoading(false);
     }
-  }, [isCometChatReady, cometChatUser, caseId, caseName]);
+  }, [isCometChatReady, cometChatUser, caseId, caseName, firmId]);
 
   // Refresh members list
   const refreshMembers = useCallback(async () => {
@@ -139,6 +183,7 @@ export const useCaseGroupChat = ({ caseId, caseName }: UseCaseGroupChatOptions) 
     members,
     isLoading,
     error,
+    isAdmin,
     addMember,
     removeMember,
     refreshMembers,
