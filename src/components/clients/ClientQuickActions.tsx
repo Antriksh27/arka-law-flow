@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Plus, Calendar, FileText, StickyNote, Briefcase, Edit, Trash2, Users, Mail } from 'lucide-react';
+import { MoreHorizontal, Plus, Calendar, FileText, StickyNote, Briefcase, Edit, Trash2, Users, Mail, FileSignature } from 'lucide-react';
 import { AssignToCaseDialog } from './AssignToCaseDialog';
 import { CreateAppointmentDialog } from '@/components/appointments/CreateAppointmentDialog';
 import { UploadDocumentForClientDialog } from '@/components/documents/UploadDocumentForClientDialog';
@@ -53,6 +53,13 @@ export const ClientQuickActions: React.FC<ClientQuickActionsProps> = ({
       });
     }
   };
+
+  const handleGenerateEngagementLetter = () => {
+    toast({
+      title: "Generating Engagement Letter",
+      description: "This feature is coming soon!",
+    });
+  };
   return <>
       <div className="flex items-center gap-3">
         
@@ -83,6 +90,10 @@ export const ClientQuickActions: React.FC<ClientQuickActionsProps> = ({
             <DropdownMenuItem className="hover:bg-gray-50 cursor-pointer" onClick={() => setShowEmailDialog(true)}>
               <Mail className="w-4 h-4 mr-3 text-gray-400" />
               <span>Send Email</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="hover:bg-gray-50 cursor-pointer" onClick={handleGenerateEngagementLetter}>
+              <FileSignature className="w-4 h-4 mr-3 text-gray-400" />
+              <span>Generate Engagement Letter</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator className="bg-gray-200" />
             <DropdownMenuItem className="hover:bg-gray-50 cursor-pointer" onClick={fetchClientData}>
