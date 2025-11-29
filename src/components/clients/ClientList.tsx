@@ -273,7 +273,7 @@ export const ClientList = () => {
           </TabsTrigger>
           <TabsTrigger value="vip" className="data-[state=active]:bg-yellow-600 data-[state=active]:text-white flex items-center gap-2">
             <Star className="w-4 h-4 fill-current" />
-            VIP Clients
+            Starred Clients
           </TabsTrigger>
         </TabsList>
 
