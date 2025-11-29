@@ -13,20 +13,32 @@ interface SendEmailDialogProps {
   onClose: () => void;
   clientEmail: string;
   clientName: string;
+  defaultSubject?: string;
+  defaultBody?: string;
 }
 
 export const SendEmailDialog: React.FC<SendEmailDialogProps> = ({
   open,
   onClose,
   clientEmail,
-  clientName
+  clientName,
+  defaultSubject = '',
+  defaultBody = ''
 }) => {
-  const [subject, setSubject] = useState('');
-  const [body, setBody] = useState('');
+  const [subject, setSubject] = useState(defaultSubject);
+  const [body, setBody] = useState(defaultBody);
   const [cc, setCc] = useState('');
   const [bcc, setBcc] = useState('');
   const [attachments, setAttachments] = useState<File[]>([]);
   const [isSending, setIsSending] = useState(false);
+
+  // Update fields when defaults change
+  React.useEffect(() => {
+    if (open) {
+      setSubject(defaultSubject);
+      setBody(defaultBody);
+    }
+  }, [open, defaultSubject, defaultBody]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);

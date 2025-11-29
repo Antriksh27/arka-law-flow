@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useDialog } from '@/hooks/use-dialog';
 import { SendEmailDialog } from './SendEmailDialog';
+import { GenerateEngagementLetterDialog } from './GenerateEngagementLetterDialog';
 interface ClientQuickActionsProps {
   clientId: string;
   clientName: string;
@@ -54,12 +55,7 @@ export const ClientQuickActions: React.FC<ClientQuickActionsProps> = ({
     }
   };
 
-  const handleGenerateEngagementLetter = () => {
-    toast({
-      title: "Generating Engagement Letter",
-      description: "This feature is coming soon!",
-    });
-  };
+  const [showEngagementDialog, setShowEngagementDialog] = useState(false);
   return <>
       <div className="flex items-center gap-3">
         
@@ -91,7 +87,7 @@ export const ClientQuickActions: React.FC<ClientQuickActionsProps> = ({
               <Mail className="w-4 h-4 mr-3 text-gray-400" />
               <span>Send Email</span>
             </DropdownMenuItem>
-            <DropdownMenuItem className="hover:bg-gray-50 cursor-pointer" onClick={handleGenerateEngagementLetter}>
+            <DropdownMenuItem className="hover:bg-gray-50 cursor-pointer" onClick={() => setShowEngagementDialog(true)}>
               <FileSignature className="w-4 h-4 mr-3 text-gray-400" />
               <span>Generate Engagement Letter</span>
             </DropdownMenuItem>
@@ -137,5 +133,15 @@ export const ClientQuickActions: React.FC<ClientQuickActionsProps> = ({
         onOpenChange={setShowDeleteDialog}
         onSuccess={onAction}
       />
+
+      {showEngagementDialog && (
+        <GenerateEngagementLetterDialog
+          open={showEngagementDialog}
+          onClose={() => setShowEngagementDialog(false)}
+          clientId={clientId}
+          clientName={clientName}
+          clientEmail={clientEmail}
+        />
+      )}
     </>;
 };
