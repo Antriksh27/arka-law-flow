@@ -26,6 +26,8 @@ export function generateEngagementLetter(data: EngagementLetterData): string {
           body {
             margin: 0;
             padding: 20mm;
+            padding-top: 60mm;
+            padding-bottom: 40mm;
           }
           .no-print {
             display: none;
@@ -38,6 +40,8 @@ export function generateEngagementLetter(data: EngagementLetterData): string {
           max-width: 210mm;
           margin: 0 auto;
           padding: 20px;
+          padding-top: 80px;
+          padding-bottom: 60px;
           background: white;
         }
         .header {
