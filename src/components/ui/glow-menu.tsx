@@ -12,12 +12,14 @@ interface MenuItem {
   href: string
   gradient: string
   iconColor: string
+  notificationCount?: number
 }
 
 interface MenuBarProps extends React.HTMLAttributes<HTMLDivElement> {
   items: MenuItem[]
   activeItem?: string
   onItemClick?: (label: string) => void
+  notificationCounts?: Record<string, number>
 }
 
 const itemVariants = {
@@ -61,7 +63,7 @@ const sharedTransition = {
 }
 
 export const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
-  ({ className, items, activeItem, onItemClick }, ref) => {
+  ({ className, items, activeItem, onItemClick, notificationCounts }, ref) => {
     const { theme } = useTheme()
     const isDarkTheme = theme === "dark"
 
@@ -87,6 +89,8 @@ export const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
           {items.map((item) => {
             const Icon = item.icon
             const isActive = item.label === activeItem
+            const notificationCount = notificationCounts?.[item.label] || 0
+            const hasNotification = notificationCount > 0
 
             return (
               <motion.li key={item.label} className="relative">
@@ -94,6 +98,27 @@ export const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
                   onClick={() => onItemClick?.(item.label)}
                   className="block w-full"
                 >
+                  {hasNotification && (
+                    <motion.div
+                      className="absolute -top-0.5 -right-0.5 z-20 h-2 w-2 rounded-full bg-primary"
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      exit={{ scale: 0 }}
+                    >
+                      <motion.div
+                        className="absolute inset-0 rounded-full bg-primary"
+                        animate={{
+                          scale: [1, 1.5, 1],
+                          opacity: [1, 0, 1],
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                      />
+                    </motion.div>
+                  )}
                   <motion.div
                     className="block rounded-lg overflow-visible group relative"
                     style={{ perspective: "600px" }}
