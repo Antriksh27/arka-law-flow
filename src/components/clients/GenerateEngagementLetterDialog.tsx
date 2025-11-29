@@ -202,8 +202,12 @@ export function GenerateEngagementLetterDialog({
       // Create a temporary container for PDF generation
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = generatedHTML;
-      tempDiv.style.position = 'absolute';
-      tempDiv.style.left = '-9999px';
+      tempDiv.style.position = 'fixed';
+      tempDiv.style.top = '0';
+      tempDiv.style.left = '0';
+      tempDiv.style.opacity = '0';
+      tempDiv.style.pointerEvents = 'none';
+      tempDiv.style.zIndex = '-1';
       document.body.appendChild(tempDiv);
 
       const opt = {
@@ -214,11 +218,11 @@ export function GenerateEngagementLetterDialog({
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
       };
 
-      const blob = await html2pdf().set(opt).from(tempDiv).outputPdf('blob');
+      const pdfBlob = await html2pdf().set(opt).from(tempDiv).outputPdf('blob');
       document.body.removeChild(tempDiv);
       
       // Create blob URL and open in new tab for printing
-      const blobUrl = URL.createObjectURL(blob);
+      const blobUrl = URL.createObjectURL(pdfBlob);
       window.open(blobUrl, '_blank');
       
       setGeneratingPrintPDF(false);
