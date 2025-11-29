@@ -1,15 +1,32 @@
 import { CometChat } from '@cometchat/chat-sdk-javascript';
 import { loginCometChatUser, createCometChatUser } from './cometchat';
+import { supabase } from '@/integrations/supabase/client';
+
+/**
+ * Get the admin user for a firm
+ */
+export const getFirmAdmin = async (firmId: string) => {
+  const { data } = await supabase
+    .from('team_members')
+    .select('user_id, full_name')
+    .eq('firm_id', firmId)
+    .eq('role', 'admin')
+    .single();
+  return data;
+};
 
 /**
  * Get or create a CometChat group for a case
- * If creating a new group, automatically adds the creator as the first member
+ * If creating a new group, the firm admin becomes the owner
+ * Current user is added as a member if they're not already
  */
 export const getOrCreateCaseGroup = async (
   caseId: string,
   caseName: string,
-  creatorId: string,
-  creatorName: string
+  firmId: string,
+  currentUserId: string,
+  currentUserName: string,
+  isCurrentUserAdmin: boolean
 ): Promise<CometChat.Group> => {
   const GUID = `case_${caseId}`;
 
@@ -19,7 +36,21 @@ export const getOrCreateCaseGroup = async (
     return group;
   } catch (error: any) {
     if (error?.code === 'ERR_GUID_NOT_FOUND') {
-      // Create new private group
+      // Only admin can create groups
+      if (!isCurrentUserAdmin) {
+        throw new Error('Chat not initialized. Ask an admin to start the chat.');
+      }
+
+      // Get firm admin to make them the owner
+      const admin = await getFirmAdmin(firmId);
+      if (!admin) {
+        throw new Error('No admin found for firm');
+      }
+
+      // Ensure admin exists in CometChat
+      await ensureCometChatUser(admin.user_id, admin.full_name || 'Admin');
+
+      // Create new private group (admin becomes owner automatically)
       const group = new CometChat.Group(
         GUID,
         caseName || 'Case Chat',
@@ -30,15 +61,15 @@ export const getOrCreateCaseGroup = async (
 
       const createdGroup = await CometChat.createGroup(group);
       
-      // Add creator as first member
+      // Add admin as first member with ADMIN scope
       try {
-        const creatorMember = new CometChat.GroupMember(
-          creatorId, 
+        const adminMember = new CometChat.GroupMember(
+          admin.user_id, 
           CometChat.GROUP_MEMBER_SCOPE.ADMIN
         );
-        await CometChat.addMembersToGroup(GUID, [creatorMember], []);
+        await CometChat.addMembersToGroup(GUID, [adminMember], []);
       } catch (addError) {
-        console.error('Error adding creator to group:', addError);
+        console.error('Error adding admin to group:', addError);
       }
       
       return createdGroup;
