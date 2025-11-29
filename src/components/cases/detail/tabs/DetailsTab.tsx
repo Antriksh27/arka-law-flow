@@ -148,6 +148,11 @@ export const DetailsTab: React.FC<DetailsTabProps> = ({
               }, {
                 label: 'Sub-Category',
                 value: legalkartData?.sub_category || caseData?.sub_category
+              }, {
+                label: 'Reference Acts',
+                value: caseData?.acts && Array.isArray(caseData.acts) && caseData.acts.length > 0 
+                  ? caseData.acts.join(', ') 
+                  : null
               }].filter(item => item.value).map((item, index) => <div key={index}>
                     <p className="text-sm text-gray-500 mb-1">{item.label}</p>
                     <p className="text-sm font-medium text-gray-900">{item.value}</p>

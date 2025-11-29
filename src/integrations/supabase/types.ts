@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      acts_master: {
+        Row: {
+          act_name: string
+          created_at: string | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          act_name: string
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          act_name?: string
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       appointment_rate_limits: {
         Row: {
           created_at: string | null

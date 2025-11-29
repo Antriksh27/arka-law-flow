@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { X } from 'lucide-react';
 import { toast } from 'sonner';
 import { ClientSelector } from '@/components/appointments/ClientSelector';
+import { ActsSelector } from './ActsSelector';
 
 interface EditCaseDialogProps {
   open: boolean;
@@ -473,23 +473,11 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
 
             {/* Acts */}
             <div>
-              <Label>Acts</Label>
-              <div className="flex gap-2 mb-2">
-                <Input
-                  value={newAct}
-                  onChange={(e) => setNewAct(e.target.value)}
-                  placeholder="Add an act"
-                />
-                <Button type="button" onClick={() => addItem('act', newAct)}>Add</Button>
-              </div>
-              <div className="flex flex-wrap gap-1">
-                {acts.map((act, index) => (
-                  <Badge key={index} variant="outline" className="flex items-center gap-1">
-                    {act}
-                    <X className="w-3 h-3 cursor-pointer" onClick={() => removeItem('act', index)} />
-                  </Badge>
-                ))}
-              </div>
+              <Label>Reference Acts</Label>
+              <ActsSelector
+                value={acts}
+                onChange={setActs}
+              />
             </div>
 
             {/* Sections */}
