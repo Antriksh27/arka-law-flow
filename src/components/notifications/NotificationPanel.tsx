@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -33,6 +34,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   // Fetch notifications
   const { data: notifications = [], isLoading } = useQuery<Notification[]>({
@@ -77,6 +79,39 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
       .eq('read', false);
     
     queryClient.invalidateQueries({ queryKey: ['notifications'] });
+  };
+
+  // Handle notification click
+  const handleNotificationClick = async (notification: Notification) => {
+    // Mark as read
+    await markAsRead(notification.id);
+    
+    // Navigate based on notification type
+    const type = notification.notification_type;
+    const refId = notification.reference_id;
+    
+    if (!refId) {
+      onClose();
+      return;
+    }
+    
+    if (type === 'hearing_scheduled' || type === 'hearing') {
+      navigate(`/hearings?id=${refId}`);
+    } else if (type === 'case_created' || type === 'case_status_changed' || type === 'case_assigned' || type === 'case') {
+      navigate(`/cases/${refId}`);
+    } else if (type === 'task_assigned' || type === 'task_completed' || type === 'task') {
+      navigate(`/tasks?id=${refId}`);
+    } else if (type === 'appointment') {
+      navigate(`/appointments?id=${refId}`);
+    } else if (type === 'client') {
+      navigate(`/clients/${refId}`);
+    } else if (type === 'document_uploaded' || type === 'document') {
+      navigate(`/documents?id=${refId}`);
+    } else if (type === 'case_chat') {
+      navigate(`/cases/${refId}?tab=chat`);
+    }
+    
+    onClose();
   };
 
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -150,7 +185,8 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
             {notifications.map((notification) => (
               <div
                 key={notification.id}
-                className={`p-4 hover:bg-gray-50 transition-colors ${
+                onClick={() => handleNotificationClick(notification)}
+                className={`p-4 hover:bg-gray-50 transition-colors cursor-pointer ${
                   !notification.read ? 'bg-blue-50' : ''
                 }`}
               >
