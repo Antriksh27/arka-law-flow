@@ -103,7 +103,7 @@ export function GenerateEngagementLetterDialog({
       const {
         data,
         error
-      } = await supabase.from('profiles').select('full_name, email').eq('id', selectedLawyerId).single();
+      } = await supabase.from('profiles').select('full_name, email, phone').eq('id', selectedLawyerId).single();
       if (error) throw error;
       return data;
     },
@@ -180,13 +180,13 @@ export function GenerateEngagementLetterDialog({
     const letterHTML = generateEngagementLetter({
       date: new Date(),
       clientName: clientData.full_name,
-      clientAddress: clientData.address || 'Address not provided',
+      clientAddress: clientData.address || '',
       matterDescription: matterDescription,
       lawyerName: lawyerData.full_name,
-      lawyerPhone: 'Contact via email',
-      lawyerEmail: lawyerData.email,
+      lawyerPhone: lawyerData.phone || '',
+      lawyerEmail: lawyerData.email || '',
       firmName: firmData.name,
-      firmAddress: firmData.address || 'Address not provided'
+      firmAddress: firmData.address || ''
     });
     
     console.log('Generated letter HTML length:', letterHTML.length);
