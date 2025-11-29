@@ -45,8 +45,14 @@ export const CaseSelector: React.FC<CaseSelectorProps> = ({
         <Button variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between bg-white border-gray-300 text-gray-900 hover:bg-gray-50">
           {selectedCase ? <div className="flex items-center gap-2 truncate">
               <Briefcase className="h-4 w-4 text-gray-500 flex-shrink-0" />
-              <span className="truncate">{selectedCase.case_title}</span>
-              {selectedCase.case_number}
+              <span className="truncate">
+                {selectedCase.case_title.length > 50 
+                  ? `${selectedCase.case_title.substring(0, 50)}...` 
+                  : selectedCase.case_title}
+              </span>
+              {selectedCase.case_number && (
+                <span className="text-xs text-muted-foreground">({selectedCase.case_number})</span>
+              )}
             </div> : placeholder}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
