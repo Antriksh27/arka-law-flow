@@ -214,11 +214,12 @@ export function GenerateEngagementLetterDialog({
   };
   return <>
       <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent className="max-w-4xl max-h-[90vh]">
-          <DialogHeader>
+        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle>Generate Engagement Letter</DialogTitle>
           </DialogHeader>
 
+          <div className="flex-1 overflow-y-auto">
           {step === 1 && <div className="space-y-6 py-4">
               <div className="space-y-2">
                 <Label>Client Name</Label>
@@ -296,8 +297,9 @@ export function GenerateEngagementLetterDialog({
                 </ScrollArea>
               )}
             </div>}
+          </div>
 
-          <DialogFooter className="flex justify-between items-center">
+          <DialogFooter className="flex-shrink-0 flex justify-between items-center sm:justify-between gap-2">
             <div>
               {step > 1 && <Button variant="outline" onClick={() => setStep(step - 1)}>
                   <ArrowLeft className="w-4 h-4 mr-2" />
