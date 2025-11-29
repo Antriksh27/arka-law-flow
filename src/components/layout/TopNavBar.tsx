@@ -1,6 +1,7 @@
 import { Home, Users, UserPlus, Briefcase, Calendar, Gavel, StickyNote, CheckSquare, FileText, Receipt, UsersRound, MessageSquare } from "lucide-react";
 import { MenuBar } from "@/components/ui/glow-menu";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useModuleNotifications } from "@/hooks/useModuleNotifications";
 
 const navigationItems = [
   {
@@ -85,6 +86,7 @@ const navigationItems = [
 export function TopNavBar() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { moduleCounts } = useModuleNotifications();
 
   const activeItem = navigationItems.find(
     (item) => item.href === location.pathname
@@ -103,6 +105,7 @@ export function TopNavBar() {
         items={navigationItems}
         activeItem={activeItem}
         onItemClick={handleItemClick}
+        notificationCounts={moduleCounts}
         className="w-auto max-w-full"
       />
     </div>
