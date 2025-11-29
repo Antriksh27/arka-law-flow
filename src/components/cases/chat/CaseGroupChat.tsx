@@ -332,8 +332,8 @@ export const CaseGroupChat: React.FC<CaseGroupChatProps> = ({ caseId, caseName, 
                     'px-4 py-2.5 shadow-sm transition-all',
                     borderRadius,
                     isMe
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted/80 text-foreground'
+                      ? 'bg-blue-50 text-gray-900'
+                      : 'bg-gray-100 text-gray-900'
                   )}
                 >
                   <p className="text-sm whitespace-pre-wrap break-words">{messageText}</p>
