@@ -46,8 +46,8 @@ export const CaseSelector: React.FC<CaseSelectorProps> = ({
           {selectedCase ? <div className="flex items-center gap-2 truncate">
               <Briefcase className="h-4 w-4 text-gray-500 flex-shrink-0" />
               <span className="truncate">
-                {selectedCase.case_title.length > 50 
-                  ? `${selectedCase.case_title.substring(0, 50)}...` 
+                {selectedCase.case_title.length > 30 
+                  ? `${selectedCase.case_title.substring(0, 30)}...` 
                   : selectedCase.case_title}
               </span>
               {selectedCase.case_number && (
