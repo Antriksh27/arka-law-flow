@@ -13,6 +13,8 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { X, Plus, Mic, MicOff, Square, Play, Pause, Trash2 } from 'lucide-react';
 import { DrawingCanvas } from './DrawingCanvas';
+import { ClientSelector } from '@/components/appointments/ClientSelector';
+import { CaseSelector } from '@/components/appointments/CaseSelector';
 interface CreateNoteMultiModalProps {
   open: boolean;
   onClose: () => void;
@@ -24,8 +26,7 @@ interface NoteFormData {
   title: string;
   content?: string;
   case_id?: string;
-  client_id?: string;
-  contact_id?: string;
+  client_contact_id?: string;
   visibility: 'private' | 'team';
   color: 'yellow' | 'blue' | 'green' | 'red' | 'gray';
   tags: string[];
@@ -67,56 +68,11 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
       color: 'gray',
       tags: [],
       case_id: caseId || 'no-case',
-      client_id: clientId || 'no-client',
-      contact_id: 'no-contact'
+      client_contact_id: clientId || ''
     }
   });
   const watchedTags = watch('tags') || [];
-
-  // Fetch cases for linking
-  const {
-    data: cases = []
-  } = useQuery({
-    queryKey: ['cases-for-notes'],
-    queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from('cases').select('id, case_title').eq('status', 'pending').order('case_title');
-      if (error) throw error;
-      return data || [];
-    }
-  });
-
-  // Fetch clients for linking
-  const {
-    data: clients = []
-  } = useQuery({
-    queryKey: ['clients-for-notes'],
-    queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from('clients').select('id, full_name').order('full_name');
-      if (error) throw error;
-      return data || [];
-    }
-  });
-
-  // Fetch contacts for linking
-  const {
-    data: contacts = []
-  } = useQuery({
-    queryKey: ['contacts-for-notes'],
-    queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from('contacts').select('id, name').order('name');
-      if (error) throw error;
-      return data || [];
-    }
-  });
+  const watchedClientContactId = watch('client_contact_id');
   const createNoteMutation = useMutation({
     mutationFn: async (data: NoteFormData) => {
       const user = await supabase.auth.getUser();
@@ -142,12 +98,31 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
       if (drawingData && !finalContent.trim()) {
         finalContent = '[Drawing attached]';
       }
+
+      // Determine if client_contact_id is a client or contact
+      let clientId = null;
+      let contactId = null;
+      
+      if (data.client_contact_id) {
+        const { data: client } = await supabase
+          .from('clients')
+          .select('id')
+          .eq('id', data.client_contact_id)
+          .maybeSingle();
+        
+        if (client) {
+          clientId = data.client_contact_id;
+        } else {
+          contactId = data.client_contact_id;
+        }
+      }
+
       const noteData = {
         title: data.title,
         content: finalContent || null,
         case_id: data.case_id === 'no-case' ? null : data.case_id,
-        client_id: data.client_id === 'no-client' ? null : data.client_id || null,
-        contact_id: data.contact_id === 'no-contact' ? null : data.contact_id || null,
+        client_id: clientId,
+        contact_id: contactId,
         visibility: data.visibility,
         color: data.color,
         tags: data.tags,
@@ -417,52 +392,23 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
               <Label htmlFor="case_id" className="text-sm font-medium text-gray-700">
                 Link to Case (Optional) {caseId && <span className="text-green-600 text-xs">(Auto-linked)</span>}
               </Label>
-              <Select onValueChange={value => setValue('case_id', value)} defaultValue={caseId || 'no-case'}>
-                <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                  <SelectValue placeholder="Select a case..." />
-                </SelectTrigger>
-                <SelectContent className="bg-white border border-gray-200 shadow-lg max-h-60">
-                  <SelectItem value="no-case">No case</SelectItem>
-                  {cases.map(caseItem => <SelectItem key={caseItem.id} value={caseItem.id}>
-                      {caseItem.case_title}
-                    </SelectItem>)}
-                </SelectContent>
-              </Select>
+              <CaseSelector
+                value={watch('case_id') || ''}
+                onValueChange={value => setValue('case_id', value)}
+                placeholder="Select a case..."
+              />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="client_id" className="text-sm font-medium text-gray-700">
-                Link to Client (Optional) {clientId && <span className="text-green-600 text-xs">(Auto-linked)</span>}
+              <Label htmlFor="client_contact_id" className="text-sm font-medium text-gray-700">
+                Link to Client/Contact (Optional) {clientId && <span className="text-green-600 text-xs">(Auto-linked)</span>}
               </Label>
-              <Select onValueChange={value => setValue('client_id', value)} defaultValue={clientId || 'no-client'}>
-                <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                  <SelectValue placeholder="Select a client..." />
-                </SelectTrigger>
-                <SelectContent className="bg-white border border-gray-200 shadow-lg max-h-60">
-                  <SelectItem value="no-client">No client</SelectItem>
-                  {clients.map(client => <SelectItem key={client.id} value={client.id}>
-                      {client.full_name}
-                    </SelectItem>)}
-                </SelectContent>
-              </Select>
+              <ClientSelector
+                value={watchedClientContactId || ''}
+                onValueChange={value => setValue('client_contact_id', value)}
+                placeholder="Select client or contact..."
+              />
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="contact_id" className="text-sm font-medium text-gray-700">
-              Link to Contact (Optional)
-            </Label>
-            <Select onValueChange={value => setValue('contact_id', value)} defaultValue="no-contact">
-              <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                <SelectValue placeholder="Select a contact..." />
-              </SelectTrigger>
-              <SelectContent className="bg-white border border-gray-200 shadow-lg max-h-60">
-                <SelectItem value="no-contact">No contact</SelectItem>
-                {contacts.map(contact => <SelectItem key={contact.id} value={contact.id}>
-                    {contact.name}
-                  </SelectItem>)}
-              </SelectContent>
-            </Select>
           </div>
 
           <div className="space-y-2">
