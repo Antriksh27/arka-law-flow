@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -52,7 +52,9 @@ export default function CaseDetailEnhanced() {
     id: string;
   }>();
   const isMobile = useIsMobile();
-  const [activeTab, setActiveTab] = useState('details');
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get('tab') || 'details';
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -62,6 +64,14 @@ export default function CaseDetailEnhanced() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  // Sync active tab with URL query parameter
+  useEffect(() => {
+    const tabFromUrl = searchParams.get('tab');
+    if (tabFromUrl && tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [searchParams]);
 
   // Fetch case data
   const {
