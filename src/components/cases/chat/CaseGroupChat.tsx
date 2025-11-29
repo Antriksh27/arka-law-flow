@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CometChatMessageList } from '@cometchat/chat-uikit-react';
+import { CometChatMessageList, CometChatMessageComposer } from '@cometchat/chat-uikit-react';
 import { useCaseGroupChat } from '@/hooks/useCaseGroupChat';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -51,7 +51,7 @@ export const CaseGroupChat: React.FC<CaseGroupChatProps> = ({ caseId, caseName }
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-h-[400px]">
       {/* Header */}
       <Card className="mb-4 p-4 rounded-xl border border-border bg-card">
         <div className="flex items-center justify-between">
@@ -79,10 +79,13 @@ export const CaseGroupChat: React.FC<CaseGroupChatProps> = ({ caseId, caseName }
       </Card>
 
       {/* CometChat Messages UI */}
-      <div className="flex-1 rounded-xl overflow-hidden border border-border bg-background">
-        <CometChatMessageList
-          group={group}
-        />
+      <div className="flex-1 flex flex-col rounded-xl overflow-hidden border border-border bg-background min-h-0">
+        <div className="flex-1 overflow-auto">
+          <CometChatMessageList group={group} />
+        </div>
+        <div className="border-t border-border">
+          <CometChatMessageComposer group={group} />
+        </div>
       </div>
 
       {/* Manage Participants Dialog */}
