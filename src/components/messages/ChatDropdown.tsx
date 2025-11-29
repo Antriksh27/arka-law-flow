@@ -136,7 +136,14 @@ export const ChatDropdown = () => {
   const handleChatClick = async (chat: Chat) => {
     await markAsRead(chat);
     setOpen(false);
-    navigate('/chat');
+    
+    // Check if this is a case group chat
+    if (chat.id.startsWith('case_group_')) {
+      const caseId = chat.id.replace('case_group_', '');
+      navigate(`/cases/${caseId}?tab=chat`);
+    } else {
+      navigate('/chat');
+    }
   };
 
   const handleViewAll = () => {
