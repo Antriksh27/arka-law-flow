@@ -112,6 +112,30 @@ export default function CaseDetailEnhanced() {
     enabled: !!id
   });
 
+  // Fetch last hearing for this case
+  const {
+    data: lastHearing
+  } = useQuery({
+    queryKey: ['last-hearing', id],
+    queryFn: async () => {
+      const today = new Date().toISOString().split('T')[0];
+      const {
+        data,
+        error
+      } = await supabase
+        .from('case_hearings')
+        .select('hearing_date')
+        .eq('case_id', id as string)
+        .lt('hearing_date', today)
+        .order('hearing_date', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id
+  });
+
   // Unified LegalKart/eCourt data via hook
   const {
     legalkartCase,
@@ -344,6 +368,9 @@ export default function CaseDetailEnhanced() {
                   <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                     <div>
                       <span className="font-medium">Reference No:</span> {caseData.reference_number || 'N/A'}
+                    </div>
+                    <div>
+                      <span className="font-medium">Last Hearing:</span> {lastHearing?.hearing_date ? TimeUtils.formatDate(lastHearing.hearing_date, 'dd/MM/yyyy') : 'N/A'}
                     </div>
                     <div>
                       <span className="font-medium">Next Hearing:</span> {caseData.next_hearing_date ? TimeUtils.formatDate(caseData.next_hearing_date, 'dd/MM/yyyy') : 'N/A'}
