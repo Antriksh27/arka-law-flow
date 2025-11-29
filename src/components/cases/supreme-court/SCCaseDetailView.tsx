@@ -19,9 +19,6 @@ import { NotesTab } from '../detail/tabs/NotesTab';
 import { TasksTab } from '../detail/tabs/TasksTab';
 import { DocumentsTab } from '../detail/tabs/DocumentsTab';
 import { CaseChatTab } from '../detail/tabs/CaseChatTab';
-import { ExpensesTab } from '../detail/tabs/ExpensesTab';
-import { InvoicesTab } from '../detail/tabs/InvoicesTab';
-import { PaymentsTab } from '../detail/tabs/PaymentsTab';
 import { TimelineTab } from '../detail/tabs/TimelineTab';
 import { LawyersTab } from '../detail/tabs/LawyersTab';
 import { RelatedMattersTab } from '../detail/tabs/RelatedMattersTab';
@@ -308,9 +305,6 @@ export function SCCaseDetailView({
     { value: 'tasks', label: 'Tasks', icon: CheckSquare },
     { value: 'documents', label: 'Documents', icon: File },
     { value: 'chat', label: 'Chat', icon: MessageSquare },
-    { value: 'expenses', label: 'Expenses', icon: FileText },
-    { value: 'invoices', label: 'Invoices', icon: FileText },
-    { value: 'payments', label: 'Payments', icon: FileText },
     { value: 'timeline', label: 'Timeline', icon: Calendar },
     { value: 'lawyers', label: 'Lawyers', icon: Users },
     { value: 'related', label: 'Related Matters', icon: Scale },
@@ -636,18 +630,6 @@ export function SCCaseDetailView({
 
             <TabsContent value="chat" className={isMobile ? 'p-4' : 'p-6'}>
               <CaseChatTab caseId={caseId} />
-            </TabsContent>
-
-            <TabsContent value="expenses" className={isMobile ? 'p-4' : 'p-6'}>
-              <ExpensesTab caseId={caseId} />
-            </TabsContent>
-
-            <TabsContent value="invoices" className={isMobile ? 'p-4' : 'p-6'}>
-              <InvoicesTab caseId={caseId} />
-            </TabsContent>
-
-            <TabsContent value="payments" className={isMobile ? 'p-4' : 'p-6'}>
-              <PaymentsTab caseId={caseId} />
             </TabsContent>
 
             <TabsContent value="timeline" className={isMobile ? 'p-4' : 'p-6'}>

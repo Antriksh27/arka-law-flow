@@ -10,7 +10,6 @@ import { BookingPage } from './pages/BookingPage';
 import { LawyerSelection } from './pages/LawyerSelection';
 import { Toaster } from './components/ui/toaster';
 import { BookRedirect } from './pages/BookRedirect';
-import ZohoCallback from './pages/ZohoCallback';
 
 // Lazy load heavy components for better performance
 const CaseDetailEnhanced = lazy(() => import('./pages/CaseDetailEnhanced'));
@@ -96,9 +95,6 @@ function AppRoutes() {
               
               {/* Auth route */}
               <Route path="/auth" element={<Auth />} />
-              
-              {/* Zoho OAuth callback */}
-              <Route path="/zoho/callback" element={<ZohoCallback />} />
               
               {/* Enhanced case details route */}
               <Route path="/cases/:id/legalkart-details" element={

@@ -67,13 +67,6 @@ const navigationItems = [
     iconColor: "text-teal-500",
   },
   {
-    label: "Invoices",
-    href: "/invoices",
-    icon: Receipt,
-    gradient: "radial-gradient(circle, rgba(244,63,94,0.15) 0%, rgba(225,29,72,0.06) 50%, rgba(190,18,60,0) 100%)",
-    iconColor: "text-rose-500",
-  },
-  {
     label: "Team",
     href: "/team",
     icon: UsersRound,

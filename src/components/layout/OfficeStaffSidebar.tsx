@@ -25,10 +25,6 @@ const menuItems = [{
   href: '/tasks',
   icon: CheckSquare
 }, {
-  name: 'Invoices',
-  href: '/invoices',
-  icon: Receipt
-}, {
   name: 'Chat',
   href: '/chat',
   icon: MessageSquareText

@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { EditClientDialog } from './EditClientDialog';
-import { EngagementLetterDialog } from './EngagementLetterDialog';
 import { AddCaseDialog } from '../cases/AddCaseDialog';
 import { Badge } from '@/components/ui/badge';
 import { User, Mail, Phone, MapPin, Building, UserCheck, Users, Edit, Plus, FileText, UserCog, Star } from 'lucide-react';
@@ -22,7 +21,6 @@ export const ClientInfoSidebar: React.FC<ClientInfoSidebarProps> = ({
   } = useAuth();
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showAddCaseDialog, setShowAddCaseDialog] = useState(false);
-  const [showEngagementLetterDialog, setShowEngagementLetterDialog] = useState(false);
 
   return <div className="space-y-6">
       {/* Quick Actions */}
@@ -43,11 +41,6 @@ export const ClientInfoSidebar: React.FC<ClientInfoSidebarProps> = ({
               Add Case
             </Button>
           </div>
-          
-          <Button size="sm" variant="outline" onClick={() => setShowEngagementLetterDialog(true)} className="w-full border-blue-200 text-blue-700 hover:bg-blue-50">
-            <FileText className="w-4 h-4 mr-2" />
-            Engagement Letter
-          </Button>
         </CardContent>
       </Card>
 
@@ -154,7 +147,5 @@ export const ClientInfoSidebar: React.FC<ClientInfoSidebarProps> = ({
       {showEditDialog && <EditClientDialog open={showEditDialog} onOpenChange={setShowEditDialog} client={client} onSuccess={onUpdate} />}
 
       {showAddCaseDialog && <AddCaseDialog open={showAddCaseDialog} onClose={() => setShowAddCaseDialog(false)} preSelectedClientId={client.id} />}
-
-      {showEngagementLetterDialog && <EngagementLetterDialog open={showEngagementLetterDialog} onClose={() => setShowEngagementLetterDialog(false)} clientId={client.id} clientName={client.full_name} />}
     </div>;
 };

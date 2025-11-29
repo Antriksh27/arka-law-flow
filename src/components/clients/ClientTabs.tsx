@@ -10,7 +10,6 @@ import { ClientAppointments } from './ClientAppointments';
 import { ClientDocuments } from './ClientDocuments';
 import { ClientNotes } from './ClientNotes';
 import { ClientTasks } from './ClientTasks';
-import { ClientBilling } from './ClientBilling';
 import { ClientEmails } from './ClientEmails';
 import { ClientTimeline } from './ClientTimeline';
 import { ClientQuickActions } from './ClientQuickActions';
@@ -73,10 +72,6 @@ export const ClientTabs: React.FC<ClientTabsProps> = ({
     value: 'notes',
     label: 'Notes',
     icon: StickyNote
-  }, {
-    value: 'billing',
-    label: 'Billing',
-    icon: DollarSign
   }, {
     value: 'emails',
     label: 'Emails',
@@ -180,9 +175,6 @@ export const ClientTabs: React.FC<ClientTabsProps> = ({
           </TabsContent>
           <TabsContent value="notes" className="m-0">
             <ClientNotes clientId={clientId} />
-          </TabsContent>
-          <TabsContent value="billing" className="m-0">
-            <ClientBilling clientId={clientId} />
           </TabsContent>
           <TabsContent value="emails" className="m-0">
             <ClientEmails clientId={clientId} />

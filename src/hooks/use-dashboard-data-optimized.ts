@@ -19,7 +19,6 @@ interface DashboardData {
   myNotes: any[];
   teamMembers: any[];
   recentActivity: any[];
-  revenue: { outstanding: number; collected: number; total: number };
   recentDocuments: any[];
   todayAppointments: any[];
   upcomingHearings: any[];
@@ -64,7 +63,6 @@ const fetchDashboardData = async (firmId: string, userId: string, role: string) 
     { data: myTasks },
     { data: myNotes },
     { data: teamMembers },
-    { data: revenueData },
     { data: recentDocuments },
     { data: todayAppointments },
     { data: upcomingHearings },
@@ -85,7 +83,6 @@ const fetchDashboardData = async (firmId: string, userId: string, role: string) 
     supabase.from('tasks').select('title, priority, due_date').eq('assigned_to', userId).neq('status', 'completed').order('due_date', { ascending: true }).limit(3),
     supabase.from('notes_v2').select('id, title, content, created_at, color').eq('created_by', userId).eq('is_pinned', true).order('updated_at', { ascending: false }).limit(4),
     supabase.from('team_members').select('full_name, role').eq('firm_id', firmId).limit(5),
-    supabase.from('invoices').select('status, total_amount').eq('firm_id', firmId),
     supabase.from('documents').select('file_name, file_type, uploaded_at, id').eq('firm_id', firmId).order('uploaded_at', { ascending: false }).limit(2),
     supabase.from('appointments').select('id, appointment_date, appointment_time, status, title, clients(full_name)').eq('firm_id', firmId).eq('appointment_date', format(today, 'yyyy-MM-dd')).order('appointment_time', { ascending: true }).limit(50),
     supabase.from('case_hearings').select('id, hearing_date, hearing_time, judge, cases!inner(case_title, firm_id)').eq('cases.firm_id', firmId).gte('hearing_date', format(startOfToday, 'yyyy-MM-dd')).lte('hearing_date', format(endOfToday, 'yyyy-MM-dd')).order('hearing_date', { ascending: true }).limit(50),
@@ -95,19 +92,6 @@ const fetchDashboardData = async (firmId: string, userId: string, role: string) 
     // @ts-ignore - Type depth warning (safe to ignore)
     supabase.from('case_activities').select('description, created_at, profiles(full_name)').eq('firm_id', firmId).order('created_at', { ascending: false }).limit(2),
   ]);
-
-  // Calculate revenue
-  const revenue = { outstanding: 0, collected: 0, total: 0 };
-  if (revenueData) {
-    revenueData.forEach(inv => {
-      if (inv.status === 'paid' && inv.total_amount) {
-        revenue.collected += inv.total_amount;
-      } else if ((inv.status === 'sent' || inv.status === 'overdue') && inv.total_amount) {
-        revenue.outstanding += inv.total_amount;
-      }
-    });
-    revenue.total = revenue.collected + revenue.outstanding;
-  }
 
   // Build events by date
   const eventsByDate: { [key: string]: number } = {};
@@ -225,7 +209,6 @@ const fetchDashboardData = async (firmId: string, userId: string, role: string) 
       user: a.profiles?.full_name || 'System',
       time: `${formatDistanceToNow(new Date(a.created_at))} ago`
     })),
-    revenue,
     recentDocuments: (recentDocuments || []).map((d, index) => ({
       id: `doc-${index}`,
       name: d.file_name,

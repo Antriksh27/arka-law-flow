@@ -11,7 +11,6 @@ import { DeleteClientDialog } from './DeleteClientDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useDialog } from '@/hooks/use-dialog';
-import { EngagementLetterDialog } from './EngagementLetterDialog';
 import { SendEmailDialog } from './SendEmailDialog';
 interface ClientQuickActionsProps {
   clientId: string;
@@ -31,7 +30,6 @@ export const ClientQuickActions: React.FC<ClientQuickActionsProps> = ({
   const [showNoteDialog, setShowNoteDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [showEngagementLetterDialog, setShowEngagementLetterDialog] = useState(false);
   const [showEmailDialog, setShowEmailDialog] = useState(false);
   const [clientData, setClientData] = useState<any>(null);
   const {
@@ -78,10 +76,6 @@ export const ClientQuickActions: React.FC<ClientQuickActionsProps> = ({
               <StickyNote className="w-4 h-4 mr-3 text-gray-400" />
               <span>Add Note</span>
             </DropdownMenuItem>
-            <DropdownMenuItem className="hover:bg-gray-50 cursor-pointer" onClick={() => setShowEngagementLetterDialog(true)}>
-              <Mail className="w-4 h-4 mr-3 text-gray-400" />
-              <span>Generate Engagement Letter</span>
-            </DropdownMenuItem>
             <DropdownMenuItem className="hover:bg-gray-50 cursor-pointer" onClick={() => setShowAssignDialog(true)}>
               <Briefcase className="w-4 h-4 mr-3 text-gray-400" />
               <span>Link to Case</span>
@@ -122,11 +116,6 @@ export const ClientQuickActions: React.FC<ClientQuickActionsProps> = ({
       setShowEditDialog(false);
       onAction();
     }} />}
-
-      <EngagementLetterDialog open={showEngagementLetterDialog} onClose={() => {
-      setShowEngagementLetterDialog(false);
-      onAction();
-    }} clientId={clientId} clientName={clientName} />
 
       <SendEmailDialog open={showEmailDialog} onClose={() => setShowEmailDialog(false)} clientEmail={clientEmail} clientName={clientName} />
 
