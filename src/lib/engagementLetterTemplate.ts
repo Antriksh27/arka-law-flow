@@ -61,7 +61,7 @@ export function generateEngagementLetter(data: EngagementLetterData): string {
         .subject {
           font-weight: bold;
           margin: 20px 0;
-          text-decoration: underline;
+          text-align: center;
         }
         .content {
           text-align: justify;
@@ -74,13 +74,30 @@ export function generateEngagementLetter(data: EngagementLetterData): string {
           margin-top: 20px;
           margin-bottom: 10px;
         }
+        .content ul {
+          list-style-type: disc;
+          margin-left: 40px;
+          margin-bottom: 15px;
+        }
+        .content ol {
+          margin-left: 40px;
+          margin-bottom: 15px;
+        }
+        .content li {
+          margin-bottom: 10px;
+        }
         .signature {
           margin-top: 40px;
         }
         .signature-line {
           border-top: 1px solid #000;
-          width: 200px;
+          width: 250px;
           margin-top: 60px;
+        }
+        .acknowledgment {
+          margin-top: 60px;
+          border-top: 2px solid #000;
+          padding-top: 20px;
         }
       </style>
     </head>
@@ -90,86 +107,108 @@ export function generateEngagementLetter(data: EngagementLetterData): string {
       </div>
 
       <div class="date">
-        <strong>Date:</strong> ${formattedDate}
+        ${formattedDate}
       </div>
 
       <div class="recipient">
-        <strong>To:</strong><br>
         ${data.clientName}${data.clientAddress ? '<br>' + data.clientAddress.split('\n').join('<br>') : ''}
       </div>
 
-      <div class="subject" style="text-align: center;">
-        Subject: Engagement Letter for Legal Services
+      <div class="subject">
+        Subject: Engagement for Legal Services
       </div>
 
       <div class="content">
         <p>Dear ${data.clientName},</p>
 
         <p>
-          Thank you for choosing ${data.firmName} to represent you in your legal matter. 
-          This letter confirms our agreement and outlines the terms and conditions of our engagement.
+          This letter confirms that ${data.clientName} ("the Client") has engaged ${data.firmName} ("the Firm") to provide legal services in connection with ${data.matterDescription}.
+        </p>
+
+        <p>
+          This Engagement Letter, and the attached Engagement Agreement, which is incorporated herein by reference, set forth the terms of our engagement. Please review these documents carefully and contact us if you have any questions.
         </p>
 
         <div class="section-title">1. Scope of Work</div>
-        <p>
-          We agree to represent you in connection with: <strong>${data.matterDescription}</strong>. 
-          Our services will include, but are not limited to, legal advice, document preparation, court appearances, 
-          and negotiation on your behalf as required for this matter.
-        </p>
-
-        <div class="section-title">2. Fees and Billing</div>
-        <p>
-          Our fees will be based on the time spent on your matter, the complexity of the issues involved, 
-          and the results achieved. We will provide you with detailed invoices on a regular basis. 
-          Payment is due within 30 days of the invoice date.
-        </p>
-        <p>
-          In addition to professional fees, you will be responsible for reimbursing us for any out-of-pocket 
-          expenses incurred on your behalf, including court filing fees, expert witness fees, travel expenses, 
-          and other necessary costs related to your case.
-        </p>
-
-        <div class="section-title">3. Client Responsibilities</div>
-        <p>
-          To enable us to represent you effectively, we ask that you:
-        </p>
-        <ul style="list-style-type: disc; margin-left: 20px;">
-          <li>Provide us with all relevant information and documents promptly</li>
-          <li>Respond to our communications in a timely manner</li>
-          <li>Keep us informed of any changes in your circumstances that may affect your case</li>
-          <li>Be truthful and accurate in all information provided to us</li>
+        <p>The Firm will provide the following legal services:</p>
+        <ul>
+          <li>
+            <strong>Legal Consultation and advice:</strong><br>
+            Offering guidance to clients on their legal rights, responsibilities and options in various situations.
+          </li>
+          <li>
+            <strong>Documentation preparation and review:</strong><br>
+            Drafting, reviewing and negotiating various legal documents, including contracts, wills leases, agreements and corporate documents like articles of association or incorporation etc.
+          </li>
+          <li>
+            <strong>Clients' representation:</strong><br>
+            Acting on behalf of the clients in legal proceedings which includes negotiations, mediation, arbitration and court appearances for litigations.
+          </li>
+          <li>
+            <strong>Legal Research and Analysis:</strong><br>
+            Conducting in depth research in to relevant laws, regulations and case precedents to support clients matters and develops sound legal strategies.
+          </li>
+          <li>
+            <strong>Alternative Dispute Resolution (ADR):</strong><br>
+            Assisting clients in resolving disputes outside the Courts through the methods like mediation and arbitration.
+          </li>
+          <li>
+            Any additional services that may be ancillary to the aforestated services, which shall be necessary to resolve the case of the clients. The Law firm also shall provide any other separate additional services that may be required by the clients, however, the same shall be subject to a separate written agreement based on separately agreed terms and conditions for the said scop.
+          </li>
         </ul>
 
-        <div class="section-title">4. Communication</div>
-        <p>
-          We will keep you informed about the progress of your matter and will respond to your inquiries promptly. 
-          You may contact us at any time during business hours${data.lawyerPhone ? ' at ' + data.lawyerPhone + ' or' : ''} via email at ${data.lawyerEmail || 'our office'}.
-        </p>
+        <div class="section-title">2. Fees and Billing</div>
+        <ul>
+          <li>
+            The fee structure module that our law firm adopts varied fee structure to suit the need of every client and the same is subjective. The same is over and above our terms and conditions shall be as under:
+            <ol>
+              <li>50% Advance</li>
+              <li>25% upon filing of the matter</li>
+              <li>25% on first hearing.</li>
+            </ol>
+          </li>
+          <li>
+            Irrespective of this fees structure, that may be adopted out of the aforestated options, the client shall be bound by the aforesaid payment structure that shall pe adopted qua the professional fees and the said terms and conditions qua the payment structure is to be agreed upon by the client unconditionally.
+          </li>
+          <li>
+            In addition to the aforesaid professional fees, the actual expenses that shall be charged on actual basis over and above professional fees shall be payable by the client immediately on raising the invoice quarterly.
+          </li>
+        </ul>
 
-        <div class="section-title">5. Termination of Services</div>
-        <p>
-          Either party may terminate this engagement at any time by providing written notice. 
-          Upon termination, you will be responsible for payment of all fees and expenses incurred up to the date of termination.
-        </p>
+        <div class="section-title">3. Client Responsibilities</div>
+        <p>To effectively represent you, we require your full cooperation. You agree to:</p>
+        <ul>
+          <li>Provide all necessary information and documentation promptly.</li>
+          <li>Communicate with us openly and honestly.</li>
+          <li>Attend any required meetings, court appearances, or depositions.</li>
+          <li>Make timely payments for our services as outlined above.</li>
+        </ul>
+        <p>Failure to meet these responsibilities may result in delays or termination of our representation.</p>
 
-        <div class="section-title">6. Confidentiality</div>
-        <p>
-          All information you provide to us will be kept strictly confidential in accordance with professional 
-          ethics and applicable laws. We will not disclose any information about your case without your express consent, 
-          except as required by law or court order.
-        </p>
+        <div class="section-title">4. Termination</div>
+        <ul>
+          <li>
+            You may terminate our services at any time by providing 7 days advance written notice. In the event of termination by you, the firm shall not be responsible and liable for refund of any of the payments made to the firm as against either professional fees or against the expenses. The firm also shall be entitled to withdraw from the representation towards the clients under certain circumstances, such non-payment of fees, a breakdown in communication or any other reasons listed under the Advocate's Act or Bar Council of India or Professional Conduct Rules.
+          </li>
+          <li>
+            In the event of termination, we will provide reasonable notice and ensure that you have the opportunity to secure alternative representation.
+          </li>
+          <li>
+            Upon termination, any unpaid fees or costs will be due immediately. We will return all original documents to you, and you may request copies of your case file for your records.
+          </li>
+        </ul>
 
-        <div class="section-title">7. Agreement</div>
+        <div class="section-title">5. Conclusion</div>
         <p>
-          If the terms outlined in this letter are acceptable to you, please sign and return a copy of this letter 
-          to confirm your agreement. If you have any questions or concerns, please do not hesitate to contact us.
+          We are committed to providing you with high-quality legal services and clear communication throughout the course of our representation. Please sign and return a copy of this engagement letter to indicate your agreement with these terms.
         </p>
-
-        <p>We look forward to working with you on this matter.</p>
+        <p>
+          If you have any questions or concerns, feel free to reach out to me${data.lawyerPhone ? ' at ' + data.lawyerPhone : ''}${data.lawyerEmail ? (data.lawyerPhone ? ' or ' : ' at ') + data.lawyerEmail : ''}. We look forward to working with you.
+        </p>
 
         <div class="signature">
           <p>Sincerely,</p>
-          <div class="signature-line"></div>
+          <br>
           <p>
             <strong>${data.lawyerName}</strong><br>
             ${data.firmName}<br>
@@ -178,19 +217,18 @@ export function generateEngagementLetter(data: EngagementLetterData): string {
           </p>
         </div>
 
-        <div style="margin-top: 60px; border-top: 2px solid #000; padding-top: 20px;">
-          <p><strong>Client Acknowledgment</strong></p>
+        <div class="acknowledgment">
+          <p><strong>Acknowledgment of Agreement</strong></p>
           <p>
-            I have read and understood the terms of this engagement letter and agree to be bound by them.
+            I, ${data.clientName}, have read, understand, and agree to the terms outlined in this engagement letter.
           </p>
-          <div class="signature">
-            <div class="signature-line"></div>
-            <p>
-              <strong>Client Signature</strong><br>
-              Name: ${data.clientName}<br>
-              Date: _________________
-            </p>
-          </div>
+          <br>
+          <p>
+            Signature: ___________________________
+          </p>
+          <p>
+            Date: ___________________________
+          </p>
         </div>
       </div>
     </body>
