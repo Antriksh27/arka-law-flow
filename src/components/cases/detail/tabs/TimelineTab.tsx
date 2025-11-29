@@ -57,10 +57,16 @@ export const TimelineTab: React.FC<TimelineTabProps> = ({ caseData, legalkartDat
   if (hearings && hearings.length > 0) {
     hearings.forEach((hearing) => {
       if (hearing.hearing_date) {
+        // Filter out JSON/bracketed content from business_on_date
+        let description = hearing.purpose || 'Hearing scheduled';
+        if (hearing.business_on_date && !hearing.business_on_date.includes('{') && !hearing.business_on_date.includes('[')) {
+          description = hearing.business_on_date;
+        }
+        
         timelineEvents.push({
           date: hearing.hearing_date,
           title: 'Hearing',
-          description: hearing.business_on_date || hearing.purpose || 'Hearing scheduled',
+          description: description,
           icon: <Scale className="h-3 w-3" />,
         });
       }
