@@ -156,12 +156,27 @@ export function GenerateEngagementLetterDialog({
         });
         return;
       }
+      
+      // Check if all required data is loaded
+      if (!clientData || !lawyerData || !firmData) {
+        toast({
+          title: 'Loading Data',
+          description: 'Please wait while we load all required information.',
+          variant: 'destructive'
+        });
+        return;
+      }
+      
       generateLetter();
       setStep(3);
     }
   };
   const generateLetter = () => {
-    if (!clientData || !lawyerData || !firmData) return;
+    if (!clientData || !lawyerData || !firmData) {
+      console.error('Missing data for letter generation:', { clientData, lawyerData, firmData });
+      return;
+    }
+    
     const letterHTML = generateEngagementLetter({
       date: new Date(),
       clientName: clientData.full_name,
@@ -173,6 +188,8 @@ export function GenerateEngagementLetterDialog({
       firmName: firmData.name,
       firmAddress: firmData.address || 'Address not provided'
     });
+    
+    console.log('Generated letter HTML length:', letterHTML.length);
     setGeneratedHTML(letterHTML);
   };
   const handlePrint = () => {
@@ -267,11 +284,17 @@ export function GenerateEngagementLetterDialog({
             </div>}
 
           {step === 3 && <div className="space-y-4 py-4">
-              <ScrollArea className="h-[500px] w-full border rounded-md">
-                <div className="p-6" dangerouslySetInnerHTML={{
-              __html: generatedHTML
-            }} />
-              </ScrollArea>
+              {!generatedHTML ? (
+                <div className="flex items-center justify-center h-[500px] w-full border rounded-md">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : (
+                <ScrollArea className="h-[500px] w-full border rounded-md bg-white">
+                  <div className="p-6" dangerouslySetInnerHTML={{
+                    __html: generatedHTML
+                  }} />
+                </ScrollArea>
+              )}
             </div>}
 
           <DialogFooter className="flex justify-between items-center">
