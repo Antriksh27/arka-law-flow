@@ -100,7 +100,7 @@ export const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
                 >
                   {hasNotification && (
                     <motion.div
-                      className="absolute -top-0.5 -right-0.5 z-20 h-2 w-2 rounded-full bg-destructive"
+                      className="absolute top-0.5 -right-0.5 z-20 h-2 w-2 rounded-full bg-destructive"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       exit={{ scale: 0 }}
