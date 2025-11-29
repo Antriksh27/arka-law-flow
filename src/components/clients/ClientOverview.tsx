@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Plus, FileText, Calendar, Briefcase, DollarSign } from 'lucide-react';
+import { Plus, FileText, Calendar, Briefcase } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { TimeUtils } from '@/lib/timeUtils';
 interface ClientOverviewProps {
@@ -18,25 +18,20 @@ export const ClientOverview: React.FC<ClientOverviewProps> = ({
   } = useQuery({
     queryKey: ['client-stats', clientId],
     queryFn: async () => {
-      const [casesResult, appointmentsResult, documentsResult, invoicesResult] = await Promise.all([
+      const [casesResult, appointmentsResult, documentsResult] = await Promise.all([
         supabase.from('cases').select('id, status').eq('client_id', clientId),
         supabase.from('appointments').select('id, status').eq('client_id', clientId),
-        supabase.from('documents').select('id').eq('client_id', clientId),
-        supabase.from('invoices').select('id, total_amount, status').eq('client_id', clientId)
+        supabase.from('documents').select('id').eq('client_id', clientId)
       ]);
       const activeCases = casesResult.data?.filter(c => c.status === 'pending').length || 0;
       const totalCases = casesResult.data?.length || 0;
       const upcomingAppointments = appointmentsResult.data?.filter(a => a.status === 'upcoming' || a.status === 'confirmed').length || 0;
       const totalDocuments = documentsResult.data?.length || 0;
-      const totalInvoices = invoicesResult.data?.length || 0;
-      const pendingInvoices = invoicesResult.data?.filter(i => i.status === 'sent').length || 0;
       return {
         activeCases,
         totalCases,
         upcomingAppointments,
-        totalDocuments,
-        totalInvoices,
-        pendingInvoices
+        totalDocuments
       };
     }
   });
@@ -82,13 +77,6 @@ export const ClientOverview: React.FC<ClientOverviewProps> = ({
     icon: FileText,
     color: 'text-purple-600',
     bgColor: 'bg-purple-50'
-  }, {
-    title: 'Pending Invoices',
-    value: clientStats?.pendingInvoices || 0,
-    total: clientStats?.totalInvoices || 0,
-    icon: DollarSign,
-    color: 'text-orange-600',
-    bgColor: 'bg-orange-50'
   }];
   return <div className="space-y-6">
       {/* Header */}
@@ -98,7 +86,7 @@ export const ClientOverview: React.FC<ClientOverviewProps> = ({
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {stats.map((stat, index) => {
         const IconComponent = stat.icon;
         return <Card key={index} className="p-4">

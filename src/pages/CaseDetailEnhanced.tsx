@@ -28,9 +28,6 @@ import { DocumentsTab } from '@/components/cases/detail/tabs/DocumentsTab';
 import { NotesTab } from '@/components/cases/detail/tabs/NotesTab';
 import { TasksTab } from '@/components/cases/detail/tabs/TasksTab';
 import { ContactTab } from '@/components/cases/detail/tabs/CaseContactsTab';
-import { ExpensesTab } from '@/components/cases/detail/tabs/ExpensesTab';
-import { InvoicesTab } from '@/components/cases/detail/tabs/InvoicesTab';
-import { PaymentsTab } from '@/components/cases/detail/tabs/PaymentsTab';
 import { TimelineTab } from '@/components/cases/detail/tabs/TimelineTab';
 import { RelatedMattersTab } from '@/components/cases/detail/tabs/RelatedMattersTab';
 import { LawyersTab } from '@/components/cases/detail/tabs/LawyersTab';
@@ -214,18 +211,6 @@ export default function CaseDetailEnhanced() {
     value: 'chat',
     label: 'Chat',
     icon: MessageSquare
-  }, {
-    value: 'expenses',
-    label: 'Expenses',
-    icon: FileText
-  }, {
-    value: 'invoices',
-    label: 'Invoices',
-    icon: FileText
-  }, {
-    value: 'payments',
-    label: 'Payments',
-    icon: FileText
   }, {
     value: 'timeline',
     label: 'Timeline',
@@ -469,15 +454,6 @@ export default function CaseDetailEnhanced() {
             </TabsContent>
             <TabsContent value="chat" className="m-0">
               <CaseChatTab caseId={id!} />
-            </TabsContent>
-            <TabsContent value="expenses" className="m-0">
-              <ExpensesTab caseId={id!} />
-            </TabsContent>
-            <TabsContent value="invoices" className="m-0">
-              <InvoicesTab caseId={id!} />
-            </TabsContent>
-            <TabsContent value="payments" className="m-0">
-              <PaymentsTab caseId={id!} />
             </TabsContent>
             <TabsContent value="timeline" className="m-0">
               <TimelineTab caseId={id!} caseData={caseData} legalkartData={legalkartCase} hearings={hearings} />

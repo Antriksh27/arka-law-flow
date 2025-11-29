@@ -20,7 +20,6 @@ const Tasks = lazy(() => import('@/pages/Tasks'));
 const Hearings = lazy(() => import('@/pages/Hearings'));
 const Documents = lazy(() => import('@/pages/Documents'));
 const Notes = lazy(() => import('@/pages/Notes'));
-const Invoices = lazy(() => import('@/pages/Invoices'));
 const Team = lazy(() => import('@/pages/Team'));
 const Availability = lazy(() => import('@/pages/Availability'));
 const ECourts = lazy(() => import('@/pages/ECourts'));
@@ -92,7 +91,6 @@ const RoleBasedRouter = () => {
             <Route path="/hearings" element={<Hearings />} />
             <Route path="/documents" element={<Documents />} />
             <Route path="/tasks" element={<Tasks />} />
-            <Route path="/invoices" element={<Invoices />} />
             <Route path="/appointments" element={<Appointments />} />
             <Route path="/chat" element={<ModernMessenger />} />
             <Route path="*" element={<StaffDashboard />} />
@@ -122,8 +120,6 @@ const RoleBasedRouter = () => {
             <Route path="/notes" element={<Notes />} />
             <Route path="/availability" element={<Availability />} />
             <Route path="/chat" element={<ModernMessenger />} />
-            {/* Redirect invoices to dashboard for juniors */}
-            <Route path="/invoices" element={<Index />} />
             <Route path="/team" element={<Index />} />
             <Route path="/reception/*" element={<Index />} />
             <Route path="*" element={<NotFound />} />
@@ -150,7 +146,6 @@ const RoleBasedRouter = () => {
           <Route path="/hearings" element={<Hearings />} />
           <Route path="/documents" element={<Documents />} />
           <Route path="/notes" element={<Notes />} />
-          <Route path="/invoices" element={<Invoices />} />
           <Route path="/availability" element={<Availability />} />
           <Route path="/team" element={<Team />} />
           <Route path="/chat" element={<ModernMessenger />} />

@@ -13,7 +13,6 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Plus } from 'lucide-react';
-import { EngagementLetterDialog } from './EngagementLetterDialog';
 
 interface AddClientDialogProps {
   open: boolean;
@@ -53,8 +52,6 @@ export const AddClientDialog: React.FC<AddClientDialogProps> = ({
   const [selectedStateId, setSelectedStateId] = useState<string>('');
   const [showAddDistrict, setShowAddDistrict] = useState(false);
   const [newDistrictName, setNewDistrictName] = useState('');
-  const [showEngagementLetter, setShowEngagementLetter] = useState(false);
-  const [newClientId, setNewClientId] = useState<string | null>(null);
   const {
     register,
     handleSubmit,
@@ -208,16 +205,15 @@ export const AddClientDialog: React.FC<AddClientDialogProps> = ({
 
       toast({
         title: "Success",
-        description: "Client added successfully. You can now create an engagement letter."
+        description: "Client added successfully."
       });
       
-      setNewClientId(newClient.id);
       reset();
       setSelectedStateId('');
       setShowAddDistrict(false);
       setNewDistrictName('');
-      setShowEngagementLetter(true);
       onSuccess();
+      onOpenChange(false);
     } catch (error) {
       console.error('Error adding client:', error);
       toast({
@@ -551,18 +547,6 @@ export const AddClientDialog: React.FC<AddClientDialogProps> = ({
           </DialogFooter>
         </form>
       </DialogContent>
-      
-      {showEngagementLetter && newClientId && (
-        <EngagementLetterDialog
-          open={showEngagementLetter}
-          onClose={() => {
-            setShowEngagementLetter(false);
-            setNewClientId(null);
-          }}
-          clientId={newClientId}
-          clientName={getValues('full_name') || 'New Client'}
-        />
-      )}
     </Dialog>
   );
 };

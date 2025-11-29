@@ -41,10 +41,6 @@ const navigationItems = [{
   url: "/documents",
   icon: FileText
 }, {
-  title: "Invoices",
-  url: "/invoices",
-  icon: Receipt
-}, {
   title: "Team",
   url: "/team",
   icon: UsersRound
