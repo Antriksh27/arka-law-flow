@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { SendEmailDialog } from './SendEmailDialog';
 import { generateEngagementLetter } from '@/lib/engagementLetterTemplate';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import html2pdf from 'html2pdf.js';
 interface GenerateEngagementLetterDialogProps {
   open: boolean;
   onClose: () => void;
@@ -41,6 +42,8 @@ export function GenerateEngagementLetterDialog({
   const [selectedLawyerId, setSelectedLawyerId] = useState<string>('');
   const [matterDescription, setMatterDescription] = useState('');
   const [generatedHTML, setGeneratedHTML] = useState('');
+  const [generatingPDF, setGeneratingPDF] = useState(false);
+  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
   const [showEmailDialog, setShowEmailDialog] = useState(false);
 
   // Fetch client details
@@ -201,8 +204,43 @@ export function GenerateEngagementLetterDialog({
       printWindow.print();
     }
   };
-  const handleSendEmail = () => {
-    setShowEmailDialog(true);
+  const handleSendEmail = async () => {
+    if (!pdfBlob) {
+      setGeneratingPDF(true);
+      try {
+        // Create a temporary container for PDF generation
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = generatedHTML;
+        tempDiv.style.position = 'absolute';
+        tempDiv.style.left = '-9999px';
+        document.body.appendChild(tempDiv);
+
+        const opt = {
+          margin: [60, 20, 40, 20] as [number, number, number, number],
+          filename: `Engagement_Letter_${clientName.replace(/\s+/g, '_')}.pdf`,
+          image: { type: 'jpeg' as const, quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+        };
+
+        const blob = await html2pdf().set(opt).from(tempDiv).outputPdf('blob');
+        document.body.removeChild(tempDiv);
+        
+        setPdfBlob(blob);
+        setGeneratingPDF(false);
+        setShowEmailDialog(true);
+      } catch (error) {
+        console.error('Error generating PDF:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to generate PDF. Please try again.',
+          variant: 'destructive'
+        });
+        setGeneratingPDF(false);
+      }
+    } else {
+      setShowEmailDialog(true);
+    }
   };
   const handleClose = () => {
     setStep(1);
@@ -210,6 +248,7 @@ export function GenerateEngagementLetterDialog({
     setSelectedLawyerId('');
     setMatterDescription('');
     setGeneratedHTML('');
+    setPdfBlob(null);
     onClose();
   };
   return <>
@@ -315,9 +354,18 @@ export function GenerateEngagementLetterDialog({
                     <Printer className="w-4 h-4 mr-2" />
                     Print
                   </Button>
-                  <Button onClick={handleSendEmail}>
-                    <Mail className="w-4 h-4 mr-2" />
-                    Send Email
+                  <Button onClick={handleSendEmail} disabled={generatingPDF}>
+                    {generatingPDF ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Generating PDF...
+                      </>
+                    ) : (
+                      <>
+                        <Mail className="w-4 h-4 mr-2" />
+                        Send Email
+                      </>
+                    )}
                   </Button>
                 </>}
             </div>
@@ -325,6 +373,6 @@ export function GenerateEngagementLetterDialog({
         </DialogContent>
       </Dialog>
 
-      {showEmailDialog && clientEmail && <SendEmailDialog open={showEmailDialog} onClose={() => setShowEmailDialog(false)} clientEmail={clientEmail} clientName={clientName} defaultSubject={`Engagement Letter for Legal Services - ${caseData?.case_title || 'Legal Matter'}`} defaultBody={generatedHTML} />}
+      {showEmailDialog && clientEmail && pdfBlob && <SendEmailDialog open={showEmailDialog} onClose={() => setShowEmailDialog(false)} clientEmail={clientEmail} clientName={clientName} defaultSubject={`Engagement Letter for Legal Services - ${caseData?.case_title || 'Legal Matter'}`} defaultBody={`Dear ${clientName},\n\nPlease find attached the engagement letter for legal services.\n\nBest regards,\n${lawyerData?.full_name || ''}\n${firmData?.name || ''}`} pdfAttachment={pdfBlob} pdfFileName={`Engagement_Letter_${clientName.replace(/\s+/g, '_')}.pdf`} />}
     </>;
 }

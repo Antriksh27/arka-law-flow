@@ -15,6 +15,8 @@ interface SendEmailDialogProps {
   clientName: string;
   defaultSubject?: string;
   defaultBody?: string;
+  pdfAttachment?: Blob;
+  pdfFileName?: string;
 }
 
 export const SendEmailDialog: React.FC<SendEmailDialogProps> = ({
@@ -23,7 +25,9 @@ export const SendEmailDialog: React.FC<SendEmailDialogProps> = ({
   clientEmail,
   clientName,
   defaultSubject = '',
-  defaultBody = ''
+  defaultBody = '',
+  pdfAttachment,
+  pdfFileName
 }) => {
   const [subject, setSubject] = useState(defaultSubject);
   const [body, setBody] = useState(defaultBody);
@@ -37,8 +41,14 @@ export const SendEmailDialog: React.FC<SendEmailDialogProps> = ({
     if (open) {
       setSubject(defaultSubject);
       setBody(defaultBody);
+      
+      // Add PDF as attachment if provided
+      if (pdfAttachment && pdfFileName) {
+        const pdfFile = new File([pdfAttachment], pdfFileName, { type: 'application/pdf' });
+        setAttachments([pdfFile]);
+      }
     }
-  }, [open, defaultSubject, defaultBody]);
+  }, [open, defaultSubject, defaultBody, pdfAttachment, pdfFileName]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);

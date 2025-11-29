@@ -22,12 +22,16 @@ export function generateEngagementLetter(data: EngagementLetterData): string {
       <meta charset="utf-8">
       <title>Legal Engagement Letter</title>
       <style>
+        @page {
+          margin-top: 60mm;
+          margin-bottom: 40mm;
+          margin-left: 20mm;
+          margin-right: 20mm;
+        }
         @media print {
           body {
             margin: 0;
-            padding: 20mm;
-            padding-top: 60mm;
-            padding-bottom: 40mm;
+            padding: 0;
           }
           .no-print {
             display: none;
