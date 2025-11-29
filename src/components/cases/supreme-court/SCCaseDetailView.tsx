@@ -18,6 +18,7 @@ import { ContactTab } from '../detail/tabs/CaseContactsTab';
 import { NotesTab } from '../detail/tabs/NotesTab';
 import { TasksTab } from '../detail/tabs/TasksTab';
 import { DocumentsTab } from '../detail/tabs/DocumentsTab';
+import { CaseChatTab } from '../detail/tabs/CaseChatTab';
 import { ExpensesTab } from '../detail/tabs/ExpensesTab';
 import { InvoicesTab } from '../detail/tabs/InvoicesTab';
 import { PaymentsTab } from '../detail/tabs/PaymentsTab';
@@ -25,7 +26,7 @@ import { TimelineTab } from '../detail/tabs/TimelineTab';
 import { LawyersTab } from '../detail/tabs/LawyersTab';
 import { RelatedMattersTab } from '../detail/tabs/RelatedMattersTab';
 import { MobileHeader } from '@/components/mobile/MobileHeader';
-import { FileText, File, Scale, StickyNote, CheckSquare, Users, Calendar, XCircle, AlertCircle, Pencil, RefreshCw } from 'lucide-react';
+import { FileText, File, Scale, StickyNote, CheckSquare, Users, Calendar, XCircle, AlertCircle, Pencil, RefreshCw, MessageSquare } from 'lucide-react';
 import { useState } from 'react';
 
 interface SCCaseDetailViewProps {
@@ -306,6 +307,7 @@ export function SCCaseDetailView({
     { value: 'notes', label: 'Notes', icon: StickyNote },
     { value: 'tasks', label: 'Tasks', icon: CheckSquare },
     { value: 'documents', label: 'Documents', icon: File },
+    { value: 'chat', label: 'Chat', icon: MessageSquare },
     { value: 'expenses', label: 'Expenses', icon: FileText },
     { value: 'invoices', label: 'Invoices', icon: FileText },
     { value: 'payments', label: 'Payments', icon: FileText },
@@ -630,6 +632,10 @@ export function SCCaseDetailView({
 
             <TabsContent value="documents" className={isMobile ? 'p-4' : 'p-6'}>
               <DocumentsTab caseId={caseId} />
+            </TabsContent>
+
+            <TabsContent value="chat" className={isMobile ? 'p-4' : 'p-6'}>
+              <CaseChatTab caseId={caseId} />
             </TabsContent>
 
             <TabsContent value="expenses" className={isMobile ? 'p-4' : 'p-6'}>

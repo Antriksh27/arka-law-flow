@@ -4716,6 +4716,7 @@ export type Database = {
       }
       cleanup_old_sync_queue_items: { Args: never; Returns: undefined }
       client_has_case_access: { Args: { case_id: string }; Returns: boolean }
+      create_case_thread: { Args: { p_case_id: string }; Returns: string }
       create_law_firm_with_admin:
         | {
             Args: {

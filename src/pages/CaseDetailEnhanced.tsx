@@ -16,6 +16,7 @@ import { HeroCard } from '@/components/mobile/HeroCard';
 import { BottomSheet } from '@/components/mobile/BottomSheet';
 import { PullToRefresh } from '@/components/mobile/PullToRefresh';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { MessageSquare } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,6 +44,7 @@ import { CreateTaskDialog } from '@/components/tasks/CreateTaskDialog';
 import { useLegalkartCaseDetails } from '@/hooks/useLegalkartCaseDetails';
 import { FetchCaseDetailsDialog } from '@/components/cases/FetchCaseDetailsDialog';
 import { SCCaseDetailView } from '@/components/cases/supreme-court/SCCaseDetailView';
+import { CaseChatTab } from '@/components/cases/detail/tabs/CaseChatTab';
 export default function CaseDetailEnhanced() {
   const {
     id
@@ -198,6 +200,10 @@ export default function CaseDetailEnhanced() {
     value: 'documents',
     label: 'Documents',
     icon: File
+  }, {
+    value: 'chat',
+    label: 'Chat',
+    icon: MessageSquare
   }, {
     value: 'expenses',
     label: 'Expenses',
@@ -450,6 +456,9 @@ export default function CaseDetailEnhanced() {
             </TabsContent>
             <TabsContent value="documents" className="m-0">
               <DocumentsTab caseId={id!} />
+            </TabsContent>
+            <TabsContent value="chat" className="m-0">
+              <CaseChatTab caseId={id!} />
             </TabsContent>
             <TabsContent value="expenses" className="m-0">
               <ExpensesTab caseId={id!} />
