@@ -23,14 +23,12 @@ export function generateEngagementLetter(data: EngagementLetterData): string {
       <title>Legal Engagement Letter</title>
       <style>
         @page {
-          margin-top: 60mm;
-          margin-bottom: 40mm;
-          margin-left: 20mm;
-          margin-right: 20mm;
+          size: auto;
+          margin: 0mm;
         }
         @media print {
           body {
-            margin: 0;
+            margin: 60mm 20mm 40mm 20mm;
             padding: 0;
           }
           .no-print {
