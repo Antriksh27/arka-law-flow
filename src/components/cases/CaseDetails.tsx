@@ -452,6 +452,16 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
                       <Badge variant="outline" className="font-normal">{sub_category}</Badge>
                     </div>
                   )}
+                  {acts && Array.isArray(acts) && acts.length > 0 && (
+                    <div className="space-y-1.5 pt-4 border-t">
+                      <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Reference Acts</p>
+                      <div className="flex flex-wrap gap-2">
+                        {acts.map((act, index) => (
+                          <Badge key={index} variant="outline" className="font-normal">{act}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 

@@ -45,6 +45,7 @@ export const CaseInfoCard = ({ caseData }: CaseInfoCardProps) => {
     { label: 'Court', value: caseData?.court_name || caseData?.court },
     { label: 'Category', value: caseData?.category },
     { label: 'Sub Category', value: caseData?.sub_category },
+    { label: 'Reference Acts', value: caseData?.acts && Array.isArray(caseData.acts) && caseData.acts.length > 0 ? caseData.acts.join(', ') : null },
     // Disposed case specific fields
     ...(caseData?.status === 'disposed' ? [
       { label: 'Decision Date', value: formatDateDisplay(caseData?.decision_date) },

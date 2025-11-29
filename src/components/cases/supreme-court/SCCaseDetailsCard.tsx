@@ -11,6 +11,8 @@ interface SCCaseDetailsCardProps {
   presentLastListedOn?: string;
   statusStage?: string;
   category?: string;
+  subCategory?: string;
+  referenceActs?: string[];
   argumentTranscripts?: string | null;
   indexing?: string | null;
   isOpen?: boolean;
@@ -26,6 +28,8 @@ export function SCCaseDetailsCard({
   presentLastListedOn,
   statusStage,
   category,
+  subCategory,
+  referenceActs,
   argumentTranscripts,
   indexing,
   isOpen = true,
@@ -55,6 +59,8 @@ export function SCCaseDetailsCard({
               { label: 'Present/Last Listed On', value: presentLastListedOn },
               { label: 'Status/Stage', value: statusStage },
               { label: 'Category', value: category },
+              { label: 'Sub-Category', value: subCategory },
+              { label: 'Reference Acts', value: referenceActs && Array.isArray(referenceActs) && referenceActs.length > 0 ? referenceActs.join(', ') : null },
               { label: 'Argument Transcripts', value: argumentTranscripts || 'N/A' },
               { label: 'Indexing', value: indexing || 'N/A' },
             ].filter(item => item.value && item.value !== 'N/A').map((item, index) => (

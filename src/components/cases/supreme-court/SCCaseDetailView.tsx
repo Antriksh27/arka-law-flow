@@ -446,6 +446,8 @@ export function SCCaseDetailView({
                       presentLastListedOn={presentLastListedOn}
                       statusStage={statusStage}
                       category={category}
+                      subCategory={caseData.sub_category}
+                      referenceActs={caseData.acts}
                       argumentTranscripts={argumentTranscripts}
                       indexing={indexing}
                       isOpen={caseInfoOpen}

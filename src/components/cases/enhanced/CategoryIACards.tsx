@@ -31,6 +31,14 @@ export const CategoryIACards = ({ caseData, iaDetails }: CategoryIACardsProps) =
                 {caseData?.sub_category || 'N/A'}
               </div>
             </div>
+            {caseData?.acts && Array.isArray(caseData.acts) && caseData.acts.length > 0 && (
+              <div>
+                <div className="text-sm text-[#6B7280]">Reference Acts</div>
+                <div className="text-base font-medium text-[#111827]">
+                  {caseData.acts.join(', ')}
+                </div>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
