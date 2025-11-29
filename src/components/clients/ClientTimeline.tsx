@@ -1,13 +1,11 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Timeline } from '@/components/ui/timeline';
 import { 
   FileText, Calendar, CheckSquare, StickyNote, 
-  Briefcase, DollarSign, Loader2 
+  Briefcase, Loader2 
 } from 'lucide-react';
-import TimeUtils from '@/lib/timeUtils';
 
 interface ClientTimelineProps {
   clientId: string;
@@ -151,59 +149,26 @@ export const ClientTimeline: React.FC<ClientTimelineProps> = ({ clientId }) => {
     );
   }
 
-  const getColorClass = (color: string) => {
-    const colorMap: Record<string, string> = {
-      blue: 'bg-blue-100 text-blue-600',
-      green: 'bg-green-100 text-green-600',
-      purple: 'bg-purple-100 text-purple-600',
-      orange: 'bg-orange-100 text-orange-600',
-      yellow: 'bg-yellow-100 text-yellow-600',
-      red: 'bg-red-100 text-red-600'
-    };
-    return colorMap[color] || 'bg-gray-100 text-gray-600';
-  };
+  // Transform events to Timeline items format
+  const timelineItems = events.map(event => ({
+    date: event.date,
+    title: event.title,
+    description: event.description,
+    icon: React.createElement(event.icon, { className: "h-3 w-3" }),
+  }));
 
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Activity Timeline</h3>
       
-      <div className="relative">
-        {/* Timeline line */}
-        <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200" />
-        
-        {/* Timeline events */}
-        <div className="space-y-4">
-          {events.map((event, index) => {
-            const IconComponent = event.icon;
-            return (
-              <div key={event.id} className="relative flex gap-4">
-                {/* Icon */}
-                <div className={`relative z-10 flex items-center justify-center w-12 h-12 rounded-full ${getColorClass(event.color)}`}>
-                  <IconComponent className="w-5 h-5" />
-                </div>
-                
-                {/* Content */}
-                <div className="flex-1 pb-4">
-                  <Card className="p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1">
-                        <h4 className="text-sm font-semibold text-gray-900">{event.title}</h4>
-                        <p className="text-sm text-gray-600 mt-1">{event.description}</p>
-                      </div>
-                      <Badge variant="outline" className="ml-2 capitalize">
-                        {event.type}
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-gray-500">
-                      {TimeUtils.formatDateTime(event.date, 'dd MMM yyyy, HH:mm')}
-                    </p>
-                  </Card>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      <Timeline
+        items={timelineItems}
+        initialCount={10}
+        showMoreText="Load More Events"
+        showLessText="Show Less"
+        dotClassName="bg-gradient-to-b from-background to-muted ring-1 ring-border"
+        lineClassName="border-l border-border"
+      />
     </div>
   );
 };
