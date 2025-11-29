@@ -243,13 +243,13 @@ export function GenerateEngagementLetterDialog({
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Case Title</Label>
-                  <div className="p-3 bg-muted rounded-md text-sm">
+                  <div className="p-3 rounded-md text-sm bg-slate-50">
                     {caseData?.case_title || 'N/A'}
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label>Lawyer</Label>
-                  <div className="p-3 bg-muted rounded-md text-sm">
+                  <div className="p-3 rounded-md text-sm bg-slate-50">
                     {lawyerData?.full_name || 'N/A'}
                   </div>
                 </div>
