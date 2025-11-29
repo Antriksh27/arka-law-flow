@@ -43,6 +43,7 @@ export function GenerateEngagementLetterDialog({
   const [matterDescription, setMatterDescription] = useState('');
   const [generatedHTML, setGeneratedHTML] = useState('');
   const [generatingPDF, setGeneratingPDF] = useState(false);
+  const [generatingPrintPDF, setGeneratingPrintPDF] = useState(false);
   const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
   const [showEmailDialog, setShowEmailDialog] = useState(false);
 
@@ -195,13 +196,45 @@ export function GenerateEngagementLetterDialog({
     console.log('Generated letter HTML length:', letterHTML.length);
     setGeneratedHTML(letterHTML);
   };
-  const handlePrint = () => {
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      printWindow.document.write(generatedHTML);
-      printWindow.document.close();
-      printWindow.focus();
-      printWindow.print();
+  const handlePrint = async () => {
+    setGeneratingPrintPDF(true);
+    try {
+      // Create a temporary container for PDF generation
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = generatedHTML;
+      tempDiv.style.position = 'absolute';
+      tempDiv.style.left = '-9999px';
+      document.body.appendChild(tempDiv);
+
+      const opt = {
+        margin: [60, 20, 40, 20] as [number, number, number, number],
+        filename: `Engagement_Letter_${clientName.replace(/\s+/g, '_')}.pdf`,
+        image: { type: 'jpeg' as const, quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+      };
+
+      const blob = await html2pdf().set(opt).from(tempDiv).outputPdf('blob');
+      document.body.removeChild(tempDiv);
+      
+      // Create blob URL and open in new tab for printing
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, '_blank');
+      
+      setGeneratingPrintPDF(false);
+      
+      toast({
+        title: 'PDF Generated',
+        description: 'The engagement letter PDF has been opened in a new tab for printing.',
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to generate PDF. Please try again.',
+        variant: 'destructive'
+      });
+      setGeneratingPrintPDF(false);
     }
   };
   const handleSendEmail = async () => {
@@ -350,9 +383,18 @@ export function GenerateEngagementLetterDialog({
                   Next
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button> : <>
-                  <Button variant="outline" onClick={handlePrint}>
-                    <Printer className="w-4 h-4 mr-2" />
-                    Print
+                  <Button variant="outline" onClick={handlePrint} disabled={generatingPrintPDF}>
+                    {generatingPrintPDF ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Generating PDF...
+                      </>
+                    ) : (
+                      <>
+                        <Printer className="w-4 h-4 mr-2" />
+                        Print
+                      </>
+                    )}
                   </Button>
                   <Button onClick={handleSendEmail} disabled={generatingPDF}>
                     {generatingPDF ? (
