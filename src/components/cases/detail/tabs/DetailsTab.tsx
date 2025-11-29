@@ -10,6 +10,7 @@ import { OrdersTable } from '@/components/cases/enhanced/OrdersTable';
 import { HearingsTable } from '@/components/cases/enhanced/HearingsTable';
 import { ObjectionsTable } from '@/components/cases/enhanced/ObjectionsTable';
 import { IADetailsTable } from '@/components/cases/enhanced/IADetailsTable';
+import { InlineEditReferenceActs } from '@/components/cases/detail/InlineEditReferenceActs';
 interface DetailsTabProps {
   caseData: any;
   legalkartData: any;
@@ -20,6 +21,13 @@ interface DetailsTabProps {
   orders: any[];
   hearings: any[];
   objections: any[];
+}
+
+interface CaseInfoItem {
+  label: string;
+  value: any;
+  isEditable?: boolean;
+  editComponent?: React.ReactNode;
 }
 export const DetailsTab: React.FC<DetailsTabProps> = ({
   caseData,
@@ -150,12 +158,21 @@ export const DetailsTab: React.FC<DetailsTabProps> = ({
                 value: legalkartData?.sub_category || caseData?.sub_category
               }, {
                 label: 'Reference Acts',
-                value: caseData?.acts && Array.isArray(caseData.acts) && caseData.acts.length > 0 
-                  ? caseData.acts.join(', ') 
-                  : 'N/A'
-              }].filter(item => item.value).map((item, index) => <div key={index}>
+                value: true,
+                isEditable: true,
+                editComponent: (
+                  <InlineEditReferenceActs
+                    caseId={caseData.id}
+                    currentActs={caseData?.acts || []}
+                  />
+                )
+              }].filter(item => item.value).map((item: CaseInfoItem, index) => <div key={index}>
                     <p className="text-sm text-gray-500 mb-1">{item.label}</p>
-                    <p className="text-sm font-medium text-gray-900">{item.value}</p>
+                    {item.isEditable && item.editComponent ? (
+                      item.editComponent
+                    ) : (
+                      <p className="text-sm font-medium text-gray-900">{item.value}</p>
+                    )}
                   </div>)}
               </div>
               
