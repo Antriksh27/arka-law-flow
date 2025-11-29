@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { ClientSelector } from './ClientSelector';
+import { ClientSelector } from '@/components/appointments/ClientSelector';
 import { CaseSelector } from '@/components/appointments/CaseSelector';
 
 interface CreateTaskDialogProps {
@@ -30,9 +30,9 @@ interface TaskFormData {
   due_date?: string;
   reminder_time?: string;
   tags?: string;
-  link_type?: 'case' | 'client' | 'none';
+  link_type?: 'case' | 'client_contact' | 'none';
   case_id?: string;
-  client_id?: string;
+  client_contact_id?: string;
 }
 
 export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
@@ -56,16 +56,16 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
     defaultValues: {
       priority: 'medium',
       status: 'todo',
-      link_type: caseId ? 'case' : (clientId ? 'client' : 'none'),
+      link_type: caseId ? 'case' : (clientId ? 'client_contact' : 'none'),
       case_id: caseId || '',
-      client_id: clientId || ''
+      client_contact_id: clientId || ''
     }
   });
 
-  // Set default client_id if provided as prop
+  // Set default client_contact_id if provided as prop
   useEffect(() => {
     if (clientId) {
-      setValue('client_id', clientId);
+      setValue('client_contact_id', clientId);
     }
   }, [clientId, setValue]);
 
@@ -103,39 +103,31 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
     enabled: !!firmId
   });
 
-  // Fetch cases for linking
-  const { data: cases = [] } = useQuery({
-    queryKey: ['cases-for-tasks'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('cases')
-        .select('id, case_title')
-        .eq('status', 'pending')
-        .order('case_title');
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: linkType === 'case'
-  });
-
-  // Fetch clients for linking
-  const { data: clients = [] } = useQuery({
-    queryKey: ['clients-for-tasks'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('clients')
-        .select('id, full_name')
-        .order('full_name');
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: linkType === 'client'
-  });
+  // Fetch cases for linking (keep for reference, but CaseSelector handles its own fetching)
 
   const createTaskMutation = useMutation({
     mutationFn: async (data: TaskFormData) => {
       const user = await supabase.auth.getUser();
       if (!user.data.user) throw new Error('Not authenticated');
+
+      // Determine if client_contact_id is a client or contact
+      let clientId = null;
+      let contactId = null;
+      if (data.link_type === 'client_contact' && data.client_contact_id) {
+        // Check if it's a client
+        const { data: clientCheck } = await supabase
+          .from('clients')
+          .select('id')
+          .eq('id', data.client_contact_id)
+          .maybeSingle();
+        
+        if (clientCheck) {
+          clientId = data.client_contact_id;
+        } else {
+          // It's a contact
+          contactId = data.client_contact_id;
+        }
+      }
 
       const taskData: any = {
         title: data.title,
@@ -147,7 +139,8 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
         due_date: data.due_date ? new Date(data.due_date).toISOString().split('T')[0] : null,
         reminder_time: data.reminder_time ? new Date(data.reminder_time).toISOString() : null,
         case_id: data.link_type === 'case' ? data.case_id || null : null,
-        client_id: data.link_type === 'client' ? data.client_id || null : null,
+        client_id: clientId,
+        contact_id: contactId,
         created_by: user.data.user.id,
         firm_id: firmId,
         tags: data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(Boolean) : []
@@ -258,7 +251,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
             </Label>
             <Select 
               onValueChange={(value) => setValue('link_type', value as any)} 
-              defaultValue={caseId ? 'case' : (clientId ? 'client' : 'none')}
+              defaultValue={caseId ? 'case' : (clientId ? 'client_contact' : 'none')}
             >
               <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                 <SelectValue />
@@ -266,7 +259,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
               <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
                 <SelectItem value="none" className="hover:bg-gray-50">No Link</SelectItem>
                 <SelectItem value="case" className="hover:bg-gray-50">Link to Case</SelectItem>
-                <SelectItem value="client" className="hover:bg-gray-50">Link to Client</SelectItem>
+                <SelectItem value="client_contact" className="hover:bg-gray-50">Link to Client/Contact</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -284,16 +277,15 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
             </div>
           )}
 
-          {linkType === 'client' && (
+          {linkType === 'client_contact' && (
             <div className="space-y-2">
-              <Label htmlFor="client_id" className="text-sm font-medium text-gray-700">
-                Select Client
+              <Label htmlFor="client_contact_id" className="text-sm font-medium text-gray-700">
+                Select Client or Contact
               </Label>
               <ClientSelector
-                clients={clients}
-                value={watch('client_id')}
-                onValueChange={(value) => setValue('client_id', value)}
-                placeholder="Search and select a client..."
+                value={watch('client_contact_id') || ''}
+                onValueChange={(value) => setValue('client_contact_id', value)}
+                placeholder="Search and select a client or contact..."
               />
             </div>
           )}
