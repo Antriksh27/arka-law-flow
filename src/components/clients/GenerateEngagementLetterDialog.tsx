@@ -255,12 +255,7 @@ export function GenerateEngagementLetterDialog({
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label>Law Firm</Label>
-                <div className="p-3 bg-muted rounded-md text-sm">
-                  {firmData?.name || 'N/A'}
-                </div>
-              </div>
+              
 
               <div className="space-y-2">
                 <Label htmlFor="matter-description">Matter Description *</Label>
