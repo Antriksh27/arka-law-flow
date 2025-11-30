@@ -24,6 +24,14 @@ export default {
 			colors: {
 				background: '#F9FAFB',
 				foreground: '#111827', // Gray-900 for main text
+				sidebar: {
+					DEFAULT: 'hsl(var(--sidebar))',
+					foreground: 'hsl(var(--sidebar-foreground))',
+					accent: 'hsl(var(--sidebar-accent))',
+					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
+					border: 'hsl(var(--sidebar-border))',
+					ring: 'hsl(var(--sidebar-ring))',
+				},
 				primary: {
 					DEFAULT: '#111827',   // Gray-900 instead of blue
 					50:   '#F9FAFB',      // very light
