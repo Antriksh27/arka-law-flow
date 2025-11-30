@@ -46,51 +46,72 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log(`AuthContext: START: Fetching firm_id and role for user: ${userId}`);
       
-      // Add timeout wrapper to prevent hanging
-      const fetchPromise = supabase
-        .from('team_members')
-        .select('firm_id, role')
-        .eq('user_id', userId)
-        .limit(1)
-        .maybeSingle();
+      // Retry logic with exponential backoff
+      const maxRetries = 3;
+      let lastError: any = null;
       
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Query timeout after 5s')), 5000)
-      );
-      
-      const { data, error, status } = await Promise.race([
-        fetchPromise,
-        timeoutPromise
-      ]) as any;
-      
-      console.log(`AuthContext: DB RESPONSE: data:`, data, `error:`, error, `status:`, status);
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          console.log(`🔄 Fetch attempt ${attempt}/${maxRetries}`);
+          
+          const fetchPromise = supabase
+            .from('team_members')
+            .select('firm_id, role')
+            .eq('user_id', userId)
+            .limit(1)
+            .maybeSingle();
+          
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Query timeout after 8s')), 8000)
+          );
+          
+          const { data, error, status } = await Promise.race([
+            fetchPromise,
+            timeoutPromise
+          ]) as any;
+          
+          console.log(`AuthContext: DB RESPONSE attempt ${attempt}:`, data, `error:`, error, `status:`, status);
 
-      if (error) {
-        console.error('AuthContext: Error fetching firm_id and role:', error.message);
-        setFirmId(undefined);
-        setRole(null);
-        setFirmError(error.message || "Unknown error fetching firm_id and role.");
-        console.log(`AuthContext: END (error): firm_id and role fetch failed for user: ${userId}`);
-        return;
+          if (error) {
+            throw error;
+          }
+          
+          if (!data || !data.firm_id) {
+            console.warn(`AuthContext: No firm_id found in team_members for user: ${userId}`);
+            setFirmId(undefined);
+            setRole(null);
+            setFirmError('No firm_id found for user.');
+            console.log(`AuthContext: END (no data): No firm_id found for user: ${userId}`);
+            return;
+          }
+          
+          console.log('✅ Firm ID and role data fetched successfully:', data);
+          setFirmId(data.firm_id);
+          setRole(data.role);
+          setFirmError(null);
+          console.log(`AuthContext: END (success): firm_id set to ${data.firm_id} and role set to ${data.role} for user: ${userId}`);
+          return; // Success, exit retry loop
+          
+        } catch (retryError: any) {
+          lastError = retryError;
+          console.warn(`❌ Attempt ${attempt} failed:`, retryError.message);
+          
+          if (attempt < maxRetries) {
+            const delay = 1000 * Math.pow(2, attempt - 1); // Exponential backoff
+            console.log(`⏳ Retrying in ${delay}ms...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+          }
+        }
       }
-      if (!data || !data.firm_id) {
-        console.warn(`AuthContext: No firm_id found in team_members for user: ${userId}`);
-        setFirmId(undefined);
-        setRole(null);
-        setFirmError('No firm_id found for user.');
-        console.log(`AuthContext: END (no data): No firm_id found for user: ${userId}`);
-        return;
-      }
-      console.log('AuthContext: Firm ID and role data fetched:', data);
-      setFirmId(data.firm_id);
-      setRole(data.role);
-      setFirmError(null);
-      console.log(`AuthContext: END (success): firm_id set to ${data.firm_id} and role set to ${data.role} for user: ${userId}`);
+      
+      // All retries failed
+      throw lastError || new Error('All retry attempts failed');
+      
     } catch (e: any) {
-      console.error('AuthContext: Exception fetching firm_id and role:', e.message);
+      console.error('❌ AuthContext: All attempts to fetch firm_id and role failed:', e.message);
       setFirmId(undefined);
       setRole(null);
-      setFirmError('Exception: ' + (e.message || 'Unknown'));
+      setFirmError('Database connection error. Please check your internet connection and try again.');
       console.log(`AuthContext: END (exception): firm_id and role fetch failed for user: ${userId}`);
     }
   };
