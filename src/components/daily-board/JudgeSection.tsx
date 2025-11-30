@@ -2,6 +2,8 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DailyHearing } from './types';
+import { formatAdvocatesSmart } from './utils';
+import { InlineEditRelief } from './InlineEditRelief';
 
 interface JudgeSectionProps {
   judgeName: string;
@@ -44,7 +46,7 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
               <TableHead>AORR</TableHead>
               <TableHead>Arguing Counsel</TableHead>
               <TableHead className="w-32">Stage</TableHead>
-              <TableHead>Remarks</TableHead>
+              <TableHead>Relief</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -59,13 +61,13 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
                 <TableCell className="text-gray-900">{hearing.petitioner || '-'}</TableCell>
                 <TableCell className="text-gray-900">{hearing.respondent || '-'}</TableCell>
                 <TableCell className="text-sm text-gray-700">
-                  {hearing.petitioner_advocate || '-'}
+                  {formatAdvocatesSmart(hearing.petitioner_advocate, 'petitioner')}
                 </TableCell>
                 <TableCell className="text-sm text-gray-700">
-                  {hearing.respondent_advocate || '-'}
+                  {formatAdvocatesSmart(hearing.respondent_advocate, 'respondent')}
                 </TableCell>
-                <TableCell className="text-sm text-gray-700">
-                  {hearing.advocate_name || '-'}
+                <TableCell className="text-sm text-gray-700 font-medium">
+                  CBU
                 </TableCell>
                 <TableCell>
                   {hearing.purpose_of_hearing && (
@@ -74,8 +76,11 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
                     </Badge>
                   )}
                 </TableCell>
-                <TableCell className="text-sm text-gray-700">
-                  {hearing.hearing_notes || '-'}
+                <TableCell>
+                  <InlineEditRelief 
+                    hearingId={hearing.hearing_id}
+                    currentValue={hearing.relief}
+                  />
                 </TableCell>
               </TableRow>
             ))}

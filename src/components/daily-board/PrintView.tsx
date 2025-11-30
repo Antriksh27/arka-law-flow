@@ -1,6 +1,7 @@
 import React from 'react';
 import { format } from 'date-fns';
 import { GroupedHearings } from './types';
+import { formatAdvocatesSmart } from './utils';
 
 interface PrintViewProps {
   selectedDate: Date;
@@ -42,7 +43,7 @@ export const PrintView = React.forwardRef<HTMLDivElement, PrintViewProps>(
                         <th className="border border-gray-300 px-2 py-2 text-left">AORR</th>
                         <th className="border border-gray-300 px-2 py-2 text-left">Arguing</th>
                         <th className="border border-gray-300 px-2 py-2 text-left">Stage</th>
-                        <th className="border border-gray-300 px-2 py-2 text-left">Remarks</th>
+                        <th className="border border-gray-300 px-2 py-2 text-left">Relief</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -60,19 +61,19 @@ export const PrintView = React.forwardRef<HTMLDivElement, PrintViewProps>(
                               {hearing.respondent || '-'}
                             </td>
                             <td className="border border-gray-300 px-2 py-2">
-                              {hearing.petitioner_advocate || '-'}
+                              {formatAdvocatesSmart(hearing.petitioner_advocate, 'petitioner')}
                             </td>
                             <td className="border border-gray-300 px-2 py-2">
-                              {hearing.respondent_advocate || '-'}
+                              {formatAdvocatesSmart(hearing.respondent_advocate, 'respondent')}
                             </td>
-                            <td className="border border-gray-300 px-2 py-2">
-                              {hearing.advocate_name || '-'}
+                            <td className="border border-gray-300 px-2 py-2 font-medium">
+                              CBU
                             </td>
                             <td className="border border-gray-300 px-2 py-2">
                               {hearing.purpose_of_hearing || '-'}
                             </td>
                             <td className="border border-gray-300 px-2 py-2">
-                              {hearing.hearing_notes || '-'}
+                              {hearing.relief || '-'}
                             </td>
                           </tr>
                         );
