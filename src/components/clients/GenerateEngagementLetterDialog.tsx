@@ -199,26 +199,44 @@ export function GenerateEngagementLetterDialog({
   const handlePrint = async () => {
     setGeneratingPrintPDF(true);
     try {
+      console.log('Starting PDF generation for print...');
+      console.log('Generated HTML length:', generatedHTML?.length);
+      
       // Create a temporary container for PDF generation
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = generatedHTML;
       tempDiv.style.position = 'fixed';
       tempDiv.style.top = '0';
       tempDiv.style.left = '0';
+      tempDiv.style.width = '210mm';
       tempDiv.style.opacity = '0';
       tempDiv.style.pointerEvents = 'none';
       tempDiv.style.zIndex = '-1';
+      tempDiv.style.background = 'white';
       document.body.appendChild(tempDiv);
+
+      console.log('Temp div appended to DOM');
+      
+      // Wait a bit for the DOM to render
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       const opt = {
         margin: [60, 20, 40, 20] as [number, number, number, number],
         filename: `Engagement_Letter_${clientName.replace(/\s+/g, '_')}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
+        html2canvas: { 
+          scale: 2, 
+          useCORS: true,
+          logging: true,
+          backgroundColor: '#ffffff'
+        },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
       };
 
+      console.log('Starting html2pdf conversion...');
       const pdfBlob = await html2pdf().set(opt).from(tempDiv).outputPdf('blob');
+      console.log('PDF blob generated:', pdfBlob?.size, 'bytes');
+      
       document.body.removeChild(tempDiv);
       
       // Create blob URL and open in new tab for printing
