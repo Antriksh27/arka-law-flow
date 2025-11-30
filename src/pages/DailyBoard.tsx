@@ -71,19 +71,32 @@ const DailyBoard = () => {
     toast({ title: 'Generating PDF...', description: 'Please wait' });
     
     try {
+      // Temporarily show the print view for PDF generation
+      printViewRef.current.classList.remove('hidden');
+      printViewRef.current.classList.add('block');
+      
       const options = {
         margin: [10, 10, 10, 10] as [number, number, number, number],
         filename: `Daily_Cause_List_${format(selectedDate, 'yyyy-MM-dd')}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { scale: 2 },
+        html2canvas: { scale: 2, useCORS: true },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' as const },
       };
       
       await html2pdf().set(options).from(printViewRef.current).save();
       
+      // Hide it again
+      printViewRef.current.classList.add('hidden');
+      printViewRef.current.classList.remove('block');
+      
       toast({ title: 'PDF exported successfully!' });
     } catch (error) {
       console.error('PDF export error:', error);
+      // Ensure we hide it even on error
+      if (printViewRef.current) {
+        printViewRef.current.classList.add('hidden');
+        printViewRef.current.classList.remove('block');
+      }
       toast({ 
         title: 'Export failed', 
         description: 'Could not generate PDF',
