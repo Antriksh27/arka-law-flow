@@ -90,16 +90,30 @@ export const ClientAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       });
 
       if (error) {
+        console.error('Edge function error:', error);
         return { success: false, error: error.message };
       }
 
       if (data.error) {
+        console.error('Sign-in error:', data.error);
         return { success: false, error: data.error };
       }
 
-      // Session will be automatically set by onAuthStateChange
+      // Set the session manually
+      if (data.session) {
+        await supabase.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        });
+        
+        setUser(data.user);
+        setSession(data.session);
+        setClient(data.client);
+      }
+
       return { success: true };
     } catch (error: any) {
+      console.error('Sign-in exception:', error);
       return { success: false, error: error.message || 'Failed to sign in' };
     }
   };

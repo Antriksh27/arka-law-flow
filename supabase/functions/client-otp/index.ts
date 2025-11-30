@@ -11,31 +11,51 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const supabase = createClient(
+    const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
     );
 
     const { action, phone } = await req.json();
 
     if (action === 'sign-in') {
+      console.log('Sign-in attempt for phone:', phone);
+
       // Validate phone number format
       if (!phone || !phone.match(/^\+91[6-9]\d{9}$/)) {
+        console.error('Invalid phone format:', phone);
         return new Response(
           JSON.stringify({ error: 'Invalid phone number format. Use +91XXXXXXXXXX' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
+      // Remove +91 prefix for database comparison
+      const phoneWithoutPrefix = phone.substring(3);
+
       // Check if client exists with this phone and portal is enabled
-      const { data: client, error: clientError } = await supabase
+      const { data: client, error: clientError } = await supabaseAdmin
         .from('clients')
         .select('id, full_name, client_portal_enabled')
-        .eq('phone', phone.substring(3)) // Remove +91 prefix for comparison
-        .single();
+        .eq('phone', phoneWithoutPrefix)
+        .maybeSingle();
 
-      if (clientError || !client) {
-        console.error('Client not found:', clientError);
+      if (clientError) {
+        console.error('Database error checking client:', clientError);
+        return new Response(
+          JSON.stringify({ error: 'Database error occurred' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      if (!client) {
+        console.error('Client not found for phone:', phoneWithoutPrefix);
         return new Response(
           JSON.stringify({ error: 'No account found with this phone number' }),
           { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -43,31 +63,40 @@ Deno.serve(async (req) => {
       }
 
       if (!client.client_portal_enabled) {
+        console.error('Portal not enabled for client:', client.id);
         return new Response(
           JSON.stringify({ error: 'Client portal access is not enabled for your account' }),
           { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
-      // Check if client_user exists, if not create auth user
+      console.log('Client found:', client.id, client.full_name);
+
+      // Check if auth user already exists
       let authUserId: string;
       
-      const { data: existingUser } = await supabase
+      const { data: existingClientUser } = await supabaseAdmin
         .from('client_users')
         .select('auth_user_id')
         .eq('phone', phone)
-        .single();
+        .maybeSingle();
 
-      if (existingUser?.auth_user_id) {
-        authUserId = existingUser.auth_user_id;
+      if (existingClientUser?.auth_user_id) {
+        console.log('Existing auth user found:', existingClientUser.auth_user_id);
+        authUserId = existingClientUser.auth_user_id;
       } else {
-        // Create a new auth user
-        const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        console.log('Creating new auth user');
+        // Create a new auth user with a temporary email
+        const tempEmail = `client-${phoneWithoutPrefix}@portal.temp`;
+        const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+          email: tempEmail,
+          email_confirm: true,
           phone: phone,
           phone_confirm: true,
           user_metadata: {
             client_id: client.id,
-            full_name: client.full_name
+            full_name: client.full_name,
+            is_client: true
           }
         });
 
@@ -80,10 +109,11 @@ Deno.serve(async (req) => {
         }
 
         authUserId = authData.user.id;
+        console.log('New auth user created:', authUserId);
       }
 
-      // Upsert client_users record
-      await supabase
+      // Update client_users record
+      const { error: upsertError } = await supabaseAdmin
         .from('client_users')
         .upsert({
           phone: phone,
@@ -95,13 +125,17 @@ Deno.serve(async (req) => {
           onConflict: 'phone'
         });
 
-      // Create a session for the user
-      const { data: sessionData, error: sessionError } = await supabase.auth.admin.generateLink({
-        type: 'magiclink',
-        email: `${phone.replace('+', '')}@client.portal`,
+      if (upsertError) {
+        console.error('Error upserting client_users:', upsertError);
+      }
+
+      // Generate a session token using admin API
+      console.log('Generating session for user:', authUserId);
+      const { data: sessionData, error: sessionError } = await supabaseAdmin.auth.admin.createSession({
+        user_id: authUserId,
       });
 
-      if (sessionError) {
+      if (sessionError || !sessionData) {
         console.error('Session generation error:', sessionError);
         return new Response(
           JSON.stringify({ error: 'Failed to create session' }),
@@ -109,12 +143,12 @@ Deno.serve(async (req) => {
         );
       }
 
-      console.log('Client signed in successfully:', phone);
+      console.log('Session created successfully');
       return new Response(
         JSON.stringify({
           success: true,
-          session: sessionData,
-          user: { id: authUserId, phone },
+          session: sessionData.session,
+          user: sessionData.user,
           client: client,
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -128,7 +162,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('Error in client-otp function:', error);
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
+      JSON.stringify({ error: 'Internal server error: ' + error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
