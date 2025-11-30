@@ -13,12 +13,14 @@ import { EditNoteDialog } from '@/components/notes/EditNoteDialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { TimeUtils } from '@/lib/timeUtils';
+import { useIsMobile } from '@/hooks/use-mobile';
 interface ClientNotesProps {
   clientId: string;
 }
 export const ClientNotes: React.FC<ClientNotesProps> = ({
   clientId
 }) => {
+  const isMobile = useIsMobile();
   const {
     user,
     role
@@ -274,25 +276,26 @@ export const ClientNotes: React.FC<ClientNotesProps> = ({
       {/* Regular Notes */}
       <Card className="bg-white rounded-2xl shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-xl font-semibold">Notes</CardTitle>
-          <Button size="sm" className="bg-primary hover:bg-primary/90" onClick={() => setShowCreateDialog(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add Note
+          <CardTitle className={isMobile ? "text-base font-semibold" : "text-xl font-semibold"}>Notes</CardTitle>
+          <Button size="sm" className={`bg-primary hover:bg-primary/90 ${isMobile ? 'h-9' : ''}`} onClick={() => setShowCreateDialog(true)}>
+            <Plus className="w-4 h-4 mr-1" />
+            {isMobile ? 'Add' : 'Add Note'}
           </Button>
         </CardHeader>
-        <CardContent>
+        <CardContent className={isMobile ? "px-3 pb-3" : ""}>
         {notes.length === 0 ? <div className="text-center py-8 text-gray-500">
-            No notes added for this client
-          </div> : <div className="space-y-4">
-            {notes.map(note => <div key={note.id} className={`border rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors ${note.is_pinned ? 'border-primary/20 bg-primary/5' : ''}`} onClick={() => setViewingNote(note)}>
+            <FileText className={`${isMobile ? 'w-8 h-8' : 'w-12 h-12'} mx-auto mb-2 text-gray-300`} />
+            <p className={isMobile ? "text-sm" : ""}>No notes added for this client</p>
+          </div> : <div className={isMobile ? "space-y-2" : "space-y-4"}>
+            {notes.map(note => <div key={note.id} className={`border rounded-lg ${isMobile ? 'p-3' : 'p-4'} hover:bg-gray-50 cursor-pointer transition-colors ${note.is_pinned ? 'border-primary/20 bg-primary/5' : ''} ${isMobile ? 'active:scale-95' : ''}`} onClick={() => setViewingNote(note)}>
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    {note.is_pinned && <Pin className="w-4 h-4 text-primary" />}
-                    <h3 className="font-medium text-gray-900">
+                    {note.is_pinned && <Pin className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} text-primary`} />}
+                    <h3 className={`${isMobile ? 'text-sm' : ''} font-medium text-gray-900`}>
                       {note.title}
                     </h3>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     {getVisibilityIcon(note.visibility)}
                     <Badge variant="outline" className="text-xs">
                       {note.visibility}
@@ -300,14 +303,14 @@ export const ClientNotes: React.FC<ClientNotesProps> = ({
                   </div>
                 </div>
                 
-                {note.content && <div className="text-gray-600 mb-3 text-sm whitespace-pre-wrap">
+                {note.content && <div className={`text-gray-600 mb-3 ${isMobile ? 'text-xs' : 'text-sm'} whitespace-pre-wrap`}>
                     {note.id === 'client-notes' ?
               // Show full content for conversion notes
               note.content :
               // Show truncated content for other notes
               <>
-                        {note.content.substring(0, 200)}
-                        {note.content.length > 200 ? '...' : ''}
+                        {note.content.substring(0, isMobile ? 100 : 200)}
+                        {note.content.length > (isMobile ? 100 : 200) ? '...' : ''}
                       </>}
                   </div>}
 
@@ -321,7 +324,7 @@ export const ClientNotes: React.FC<ClientNotesProps> = ({
                   <span>
                     By {note.created_by?.full_name} • {format(new Date(note.created_at), 'dd/MM/yyyy')}
                   </span>
-                  {note.color && <div className="w-4 h-4 rounded-full border border-gray-200" style={{
+                  {note.color && <div className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} rounded-full border border-gray-200`} style={{
                 backgroundColor: note.color
               }} />}
                 </div>

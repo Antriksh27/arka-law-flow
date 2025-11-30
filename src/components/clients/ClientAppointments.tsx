@@ -8,6 +8,7 @@ import { Calendar, Plus, Clock, MapPin, FileText, User } from 'lucide-react';
 import { useDialog } from '@/hooks/use-dialog';
 import { CreateAppointmentDialog } from '@/components/appointments/CreateAppointmentDialog';
 import { format } from 'date-fns';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ClientAppointmentsProps {
   clientId: string;
@@ -34,6 +35,7 @@ interface AppointmentWithDetails {
 }
 
 export const ClientAppointments: React.FC<ClientAppointmentsProps> = ({ clientId }) => {
+  const isMobile = useIsMobile();
   const { data: appointments = [], isLoading } = useQuery({
     queryKey: ['client-appointments', clientId],
     queryFn: async (): Promise<AppointmentWithDetails[]> => {
@@ -229,8 +231,127 @@ export const ClientAppointments: React.FC<ClientAppointmentsProps> = ({ clientId
   if (isLoading) {
     return (
       <Card className="bg-card rounded-2xl shadow-sm border-border">
-        <CardContent className="p-6">
+        <CardContent className={isMobile ? "p-4" : "p-6"}>
           <div className="text-center text-muted-foreground">Loading appointments...</div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (isMobile) {
+    return (
+      <Card className="bg-card rounded-2xl shadow-sm border-border">
+        <CardHeader className="flex flex-row items-center justify-between border-b border-border pb-3">
+          <div>
+            <CardTitle className="text-base font-semibold text-foreground">Appointments</CardTitle>
+            <p className="text-xs text-muted-foreground mt-1">
+              {upcomingAppointments.length} upcoming • {pastAppointments.length} past
+            </p>
+          </div>
+          <Button 
+            size="sm" 
+            className="bg-primary hover:bg-primary/90 h-9" 
+            onClick={() => openDialog(<CreateAppointmentDialog preSelectedClientId={clientId} />)}
+          >
+            <Plus className="w-4 h-4 mr-1" />
+            Add
+          </Button>
+        </CardHeader>
+        <CardContent className="px-3 pb-3 pt-3">
+          {appointments.length === 0 ? (
+            <div className="text-center py-12">
+              <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+              <p className="text-sm text-muted-foreground mb-3">No appointments scheduled</p>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => openDialog(<CreateAppointmentDialog preSelectedClientId={clientId} />)}
+              >
+                Schedule First Appointment
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {/* Upcoming Appointments */}
+              {upcomingAppointments.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-sm text-foreground mb-2 flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-primary" />
+                    Upcoming ({upcomingAppointments.length})
+                  </h3>
+                  <div className="space-y-2">
+                    {upcomingAppointments.map((appointment) => (
+                      <Card key={appointment.id} className="active:scale-95 transition-transform">
+                        <CardContent className="p-3">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-base">{getTypeIcon(appointment.type)}</span>
+                            <h4 className="font-semibold text-sm text-foreground flex-1">
+                              {appointment.title || `${appointment.type} Appointment`}
+                            </h4>
+                          </div>
+                          <Badge className={`${getStatusColor(appointment.status)} text-xs mb-2`}>
+                            {appointment.status}
+                          </Badge>
+                          <div className="space-y-1 text-xs">
+                            {appointment.appointment_date && (
+                              <div className="flex items-center gap-1 text-muted-foreground">
+                                <Calendar className="w-3 h-3" />
+                                {format(new Date(appointment.appointment_date), 'MMM d, yyyy')}
+                              </div>
+                            )}
+                            {appointment.appointment_time && (
+                              <div className="flex items-center gap-1 text-muted-foreground">
+                                <Clock className="w-3 h-3" />
+                                {appointment.appointment_time} • {appointment.duration_minutes}min
+                              </div>
+                            )}
+                            {appointment.lawyer && (
+                              <div className="flex items-center gap-1 text-muted-foreground">
+                                <User className="w-3 h-3" />
+                                {appointment.lawyer.full_name}
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Past Appointments */}
+              {pastAppointments.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-sm text-foreground mb-2 flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-muted-foreground" />
+                    Past ({pastAppointments.length})
+                  </h3>
+                  <div className="space-y-2">
+                    {pastAppointments.map((appointment) => (
+                      <Card key={appointment.id} className="opacity-75">
+                        <CardContent className="p-3">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-base">{getTypeIcon(appointment.type)}</span>
+                            <h4 className="font-semibold text-sm text-foreground flex-1">
+                              {appointment.title || `${appointment.type} Appointment`}
+                            </h4>
+                          </div>
+                          <div className="space-y-1 text-xs text-muted-foreground">
+                            {appointment.appointment_date && (
+                              <div className="flex items-center gap-1">
+                                <Calendar className="w-3 h-3" />
+                                {format(new Date(appointment.appointment_date), 'MMM d, yyyy')}
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
     );

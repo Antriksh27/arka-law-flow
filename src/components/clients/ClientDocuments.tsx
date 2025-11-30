@@ -10,12 +10,14 @@ import { TimeUtils } from '@/lib/timeUtils';
 import { UploadDocumentForClientDialog } from '../documents/UploadDocumentForClientDialog';
 import { FileViewer } from '../documents/FileViewer';
 import { uploadFileToWebDAV } from '@/lib/pydioIntegration';
+import { useIsMobile } from '@/hooks/use-mobile';
 interface ClientDocumentsProps {
   clientId: string;
 }
 export const ClientDocuments: React.FC<ClientDocumentsProps> = ({
   clientId
 }) => {
+  const isMobile = useIsMobile();
   const {
     toast
   } = useToast();
@@ -125,6 +127,120 @@ export const ClientDocuments: React.FC<ClientDocumentsProps> = ({
         </CardContent>
       </Card>;
   }
+
+  if (isMobile) {
+    return (
+      <>
+        <Card className="bg-white rounded-2xl shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="text-base font-semibold">Documents</CardTitle>
+            <Button size="sm" className="bg-primary hover:bg-primary/90 h-9" onClick={() => setUploadDialogOpen(true)}>
+              <Plus className="w-4 h-4 mr-1" />
+              Upload
+            </Button>
+          </CardHeader>
+          <CardContent className="px-3 pb-3">
+            {documents.length === 0 ? (
+              <div className="text-center py-12">
+                <FileText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-base font-medium text-gray-900 mb-2">No documents yet</h3>
+                <p className="text-sm text-gray-500 mb-4">Upload documents to get started.</p>
+                <Button onClick={() => setUploadDialogOpen(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Upload Document
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {documents.map(document => {
+                  const FileIcon = getFileIcon(document.file_type);
+                  return (
+                    <Card key={document.id} className="active:scale-95 transition-transform">
+                      <CardContent className="p-3">
+                        <div className="flex items-start gap-2 mb-2">
+                          <FileIcon className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-medium text-sm text-gray-900 truncate">
+                              {document.title || document.file_name}
+                            </h3>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-1 flex-wrap mb-2">
+                          {document.confidential && (
+                            <Badge variant="error" className="bg-red-100 text-red-700 text-xs">
+                              <Shield className="w-2.5 h-2.5 mr-0.5" />
+                              Confidential
+                            </Badge>
+                          )}
+                          {document.certified_copy && (
+                            <Badge variant="default" className="bg-blue-100 text-blue-700 text-xs">
+                              <Award className="w-2.5 h-2.5 mr-0.5" />
+                              Cert
+                            </Badge>
+                          )}
+                          {document.original_copy_retained && (
+                            <Badge variant="success" className="bg-green-100 text-green-700 text-xs">
+                              <Copy className="w-2.5 h-2.5 mr-0.5" />
+                              Original
+                            </Badge>
+                          )}
+                        </div>
+
+                        <div className="text-xs text-gray-500 mb-2">
+                          {formatFileSize(document.file_size)} • {document.file_type || 'Unknown'}
+                        </div>
+
+                        <div className="flex items-center gap-1 text-xs text-gray-500 mb-3">
+                          <Clock className="w-3 h-3" />
+                          {TimeUtils.formatDate(document.uploaded_at)}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="flex-1 h-8"
+                            onClick={() => handleViewDocument(document)}
+                          >
+                            <Eye className="w-3 h-3 mr-1" />
+                            View
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="flex-1 h-8"
+                            onClick={() => handleDownload(document)}
+                          >
+                            <Download className="w-3 h-3 mr-1" />
+                            Download
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <UploadDocumentForClientDialog 
+          open={uploadDialogOpen} 
+          onClose={() => setUploadDialogOpen(false)} 
+          clientId={clientId} 
+          onUploadSuccess={handleUploadSuccess} 
+        />
+
+        <FileViewer 
+          open={showFileViewer} 
+          onClose={() => setShowFileViewer(false)} 
+          document={selectedDocument} 
+        />
+      </>
+    );
+  }
+
   return <>
       <Card className="bg-white rounded-2xl shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between">

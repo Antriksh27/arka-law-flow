@@ -8,12 +8,14 @@ import { Loader2 } from 'lucide-react';
 import { TimeUtils } from '@/lib/timeUtils';
 import { InlineEditCard } from './InlineEditCard';
 import { z } from 'zod';
+import { useIsMobile } from '@/hooks/use-mobile';
 interface ClientInformationProps {
   clientId: string;
 }
 export const ClientInformation: React.FC<ClientInformationProps> = ({
   clientId
 }) => {
+  const isMobile = useIsMobile();
   const {
     data: client,
     isLoading,
@@ -94,7 +96,7 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
       </div>;
   };
 
-  return <div className="space-y-6">
+  return <div className={isMobile ? "space-y-4 pb-4" : "space-y-6"}>
       {/* Personal Details */}
       <InlineEditCard
         title="Personal Details"
@@ -139,11 +141,11 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-blue-600" />
-            <CardTitle>Account Details</CardTitle>
+            <Calendar className={isMobile ? "w-4 h-4 text-blue-600" : "w-5 h-5 text-blue-600"} />
+            <CardTitle className={isMobile ? "text-base" : ""}>Account Details</CardTitle>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className={isMobile ? "space-y-3 px-3 pb-3" : "space-y-4"}>
           <InfoRow icon={Calendar} label="Created Date" value={TimeUtils.formatDate(client.created_at)} />
           <InfoRow icon={Calendar} label="Last Edited Date" value={TimeUtils.formatDate(client.updated_at)} />
         </CardContent>
