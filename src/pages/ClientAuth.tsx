@@ -1,189 +1,95 @@
 import React, { useState } from 'react';
 import { useClientAuth } from '@/contexts/ClientAuthContext';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Loader2, Phone, Shield } from 'lucide-react';
-import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
+import { Loader2 } from 'lucide-react';
 
 const ClientAuth: React.FC = () => {
-  const { user, loading, sendOtp, verifyOtp } = useClientAuth();
+  const { user, loading, signInWithPhone } = useClientAuth();
   const navigate = useNavigate();
-  const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [phone, setPhone] = useState('');
-  const [otp, setOtp] = useState('');
+  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   if (!loading && user) {
     return <Navigate to="/client/cases" replace />;
   }
 
-  const handleSendOtp = async (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate phone number
     const phoneRegex = /^[6-9]\d{9}$/;
     if (!phoneRegex.test(phone)) {
-      toast.error('Please enter a valid 10-digit mobile number starting with 6-9');
+      setError('Please enter a valid 10-digit mobile number starting with 6-9');
       return;
     }
 
+    setError('');
     setIsLoading(true);
     const formattedPhone = `+91${phone}`;
     
-    const result = await sendOtp(formattedPhone);
-    
-    if (result.success) {
-      toast.success('OTP sent successfully to your mobile number');
-      setStep('otp');
-    } else {
-      toast.error(result.error || 'Failed to send OTP');
-    }
-    
-    setIsLoading(false);
-  };
-
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (otp.length !== 6) {
-      toast.error('Please enter the 6-digit OTP');
-      return;
-    }
-
-    setIsLoading(true);
-    const formattedPhone = `+91${phone}`;
-    
-    const result = await verifyOtp(formattedPhone, otp);
+    const result = await signInWithPhone(formattedPhone);
     
     if (result.success) {
       toast.success('Login successful!');
       navigate('/client/cases');
     } else {
-      toast.error(result.error || 'Invalid OTP');
-      setOtp('');
+      setError(result.error || 'Login failed. Please check your mobile number.');
+      toast.error(result.error || 'Login failed');
     }
     
     setIsLoading(false);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1 text-center">
-          <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-            <Shield className="w-6 h-6 text-primary" />
+    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-800 relative overflow-hidden w-full rounded-xl">
+      {/* Centered glass card */}
+      <div className="relative z-10 w-full max-w-sm rounded-3xl bg-gradient-to-r from-[#ffffff10] to-slate-800 backdrop-blur-sm shadow-2xl p-8 flex flex-col items-center">
+        {/* Logo */}
+        <div className="mb-6">
+          <img src="/lovable-uploads/30e004e6-73ad-4686-9de7-5e4312987f74.png" alt="HRU Legal" className="h-16 w-auto" />
+        </div>
+        
+        {/* Form */}
+        <form onSubmit={handleSignIn} className="flex flex-col w-full gap-4">
+          <div className="w-full flex flex-col gap-3">
+            <div className="flex gap-2">
+              <div className="flex items-center justify-center px-3 py-3 rounded-xl bg-white/10 text-white text-sm font-medium">
+                +91
+              </div>
+              <input 
+                placeholder="Mobile Number" 
+                type="tel" 
+                value={phone}
+                className="flex-1 px-5 py-3 rounded-xl bg-white/10 text-white placeholder-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400" 
+                onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                maxLength={10}
+                disabled={isLoading}
+                required
+              />
+            </div>
+            {error && <div className="text-sm text-red-400 text-left">{error}</div>}
           </div>
-          <CardTitle className="text-2xl font-semibold">Client Portal</CardTitle>
-          <CardDescription>
-            {step === 'phone' 
-              ? 'Enter your registered mobile number to receive OTP'
-              : 'Enter the 6-digit OTP sent to your mobile'
-            }
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {step === 'phone' ? (
-            <form onSubmit={handleSendOtp} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="phone">Mobile Number</Label>
-                <div className="flex gap-2">
-                  <div className="flex items-center justify-center px-3 py-2 border border-input rounded-md bg-muted text-sm font-medium">
-                    +91
-                  </div>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="Enter 10-digit mobile number"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                    maxLength={10}
-                    required
-                    className="flex-1"
-                    disabled={isLoading}
-                  />
-                </div>
-              </div>
-              
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isLoading || phone.length !== 10}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Sending OTP...
-                  </>
-                ) : (
-                  <>
-                    <Phone className="mr-2 h-4 w-4" />
-                    Send OTP
-                  </>
-                )}
-              </Button>
-            </form>
-          ) : (
-            <form onSubmit={handleVerifyOtp} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="otp" className="text-center block">
-                  Enter OTP sent to +91{phone}
-                </Label>
-                <div className="flex justify-center">
-                  <InputOTP
-                    maxLength={6}
-                    value={otp}
-                    onChange={setOtp}
-                    disabled={isLoading}
-                  >
-                    <InputOTPGroup>
-                      <InputOTPSlot index={0} />
-                      <InputOTPSlot index={1} />
-                      <InputOTPSlot index={2} />
-                      <InputOTPSlot index={3} />
-                      <InputOTPSlot index={4} />
-                      <InputOTPSlot index={5} />
-                    </InputOTPGroup>
-                  </InputOTP>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={isLoading || otp.length !== 6}
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Verifying...
-                    </>
-                  ) : (
-                    'Verify & Login'
-                  )}
-                </Button>
-                
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="w-full"
-                  onClick={() => {
-                    setStep('phone');
-                    setOtp('');
-                  }}
-                  disabled={isLoading}
-                >
-                  Change Mobile Number
-                </Button>
-              </div>
-            </form>
-          )}
-        </CardContent>
-      </Card>
+          <hr className="opacity-10" />
+          <div>
+            <button 
+              type="submit"
+              disabled={isLoading || phone.length !== 10}
+              className="w-full bg-white/10 font-medium px-5 py-3 rounded-full shadow hover:bg-white/20 transition mb-3 text-sm disabled:opacity-50 disabled:cursor-not-allowed text-white flex items-center justify-center gap-2"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                'Sign in to Client Portal'
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };
