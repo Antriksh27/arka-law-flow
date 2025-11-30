@@ -28,8 +28,7 @@ export const CasesFilters: React.FC<CasesFiltersProps> = ({
   statusOptions
 }) => {
   return (
-    <div className="sticky top-0 z-40 bg-gray-50 pb-4 pt-4">
-      <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-200">
+    <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-200 mb-6">
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 sm:w-4 sm:h-4" />
@@ -80,7 +79,6 @@ export const CasesFilters: React.FC<CasesFiltersProps> = ({
             <SelectItem value="unassigned">Unassigned</SelectItem>
           </SelectContent>
         </Select>
-      </div>
       </div>
     </div>
   );
