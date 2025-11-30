@@ -25,6 +25,13 @@ export const ClientAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Only initialize if on client portal routes
+    const isClientRoute = window.location.pathname.startsWith('/client');
+    if (!isClientRoute) {
+      setLoading(false);
+      return;
+    }
+
     // Check active session
     const initializeAuth = async () => {
       try {
@@ -34,15 +41,21 @@ export const ClientAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           setSession(currentSession);
           setUser(currentSession.user);
           
-          // Fetch client data
-          const { data: clientUser } = await supabase
-            .from('client_users')
-            .select('client_id, clients(id, full_name)')
-            .eq('auth_user_id', currentSession.user.id)
-            .single();
-          
-          if (clientUser && clientUser.clients) {
-            setClient(clientUser.clients as ClientData);
+          // Fetch client data with error handling
+          try {
+            const { data: clientUser, error } = await supabase
+              .from('client_users')
+              .select('client_id, clients(id, full_name)')
+              .eq('auth_user_id', currentSession.user.id)
+              .maybeSingle();
+            
+            if (error) {
+              console.warn('ClientAuthContext: Error fetching client data:', error);
+            } else if (clientUser && clientUser.clients) {
+              setClient(clientUser.clients as ClientData);
+            }
+          } catch (clientError) {
+            console.warn('ClientAuthContext: Failed to fetch client data:', clientError);
           }
         }
       } catch (error) {
@@ -54,22 +67,31 @@ export const ClientAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
     initializeAuth();
 
-    // Listen for auth changes
+    // Listen for auth changes (sync callback only)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, newSession) => {
+      (event, newSession) => {
         setSession(newSession);
         setUser(newSession?.user ?? null);
         
+        // Defer client data fetch to avoid deadlock
         if (newSession?.user) {
-          const { data: clientUser } = await supabase
-            .from('client_users')
-            .select('client_id, clients(id, full_name)')
-            .eq('auth_user_id', newSession.user.id)
-            .single();
-          
-          if (clientUser && clientUser.clients) {
-            setClient(clientUser.clients as ClientData);
-          }
+          setTimeout(async () => {
+            try {
+              const { data: clientUser, error } = await supabase
+                .from('client_users')
+                .select('client_id, clients(id, full_name)')
+                .eq('auth_user_id', newSession.user.id)
+                .maybeSingle();
+              
+              if (error) {
+                console.warn('ClientAuthContext: Error fetching client data on auth change:', error);
+              } else if (clientUser && clientUser.clients) {
+                setClient(clientUser.clients as ClientData);
+              }
+            } catch (clientError) {
+              console.warn('ClientAuthContext: Failed to fetch client data on auth change:', clientError);
+            }
+          }, 0);
         } else {
           setClient(null);
         }
