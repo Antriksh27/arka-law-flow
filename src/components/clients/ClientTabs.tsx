@@ -162,42 +162,6 @@ export const ClientTabs: React.FC<ClientTabsProps> = ({
           </div>
         )}
 
-        {/* Mobile Client Info Card */}
-        {isMobile && (
-          <div className="bg-white border-b border-gray-200 p-4">
-            <div className="flex items-start gap-3">
-              <Avatar className="w-12 h-12 flex-shrink-0">
-                <AvatarFallback className="bg-gray-100 text-gray-600 text-sm font-medium">
-                  {client.full_name.split(' ').map((n: string) => n[0]).join('')}
-                </AvatarFallback>
-              </Avatar>
-              
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <h2 className="text-base font-semibold text-gray-900 truncate">
-                    {client.full_name}
-                  </h2>
-                  {client.is_vip && (
-                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400 flex-shrink-0" aria-label="VIP Client" />
-                  )}
-                </div>
-                <div className="space-y-1 text-xs text-gray-600">
-                  {client.email && (
-                    <div className="truncate">{client.email}</div>
-                  )}
-                  {client.phone && (
-                    <div>{client.phone}</div>
-                  )}
-                  {client.organization && (
-                    <div className="truncate">
-                      <span className="font-medium">Org:</span> {client.organization}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Tabs List */}
         <TabsList className={`w-full bg-white border-b border-gray-200 h-auto p-0 ${isMobile ? 'sticky top-14 z-30' : ''}`}>
