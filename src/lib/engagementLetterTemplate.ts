@@ -20,11 +20,17 @@ export function generateEngagementLetter(data: EngagementLetterData): string {
     <html>
     <head>
       <meta charset="utf-8">
-      <title>Legal Engagement Letter</title>
+      <title>Engagement Letter</title>
       <style>
         @page {
           size: A4;
-          margin: 60mm 20mm 30mm 20mm;
+          margin: 50mm 20mm 30mm 20mm;
+          @top-left { content: none; }
+          @top-center { content: none; }
+          @top-right { content: none; }
+          @bottom-left { content: none; }
+          @bottom-center { content: none; }
+          @bottom-right { content: none; }
         }
         @media print {
           body {
