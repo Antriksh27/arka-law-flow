@@ -81,6 +81,8 @@ export const HearingsCalendarView: React.FC<HearingsCalendarViewProps> = ({
         throw error;
       }
       console.debug('✅ Fetched hearings:', data?.length || 0, 'hearings');
+      console.log('📊 HEARINGS DATA:', data);
+      console.log('📊 SAMPLE HEARING:', data?.[0]);
       return data || [];
     }
   });
