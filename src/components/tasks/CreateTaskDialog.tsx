@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -13,6 +13,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { ClientSelector } from '@/components/appointments/ClientSelector';
 import { CaseSelector } from '@/components/appointments/CaseSelector';
+import { Mic, MicOff, Loader2 } from 'lucide-react';
+import { AudioRecorder } from '@/utils/audioRecorder';
+import { useDeepgramTranscription } from '@/hooks/useDeepgramTranscription';
 
 interface CreateTaskDialogProps {
   open: boolean;
@@ -45,6 +48,10 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   const queryClient = useQueryClient();
   const { firmId } = useAuth();
   
+  const [isDictating, setIsDictating] = useState(false);
+  const audioRecorderRef = useRef<AudioRecorder>(new AudioRecorder());
+  const { transcribe, isProcessing: isTranscribing } = useDeepgramTranscription();
+  
   const {
     register,
     handleSubmit,
@@ -70,6 +77,67 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   }, [clientId, setValue]);
 
   const linkType = watch('link_type');
+
+  const toggleDictation = async () => {
+    if (isDictating) {
+      // Stop dictation and transcribe
+      setIsDictating(false);
+      
+      try {
+        const blob = await audioRecorderRef.current.stopRecording();
+        
+        toast({
+          title: "Transcribing...",
+          description: "Converting speech to text"
+        });
+
+        const result = await transcribe(blob);
+        
+        if (result.error) {
+          toast({
+            title: "Transcription failed",
+            description: result.error,
+            variant: "destructive"
+          });
+        } else if (result.text) {
+          const currentDescription = watch('description') || '';
+          const newDescription = currentDescription 
+            ? `${currentDescription}\n\n${result.text}` 
+            : result.text;
+          setValue('description', newDescription);
+          
+          toast({
+            title: "Transcription complete",
+            description: "Speech converted to text successfully"
+          });
+        }
+      } catch (error) {
+        console.error('Dictation error:', error);
+        toast({
+          title: "Dictation failed",
+          description: "Could not process speech",
+          variant: "destructive"
+        });
+      }
+    } else {
+      // Start dictation
+      try {
+        await audioRecorderRef.current.startRecording();
+        setIsDictating(true);
+        
+        toast({
+          title: "Recording started",
+          description: "Speak now, click again to finish"
+        });
+      } catch (error) {
+        toast({
+          title: "Dictation failed",
+          description: "Could not access microphone",
+          variant: "destructive"
+        });
+      }
+    }
+  };
 
   // Fetch team members for assignment
   const { data: teamMembers = [] } = useQuery({
@@ -229,16 +297,52 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description" className="text-sm font-medium text-gray-700">
-              Description
-            </Label>
-            <Textarea
-              id="description"
-              {...register('description')}
-              placeholder="Enter task description..."
-              className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 min-h-[100px]"
-              rows={4}
-            />
+            <div className="flex items-center justify-between">
+              <Label htmlFor="description" className="text-sm font-medium text-gray-700">
+                Description
+              </Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={toggleDictation}
+                disabled={isTranscribing}
+                className={`${isDictating 
+                  ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100' 
+                  : 'text-blue-600 border-blue-200 hover:bg-blue-50'}`}
+              >
+                {isTranscribing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Transcribing...
+                  </>
+                ) : isDictating ? (
+                  <>
+                    <MicOff className="w-4 h-4 mr-2" />
+                    Stop Dictation
+                  </>
+                ) : (
+                  <>
+                    <Mic className="w-4 h-4 mr-2" />
+                    Dictate
+                  </>
+                )}
+              </Button>
+            </div>
+            <div className="relative">
+              <Textarea
+                id="description"
+                {...register('description')}
+                placeholder="Enter task description or click Dictate to speak..."
+                className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 min-h-[100px]"
+                rows={4}
+              />
+              {isDictating && (
+                <div className="absolute bottom-2 right-2 flex items-center gap-2 text-red-500 text-sm">
+                  <span className="animate-pulse">●</span> Recording...
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="space-y-2">
