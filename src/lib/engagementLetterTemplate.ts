@@ -23,17 +23,26 @@ export function generateEngagementLetter(data: EngagementLetterData): string {
       <title>Legal Engagement Letter</title>
       <style>
         @page {
-          size: auto;
+          size: A4;
           margin: 0mm;
         }
         @media print {
-          .letter-container {
-            margin: 60mm 20mm 40mm 20mm;
+          body {
+            margin: 0;
             padding: 0;
+          }
+          .letter-container {
+            margin: 70mm 20mm 50mm 20mm !important;
+            padding: 0 !important;
           }
           .no-print {
             display: none;
           }
+        }
+        body {
+          margin: 0;
+          padding: 0;
+          background: #f5f5f5;
         }
         .letter-container {
           font-family: 'Times New Roman', Times, serif;
@@ -42,9 +51,10 @@ export function generateEngagementLetter(data: EngagementLetterData): string {
           max-width: 210mm;
           margin: 0 auto;
           padding: 20px;
-          padding-top: 80px;
-          padding-bottom: 60px;
+          padding-top: 100px;
+          padding-bottom: 80px;
           background: white;
+          min-height: 297mm;
         }
         .header {
           text-align: center;
