@@ -202,12 +202,15 @@ export function GenerateEngagementLetterDialog({
   const handlePrint = async () => {
     setGeneratingPrintPDF(true);
     try {
-      console.log('Starting PDF generation for print...');
-      console.log('Generated HTML length:', generatedHTML?.length);
+      // Parse the full HTML document and extract components
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(generatedHTML, 'text/html');
+      const bodyContent = doc.body.innerHTML;
+      const styleContent = doc.head.querySelector('style')?.innerHTML || '';
       
-      // Create a temporary container for PDF generation
+      // Create a properly structured div for PDF generation
       const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = generatedHTML;
+      tempDiv.innerHTML = `<style>${styleContent}</style>${bodyContent}`;
       tempDiv.style.position = 'fixed';
       tempDiv.style.top = '0';
       tempDiv.style.left = '0';
@@ -216,11 +219,11 @@ export function GenerateEngagementLetterDialog({
       tempDiv.style.pointerEvents = 'none';
       tempDiv.style.zIndex = '-1';
       tempDiv.style.background = 'white';
+      tempDiv.style.fontFamily = "'Times New Roman', Times, serif";
+      tempDiv.style.lineHeight = '1.6';
+      tempDiv.style.color = '#000';
       document.body.appendChild(tempDiv);
 
-      console.log('Temp div appended to DOM');
-      
-      // Wait a bit for the DOM to render
       await new Promise(resolve => setTimeout(resolve, 100));
 
       const opt = {
@@ -230,74 +233,92 @@ export function GenerateEngagementLetterDialog({
         html2canvas: { 
           scale: 2, 
           useCORS: true,
-          logging: true,
+          logging: false,
           backgroundColor: '#ffffff'
         },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
       };
 
-      console.log('Starting html2pdf conversion...');
       const pdfBlob = await html2pdf().set(opt).from(tempDiv).outputPdf('blob');
-      console.log('PDF blob generated:', pdfBlob?.size, 'bytes');
-      
       document.body.removeChild(tempDiv);
       
-      // Create blob URL and open in new tab for printing
       const blobUrl = URL.createObjectURL(pdfBlob);
       window.open(blobUrl, '_blank');
       
-      setGeneratingPrintPDF(false);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
       
       toast({
         title: 'PDF Generated',
-        description: 'The engagement letter PDF has been opened in a new tab for printing.',
+        description: 'The engagement letter has been opened in a new tab for printing.',
       });
     } catch (error) {
-      console.error('Error generating PDF:', error);
+      console.error('Error generating print PDF:', error);
       toast({
         title: 'Error',
-        description: 'Failed to generate PDF. Please try again.',
-        variant: 'destructive'
+        description: 'Failed to generate PDF for printing. Please try again.',
+        variant: 'destructive',
       });
+    } finally {
       setGeneratingPrintPDF(false);
     }
   };
   const handleSendEmail = async () => {
-    if (!pdfBlob) {
-      setGeneratingPDF(true);
-      try {
-        // Create a temporary container for PDF generation
+    try {
+      if (!pdfBlob) {
+        setGeneratingPDF(true);
+        
+        // Parse the full HTML document and extract components
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(generatedHTML, 'text/html');
+        const bodyContent = doc.body.innerHTML;
+        const styleContent = doc.head.querySelector('style')?.innerHTML || '';
+        
+        // Create a properly structured div for PDF generation
         const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = generatedHTML;
-        tempDiv.style.position = 'absolute';
-        tempDiv.style.left = '-9999px';
+        tempDiv.innerHTML = `<style>${styleContent}</style>${bodyContent}`;
+        tempDiv.style.position = 'fixed';
+        tempDiv.style.top = '0';
+        tempDiv.style.left = '0';
+        tempDiv.style.width = '210mm';
+        tempDiv.style.opacity = '0';
+        tempDiv.style.pointerEvents = 'none';
+        tempDiv.style.zIndex = '-1';
+        tempDiv.style.background = 'white';
+        tempDiv.style.fontFamily = "'Times New Roman', Times, serif";
+        tempDiv.style.lineHeight = '1.6';
+        tempDiv.style.color = '#000';
         document.body.appendChild(tempDiv);
+
+        await new Promise(resolve => setTimeout(resolve, 100));
 
         const opt = {
           margin: [60, 20, 40, 20] as [number, number, number, number],
           filename: `Engagement_Letter_${clientName.replace(/\s+/g, '_')}.pdf`,
           image: { type: 'jpeg' as const, quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true },
+          html2canvas: { 
+            scale: 2, 
+            useCORS: true,
+            logging: false,
+            backgroundColor: '#ffffff'
+          },
           jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
         };
 
         const blob = await html2pdf().set(opt).from(tempDiv).outputPdf('blob');
         document.body.removeChild(tempDiv);
-        
         setPdfBlob(blob);
         setGeneratingPDF(false);
-        setShowEmailDialog(true);
-      } catch (error) {
-        console.error('Error generating PDF:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to generate PDF. Please try again.',
-          variant: 'destructive'
-        });
-        setGeneratingPDF(false);
       }
-    } else {
+      
       setShowEmailDialog(true);
+    } catch (error) {
+      console.error('Error generating email PDF:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to generate PDF for email. Please try again.',
+        variant: 'destructive',
+      });
+      setGeneratingPDF(false);
     }
   };
   const handleClose = () => {
