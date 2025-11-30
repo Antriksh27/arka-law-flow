@@ -7,7 +7,8 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, Printer, Mail, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Loader2, Download, Mail, ArrowLeft, ArrowRight } from 'lucide-react';
+import html2pdf from 'html2pdf.js';
 import { CaseSelector } from '@/components/appointments/CaseSelector';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SendEmailDialog } from './SendEmailDialog';
@@ -43,6 +44,8 @@ export function GenerateEngagementLetterDialog({
   const [matterDescription, setMatterDescription] = useState('');
   const [generatedHTML, setGeneratedHTML] = useState('');
   const [showEmailDialog, setShowEmailDialog] = useState(false);
+  const [generatingPDF, setGeneratingPDF] = useState(false);
+  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
 
   // Fetch client details
   const { data: clientData } = useQuery({
@@ -184,27 +187,72 @@ export function GenerateEngagementLetterDialog({
     setGeneratedHTML(letterHTML);
   };
 
-  const handlePrint = () => {
-    const blob = new Blob([generatedHTML], { type: 'text/html' });
-    const blobUrl = URL.createObjectURL(blob);
+  const generatePDF = async (): Promise<Blob> => {
+    const element = document.createElement('div');
+    element.innerHTML = generatedHTML;
     
-    const printWindow = window.open(blobUrl, '_blank');
-    if (printWindow) {
-      printWindow.onload = () => {
-        printWindow.focus();
-        printWindow.print();
-        setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
-      };
+    const options = {
+      margin: [50, 20, 30, 20] as [number, number, number, number], // [top, right, bottom, left] in mm
+      filename: `Engagement_Letter_${clientName.replace(/\s+/g, '_')}.pdf`,
+      image: { type: 'jpeg' as const, quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+    };
+
+    return await html2pdf().set(options).from(element).outputPdf('blob');
+  };
+
+  const handleDownloadPDF = async () => {
+    setGeneratingPDF(true);
+    try {
+      const blob = await generatePDF();
+      setPdfBlob(blob);
+      
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Engagement_Letter_${clientName.replace(/\s+/g, '_')}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
       
       toast({
-        title: 'Print Dialog Opened',
-        description: 'The engagement letter is ready to print.',
+        title: 'PDF Downloaded',
+        description: 'The engagement letter has been saved as a PDF.',
       });
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to generate PDF. Please try again.',
+        variant: 'destructive'
+      });
+    } finally {
+      setGeneratingPDF(false);
     }
   };
 
-  const handleSendEmail = () => {
-    setShowEmailDialog(true);
+  const handleSendEmail = async () => {
+    if (!pdfBlob) {
+      setGeneratingPDF(true);
+      try {
+        const blob = await generatePDF();
+        setPdfBlob(blob);
+        setShowEmailDialog(true);
+      } catch (error) {
+        console.error('PDF generation error:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to generate PDF for email. Please try again.',
+          variant: 'destructive'
+        });
+      } finally {
+        setGeneratingPDF(false);
+      }
+    } else {
+      setShowEmailDialog(true);
+    }
   };
 
   const handleClose = () => {
@@ -213,6 +261,7 @@ export function GenerateEngagementLetterDialog({
     setSelectedLawyerId('');
     setMatterDescription('');
     setGeneratedHTML('');
+    setPdfBlob(null);
     onClose();
   };
 
@@ -344,12 +393,27 @@ export function GenerateEngagementLetterDialog({
                 </Button>
               ) : (
                 <>
-                  <Button variant="outline" onClick={handlePrint}>
-                    <Printer className="w-4 h-4 mr-2" />
-                    Print
+                  <Button 
+                    variant="outline" 
+                    onClick={handleDownloadPDF}
+                    disabled={generatingPDF}
+                  >
+                    {generatingPDF ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Download className="w-4 h-4 mr-2" />
+                    )}
+                    Download PDF
                   </Button>
-                  <Button onClick={handleSendEmail}>
-                    <Mail className="w-4 h-4 mr-2" />
+                  <Button 
+                    onClick={handleSendEmail}
+                    disabled={generatingPDF}
+                  >
+                    {generatingPDF ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Mail className="w-4 h-4 mr-2" />
+                    )}
                     Send Email
                   </Button>
                 </>
@@ -359,14 +423,16 @@ export function GenerateEngagementLetterDialog({
         </DialogContent>
       </Dialog>
 
-      {showEmailDialog && clientEmail && (
+      {showEmailDialog && clientEmail && pdfBlob && (
         <SendEmailDialog
           open={showEmailDialog}
           onClose={() => setShowEmailDialog(false)}
           clientEmail={clientEmail}
           clientName={clientName}
           defaultSubject={`Engagement Letter for Legal Services - ${caseData?.case_title || 'Legal Matter'}`}
-          defaultBody={`Dear ${clientName},\n\nPlease find the engagement letter for your legal matter: ${caseData?.case_title || 'Legal Matter'}.\n\nYou can print the letter using the Print button in the Generate Engagement Letter dialog.\n\nBest regards,\n${selectedLawyer?.full_name || lawyerData?.full_name || ''}\n${firmData?.name || ''}`}
+          defaultBody={`Dear ${clientName},\n\nPlease find attached the engagement letter for your legal matter: ${caseData?.case_title || 'Legal Matter'}.\n\nKindly review the terms and conditions outlined in the letter. If you have any questions, please feel free to contact us.\n\nBest regards,\n${selectedLawyer?.full_name || lawyerData?.full_name || ''}\n${firmData?.name || ''}`}
+          pdfAttachment={pdfBlob}
+          pdfFileName={`Engagement_Letter_${clientName.replace(/\s+/g, '_')}.pdf`}
         />
       )}
     </>
