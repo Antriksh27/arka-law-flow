@@ -12,9 +12,16 @@ const CauseList = () => {
   useEffect(() => {
     getDisplayBoard.mutate(undefined, {
       onSuccess: (data) => {
+        console.log('Gujarat Display Board API Response:', data);
         if (data.success) {
-          setCauseListData(data.data);
+          // Ensure we're setting an array
+          const responseData = data.data;
+          console.log('Response data type:', typeof responseData, 'isArray:', Array.isArray(responseData));
+          setCauseListData(responseData);
         }
+      },
+      onError: (error) => {
+        console.error('Failed to fetch display board:', error);
       }
     });
   }, []);
