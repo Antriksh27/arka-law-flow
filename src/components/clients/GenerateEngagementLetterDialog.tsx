@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -13,8 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { SendEmailDialog } from './SendEmailDialog';
 import { generateEngagementLetter } from '@/lib/engagementLetterTemplate';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
+
 interface GenerateEngagementLetterDialogProps {
   open: boolean;
   onClose: () => void;
@@ -22,12 +21,14 @@ interface GenerateEngagementLetterDialogProps {
   clientName: string;
   clientEmail?: string | null;
 }
+
 interface LawyerOption {
   user_id: string;
   full_name: string;
   email: string;
   role: string;
 }
+
 export function GenerateEngagementLetterDialog({
   open,
   onClose,
@@ -35,30 +36,23 @@ export function GenerateEngagementLetterDialog({
   clientName,
   clientEmail
 }: GenerateEngagementLetterDialogProps) {
-  const {
-    user
-  } = useAuth();
+  const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [selectedCaseId, setSelectedCaseId] = useState<string>('');
   const [selectedLawyerId, setSelectedLawyerId] = useState<string>('');
   const [matterDescription, setMatterDescription] = useState('');
   const [generatedHTML, setGeneratedHTML] = useState('');
-  const [generatingPDF, setGeneratingPDF] = useState(false);
-  const [generatingPrintPDF, setGeneratingPrintPDF] = useState(false);
-  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
   const [showEmailDialog, setShowEmailDialog] = useState(false);
-  const letterPreviewRef = useRef<HTMLDivElement>(null);
 
   // Fetch client details
-  const {
-    data: clientData
-  } = useQuery({
+  const { data: clientData } = useQuery({
     queryKey: ['client-details', clientId],
     queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from('clients').select('full_name, address, email').eq('id', clientId).single();
+      const { data, error } = await supabase
+        .from('clients')
+        .select('full_name, address, email')
+        .eq('id', clientId)
+        .single();
       if (error) throw error;
       return data;
     },
@@ -66,16 +60,15 @@ export function GenerateEngagementLetterDialog({
   });
 
   // Fetch selected case details
-  const {
-    data: caseData
-  } = useQuery({
+  const { data: caseData } = useQuery({
     queryKey: ['case-details', selectedCaseId],
     queryFn: async () => {
       if (!selectedCaseId) return null;
-      const {
-        data,
-        error
-      } = await supabase.from('cases').select('case_title, description').eq('id', selectedCaseId).single();
+      const { data, error } = await supabase
+        .from('cases')
+        .select('case_title, description')
+        .eq('id', selectedCaseId)
+        .single();
       if (error) throw error;
       return data;
     },
@@ -83,16 +76,10 @@ export function GenerateEngagementLetterDialog({
   });
 
   // Fetch lawyers list
-  const {
-    data: lawyers,
-    isLoading: loadingLawyers
-  } = useQuery({
+  const { data: lawyers, isLoading: loadingLawyers } = useQuery({
     queryKey: ['lawyers-list'],
     queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.rpc('get_lawyers_and_juniors');
+      const { data, error } = await supabase.rpc('get_lawyers_and_juniors');
       if (error) throw error;
       return data;
     },
@@ -100,51 +87,50 @@ export function GenerateEngagementLetterDialog({
   });
 
   // Fetch selected lawyer details
-  const {
-    data: lawyerData
-  } = useQuery({
+  const { data: lawyerData } = useQuery({
     queryKey: ['lawyer-details', selectedLawyerId],
     queryFn: async () => {
       if (!selectedLawyerId) return null;
-      const {
-        data,
-        error
-      } = await supabase.from('profiles').select('full_name, email, phone').eq('id', selectedLawyerId).single();
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('full_name, email, phone')
+        .eq('id', selectedLawyerId)
+        .single();
       if (error) throw error;
       return data;
     },
     enabled: !!selectedLawyerId
   });
 
-  // Get selected lawyer from the already-loaded lawyers list for immediate display
   const selectedLawyer = lawyers?.find(l => l.user_id === selectedLawyerId);
 
   // Fetch firm details
-  const {
-    data: firmData
-  } = useQuery({
+  const { data: firmData } = useQuery({
     queryKey: ['firm-details'],
     queryFn: async () => {
-      const {
-        data: teamMember
-      } = await supabase.from('team_members').select('firm_id').eq('user_id', user?.id).single();
+      const { data: teamMember } = await supabase
+        .from('team_members')
+        .select('firm_id')
+        .eq('user_id', user?.id)
+        .single();
       if (!teamMember?.firm_id) throw new Error('Firm not found');
-      const {
-        data,
-        error
-      } = await supabase.from('law_firms').select('name, address').eq('id', teamMember.firm_id).single();
+      const { data, error } = await supabase
+        .from('law_firms')
+        .select('name, address')
+        .eq('id', teamMember.firm_id)
+        .single();
       if (error) throw error;
       return data;
     },
     enabled: open && !!user
   });
 
-  // Set default matter description when case is selected
   useEffect(() => {
     if (caseData) {
       setMatterDescription(caseData.description || caseData.case_title || '');
     }
   }, [caseData]);
+
   const handleNext = () => {
     if (step === 1) {
       if (!selectedCaseId || !selectedLawyerId) {
@@ -166,7 +152,6 @@ export function GenerateEngagementLetterDialog({
         return;
       }
       
-      // Check if all required data is loaded
       if (!clientData || !selectedLawyer || !firmData) {
         toast({
           title: 'Loading Data',
@@ -180,11 +165,9 @@ export function GenerateEngagementLetterDialog({
       setStep(3);
     }
   };
+
   const generateLetter = () => {
-    if (!clientData || !selectedLawyer || !firmData) {
-      console.error('Missing data for letter generation:', { clientData, selectedLawyer, firmData });
-      return;
-    }
+    if (!clientData || !selectedLawyer || !firmData) return;
     
     const letterHTML = generateEngagementLetter({
       date: new Date(),
@@ -198,120 +181,41 @@ export function GenerateEngagementLetterDialog({
       firmAddress: firmData.address || ''
     });
     
-    console.log('Generated letter HTML length:', letterHTML.length);
     setGeneratedHTML(letterHTML);
   };
-  const handlePrint = async () => {
-    if (!letterPreviewRef.current) return;
-    setGeneratingPrintPDF(true);
-    
-    try {
-      // Capture the visible preview element directly
-      const canvas = await html2canvas(letterPreviewRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-      });
-      
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      
-      // Calculate scaling to fit A4 with letterhead margins
-      const marginTop = 60; // mm for letterhead
-      const marginBottom = 40;
-      const marginSide = 20;
-      const availableWidth = pdfWidth - (marginSide * 2);
-      const availableHeight = pdfHeight - marginTop - marginBottom;
-      
-      const imgWidthMM = availableWidth;
-      const imgHeightMM = (canvas.height * availableWidth) / canvas.width;
-      
-      pdf.addImage(imgData, 'PNG', marginSide, marginTop, imgWidthMM, imgHeightMM);
-      
-      const blob = pdf.output('blob');
-      const blobUrl = URL.createObjectURL(blob);
-      window.open(blobUrl, '_blank');
-      
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+
+  const handlePrint = () => {
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(generatedHTML);
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => {
+        printWindow.print();
+      }, 250);
       
       toast({
-        title: 'PDF Generated',
-        description: 'The engagement letter has been opened in a new tab for printing.',
+        title: 'Print Dialog Opened',
+        description: 'The engagement letter is ready to print.',
       });
-    } catch (error) {
-      console.error('Error generating print PDF:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to generate PDF for printing. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setGeneratingPrintPDF(false);
     }
   };
-  const handleSendEmail = async () => {
-    if (!letterPreviewRef.current) return;
-    
-    try {
-      if (!pdfBlob) {
-        setGeneratingPDF(true);
-        
-        // Capture the visible preview element directly
-        const canvas = await html2canvas(letterPreviewRef.current, {
-          scale: 2,
-          useCORS: true,
-          backgroundColor: '#ffffff',
-          logging: false,
-        });
-        
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
-        
-        // Calculate scaling to fit A4 with letterhead margins
-        const marginTop = 60; // mm for letterhead
-        const marginBottom = 40;
-        const marginSide = 20;
-        const availableWidth = pdfWidth - (marginSide * 2);
-        const availableHeight = pdfHeight - marginTop - marginBottom;
-        
-        const imgWidthMM = availableWidth;
-        const imgHeightMM = (canvas.height * availableWidth) / canvas.width;
-        
-        pdf.addImage(imgData, 'PNG', marginSide, marginTop, imgWidthMM, imgHeightMM);
-        
-        const blob = pdf.output('blob');
-        setPdfBlob(blob);
-        setGeneratingPDF(false);
-      }
-      
-      setShowEmailDialog(true);
-    } catch (error) {
-      console.error('Error generating email PDF:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to generate PDF for email. Please try again.',
-        variant: 'destructive',
-      });
-      setGeneratingPDF(false);
-    }
+
+  const handleSendEmail = () => {
+    setShowEmailDialog(true);
   };
+
   const handleClose = () => {
     setStep(1);
     setSelectedCaseId('');
     setSelectedLawyerId('');
     setMatterDescription('');
     setGeneratedHTML('');
-    setPdfBlob(null);
     onClose();
   };
-  return <>
+
+  return (
+    <>
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
           <DialogHeader className="flex-shrink-0">
@@ -319,133 +223,150 @@ export function GenerateEngagementLetterDialog({
           </DialogHeader>
 
           <div className="flex-1 overflow-y-auto">
-          {step === 1 && <div className="space-y-6 py-4">
-              <div className="space-y-2">
-                <Label>Client Name</Label>
-                <div className="p-3 rounded-md text-sm bg-slate-50">
-                  {clientData?.full_name || clientName}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Client Address</Label>
-                <div className="p-3 rounded-md text-sm whitespace-pre-line bg-slate-50">
-                  {clientData?.address || 'Not provided'}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="case-select">Select Case *</Label>
-                <CaseSelector value={selectedCaseId} onValueChange={setSelectedCaseId} placeholder="Select a case..." clientId={clientId} />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="lawyer-select">Select Lawyer *</Label>
-                {loadingLawyers ? <div className="flex items-center justify-center p-4">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  </div> : <Select value={selectedLawyerId} onValueChange={setSelectedLawyerId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a lawyer..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {lawyers?.map(lawyer => <SelectItem key={lawyer.user_id} value={lawyer.user_id}>
-                          {lawyer.full_name}
-                        </SelectItem>)}
-                    </SelectContent>
-                  </Select>}
-              </div>
-            </div>}
-
-          {step === 2 && <div className="space-y-6 py-4">
-              <div className="grid grid-cols-2 gap-4">
+            {step === 1 && (
+              <div className="space-y-6 py-4">
                 <div className="space-y-2">
-                  <Label>Case Title</Label>
+                  <Label>Client Name</Label>
                   <div className="p-3 rounded-md text-sm bg-slate-50">
-                    {caseData?.case_title || 'Loading...'}
+                    {clientData?.full_name || clientName}
                   </div>
                 </div>
+
                 <div className="space-y-2">
-                  <Label>Lawyer</Label>
-                  <div className="p-3 rounded-md text-sm bg-slate-50">
-                    {selectedLawyer?.full_name || lawyerData?.full_name || 'Loading...'}
+                  <Label>Client Address</Label>
+                  <div className="p-3 rounded-md text-sm whitespace-pre-line bg-slate-50">
+                    {clientData?.address || 'Not provided'}
                   </div>
                 </div>
-              </div>
 
-              
-
-              <div className="space-y-2">
-                <Label htmlFor="matter-description">Matter Description *</Label>
-                <Textarea id="matter-description" value={matterDescription} onChange={e => setMatterDescription(e.target.value)} placeholder="Describe the legal matter..." rows={6} className="resize-none" />
-                <p className="text-xs text-muted-foreground">
-                  This will appear in the engagement letter as the scope of work.
-                </p>
-              </div>
-            </div>}
-
-          {step === 3 && <div className="space-y-4 py-4">
-              {!generatedHTML ? (
-                <div className="flex items-center justify-center h-[500px] w-full border rounded-md">
-                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                </div>
-              ) : (
-                <ScrollArea className="h-[500px] w-full border rounded-md bg-white">
-                  <div 
-                    ref={letterPreviewRef}
-                    className="p-6" 
-                    dangerouslySetInnerHTML={{
-                      __html: generatedHTML
-                    }} 
+                <div className="space-y-2">
+                  <Label htmlFor="case-select">Select Case *</Label>
+                  <CaseSelector
+                    value={selectedCaseId}
+                    onValueChange={setSelectedCaseId}
+                    placeholder="Select a case..."
+                    clientId={clientId}
                   />
-                </ScrollArea>
-              )}
-            </div>}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="lawyer-select">Select Lawyer *</Label>
+                  {loadingLawyers ? (
+                    <div className="flex items-center justify-center p-4">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    </div>
+                  ) : (
+                    <Select value={selectedLawyerId} onValueChange={setSelectedLawyerId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a lawyer..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {lawyers?.map(lawyer => (
+                          <SelectItem key={lawyer.user_id} value={lawyer.user_id}>
+                            {lawyer.full_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {step === 2 && (
+              <div className="space-y-6 py-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Case Title</Label>
+                    <div className="p-3 rounded-md text-sm bg-slate-50">
+                      {caseData?.case_title || 'Loading...'}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Lawyer</Label>
+                    <div className="p-3 rounded-md text-sm bg-slate-50">
+                      {selectedLawyer?.full_name || lawyerData?.full_name || 'Loading...'}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="matter-description">Matter Description *</Label>
+                  <Textarea
+                    id="matter-description"
+                    value={matterDescription}
+                    onChange={e => setMatterDescription(e.target.value)}
+                    placeholder="Describe the legal matter..."
+                    rows={6}
+                    className="resize-none"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    This will appear in the engagement letter as the scope of work.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {step === 3 && (
+              <div className="space-y-4 py-4">
+                {!generatedHTML ? (
+                  <div className="flex items-center justify-center h-[500px] w-full border rounded-md">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
+                  <ScrollArea className="h-[500px] w-full border rounded-md bg-white">
+                    <div 
+                      className="p-6" 
+                      dangerouslySetInnerHTML={{ __html: generatedHTML }}
+                    />
+                  </ScrollArea>
+                )}
+              </div>
+            )}
           </div>
 
           <DialogFooter className="flex-shrink-0 flex justify-between items-center sm:justify-between gap-2">
             <div>
-              {step > 1 && <Button variant="outline" onClick={() => setStep(step - 1)}>
+              {step > 1 && (
+                <Button variant="outline" onClick={() => setStep(step - 1)}>
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Back
-                </Button>}
+                </Button>
+              )}
             </div>
             <div className="flex gap-2">
-              {step < 3 ? <Button onClick={handleNext}>
+              {step < 3 ? (
+                <Button onClick={handleNext}>
                   Next
                   <ArrowRight className="w-4 h-4 ml-2" />
-                </Button> : <>
-                  <Button variant="outline" onClick={handlePrint} disabled={generatingPrintPDF}>
-                    {generatingPrintPDF ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Generating PDF...
-                      </>
-                    ) : (
-                      <>
-                        <Printer className="w-4 h-4 mr-2" />
-                        Print
-                      </>
-                    )}
+                </Button>
+              ) : (
+                <>
+                  <Button variant="outline" onClick={handlePrint}>
+                    <Printer className="w-4 h-4 mr-2" />
+                    Print
                   </Button>
-                  <Button onClick={handleSendEmail} disabled={generatingPDF}>
-                    {generatingPDF ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Generating PDF...
-                      </>
-                    ) : (
-                      <>
-                        <Mail className="w-4 h-4 mr-2" />
-                        Send Email
-                      </>
-                    )}
+                  <Button onClick={handleSendEmail}>
+                    <Mail className="w-4 h-4 mr-2" />
+                    Send Email
                   </Button>
-                </>}
+                </>
+              )}
             </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {showEmailDialog && clientEmail && pdfBlob && <SendEmailDialog open={showEmailDialog} onClose={() => setShowEmailDialog(false)} clientEmail={clientEmail} clientName={clientName} defaultSubject={`Engagement Letter for Legal Services - ${caseData?.case_title || 'Legal Matter'}`} defaultBody={`Dear ${clientName},\n\nPlease find attached the engagement letter for legal services.\n\nBest regards,\n${selectedLawyer?.full_name || lawyerData?.full_name || ''}\n${firmData?.name || ''}`} pdfAttachment={pdfBlob} pdfFileName={`Engagement_Letter_${clientName.replace(/\s+/g, '_')}.pdf`} />}
-    </>;
+      {showEmailDialog && clientEmail && (
+        <SendEmailDialog
+          open={showEmailDialog}
+          onClose={() => setShowEmailDialog(false)}
+          clientEmail={clientEmail}
+          clientName={clientName}
+          defaultSubject={`Engagement Letter for Legal Services - ${caseData?.case_title || 'Legal Matter'}`}
+          defaultBody={`Dear ${clientName},\n\nPlease find the engagement letter for your legal matter: ${caseData?.case_title || 'Legal Matter'}.\n\nYou can print the letter using the Print button in the Generate Engagement Letter dialog.\n\nBest regards,\n${selectedLawyer?.full_name || lawyerData?.full_name || ''}\n${firmData?.name || ''}`}
+        />
+      )}
+    </>
+  );
 }
