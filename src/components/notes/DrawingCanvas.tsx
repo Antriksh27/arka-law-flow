@@ -1,188 +1,183 @@
-
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Trash2, Download } from 'lucide-react';
+import getStroke from 'perfect-freehand';
 
 interface DrawingCanvasProps {
   onDrawingChange: (data: string | null) => void;
 }
 
+interface Point {
+  x: number;
+  y: number;
+  pressure: number;
+}
+
+interface Stroke {
+  points: Point[];
+  color: string;
+  size: number;
+}
+
 export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentColor, setCurrentColor] = useState('#000000');
-  const [lineWidth, setLineWidth] = useState(3);
-  const lastPointRef = useRef<{ x: number; y: number } | null>(null);
-  const pathRef = useRef<{ x: number; y: number }[]>([]);
+  const [brushSize, setBrushSize] = useState(8);
+  const [strokes, setStrokes] = useState<Stroke[]>([]);
+  const [currentStroke, setCurrentStroke] = useState<Point[]>([]);
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+  const getStrokeOptions = (size: number) => ({
+    size,
+    thinning: 0.5,
+    smoothing: 0.5,
+    streamline: 0.5,
+    easing: (t: number) => t,
+    simulatePressure: true,
+    start: {
+      cap: true,
+      taper: 0,
+    },
+    end: {
+      cap: true,
+      taper: 0,
+    },
+  });
 
-    const context = canvas.getContext('2d');
-    if (!context) return;
+  const getSvgPathFromStroke = useCallback((stroke: number[][]): string => {
+    if (!stroke.length) return '';
 
-    // Set canvas size to match display size with high DPI support
-    const rect = canvas.getBoundingClientRect();
+    const d = stroke.reduce(
+      (acc, [x0, y0], i, arr) => {
+        const [x1, y1] = arr[(i + 1) % arr.length];
+        acc.push(x0, y0, (x0 + x1) / 2, (y0 + y1) / 2);
+        return acc;
+      },
+      ['M', ...stroke[0], 'Q']
+    );
+
+    d.push('Z');
+    return d.join(' ');
+  }, []);
+
+  const getEventPos = useCallback((e: React.PointerEvent<SVGSVGElement>): Point => {
+    const svg = svgRef.current;
+    if (!svg) return { x: 0, y: 0, pressure: 0.5 };
+
+    const rect = svg.getBoundingClientRect();
+    return {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+      pressure: e.pressure || 0.5,
+    };
+  }, []);
+
+  const startDrawing = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
+    e.preventDefault();
+    setIsDrawing(true);
+    const point = getEventPos(e);
+    setCurrentStroke([point]);
+  }, [getEventPos]);
+
+  const draw = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
+    e.preventDefault();
+    if (!isDrawing) return;
+
+    const point = getEventPos(e);
+    setCurrentStroke(prev => [...prev, point]);
+  }, [isDrawing, getEventPos]);
+
+  const stopDrawing = useCallback(() => {
+    if (!isDrawing || currentStroke.length === 0) return;
+
+    const newStroke: Stroke = {
+      points: currentStroke,
+      color: currentColor,
+      size: brushSize,
+    };
+
+    setStrokes(prev => [...prev, newStroke]);
+    setCurrentStroke([]);
+    setIsDrawing(false);
+
+    // Export to data URL after a short delay to allow state to update
+    setTimeout(() => {
+      exportToDataUrl();
+    }, 50);
+  }, [isDrawing, currentStroke, currentColor, brushSize]);
+
+  const exportToDataUrl = useCallback(() => {
+    const svg = svgRef.current;
+    if (!svg) return;
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const rect = svg.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
     
     canvas.width = rect.width * dpr;
     canvas.height = rect.height * dpr;
-    
-    // Scale the context to match the device pixel ratio
-    context.scale(dpr, dpr);
-    
-    // Set canvas CSS size back to original
     canvas.style.width = rect.width + 'px';
     canvas.style.height = rect.height + 'px';
+    
+    ctx.scale(dpr, dpr);
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, rect.width, rect.height);
 
-    // Set high-quality rendering settings
-    context.strokeStyle = currentColor;
-    context.lineWidth = lineWidth;
-    context.lineCap = 'round';
-    context.lineJoin = 'round';
-    context.imageSmoothingEnabled = true;
-    context.imageSmoothingQuality = 'high';
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(svgBlob);
 
-    // Fill with white background
-    context.fillStyle = 'white';
-    context.fillRect(0, 0, canvas.width / dpr, canvas.height / dpr);
-  }, []);
-
-  // Update canvas context when color or line width changes
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const context = canvas?.getContext('2d');
-    if (!canvas || !context) return;
-
-    context.strokeStyle = currentColor;
-    context.lineWidth = lineWidth;
-  }, [currentColor, lineWidth]);
-
-  const getEventPos = useCallback((e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return { x: 0, y: 0 };
-
-    const rect = canvas.getBoundingClientRect();
-
-    // Handle touch events
-    if ('touches' in e) {
-      const touch = e.touches[0] || e.changedTouches[0];
-      return {
-        x: touch.clientX - rect.left,
-        y: touch.clientY - rect.top
-      };
-    }
-
-    // Handle mouse events
-    return {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
+    const img = new Image();
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0);
+      const dataUrl = canvas.toDataURL('image/png', 1.0);
+      onDrawingChange(dataUrl);
+      URL.revokeObjectURL(url);
     };
-  }, []);
-
-  const drawSmoothLine = useCallback((points: { x: number; y: number }[]) => {
-    const canvas = canvasRef.current;
-    const context = canvas?.getContext('2d');
-    if (!canvas || !context || points.length < 2) return;
-
-    context.beginPath();
-    context.moveTo(points[0].x, points[0].y);
-
-    // Use quadratic curves for smoother lines
-    for (let i = 1; i < points.length - 1; i++) {
-      const currentPoint = points[i];
-      const nextPoint = points[i + 1];
-      const controlPointX = (currentPoint.x + nextPoint.x) / 2;
-      const controlPointY = (currentPoint.y + nextPoint.y) / 2;
-      
-      context.quadraticCurveTo(currentPoint.x, currentPoint.y, controlPointX, controlPointY);
-    }
-
-    // Draw to the last point
-    if (points.length > 1) {
-      const lastPoint = points[points.length - 1];
-      context.lineTo(lastPoint.x, lastPoint.y);
-    }
-
-    context.stroke();
-  }, []);
-
-  const startDrawing = useCallback((e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    e.preventDefault();
-    const canvas = canvasRef.current;
-    const context = canvas?.getContext('2d');
-    if (!canvas || !context) return;
-
-    const pos = getEventPos(e);
-    setIsDrawing(true);
-    lastPointRef.current = pos;
-    pathRef.current = [pos];
-
-    // Start a new path and draw a dot for single clicks
-    context.beginPath();
-    context.moveTo(pos.x, pos.y);
-    context.lineTo(pos.x, pos.y);
-    context.stroke();
-  }, [getEventPos]);
-
-  const draw = useCallback((e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    e.preventDefault();
-    if (!isDrawing || !lastPointRef.current) return;
-
-    const canvas = canvasRef.current;
-    const context = canvas?.getContext('2d');
-    if (!canvas || !context) return;
-
-    const currentPos = getEventPos(e);
-    
-    // Add current position to path
-    pathRef.current.push(currentPos);
-    
-    // Always draw a line from last point to current point for continuous strokes
-    context.beginPath();
-    context.moveTo(lastPointRef.current.x, lastPointRef.current.y);
-    context.lineTo(currentPos.x, currentPos.y);
-    context.stroke();
-
-    lastPointRef.current = currentPos;
-  }, [isDrawing, getEventPos]);
-
-  const stopDrawing = useCallback((e?: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    if (e) e.preventDefault();
-    
-    if (isDrawing) {
-      setIsDrawing(false);
-      lastPointRef.current = null;
-      pathRef.current = [];
-      
-      // Update the drawing data
-      const canvas = canvasRef.current;
-      if (canvas) {
-        onDrawingChange(canvas.toDataURL());
-      }
-    }
-  }, [isDrawing, onDrawingChange]);
+    img.src = url;
+  }, [onDrawingChange]);
 
   const clearCanvas = useCallback(() => {
-    const canvas = canvasRef.current;
-    const context = canvas?.getContext('2d');
-    if (!canvas || !context) return;
-
-    const dpr = window.devicePixelRatio || 1;
-    context.fillStyle = 'white';
-    context.fillRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+    setStrokes([]);
+    setCurrentStroke([]);
+    setIsDrawing(false);
     onDrawingChange(null);
   }, [onDrawingChange]);
 
   const downloadDrawing = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    const svg = svgRef.current;
+    if (!svg) return;
 
-    const link = document.createElement('a');
-    link.download = 'note-drawing.png';
-    link.href = canvas.toDataURL('image/png', 1.0);
-    link.click();
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const rect = svg.getBoundingClientRect();
+    canvas.width = rect.width * 2;
+    canvas.height = rect.height * 2;
+    
+    ctx.scale(2, 2);
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, rect.width, rect.height);
+
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(svgBlob);
+
+    const img = new Image();
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0);
+      const link = document.createElement('a');
+      link.download = 'note-drawing.png';
+      link.href = canvas.toDataURL('image/png', 1.0);
+      link.click();
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
   }, []);
 
   const colors = [
@@ -222,18 +217,18 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange })
           <label className="text-sm font-medium text-gray-700">Brush:</label>
           <input
             type="range"
-            min="1"
-            max="12"
-            value={lineWidth}
-            onChange={(e) => setLineWidth(parseInt(e.target.value))}
+            min="4"
+            max="24"
+            value={brushSize}
+            onChange={(e) => setBrushSize(parseInt(e.target.value))}
             className="w-24 accent-slate-800"
           />
           <div className="flex items-center justify-center w-8 h-8">
             <div 
               className="rounded-full border border-gray-300"
               style={{ 
-                width: `${Math.max(lineWidth, 4)}px`, 
-                height: `${Math.max(lineWidth, 4)}px`,
+                width: `${Math.max(brushSize / 2, 4)}px`, 
+                height: `${Math.max(brushSize / 2, 4)}px`,
                 backgroundColor: currentColor 
               }}
             />
@@ -264,22 +259,45 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange })
         </div>
       </div>
 
-      <div className="border-2 border-gray-200 rounded-xl overflow-hidden shadow-sm bg-white">
-        <canvas
-          ref={canvasRef}
+      <div 
+        ref={containerRef}
+        className="border-2 border-gray-200 rounded-xl overflow-hidden shadow-sm bg-white"
+      >
+        <svg
+          ref={svgRef}
           className="block cursor-crosshair bg-white w-full h-96 touch-none"
-          style={{ 
-            touchAction: 'none'
-          }}
-          onMouseDown={startDrawing}
-          onMouseMove={draw}
-          onMouseUp={stopDrawing}
-          onMouseLeave={stopDrawing}
-          onTouchStart={startDrawing}
-          onTouchMove={draw}
-          onTouchEnd={stopDrawing}
-          onTouchCancel={stopDrawing}
-        />
+          style={{ touchAction: 'none' }}
+          onPointerDown={startDrawing}
+          onPointerMove={draw}
+          onPointerUp={stopDrawing}
+          onPointerLeave={stopDrawing}
+        >
+          {/* Render completed strokes */}
+          {strokes.map((stroke, i) => {
+            const pathData = getSvgPathFromStroke(
+              getStroke(stroke.points, getStrokeOptions(stroke.size))
+            );
+            return (
+              <path
+                key={i}
+                d={pathData}
+                fill={stroke.color}
+                strokeWidth={0}
+              />
+            );
+          })}
+          
+          {/* Render current stroke being drawn */}
+          {currentStroke.length > 0 && (
+            <path
+              d={getSvgPathFromStroke(
+                getStroke(currentStroke, getStrokeOptions(brushSize))
+              )}
+              fill={currentColor}
+              strokeWidth={0}
+            />
+          )}
+        </svg>
       </div>
     </div>
   );
