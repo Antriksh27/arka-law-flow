@@ -20,11 +20,11 @@ export const useDailyBoardData = (
         .eq('hearing_date', dateStr);
       
       // Apply filters
-      if (filters.court) {
+      if (filters.court && filters.court !== 'all') {
         query = query.eq('court_name', filters.court);
       }
       
-      if (filters.judge) {
+      if (filters.judge && filters.judge !== 'all') {
         query = query.eq('judge', filters.judge);
       }
       
