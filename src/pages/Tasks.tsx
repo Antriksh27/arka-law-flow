@@ -496,21 +496,36 @@ const Tasks = () => {
           <TabsList className="w-full grid grid-cols-3 h-11 bg-white rounded-xl shadow-sm border border-border mb-4">
             <TabsTrigger
               value="todo"
-              className="data-[state=active]:bg-blue-600 data-[state=active]:text-white rounded-lg text-sm"
+              className="data-[state=active]:bg-blue-600 data-[state=active]:text-white rounded-lg text-sm font-medium"
             >
-              To Do ({tasksByStatus.todo.length})
+              <span className="flex items-center gap-1.5">
+                To Do
+                <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold data-[state=active]:bg-white/20 data-[state=active]:text-white">
+                  {tasksByStatus.todo.length}
+                </span>
+              </span>
             </TabsTrigger>
             <TabsTrigger
               value="in_progress"
-              className="data-[state=active]:bg-gray-600 data-[state=active]:text-white rounded-lg text-sm"
+              className="data-[state=active]:bg-gray-600 data-[state=active]:text-white rounded-lg text-sm font-medium"
             >
-              In Progress ({tasksByStatus.in_progress.length})
+              <span className="flex items-center gap-1.5">
+                In Progress
+                <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-gray-100 text-gray-700 text-xs font-semibold data-[state=active]:bg-white/20 data-[state=active]:text-white">
+                  {tasksByStatus.in_progress.length}
+                </span>
+              </span>
             </TabsTrigger>
             <TabsTrigger
               value="completed"
-              className="data-[state=active]:bg-green-600 data-[state=active]:text-white rounded-lg text-sm"
+              className="data-[state=active]:bg-green-600 data-[state=active]:text-white rounded-lg text-sm font-medium"
             >
-              Done ({tasksByStatus.completed.length})
+              <span className="flex items-center gap-1.5">
+                Done
+                <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-green-100 text-green-700 text-xs font-semibold data-[state=active]:bg-white/20 data-[state=active]:text-white">
+                  {tasksByStatus.completed.length}
+                </span>
+              </span>
             </TabsTrigger>
           </TabsList>
 
