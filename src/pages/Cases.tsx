@@ -136,14 +136,6 @@ const Cases = () => {
     assignedFilter !== 'all'
   ].filter(Boolean).length;
 
-  // Mobile segmented filter options - use valid status values
-  const filterSegments = [
-    { value: 'all', label: 'All' },
-    { value: 'in_court', label: 'In Court' },
-    { value: 'disposed', label: 'Disposed' },
-    { value: 'my', label: 'My Cases' },
-  ];
-
   return (
     <>
       {/* Mobile Header */}
@@ -183,53 +175,52 @@ const Cases = () => {
             />
           )}
 
-          {/* Mobile Hero Stats Card */}
+          {/* Mobile Hero Stats Card - Horizontal Scroll Strip */}
           {isMobile && (
             isLoadingStats ? (
-              <Skeleton className="h-32 rounded-2xl" />
+              <Skeleton className="h-24 rounded-2xl" />
             ) : caseStats ? (
-              <Card className="p-4 bg-gradient-to-br from-primary/20 via-blue-100 to-accent/20 border-border shadow-md">
-                <h3 className="text-sm font-medium text-muted-foreground mb-3">Quick Overview</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="flex flex-col items-center p-3 bg-white/80 rounded-xl">
+              <div className="overflow-x-auto -mx-3 px-3 pb-2">
+                <div className="flex gap-3 min-w-max">
+                  <div className="flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-border shadow-sm min-w-[140px]">
                     <div className="text-2xl font-bold text-foreground">{caseStats.active}</div>
-                    <div className="text-xs text-muted-foreground">Active Cases</div>
+                    <div className="text-xs text-muted-foreground whitespace-nowrap">Active Cases</div>
                   </div>
                   
-                  <div className="flex flex-col items-center p-3 bg-white/80 rounded-xl">
+                  <div className="flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-border shadow-sm min-w-[140px]">
                     <div className="text-2xl font-bold text-destructive">{caseStats.urgent}</div>
                     {caseStats.urgent === 0 ? (
-                      <div className="text-xs text-green-600 flex items-center gap-1">
+                      <div className="text-xs text-green-600 flex items-center gap-1 whitespace-nowrap">
                         <CheckCircle className="w-3 h-3" />
                         All clear!
                       </div>
                     ) : (
-                      <div className="text-xs text-muted-foreground">Urgent Today</div>
+                      <div className="text-xs text-muted-foreground whitespace-nowrap">Urgent Today</div>
                     )}
                   </div>
                   
-                  <div className="flex flex-col items-center p-3 bg-white/80 rounded-xl">
+                  <div className="flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-border shadow-sm min-w-[140px]">
                     <div className="text-2xl font-bold text-primary">{caseStats.nextWeek}</div>
-                    <div className="text-xs text-muted-foreground">Next 7 Days</div>
+                    <div className="text-xs text-muted-foreground whitespace-nowrap">Next 7 Days</div>
                   </div>
                   
-                  <div className="flex flex-col items-center p-3 bg-white/80 rounded-xl">
+                  <div className="flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-border shadow-sm min-w-[140px]">
                     <div className="text-2xl font-bold text-amber-600">{caseStats.highPriority}</div>
-                    <div className="text-xs text-muted-foreground">High Priority</div>
+                    <div className="text-xs text-muted-foreground whitespace-nowrap">High Priority</div>
                   </div>
                 </div>
-              </Card>
+              </div>
             ) : null
           )}
 
           {/* Mobile Tabs */}
           {isMobile && (
             <Tabs value={casesTab} onValueChange={(value) => setCasesTab(value as 'all' | 'my')} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 bg-white rounded-2xl shadow-sm border border-gray-200 h-11">
-                <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs">
-                  All
+              <TabsList className="grid w-full grid-cols-2 bg-white rounded-xl shadow-sm border border-border h-11">
+                <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg text-sm font-medium transition-all">
+                  All Cases
                 </TabsTrigger>
-                <TabsTrigger value="my" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs">
+                <TabsTrigger value="my" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg text-sm font-medium transition-all">
                   My Cases
                 </TabsTrigger>
               </TabsList>

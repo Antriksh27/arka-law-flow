@@ -10,45 +10,19 @@ interface CaseCardProps {
   case: any;
 }
 
-const getDisplayStatus = (caseItem: any) => {
-  // If linked to Legalkart (has CNR and has been fetched), show actual status mapped to in_court/disposed
-  const isLinkedToLegalkart = caseItem.cnr_number && caseItem.last_fetched_at;
-  const mapToLegalkartStatus = (text?: string | null) => {
-    const s = (text || '').toLowerCase();
-    if (!s) return 'in_court';
-    if (
-      s.includes('disposed') || s.includes('dismiss') || s.includes('withdraw') ||
-      s.includes('decid') || s.includes('complete') || s.includes('settled') || s.includes('close')
-    ) {
-      return 'disposed';
-    }
-    return 'in_court';
-  };
-
-  if (isLinkedToLegalkart) {
-    return mapToLegalkartStatus(caseItem.status);
+// Status colors - only pending and disposed are valid DB values
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'pending':
+      return 'bg-amber-100 text-amber-700 border-amber-200';
+    case 'disposed':
+      return 'bg-purple-100 text-purple-700 border-purple-200';
+    default:
+      return 'bg-gray-100 text-gray-700 border-gray-200';
   }
-  // Otherwise, show "open"
-  return 'open';
 };
 
 export const CaseCard: React.FC<CaseCardProps> = ({ case: caseItem }) => {
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'open':
-        return 'bg-blue-100 text-blue-700 border-blue-200';
-      case 'in_court':
-        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-      case 'disposed':
-        return 'bg-purple-100 text-purple-700 border-purple-200';
-      case 'closed':
-        return 'bg-gray-100 text-gray-700 border-gray-200';
-      case 'on_hold':
-        return 'bg-orange-100 text-orange-700 border-orange-200';
-      default:
-        return 'bg-gray-100 text-gray-700 border-gray-200';
-    }
-  };
 
   const getStageBadgeVariant = (stage: string | undefined) => {
     if (!stage) return "default";
@@ -125,8 +99,8 @@ export const CaseCard: React.FC<CaseCardProps> = ({ case: caseItem }) => {
 
         {/* Status Badges */}
         <div className="flex flex-wrap gap-2 mb-4">
-          <Badge className={`${getStatusColor(getDisplayStatus(caseItem))} rounded-full text-xs px-3 py-1 border`}>
-            {getDisplayStatus(caseItem)?.replace('_', ' ').toUpperCase()}
+          <Badge className={`${getStatusColor(caseItem.status)} rounded-full text-xs px-3 py-1 border`}>
+            {caseItem.status?.replace('_', ' ').toUpperCase()}
           </Badge>
           {caseItem.stage && (
             <Badge variant={getStageBadgeVariant(caseItem.stage) as any} className="rounded-full px-3 py-1 text-xs">

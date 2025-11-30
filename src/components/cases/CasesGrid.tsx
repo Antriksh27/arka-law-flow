@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { defaultQueryConfig } from '@/lib/queryConfig';
 import { CaseCard } from './CaseCard';
+import { MobileCaseCard } from './MobileCaseCard';
 import { SkeletonGrid } from '@/components/ui/skeleton-list';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -249,7 +250,7 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
       {isLoading ? (
         <SkeletonGrid count={9} />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 sm:gap-6'}`}>
           {cases.map((caseItem) => (
           <div key={caseItem.id} className="relative">
             {/* Only show checkbox on desktop */}
@@ -262,7 +263,11 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
                 />
               </div>
             )}
-            <CaseCard case={caseItem} />
+            {isMobile ? (
+              <MobileCaseCard case={caseItem} />
+            ) : (
+              <CaseCard case={caseItem} />
+            )}
           </div>
         ))}
         </div>
@@ -271,18 +276,24 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
       {/* Pagination Controls */}
       {totalPages > 1 && (
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 py-4 bg-white rounded-2xl shadow-sm border border-gray-200">
-          <div className="text-sm text-muted-foreground text-center sm:text-left">
-            Page {page} of {totalPages} <span className="hidden sm:inline">(Total: {totalCount} cases)</span>
-          </div>
+          {isMobile ? (
+            <div className="text-sm text-muted-foreground text-center">
+              Page {page} of {totalPages}
+            </div>
+          ) : (
+            <div className="text-sm text-muted-foreground">
+              Page {page} of {totalPages} (Total: {totalCount} cases)
+            </div>
+          )}
           <div className="flex items-center justify-center gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setPage(p => p - 1)}
               disabled={page === 1}
-              className="h-11 sm:h-9 px-4"
+              className={isMobile ? "h-11 px-5" : "h-9 px-4"}
             >
-              <ChevronLeft className="h-5 w-5 sm:h-4 sm:w-4" />
+              <ChevronLeft className={isMobile ? "h-5 w-5" : "h-4 w-4"} />
               <span className="ml-1">Prev</span>
             </Button>
             
@@ -318,10 +329,10 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
               size="sm"
               onClick={() => setPage(p => p + 1)}
               disabled={page === totalPages}
-              className="h-11 sm:h-9 px-4"
+              className={isMobile ? "h-11 px-5" : "h-9 px-4"}
             >
               <span className="mr-1">Next</span>
-              <ChevronRight className="h-5 w-5 sm:h-4 sm:w-4" />
+              <ChevronRight className={isMobile ? "h-5 w-5" : "h-4 w-4"} />
             </Button>
           </div>
         </div>
