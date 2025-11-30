@@ -144,6 +144,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "appointments_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "daily_hearings_view"
+            referencedColumns: ["case_id"]
+          },
+          {
             foreignKeyName: "appointments_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
@@ -372,6 +379,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "case_activities_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "daily_hearings_view"
+            referencedColumns: ["case_id"]
+          },
+          {
             foreignKeyName: "case_activities_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
@@ -423,6 +437,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "cases"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_assignments_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "daily_hearings_view"
+            referencedColumns: ["case_id"]
           },
           {
             foreignKeyName: "case_assignments_team_member_id_fkey"
@@ -477,6 +498,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "cases"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_contacts_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "daily_hearings_view"
+            referencedColumns: ["case_id"]
           },
         ]
       }
@@ -534,6 +562,13 @@ export type Database = {
             referencedRelation: "cases"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "case_documents_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "daily_hearings_view"
+            referencedColumns: ["case_id"]
+          },
         ]
       }
       case_emails: {
@@ -586,6 +621,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "cases"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_emails_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "daily_hearings_view"
+            referencedColumns: ["case_id"]
           },
         ]
       }
@@ -664,6 +706,13 @@ export type Database = {
             referencedRelation: "cases"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "case_fetch_queue_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: true
+            referencedRelation: "daily_hearings_view"
+            referencedColumns: ["case_id"]
+          },
         ]
       }
       case_files: {
@@ -698,6 +747,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "cases"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_files_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "daily_hearings_view"
+            referencedColumns: ["case_id"]
           },
         ]
       }
@@ -779,6 +835,13 @@ export type Database = {
             referencedRelation: "cases"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "case_hearings_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "daily_hearings_view"
+            referencedColumns: ["case_id"]
+          },
         ]
       }
       case_internal_notes: {
@@ -817,6 +880,13 @@ export type Database = {
             referencedRelation: "cases"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "case_internal_notes_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "daily_hearings_view"
+            referencedColumns: ["case_id"]
+          },
         ]
       }
       case_notes: {
@@ -848,6 +918,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "cases"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_notes_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "daily_hearings_view"
+            referencedColumns: ["case_id"]
           },
         ]
       }
@@ -895,6 +972,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "cases"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_objections_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "daily_hearings_view"
+            referencedColumns: ["case_id"]
           },
         ]
       }
@@ -952,6 +1036,13 @@ export type Database = {
             referencedRelation: "cases"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "case_orders_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "daily_hearings_view"
+            referencedColumns: ["case_id"]
+          },
         ]
       }
       case_relations: {
@@ -985,11 +1076,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "case_relations_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "daily_hearings_view"
+            referencedColumns: ["case_id"]
+          },
+          {
             foreignKeyName: "case_relations_related_case_id_fkey"
             columns: ["related_case_id"]
             isOneToOne: false
             referencedRelation: "cases"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_relations_related_case_id_fkey"
+            columns: ["related_case_id"]
+            isOneToOne: false
+            referencedRelation: "daily_hearings_view"
+            referencedColumns: ["case_id"]
           },
         ]
       }
@@ -1618,6 +1723,13 @@ export type Database = {
             referencedRelation: "cases"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "court_hearings_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "daily_hearings_view"
+            referencedColumns: ["case_id"]
+          },
         ]
       }
       districts: {
@@ -1762,6 +1874,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "cases"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "daily_hearings_view"
+            referencedColumns: ["case_id"]
           },
           {
             foreignKeyName: "documents_client_id_fkey"
@@ -2049,6 +2168,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "cases"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ia_details_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "daily_hearings_view"
+            referencedColumns: ["case_id"]
           },
           {
             foreignKeyName: "ia_details_legalkart_case_id_fkey"
@@ -2356,6 +2482,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "invoices_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "daily_hearings_view"
+            referencedColumns: ["case_id"]
+          },
+          {
             foreignKeyName: "invoices_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
@@ -2578,6 +2711,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "cases"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "legalkart_case_searches_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "daily_hearings_view"
+            referencedColumns: ["case_id"]
           },
           {
             foreignKeyName: "legalkart_case_searches_created_by_fkey"
@@ -2850,6 +2990,13 @@ export type Database = {
             referencedRelation: "cases"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "message_threads_related_case_id_fkey"
+            columns: ["related_case_id"]
+            isOneToOne: false
+            referencedRelation: "daily_hearings_view"
+            referencedColumns: ["case_id"]
+          },
         ]
       }
       messages: {
@@ -2955,6 +3102,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "cases"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notes_v2_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "daily_hearings_view"
+            referencedColumns: ["case_id"]
           },
           {
             foreignKeyName: "notes_v2_client_id_fkey"
@@ -3288,6 +3442,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "payments_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "daily_hearings_view"
+            referencedColumns: ["case_id"]
+          },
+          {
             foreignKeyName: "payments_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
@@ -3355,6 +3516,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "cases"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "petitioners_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "daily_hearings_view"
+            referencedColumns: ["case_id"]
           },
           {
             foreignKeyName: "petitioners_legalkart_case_id_fkey"
@@ -3555,6 +3723,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "respondents_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "daily_hearings_view"
+            referencedColumns: ["case_id"]
+          },
+          {
             foreignKeyName: "respondents_legalkart_case_id_fkey"
             columns: ["legalkart_case_id"]
             isOneToOne: false
@@ -3601,6 +3776,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "cases"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sc_court_fees_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "daily_hearings_view"
+            referencedColumns: ["case_id"]
           },
           {
             foreignKeyName: "sc_court_fees_legalkart_case_id_fkey"
@@ -3655,6 +3837,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "cases"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sc_defects_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "daily_hearings_view"
+            referencedColumns: ["case_id"]
           },
           {
             foreignKeyName: "sc_defects_legalkart_case_id_fkey"
@@ -3798,6 +3987,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "sc_earlier_court_details_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "daily_hearings_view"
+            referencedColumns: ["case_id"]
+          },
+          {
             foreignKeyName: "sc_earlier_court_details_legalkart_case_id_fkey"
             columns: ["legalkart_case_id"]
             isOneToOne: false
@@ -3852,6 +4048,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "sc_ia_documents_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "daily_hearings_view"
+            referencedColumns: ["case_id"]
+          },
+          {
             foreignKeyName: "sc_ia_documents_legalkart_case_id_fkey"
             columns: ["legalkart_case_id"]
             isOneToOne: false
@@ -3898,6 +4101,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "cases"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sc_judgement_orders_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "daily_hearings_view"
+            referencedColumns: ["case_id"]
           },
           {
             foreignKeyName: "sc_judgement_orders_legalkart_case_id_fkey"
@@ -3969,6 +4179,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "sc_listing_dates_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "daily_hearings_view"
+            referencedColumns: ["case_id"]
+          },
+          {
             foreignKeyName: "sc_listing_dates_legalkart_case_id_fkey"
             columns: ["legalkart_case_id"]
             isOneToOne: false
@@ -4038,6 +4255,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "sc_notices_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "daily_hearings_view"
+            referencedColumns: ["case_id"]
+          },
+          {
             foreignKeyName: "sc_notices_legalkart_case_id_fkey"
             columns: ["legalkart_case_id"]
             isOneToOne: false
@@ -4092,6 +4316,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "sc_office_reports_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "daily_hearings_view"
+            referencedColumns: ["case_id"]
+          },
+          {
             foreignKeyName: "sc_office_reports_legalkart_case_id_fkey"
             columns: ["legalkart_case_id"]
             isOneToOne: false
@@ -4135,6 +4366,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "cases"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sc_similarities_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "daily_hearings_view"
+            referencedColumns: ["case_id"]
           },
           {
             foreignKeyName: "sc_similarities_legalkart_case_id_fkey"
@@ -4201,6 +4439,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "cases"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sc_tagged_matters_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "daily_hearings_view"
+            referencedColumns: ["case_id"]
           },
           {
             foreignKeyName: "sc_tagged_matters_legalkart_case_id_fkey"
@@ -4358,6 +4603,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "cases"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "daily_hearings_view"
+            referencedColumns: ["case_id"]
           },
           {
             foreignKeyName: "tasks_client_id_fkey"
@@ -4558,6 +4810,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "appointments_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "daily_hearings_view"
+            referencedColumns: ["case_id"]
+          },
+          {
             foreignKeyName: "appointments_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
@@ -4649,6 +4908,35 @@ export type Database = {
           successful_fetches?: number | null
           total_attempted?: number | null
           total_hearings?: number | null
+        }
+        Relationships: []
+      }
+      daily_hearings_view: {
+        Row: {
+          advocate_name: string | null
+          assigned_lawyer_name: string | null
+          assigned_lawyer_user_id: string | null
+          assigned_to: string | null
+          bench: string | null
+          case_court_name: string | null
+          case_id: string | null
+          case_number: string | null
+          case_title: string | null
+          cause_list_type: string | null
+          coram: string | null
+          court_name: string | null
+          firm_id: string | null
+          hearing_date: string | null
+          hearing_id: string | null
+          hearing_notes: string | null
+          hearing_time: string | null
+          judge: string | null
+          petitioner: string | null
+          petitioner_advocate: string | null
+          purpose_of_hearing: string | null
+          respondent: string | null
+          respondent_advocate: string | null
+          status: string | null
         }
         Relationships: []
       }

@@ -18,6 +18,7 @@ const ClientInfo = lazy(() => import('@/pages/ClientInfo'));
 const Appointments = lazy(() => import('@/pages/Appointments'));
 const Tasks = lazy(() => import('@/pages/Tasks'));
 const Hearings = lazy(() => import('@/pages/Hearings'));
+const DailyBoard = lazy(() => import('@/pages/DailyBoard'));
 const Documents = lazy(() => import('@/pages/Documents'));
 const Notes = lazy(() => import('@/pages/Notes'));
 const Team = lazy(() => import('@/pages/Team'));
@@ -89,6 +90,7 @@ const RoleBasedRouter = () => {
             <Route path="/clients" element={<Clients />} />
             <Route path="/clients/:id" element={<ClientInfo />} />
             <Route path="/hearings" element={<Hearings />} />
+            <Route path="/daily-board" element={<DailyBoard />} />
             <Route path="/documents" element={<Documents />} />
             <Route path="/tasks" element={<Tasks />} />
             <Route path="/appointments" element={<Appointments />} />
@@ -116,6 +118,7 @@ const RoleBasedRouter = () => {
             <Route path="/appointments" element={<Appointments />} />
             <Route path="/tasks" element={<Tasks />} />
             <Route path="/hearings" element={<Hearings />} />
+            <Route path="/daily-board" element={<DailyBoard />} />
             <Route path="/documents" element={<Documents />} />
             <Route path="/notes" element={<Notes />} />
             <Route path="/availability" element={<Availability />} />
@@ -144,6 +147,7 @@ const RoleBasedRouter = () => {
           <Route path="/appointments" element={<Appointments />} />
           <Route path="/tasks" element={<Tasks />} />
           <Route path="/hearings" element={<Hearings />} />
+          <Route path="/daily-board" element={<DailyBoard />} />
           <Route path="/documents" element={<Documents />} />
           <Route path="/notes" element={<Notes />} />
           <Route path="/availability" element={<Availability />} />
