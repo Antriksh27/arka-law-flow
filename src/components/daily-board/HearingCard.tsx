@@ -1,7 +1,8 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { DailyHearing } from './types';
-import { cn } from '@/lib/utils';
+import { formatAdvocatesSmart } from './utils';
+import { InlineEditRelief } from './InlineEditRelief';
 
 interface HearingCardProps {
   hearing: DailyHearing;
@@ -47,35 +48,28 @@ export const HearingCard: React.FC<HearingCardProps> = ({ hearing, serialNo }) =
           </p>
         </div>
         
-        {(hearing.petitioner_advocate || hearing.respondent_advocate || hearing.advocate_name) && (
-          <div>
-            <p className="text-xs text-gray-500 uppercase tracking-wide font-medium mb-1">Lawyers</p>
-            <div className="space-y-1">
-              {hearing.petitioner_advocate && (
-                <p className="text-sm text-gray-700">
-                  <span className="text-gray-500">AORP:</span> {hearing.petitioner_advocate}
-                </p>
-              )}
-              {hearing.respondent_advocate && (
-                <p className="text-sm text-gray-700">
-                  <span className="text-gray-500">AORR:</span> {hearing.respondent_advocate}
-                </p>
-              )}
-              {hearing.advocate_name && (
-                <p className="text-sm text-gray-700">
-                  <span className="text-gray-500">Arguing:</span> {hearing.advocate_name}
-                </p>
-              )}
-            </div>
+        <div>
+          <p className="text-xs text-gray-500 uppercase tracking-wide font-medium mb-1">Lawyers</p>
+          <div className="space-y-1">
+            <p className="text-sm text-gray-700">
+              <span className="text-gray-500">AORP:</span> {formatAdvocatesSmart(hearing.petitioner_advocate, 'petitioner')}
+            </p>
+            <p className="text-sm text-gray-700">
+              <span className="text-gray-500">AORR:</span> {formatAdvocatesSmart(hearing.respondent_advocate, 'respondent')}
+            </p>
+            <p className="text-sm text-gray-700">
+              <span className="text-gray-500">Arguing:</span> <span className="font-medium">CBU</span>
+            </p>
           </div>
-        )}
+        </div>
         
-        {hearing.hearing_notes && (
-          <div>
-            <p className="text-xs text-gray-500 uppercase tracking-wide font-medium mb-1">Remarks</p>
-            <p className="text-sm text-gray-700">{hearing.hearing_notes}</p>
-          </div>
-        )}
+        <div>
+          <p className="text-xs text-gray-500 uppercase tracking-wide font-medium mb-1">Relief</p>
+          <InlineEditRelief 
+            hearingId={hearing.hearing_id}
+            currentValue={hearing.relief}
+          />
+        </div>
       </div>
     </div>
   );

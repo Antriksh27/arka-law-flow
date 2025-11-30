@@ -8,6 +8,7 @@ export interface DailyHearing {
   cause_list_type: string | null;
   status: string | null;
   hearing_notes: string | null;
+  relief: string | null;
   bench: string | null;
   coram: string | null;
   firm_id: string;

@@ -778,6 +778,7 @@ export type Database = {
           notes: string | null
           outcome: string | null
           purpose_of_hearing: string | null
+          relief: string | null
           status: string | null
           updated_at: string | null
         }
@@ -801,6 +802,7 @@ export type Database = {
           notes?: string | null
           outcome?: string | null
           purpose_of_hearing?: string | null
+          relief?: string | null
           status?: string | null
           updated_at?: string | null
         }
@@ -824,6 +826,7 @@ export type Database = {
           notes?: string | null
           outcome?: string | null
           purpose_of_hearing?: string | null
+          relief?: string | null
           status?: string | null
           updated_at?: string | null
         }
@@ -4934,6 +4937,7 @@ export type Database = {
           petitioner: string | null
           petitioner_advocate: string | null
           purpose_of_hearing: string | null
+          relief: string | null
           respondent: string | null
           respondent_advocate: string | null
           status: string | null
