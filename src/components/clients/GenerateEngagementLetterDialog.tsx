@@ -165,7 +165,7 @@ export function GenerateEngagementLetterDialog({
       }
       
       // Check if all required data is loaded
-      if (!clientData || !lawyerData || !firmData) {
+      if (!clientData || !selectedLawyer || !firmData) {
         toast({
           title: 'Loading Data',
           description: 'Please wait while we load all required information.',
@@ -179,8 +179,8 @@ export function GenerateEngagementLetterDialog({
     }
   };
   const generateLetter = () => {
-    if (!clientData || !lawyerData || !firmData) {
-      console.error('Missing data for letter generation:', { clientData, lawyerData, firmData });
+    if (!clientData || !selectedLawyer || !firmData) {
+      console.error('Missing data for letter generation:', { clientData, selectedLawyer, firmData });
       return;
     }
     
@@ -189,9 +189,9 @@ export function GenerateEngagementLetterDialog({
       clientName: clientData.full_name,
       clientAddress: clientData.address || '',
       matterDescription: matterDescription,
-      lawyerName: lawyerData.full_name,
-      lawyerPhone: lawyerData.phone || '',
-      lawyerEmail: lawyerData.email || '',
+      lawyerName: selectedLawyer.full_name,
+      lawyerPhone: lawyerData?.phone || '',
+      lawyerEmail: selectedLawyer.email,
       firmName: firmData.name,
       firmAddress: firmData.address || ''
     });
@@ -440,6 +440,6 @@ export function GenerateEngagementLetterDialog({
         </DialogContent>
       </Dialog>
 
-      {showEmailDialog && clientEmail && pdfBlob && <SendEmailDialog open={showEmailDialog} onClose={() => setShowEmailDialog(false)} clientEmail={clientEmail} clientName={clientName} defaultSubject={`Engagement Letter for Legal Services - ${caseData?.case_title || 'Legal Matter'}`} defaultBody={`Dear ${clientName},\n\nPlease find attached the engagement letter for legal services.\n\nBest regards,\n${lawyerData?.full_name || ''}\n${firmData?.name || ''}`} pdfAttachment={pdfBlob} pdfFileName={`Engagement_Letter_${clientName.replace(/\s+/g, '_')}.pdf`} />}
+      {showEmailDialog && clientEmail && pdfBlob && <SendEmailDialog open={showEmailDialog} onClose={() => setShowEmailDialog(false)} clientEmail={clientEmail} clientName={clientName} defaultSubject={`Engagement Letter for Legal Services - ${caseData?.case_title || 'Legal Matter'}`} defaultBody={`Dear ${clientName},\n\nPlease find attached the engagement letter for legal services.\n\nBest regards,\n${selectedLawyer?.full_name || lawyerData?.full_name || ''}\n${firmData?.name || ''}`} pdfAttachment={pdfBlob} pdfFileName={`Engagement_Letter_${clientName.replace(/\s+/g, '_')}.pdf`} />}
     </>;
 }
