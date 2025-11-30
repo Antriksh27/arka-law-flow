@@ -52,10 +52,10 @@ export const HearingCard: React.FC<HearingCardProps> = ({ hearing, serialNo }) =
           <p className="text-xs text-gray-500 uppercase tracking-wide font-medium mb-1">Lawyers</p>
           <div className="space-y-1">
             <p className="text-sm text-gray-700">
-              <span className="text-gray-500">AORP:</span> {formatAdvocatesSmart(hearing.petitioner_advocate, 'petitioner')}
+              <span className="text-gray-500">AORP:</span> {hearing.formatted_aorp || '-'}
             </p>
             <p className="text-sm text-gray-700">
-              <span className="text-gray-500">AORR:</span> {formatAdvocatesSmart(hearing.respondent_advocate, 'respondent')}
+              <span className="text-gray-500">AORR:</span> {hearing.formatted_aorr || '-'}
             </p>
             <p className="text-sm text-gray-700">
               <span className="text-gray-500">Arguing:</span> <span className="font-medium">CBU</span>

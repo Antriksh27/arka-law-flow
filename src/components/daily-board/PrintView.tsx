@@ -61,10 +61,10 @@ export const PrintView = React.forwardRef<HTMLDivElement, PrintViewProps>(
                               {hearing.respondent || '-'}
                             </td>
                             <td className="border border-gray-300 px-2 py-2">
-                              {formatAdvocatesSmart(hearing.petitioner_advocate, 'petitioner')}
+                              {hearing.formatted_aorp || '-'}
                             </td>
                             <td className="border border-gray-300 px-2 py-2">
-                              {formatAdvocatesSmart(hearing.respondent_advocate, 'respondent')}
+                              {hearing.formatted_aorr || '-'}
                             </td>
                             <td className="border border-gray-300 px-2 py-2 font-medium">
                               CBU
