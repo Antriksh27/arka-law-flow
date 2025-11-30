@@ -4,6 +4,7 @@ import App from './App.tsx'
 import './index.css'
 import { applyCSPMetaTag } from './lib/contentSecurityPolicy'
 import { AuthProvider } from './contexts/AuthContext'
+import { ClientAuthProvider } from './contexts/ClientAuthContext'
 import { DialogProvider } from './hooks/use-dialog'
 
 // Apply Content Security Policy for XSS protection
@@ -18,9 +19,11 @@ const root = createRoot(container);
 root.render(
   <StrictMode>
     <AuthProvider>
-      <DialogProvider>
-        <App />
-      </DialogProvider>
+      <ClientAuthProvider>
+        <DialogProvider>
+          <App />
+        </DialogProvider>
+      </ClientAuthProvider>
     </AuthProvider>
   </StrictMode>
 );

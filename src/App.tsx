@@ -3,13 +3,16 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { useEffect, lazy, Suspense } from 'react';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { ClientProtectedRoute } from './components/auth/ClientProtectedRoute';
 import { DialogProvider } from './hooks/use-dialog';
 import RoleBasedRouter from './components/routing/RoleBasedRouter';
 import Auth from './pages/Auth';
+import ClientAuth from './pages/ClientAuth';
 import { BookingPage } from './pages/BookingPage';
 import { LawyerSelection } from './pages/LawyerSelection';
 import { Toaster } from './components/ui/toaster';
 import { BookRedirect } from './pages/BookRedirect';
+import { ClientLayout } from './layouts/ClientLayout';
 
 // Lazy load heavy components for better performance
 const CaseDetailEnhanced = lazy(() => import('./pages/CaseDetailEnhanced'));
@@ -23,6 +26,10 @@ const Team = lazy(() => import('./pages/Team'));
 const NotificationDashboard = lazy(() => import('./components/notifications/NotificationDashboard'));
 const DailyBoard = lazy(() => import('./pages/DailyBoard'));
 const CauseList = lazy(() => import('./pages/CauseList'));
+
+// Client portal components
+const ClientCases = lazy(() => import('./pages/client-portal/ClientCases'));
+const ClientCaseDetail = lazy(() => import('./pages/client-portal/ClientCaseDetail'));
 
 import { defaultQueryConfig } from './lib/queryConfig';
 import { useAuth } from './contexts/AuthContext';
@@ -94,6 +101,21 @@ function AppRoutes() {
               <Route path="/bk/:compact" element={<BookRedirect />} />
               <Route path="/book/:lawyerId" element={<BookingPage />} />
               <Route path="/book" element={<LawyerSelection />} />
+              
+              {/* Client Portal Routes */}
+              <Route path="/client-login" element={<ClientAuth />} />
+              <Route path="/client/*" element={
+                <ClientProtectedRoute>
+                  <ClientLayout>
+                    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+                      <Routes>
+                        <Route path="cases" element={<ClientCases />} />
+                        <Route path="cases/:id" element={<ClientCaseDetail />} />
+                      </Routes>
+                    </Suspense>
+                  </ClientLayout>
+                </ClientProtectedRoute>
+              } />
               
               {/* Auth route */}
               <Route path="/auth" element={<Auth />} />
