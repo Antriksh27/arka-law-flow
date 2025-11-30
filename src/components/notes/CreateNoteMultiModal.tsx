@@ -236,16 +236,11 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
     
     setIsFixingGrammar(true);
     try {
-      const response = await fetch('https://api.languagetool.org/v2/check', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          text: text,
-          language: 'en-IN'
-        })
+      const { data, error } = await supabase.functions.invoke('grammar-check', {
+        body: { text, language: 'en-IN' }
       });
       
-      const data = await response.json();
+      if (error) throw error;
       
       if (!data.matches?.length) {
         toast({ 
