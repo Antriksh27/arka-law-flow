@@ -16,7 +16,7 @@ export async function checkSupabaseHealth(): Promise<HealthCheckResult> {
     const { data: { session }, error: authError } = await Promise.race([
       supabase.auth.getSession(),
       new Promise<any>((_, reject) => 
-        setTimeout(() => reject(new Error('Auth timeout')), 15000)
+        setTimeout(() => reject(new Error('Auth timeout')), 30000)
       )
     ]);
     
@@ -33,7 +33,7 @@ export async function checkSupabaseHealth(): Promise<HealthCheckResult> {
     const { data: dbData, error: dbError } = await Promise.race([
       supabase.from('law_firms').select('id').limit(1),
       new Promise<any>((_, reject) => 
-        setTimeout(() => reject(new Error('Database timeout')), 15000)
+        setTimeout(() => reject(new Error('Database timeout')), 30000)
       )
     ]);
     
@@ -77,7 +77,7 @@ export async function retryQuery<T>(
       const result = await Promise.race([
         queryFn(),
         new Promise<never>((_, reject) => 
-          setTimeout(() => reject(new Error('Query timeout')), 15000)
+          setTimeout(() => reject(new Error('Query timeout')), 30000)
         )
       ]);
       console.log(`✅ Query succeeded on attempt ${attempt}`);
