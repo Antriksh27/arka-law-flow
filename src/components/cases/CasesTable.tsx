@@ -44,8 +44,8 @@ export const CasesTable: React.FC<CasesTableProps> = ({
   const [selectedCases, setSelectedCases] = useState<Set<string>>(new Set());
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [page, setPage] = useState(1);
-  const [sortField, setSortField] = useState<'created_at' | 'reference_number'>('created_at');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [sortField, setSortField] = useState<'created_at' | 'reference_number' | 'case_title' | 'client_name'>('reference_number');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const pageSize = 20;
   
   const {
@@ -87,6 +87,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
         case_type,
         status,
         stage,
+        court,
         reference_number,
         created_at,
         updated_at,
@@ -96,9 +97,17 @@ export const CasesTable: React.FC<CasesTableProps> = ({
         cnr_number,
         last_fetched_at,
         clients!client_id(full_name)
-      `, { count: 'exact' })
-      .order(sortField, { ascending: sortOrder === 'asc' })
-      .range(startIndex, endIndex);
+      `, { count: 'exact' });
+      
+      // Handle sorting - client_name requires special handling
+      if (sortField === 'client_name') {
+        // For client sorting, we need to sort by the joined field
+        query = query.order('clients.full_name', { ascending: sortOrder === 'asc', nullsFirst: false });
+      } else {
+        query = query.order(sortField, { ascending: sortOrder === 'asc' });
+      }
+      
+      query = query.range(startIndex, endIndex);
 
       // Add firm scoping
       if (teamMember?.firm_id) {
@@ -203,7 +212,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
   const cases = queryResult?.cases || [];
   const totalCount = queryResult?.totalCount || 0;
 
-  const handleSort = (field: 'created_at' | 'reference_number') => {
+  const handleSort = (field: 'created_at' | 'reference_number' | 'case_title' | 'client_name') => {
     if (sortField === field) {
       // Toggle sort order
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
@@ -333,8 +342,33 @@ export const CasesTable: React.FC<CasesTableProps> = ({
                   )}
                 </div>
               </TableHead>
-              <TableHead className="bg-slate-800 text-white">Case Title</TableHead>
-              <TableHead className="bg-slate-800 text-white">Client</TableHead>
+              <TableHead 
+                className="bg-slate-800 text-white cursor-pointer hover:bg-slate-700 select-none"
+                onClick={() => handleSort('case_title')}
+              >
+                <div className="flex items-center gap-2">
+                  Case Title
+                  {sortField === 'case_title' ? (
+                    sortOrder === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                  ) : (
+                    <ArrowUpDown className="h-4 w-4 opacity-50" />
+                  )}
+                </div>
+              </TableHead>
+              <TableHead 
+                className="bg-slate-800 text-white cursor-pointer hover:bg-slate-700 select-none"
+                onClick={() => handleSort('client_name')}
+              >
+                <div className="flex items-center gap-2">
+                  Client
+                  {sortField === 'client_name' ? (
+                    sortOrder === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                  ) : (
+                    <ArrowUpDown className="h-4 w-4 opacity-50" />
+                  )}
+                </div>
+              </TableHead>
+              <TableHead className="bg-slate-800 text-white">Court Forum</TableHead>
               <TableHead className="bg-slate-800 text-white">Type</TableHead>
               <TableHead className="bg-slate-800 text-white">Status</TableHead>
               <TableHead className="bg-slate-800 text-white">Stage</TableHead>
@@ -381,6 +415,9 @@ export const CasesTable: React.FC<CasesTableProps> = ({
                 ) : (
                   <span className="text-muted-foreground">No client assigned</span>
                 )}
+              </TableCell>
+              <TableCell className="text-sm">
+                {caseItem.court || '-'}
               </TableCell>
               <TableCell>
                 {formatCaseType(caseItem.case_type)}
