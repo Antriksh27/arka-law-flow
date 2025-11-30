@@ -4,9 +4,62 @@ import { Card } from '@/components/ui/card';
 import { Bell, Settings, History, Mail } from 'lucide-react';
 import { NotificationSettingsPanel } from './NotificationSettingsPanel';
 import { NotificationInbox } from './NotificationInbox';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { MobileHeader } from '@/components/mobile/MobileHeader';
+import { BottomNavBar } from '@/components/mobile/BottomNavBar';
 
 export const NotificationDashboard = () => {
   const [activeTab, setActiveTab] = useState('inbox');
+  const isMobile = useIsMobile();
+
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-background pb-24">
+        <MobileHeader title="Notifications" />
+
+        <div className="p-4">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+            <TabsList className="w-full overflow-x-auto scrollbar-hide flex">
+              <TabsTrigger value="inbox" className="flex-1 text-xs">
+                <Bell className="h-4 w-4 mr-1" />
+                Inbox
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="flex-1 text-xs">
+                <Settings className="h-4 w-4 mr-1" />
+                Settings
+              </TabsTrigger>
+              <TabsTrigger value="history" className="flex-1 text-xs">
+                <History className="h-4 w-4 mr-1" />
+                History
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="inbox" className="mt-0">
+              <NotificationInbox />
+            </TabsContent>
+
+            <TabsContent value="settings" className="mt-0">
+              <div className="bg-white rounded-xl p-4 shadow-sm">
+                <NotificationSettingsPanel />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="history" className="mt-0">
+              <div className="bg-white rounded-xl p-8 shadow-sm text-center">
+                <History className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-20" />
+                <h3 className="font-semibold text-sm mb-2">Notification History</h3>
+                <p className="text-xs text-muted-foreground">
+                  View archived notifications
+                </p>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        <BottomNavBar />
+      </div>
+    );
+  }
 
   return (
     <div className="container max-w-7xl mx-auto p-6 space-y-6">

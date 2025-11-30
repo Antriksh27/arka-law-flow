@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Users, MessageCircle, Sparkles, Search } from 'lucide-react';
+import { Send, Users, MessageCircle, Sparkles, Search, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useCometChat } from '@/hooks/useCometChat';
@@ -13,6 +13,10 @@ import { cn } from '@/lib/utils';
 import { MessageLoading } from '@/components/ui/message-loading';
 import { createCometChatUser } from '@/lib/cometchat';
 import { toast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { MobileHeader } from '@/components/mobile/MobileHeader';
+import { BottomNavBar } from '@/components/mobile/BottomNavBar';
+import { MobileFAB } from '@/components/mobile/MobileFAB';
 interface TeamMember {
   user_id: string;
   full_name: string;
@@ -43,6 +47,8 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const MESSAGE_LISTENER_ID = 'modern_messenger_listener';
+  const isMobile = useIsMobile();
+  const [showMobileChat, setShowMobileChat] = useState(false);
 
   // Fetch team members and create CometChat users for them
   useEffect(() => {
@@ -260,6 +266,181 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
         </div>
       </div>;
   }
+
+  // Mobile view
+  if (isMobile) {
+    if (showMobileChat && selectedUser) {
+      return (
+        <div className="flex flex-col h-screen bg-background">
+          <MobileHeader
+            title={selectedUser.getName()}
+            showBack
+            onBack={() => {
+              setShowMobileChat(false);
+              setSelectedUser(null);
+            }}
+          />
+
+          {/* Messages */}
+          <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 space-y-2">
+            {messages.map((message, index) => {
+              const isMe = message.getSender().getUid() === cometChatUser?.getUid();
+              const messageText = (message as CometChat.TextMessage).getText?.() || '';
+              
+              return (
+                <div key={message.getId()} className={cn('flex items-end gap-2', isMe ? 'justify-end' : 'justify-start')}>
+                  {!isMe && (
+                    <Avatar className="h-6 w-6 flex-shrink-0">
+                      <AvatarImage src={message.getSender().getAvatar()} />
+                      <AvatarFallback className="text-xs">
+                        {getInitials(message.getSender().getName())}
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
+                  <div
+                    className={cn(
+                      'max-w-[75%] px-3 py-2 rounded-2xl text-sm',
+                      isMe ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'
+                    )}
+                  >
+                    <p className="break-words">{messageText}</p>
+                  </div>
+                </div>
+              );
+            })}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Input */}
+          <div className="border-t bg-background p-4 pb-safe">
+            <div className="flex items-center gap-2">
+              <Input
+                placeholder="Type a message..."
+                value={inputValue}
+                onChange={handleInputChange}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSendMessage();
+                  }
+                }}
+                className="flex-1"
+              />
+              <Button onClick={handleSendMessage} size="icon">
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Chat list view
+    return (
+      <div className="min-h-screen bg-background pb-24">
+        <MobileHeader title="Messages" />
+
+        <div className="p-4 space-y-4">
+          <Input
+            placeholder="Search conversations..."
+            className="w-full"
+          />
+
+          <div className="flex gap-2">
+            <Button
+              variant={activeTab === 'chats' ? 'default' : 'outline'}
+              className="flex-1"
+              onClick={() => setActiveTab('chats')}
+            >
+              <MessageCircle className="h-4 w-4 mr-2" />
+              Chats
+            </Button>
+            <Button
+              variant={activeTab === 'team' ? 'default' : 'outline'}
+              className="flex-1"
+              onClick={() => setActiveTab('team')}
+            >
+              <Users className="h-4 w-4 mr-2" />
+              Team
+            </Button>
+          </div>
+
+          <div className="space-y-2">
+            {activeTab === 'chats' && (
+              conversations.length === 0 ? (
+                <div className="bg-white rounded-xl p-8 text-center">
+                  <MessageCircle className="h-12 w-12 mx-auto mb-3 text-muted-foreground opacity-20" />
+                  <p className="text-sm text-muted-foreground">No conversations yet</p>
+                </div>
+              ) : (
+                conversations.map((conversation) => {
+                  const lastMessage = conversation.getLastMessage();
+                  const lastMessageText = lastMessage ? (lastMessage as CometChat.TextMessage).getText?.() || 'Media' : 'No messages';
+                  const conversationWith = conversation.getConversationWith() as CometChat.User;
+                  
+                  return (
+                    <div
+                      key={conversation.getConversationId()}
+                      onClick={() => {
+                        setSelectedUser(conversationWith);
+                        setShowMobileChat(true);
+                      }}
+                      className="bg-white rounded-xl p-4 active:scale-[0.98] transition-all cursor-pointer"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-12 w-12">
+                          <AvatarImage src={conversationWith.getAvatar()} />
+                          <AvatarFallback>
+                            {getInitials(conversationWith.getName())}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-sm truncate">{conversationWith.getName()}</h3>
+                          <p className="text-xs text-muted-foreground truncate">{lastMessageText}</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )
+            )}
+
+            {activeTab === 'team' && (
+              teamMembers.length === 0 ? (
+                <div className="bg-white rounded-xl p-8 text-center">
+                  <Users className="h-12 w-12 mx-auto mb-3 text-muted-foreground opacity-20" />
+                  <p className="text-sm text-muted-foreground">No team members</p>
+                </div>
+              ) : (
+                teamMembers.map((member) => (
+                  <div
+                    key={member.user_id}
+                    onClick={() => handleStartDM(member)}
+                    className="bg-white rounded-xl p-4 active:scale-[0.98] transition-all cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-12 w-12">
+                        <AvatarFallback>
+                          {getInitials(member.full_name || member.email)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-sm truncate">{member.full_name || member.email}</h3>
+                        <p className="text-xs text-muted-foreground">{member.role}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )
+            )}
+          </div>
+        </div>
+
+        <BottomNavBar />
+      </div>
+    );
+  }
+
+  // Desktop view
   return <div className="flex h-[calc(100vh-64px)] bg-gradient-to-br from-background via-background to-muted/20">
       {/* Sidebar */}
       <div className="w-80 border-r border-border/50 flex flex-col bg-card/95 backdrop-blur-sm">
