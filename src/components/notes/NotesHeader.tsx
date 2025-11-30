@@ -4,9 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Filter, X } from 'lucide-react';
+import { Plus, Search, Filter, X, SlidersHorizontal } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { MobileSearchBar } from '@/components/cases/MobileSearchBar';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { useState } from 'react';
 
 interface NotesHeaderProps {
   onCreateNote: () => void;
@@ -35,6 +39,9 @@ export const NotesHeader: React.FC<NotesHeaderProps> = ({
   selectedCase,
   onCaseChange,
 }) => {
+  const isMobile = useIsMobile();
+  const [showMobileFilter, setShowMobileFilter] = useState(false);
+  
   // Fetch available tags
   const { data: availableTags = [] } = useQuery({
     queryKey: ['note-tags'],
@@ -84,24 +91,144 @@ export const NotesHeader: React.FC<NotesHeaderProps> = ({
     selectedVisibility !== 'all-visibility' || 
     selectedCase !== 'all-cases';
 
+  const activeFiltersCount = 
+    (selectedColor !== 'all-colors' ? 1 : 0) +
+    (selectedVisibility !== 'all-visibility' ? 1 : 0) +
+    (selectedCase !== 'all-cases' ? 1 : 0) +
+    selectedTags.length;
+
+  // Mobile Filter Sheet
+  const MobileFilterSheet = () => (
+    <Sheet open={showMobileFilter} onOpenChange={setShowMobileFilter}>
+      <SheetContent side="bottom" className="h-[80vh] rounded-t-3xl">
+        <SheetHeader>
+          <SheetTitle>Filters</SheetTitle>
+        </SheetHeader>
+        <div className="py-6 space-y-6">
+          {/* Color Filter */}
+          <div>
+            <h3 className="text-sm font-medium mb-3">Color</h3>
+            <div className="flex flex-wrap gap-2">
+              {['all-colors', 'yellow', 'blue', 'green', 'red', 'gray'].map((color) => (
+                <button
+                  key={color}
+                  onClick={() => onColorChange(color)}
+                  className={`px-4 h-10 rounded-full font-medium text-sm transition-all ${
+                    selectedColor === color
+                      ? 'bg-slate-800 text-white'
+                      : 'bg-white border border-border text-foreground'
+                  }`}
+                >
+                  {color === 'all-colors' ? 'All' : color.charAt(0).toUpperCase() + color.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Visibility Filter */}
+          <div>
+            <h3 className="text-sm font-medium mb-3">Visibility</h3>
+            <div className="flex flex-wrap gap-2">
+              {['all-visibility', 'private', 'team'].map((visibility) => (
+                <button
+                  key={visibility}
+                  onClick={() => onVisibilityChange(visibility)}
+                  className={`px-4 h-10 rounded-full font-medium text-sm transition-all ${
+                    selectedVisibility === visibility
+                      ? 'bg-slate-800 text-white'
+                      : 'bg-white border border-border text-foreground'
+                  }`}
+                >
+                  {visibility === 'all-visibility' ? 'All' : visibility.charAt(0).toUpperCase() + visibility.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Case Filter */}
+          <div>
+            <h3 className="text-sm font-medium mb-3">Linked Case</h3>
+            <div className="space-y-2 max-h-48 overflow-y-auto">
+              <button
+                onClick={() => onCaseChange('all-cases')}
+                className={`w-full text-left p-3 rounded-lg transition-all ${
+                  selectedCase === 'all-cases'
+                    ? 'bg-slate-100'
+                    : 'bg-white border border-border'
+                }`}
+              >
+                All Cases
+              </button>
+              {cases.map((caseItem) => (
+                <button
+                  key={caseItem.id}
+                  onClick={() => onCaseChange(caseItem.id)}
+                  className={`w-full text-left p-3 rounded-lg transition-all truncate ${
+                    selectedCase === caseItem.id
+                      ? 'bg-slate-100'
+                      : 'bg-white border border-border'
+                  }`}
+                >
+                  {caseItem.case_title}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {hasActiveFilters && (
+            <Button
+              onClick={clearFilters}
+              variant="outline"
+              className="w-full h-12 border-2"
+            >
+              <X className="w-4 h-4 mr-2" />
+              Clear All Filters
+            </Button>
+          )}
+
+          <Button
+            onClick={() => setShowMobileFilter(false)}
+            className="w-full h-12 bg-slate-800 hover:bg-slate-700"
+          >
+            Apply Filters
+          </Button>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+
   return (
-    <div className="space-y-4">
+    <div className={isMobile ? "px-3 pt-3 space-y-4" : "space-y-4"}>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Notes</h1>
-          <p className="text-sm text-gray-600 mt-1">Create and organize your notes</p>
+          <h1 className={isMobile ? "text-xl font-semibold text-gray-900" : "text-2xl font-semibold text-gray-900"}>
+            Notes
+          </h1>
+          {!isMobile && <p className="text-sm text-gray-600 mt-1">Create and organize your notes</p>}
         </div>
         
-        <Button 
-          onClick={onCreateNote}
-          className="bg-slate-800 hover:bg-slate-700 text-white"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          New Note
-        </Button>
+        {!isMobile && (
+          <Button 
+            onClick={onCreateNote}
+            className="bg-slate-800 hover:bg-slate-700 text-white"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            New Note
+          </Button>
+        )}
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-4">
+      {/* Mobile Search & Filter */}
+      {isMobile ? (
+        <MobileSearchBar
+          value={searchQuery}
+          onChange={onSearchChange}
+          onFilterClick={() => setShowMobileFilter(true)}
+          activeFiltersCount={activeFiltersCount}
+        />
+      ) : (
+        /* Desktop Filters */
+        <div className="flex flex-col lg:flex-row gap-4">
         {/* Search */}
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -167,8 +294,12 @@ export const NotesHeader: React.FC<NotesHeaderProps> = ({
           )}
         </div>
       </div>
+      )}
 
-      {/* Selected Tags */}
+      {/* Mobile Filter Sheet */}
+      <MobileFilterSheet />
+
+      {/* Selected Tags - shown on both mobile and desktop */}
       {selectedTags.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {selectedTags.map(tag => (
