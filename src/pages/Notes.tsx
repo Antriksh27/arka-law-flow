@@ -4,8 +4,14 @@ import { NotesGrid } from '../components/notes/NotesGrid';
 import { NotesHeader } from '../components/notes/NotesHeader';
 import { CreateNoteMultiModal } from '../components/notes/CreateNoteMultiModal';
 import { EditNoteDialog } from '../components/notes/EditNoteDialog';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { MobilePageContainer } from '@/components/mobile/MobilePageContainer';
+import { MobileFAB } from '@/components/mobile/MobileFAB';
+import { BottomNavBar } from '@/components/mobile/BottomNavBar';
+import { Plus } from 'lucide-react';
 
 const Notes = () => {
+  const isMobile = useIsMobile();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingNote, setEditingNote] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -27,7 +33,8 @@ const Notes = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-6">
+    <MobilePageContainer withBottomNav={isMobile}>
+      <div className={isMobile ? "" : "max-w-7xl mx-auto p-6 space-y-6"}>
       <NotesHeader
         onCreateNote={() => setShowCreateDialog(true)}
         searchQuery={searchQuery}
@@ -51,6 +58,17 @@ const Notes = () => {
         onEditNote={setEditingNote}
       />
 
+      {/* Mobile FAB */}
+      {isMobile && (
+        <MobileFAB
+          onClick={() => setShowCreateDialog(true)}
+          icon={Plus}
+        />
+      )}
+
+      {/* Mobile Bottom Nav */}
+      {isMobile && <BottomNavBar />}
+
       <CreateNoteMultiModal
         open={showCreateDialog}
         onClose={() => setShowCreateDialog(false)}
@@ -63,7 +81,8 @@ const Notes = () => {
           onClose={() => setEditingNote(null)}
         />
       )}
-    </div>
+      </div>
+    </MobilePageContainer>
   );
 };
 

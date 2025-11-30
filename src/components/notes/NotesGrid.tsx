@@ -6,6 +6,7 @@ import { NoteCard } from './NoteCard';
 import { NoteViewDialog } from './NoteViewDialog';
 import { StickyNote, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface NotesGridProps {
   searchQuery: string;
@@ -24,6 +25,7 @@ export const NotesGrid: React.FC<NotesGridProps> = ({
   selectedCase,
   onEditNote,
 }) => {
+  const isMobile = useIsMobile();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [viewingNote, setViewingNote] = useState<any>(null);
@@ -129,7 +131,7 @@ export const NotesGrid: React.FC<NotesGridProps> = ({
 
   if (notes.length === 0) {
     return (
-      <div className="text-center py-12">
+      <div className={isMobile ? "text-center py-12 px-6" : "text-center py-12"}>
         <StickyNote className="w-12 h-12 mx-auto mb-4 text-gray-300" />
         <h3 className="text-lg font-medium text-gray-900 mb-2">
           {hasActiveFilters ? 'No notes found' : 'No notes yet'}
@@ -146,7 +148,10 @@ export const NotesGrid: React.FC<NotesGridProps> = ({
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className={isMobile 
+        ? "grid grid-cols-2 gap-3 px-3" 
+        : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+      }>
         {notes.map((note) => (
           <NoteCard
             key={note.id}
