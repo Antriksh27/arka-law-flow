@@ -202,15 +202,19 @@ export function GenerateEngagementLetterDialog({
   const handlePrint = async () => {
     setGeneratingPrintPDF(true);
     try {
-      // Parse the full HTML document and extract components
+      // Parse the HTML to get the letter-container content
       const parser = new DOMParser();
       const doc = parser.parseFromString(generatedHTML, 'text/html');
-      const bodyContent = doc.body.innerHTML;
+      const letterContainer = doc.querySelector('.letter-container');
       const styleContent = doc.head.querySelector('style')?.innerHTML || '';
       
+      if (!letterContainer) {
+        throw new Error('Letter container not found in generated HTML');
+      }
+
       // Create a properly structured div for PDF generation
       const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = `<style>${styleContent}</style>${bodyContent}`;
+      tempDiv.innerHTML = `<style>${styleContent}</style>${letterContainer.outerHTML}`;
       tempDiv.style.position = 'absolute';
       tempDiv.style.top = '0';
       tempDiv.style.left = '-9999px';
@@ -218,9 +222,6 @@ export function GenerateEngagementLetterDialog({
       tempDiv.style.pointerEvents = 'none';
       tempDiv.style.zIndex = '-1';
       tempDiv.style.background = 'white';
-      tempDiv.style.fontFamily = "'Times New Roman', Times, serif";
-      tempDiv.style.lineHeight = '1.6';
-      tempDiv.style.color = '#000';
       document.body.appendChild(tempDiv);
 
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -266,15 +267,19 @@ export function GenerateEngagementLetterDialog({
       if (!pdfBlob) {
         setGeneratingPDF(true);
         
-        // Parse the full HTML document and extract components
+        // Parse the HTML to get the letter-container content
         const parser = new DOMParser();
         const doc = parser.parseFromString(generatedHTML, 'text/html');
-        const bodyContent = doc.body.innerHTML;
+        const letterContainer = doc.querySelector('.letter-container');
         const styleContent = doc.head.querySelector('style')?.innerHTML || '';
         
+        if (!letterContainer) {
+          throw new Error('Letter container not found in generated HTML');
+        }
+
         // Create a properly structured div for PDF generation
         const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = `<style>${styleContent}</style>${bodyContent}`;
+        tempDiv.innerHTML = `<style>${styleContent}</style>${letterContainer.outerHTML}`;
         tempDiv.style.position = 'absolute';
         tempDiv.style.top = '0';
         tempDiv.style.left = '-9999px';
@@ -282,9 +287,6 @@ export function GenerateEngagementLetterDialog({
         tempDiv.style.pointerEvents = 'none';
         tempDiv.style.zIndex = '-1';
         tempDiv.style.background = 'white';
-        tempDiv.style.fontFamily = "'Times New Roman', Times, serif";
-        tempDiv.style.lineHeight = '1.6';
-        tempDiv.style.color = '#000';
         document.body.appendChild(tempDiv);
 
         await new Promise(resolve => setTimeout(resolve, 100));
