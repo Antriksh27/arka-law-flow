@@ -84,9 +84,9 @@ export function MobileSidebar({
       <div className={cn("fixed top-0 left-0 h-full w-80 bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out md:hidden", isOpen ? "translate-x-0" : "-translate-x-full")}>
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b">
+          <div className="flex items-center justify-between p-4 border-b bg-slate-900">
             <div className="flex items-center gap-2 mx-[83px]">
-              <img src="/lovable-uploads/89ea18cf-8c73-4793-9dcc-1a192855a630.png" alt="HRU Legal" className="h-10 w-auto" />
+              <img src="/lovable-uploads/89ea18cf-8c73-4793-9dcc-1a192855a630.png" alt="HRU Legal" className="h-10 w-auto object-cover border-0" />
               
             </div>
             <Button variant="ghost" size="icon" onClick={onClose} className="text-gray-600">
