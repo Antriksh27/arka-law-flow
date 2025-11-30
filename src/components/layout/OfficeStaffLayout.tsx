@@ -2,8 +2,7 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import Header from './Header';
-import { SidebarProvider } from '@/components/ui/sidebar';
-import { AppSidebar } from './AppSidebar';
+import { SessionNavBar } from '@/components/ui/sidebar';
 import { OfficeStaffTopNavBar } from './OfficeStaffTopNavBar';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -32,27 +31,25 @@ const OfficeStaffLayout = ({ children }: OfficeStaffLayoutProps) => {
   }
 
   return (
-    <SidebarProvider defaultOpen={false}>
-      <div className="flex min-h-screen w-full bg-[#F9FAFB]">
-        {/* Mobile only: Render sidebar */}
-        {isMobile && <AppSidebar />}
+    <div className="flex h-screen w-screen flex-row bg-[#F9FAFB]">
+      {/* Desktop only: Collapsible sidebar */}
+      <SessionNavBar />
+      
+      <div className="flex flex-1 flex-col w-full overflow-hidden">
+        <header className={`sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-[#E5E7EB] shadow-sm px-4 md:px-6 ${isMobile ? 'bg-white' : 'bg-slate-900'}`}>
+          <div className="flex-1">
+            <Header />
+          </div>
+        </header>
         
-        <div className="flex-1 flex flex-col w-full overflow-hidden">
-          <header className={`sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-[#E5E7EB] shadow-sm px-4 md:px-6 ${isMobile ? 'bg-white' : 'bg-slate-900'}`}>
-            <div className="flex-1">
-              <Header />
-            </div>
-          </header>
-          
-          {/* Desktop only: Render top nav bar */}
-          {!isMobile && <OfficeStaffTopNavBar />}
-          
-          <main className="flex-1 overflow-auto bg-[#F9FAFB]">
-            {children}
-          </main>
-        </div>
+        {/* Desktop only: Render top nav bar */}
+        {!isMobile && <OfficeStaffTopNavBar />}
+        
+        <main className="flex-1 overflow-auto bg-[#F9FAFB]">
+          {children}
+        </main>
       </div>
-    </SidebarProvider>
+    </div>
   );
 };
 
