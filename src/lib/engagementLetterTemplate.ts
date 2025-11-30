@@ -24,7 +24,7 @@ export function generateEngagementLetter(data: EngagementLetterData): string {
       <style>
         @page {
           size: A4;
-          margin: 0mm;
+          margin: 60mm 20mm 30mm 20mm;
         }
         @media print {
           body {
@@ -32,7 +32,7 @@ export function generateEngagementLetter(data: EngagementLetterData): string {
             padding: 0;
           }
           .letter-container {
-            margin: 70mm 20mm 50mm 20mm !important;
+            margin: 0 !important;
             padding: 0 !important;
           }
           .no-print {
