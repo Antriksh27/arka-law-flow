@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '../ui/button';
-import { Plus, Calendar, List, CalendarDays, Clock, ListOrdered } from 'lucide-react';
+import { Plus, Calendar, List, CalendarDays, Clock, ListOrdered, FileText } from 'lucide-react';
 import { useDialog } from '@/hooks/use-dialog';
 import { CreateHearingDialog } from './CreateHearingDialog';
 import { ViewType } from './types';
@@ -40,6 +40,11 @@ export const HearingsHeader: React.FC<HearingsHeaderProps> = ({
         <Button variant="outline" onClick={() => navigate('/daily-board')}>
           <ListOrdered className="h-4 w-4 mr-2" />
           Daily Board
+        </Button>
+        
+        <Button variant="outline" onClick={() => navigate('/cause-list')}>
+          <FileText className="h-4 w-4 mr-2" />
+          Cause List
         </Button>
         
         <div className="bg-gray-100 rounded-lg flex p-1">
