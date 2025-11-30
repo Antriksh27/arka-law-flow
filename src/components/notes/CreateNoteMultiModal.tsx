@@ -49,9 +49,12 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(true);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const recognitionRef = useRef<any>(null);
   const {
     register,
     handleSubmit,
@@ -265,6 +268,69 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
       audioRef.current.onended = () => setIsPlaying(false);
     }
   }, [audioUrl]);
+
+  // Setup Speech Recognition
+  useEffect(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setSpeechSupported(false);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-IN';
+
+    recognition.onresult = (event: any) => {
+      let transcript = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+          transcript += event.results[i][0].transcript + ' ';
+        }
+      }
+      
+      if (transcript) {
+        const currentContent = watch('content') || '';
+        setValue('content', currentContent + transcript);
+      }
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error('Speech recognition error:', event.error);
+      setIsListening(false);
+      toast({
+        title: "Speech recognition error",
+        description: event.error === 'no-speech' ? 'No speech detected' : 'Could not process speech',
+        variant: "destructive"
+      });
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognitionRef.current = recognition;
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, [setValue, watch, toast]);
+
+  const toggleSpeechToText = () => {
+    if (!recognitionRef.current) return;
+
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      recognitionRef.current.start();
+      setIsListening(true);
+      toast({ title: "Listening...", description: "Speak now" });
+    }
+  };
   return <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white">
         <DialogHeader className="pb-4 border-b border-gray-100">
@@ -291,10 +357,48 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
             
             <TabsContent value="write" className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="content" className="text-sm font-medium text-gray-700">
-                  Content
-                </Label>
-                <Textarea id="content" {...register('content')} placeholder="Write your note content..." className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 min-h-[200px]" rows={8} />
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="content" className="text-sm font-medium text-gray-700">
+                    Content
+                  </Label>
+                  {speechSupported && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={toggleSpeechToText}
+                      className={`${isListening 
+                        ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100' 
+                        : 'text-blue-600 border-blue-200 hover:bg-blue-50'}`}
+                    >
+                      {isListening ? (
+                        <>
+                          <MicOff className="w-4 h-4 mr-2" />
+                          Stop Dictation
+                        </>
+                      ) : (
+                        <>
+                          <Mic className="w-4 h-4 mr-2" />
+                          Dictate
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
+                <div className="relative">
+                  <Textarea 
+                    id="content" 
+                    {...register('content')} 
+                    placeholder="Write your note content or click Dictate to speak..." 
+                    className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 min-h-[200px]" 
+                    rows={8} 
+                  />
+                  {isListening && (
+                    <div className="absolute bottom-2 right-2 flex items-center gap-2 text-red-500 text-sm">
+                      <span className="animate-pulse">●</span> Listening...
+                    </div>
+                  )}
+                </div>
               </div>
             </TabsContent>
             
