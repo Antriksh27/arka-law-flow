@@ -23,6 +23,7 @@ import { MobileClientCard } from './MobileClientCard';
 import { MobileFAB } from '@/components/mobile/MobileFAB';
 import { BottomNavBar } from '@/components/mobile/BottomNavBar';
 import { MobileSearchBar } from '@/components/cases/MobileSearchBar';
+import { MobileHeader } from '@/components/mobile/MobileHeader';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 interface Client {
   id: string;
@@ -331,6 +332,11 @@ export const ClientList = () => {
   );
 
   return <div className="w-full overflow-x-hidden">
+      {/* Mobile Header */}
+      {isMobile && (
+        <MobileHeader title="Clients" />
+      )}
+
       {/* Desktop Header */}
       {!isMobile && (
         <div className="flex items-center justify-between mb-6 px-6">
