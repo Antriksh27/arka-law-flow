@@ -90,7 +90,7 @@ const WorkspaceDashboard = () => {
   const [showDocumentDialog, setShowDocumentDialog] = useState(false);
   return <>
       {/* Mobile Header */}
-      {isMobile && <MobileHeader title={`${getGreeting()}, ${userName.split(' ')[0]}`} actions={<>
+      {isMobile && <MobileHeader title={`${getGreeting()}, ${userName.split(' ')[0]}!`} actions={<>
               
               <button onClick={() => navigate('/team')} className="p-2 rounded-lg hover:bg-accent/50 active:scale-95 transition-all">
                 
@@ -106,7 +106,7 @@ const WorkspaceDashboard = () => {
                   <div className="flex flex-col md:min-w-0">
                     <div className="flex flex-col gap-1">
                       <h1 className="text-2xl font-semibold">
-                        {getGreeting()}, {userName}
+                        {getGreeting()}, {userName}!
                       </h1>
                       <p className="text-sm text-muted-foreground">
                         {TimeUtils.formatDateTime(new Date(), "EEEE, MMMM d, yyyy • h:mm a")}
