@@ -16,7 +16,7 @@ import { DrawingCanvas } from './DrawingCanvas';
 import { ClientSelector } from '@/components/appointments/ClientSelector';
 import { CaseSelector } from '@/components/appointments/CaseSelector';
 import { AudioRecorder } from '@/utils/audioRecorder';
-import { useWhisperTranscription } from '@/hooks/useWhisperTranscription';
+import { useDeepgramTranscription } from '@/hooks/useDeepgramTranscription';
 interface CreateNoteMultiModalProps {
   open: boolean;
   onClose: () => void;
@@ -55,7 +55,7 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
   const [isFixingGrammar, setIsFixingGrammar] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioRecorderRef = useRef<AudioRecorder>(new AudioRecorder());
-  const { transcribe, isLoading: isModelLoading, isProcessing: isTranscribing, modelLoaded, loadProgress } = useWhisperTranscription();
+  const { transcribe, isProcessing: isTranscribing } = useDeepgramTranscription();
   const {
     register,
     handleSubmit,
@@ -324,8 +324,8 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
         const blob = await audioRecorderRef.current.stopRecording();
         
         toast({
-          title: "Transcribing...",
-          description: "Converting speech to text with AI"
+          title: "Transcribing with Deepgram...",
+          description: "Converting speech to text"
         });
 
         const result = await transcribe(blob);
@@ -357,18 +357,11 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
     } else {
       // Start dictation
       try {
-        if (!modelLoaded && !isModelLoading) {
-          toast({
-            title: "Loading AI model...",
-            description: "First-time setup, please wait"
-          });
-        }
-        
         await audioRecorderRef.current.startRecording();
         setIsDictating(true);
         
         toast({
-          title: "Dictating...",
+          title: "Recording started",
           description: "Speak now, click again to finish"
         });
       } catch (error) {
@@ -416,17 +409,12 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
                     variant="outline"
                     size="sm"
                     onClick={toggleDictation}
-                    disabled={isModelLoading || isTranscribing}
+                    disabled={isTranscribing}
                     className={`${isDictating 
                       ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100' 
                       : 'text-blue-600 border-blue-200 hover:bg-blue-50'}`}
                   >
-                    {isModelLoading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Loading Model ({loadProgress}%)
-                      </>
-                    ) : isTranscribing ? (
+                    {isTranscribing ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                         Transcribing...
