@@ -8,20 +8,33 @@ export function ConnectionStatus() {
   const [health, setHealth] = useState<HealthCheckResult | null>(null);
   const [checking, setChecking] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
+  const [failureCount, setFailureCount] = useState(0);
 
   const performHealthCheck = async () => {
     setChecking(true);
     const result = await checkSupabaseHealth();
     setHealth(result);
-    setShowAlert(!result.success);
-    setChecking(false);
     
+    // Only show alert after 2 consecutive failures
+    if (!result.success) {
+      setFailureCount(prev => prev + 1);
+      if (failureCount >= 1) {
+        setShowAlert(true);
+      }
+    } else {
+      setFailureCount(0);
+      setShowAlert(false);
+    }
+    
+    setChecking(false);
     console.log('🏥 Health check result:', result);
   };
 
   useEffect(() => {
-    // Run health check on mount
-    performHealthCheck();
+    // Delay initial health check by 3 seconds to let auth settle
+    const initialDelay = setTimeout(() => {
+      performHealthCheck();
+    }, 3000);
     
     // Periodic health check every 30 seconds if there's an error
     const interval = setInterval(() => {
@@ -30,7 +43,10 @@ export function ConnectionStatus() {
       }
     }, 30000);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearTimeout(initialDelay);
+      clearInterval(interval);
+    };
   }, [health?.success]);
 
   if (!showAlert || health?.success) {
@@ -42,38 +58,46 @@ export function ConnectionStatus() {
       <Alert variant="destructive" className="shadow-lg">
         <AlertCircle className="h-4 w-4" />
         <AlertTitle className="flex items-center justify-between">
-          <span>Connection Error</span>
+          <span>Connection Issue</span>
           <WifiOff className="h-4 w-4" />
         </AlertTitle>
         <AlertDescription className="space-y-2">
           <div className="text-sm">
+            <p className="mb-2">Having trouble connecting to the server. This may be due to slow network.</p>
             {!health?.authWorking && (
-              <p>• Authentication service is unreachable</p>
+              <p>• Authentication service is slow</p>
             )}
             {!health?.databaseWorking && (
-              <p>• Database connection failed</p>
+              <p>• Database queries are slow</p>
             )}
             {health?.error && (
               <p className="text-xs mt-1 opacity-80">{health.error}</p>
             )}
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={performHealthCheck}
-            disabled={checking}
-            className="mt-2"
-          >
-            {checking ? 'Checking...' : 'Retry Connection'}
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => window.location.reload()}
-            className="ml-2"
-          >
-            Reload Page
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={performHealthCheck}
+              disabled={checking}
+            >
+              {checking ? 'Checking...' : 'Retry'}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => window.location.reload()}
+            >
+              Reload
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowAlert(false)}
+            >
+              Dismiss
+            </Button>
+          </div>
         </AlertDescription>
       </Alert>
     </div>

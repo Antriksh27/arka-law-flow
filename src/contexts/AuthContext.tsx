@@ -62,7 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .maybeSingle();
           
           const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Query timeout after 8s')), 8000)
+            setTimeout(() => reject(new Error('Query timeout after 20s')), 20000)
           );
           
           const { data, error, status } = await Promise.race([
@@ -122,9 +122,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Timeout fallback to prevent infinite loading
     const loadingTimeout = setTimeout(() => {
-      console.warn('AuthContext: Session check timed out after 5s, stopping loading state');
+      console.warn('AuthContext: Session check timed out after 15s, stopping loading state');
       setLoading(false);
-    }, 5000);
+    }, 15000);
 
     // 1) Subscribe to auth changes FIRST (sync callback only)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {

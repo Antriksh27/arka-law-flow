@@ -13,6 +13,7 @@ import { LawyerSelection } from './pages/LawyerSelection';
 import { Toaster } from './components/ui/toaster';
 import { BookRedirect } from './pages/BookRedirect';
 import { ClientLayout } from './layouts/ClientLayout';
+import { ClientAuthProvider } from './contexts/ClientAuthContext';
 
 // Lazy load heavy components for better performance
 const CaseDetailEnhanced = lazy(() => import('./pages/CaseDetailEnhanced'));
@@ -104,25 +105,31 @@ function AppRoutes() {
               <Route path="/book/:lawyerId" element={<BookingPage />} />
               <Route path="/book" element={<LawyerSelection />} />
               
-              {/* Client Portal Routes */}
-              <Route path="/client" element={<ClientAuth />} />
-              <Route path="/client/cases" element={
-                <ClientProtectedRoute>
-                  <ClientLayout>
-                    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
-                      <ClientCases />
-                    </Suspense>
-                  </ClientLayout>
-                </ClientProtectedRoute>
-              } />
-              <Route path="/client/cases/:id" element={
-                <ClientProtectedRoute>
-                  <ClientLayout>
-                    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
-                      <ClientCaseDetail />
-                    </Suspense>
-                  </ClientLayout>
-                </ClientProtectedRoute>
+              {/* Client Portal Routes - wrapped with ClientAuthProvider */}
+              <Route path="/client/*" element={
+                <ClientAuthProvider>
+                  <Routes>
+                    <Route path="/" element={<ClientAuth />} />
+                    <Route path="/cases" element={
+                      <ClientProtectedRoute>
+                        <ClientLayout>
+                          <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+                            <ClientCases />
+                          </Suspense>
+                        </ClientLayout>
+                      </ClientProtectedRoute>
+                    } />
+                    <Route path="/cases/:id" element={
+                      <ClientProtectedRoute>
+                        <ClientLayout>
+                          <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+                            <ClientCaseDetail />
+                          </Suspense>
+                        </ClientLayout>
+                      </ClientProtectedRoute>
+                    } />
+                  </Routes>
+                </ClientAuthProvider>
               } />
               
               {/* Auth route */}
