@@ -40,7 +40,7 @@ export const TodaysSummary = ({
         
         <div className="flex items-center justify-between py-2 md:py-3">
           <span className="text-sm">Tasks Pending</span>
-          <span className="text-2xl md:text-3xl font-bold">{summary.tasks || 0}</span>
+          <span className="text-2xl md:text-3xl font-bold">{summary.tasks}</span>
         </div>
       </div>
 

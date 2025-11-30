@@ -207,7 +207,7 @@ const WorkspaceDashboard = () => {
                   <TodaysSummary summary={{
                 hearings: (data?.timelineEvents || []).filter(e => e.type === 'hearing').length,
                 meetings: (data?.timelineEvents || []).filter(e => e.type === 'appointment').length,
-                tasks: (data?.timelineEvents || []).filter(e => e.type === 'task').length
+                tasks: data?.metrics?.tasks || 0
               }} isLoading={isLoading} />
                   
                   <UpcomingWeek events={data?.weekEvents || []} isLoading={isLoading} />
