@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Plus, Calendar, FileText, StickyNote, Briefcase, Edit, Trash2, Users, Mail, FileSignature, Shield, ShieldOff } from 'lucide-react';
+import { MoreHorizontal, Plus, Calendar, FileText, StickyNote, Briefcase, Edit, Trash2, Users, Mail, FileSignature } from 'lucide-react';
 import { AssignToCaseDialog } from './AssignToCaseDialog';
 import { CreateAppointmentDialog } from '@/components/appointments/CreateAppointmentDialog';
 import { UploadDocumentForClientDialog } from '@/components/documents/UploadDocumentForClientDialog';
@@ -33,57 +33,9 @@ export const ClientQuickActions: React.FC<ClientQuickActionsProps> = ({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showEmailDialog, setShowEmailDialog] = useState(false);
   const [clientData, setClientData] = useState<any>(null);
-  const [portalEnabled, setPortalEnabled] = useState<boolean>(false);
-  const [togglingPortal, setTogglingPortal] = useState(false);
   const {
     openDialog
   } = useDialog();
-
-  useEffect(() => {
-    fetchPortalStatus();
-  }, [clientId]);
-
-  const fetchPortalStatus = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('clients')
-        .select('client_portal_enabled')
-        .eq('id', clientId)
-        .single();
-      
-      if (error) throw error;
-      setPortalEnabled(data?.client_portal_enabled || false);
-    } catch (error) {
-      console.error('Error fetching portal status:', error);
-    }
-  };
-
-  const toggleClientPortal = async () => {
-    setTogglingPortal(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('toggle-client-portal', {
-        body: { clientId, enabled: !portalEnabled }
-      });
-
-      if (error) throw error;
-
-      setPortalEnabled(!portalEnabled);
-      toast({
-        title: "Success",
-        description: `Client portal ${!portalEnabled ? 'enabled' : 'disabled'} successfully`,
-      });
-      onAction();
-    } catch (error) {
-      console.error('Error toggling portal:', error);
-      toast({
-        title: "Error",
-        description: "Failed to toggle client portal access",
-        variant: "destructive"
-      });
-    } finally {
-      setTogglingPortal(false);
-    }
-  };
   const fetchClientData = async () => {
     try {
       const {
@@ -138,18 +90,6 @@ export const ClientQuickActions: React.FC<ClientQuickActionsProps> = ({
             <DropdownMenuItem className="hover:bg-gray-50 cursor-pointer" onClick={() => setShowEngagementDialog(true)}>
               <FileSignature className="w-4 h-4 mr-3 text-gray-400" />
               <span>Generate Engagement Letter</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem 
-              className="hover:bg-gray-50 cursor-pointer" 
-              onClick={toggleClientPortal}
-              disabled={togglingPortal}
-            >
-              {portalEnabled ? (
-                <ShieldOff className="w-4 h-4 mr-3 text-gray-400" />
-              ) : (
-                <Shield className="w-4 h-4 mr-3 text-gray-400" />
-              )}
-              <span>{togglingPortal ? 'Processing...' : portalEnabled ? 'Disable Client Portal' : 'Enable Client Portal'}</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator className="bg-gray-200" />
             <DropdownMenuItem className="hover:bg-gray-50 cursor-pointer" onClick={fetchClientData}>

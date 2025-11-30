@@ -125,15 +125,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
 
-    // 2) THEN check for existing session with timeout wrapper
-    Promise.race([
-      supabase.auth.getSession(),
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Session check timeout')), 5000)
-      )
-    ])
-      .then((result: any) => {
-        const { data: { session: currentSession } } = result;
+    // 2) THEN check for existing session
+    supabase.auth.getSession()
+      .then(({ data: { session: currentSession } }) => {
         console.log('AuthContext: Initial session check:', !!currentSession);
         clearTimeout(loadingTimeout);
 
