@@ -10,7 +10,11 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useNotifications } from '@/hooks/useNotifications';
 import { NotificationPanel } from '@/components/notifications/NotificationPanel';
 
-const Header = () => {
+interface HeaderProps {
+  onMenuClick?: () => void;
+}
+
+const Header = ({ onMenuClick }: HeaderProps) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
@@ -18,6 +22,18 @@ const Header = () => {
   const { unreadCount } = useNotifications();
   
   return <div className="flex items-center justify-between gap-3 w-full">
+          {/* Mobile: Hamburger Menu */}
+          {isMobile && (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={onMenuClick}
+              className="text-foreground hover:bg-accent md:hidden"
+            >
+              <Menu className="w-5 h-5" />
+            </Button>
+          )}
+          
           {/* Desktop: Logo */}
           {!isMobile && <div className="flex items-center">
               <img src="/lovable-uploads/89ea18cf-8c73-4793-9dcc-1a192855a630.png" alt="HRU Legal" className="h-20 w-auto" />

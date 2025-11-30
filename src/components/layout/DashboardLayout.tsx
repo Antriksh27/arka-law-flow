@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Header from './Header';
-import { SessionNavBar } from '@/components/ui/sidebar';
+import { MobileSidebar } from '@/components/ui/sidebar';
 import { TopNavBar } from './TopNavBar';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -12,16 +12,17 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   children
 }) => {
   const isMobile = useIsMobile();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   
   return (
     <div className="flex h-screen w-screen flex-row bg-[#F9FAFB]">
       {/* Mobile only: Collapsible sidebar */}
-      <SessionNavBar />
+      <MobileSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       
       <div className="flex flex-1 flex-col w-full overflow-hidden">
         <header className={`sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-[#E5E7EB] shadow-sm px-4 md:px-6 ${isMobile ? 'bg-white' : 'bg-slate-900'}`}>
           <div className="flex-1">
-            <Header />
+            <Header onMenuClick={() => setSidebarOpen(true)} />
           </div>
         </header>
         
