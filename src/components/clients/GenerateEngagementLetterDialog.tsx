@@ -211,11 +211,10 @@ export function GenerateEngagementLetterDialog({
       // Create a properly structured div for PDF generation
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = `<style>${styleContent}</style>${bodyContent}`;
-      tempDiv.style.position = 'fixed';
+      tempDiv.style.position = 'absolute';
       tempDiv.style.top = '0';
-      tempDiv.style.left = '0';
+      tempDiv.style.left = '-9999px';
       tempDiv.style.width = '210mm';
-      tempDiv.style.opacity = '0';
       tempDiv.style.pointerEvents = 'none';
       tempDiv.style.zIndex = '-1';
       tempDiv.style.background = 'white';
@@ -276,11 +275,10 @@ export function GenerateEngagementLetterDialog({
         // Create a properly structured div for PDF generation
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = `<style>${styleContent}</style>${bodyContent}`;
-        tempDiv.style.position = 'fixed';
+        tempDiv.style.position = 'absolute';
         tempDiv.style.top = '0';
-        tempDiv.style.left = '0';
+        tempDiv.style.left = '-9999px';
         tempDiv.style.width = '210mm';
-        tempDiv.style.opacity = '0';
         tempDiv.style.pointerEvents = 'none';
         tempDiv.style.zIndex = '-1';
         tempDiv.style.background = 'white';
