@@ -17,12 +17,18 @@ import BookAppointmentDialog from '@/components/reception/BookAppointmentDialog'
 import { EditContactDialog } from '@/components/contacts/EditContactDialog';
 import EditAppointmentDialog from '@/components/reception/EditAppointmentDialog';
 import RescheduleAppointmentDialog from '@/components/reception/RescheduleAppointmentDialog';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { MobileHeader } from '@/components/mobile/MobileHeader';
+import { BottomNavBar } from '@/components/mobile/BottomNavBar';
+import { MobileFAB } from '@/components/mobile/MobileFAB';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 const ReceptionHome = () => {
   const {
     user,
     firmId
   } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [addContactOpen, setAddContactOpen] = useState(false);
   const [bookAppointmentOpen, setBookAppointmentOpen] = useState(false);
   const [editContactOpen, setEditContactOpen] = useState(false);
@@ -145,6 +151,191 @@ const ReceptionHome = () => {
         return 'outline';
     }
   };
+
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-background pb-24">
+        <MobileHeader 
+          title="Reception"
+          actions={
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <MoreHorizontal className="w-5 h-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="bottom" className="h-auto">
+                <SheetHeader>
+                  <SheetTitle>Quick Actions</SheetTitle>
+                </SheetHeader>
+                <div className="grid grid-cols-2 gap-3 py-4">
+                  <Button onClick={() => setAddContactOpen(true)} className="h-20 flex flex-col gap-2">
+                    <UserPlus className="w-5 h-5" />
+                    <span className="text-xs">New Contact</span>
+                  </Button>
+                  <Button onClick={() => setBookAppointmentOpen(true)} className="h-20 flex flex-col gap-2">
+                    <CalendarPlus className="w-5 h-5" />
+                    <span className="text-xs">New Appointment</span>
+                  </Button>
+                </div>
+              </SheetContent>
+            </Sheet>
+          }
+        />
+
+        <div className="p-4 space-y-4">
+          <Input
+            placeholder="Search appointments..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full"
+          />
+
+          {/* Today's Appointments */}
+          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div className="p-4 border-b">
+              <h3 className="font-semibold text-sm">Today's Appointments</h3>
+              <p className="text-xs text-muted-foreground">
+                {todayAppointments?.length || 0} scheduled
+              </p>
+            </div>
+            <div className="divide-y">
+              {todayAppointments?.length > 0 ? (
+                todayAppointments.map(appointment => (
+                  <div key={appointment.id} className="p-4 space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-semibold text-sm">
+                            {appointment.appointment_time ? appointment.appointment_time.slice(0, 5) : 'Time not set'}
+                          </span>
+                          <Badge variant={getStatusVariant(appointment.status)} className="text-xs">
+                            {appointment.status}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground mb-1">
+                          {appointment.clients?.[0]?.full_name || 'Unknown Client'}
+                        </p>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          {getAppointmentTypeIcon(appointment.type)}
+                          <span>{appointment.type === 'video-call' ? 'Virtual' : 'In Person'}</span>
+                          <span>•</span>
+                          <span>{appointment.duration_minutes} min</span>
+                        </div>
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreHorizontal className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => {
+                            setSelectedAppointment(appointment);
+                            setEditAppointmentOpen(true);
+                          }}>
+                            <Edit className="w-4 h-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => {
+                            setSelectedAppointment(appointment);
+                            setRescheduleAppointmentOpen(true);
+                          }}>
+                            <Clock className="w-4 h-4 mr-2" />
+                            Reschedule
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-8 text-center text-muted-foreground text-xs">
+                  No appointments today
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Recent Contacts */}
+          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div className="p-4 border-b flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-sm">Recent Contacts</h3>
+                <p className="text-xs text-muted-foreground">
+                  {recentContacts?.length || 0} contacts
+                </p>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => navigate('/reception/contacts')}>
+                View All
+              </Button>
+            </div>
+            <div className="divide-y">
+              {recentContacts?.length > 0 ? (
+                recentContacts.map(contact => (
+                  <div key={contact.id} className="p-4 flex items-center gap-3">
+                    <Avatar className="h-10 w-10">
+                      <AvatarFallback>
+                        {contact.name?.charAt(0) || 'C'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold truncate">{contact.name}</p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {contact.visit_purpose || 'General Inquiry'}
+                      </p>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => {
+                        setSelectedContact(contact);
+                        setEditContactOpen(true);
+                      }}
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))
+              ) : (
+                <div className="p-8 text-center text-muted-foreground text-xs">
+                  No recent contacts
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <MobileFAB
+          onClick={() => setBookAppointmentOpen(true)}
+          icon={CalendarPlus}
+        />
+
+        <BottomNavBar />
+
+        {/* Modals */}
+        <AddContactDialog open={addContactOpen} onOpenChange={setAddContactOpen} />
+        <BookAppointmentDialog open={bookAppointmentOpen} onOpenChange={setBookAppointmentOpen} />
+        <EditContactDialog 
+          open={editContactOpen} 
+          onOpenChange={setEditContactOpen}
+          contact={selectedContact}
+        />
+        <EditAppointmentDialog
+          open={editAppointmentOpen}
+          onOpenChange={setEditAppointmentOpen}
+          appointment={selectedAppointment}
+        />
+        <RescheduleAppointmentDialog
+          open={rescheduleAppointmentOpen}
+          onOpenChange={setRescheduleAppointmentOpen}
+          appointment={selectedAppointment}
+        />
+      </div>
+    );
+  }
+
   return <div className="container max-w-none flex h-full w-full flex-col items-start gap-6 bg-[#F9FAFB] py-12 overflow-auto">
       {/* Header */}
       <div className="flex w-full items-center gap-4">

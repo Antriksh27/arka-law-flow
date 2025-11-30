@@ -6,6 +6,10 @@ import { Link } from 'react-router-dom';
 import { CheckSquare, Clock, AlertTriangle, FileText, Upload, Plus, Calendar, MessageSquareText, FolderOpen } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { MobileHeader } from '@/components/mobile/MobileHeader';
+import { BottomNavBar } from '@/components/mobile/BottomNavBar';
+import { MobileFAB } from '@/components/mobile/MobileFAB';
 interface DashboardStats {
   pendingTasks: number;
   inProgressTasks: number;
@@ -26,6 +30,7 @@ const StaffDashboard = () => {
   const {
     user
   } = useAuth();
+  const isMobile = useIsMobile();
   const [stats, setStats] = useState<DashboardStats>({
     pendingTasks: 0,
     inProgressTasks: 0,
@@ -155,6 +160,138 @@ const StaffDashboard = () => {
         <div className="text-muted-foreground">Loading dashboard...</div>
       </div>;
   }
+
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-background pb-24">
+        <MobileHeader 
+          title="Dashboard"
+          actions={
+            <span className="text-sm text-muted-foreground">
+              {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            </span>
+          }
+        />
+
+        <div className="p-4 space-y-4">
+          {/* Stats Strip - Horizontal Scroll */}
+          <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
+            <div className="flex-shrink-0 bg-white rounded-xl p-4 shadow-sm w-32">
+              <CheckSquare className="h-6 w-6 text-orange-500 mb-2" />
+              <p className="text-2xl font-bold">{stats.pendingTasks}</p>
+              <p className="text-xs text-muted-foreground">Pending</p>
+            </div>
+            <div className="flex-shrink-0 bg-white rounded-xl p-4 shadow-sm w-32">
+              <Clock className="h-6 w-6 text-blue-500 mb-2" />
+              <p className="text-2xl font-bold">{stats.inProgressTasks}</p>
+              <p className="text-xs text-muted-foreground">In Progress</p>
+            </div>
+            <div className="flex-shrink-0 bg-white rounded-xl p-4 shadow-sm w-32">
+              <CheckSquare className="h-6 w-6 text-green-500 mb-2" />
+              <p className="text-2xl font-bold">{stats.completedTasks}</p>
+              <p className="text-xs text-muted-foreground">Completed</p>
+            </div>
+            <div className="flex-shrink-0 bg-white rounded-xl p-4 shadow-sm w-32">
+              <AlertTriangle className="h-6 w-6 text-red-500 mb-2" />
+              <p className="text-2xl font-bold">{stats.todayDeadlines}</p>
+              <p className="text-xs text-muted-foreground">Due Today</p>
+            </div>
+            <div className="flex-shrink-0 bg-white rounded-xl p-4 shadow-sm w-32">
+              <FileText className="h-6 w-6 text-purple-500 mb-2" />
+              <p className="text-2xl font-bold">{stats.documentsUploaded}</p>
+              <p className="text-xs text-muted-foreground">Docs Today</p>
+            </div>
+          </div>
+
+          {/* Quick Actions Grid */}
+          <div className="bg-white rounded-xl p-4 shadow-sm">
+            <h3 className="font-semibold text-sm mb-3">Quick Actions</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <Button 
+                variant="outline" 
+                className="h-20 flex flex-col gap-2" 
+                asChild
+              >
+                <Link to="/documents?action=upload">
+                  <Upload className="w-5 h-5" />
+                  <span className="text-xs">Upload Doc</span>
+                </Link>
+              </Button>
+              <Button 
+                variant="outline" 
+                className="h-20 flex flex-col gap-2" 
+                asChild
+              >
+                <Link to="/tasks?action=create">
+                  <Plus className="w-5 h-5" />
+                  <span className="text-xs">New Task</span>
+                </Link>
+              </Button>
+              <Button 
+                variant="outline" 
+                className="h-20 flex flex-col gap-2" 
+                asChild
+              >
+                <Link to="/cases">
+                  <FolderOpen className="w-5 h-5" />
+                  <span className="text-xs">Cases</span>
+                </Link>
+              </Button>
+              <Button 
+                variant="outline" 
+                className="h-20 flex flex-col gap-2" 
+                asChild
+              >
+                <Link to="/chat">
+                  <MessageSquareText className="w-5 h-5" />
+                  <span className="text-xs">Messages</span>
+                </Link>
+              </Button>
+            </div>
+          </div>
+
+          {/* Recent Activity */}
+          <div className="bg-white rounded-xl p-4 shadow-sm">
+            <h3 className="font-semibold text-sm mb-3">Recent Activity</h3>
+            <div className="space-y-3">
+              {recentActivity.length === 0 ? (
+                <p className="text-muted-foreground text-center py-4 text-xs">
+                  No recent activity
+                </p>
+              ) : (
+                recentActivity.map(activity => (
+                  <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg border">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{activity.title}</p>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <Badge variant={getStatusColor(activity.status)} className="text-xs">
+                          {activity.status.replace('_', ' ')}
+                        </Badge>
+                        {activity.priority && (
+                          <Badge variant={getPriorityColor(activity.priority)} className="text-xs">
+                            {activity.priority}
+                          </Badge>
+                        )}
+                        <span className="text-xs text-muted-foreground">{activity.time}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+
+        <MobileFAB
+          onClick={() => window.location.href = '/tasks?action=create'}
+          icon={Plus}
+        />
+
+        <BottomNavBar />
+      </div>
+    );
+  }
+
   return <div className="max-w-7xl mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
