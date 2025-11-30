@@ -4,6 +4,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { CauseListHeader } from '@/components/cause-list/CauseListHeader';
 import { CauseListContent } from '@/components/cause-list/CauseListContent';
 import { BottomNavBar } from '@/components/mobile/BottomNavBar';
+import { Card } from '@/components/ui/card';
 
 const CauseList = () => {
   const { getDisplayBoard } = useLegalkartIntegration();
@@ -14,9 +15,9 @@ const CauseList = () => {
       onSuccess: (data) => {
         console.log('Gujarat Display Board API Response:', data);
         if (data.success) {
-          // Ensure we're setting an array
-          const responseData = data.data;
-          console.log('Response data type:', typeof responseData, 'isArray:', Array.isArray(responseData));
+          // The LegalKart API response is nested: data.data contains { success, data: [] }
+          const responseData = data.data?.data || data.data || [];
+          console.log('Extracted data:', responseData, 'isArray:', Array.isArray(responseData));
           setCauseListData(responseData);
         }
       },
@@ -41,6 +42,15 @@ const CauseList = () => {
         
         {getDisplayBoard.isPending ? (
           <LoadingSpinner message="Fetching Gujarat Display Board data..." />
+        ) : causeListData && Array.isArray(causeListData) && causeListData.length === 0 ? (
+          <Card className="p-8 text-center">
+            <p className="text-muted-foreground">
+              No cases currently listed on the Gujarat Display Board.
+            </p>
+            <p className="text-sm text-muted-foreground mt-2">
+              The display board is typically available during Gujarat High Court working hours (Mon-Fri, 10am-5pm IST).
+            </p>
+          </Card>
         ) : causeListData ? (
           <CauseListContent data={causeListData} />
         ) : (
