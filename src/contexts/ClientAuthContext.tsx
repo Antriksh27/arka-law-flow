@@ -12,8 +12,7 @@ interface ClientAuthContextType {
   client: ClientData | null;
   session: Session | null;
   loading: boolean;
-  sendOtp: (phone: string) => Promise<{ success: boolean; error?: string }>;
-  verifyOtp: (phone: string, otp: string) => Promise<{ success: boolean; error?: string }>;
+  signInWithPhone: (phone: string) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
 }
 
@@ -84,30 +83,10 @@ export const ClientAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     };
   }, []);
 
-  const sendOtp = async (phone: string): Promise<{ success: boolean; error?: string }> => {
+  const signInWithPhone = async (phone: string): Promise<{ success: boolean; error?: string }> => {
     try {
       const { data, error } = await supabase.functions.invoke('client-otp', {
-        body: { action: 'send-otp', phone },
-      });
-
-      if (error) {
-        return { success: false, error: error.message };
-      }
-
-      if (data.error) {
-        return { success: false, error: data.error };
-      }
-
-      return { success: true };
-    } catch (error: any) {
-      return { success: false, error: error.message || 'Failed to send OTP' };
-    }
-  };
-
-  const verifyOtp = async (phone: string, otp: string): Promise<{ success: boolean; error?: string }> => {
-    try {
-      const { data, error } = await supabase.functions.invoke('client-otp', {
-        body: { action: 'verify-otp', phone, token: otp },
+        body: { action: 'sign-in', phone },
       });
 
       if (error) {
@@ -121,7 +100,7 @@ export const ClientAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       // Session will be automatically set by onAuthStateChange
       return { success: true };
     } catch (error: any) {
-      return { success: false, error: error.message || 'Failed to verify OTP' };
+      return { success: false, error: error.message || 'Failed to sign in' };
     }
   };
 
@@ -139,8 +118,7 @@ export const ClientAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         client,
         session,
         loading,
-        sendOtp,
-        verifyOtp,
+        signInWithPhone,
         signOut,
       }}
     >

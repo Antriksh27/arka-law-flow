@@ -16,9 +16,9 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { action, phone, token } = await req.json();
+    const { action, phone } = await req.json();
 
-    if (action === 'send-otp') {
+    if (action === 'sign-in') {
       // Validate phone number format
       if (!phone || !phone.match(/^\+91[6-9]\d{9}$/)) {
         return new Response(
@@ -49,79 +49,72 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Send OTP using Supabase Auth
-      const { data: otpData, error: otpError } = await supabase.auth.signInWithOtp({
-        phone: phone,
-      });
-
-      if (otpError) {
-        console.error('OTP send error:', otpError);
-        return new Response(
-          JSON.stringify({ error: 'Failed to send OTP. Please try again.' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      console.log('OTP sent successfully to:', phone);
-      return new Response(
-        JSON.stringify({ success: true, message: 'OTP sent successfully' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    if (action === 'verify-otp') {
-      // Verify OTP
-      const { data: authData, error: verifyError } = await supabase.auth.verifyOtp({
-        phone: phone,
-        token: token,
-        type: 'sms',
-      });
-
-      if (verifyError || !authData.user) {
-        console.error('OTP verification error:', verifyError);
-        return new Response(
-          JSON.stringify({ error: 'Invalid OTP. Please try again.' }),
-          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      // Get client data
-      const { data: client } = await supabase
-        .from('clients')
-        .select('id, full_name')
-        .eq('phone', phone.substring(3))
+      // Check if client_user exists, if not create auth user
+      let authUserId: string;
+      
+      const { data: existingUser } = await supabase
+        .from('client_users')
+        .select('auth_user_id')
+        .eq('phone', phone)
         .single();
 
-      if (!client) {
-        return new Response(
-          JSON.stringify({ error: 'Client data not found' }),
-          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+      if (existingUser?.auth_user_id) {
+        authUserId = existingUser.auth_user_id;
+      } else {
+        // Create a new auth user
+        const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+          phone: phone,
+          phone_confirm: true,
+          user_metadata: {
+            client_id: client.id,
+            full_name: client.full_name
+          }
+        });
+
+        if (authError || !authData.user) {
+          console.error('Error creating auth user:', authError);
+          return new Response(
+            JSON.stringify({ error: 'Failed to create user account' }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        authUserId = authData.user.id;
       }
 
-      // Create or update client_users record
-      const { error: upsertError } = await supabase
+      // Upsert client_users record
+      await supabase
         .from('client_users')
         .upsert({
-          client_id: client.id,
           phone: phone,
-          auth_user_id: authData.user.id,
+          client_id: client.id,
+          auth_user_id: authUserId,
           is_active: true,
-          last_login: new Date().toISOString(),
+          last_login: new Date().toISOString()
         }, {
           onConflict: 'phone'
         });
 
-      if (upsertError) {
-        console.error('Error updating client_users:', upsertError);
+      // Create a session for the user
+      const { data: sessionData, error: sessionError } = await supabase.auth.admin.generateLink({
+        type: 'magiclink',
+        email: `${phone.replace('+', '')}@client.portal`,
+      });
+
+      if (sessionError) {
+        console.error('Session generation error:', sessionError);
+        return new Response(
+          JSON.stringify({ error: 'Failed to create session' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
 
-      console.log('Client logged in successfully:', phone);
+      console.log('Client signed in successfully:', phone);
       return new Response(
         JSON.stringify({
           success: true,
-          session: authData.session,
-          user: authData.user,
+          session: sessionData,
+          user: { id: authUserId, phone },
           client: client,
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

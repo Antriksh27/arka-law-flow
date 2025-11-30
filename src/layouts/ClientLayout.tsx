@@ -14,7 +14,7 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate('/client-login');
+    navigate('/client');
   };
 
   return (

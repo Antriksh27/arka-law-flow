@@ -21,7 +21,7 @@ export const ClientProtectedRoute: React.FC<ClientProtectedRouteProps> = ({ chil
   }
 
   if (!user) {
-    return <Navigate to="/client-login" replace />;
+    return <Navigate to="/client" replace />;
   }
 
   return <>{children}</>;

@@ -103,15 +103,21 @@ function AppRoutes() {
               <Route path="/book" element={<LawyerSelection />} />
               
               {/* Client Portal Routes */}
-              <Route path="/client-login" element={<ClientAuth />} />
-              <Route path="/client/*" element={
+              <Route path="/client" element={<ClientAuth />} />
+              <Route path="/client/cases" element={
                 <ClientProtectedRoute>
                   <ClientLayout>
                     <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
-                      <Routes>
-                        <Route path="cases" element={<ClientCases />} />
-                        <Route path="cases/:id" element={<ClientCaseDetail />} />
-                      </Routes>
+                      <ClientCases />
+                    </Suspense>
+                  </ClientLayout>
+                </ClientProtectedRoute>
+              } />
+              <Route path="/client/cases/:id" element={
+                <ClientProtectedRoute>
+                  <ClientLayout>
+                    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+                      <ClientCaseDetail />
                     </Suspense>
                   </ClientLayout>
                 </ClientProtectedRoute>
