@@ -40,7 +40,7 @@ const Header = ({ onMenuClick }: HeaderProps) => {
             </div>}
           
           {/* Mobile: Logo */}
-          {isMobile && <div className="flex items-center">
+          {isMobile && <div className="hidden flex items-center">
               <img src="/lovable-uploads/89ea18cf-8c73-4793-9dcc-1a192855a630.png" alt="HRU Legal" className="h-10 w-auto" />
             </div>}
 
