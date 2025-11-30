@@ -51,12 +51,12 @@ export const HearingsCalendarView: React.FC<HearingsCalendarViewProps> = ({
       if (filters.dateRange.from && filters.dateRange.to) {
         query = query.gte('hearing_date', format(filters.dateRange.from, 'yyyy-MM-dd')).lte('hearing_date', format(filters.dateRange.to, 'yyyy-MM-dd'));
       } else {
-        // Default range: show hearings from 6 months ago to 6 months ahead
-        const sixMonthsAgo = new Date();
-        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+        // Default range: show hearings from 2 months ago to 6 months ahead
+        const twoMonthsAgo = new Date();
+        twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
         const sixMonthsAhead = new Date();
         sixMonthsAhead.setMonth(sixMonthsAhead.getMonth() + 6);
-        query = query.gte('hearing_date', format(sixMonthsAgo, 'yyyy-MM-dd')).lte('hearing_date', format(sixMonthsAhead, 'yyyy-MM-dd'));
+        query = query.gte('hearing_date', format(twoMonthsAgo, 'yyyy-MM-dd')).lte('hearing_date', format(sixMonthsAhead, 'yyyy-MM-dd'));
       }
       if (filters.case && filters.case !== 'all') {
         query = query.eq('case_id', filters.case);
@@ -74,7 +74,7 @@ export const HearingsCalendarView: React.FC<HearingsCalendarViewProps> = ({
         data,
         error
       } = await query.order('hearing_date', {
-        ascending: true
+        ascending: false
       });
       if (error) {
         console.error('❌ Error fetching hearings:', error);
