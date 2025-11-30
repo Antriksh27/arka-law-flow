@@ -14,18 +14,29 @@ import { TaskDetailDialog } from '../components/tasks/TaskDetailDialog';
 import { DeleteTaskDialog } from '../components/tasks/DeleteTaskDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { MobileTaskCard } from '@/components/tasks/MobileTaskCard';
+import { MobileFAB } from '@/components/mobile/MobileFAB';
+import { BottomNavBar } from '@/components/mobile/BottomNavBar';
+import { MobileSearchBar } from '@/components/cases/MobileSearchBar';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { MobilePageContainer } from '@/components/mobile/MobilePageContainer';
 
 const Tasks = () => {
+  const isMobile = useIsMobile();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showMobileFilter, setShowMobileFilter] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<string>('');
   const [selectedTaskTitle, setSelectedTaskTitle] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [assigneeFilter, setAssigneeFilter] = useState<string>('all');
+  const [activeTabMobile, setActiveTabMobile] = useState<'todo' | 'in_progress' | 'completed'>('todo');
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -269,30 +280,133 @@ const Tasks = () => {
     </div>
   );
 
+  // Mobile Filter Sheet
+  const MobileFilterSheet = () => (
+    <Sheet open={showMobileFilter} onOpenChange={setShowMobileFilter}>
+      <SheetContent side="bottom" className="h-[80vh] rounded-t-3xl">
+        <SheetHeader>
+          <SheetTitle>Filters</SheetTitle>
+        </SheetHeader>
+        <div className="py-6 space-y-6">
+          {/* Priority Filter */}
+          <div>
+            <h3 className="text-sm font-medium mb-3">Priority</h3>
+            <div className="flex flex-wrap gap-2">
+              {['all', 'high', 'medium', 'low'].map((priority) => (
+                <button
+                  key={priority}
+                  onClick={() => setPriorityFilter(priority)}
+                  className={`px-4 h-10 rounded-full font-medium text-sm transition-all ${
+                    priorityFilter === priority
+                      ? 'bg-slate-800 text-white'
+                      : 'bg-white border border-border text-foreground'
+                  }`}
+                >
+                  {priority === 'all' ? 'All' : priority.charAt(0).toUpperCase() + priority.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Assignee Filter */}
+          <div>
+            <h3 className="text-sm font-medium mb-3">Assignee</h3>
+            <div className="space-y-2 max-h-48 overflow-y-auto">
+              <button
+                onClick={() => setAssigneeFilter('all')}
+                className={`w-full text-left p-3 rounded-lg transition-all ${
+                  assigneeFilter === 'all'
+                    ? 'bg-slate-100'
+                    : 'bg-white border border-border'
+                }`}
+              >
+                All Assignees
+              </button>
+              <button
+                onClick={() => setAssigneeFilter('unassigned')}
+                className={`w-full text-left p-3 rounded-lg transition-all ${
+                  assigneeFilter === 'unassigned'
+                    ? 'bg-slate-100'
+                    : 'bg-white border border-border'
+                }`}
+              >
+                Unassigned
+              </button>
+              {teamMembers.map((member) => (
+                <button
+                  key={member.id}
+                  onClick={() => setAssigneeFilter(member.id)}
+                  className={`w-full text-left p-3 rounded-lg transition-all ${
+                    assigneeFilter === member.id
+                      ? 'bg-slate-100'
+                      : 'bg-white border border-border'
+                  }`}
+                >
+                  {member.full_name}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <Button
+            onClick={() => setShowMobileFilter(false)}
+            className="w-full h-12 bg-slate-800 hover:bg-slate-700"
+          >
+            Apply Filters
+          </Button>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+
   if (isLoading) {
     return (
-      <div className="text-center py-8">Loading tasks...</div>
+      <MobilePageContainer>
+        <div className="text-center py-8">Loading tasks...</div>
+      </MobilePageContainer>
     );
   }
 
-  return (
-    <div className="max-w-7xl mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Task Management</h1>
-          <p className="text-gray-600 mt-1">Manage and track all tasks across your cases</p>
-        </div>
-        <Button onClick={() => setShowCreateDialog(true)} className="bg-slate-800 hover:bg-slate-700">
-          <Plus className="w-4 h-4 mr-2" />
-          New Task
-        </Button>
-      </div>
+  // Get active filters count for mobile
+  const activeFiltersCount = (priorityFilter !== 'all' ? 1 : 0) + (assigneeFilter !== 'all' ? 1 : 0);
 
-      {/* Filters */}
-      <Card className="bg-white border-gray-200">
-        <CardContent className="p-6">
-          <div className="flex flex-wrap gap-4 items-center">
+  // Filter tasks by mobile tab
+  const filteredTasksByTab = isMobile && statusFilter === 'all' 
+    ? tasksByStatus[activeTabMobile]
+    : tasks;
+
+  return (
+    <MobilePageContainer withBottomNav={isMobile}>
+      <div className={isMobile ? "" : "max-w-7xl mx-auto p-6 space-y-6"}>
+      {/* Desktop Header */}
+      {!isMobile && (
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900">Task Management</h1>
+            <p className="text-gray-600 mt-1">Manage and track all tasks across your cases</p>
+          </div>
+          <Button onClick={() => setShowCreateDialog(true)} className="bg-slate-800 hover:bg-slate-700">
+            <Plus className="w-4 h-4 mr-2" />
+            New Task
+          </Button>
+        </div>
+      )}
+
+      {/* Mobile Search & Filter */}
+      {isMobile ? (
+        <div className="px-3 pt-3">
+          <MobileSearchBar
+            value={searchTerm}
+            onChange={setSearchTerm}
+            onFilterClick={() => setShowMobileFilter(true)}
+            activeFiltersCount={activeFiltersCount}
+          />
+        </div>
+      ) : (
+        /* Desktop Filters */
+        <Card className="bg-white border-gray-200">
+          <CardContent className="p-6">
+            <div className="flex flex-wrap gap-4 items-center">
             <div className="flex items-center gap-2">
               <Search className="w-4 h-4 text-gray-400" />
               <Input
@@ -341,12 +455,14 @@ const Tasks = () => {
                 ))}
               </SelectContent>
             </Select>
-          </div>
-        </CardContent>
-      </Card>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Task Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      {/* Task Statistics - Hidden on mobile */}
+      {!isMobile && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card className="bg-white border-gray-200">
           <CardContent className="p-6">
             <div className="text-2xl font-bold text-gray-900">{tasks.length}</div>
@@ -371,11 +487,60 @@ const Tasks = () => {
             <div className="text-sm text-gray-600">Completed</div>
           </CardContent>
         </Card>
-      </div>
+        </div>
+      )}
 
-      {/* Tasks Display */}
-      {tasks.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Mobile Tasks with Tabs */}
+      {isMobile ? (
+        <Tabs value={activeTabMobile} onValueChange={(v) => setActiveTabMobile(v as any)} className="px-3">
+          <TabsList className="w-full grid grid-cols-3 h-11 bg-white rounded-xl shadow-sm border border-border mb-4">
+            <TabsTrigger
+              value="todo"
+              className="data-[state=active]:bg-blue-600 data-[state=active]:text-white rounded-lg text-sm"
+            >
+              To Do ({tasksByStatus.todo.length})
+            </TabsTrigger>
+            <TabsTrigger
+              value="in_progress"
+              className="data-[state=active]:bg-gray-600 data-[state=active]:text-white rounded-lg text-sm"
+            >
+              In Progress ({tasksByStatus.in_progress.length})
+            </TabsTrigger>
+            <TabsTrigger
+              value="completed"
+              className="data-[state=active]:bg-green-600 data-[state=active]:text-white rounded-lg text-sm"
+            >
+              Done ({tasksByStatus.completed.length})
+            </TabsTrigger>
+          </TabsList>
+
+          {(['todo', 'in_progress', 'completed'] as const).map((status) => (
+            <TabsContent key={status} value={status} className="space-y-3 mt-0">
+              {tasksByStatus[status].length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  <CheckSquare className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <p className="text-sm">No {status.replace('_', ' ')} tasks</p>
+                </div>
+              ) : (
+                tasksByStatus[status].map((task) => (
+                  <MobileTaskCard
+                    key={task.id}
+                    task={task}
+                    onView={() => handleViewTask(task.id)}
+                    onEdit={() => handleEditTask(task.id)}
+                    onDelete={() => handleDeleteTask(task.id, task.title)}
+                    onStatusChange={(newStatus) => handleStatusChange(task.id, newStatus)}
+                    memberMap={memberMap}
+                  />
+                ))
+              )}
+            </TabsContent>
+          ))}
+        </Tabs>
+      ) : (
+        /* Desktop Kanban View */
+        tasks.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {Object.entries(tasksByStatus).map(([status, statusTasks]) => (
             <Card key={status} className="h-fit bg-white border-gray-200 shadow-sm">
               <CardHeader className="pb-3 bg-gray-50 border-b border-gray-100">
@@ -397,8 +562,8 @@ const Tasks = () => {
               </CardContent>
             </Card>
           ))}
-        </div>
-      ) : (
+          </div>
+        ) : (
         <div className="text-center py-12 text-gray-500">
           <CheckSquare className="w-12 h-12 mx-auto mb-4 text-gray-300" />
           <p className="text-lg font-medium">No tasks found</p>
@@ -407,8 +572,23 @@ const Tasks = () => {
             <Plus className="w-4 h-4 mr-2" />
             Create First Task
           </Button>
-        </div>
+          </div>
+        )
       )}
+
+      {/* Mobile FAB */}
+      {isMobile && (
+        <MobileFAB
+          onClick={() => setShowCreateDialog(true)}
+          icon={Plus}
+        />
+      )}
+
+      {/* Mobile Bottom Nav */}
+      {isMobile && <BottomNavBar />}
+
+      {/* Mobile Filter Sheet */}
+      <MobileFilterSheet />
 
       <CreateTaskDialog open={showCreateDialog} onClose={() => setShowCreateDialog(false)} />
       
@@ -436,7 +616,8 @@ const Tasks = () => {
         taskId={selectedTaskId}
         taskTitle={selectedTaskTitle}
       />
-    </div>
+      </div>
+    </MobilePageContainer>
   );
 };
 
