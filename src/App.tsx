@@ -35,6 +35,7 @@ import { defaultQueryConfig } from './lib/queryConfig';
 import { useAuth } from './contexts/AuthContext';
 import { supabase } from './integrations/supabase/client';
 import { useRealtimeNotifications } from './hooks/useRealtimeNotifications';
+import { ConnectionStatus } from './components/ConnectionStatus';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -95,6 +96,7 @@ function AppRoutes() {
 
   return (
     <DialogProvider>
+              <ConnectionStatus />
               <Routes>
               {/* Public booking routes - completely public, no authentication */}
               <Route path="/b/:code" element={<BookRedirect />} />
