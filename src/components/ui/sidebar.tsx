@@ -86,7 +86,7 @@ export function MobileSidebar({
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b bg-slate-50">
             <div className="flex items-center gap-2 mx-[83px]">
-              <img alt="HRU Legal" className="h-11 w-auto object-cover border-0" src="/lovable-uploads/428565de-3927-43da-90e5-5ea8ad3b12c9.png" />
+              <img alt="HRU Legal" className="h-11 w-auto object-cover border-0" src="/lovable-uploads/f4b1f288-b485-42f7-9fb1-f4542ba32db2.png" />
               
             </div>
             <Button variant="ghost" size="icon" onClick={onClose} className="text-gray-600">
