@@ -104,18 +104,18 @@ export function AppSidebar() {
   return <Sidebar 
       ref={sidebarRef}
       collapsible="offcanvas" 
-      className="bg-slate-900 border-r border-white/10 shadow-2xl z-50 sm:hidden"
+      className="bg-sidebar border-r border-sidebar-border shadow-2xl z-50 sm:hidden"
       side="left"
     >
-      <SidebarHeader className="border-b border-white/10 h-20 flex items-center justify-center">
+      <SidebarHeader className="border-b border-sidebar-border h-20 flex items-center justify-center bg-sidebar">
         <div className="flex items-center justify-center">
           <img src="/lovable-uploads/89ea18cf-8c73-4793-9dcc-1a192855a630.png" alt="HRU Legal" className="h-12 w-auto" />
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="bg-slate-900">
+      <SidebarContent className="bg-sidebar">
         <SidebarGroup>
-          {open && <SidebarGroupLabel className="text-xs font-medium text-white/70 uppercase tracking-wider px-3 py-2">
+          {open && <SidebarGroupLabel className="text-xs font-medium text-sidebar-foreground/70 uppercase tracking-wider px-3 py-2">
               Navigation
             </SidebarGroupLabel>}
           <SidebarGroupContent>
@@ -125,13 +125,13 @@ export function AppSidebar() {
               return <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild isActive={active} tooltip={item.title}>
                       <NavLink to={item.url} end={item.url === "/"} className={`
-                          nav-link flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 w-full
+                          nav-link flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 w-full font-sans
                           ${active 
                             ? 'active bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 border border-yellow-500/50 font-medium shadow-[0_0_20px_rgba(234,179,8,0.3)]' 
-                            : 'hover:bg-white/5 border border-transparent hover:border-white/20'}
+                            : 'hover:bg-sidebar-accent border border-transparent hover:border-sidebar-border'}
                         `} activeClassName="">
-                        <item.icon className={`h-5 w-5 flex-shrink-0 ${active ? 'text-white' : 'text-slate-50'}`} />
-                        {open && <span className={`text-sm font-medium ${active ? 'text-white' : 'text-slate-50'}`}>{item.title}</span>}
+                        <item.icon className={`h-5 w-5 flex-shrink-0 ${active ? 'text-sidebar-foreground' : 'text-sidebar-foreground'}`} />
+                        {open && <span className={`text-sm font-medium ${active ? 'text-sidebar-foreground' : 'text-sidebar-foreground'}`}>{item.title}</span>}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>;
@@ -141,15 +141,15 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-white/10 p-4">
+      <SidebarFooter className="border-t border-sidebar-border bg-sidebar p-4">
         {open && user && (
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-pink-400 flex items-center justify-center text-white font-semibold">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-pink-400 flex items-center justify-center text-white font-semibold font-sans">
               {user.email?.charAt(0).toUpperCase()}
             </div>
             <div>
-              <p className="font-semibold text-white text-sm">{user.email?.split('@')[0]}</p>
-              <p className="text-xs text-gray-400">User</p>
+              <p className="font-semibold text-sidebar-foreground text-sm font-sans">{user.email?.split('@')[0]}</p>
+              <p className="text-xs text-sidebar-foreground/60 font-sans">User</p>
             </div>
           </div>
         )}

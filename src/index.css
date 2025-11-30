@@ -34,6 +34,14 @@
     --input: 191 219 254;
     --ring: 37 99 235;              /* Blue-600 #2563EB */
 
+    /* Sidebar colors for mobile dark theme */
+    --sidebar: 15 23 42;            /* slate-900 */
+    --sidebar-foreground: 248 250 252;  /* slate-50 */
+    --sidebar-accent: 30 41 59;     /* slate-800 */
+    --sidebar-accent-foreground: 248 250 252;
+    --sidebar-border: 51 65 85;     /* slate-700 */
+    --sidebar-ring: 59 130 246;     /* blue-500 */
+
     --radius: 0.75rem;
   }
 
