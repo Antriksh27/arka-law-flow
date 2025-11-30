@@ -14,6 +14,9 @@ import { ClientEmails } from './ClientEmails';
 import { ClientTimeline } from './ClientTimeline';
 import { ClientQuickActions } from './ClientQuickActions';
 import { EditClientDialog } from './EditClientDialog';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { MobileHeader } from '@/components/mobile/MobileHeader';
+import { BottomNavBar } from '@/components/mobile/BottomNavBar';
 import { BarChart3, CheckSquare, Calendar, Briefcase, DollarSign, StickyNote, FileText, Mail, User, Clock, Edit, Star } from 'lucide-react';
 interface ClientTabsProps {
   clientId: string;
@@ -29,6 +32,7 @@ export const ClientTabs: React.FC<ClientTabsProps> = ({
   onTabChange,
   onUpdate
 }) => {
+  const isMobile = useIsMobile();
   const [showEditDialog, setShowEditDialog] = useState(false);
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -81,80 +85,143 @@ export const ClientTabs: React.FC<ClientTabsProps> = ({
     label: 'Timeline',
     icon: Clock
   }];
-  return <div className="bg-white border border-gray-200 rounded-2xl shadow-sm m-8">
+  return <>
+      {/* Mobile Header */}
+      {isMobile && (
+        <MobileHeader 
+          title={client.full_name}
+          showBack={true}
+          actions={
+            <ClientQuickActions 
+              clientId={client.id} 
+              clientName={client.full_name} 
+              clientEmail={client.email} 
+              onAction={onUpdate} 
+            />
+          }
+        />
+      )}
+
+      <div className={isMobile ? "" : "bg-white border border-gray-200 rounded-2xl shadow-sm m-8"}>
       <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
-        {/* Header section integrated with tabs - matching CaseDetailEnhanced pattern */}
-        <div className="p-6 pb-0">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-center gap-4 flex-1">
-              <Avatar className="w-16 h-16">
-                <AvatarFallback className="bg-gray-100 text-gray-600 text-lg font-medium">
+        {/* Header section - Desktop only */}
+        {!isMobile && (
+          <div className="p-6 pb-0">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-4 flex-1">
+                <Avatar className="w-16 h-16">
+                  <AvatarFallback className="bg-gray-100 text-gray-600 text-lg font-medium">
+                    {client.full_name.split(' ').map((n: string) => n[0]).join('')}
+                  </AvatarFallback>
+                </Avatar>
+                
+                <div className="flex-1">
+                  <h1 className="text-2xl font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                    {client.full_name}
+                    {client.is_vip && (
+                      <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" aria-label="VIP Client" />
+                    )}
+                  </h1>
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                      {client.email && <div>
+                          <span className="font-medium">Email:</span> {client.email}
+                        </div>}
+                      {client.phone && <div>
+                          <span className="font-medium">Phone:</span> {client.phone}
+                        </div>}
+                      {client.type && <div>
+                          <span className="font-medium">Type:</span> {client.type}
+                        </div>}
+                    </div>
+                    <div className="flex flex-wrap gap-4 text-sm text-gray-600 items-center">
+                      {client.organization && <div>
+                          <span className="font-medium">Organization:</span> {client.organization}
+                        </div>}
+                      
+                      {client.client_portal_enabled && <Badge variant="outline" className="text-xs">
+                          Portal Enabled
+                        </Badge>}
+                    </div>
+                    {(client.referred_by_name || client.source) && <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                        {client.referred_by_name && <div>
+                            <span className="font-medium">Referred By:</span> {client.referred_by_name}
+                          </div>}
+                        {client.source && <div>
+                            <span className="font-medium">Source:</span> {client.source}
+                          </div>}
+                      </div>}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex gap-2">
+                <ClientQuickActions clientId={client.id} clientName={client.full_name} clientEmail={client.email} onAction={onUpdate} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Mobile Client Info Card */}
+        {isMobile && (
+          <div className="bg-white border-b border-gray-200 p-4">
+            <div className="flex items-start gap-3">
+              <Avatar className="w-12 h-12 flex-shrink-0">
+                <AvatarFallback className="bg-gray-100 text-gray-600 text-sm font-medium">
                   {client.full_name.split(' ').map((n: string) => n[0]).join('')}
                 </AvatarFallback>
               </Avatar>
               
-              <div className="flex-1">
-                <h1 className="text-2xl font-semibold text-gray-900 mb-2 flex items-center gap-2">
-                  {client.full_name}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <h2 className="text-base font-semibold text-gray-900 truncate">
+                    {client.full_name}
+                  </h2>
                   {client.is_vip && (
-                    <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" aria-label="VIP Client" />
+                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400 flex-shrink-0" aria-label="VIP Client" />
                   )}
-                </h1>
-                <div className="space-y-2">
-                  <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                    {client.email && <div>
-                        <span className="font-medium">Email:</span> {client.email}
-                      </div>}
-                    {client.phone && <div>
-                        <span className="font-medium">Phone:</span> {client.phone}
-                      </div>}
-                    {client.type && <div>
-                        <span className="font-medium">Type:</span> {client.type}
-                      </div>}
-                  </div>
-                  <div className="flex flex-wrap gap-4 text-sm text-gray-600 items-center">
-                    {client.organization && <div>
-                        <span className="font-medium">Organization:</span> {client.organization}
-                      </div>}
-                    
-                    {client.client_portal_enabled && <Badge variant="outline" className="text-xs">
-                        Portal Enabled
-                      </Badge>}
-                  </div>
-                  {(client.referred_by_name || client.source) && <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                      {client.referred_by_name && <div>
-                          <span className="font-medium">Referred By:</span> {client.referred_by_name}
-                        </div>}
-                      {client.source && <div>
-                          <span className="font-medium">Source:</span> {client.source}
-                        </div>}
-                    </div>}
+                </div>
+                <div className="space-y-1 text-xs text-gray-600">
+                  {client.email && (
+                    <div className="truncate">{client.email}</div>
+                  )}
+                  {client.phone && (
+                    <div>{client.phone}</div>
+                  )}
+                  {client.organization && (
+                    <div className="truncate">
+                      <span className="font-medium">Org:</span> {client.organization}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
-            
-            <div className="flex gap-2">
-              
-              <ClientQuickActions clientId={client.id} clientName={client.full_name} clientEmail={client.email} onAction={onUpdate} />
-            </div>
           </div>
-        </div>
+        )}
 
-        {/* Tabs List - matching case details styling */}
-        <TabsList className="w-full bg-white border-b border-gray-200 h-auto p-0">
-          <div className="flex flex-wrap sm:flex-nowrap overflow-x-auto">
+        {/* Tabs List */}
+        <TabsList className={`w-full bg-white border-b border-gray-200 h-auto p-0 ${isMobile ? 'sticky top-14 z-30' : ''}`}>
+          <div className={`flex ${isMobile ? 'overflow-x-auto scrollbar-hide' : 'flex-wrap sm:flex-nowrap overflow-x-auto'}`}>
             {tabs.map(tab => {
             const IconComponent = tab.icon;
-            return <TabsTrigger key={tab.value} value={tab.value} className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 border-b-2 border-transparent data-[state=active]:border-blue-700 data-[state=active]:text-blue-800 data-[state=active]:bg-blue-50 bg-transparent rounded-none whitespace-nowrap transition-colors">
-                  <IconComponent className="w-4 h-4" />
-                  {tab.label}
-                </TabsTrigger>;
+            return <TabsTrigger 
+              key={tab.value} 
+              value={tab.value} 
+              className={`flex items-center gap-2 ${
+                isMobile 
+                  ? 'px-3 py-2.5 text-xs flex-shrink-0' 
+                  : 'px-4 py-3 text-sm'
+              } font-medium text-gray-600 hover:text-gray-900 border-b-2 border-transparent data-[state=active]:border-blue-700 data-[state=active]:text-blue-800 data-[state=active]:bg-blue-50 bg-transparent rounded-none whitespace-nowrap transition-colors`}
+            >
+              <IconComponent className="w-4 h-4" />
+              {tab.label}
+            </TabsTrigger>;
           })}
           </div>
         </TabsList>
 
         {/* Tab Content */}
-        <div className="p-6">
+        <div className={isMobile ? "p-4 pb-20" : "p-6"}>
           <TabsContent value="overview" className="m-0">
             <ClientOverview clientId={clientId} />
           </TabsContent>
@@ -187,5 +254,9 @@ export const ClientTabs: React.FC<ClientTabsProps> = ({
 
       {/* Edit Dialog */}
       {showEditDialog && <EditClientDialog open={showEditDialog} onOpenChange={setShowEditDialog} client={client} onSuccess={onUpdate} />}
-    </div>;
+    </div>
+    
+    {/* Mobile Bottom Nav */}
+    {isMobile && <BottomNavBar />}
+  </>;
 };
