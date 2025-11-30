@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { X, Plus, Mic, MicOff, Square, Play, Pause, Trash2, Sparkles, Loader2 } from 'lucide-react';
+import { X, Plus, Mic, MicOff, Square, Play, Pause, Trash2, Loader2 } from 'lucide-react';
 import { DrawingCanvas } from './DrawingCanvas';
 import { ClientSelector } from '@/components/appointments/ClientSelector';
 import { CaseSelector } from '@/components/appointments/CaseSelector';
@@ -52,7 +52,6 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isDictating, setIsDictating] = useState(false);
-  const [isFixingGrammar, setIsFixingGrammar] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioRecorderRef = useRef<AudioRecorder>(new AudioRecorder());
   const { transcribe, isProcessing: isTranscribing } = useDeepgramTranscription();
@@ -225,56 +224,6 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
   const removeTag = (tagToRemove: string) => {
     setValue('tags', watchedTags.filter(tag => tag !== tagToRemove));
   };
-  const fixGrammar = async (text: string): Promise<string> => {
-    if (!text?.trim()) return text;
-    
-    setIsFixingGrammar(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('grammar-check', {
-        body: { text, language: 'en-IN' }
-      });
-      
-      if (error) throw error;
-      
-      if (!data.matches?.length) {
-        toast({ 
-          title: "No grammar issues found", 
-          description: "Your text looks good!" 
-        });
-        return text;
-      }
-      
-      let correctedText = text;
-      const sortedMatches = [...data.matches].sort((a, b) => b.offset - a.offset);
-      
-      for (const match of sortedMatches) {
-        if (match.replacements?.length > 0) {
-          const replacement = match.replacements[0].value;
-          correctedText = 
-            correctedText.slice(0, match.offset) + 
-            replacement + 
-            correctedText.slice(match.offset + match.length);
-        }
-      }
-      
-      toast({ 
-        title: "Grammar corrected", 
-        description: `Fixed ${sortedMatches.length} issue(s)` 
-      });
-      
-      return correctedText;
-    } catch (error) {
-      console.error('Grammar check failed:', error);
-      toast({
-        title: "Grammar check failed",
-        description: "Could not connect to grammar service. Please try again.",
-        variant: "destructive"
-      });
-      return text;
-    } finally {
-      setIsFixingGrammar(false);
-    }
-  };
 
   const handleReset = () => {
     reset();
@@ -403,63 +352,33 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
                 <Label htmlFor="content" className="text-sm font-medium text-gray-700">
                   Content
                 </Label>
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={toggleDictation}
-                    disabled={isTranscribing}
-                    className={`${isDictating 
-                      ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100' 
-                      : 'text-blue-600 border-blue-200 hover:bg-blue-50'}`}
-                  >
-                    {isTranscribing ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Transcribing...
-                      </>
-                    ) : isDictating ? (
-                      <>
-                        <MicOff className="w-4 h-4 mr-2" />
-                        Stop Dictation
-                      </>
-                    ) : (
-                      <>
-                        <Mic className="w-4 h-4 mr-2" />
-                        Dictate
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={async () => {
-                      const currentContent = watch('content');
-                      if (currentContent?.trim()) {
-                        const correctedContent = await fixGrammar(currentContent);
-                        if (correctedContent !== currentContent) {
-                          setValue('content', correctedContent);
-                        }
-                      }
-                    }}
-                    disabled={!watch('content')?.trim() || isFixingGrammar}
-                    className="text-purple-600 border-purple-200 hover:bg-purple-50"
-                  >
-                    {isFixingGrammar ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Fixing...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-4 h-4 mr-2" />
-                        Fix Grammar
-                      </>
-                    )}
-                  </Button>
-                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={toggleDictation}
+                  disabled={isTranscribing}
+                  className={`${isDictating 
+                    ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100' 
+                    : 'text-blue-600 border-blue-200 hover:bg-blue-50'}`}
+                >
+                  {isTranscribing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Transcribing...
+                    </>
+                  ) : isDictating ? (
+                    <>
+                      <MicOff className="w-4 h-4 mr-2" />
+                      Stop Dictation
+                    </>
+                  ) : (
+                    <>
+                      <Mic className="w-4 h-4 mr-2" />
+                      Dictate
+                    </>
+                  )}
+                </Button>
               </div>
               <div className="relative">
                 <Textarea 
