@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { X, Plus, Mic, MicOff, Square, Play, Pause, Trash2 } from 'lucide-react';
+import { X, Plus, Mic, MicOff, Square, Play, Pause, Trash2, Sparkles, Loader2 } from 'lucide-react';
 import { DrawingCanvas } from './DrawingCanvas';
 import { ClientSelector } from '@/components/appointments/ClientSelector';
 import { CaseSelector } from '@/components/appointments/CaseSelector';
@@ -356,16 +356,8 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
       });
     };
 
-    recognition.onend = async () => {
+    recognition.onend = () => {
       setIsListening(false);
-      
-      const currentContent = watch('content');
-      if (currentContent?.trim()) {
-        const correctedContent = await fixGrammar(currentContent);
-        if (correctedContent !== currentContent) {
-          setValue('content', correctedContent);
-        }
-      }
     };
 
     recognitionRef.current = recognition;
@@ -419,29 +411,59 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
                   <Label htmlFor="content" className="text-sm font-medium text-gray-700">
                     Content
                   </Label>
-                  {speechSupported && (
+                  <div className="flex items-center gap-2">
+                    {speechSupported && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={toggleSpeechToText}
+                        className={`${isListening 
+                          ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100' 
+                          : 'text-blue-600 border-blue-200 hover:bg-blue-50'}`}
+                      >
+                        {isListening ? (
+                          <>
+                            <MicOff className="w-4 h-4 mr-2" />
+                            Stop Dictation
+                          </>
+                        ) : (
+                          <>
+                            <Mic className="w-4 h-4 mr-2" />
+                            Dictate
+                          </>
+                        )}
+                      </Button>
+                    )}
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={toggleSpeechToText}
-                      className={`${isListening 
-                        ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100' 
-                        : 'text-blue-600 border-blue-200 hover:bg-blue-50'}`}
+                      onClick={async () => {
+                        const currentContent = watch('content');
+                        if (currentContent?.trim()) {
+                          const correctedContent = await fixGrammar(currentContent);
+                          if (correctedContent !== currentContent) {
+                            setValue('content', correctedContent);
+                          }
+                        }
+                      }}
+                      disabled={!watch('content')?.trim() || isFixingGrammar}
+                      className="text-purple-600 border-purple-200 hover:bg-purple-50"
                     >
-                      {isListening ? (
+                      {isFixingGrammar ? (
                         <>
-                          <MicOff className="w-4 h-4 mr-2" />
-                          Stop Dictation
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Fixing...
                         </>
                       ) : (
                         <>
-                          <Mic className="w-4 h-4 mr-2" />
-                          Dictate
+                          <Sparkles className="w-4 h-4 mr-2" />
+                          Fix Grammar
                         </>
                       )}
                     </Button>
-                  )}
+                  </div>
                 </div>
                 <div className="relative">
                   <Textarea 
@@ -454,11 +476,6 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
                   {isListening && (
                     <div className="absolute bottom-2 right-2 flex items-center gap-2 text-red-500 text-sm">
                       <span className="animate-pulse">●</span> Listening...
-                    </div>
-                  )}
-                  {isFixingGrammar && (
-                    <div className="absolute bottom-2 right-2 flex items-center gap-2 text-purple-500 text-sm">
-                      <span className="animate-spin">✨</span> Fixing grammar...
                     </div>
                   )}
                 </div>
