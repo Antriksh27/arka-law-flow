@@ -15,7 +15,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   
   return (
     <div className="flex h-screen w-screen flex-row bg-[#F9FAFB]">
-      {/* Desktop only: Collapsible sidebar */}
+      {/* Mobile only: Collapsible sidebar */}
       <SessionNavBar />
       
       <div className="flex flex-1 flex-col w-full overflow-hidden">
