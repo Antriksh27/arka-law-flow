@@ -45,11 +45,11 @@ export const TodayFlow = ({ events, isLoading }: TodayFlowProps) => {
   const getEventIcon = (type: string) => {
     switch (type) {
       case 'appointment':
-        return <Calendar className="w-5 h-5 text-primary" />;
+        return <Calendar className="w-5 h-5 text-indigo-600" />;
       case 'hearing':
         return <span className="text-xl">⚖️</span>;
       case 'task':
-        return <CheckCircle2 className="w-5 h-5 text-green-600" />;
+        return <CheckCircle2 className="w-5 h-5 text-teal-600" />;
       default:
         return <Clock className="w-5 h-5" />;
     }
@@ -58,13 +58,13 @@ export const TodayFlow = ({ events, isLoading }: TodayFlowProps) => {
   const getEventColor = (type: string) => {
     switch (type) {
       case 'appointment':
-        return 'bg-blue-50 border-blue-200';
+        return 'bg-indigo-50 border-indigo-200 hover:bg-indigo-100/50 transition-colors';
       case 'hearing':
-        return 'bg-red-50 border-red-200';
+        return 'bg-amber-50 border-amber-200 hover:bg-amber-100/50 transition-colors';
       case 'task':
-        return 'bg-green-50 border-green-200';
+        return 'bg-teal-50 border-teal-200 hover:bg-teal-100/50 transition-colors';
       default:
-        return 'bg-gray-50 border-gray-200';
+        return 'bg-gray-50 border-gray-200 hover:bg-gray-100/50 transition-colors';
     }
   };
 
