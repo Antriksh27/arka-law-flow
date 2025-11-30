@@ -17,7 +17,8 @@ export const MobileSearchBar: React.FC<MobileSearchBarProps> = ({
   activeFiltersCount = 0,
 }) => {
   return (
-    <div className="flex items-center gap-2 p-3 bg-white rounded-2xl shadow-sm border border-border">
+    <div className="sticky top-14 z-30 bg-gray-50 px-3 py-3">
+      <div className="flex items-center gap-2 bg-white rounded-2xl shadow-sm border border-border">
       <div className="relative flex-1">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
@@ -41,6 +42,7 @@ export const MobileSearchBar: React.FC<MobileSearchBarProps> = ({
           </span>
         )}
       </Button>
+      </div>
     </div>
   );
 };
