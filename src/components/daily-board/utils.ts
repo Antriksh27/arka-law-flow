@@ -75,3 +75,80 @@ export const formatAdvocatesSmart = (
   
   return formatted.join(', ') || '-';
 };
+
+/**
+ * Format advocates from normalized petitioners/respondents tables
+ * Groups advocates by name and consolidates party numbers into ranges
+ */
+interface Party {
+  case_id: string;
+  advocate_name: string | null;
+}
+
+const formatNumberRanges = (nums: number[]): string => {
+  const ranges: string[] = [];
+  let start = nums[0], end = nums[0];
+  
+  for (let i = 1; i <= nums.length; i++) {
+    if (i < nums.length && nums[i] === end + 1) {
+      end = nums[i];
+    } else {
+      ranges.push(start === end ? `${start}` : `${start}-${end}`);
+      if (i < nums.length) {
+        start = end = nums[i];
+      }
+    }
+  }
+  return ranges.join(', ');
+};
+
+export const formatAdvocatesFromParties = (
+  parties: Party[],
+  type: 'petitioner' | 'respondent'
+): Record<string, string> => {
+  const prefix = type === 'petitioner' ? 'Pet' : 'Resp';
+  const result: Record<string, string> = {};
+  
+  // Group by case_id first
+  const byCaseId = new Map<string, Array<{ partyNumber: number; advocate: string }>>();
+  
+  parties.forEach((party) => {
+    if (!byCaseId.has(party.case_id)) {
+      byCaseId.set(party.case_id, []);
+    }
+  });
+  
+  // Calculate party numbers within each case
+  parties.forEach((party) => {
+    const caseParties = parties.filter(p => p.case_id === party.case_id);
+    const partyNumber = caseParties.indexOf(party) + 1;
+    
+    byCaseId.get(party.case_id)!.push({
+      partyNumber,
+      advocate: party.advocate_name?.trim() || 'No Advocate'
+    });
+  });
+  
+  // Format each case_id
+  byCaseId.forEach((partyList, caseId) => {
+    // Group by advocate
+    const byAdvocate = new Map<string, number[]>();
+    partyList.forEach(p => {
+      if (!byAdvocate.has(p.advocate)) {
+        byAdvocate.set(p.advocate, []);
+      }
+      byAdvocate.get(p.advocate)!.push(p.partyNumber);
+    });
+    
+    // Format with ranges
+    const formatted = Array.from(byAdvocate.entries()).map(([advocate, nums]) => {
+      nums.sort((a, b) => a - b);
+      const ranges = formatNumberRanges(nums);
+      return `${advocate} (${prefix} ${ranges})`;
+    });
+    
+    result[caseId] = formatted.join(', ');
+  });
+  
+  return result;
+};

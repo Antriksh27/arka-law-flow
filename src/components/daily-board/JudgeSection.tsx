@@ -61,10 +61,10 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
                 <TableCell className="text-gray-900">{hearing.petitioner || '-'}</TableCell>
                 <TableCell className="text-gray-900">{hearing.respondent || '-'}</TableCell>
                 <TableCell className="text-sm text-gray-700">
-                  {formatAdvocatesSmart(hearing.petitioner_advocate, 'petitioner')}
+                  {hearing.formatted_aorp || '-'}
                 </TableCell>
                 <TableCell className="text-sm text-gray-700">
-                  {formatAdvocatesSmart(hearing.respondent_advocate, 'respondent')}
+                  {hearing.formatted_aorr || '-'}
                 </TableCell>
                 <TableCell className="text-sm text-gray-700 font-medium">
                   CBU

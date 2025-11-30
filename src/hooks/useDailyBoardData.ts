@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { DailyHearing, DailyBoardFilters } from '@/components/daily-board/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
+import { formatAdvocatesFromParties } from '@/components/daily-board/utils';
 
 export const useDailyBoardData = (
   selectedDate: Date,
@@ -48,7 +49,35 @@ export const useDailyBoardData = (
       
       if (error) throw error;
       
-      return (data || []) as DailyHearing[];
+      const hearings = (data || []) as DailyHearing[];
+      
+      if (hearings.length === 0) return hearings;
+      
+      // Get unique case IDs
+      const caseIds = [...new Set(hearings.map(h => h.case_id))];
+      
+      // Batch fetch petitioners
+      const { data: petitioners } = await supabase
+        .from('petitioners')
+        .select('case_id, advocate_name')
+        .in('case_id', caseIds);
+      
+      // Batch fetch respondents
+      const { data: respondents } = await supabase
+        .from('respondents')
+        .select('case_id, advocate_name')
+        .in('case_id', caseIds);
+      
+      // Format advocates per case
+      const aorpByCase = formatAdvocatesFromParties(petitioners || [], 'petitioner');
+      const aorrByCase = formatAdvocatesFromParties(respondents || [], 'respondent');
+      
+      // Merge formatted data into hearings
+      return hearings.map(h => ({
+        ...h,
+        formatted_aorp: aorpByCase[h.case_id] || '-',
+        formatted_aorr: aorrByCase[h.case_id] || '-',
+      }));
     },
   });
 };

@@ -26,6 +26,10 @@ export interface DailyHearing {
   
   assigned_lawyer_name: string | null;
   assigned_lawyer_user_id: string | null;
+  
+  // Formatted advocate strings from normalized tables
+  formatted_aorp?: string;
+  formatted_aorr?: string;
 }
 
 export interface GroupedHearings {
