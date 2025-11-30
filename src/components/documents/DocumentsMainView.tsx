@@ -92,7 +92,7 @@ export const DocumentsMainView: React.FC<DocumentsMainViewProps> = ({
   }
 
   return (
-    <div className="flex-1 bg-white overflow-auto">
+    <div className="flex-1 bg-white overflow-auto px-4 sm:px-0">
       {viewMode === 'grid' ? (
         <DocumentGrid documents={documents} onRefresh={refetch} />
       ) : (

@@ -1,12 +1,14 @@
 
 import React, { useState } from 'react';
-import { Search, Grid3X3, List, Filter, Upload } from 'lucide-react';
+import { Search, Grid3X3, List, Filter, Upload, SlidersHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { UploadDocumentDialog } from './UploadDocumentDialog';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
 interface DocumentsHeaderProps {
   viewMode: 'grid' | 'list';
@@ -29,8 +31,10 @@ export const DocumentsHeader: React.FC<DocumentsHeaderProps> = ({
   selectedFilters,
   onFiltersChange
 }) => {
+  const isMobile = useIsMobile();
   const [showFilters, setShowFilters] = useState(false);
   const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   const queryClient = useQueryClient();
 
   // Fetch cases for filter dropdown
@@ -66,139 +70,244 @@ export const DocumentsHeader: React.FC<DocumentsHeaderProps> = ({
   };
 
   return (
-    <div className="bg-white border-b border-gray-200 p-6">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Documents</h1>
-          <p className="text-gray-600 mt-1">Manage and organize your legal documents</p>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            onClick={() => setShowFilters(!showFilters)}
-            className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
-          >
-            <Filter className="w-4 h-4 mr-2" />
-            Filters
-          </Button>
+    <>
+      <div className={isMobile ? "bg-white border-b border-gray-200 px-4 py-3" : "bg-white border-b border-gray-200 p-6"}>
+        {!isMobile && (
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-2xl font-semibold text-gray-900">Documents</h1>
+              <p className="text-gray-600 mt-1">Manage and organize your legal documents</p>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowFilters(!showFilters)}
+                className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+              >
+                <Filter className="w-4 h-4 mr-2" />
+                Filters
+              </Button>
+              
+              <div className="flex border border-gray-300 rounded-lg bg-white">
+                <Button
+                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => onViewModeChange('grid')}
+                  className={viewMode === 'grid' ? 'bg-gray-100' : ''}
+                >
+                  <Grid3X3 className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'list' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => onViewModeChange('list')}
+                  className={viewMode === 'list' ? 'bg-gray-100' : ''}
+                >
+                  <List className="w-4 h-4" />
+                </Button>
+              </div>
+
+              <Button 
+                onClick={() => setShowUploadDialog(true)}
+                className="bg-primary text-white hover:bg-primary/90"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Upload Documents
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Search Bar */}
+        <div className={`flex items-center gap-2 ${!isMobile && 'mb-4'}`}>
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Input
+              placeholder="Search documents..."
+              value={searchQuery}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className={`pl-10 bg-white ${isMobile ? 'h-10 text-sm' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
+            />
+          </div>
           
-          <div className="flex border border-gray-300 rounded-lg bg-white">
+          {isMobile && (
             <Button
-              variant={viewMode === 'grid' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => onViewModeChange('grid')}
-              className={viewMode === 'grid' ? 'bg-gray-100' : ''}
+              variant="outline"
+              size="icon"
+              onClick={() => setShowMobileFilters(true)}
+              className="flex-shrink-0"
             >
-              <Grid3X3 className="w-4 h-4" />
+              <SlidersHorizontal className="w-4 h-4" />
             </Button>
-            <Button
-              variant={viewMode === 'list' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => onViewModeChange('list')}
-              className={viewMode === 'list' ? 'bg-gray-100' : ''}
-            >
-              <List className="w-4 h-4" />
-            </Button>
-          </div>
-
-          <Button 
-            onClick={() => setShowUploadDialog(true)}
-            className="bg-primary text-white hover:bg-primary/90"
-          >
-            <Upload className="w-4 h-4 mr-2" />
-            Upload Documents
-          </Button>
+          )}
         </div>
+
+        {/* Desktop Filters */}
+        {!isMobile && showFilters && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                File Type
+              </label>
+              <Select
+                value={selectedFilters.fileType}
+                onValueChange={(value) => 
+                  onFiltersChange({ ...selectedFilters, fileType: value })
+                }
+              >
+                <SelectTrigger className="bg-white">
+                  <SelectValue placeholder="All types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="pdf">PDF</SelectItem>
+                  <SelectItem value="doc">Word Documents</SelectItem>
+                  <SelectItem value="jpg">Images</SelectItem>
+                  <SelectItem value="txt">Text Files</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Uploaded By
+              </label>
+              <Select
+                value={selectedFilters.uploadedBy}
+                onValueChange={(value) => 
+                  onFiltersChange({ ...selectedFilters, uploadedBy: value })
+                }
+              >
+                <SelectTrigger className="bg-white">
+                  <SelectValue placeholder="All users" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Users</SelectItem>
+                  {users.map((user) => (
+                    <SelectItem key={user.id} value={user.id}>
+                      {user.full_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Case
+              </label>
+              <Select
+                value={selectedFilters.caseId}
+                onValueChange={(value) => 
+                  onFiltersChange({ ...selectedFilters, caseId: value })
+                }
+              >
+                <SelectTrigger className="bg-white">
+                  <SelectValue placeholder="All cases" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Cases</SelectItem>
+                  {cases.map((case_item) => (
+                    <SelectItem key={case_item.id} value={case_item.id}>
+                      {case_item.case_title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Search Bar */}
-      <div className="flex items-center gap-4 mb-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <Input
-            placeholder="Search documents..."
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-10 bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-          />
-        </div>
-      </div>
+      {/* Mobile Filter Sheet */}
+      {isMobile && (
+        <Sheet open={showMobileFilters} onOpenChange={setShowMobileFilters}>
+          <SheetContent side="bottom" className="h-[80vh] rounded-t-3xl">
+            <SheetHeader>
+              <SheetTitle>Filters</SheetTitle>
+            </SheetHeader>
+            <div className="py-6 space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-3">
+                  File Type
+                </label>
+                <Select
+                  value={selectedFilters.fileType}
+                  onValueChange={(value) => 
+                    onFiltersChange({ ...selectedFilters, fileType: value })
+                  }
+                >
+                  <SelectTrigger className="bg-white h-12">
+                    <SelectValue placeholder="All types" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    <SelectItem value="pdf">PDF</SelectItem>
+                    <SelectItem value="doc">Word Documents</SelectItem>
+                    <SelectItem value="jpg">Images</SelectItem>
+                    <SelectItem value="txt">Text Files</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-      {/* Filters */}
-      {showFilters && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              File Type
-            </label>
-            <Select
-              value={selectedFilters.fileType}
-              onValueChange={(value) => 
-                onFiltersChange({ ...selectedFilters, fileType: value })
-              }
-            >
-              <SelectTrigger className="bg-white">
-                <SelectValue placeholder="All types" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="pdf">PDF</SelectItem>
-                <SelectItem value="doc">Word Documents</SelectItem>
-                <SelectItem value="jpg">Images</SelectItem>
-                <SelectItem value="txt">Text Files</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-3">
+                  Uploaded By
+                </label>
+                <Select
+                  value={selectedFilters.uploadedBy}
+                  onValueChange={(value) => 
+                    onFiltersChange({ ...selectedFilters, uploadedBy: value })
+                  }
+                >
+                  <SelectTrigger className="bg-white h-12">
+                    <SelectValue placeholder="All users" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Users</SelectItem>
+                    {users.map((user) => (
+                      <SelectItem key={user.id} value={user.id}>
+                        {user.full_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Uploaded By
-            </label>
-            <Select
-              value={selectedFilters.uploadedBy}
-              onValueChange={(value) => 
-                onFiltersChange({ ...selectedFilters, uploadedBy: value })
-              }
-            >
-              <SelectTrigger className="bg-white">
-                <SelectValue placeholder="All users" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Users</SelectItem>
-                {users.map((user) => (
-                  <SelectItem key={user.id} value={user.id}>
-                    {user.full_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-3">
+                  Case
+                </label>
+                <Select
+                  value={selectedFilters.caseId}
+                  onValueChange={(value) => 
+                    onFiltersChange({ ...selectedFilters, caseId: value })
+                  }
+                >
+                  <SelectTrigger className="bg-white h-12">
+                    <SelectValue placeholder="All cases" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Cases</SelectItem>
+                    {cases.map((case_item) => (
+                      <SelectItem key={case_item.id} value={case_item.id}>
+                        {case_item.case_title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Case
-            </label>
-            <Select
-              value={selectedFilters.caseId}
-              onValueChange={(value) => 
-                onFiltersChange({ ...selectedFilters, caseId: value })
-              }
-            >
-              <SelectTrigger className="bg-white">
-                <SelectValue placeholder="All cases" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Cases</SelectItem>
-                {cases.map((case_item) => (
-                  <SelectItem key={case_item.id} value={case_item.id}>
-                    {case_item.case_title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+              <Button
+                onClick={() => setShowMobileFilters(false)}
+                className="w-full h-12 bg-slate-800 hover:bg-slate-700"
+              >
+                Apply Filters
+              </Button>
+            </div>
+          </SheetContent>
+        </Sheet>
       )}
 
       <UploadDocumentDialog 
@@ -206,6 +315,6 @@ export const DocumentsHeader: React.FC<DocumentsHeaderProps> = ({
         onClose={() => setShowUploadDialog(false)}
         onUploadSuccess={handleUploadSuccess}
       />
-    </div>
+    </>
   );
 };

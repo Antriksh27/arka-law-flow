@@ -63,7 +63,7 @@ export const DocumentsSidebar: React.FC<DocumentsSidebarProps> = ({
     folder.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  return <div className="w-64 bg-gray-50 border-r border-gray-200 flex flex-col">
+  return <div className="w-full sm:w-64 bg-gray-50 sm:border-r border-gray-200 flex flex-col h-full">
       {/* Main Navigation */}
       <div className="p-4">
         <div className="space-y-1">
@@ -82,7 +82,7 @@ export const DocumentsSidebar: React.FC<DocumentsSidebarProps> = ({
       </div>
 
       {/* Folders Section */}
-      <div className="flex-1 px-4 pb-4">
+      <div className="flex-1 px-4 pb-4 overflow-hidden flex flex-col">
         <div className="mb-3">
           <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
             Case Folders
@@ -101,7 +101,7 @@ export const DocumentsSidebar: React.FC<DocumentsSidebarProps> = ({
           />
         </div>
         
-        <div className="space-y-1 max-h-96 overflow-y-auto">
+        <div className="space-y-1 flex-1 overflow-y-auto">
           {filteredFolders.map(folder => {
           const isSelected = selectedFolder === folder.name;
           return <button key={folder.name} onClick={() => onFolderSelect(folder.name)} className={cn("w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors", isSelected ? "bg-primary text-white" : "text-gray-700 hover:bg-gray-200")}>
