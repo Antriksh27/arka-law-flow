@@ -28,8 +28,8 @@ export const CasesFilters: React.FC<CasesFiltersProps> = ({
   statusOptions
 }) => {
   return (
-    <div className="sticky top-16 z-30 bg-gray-50 -mx-6 px-6 py-4">
-      <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-200">
+    <div className="sticky top-16 z-40 bg-gray-50 pb-4 -mx-6 px-6">
+      <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-200 mt-4">
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 sm:w-4 sm:h-4" />
