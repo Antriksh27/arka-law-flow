@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { DailyHearing, DailyBoardFilters } from '@/components/daily-board/types';
 import { useAuth } from '@/contexts/AuthContext';
+import { format } from 'date-fns';
 
 export const useDailyBoardData = (
   selectedDate: Date,
@@ -10,9 +11,9 @@ export const useDailyBoardData = (
   const { user } = useAuth();
   
   return useQuery({
-    queryKey: ['daily-hearings', selectedDate.toISOString(), filters, user?.id],
+    queryKey: ['daily-hearings', format(selectedDate, 'yyyy-MM-dd'), filters, user?.id],
     queryFn: async () => {
-      const dateStr = selectedDate.toISOString().split('T')[0];
+      const dateStr = format(selectedDate, 'yyyy-MM-dd');
       
       let query = supabase
         .from('daily_hearings_view')
