@@ -507,11 +507,11 @@ const Tasks = () => {
             </TabsTrigger>
             <TabsTrigger
               value="in_progress"
-              className="data-[state=active]:bg-gray-600 data-[state=active]:text-white rounded-lg text-sm font-medium"
+              className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white rounded-lg text-sm font-medium"
             >
               <span className="flex items-center gap-1.5">
                 In Progress
-                <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-gray-100 text-gray-700 text-xs font-semibold data-[state=active]:bg-white/20 data-[state=active]:text-white">
+                <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-yellow-100 text-yellow-700 text-xs font-semibold data-[state=active]:bg-white/20 data-[state=active]:text-white">
                   {tasksByStatus.in_progress.length}
                 </span>
               </span>
