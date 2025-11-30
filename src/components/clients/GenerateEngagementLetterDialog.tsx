@@ -114,6 +114,9 @@ export function GenerateEngagementLetterDialog({
     enabled: !!selectedLawyerId
   });
 
+  // Get selected lawyer from the already-loaded lawyers list for immediate display
+  const selectedLawyer = lawyers?.find(l => l.user_id === selectedLawyerId);
+
   // Fetch firm details
   const {
     data: firmData
@@ -356,13 +359,13 @@ export function GenerateEngagementLetterDialog({
                 <div className="space-y-2">
                   <Label>Case Title</Label>
                   <div className="p-3 rounded-md text-sm bg-slate-50">
-                    {caseData?.case_title || 'N/A'}
+                    {caseData?.case_title || 'Loading...'}
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label>Lawyer</Label>
                   <div className="p-3 rounded-md text-sm bg-slate-50">
-                    {lawyerData?.full_name || 'N/A'}
+                    {selectedLawyer?.full_name || lawyerData?.full_name || 'Loading...'}
                   </div>
                 </div>
               </div>
