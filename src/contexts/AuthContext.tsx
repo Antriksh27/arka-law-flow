@@ -45,12 +45,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     try {
       console.log(`AuthContext: START: Fetching firm_id and role for user: ${userId}`);
-      const { data, error, status } = await supabase
+      
+      // Add timeout wrapper to prevent hanging
+      const fetchPromise = supabase
         .from('team_members')
         .select('firm_id, role')
         .eq('user_id', userId)
-        .limit(1) // Take the first record if multiple exist
+        .limit(1)
         .maybeSingle();
+      
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Query timeout after 5s')), 5000)
+      );
+      
+      const { data, error, status } = await Promise.race([
+        fetchPromise,
+        timeoutPromise
+      ]) as any;
       
       console.log(`AuthContext: DB RESPONSE: data:`, data, `error:`, error, `status:`, status);
 
