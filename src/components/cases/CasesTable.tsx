@@ -87,7 +87,6 @@ export const CasesTable: React.FC<CasesTableProps> = ({
         case_type,
         status,
         stage,
-        court,
         reference_number,
         created_at,
         updated_at,
@@ -368,7 +367,6 @@ export const CasesTable: React.FC<CasesTableProps> = ({
                   )}
                 </div>
               </TableHead>
-              <TableHead className="bg-slate-800 text-white">Court Forum</TableHead>
               <TableHead className="bg-slate-800 text-white">Type</TableHead>
               <TableHead className="bg-slate-800 text-white">Status</TableHead>
               <TableHead className="bg-slate-800 text-white">Stage</TableHead>
@@ -415,9 +413,6 @@ export const CasesTable: React.FC<CasesTableProps> = ({
                 ) : (
                   <span className="text-muted-foreground">No client assigned</span>
                 )}
-              </TableCell>
-              <TableCell className="text-sm">
-                {caseItem.court || '-'}
               </TableCell>
               <TableCell>
                 {formatCaseType(caseItem.case_type)}
