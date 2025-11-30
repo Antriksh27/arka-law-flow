@@ -248,6 +248,10 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
       const data = await response.json();
       
       if (!data.matches?.length) {
+        toast({ 
+          title: "No grammar issues found", 
+          description: "Your text looks good!" 
+        });
         return text;
       }
       
@@ -264,16 +268,19 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
         }
       }
       
-      if (sortedMatches.length > 0) {
-        toast({ 
-          title: "Grammar corrected", 
-          description: `Fixed ${sortedMatches.length} issue(s)` 
-        });
-      }
+      toast({ 
+        title: "Grammar corrected", 
+        description: `Fixed ${sortedMatches.length} issue(s)` 
+      });
       
       return correctedText;
     } catch (error) {
       console.error('Grammar check failed:', error);
+      toast({
+        title: "Grammar check failed",
+        description: "Could not connect to grammar service. Please try again.",
+        variant: "destructive"
+      });
       return text;
     } finally {
       setIsFixingGrammar(false);
