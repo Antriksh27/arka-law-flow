@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -13,7 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { SendEmailDialog } from './SendEmailDialog';
 import { generateEngagementLetter } from '@/lib/engagementLetterTemplate';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import html2pdf from 'html2pdf.js';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 interface GenerateEngagementLetterDialogProps {
   open: boolean;
   onClose: () => void;
@@ -46,6 +47,7 @@ export function GenerateEngagementLetterDialog({
   const [generatingPrintPDF, setGeneratingPrintPDF] = useState(false);
   const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
   const [showEmailDialog, setShowEmailDialog] = useState(false);
+  const letterPreviewRef = useRef<HTMLDivElement>(null);
 
   // Fetch client details
   const {
@@ -200,49 +202,38 @@ export function GenerateEngagementLetterDialog({
     setGeneratedHTML(letterHTML);
   };
   const handlePrint = async () => {
+    if (!letterPreviewRef.current) return;
     setGeneratingPrintPDF(true);
+    
     try {
-      // Parse the HTML to get the letter-container content
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(generatedHTML, 'text/html');
-      const letterContainer = doc.querySelector('.letter-container');
-      const styleContent = doc.head.querySelector('style')?.innerHTML || '';
+      // Capture the visible preview element directly
+      const canvas = await html2canvas(letterPreviewRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+      });
       
-      if (!letterContainer) {
-        throw new Error('Letter container not found in generated HTML');
-      }
-
-      // Create a properly structured div for PDF generation
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = `<style>${styleContent}</style>${letterContainer.outerHTML}`;
-      tempDiv.style.position = 'absolute';
-      tempDiv.style.top = '0';
-      tempDiv.style.left = '-9999px';
-      tempDiv.style.width = '210mm';
-      tempDiv.style.pointerEvents = 'none';
-      tempDiv.style.zIndex = '-1';
-      tempDiv.style.background = 'white';
-      document.body.appendChild(tempDiv);
-
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      const opt = {
-        margin: [60, 20, 40, 20] as [number, number, number, number],
-        filename: `Engagement_Letter_${clientName.replace(/\s+/g, '_')}.pdf`,
-        image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { 
-          scale: 2, 
-          useCORS: true,
-          logging: false,
-          backgroundColor: '#ffffff'
-        },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
-      };
-
-      const pdfBlob = await html2pdf().set(opt).from(tempDiv).outputPdf('blob');
-      document.body.removeChild(tempDiv);
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
       
-      const blobUrl = URL.createObjectURL(pdfBlob);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      // Calculate scaling to fit A4 with letterhead margins
+      const marginTop = 60; // mm for letterhead
+      const marginBottom = 40;
+      const marginSide = 20;
+      const availableWidth = pdfWidth - (marginSide * 2);
+      const availableHeight = pdfHeight - marginTop - marginBottom;
+      
+      const imgWidthMM = availableWidth;
+      const imgHeightMM = (canvas.height * availableWidth) / canvas.width;
+      
+      pdf.addImage(imgData, 'PNG', marginSide, marginTop, imgWidthMM, imgHeightMM);
+      
+      const blob = pdf.output('blob');
+      const blobUrl = URL.createObjectURL(blob);
       window.open(blobUrl, '_blank');
       
       setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
@@ -263,49 +254,39 @@ export function GenerateEngagementLetterDialog({
     }
   };
   const handleSendEmail = async () => {
+    if (!letterPreviewRef.current) return;
+    
     try {
       if (!pdfBlob) {
         setGeneratingPDF(true);
         
-        // Parse the HTML to get the letter-container content
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(generatedHTML, 'text/html');
-        const letterContainer = doc.querySelector('.letter-container');
-        const styleContent = doc.head.querySelector('style')?.innerHTML || '';
+        // Capture the visible preview element directly
+        const canvas = await html2canvas(letterPreviewRef.current, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          logging: false,
+        });
         
-        if (!letterContainer) {
-          throw new Error('Letter container not found in generated HTML');
-        }
-
-        // Create a properly structured div for PDF generation
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = `<style>${styleContent}</style>${letterContainer.outerHTML}`;
-        tempDiv.style.position = 'absolute';
-        tempDiv.style.top = '0';
-        tempDiv.style.left = '-9999px';
-        tempDiv.style.width = '210mm';
-        tempDiv.style.pointerEvents = 'none';
-        tempDiv.style.zIndex = '-1';
-        tempDiv.style.background = 'white';
-        document.body.appendChild(tempDiv);
-
-        await new Promise(resolve => setTimeout(resolve, 100));
-
-        const opt = {
-          margin: [60, 20, 40, 20] as [number, number, number, number],
-          filename: `Engagement_Letter_${clientName.replace(/\s+/g, '_')}.pdf`,
-          image: { type: 'jpeg' as const, quality: 0.98 },
-          html2canvas: { 
-            scale: 2, 
-            useCORS: true,
-            logging: false,
-            backgroundColor: '#ffffff'
-          },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
-        };
-
-        const blob = await html2pdf().set(opt).from(tempDiv).outputPdf('blob');
-        document.body.removeChild(tempDiv);
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        
+        // Calculate scaling to fit A4 with letterhead margins
+        const marginTop = 60; // mm for letterhead
+        const marginBottom = 40;
+        const marginSide = 20;
+        const availableWidth = pdfWidth - (marginSide * 2);
+        const availableHeight = pdfHeight - marginTop - marginBottom;
+        
+        const imgWidthMM = availableWidth;
+        const imgHeightMM = (canvas.height * availableWidth) / canvas.width;
+        
+        pdf.addImage(imgData, 'PNG', marginSide, marginTop, imgWidthMM, imgHeightMM);
+        
+        const blob = pdf.output('blob');
         setPdfBlob(blob);
         setGeneratingPDF(false);
       }
@@ -409,9 +390,13 @@ export function GenerateEngagementLetterDialog({
                 </div>
               ) : (
                 <ScrollArea className="h-[500px] w-full border rounded-md bg-white">
-                  <div className="p-6" dangerouslySetInnerHTML={{
-                    __html: generatedHTML
-                  }} />
+                  <div 
+                    ref={letterPreviewRef}
+                    className="p-6" 
+                    dangerouslySetInnerHTML={{
+                      __html: generatedHTML
+                    }} 
+                  />
                 </ScrollArea>
               )}
             </div>}
