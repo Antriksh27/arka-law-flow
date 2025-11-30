@@ -185,14 +185,16 @@ export function GenerateEngagementLetterDialog({
   };
 
   const handlePrint = () => {
-    const printWindow = window.open('', '_blank');
+    const blob = new Blob([generatedHTML], { type: 'text/html' });
+    const blobUrl = URL.createObjectURL(blob);
+    
+    const printWindow = window.open(blobUrl, '_blank');
     if (printWindow) {
-      printWindow.document.write(generatedHTML);
-      printWindow.document.close();
-      printWindow.focus();
-      setTimeout(() => {
+      printWindow.onload = () => {
+        printWindow.focus();
         printWindow.print();
-      }, 250);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+      };
       
       toast({
         title: 'Print Dialog Opened',
