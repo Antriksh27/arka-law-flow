@@ -21,6 +21,8 @@ const Tasks = lazy(() => import('./pages/Tasks'));
 const Notes = lazy(() => import('./pages/Notes'));
 const Team = lazy(() => import('./pages/Team'));
 const NotificationDashboard = lazy(() => import('./components/notifications/NotificationDashboard'));
+const DailyBoard = lazy(() => import('./pages/DailyBoard'));
+const CauseList = lazy(() => import('./pages/CauseList'));
 
 import { defaultQueryConfig } from './lib/queryConfig';
 import { useAuth } from './contexts/AuthContext';
@@ -110,6 +112,24 @@ function AppRoutes() {
                 <ProtectedRoute>
                   <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
                     <NotificationDashboard />
+                  </Suspense>
+                </ProtectedRoute>
+              } />
+              
+              {/* Daily Board */}
+              <Route path="/daily-board" element={
+                <ProtectedRoute>
+                  <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+                    <DailyBoard />
+                  </Suspense>
+                </ProtectedRoute>
+              } />
+              
+              {/* Cause List */}
+              <Route path="/cause-list" element={
+                <ProtectedRoute>
+                  <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+                    <CauseList />
                   </Suspense>
                 </ProtectedRoute>
               } />
