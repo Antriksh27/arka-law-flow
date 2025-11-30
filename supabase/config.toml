@@ -69,3 +69,6 @@ verify_jwt = false
 
 [functions.process-fetch-queue]
 verify_jwt = true
+
+[functions.grammar-check]
+verify_jwt = false
