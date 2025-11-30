@@ -94,6 +94,33 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;  /* Chrome, Safari, Opera */
   }
+
+  /* Mobile-first touch interactions */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+  
+  .touch-feedback {
+    @apply active:scale-95 transition-transform duration-150;
+  }
+
+  /* Mobile typography scale */
+  .text-mobile-title {
+    @apply text-xl font-semibold leading-tight;
+  }
+  
+  .text-mobile-section {
+    @apply text-lg font-medium;
+  }
+  
+  .text-mobile-body {
+    @apply text-base leading-relaxed;
+  }
+
+  /* Tap highlight removal */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
 }
 
 /* Capacitor Safe Area Support */

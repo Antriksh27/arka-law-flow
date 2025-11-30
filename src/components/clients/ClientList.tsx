@@ -18,6 +18,12 @@ import { DeleteClientDialog } from './DeleteClientDialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { MobileClientCard } from './MobileClientCard';
+import { MobileFAB } from '@/components/mobile/MobileFAB';
+import { BottomNavBar } from '@/components/mobile/BottomNavBar';
+import { MobileSearchBar } from '@/components/cases/MobileSearchBar';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 interface Client {
   id: string;
   full_name: string;
@@ -36,6 +42,7 @@ type SortDirection = 'asc' | 'desc';
 type TabFilter = 'all' | 'vip';
 export const ClientList = () => {
   console.log('ClientList component rendering...');
+  const isMobile = useIsMobile();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [activeTab, setActiveTab] = useState<TabFilter>('all');
@@ -43,6 +50,7 @@ export const ClientList = () => {
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showBulkImportDialog, setShowBulkImportDialog] = useState(false);
+  const [showMobileFilter, setShowMobileFilter] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [viewingClient, setViewingClient] = useState<Client | null>(null);
   const [deletingClient, setDeletingClient] = useState<Client | null>(null);
@@ -251,22 +259,95 @@ export const ClientList = () => {
         </div>
       </div>;
   }
-  return <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Clients</h1>
-        </div>
-        <div className="flex gap-2">
-          <Button onClick={() => setShowAddDialog(true)} className="bg-slate-800 hover:bg-slate-700">
-            <Plus className="w-4 h-4 mr-2" />
-            New Client
+  // Mobile Filter Sheet
+  const MobileFilterSheet = () => (
+    <Sheet open={showMobileFilter} onOpenChange={setShowMobileFilter}>
+      <SheetContent side="bottom" className="h-[80vh] rounded-t-3xl">
+        <SheetHeader>
+          <SheetTitle>Filters & Sort</SheetTitle>
+        </SheetHeader>
+        <div className="py-6 space-y-6">
+          {/* Status Filter */}
+          <div>
+            <h3 className="text-sm font-medium mb-3">Status</h3>
+            <div className="flex flex-wrap gap-2">
+              {['all', 'active', 'lead', 'inactive'].map((status) => (
+                <button
+                  key={status}
+                  onClick={() => {
+                    setStatusFilter(status as StatusFilter);
+                    setPage(1);
+                  }}
+                  className={`px-4 h-10 rounded-full font-medium text-sm transition-all ${
+                    statusFilter === status
+                      ? 'bg-slate-800 text-white'
+                      : 'bg-white border border-border text-foreground'
+                  }`}
+                >
+                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Sort Options */}
+          <div>
+            <h3 className="text-sm font-medium mb-3">Sort By</h3>
+            <div className="space-y-2">
+              {[
+                { field: 'name' as SortField, label: 'Name' },
+                { field: 'email' as SortField, label: 'Email' },
+                { field: 'status' as SortField, label: 'Status' },
+                { field: 'active_cases' as SortField, label: 'Active Cases' },
+                { field: 'created_at' as SortField, label: 'Date Added' },
+              ].map((sort) => (
+                <button
+                  key={sort.field}
+                  onClick={() => handleSort(sort.field)}
+                  className={`w-full flex items-center justify-between p-3 rounded-lg transition-all ${
+                    sortField === sort.field
+                      ? 'bg-slate-100'
+                      : 'bg-white border border-border'
+                  }`}
+                >
+                  <span>{sort.label}</span>
+                  {sortField === sort.field && (
+                    <span>{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <Button
+            onClick={() => setShowMobileFilter(false)}
+            className="w-full h-12 bg-slate-800 hover:bg-slate-700"
+          >
+            Apply Filters
           </Button>
         </div>
-      </div>
+      </SheetContent>
+    </Sheet>
+  );
+
+  return <div className="w-full overflow-x-hidden">
+      {/* Desktop Header */}
+      {!isMobile && (
+        <div className="flex items-center justify-between mb-6 px-6">
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900">Clients</h1>
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={() => setShowAddDialog(true)} className="bg-slate-800 hover:bg-slate-700">
+              <Plus className="w-4 h-4 mr-2" />
+              New Client
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={(value: any) => setActiveTab(value)} className="w-full">
+      <Tabs value={activeTab} onValueChange={(value: any) => setActiveTab(value)} className="w-full px-3 sm:px-6">
         <TabsList className="grid w-full grid-cols-2 bg-white rounded-2xl shadow-sm border border-gray-200">
           <TabsTrigger value="all" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white">
             All Clients
@@ -277,9 +358,20 @@ export const ClientList = () => {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="all" className="mt-6">
-          {/* Filters Bar */}
-          <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-200 mb-6">
+        <TabsContent value="all" className="mt-4 sm:mt-6">
+          {/* Mobile Search & Filter */}
+          {isMobile ? (
+            <div className="mb-4">
+              <MobileSearchBar
+                value={searchTerm}
+                onChange={setSearchTerm}
+                onFilterClick={() => setShowMobileFilter(true)}
+                activeFiltersCount={statusFilter !== 'all' ? 1 : 0}
+              />
+            </div>
+          ) : (
+            /* Desktop Filters Bar */
+            <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-200 mb-6">
         <div className="flex items-center gap-4">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -376,9 +468,36 @@ export const ClientList = () => {
           </DropdownMenu>
         </div>
       </div>
+          )}
 
-      {/* Clients Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200">
+      {/* Mobile Cards View */}
+      {isMobile ? (
+        <div className="space-y-3 pb-24">
+          {isLoading ? (
+            <div className="p-3">
+              <SkeletonList count={5} />
+            </div>
+          ) : clients.length === 0 ? (
+            <div className="text-center py-12 px-6">
+              <p className="text-gray-500 mb-4">No clients found matching your criteria.</p>
+              <Button onClick={() => setShowAddDialog(true)} className="bg-slate-800 hover:bg-slate-700 w-full sm:w-auto">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Your First Client
+              </Button>
+            </div>
+          ) : (
+            clients.map((client) => (
+              <MobileClientCard
+                key={client.id}
+                {...client}
+                onClick={() => navigate(`/clients/${client.id}`)}
+              />
+            ))
+          )}
+        </div>
+      ) : (
+        /* Desktop Table View */
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200">
         {isLoading ? (
           <div className="p-6">
             <SkeletonList count={5} />
@@ -527,13 +646,25 @@ export const ClientList = () => {
                 Last
               </Button>
             </div>
-          </div>}
+            </div>}
           </div>
+        )}
         </TabsContent>
 
-        <TabsContent value="vip" className="mt-6">
-          {/* Filters Bar */}
-          <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-200 mb-6">
+        <TabsContent value="vip" className="mt-4 sm:mt-6">
+          {/* Mobile Search & Filter */}
+          {isMobile ? (
+            <div className="mb-4">
+              <MobileSearchBar
+                value={searchTerm}
+                onChange={setSearchTerm}
+                onFilterClick={() => setShowMobileFilter(true)}
+                activeFiltersCount={statusFilter !== 'all' ? 1 : 0}
+              />
+            </div>
+          ) : (
+            /* Desktop Filters Bar */
+            <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-200 mb-6">
             <div className="flex items-center gap-4">
               <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -630,9 +761,34 @@ export const ClientList = () => {
               </DropdownMenu>
             </div>
           </div>
+          )}
 
-          {/* VIP Clients Table */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200">
+          {/* Mobile VIP Cards View */}
+          {isMobile ? (
+            <div className="space-y-3 pb-24">
+              {isLoading ? (
+                <div className="p-3">
+                  <SkeletonList count={5} />
+                </div>
+              ) : clients.length === 0 ? (
+                <div className="text-center py-12 px-6">
+                  <Star className="w-12 h-12 mx-auto mb-4 text-yellow-400 fill-yellow-400" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No VIP clients yet</h3>
+                  <p className="text-gray-500 mb-4">Mark important clients as VIP to see them here.</p>
+                </div>
+              ) : (
+                clients.map((client) => (
+                  <MobileClientCard
+                    key={client.id}
+                    {...client}
+                    onClick={() => navigate(`/clients/${client.id}`)}
+                  />
+                ))
+              )}
+            </div>
+          ) : (
+            /* Desktop VIP Clients Table */
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200">
             {isLoading ? (
               <div className="p-6">
                 <SkeletonList count={5} />
@@ -779,8 +935,23 @@ export const ClientList = () => {
                 </div>
               </div>}
           </div>
+          )}
         </TabsContent>
       </Tabs>
+
+      {/* Mobile FAB */}
+      {isMobile && (
+        <MobileFAB
+          onClick={() => setShowAddDialog(true)}
+          icon={Plus}
+        />
+      )}
+
+      {/* Mobile Bottom Nav */}
+      {isMobile && <BottomNavBar />}
+
+      {/* Mobile Filter Sheet */}
+      <MobileFilterSheet />
 
       {/* Dialogs */}
       <AddClientDialog open={showAddDialog} onOpenChange={setShowAddDialog} onSuccess={() => {
