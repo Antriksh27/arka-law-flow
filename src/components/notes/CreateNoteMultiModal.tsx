@@ -51,6 +51,7 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(true);
+  const [isFixingGrammar, setIsFixingGrammar] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -230,6 +231,55 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
   const removeTag = (tagToRemove: string) => {
     setValue('tags', watchedTags.filter(tag => tag !== tagToRemove));
   };
+  const fixGrammar = async (text: string): Promise<string> => {
+    if (!text?.trim()) return text;
+    
+    setIsFixingGrammar(true);
+    try {
+      const response = await fetch('https://api.languagetool.org/v2/check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          text: text,
+          language: 'en-IN'
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (!data.matches?.length) {
+        return text;
+      }
+      
+      let correctedText = text;
+      const sortedMatches = [...data.matches].sort((a, b) => b.offset - a.offset);
+      
+      for (const match of sortedMatches) {
+        if (match.replacements?.length > 0) {
+          const replacement = match.replacements[0].value;
+          correctedText = 
+            correctedText.slice(0, match.offset) + 
+            replacement + 
+            correctedText.slice(match.offset + match.length);
+        }
+      }
+      
+      if (sortedMatches.length > 0) {
+        toast({ 
+          title: "Grammar corrected", 
+          description: `Fixed ${sortedMatches.length} issue(s)` 
+        });
+      }
+      
+      return correctedText;
+    } catch (error) {
+      console.error('Grammar check failed:', error);
+      return text;
+    } finally {
+      setIsFixingGrammar(false);
+    }
+  };
+
   const handleReset = () => {
     reset();
     setDrawingData(null);
@@ -306,8 +356,16 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
       });
     };
 
-    recognition.onend = () => {
+    recognition.onend = async () => {
       setIsListening(false);
+      
+      const currentContent = watch('content');
+      if (currentContent?.trim()) {
+        const correctedContent = await fixGrammar(currentContent);
+        if (correctedContent !== currentContent) {
+          setValue('content', correctedContent);
+        }
+      }
     };
 
     recognitionRef.current = recognition;
@@ -396,6 +454,11 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
                   {isListening && (
                     <div className="absolute bottom-2 right-2 flex items-center gap-2 text-red-500 text-sm">
                       <span className="animate-pulse">●</span> Listening...
+                    </div>
+                  )}
+                  {isFixingGrammar && (
+                    <div className="absolute bottom-2 right-2 flex items-center gap-2 text-purple-500 text-sm">
+                      <span className="animate-spin">✨</span> Fixing grammar...
                     </div>
                   )}
                 </div>
