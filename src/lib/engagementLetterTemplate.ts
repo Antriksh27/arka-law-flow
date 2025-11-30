@@ -27,7 +27,7 @@ export function generateEngagementLetter(data: EngagementLetterData): string {
           margin: 0mm;
         }
         @media print {
-          body {
+          .letter-container {
             margin: 60mm 20mm 40mm 20mm;
             padding: 0;
           }
@@ -35,7 +35,7 @@ export function generateEngagementLetter(data: EngagementLetterData): string {
             display: none;
           }
         }
-        body {
+        .letter-container {
           font-family: 'Times New Roman', Times, serif;
           line-height: 1.6;
           color: #000;
@@ -108,7 +108,8 @@ export function generateEngagementLetter(data: EngagementLetterData): string {
       </style>
     </head>
     <body>
-      <div class="header">
+      <div class="letter-container">
+        <div class="header">
         <h1>LEGAL ENGAGEMENT LETTER</h1>
       </div>
 
@@ -236,6 +237,7 @@ export function generateEngagementLetter(data: EngagementLetterData): string {
             Date: ___________________________
           </p>
         </div>
+      </div>
       </div>
     </body>
     </html>
