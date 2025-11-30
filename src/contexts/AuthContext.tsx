@@ -88,6 +88,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true);
     console.log('AuthContext: useEffect mounting. Subscribing to onAuthStateChange and checking initial session.');
 
+    // Timeout fallback to prevent infinite loading
+    const loadingTimeout = setTimeout(() => {
+      console.warn('AuthContext: Session check timed out after 5s, stopping loading state');
+      setLoading(false);
+    }, 5000);
+
     // 1) Subscribe to auth changes FIRST (sync callback only)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
       console.log('AuthContext: onAuthStateChange event:', event, 'Session:', !!currentSession);
@@ -109,30 +115,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     // 2) THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      console.log('AuthContext: Initial session check:', !!currentSession);
+    supabase.auth.getSession()
+      .then(({ data: { session: currentSession } }) => {
+        console.log('AuthContext: Initial session check:', !!currentSession);
+        clearTimeout(loadingTimeout);
 
-      setSession(currentSession);
-      const currentUser = currentSession?.user ?? null;
-      setUser(currentUser);
+        setSession(currentSession);
+        const currentUser = currentSession?.user ?? null;
+        setUser(currentUser);
 
-      if (currentUser) {
-        // Defer fetch to avoid doing async work directly here
-        setTimeout(async () => {
-          await fetchFirmIdAndRole(currentUser.id);
-          initializeSessionSecurity();
-        }, 0);
-      } else {
-        setFirmId(undefined);
-        setRole(null);
-        setFirmError(null);
-      }
+        if (currentUser) {
+          // Defer fetch to avoid doing async work directly here
+          setTimeout(async () => {
+            await fetchFirmIdAndRole(currentUser.id);
+            initializeSessionSecurity();
+          }, 0);
+        } else {
+          setFirmId(undefined);
+          setRole(null);
+          setFirmError(null);
+        }
 
-      setLoading(false);
-    });
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error('AuthContext: Error checking session:', error);
+        clearTimeout(loadingTimeout);
+        setLoading(false);
+      });
 
     return () => {
       console.log('AuthContext: useEffect unmounting. Unsubscribing from onAuthStateChange.');
+      clearTimeout(loadingTimeout);
       subscription.unsubscribe();
     };
   }, []);
