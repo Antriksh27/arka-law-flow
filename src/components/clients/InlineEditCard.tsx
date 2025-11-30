@@ -7,6 +7,7 @@ import { Edit2, Check, X, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Field {
   key: string;
@@ -34,6 +35,7 @@ export const InlineEditCard: React.FC<InlineEditCardProps> = ({
   clientData,
   onUpdate
 }) => {
+  const isMobile = useIsMobile();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editedData, setEditedData] = useState<Record<string, string>>({});
@@ -155,15 +157,15 @@ export const InlineEditCard: React.FC<InlineEditCardProps> = ({
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <TitleIcon className="w-5 h-5 text-blue-600" />
-            <CardTitle>{title}</CardTitle>
+            <TitleIcon className={isMobile ? "w-4 h-4 text-blue-600" : "w-5 h-5 text-blue-600"} />
+            <CardTitle className={isMobile ? "text-base" : ""}>{title}</CardTitle>
           </div>
           {!isEditing ? (
             <Button
               variant="ghost"
               size="sm"
               onClick={handleEdit}
-              className="h-8 w-8 p-0"
+              className={isMobile ? "h-9 w-9 p-0" : "h-8 w-8 p-0"}
             >
               <Edit2 className="w-4 h-4" />
             </Button>
@@ -174,7 +176,7 @@ export const InlineEditCard: React.FC<InlineEditCardProps> = ({
                 size="sm"
                 onClick={handleCancel}
                 disabled={isSaving}
-                className="h-8 w-8 p-0"
+                className={isMobile ? "h-9 w-9 p-0" : "h-8 w-8 p-0"}
               >
                 <X className="w-4 h-4" />
               </Button>
@@ -183,7 +185,7 @@ export const InlineEditCard: React.FC<InlineEditCardProps> = ({
                 size="sm"
                 onClick={handleSave}
                 disabled={isSaving}
-                className="h-8 w-8 p-0 bg-green-600 hover:bg-green-700"
+                className={isMobile ? "h-9 w-9 p-0 bg-green-600 hover:bg-green-700" : "h-8 w-8 p-0 bg-green-600 hover:bg-green-700"}
               >
                 {isSaving ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -195,11 +197,11 @@ export const InlineEditCard: React.FC<InlineEditCardProps> = ({
           )}
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className={isMobile ? "space-y-3 px-3 pb-3" : "space-y-4"}>
         {isEditing ? (
           fields.map(field => (
             <div key={field.key} className="space-y-1.5">
-              <Label htmlFor={field.key} className="text-sm font-medium">
+              <Label htmlFor={field.key} className={isMobile ? "text-xs font-medium" : "text-sm font-medium"}>
                 {field.label}
               </Label>
               <Input
@@ -219,11 +221,11 @@ export const InlineEditCard: React.FC<InlineEditCardProps> = ({
                   }
                 }}
                 maxLength={field.maxLength}
-                className={errors[field.key] ? 'border-red-500' : ''}
+                className={`${errors[field.key] ? 'border-red-500' : ''} ${isMobile ? 'h-10 text-base' : ''}`}
                 placeholder={field.label}
               />
               {errors[field.key] && (
-                <p className="text-sm text-red-500">{errors[field.key]}</p>
+                <p className={isMobile ? "text-xs text-red-500" : "text-sm text-red-500"}>{errors[field.key]}</p>
               )}
             </div>
           ))

@@ -5,15 +5,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
-import { Eye, Link } from 'lucide-react';
+import { Eye, Link, User, Calendar } from 'lucide-react';
 import { TimeUtils } from '@/lib/timeUtils';
 import { AssignToCaseDialog } from './AssignToCaseDialog';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ClientCasesProps {
   clientId: string;
 }
 
 export const ClientCases: React.FC<ClientCasesProps> = ({ clientId }) => {
+  const isMobile = useIsMobile();
   const [showLinkDialog, setShowLinkDialog] = useState(false);
   const navigate = useNavigate();
   const { data: client } = useQuery({
@@ -67,6 +69,76 @@ export const ClientCases: React.FC<ClientCasesProps> = ({ clientId }) => {
           <div className="text-center text-gray-500">Loading cases...</div>
         </CardContent>
       </Card>
+    );
+  }
+
+  if (isMobile) {
+    return (
+      <>
+        <Card className="bg-white rounded-2xl shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="text-base font-semibold">Cases</CardTitle>
+            <Button 
+              size="sm" 
+              className="bg-primary hover:bg-primary/90 h-9"
+              onClick={() => setShowLinkDialog(true)}
+            >
+              <Link className="w-4 h-4 mr-1" />
+              Link
+            </Button>
+          </CardHeader>
+          <CardContent className="px-3 pb-3">
+            {cases.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <p className="text-sm">No cases found</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {cases.map((case_item) => (
+                  <Card 
+                    key={case_item.id} 
+                    className="active:scale-95 transition-transform"
+                    onClick={() => navigate(`/cases/${case_item.id}`)}
+                  >
+                    <CardContent className="p-3">
+                      <div className="font-medium text-sm text-gray-900 mb-2">
+                        {case_item.case_title?.replace(/\bVersus\b/g, 'Vs')}
+                      </div>
+                      <div className="flex items-center gap-2 flex-wrap mb-2">
+                        <Badge 
+                          variant="default" 
+                          className={`${getStatusColor(case_item.status)} text-xs`}
+                        >
+                          {case_item.status?.replace('_', ' ')}
+                        </Badge>
+                      </div>
+                      <div className="space-y-1">
+                        {case_item.assigned_to && (
+                          <div className="flex items-center gap-1 text-xs text-gray-600">
+                            <User className="w-3 h-3" />
+                            {case_item.assigned_to.full_name}
+                          </div>
+                        )}
+                        <div className="flex items-center gap-1 text-xs text-gray-500">
+                          <Calendar className="w-3 h-3" />
+                          {TimeUtils.formatDate(case_item.created_at)}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        
+        <AssignToCaseDialog 
+          open={showLinkDialog}
+          onOpenChange={setShowLinkDialog}
+          clientId={clientId}
+          clientName={client?.full_name || ''}
+        />
+      </>
     );
   }
 

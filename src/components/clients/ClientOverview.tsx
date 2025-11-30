@@ -6,12 +6,15 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Plus, FileText, Calendar, Briefcase } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { TimeUtils } from '@/lib/timeUtils';
+import { useIsMobile } from '@/hooks/use-mobile';
 interface ClientOverviewProps {
   clientId: string;
 }
 export const ClientOverview: React.FC<ClientOverviewProps> = ({
   clientId
 }) => {
+  const isMobile = useIsMobile();
+  
   // Fetch client stats
   const {
     data: clientStats
@@ -78,6 +81,68 @@ export const ClientOverview: React.FC<ClientOverviewProps> = ({
     color: 'text-purple-600',
     bgColor: 'bg-purple-50'
   }];
+  if (isMobile) {
+    return (
+      <div className="space-y-4 pb-4">
+        {/* Stats Strip - Horizontal Scroll */}
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide px-1 pb-2">
+          {stats.map((stat, index) => {
+            const IconComponent = stat.icon;
+            return (
+              <Card key={index} className="flex-shrink-0 w-32">
+                <CardContent className="p-3">
+                  <div className={`w-8 h-8 rounded-lg ${stat.bgColor} flex items-center justify-center mb-2`}>
+                    <IconComponent className={`w-4 h-4 ${stat.color}`} />
+                  </div>
+                  <p className="text-lg font-bold text-gray-900">
+                    {stat.value}
+                    {stat.total && <span className="text-xs font-normal text-gray-500">/{stat.total}</span>}
+                  </p>
+                  <p className="text-xs text-gray-600 truncate">{stat.title}</p>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+
+        {/* Recent Activity - Mobile Cards */}
+        <div>
+          <h3 className="text-base font-semibold text-gray-900 mb-3 px-1">Recent Activity</h3>
+          <div className="space-y-2">
+            {recentActivity && recentActivity.length > 0 ? (
+              recentActivity.map((activity) => (
+                <Card key={activity.id} className="active:scale-95 transition-transform">
+                  <CardContent className="p-3">
+                    <div className="flex items-start justify-between mb-1">
+                      <div className="font-medium text-sm text-gray-900 flex-1">
+                        {activity.description}
+                      </div>
+                      <Badge variant="outline" className="capitalize text-xs ml-2 flex-shrink-0">
+                        {activity.activity_type}
+                      </Badge>
+                    </div>
+                    <div className="text-xs text-gray-600 mb-1">
+                      {activity.cases?.case_number} - {activity.cases?.case_title}
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-gray-500">
+                      <Calendar className="w-3 h-3" />
+                      {TimeUtils.formatDate(activity.created_at)}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <div className="text-center py-12 text-gray-500">
+                <Briefcase className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                <p className="text-sm">No recent activity</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">

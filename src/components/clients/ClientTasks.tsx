@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
@@ -8,12 +7,14 @@ import { Loader2, ListTodo, Calendar, User, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { TimeUtils } from '@/lib/timeUtils';
 import { CreateTaskDialog } from '../tasks/CreateTaskDialog';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ClientTasksProps {
   clientId: string;
 }
 
 export const ClientTasks: React.FC<ClientTasksProps> = ({ clientId }) => {
+  const isMobile = useIsMobile();
   const [showCreateDialog, setShowCreateDialog] = React.useState(false);
   const { data: tasks = [], isLoading } = useQuery({
     queryKey: ['client-tasks', clientId],
@@ -85,6 +86,66 @@ export const ClientTasks: React.FC<ClientTasksProps> = ({ clientId }) => {
           </div>
         </CardContent>
       </Card>
+    );
+  }
+
+  if (isMobile) {
+    return (
+      <>
+        <Card className="bg-white rounded-2xl shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="text-base font-semibold">Tasks</CardTitle>
+            <Button size="sm" className="bg-primary hover:bg-primary/90 h-9" onClick={() => setShowCreateDialog(true)}>
+              <Plus className="w-4 h-4 mr-1" />
+              Add
+            </Button>
+          </CardHeader>
+          <CardContent className="px-3 pb-3">
+            {tasks.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <ListTodo className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                <p className="text-sm">No tasks assigned</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {tasks.map((task) => (
+                  <Card key={task.id} className="active:scale-95 transition-transform">
+                    <CardContent className="p-3">
+                      <div className="font-medium text-sm text-gray-900 mb-2">
+                        {task.title}
+                      </div>
+                      <div className="flex items-center gap-1 flex-wrap mb-2">
+                        <Badge className={`${getStatusColor(task.status)} text-xs`}>
+                          {task.status?.replace('_', ' ')}
+                        </Badge>
+                        <Badge className={`${getPriorityColor(task.priority)} text-xs`}>
+                          {task.priority}
+                        </Badge>
+                      </div>
+                      {task.description && (
+                        <div className="text-xs text-gray-600 mb-2 line-clamp-2">{task.description}</div>
+                      )}
+                      <div className="flex items-center gap-3 text-xs text-gray-500">
+                        <div className="flex items-center gap-1">
+                          <User className="w-3 h-3" />
+                          {task.assigned_user?.full_name || 'Unassigned'}
+                        </div>
+                        {task.due_date && (
+                          <div className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            {TimeUtils.formatDate(task.due_date)}
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        <CreateTaskDialog open={showCreateDialog} onClose={() => setShowCreateDialog(false)} clientId={clientId} />
+      </>
     );
   }
 
