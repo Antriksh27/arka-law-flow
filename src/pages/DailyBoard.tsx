@@ -9,6 +9,16 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { useToast } from '@/hooks/use-toast';
 import html2pdf from 'html2pdf.js';
 import { format } from 'date-fns';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { MobileHeader } from '@/components/mobile/MobileHeader';
+import { BottomNavBar } from '@/components/mobile/BottomNavBar';
+import { MobileDailyBoardCard } from '@/components/daily-board/MobileDailyBoardCard';
+import { Button } from '@/components/ui/button';
+import { Calendar as CalendarIcon, Loader2 } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown } from 'lucide-react';
 
 const DailyBoard = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -21,6 +31,7 @@ const DailyBoard = () => {
   
   const printViewRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   
   const { data: hearings = [], isLoading } = useDailyBoardData(selectedDate, filters);
   
@@ -122,6 +133,92 @@ const DailyBoard = () => {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <LoadingSpinner message="Loading hearings..." />
+      </div>
+    );
+  }
+
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-background pb-24">
+        <MobileHeader 
+          title="Daily Board"
+          actions={
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <CalendarIcon className="w-5 h-5" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(date) => date && setSelectedDate(date)}
+                />
+              </PopoverContent>
+            </Popover>
+          }
+        />
+
+        <div className="p-4 space-y-4">
+          <div className="bg-white rounded-xl p-4 shadow-sm">
+            <p className="text-sm text-muted-foreground mb-1">
+              {format(selectedDate, 'EEEE, MMMM d, yyyy')}
+            </p>
+            <p className="text-2xl font-bold text-primary">
+              {hearings.length} Hearings
+            </p>
+          </div>
+
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : groupedHearings.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+              <CalendarIcon className="h-16 w-16 mb-4 opacity-20" />
+              <p className="text-sm">No hearings for this date</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {groupedHearings.map((court) => (
+                <Collapsible key={court.courtName} defaultOpen>
+                  <CollapsibleTrigger className="w-full">
+                    <div className="bg-white rounded-xl p-4 shadow-sm flex items-center justify-between">
+                      <div className="flex-1 text-left">
+                        <h3 className="font-semibold text-sm">{court.courtName}</h3>
+                        <p className="text-xs text-muted-foreground">
+                          {court.judges.reduce((sum, j) => sum + j.hearings.length, 0)} hearings
+                        </p>
+                      </div>
+                      <ChevronDown className="w-5 h-5 text-muted-foreground transition-transform ui-expanded:rotate-180" />
+                    </div>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="space-y-4 mt-4">
+                    {court.judges.map((judge) => (
+                      <div key={judge.judgeName} className="space-y-3">
+                        <div className="px-2">
+                          <h4 className="font-semibold text-xs text-muted-foreground">
+                            {judge.judgeName}
+                          </h4>
+                        </div>
+                        {judge.hearings.map((hearing, idx) => (
+                          <MobileDailyBoardCard
+                            key={hearing.hearing_id}
+                            hearing={hearing}
+                            index={idx + 1}
+                          />
+                        ))}
+                      </div>
+                    ))}
+                  </CollapsibleContent>
+                </Collapsible>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <BottomNavBar />
       </div>
     );
   }

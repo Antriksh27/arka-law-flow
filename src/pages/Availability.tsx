@@ -6,13 +6,71 @@ import { FirmHolidays } from '@/components/availability/FirmHolidays';
 import { GoogleCalendarSync } from '@/components/availability/GoogleCalendarSync';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar, Clock, AlertCircle, List, LayoutGrid } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { MobileHeader } from '@/components/mobile/MobileHeader';
+import { BottomNavBar } from '@/components/mobile/BottomNavBar';
 
 const Availability = () => {
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     document.title = 'My Availability | Working hours & blocked dates';
   }, []);
+
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-background pb-24">
+        <MobileHeader title="Availability" />
+        
+        <div className="p-4">
+          <Tabs defaultValue="schedules" className="space-y-4">
+            <TabsList className="w-full overflow-x-auto scrollbar-hide flex">
+              <TabsTrigger value="schedules" className="flex-1 text-xs">Schedules</TabsTrigger>
+              <TabsTrigger value="holidays" className="flex-1 text-xs">Holidays</TabsTrigger>
+              <TabsTrigger value="settings" className="flex-1 text-xs">Settings</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="schedules" className="space-y-4 mt-0">
+              <div className="bg-white rounded-xl p-4 shadow-sm space-y-4">
+                <div>
+                  <h3 className="font-semibold text-sm mb-1">Weekly hours</h3>
+                  <p className="text-xs text-muted-foreground mb-3">Set your typical availability</p>
+                  <AvailabilitySchedule />
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl p-4 shadow-sm space-y-4">
+                <div>
+                  <h3 className="font-semibold text-sm mb-1">Date-specific hours</h3>
+                  <p className="text-xs text-muted-foreground mb-3">Blocked dates</p>
+                  <AvailabilityExceptions />
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="holidays" className="space-y-4 mt-0">
+              <div className="bg-white rounded-xl p-4 shadow-sm">
+                <FirmHolidays />
+              </div>
+              <div className="bg-white rounded-xl p-4 shadow-sm">
+                <h3 className="font-semibold text-sm mb-3">Personal Blocked Dates</h3>
+                <AvailabilityExceptions />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="settings" className="space-y-4 mt-0">
+              <div className="bg-white rounded-xl p-4 shadow-sm">
+                <GoogleCalendarSync />
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        <BottomNavBar />
+      </div>
+    );
+  }
 
   return (
     <DefaultPageLayout>

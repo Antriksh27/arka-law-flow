@@ -13,6 +13,9 @@ import { CasesUploadSection } from "@/components/ecourts/CasesUploadSection";
 import { CasesFetchManager } from "@/components/ecourts/CasesFetchManager";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsMobile } from '@/hooks/use-mobile';
+import { MobileHeader } from '@/components/mobile/MobileHeader';
+import { BottomNavBar } from '@/components/mobile/BottomNavBar';
 
 export const ECourts = () => {
   const [selectedCase, setSelectedCase] = useState<any>(null);
@@ -20,6 +23,7 @@ export const ECourts = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { firmId } = useAuth();
+  const isMobile = useIsMobile();
 
   const { data: legalkartCases, refetch } = useQuery({
     queryKey: ['legalkart-case-searches', firmId],
@@ -48,6 +52,152 @@ export const ECourts = () => {
   const successfulSearches = legalkartCases?.filter((c: any) => c.status === 'success').length || 0;
   const failedSearches = legalkartCases?.filter((c: any) => c.status === 'failed').length || 0;
   const totalSearches = legalkartCases?.length || 0;
+
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-background pb-24">
+        <MobileHeader title="Legalkart" />
+
+        <div className="p-4 space-y-4">
+          {/* Stats Strip - Horizontal Scroll */}
+          <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
+            <div className="flex-shrink-0 bg-white rounded-xl p-4 shadow-sm w-32">
+              <Search className="h-6 w-6 text-primary mb-2" />
+              <p className="text-2xl font-bold">{totalSearches}</p>
+              <p className="text-xs text-muted-foreground">Total</p>
+            </div>
+            <div className="flex-shrink-0 bg-white rounded-xl p-4 shadow-sm w-32">
+              <CheckCircle className="h-6 w-6 text-green-600 mb-2" />
+              <p className="text-2xl font-bold text-green-600">{successfulSearches}</p>
+              <p className="text-xs text-muted-foreground">Success</p>
+            </div>
+            <div className="flex-shrink-0 bg-white rounded-xl p-4 shadow-sm w-32">
+              <XCircle className="h-6 w-6 text-red-600 mb-2" />
+              <p className="text-2xl font-bold text-red-600">{failedSearches}</p>
+              <p className="text-xs text-muted-foreground">Failed</p>
+            </div>
+          </div>
+
+          {/* Tabs */}
+          <Tabs defaultValue="fetch-all" className="space-y-4">
+            <TabsList className="w-full overflow-x-auto scrollbar-hide flex">
+              <TabsTrigger value="fetch-all" className="flex-1 text-xs whitespace-nowrap">
+                <List className="h-4 w-4 mr-1" />
+                Fetch All
+              </TabsTrigger>
+              <TabsTrigger value="search" className="flex-1 text-xs whitespace-nowrap">
+                <Search className="h-4 w-4 mr-1" />
+                Search
+              </TabsTrigger>
+              <TabsTrigger value="bulk" className="flex-1 text-xs whitespace-nowrap">
+                <Upload className="h-4 w-4 mr-1" />
+                Bulk
+              </TabsTrigger>
+              <TabsTrigger value="history" className="flex-1 text-xs whitespace-nowrap">
+                <History className="h-4 w-4 mr-1" />
+                History
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="fetch-all" className="mt-0 space-y-3">
+              <div className="bg-white rounded-xl p-4 shadow-sm">
+                <h3 className="font-semibold text-sm mb-2">Fetch All Cases</h3>
+                <p className="text-xs text-muted-foreground mb-3">
+                  View and fetch all cases with CNR
+                </p>
+                <CasesFetchManager />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="search" className="mt-0 space-y-3">
+              <div className="bg-white rounded-xl p-4 shadow-sm">
+                <h3 className="font-semibold text-sm mb-2">Search by CNR</h3>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Fetch case details from Legalkart
+                </p>
+                <LegalkartCaseSearch 
+                  onCaseDataFetched={() => { 
+                    refetch(); 
+                    queryClient.invalidateQueries({ queryKey: ["cases"] }); 
+                  }} 
+                />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="bulk" className="mt-0 space-y-3">
+              <div className="bg-white rounded-xl p-4 shadow-sm">
+                <h3 className="font-semibold text-sm mb-2">Bulk Upload</h3>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Upload multiple cases via CSV/Excel
+                </p>
+                <CasesUploadSection 
+                  onUploadComplete={() => {
+                    queryClient.invalidateQueries({ queryKey: ["cases"] });
+                    refetch();
+                  }} 
+                />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="history" className="mt-0 space-y-3">
+              {legalkartCases && legalkartCases.length > 0 ? (
+                legalkartCases.map((item: any) => (
+                  <div key={item.id} className="bg-white rounded-xl p-4 shadow-sm space-y-3">
+                    <div className="space-y-2">
+                      <h4 className="font-semibold text-sm">
+                        {item.cases?.case_title || 'Case Search'}
+                      </h4>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <FileText className="h-3 w-3" />
+                        <span>CNR: {item.cnr_number}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge variant="outline" className="text-xs">
+                        {item.search_type?.replace('_', ' ')}
+                      </Badge>
+                      <Badge 
+                        variant={item.status === 'success' ? 'default' : 'error'}
+                        className="text-xs"
+                      >
+                        {item.status}
+                      </Badge>
+                    </div>
+
+                    {item.error_message && (
+                      <div className="text-xs text-destructive bg-destructive/10 p-2 rounded-lg">
+                        {item.error_message}
+                      </div>
+                    )}
+
+                    <div className="flex gap-2">
+                      {item.case_id && (
+                        <Button 
+                          size="sm" 
+                          className="flex-1 text-xs"
+                          onClick={() => navigate(`/cases/${item.case_id}`)}
+                        >
+                          Open Case
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="bg-white rounded-xl p-8 shadow-sm text-center">
+                  <History className="h-12 w-12 mx-auto text-muted-foreground mb-3 opacity-20" />
+                  <p className="text-sm text-muted-foreground">No search history</p>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        <BottomNavBar />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen p-6 space-y-6">
