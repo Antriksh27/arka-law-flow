@@ -11,7 +11,10 @@ interface CauseListContentProps {
 export const CauseListContent: React.FC<CauseListContentProps> = ({ data }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredData = data?.filter(item => {
+  // Ensure data is an array - handle both array and object responses
+  const dataArray = Array.isArray(data) ? data : [];
+
+  const filteredData = dataArray.filter(item => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
     return (
@@ -41,11 +44,11 @@ export const CauseListContent: React.FC<CauseListContentProps> = ({ data }) => {
           <h2 className="text-lg font-semibold">
             Cause List Items
             <span className="ml-2 text-sm font-normal text-muted-foreground">
-              ({filteredData?.length || 0} cases)
+              ({filteredData.length} cases)
             </span>
           </h2>
         </div>
-        <CauseListTable data={filteredData || []} />
+        <CauseListTable data={filteredData} />
       </Card>
     </div>
   );
