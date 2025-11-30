@@ -15,6 +15,8 @@ import { X, Plus, Mic, MicOff, Square, Play, Pause, Trash2, Sparkles, Loader2 } 
 import { DrawingCanvas } from './DrawingCanvas';
 import { ClientSelector } from '@/components/appointments/ClientSelector';
 import { CaseSelector } from '@/components/appointments/CaseSelector';
+import { AudioRecorder } from '@/utils/audioRecorder';
+import { useWhisperTranscription } from '@/hooks/useWhisperTranscription';
 interface CreateNoteMultiModalProps {
   open: boolean;
   onClose: () => void;
@@ -49,13 +51,11 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const [speechSupported, setSpeechSupported] = useState(true);
+  const [isDictating, setIsDictating] = useState(false);
   const [isFixingGrammar, setIsFixingGrammar] = useState(false);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
-  const recognitionRef = useRef<any>(null);
+  const audioRecorderRef = useRef<AudioRecorder>(new AudioRecorder());
+  const { transcribe, isLoading: isModelLoading, isProcessing: isTranscribing, modelLoaded, loadProgress } = useWhisperTranscription();
   const {
     register,
     handleSubmit,
@@ -171,27 +171,12 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
   });
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true
-      });
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-      chunksRef.current = [];
-      mediaRecorder.ondataavailable = event => {
-        if (event.data.size > 0) {
-          chunksRef.current.push(event.data);
-        }
-      };
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, {
-          type: 'audio/wav'
-        });
-        setAudioBlob(blob);
-        setAudioUrl(URL.createObjectURL(blob));
-        stream.getTracks().forEach(track => track.stop());
-      };
-      mediaRecorder.start();
+      await audioRecorderRef.current.startRecording();
       setIsRecording(true);
+      toast({
+        title: "Recording started",
+        description: "Speak now..."
+      });
     } catch (error) {
       toast({
         title: "Recording failed",
@@ -200,10 +185,19 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
       });
     }
   };
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
+
+  const stopRecording = async () => {
+    try {
+      const blob = await audioRecorderRef.current.stopRecording();
+      setAudioBlob(blob);
+      setAudioUrl(URL.createObjectURL(blob));
       setIsRecording(false);
+    } catch (error) {
+      toast({
+        title: "Stop recording failed",
+        description: "Could not stop recording",
+        variant: "destructive"
+      });
     }
   };
   const playAudio = () => {
@@ -321,66 +315,69 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
     }
   }, [audioUrl]);
 
-  // Setup Speech Recognition
-  useEffect(() => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      setSpeechSupported(false);
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'en-IN';
-
-    recognition.onresult = (event: any) => {
-      let transcript = '';
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        if (event.results[i].isFinal) {
-          transcript += event.results[i][0].transcript + ' ';
-        }
-      }
+  const toggleDictation = async () => {
+    if (isDictating) {
+      // Stop dictation and transcribe
+      setIsDictating(false);
       
-      if (transcript) {
-        const currentContent = watch('content') || '';
-        setValue('content', currentContent + transcript);
+      try {
+        const blob = await audioRecorderRef.current.stopRecording();
+        
+        toast({
+          title: "Transcribing...",
+          description: "Converting speech to text with AI"
+        });
+
+        const result = await transcribe(blob);
+        
+        if (result.error) {
+          toast({
+            title: "Transcription failed",
+            description: result.error,
+            variant: "destructive"
+          });
+        } else if (result.text) {
+          const currentContent = watch('content') || '';
+          const newContent = currentContent ? `${currentContent}\n\n${result.text}` : result.text;
+          setValue('content', newContent);
+          
+          toast({
+            title: "Transcription complete",
+            description: "Speech converted to text successfully"
+          });
+        }
+      } catch (error) {
+        console.error('Dictation error:', error);
+        toast({
+          title: "Dictation failed",
+          description: "Could not process speech",
+          variant: "destructive"
+        });
       }
-    };
-
-    recognition.onerror = (event: any) => {
-      console.error('Speech recognition error:', event.error);
-      setIsListening(false);
-      toast({
-        title: "Speech recognition error",
-        description: event.error === 'no-speech' ? 'No speech detected' : 'Could not process speech',
-        variant: "destructive"
-      });
-    };
-
-    recognition.onend = () => {
-      setIsListening(false);
-    };
-
-    recognitionRef.current = recognition;
-
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
-    };
-  }, [setValue, watch, toast]);
-
-  const toggleSpeechToText = () => {
-    if (!recognitionRef.current) return;
-
-    if (isListening) {
-      recognitionRef.current.stop();
-      setIsListening(false);
     } else {
-      recognitionRef.current.start();
-      setIsListening(true);
-      toast({ title: "Listening...", description: "Speak now" });
+      // Start dictation
+      try {
+        if (!modelLoaded && !isModelLoading) {
+          toast({
+            title: "Loading AI model...",
+            description: "First-time setup, please wait"
+          });
+        }
+        
+        await audioRecorderRef.current.startRecording();
+        setIsDictating(true);
+        
+        toast({
+          title: "Dictating...",
+          description: "Speak now, click again to finish"
+        });
+      } catch (error) {
+        toast({
+          title: "Dictation failed",
+          description: "Could not access microphone",
+          variant: "destructive"
+        });
+      }
     }
   };
   return <Dialog open={open} onOpenChange={onClose}>
@@ -409,78 +406,87 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
             
             <TabsContent value="write" className="space-y-4">
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="content" className="text-sm font-medium text-gray-700">
-                    Content
-                  </Label>
-                  <div className="flex items-center gap-2">
-                    {speechSupported && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={toggleSpeechToText}
-                        className={`${isListening 
-                          ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100' 
-                          : 'text-blue-600 border-blue-200 hover:bg-blue-50'}`}
-                      >
-                        {isListening ? (
-                          <>
-                            <MicOff className="w-4 h-4 mr-2" />
-                            Stop Dictation
-                          </>
-                        ) : (
-                          <>
-                            <Mic className="w-4 h-4 mr-2" />
-                            Dictate
-                          </>
-                        )}
-                      </Button>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="content" className="text-sm font-medium text-gray-700">
+                  Content
+                </Label>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={toggleDictation}
+                    disabled={isModelLoading || isTranscribing}
+                    className={`${isDictating 
+                      ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100' 
+                      : 'text-blue-600 border-blue-200 hover:bg-blue-50'}`}
+                  >
+                    {isModelLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Loading Model ({loadProgress}%)
+                      </>
+                    ) : isTranscribing ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Transcribing...
+                      </>
+                    ) : isDictating ? (
+                      <>
+                        <MicOff className="w-4 h-4 mr-2" />
+                        Stop Dictation
+                      </>
+                    ) : (
+                      <>
+                        <Mic className="w-4 h-4 mr-2" />
+                        Dictate
+                      </>
                     )}
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={async () => {
-                        const currentContent = watch('content');
-                        if (currentContent?.trim()) {
-                          const correctedContent = await fixGrammar(currentContent);
-                          if (correctedContent !== currentContent) {
-                            setValue('content', correctedContent);
-                          }
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      const currentContent = watch('content');
+                      if (currentContent?.trim()) {
+                        const correctedContent = await fixGrammar(currentContent);
+                        if (correctedContent !== currentContent) {
+                          setValue('content', correctedContent);
                         }
-                      }}
-                      disabled={!watch('content')?.trim() || isFixingGrammar}
-                      className="text-purple-600 border-purple-200 hover:bg-purple-50"
-                    >
-                      {isFixingGrammar ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Fixing...
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="w-4 h-4 mr-2" />
-                          Fix Grammar
-                        </>
-                      )}
-                    </Button>
+                      }
+                    }}
+                    disabled={!watch('content')?.trim() || isFixingGrammar}
+                    className="text-purple-600 border-purple-200 hover:bg-purple-50"
+                  >
+                    {isFixingGrammar ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Fixing...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Fix Grammar
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+              <div className="relative">
+                <Textarea 
+                  id="content" 
+                  {...register('content')} 
+                  placeholder="Write your note content or click Dictate to speak..." 
+                  className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 min-h-[200px]" 
+                  rows={8} 
+                />
+                {isDictating && (
+                  <div className="absolute bottom-2 right-2 flex items-center gap-2 text-red-500 text-sm">
+                    <span className="animate-pulse">●</span> Recording...
                   </div>
-                </div>
-                <div className="relative">
-                  <Textarea 
-                    id="content" 
-                    {...register('content')} 
-                    placeholder="Write your note content or click Dictate to speak..." 
-                    className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 min-h-[200px]" 
-                    rows={8} 
-                  />
-                  {isListening && (
-                    <div className="absolute bottom-2 right-2 flex items-center gap-2 text-red-500 text-sm">
-                      <span className="animate-pulse">●</span> Listening...
-                    </div>
-                  )}
-                </div>
+                )}
+              </div>
               </div>
             </TabsContent>
             
