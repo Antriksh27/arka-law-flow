@@ -20,69 +20,69 @@
 @tailwind utilities;
 @layer base {
   :root {
-    --background: 0 0% 96%;      /* Light blue background #EFF6FF */
-    --foreground: 0 0% 9%;         /* Dark text #111827 */
+    --background: 0 0% 100%;      /* Light blue background #EFF6FF */
+    --foreground: 265 4% 12.9%;         /* Dark text #111827 */
 
-    --card: 0 0% 98%;
-    --card-foreground: 0 0% 9%;    /* Dark text #111827 */
+    --card: 0 0% 100%;
+    --card-foreground: 265 4% 12.9%;    /* Dark text #111827 */
 
-    --primary: 161 93% 30%;           /* Vibrant blue #2563EB */
+    --primary: 266 4% 20.8%;           /* Vibrant blue #2563EB */
     --primary-hover: 29 78 216;     /* Darker blue #1D4ED8 */
-    --primary-foreground: 151 80% 95%;
+    --primary-foreground: 248 0.3% 98.4%;
 
-    --secondary: 0 0% 32%;       /* Light blue #DBEAFE */
-    --secondary-foreground: 0 0% 98%; /* Dark text */
+    --secondary: 248 0.7% 96.8%;       /* Light blue #DBEAFE */
+    --secondary-foreground: 266 4% 20.8%; /* Dark text */
 
-    --accent: 166 76% 96%;          /* Sky blue #93C5FD */
-    --accent-foreground: 173 80% 40%;  /* Dark text */
+    --accent: 248 0.7% 96.8%;          /* Sky blue #93C5FD */
+    --accent-foreground: 266 4% 20.8%;  /* Dark text */
 
-    --muted: 0 0% 63%;           /* Slate-200 #E2E8F0 */
-    --muted-foreground: 0 0% 9%;  /* Slate-600 #475569 */
+    --muted: 248 0.7% 96.8%;           /* Slate-200 #E2E8F0 */
+    --muted-foreground: 257 4.6% 55.4%;  /* Slate-600 #475569 */
 
-    --destructive: 0 72% 50%;
+    --destructive: 27 24.5% 57.7%;
     --success: 16 185 129;
     --warning: 245 158 11;
     --info: 59 130 246;             /* Blue-500 #3B82F6 */
 
-    --border: 0 0% 83%;          /* Light blue border #BFDBFE */
-    --input: 0 0% 83%;
-    --ring: 161 93% 30%;              /* Blue-600 #2563EB */
+    --border: 256 1.3% 92.9%;          /* Light blue border #BFDBFE */
+    --input: 256 1.3% 92.9%;
+    --ring: 257 4% 70.4%;              /* Blue-600 #2563EB */
 
     /* Sidebar colors for mobile dark theme */
-    --sidebar: 0 0% 98%;            /* slate-900 */
-    --sidebar-foreground: 0 0% 9%;  /* slate-50 */
-    --sidebar-accent: 0 0% 32%;     /* slate-800 */
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 0 0% 83%;     /* slate-700 */
-    --sidebar-ring: 161 93% 30%;     /* blue-500 */
+    --sidebar: 248 0.3% 98.4%;            /* slate-900 */
+    --sidebar-foreground: 265 4% 12.9%;  /* slate-50 */
+    --sidebar-accent: 248 0.7% 96.8%;     /* slate-800 */
+    --sidebar-accent-foreground: 266 4% 20.8%;
+    --sidebar-border: 256 1.3% 92.9%;     /* slate-700 */
+    --sidebar-ring: 257 4% 70.4%;     /* blue-500 */
 
-    --radius: 0.75rem;
+    --radius: 0.375rem;
 
-    --popover: 0 0% 89%;
+    --popover: 0 0% 100%;
 
-    --popover-foreground: 0 0% 9%;
+    --popover-foreground: 265 4% 12.9%;
 
-    --destructive-foreground: 0 85% 97%;
+    --destructive-foreground: 0 0% 100%;
 
-    --chart-1: 158 64% 51%;
+    --chart-1: 41 22.2% 64.6%;
 
-    --chart-2: 141 69% 58%;
+    --chart-2: 185 11.8% 60%;
 
-    --chart-3: 172 66% 50%;
+    --chart-3: 227 7% 39.8%;
 
-    --chart-4: 82 77% 55%;
+    --chart-4: 84 18.9% 82.8%;
 
-    --chart-5: 0 0% 45%;
+    --chart-5: 70 18.8% 76.9%;
 
-    --sidebar-primary: 161 93% 30%;
+    --sidebar-primary: 266 4% 20.8%;
 
-    --sidebar-primary-foreground: 151 80% 95%;
+    --sidebar-primary-foreground: 248 0.3% 98.4%;
 
-    --font-sans: 'Work Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+    --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
-    --font-serif: 'Lora', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
+    --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
 
-    --font-mono: 'Inconsolata', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
     --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
 
@@ -117,38 +117,38 @@
     @apply font-normal text-[#111827];
   }
   .dark {
-    --background: 0 0% 9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 14%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 25%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 158 64% 51%;
-    --primary-foreground: 165 91% 9%;
-    --secondary: 0 0% 45%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 45%;
-    --muted-foreground: 0 0% 98%;
-    --accent: 178 84% 10%;
-    --accent-foreground: 172 66% 50%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 85% 97%;
-    --border: 0 0% 32%;
-    --input: 0 0% 32%;
-    --ring: 158 64% 51%;
-    --chart-1: 156 71% 66%;
-    --chart-2: 141 76% 73%;
-    --chart-3: 170 76% 64%;
-    --chart-4: 81 84% 67%;
-    --chart-5: 0 0% 45%;
-    --sidebar: 0 0% 14%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 158 64% 51%;
-    --sidebar-primary-foreground: 165 91% 9%;
-    --sidebar-accent: 172 66% 50%;
-    --sidebar-accent-foreground: 178 84% 10%;
-    --sidebar-border: 0 0% 32%;
-    --sidebar-ring: 158 64% 51%;
+    --background: 0 0% 15%;
+    --foreground: 248 0.3% 98.4%;
+    --card: 266 4% 20.8%;
+    --card-foreground: 248 0.3% 98.4%;
+    --popover: 266 4% 20.8%;
+    --popover-foreground: 248 0.3% 98.4%;
+    --primary: 256 1.3% 92.9%;
+    --primary-foreground: 266 4% 20.8%;
+    --secondary: 260 4.1% 27.9%;
+    --secondary-foreground: 248 0.3% 98.4%;
+    --muted: 260 4.1% 27.9%;
+    --muted-foreground: 257 4% 70.4%;
+    --accent: 260 4.1% 27.9%;
+    --accent-foreground: 248 0.3% 98.4%;
+    --destructive: 22 19.1% 70.4%;
+    --destructive-foreground: 248 0.3% 98.4%;
+    --border: 0 0% 100% / 10%;
+    --input: 0 0% 100% / 15%;
+    --ring: 264 2.7% 55.1%;
+    --chart-1: 264 24.3% 48.8%;
+    --chart-2: 162 17% 69.6%;
+    --chart-3: 70 18.8% 76.9%;
+    --chart-4: 304 26.5% 62.7%;
+    --chart-5: 16 24.6% 64.5%;
+    --sidebar: 266 4% 20.8%;
+    --sidebar-foreground: 248 0.3% 98.4%;
+    --sidebar-primary: 264 24.3% 48.8%;
+    --sidebar-primary-foreground: 248 0.3% 98.4%;
+    --sidebar-accent: 260 4.1% 27.9%;
+    --sidebar-accent-foreground: 248 0.3% 98.4%;
+    --sidebar-border: 0 0% 100% / 10%;
+    --sidebar-ring: 264 2.7% 55.1%;
     --radius: 0rem;
     --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
     --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
