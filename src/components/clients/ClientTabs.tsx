@@ -3,9 +3,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 import { ClientOverview } from './ClientOverview';
 import { ClientInformation } from './ClientInformation';
 import { ClientCases } from './ClientCases';
@@ -37,36 +34,6 @@ export const ClientTabs: React.FC<ClientTabsProps> = ({
 }) => {
   const isMobile = useIsMobile();
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const [isUpdatingPortal, setIsUpdatingPortal] = useState(false);
-  const { toast } = useToast();
-
-  const handlePortalToggle = async (enabled: boolean) => {
-    setIsUpdatingPortal(true);
-    try {
-      const { error } = await supabase
-        .from('clients')
-        .update({ client_portal_enabled: enabled })
-        .eq('id', client.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: `Client portal ${enabled ? 'enabled' : 'disabled'} successfully`,
-      });
-      
-      onUpdate();
-    } catch (error) {
-      console.error('Error updating portal access:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update portal access",
-        variant: "destructive",
-      });
-    } finally {
-      setIsUpdatingPortal(false);
-    }
-  };
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
@@ -172,14 +139,9 @@ export const ClientTabs: React.FC<ClientTabsProps> = ({
                           <span className="font-medium">Organization:</span> {client.organization}
                         </div>}
                       
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-gray-900">Portal Access:</span>
-                        <Switch
-                          checked={client.client_portal_enabled || false}
-                          onCheckedChange={handlePortalToggle}
-                          disabled={isUpdatingPortal}
-                        />
-                      </div>
+                      {client.client_portal_enabled && <Badge variant="outline" className="text-xs">
+                          Portal Enabled
+                        </Badge>}
                     </div>
                     {(client.referred_by_name || client.source) && <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                         {client.referred_by_name && <div>

@@ -1,8 +1,5 @@
 project_id = "hpcnipcbymruvsnqrmjx"
 
-[functions.client-otp]
-verify_jwt = false
-
 [functions.voice-to-text]
 verify_jwt = true
 

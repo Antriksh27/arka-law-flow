@@ -36,13 +36,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [firmError, setFirmError] = useState<string | null>(null);
 
   const fetchFirmIdAndRole = async (userId: string) => {
-    // Skip firm fetch for client routes
-    if (window.location.pathname.startsWith('/client')) {
-      console.log('AuthContext: Skipping firm fetch - on client portal route');
-      setLoading(false);
-      return;
-    }
-    
     if (!userId) {
       console.log('AuthContext: fetchFirmIdAndRole called with no userId. Setting firmId and role to undefined.');
       setFirmId(undefined);
@@ -53,93 +46,64 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log(`AuthContext: START: Fetching firm_id and role for user: ${userId}`);
       
-      // Retry logic with exponential backoff
-      const maxRetries = 3;
-      let lastError: any = null;
+      // Add timeout wrapper to prevent hanging
+      const fetchPromise = supabase
+        .from('team_members')
+        .select('firm_id, role')
+        .eq('user_id', userId)
+        .limit(1)
+        .maybeSingle();
       
-      for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-          console.log(`🔄 Fetch attempt ${attempt}/${maxRetries}`);
-          
-          const fetchPromise = supabase
-            .from('team_members')
-            .select('firm_id, role')
-            .eq('user_id', userId)
-            .limit(1)
-            .maybeSingle();
-          
-          const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Query timeout after 40s')), 40000)
-          );
-          
-          const { data, error, status } = await Promise.race([
-            fetchPromise,
-            timeoutPromise
-          ]) as any;
-          
-          console.log(`AuthContext: DB RESPONSE attempt ${attempt}:`, data, `error:`, error, `status:`, status);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Query timeout after 5s')), 5000)
+      );
+      
+      const { data, error, status } = await Promise.race([
+        fetchPromise,
+        timeoutPromise
+      ]) as any;
+      
+      console.log(`AuthContext: DB RESPONSE: data:`, data, `error:`, error, `status:`, status);
 
-          if (error) {
-            throw error;
-          }
-          
-          if (!data || !data.firm_id) {
-            console.warn(`AuthContext: No firm_id found in team_members for user: ${userId}`);
-            setFirmId(undefined);
-            setRole(null);
-            setFirmError('No firm_id found for user.');
-            console.log(`AuthContext: END (no data): No firm_id found for user: ${userId}`);
-            return;
-          }
-          
-          console.log('✅ Firm ID and role data fetched successfully:', data);
-          setFirmId(data.firm_id);
-          setRole(data.role);
-          setFirmError(null);
-          console.log(`AuthContext: END (success): firm_id set to ${data.firm_id} and role set to ${data.role} for user: ${userId}`);
-          return; // Success, exit retry loop
-          
-        } catch (retryError: any) {
-          lastError = retryError;
-          console.warn(`❌ Attempt ${attempt} failed:`, retryError.message);
-          
-          if (attempt < maxRetries) {
-            const delay = 1000 * Math.pow(2, attempt - 1); // Exponential backoff
-            console.log(`⏳ Retrying in ${delay}ms...`);
-            await new Promise(resolve => setTimeout(resolve, delay));
-          }
-        }
+      if (error) {
+        console.error('AuthContext: Error fetching firm_id and role:', error.message);
+        setFirmId(undefined);
+        setRole(null);
+        setFirmError(error.message || "Unknown error fetching firm_id and role.");
+        console.log(`AuthContext: END (error): firm_id and role fetch failed for user: ${userId}`);
+        return;
       }
-      
-      // All retries failed
-      throw lastError || new Error('All retry attempts failed');
-      
+      if (!data || !data.firm_id) {
+        console.warn(`AuthContext: No firm_id found in team_members for user: ${userId}`);
+        setFirmId(undefined);
+        setRole(null);
+        setFirmError('No firm_id found for user.');
+        console.log(`AuthContext: END (no data): No firm_id found for user: ${userId}`);
+        return;
+      }
+      console.log('AuthContext: Firm ID and role data fetched:', data);
+      setFirmId(data.firm_id);
+      setRole(data.role);
+      setFirmError(null);
+      console.log(`AuthContext: END (success): firm_id set to ${data.firm_id} and role set to ${data.role} for user: ${userId}`);
     } catch (e: any) {
-      console.error('❌ AuthContext: All attempts to fetch firm_id and role failed:', e.message);
+      console.error('AuthContext: Exception fetching firm_id and role:', e.message);
       setFirmId(undefined);
       setRole(null);
-      setFirmError('Database connection error. Please check your internet connection and try again.');
+      setFirmError('Exception: ' + (e.message || 'Unknown'));
       console.log(`AuthContext: END (exception): firm_id and role fetch failed for user: ${userId}`);
     }
   };
 
   useEffect(() => {
-    // Skip auth initialization completely for client portal routes
-    const isClientRoute = window.location.pathname.startsWith('/client');
-    if (isClientRoute) {
-      console.log('AuthContext: Skipping - on client portal route');
-      setLoading(false);
-      return;
-    }
-    
     setLoading(true);
     console.log('AuthContext: useEffect mounting. Subscribing to onAuthStateChange and checking initial session.');
 
     // Timeout fallback to prevent infinite loading
     const loadingTimeout = setTimeout(() => {
-      console.warn('AuthContext: Session check timed out after 30s, stopping loading state');
+      console.warn('AuthContext: Session check timed out after 5s, stopping loading state');
       setLoading(false);
-    }, 30000);
+    }, 5000);
 
     // 1) Subscribe to auth changes FIRST (sync callback only)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
@@ -151,19 +115,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (currentUser) {
         // Defer additional Supabase calls to avoid deadlocks
         setTimeout(async () => {
-          // Check if this is a client user (shouldn't be using lawyer routes)
-          const { data: clientUser } = await supabase
-            .from('client_users')
-            .select('id')
-            .eq('auth_user_id', currentUser.id)
-            .maybeSingle();
-          
-          if (clientUser) {
-            console.log('AuthContext: User is a client, skipping firm fetch');
-            setLoading(false);
-            return;
-          }
-          
           await fetchFirmIdAndRole(currentUser.id);
           initializeSessionSecurity();
         }, 0);
@@ -187,19 +138,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (currentUser) {
           // Defer fetch to avoid doing async work directly here
           setTimeout(async () => {
-            // Check if this is a client user (shouldn't be using lawyer routes)
-            const { data: clientUser } = await supabase
-              .from('client_users')
-              .select('id')
-              .eq('auth_user_id', currentUser.id)
-              .maybeSingle();
-            
-            if (clientUser) {
-              console.log('AuthContext: User is a client, skipping firm fetch');
-              setLoading(false);
-              return;
-            }
-            
             await fetchFirmIdAndRole(currentUser.id);
             initializeSessionSecurity();
           }, 0);

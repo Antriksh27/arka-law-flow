@@ -78,11 +78,10 @@ const SignIn1 = () => {
             <button onClick={handleSignIn} disabled={isLoading} className="w-full bg-white/10 font-medium px-5 py-3 rounded-full shadow hover:bg-white/20 transition mb-3 text-sm disabled:opacity-50 disabled:cursor-not-allowed text-white">
               {isLoading ? "Signing in..." : "Sign in"}
             </button>
+            {/* Google Sign In */}
             
             <div className="w-full text-center mt-2">
-              <a href="/client" className="text-sm text-gray-300 hover:text-white transition">
-                Client Login
-              </a>
+              
             </div>
           </div>
         </div>
