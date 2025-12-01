@@ -8,75 +8,78 @@
 @import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:wght@400;700&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 @layer base {
   :root {
-    --background: 0 0% 96%;      /* Light blue background #EFF6FF */
-    --foreground: 0 0% 9%;         /* Dark text #111827 */
+    --background: 240 4% 95%;      /* Light blue background #EFF6FF */
+    --foreground: 240 5% 10%;         /* Dark text #111827 */
 
     --card: 0 0% 98%;
-    --card-foreground: 0 0% 9%;    /* Dark text #111827 */
+    --card-foreground: 240 5% 10%;    /* Dark text #111827 */
 
-    --primary: 20 90% 48%;           /* Vibrant blue #2563EB */
+    --primary: 333 71% 50%;           /* Vibrant blue #2563EB */
     --primary-hover: 29 78 216;     /* Darker blue #1D4ED8 */
-    --primary-foreground: 33 100% 96%;
+    --primary-foreground: 327 73% 97%;
 
-    --secondary: 0 0% 32%;       /* Light blue #DBEAFE */
+    --secondary: 240 5% 33%;       /* Light blue #DBEAFE */
     --secondary-foreground: 0 0% 98%; /* Dark text */
 
-    --accent: 47 100% 96%;          /* Sky blue #93C5FD */
-    --accent-foreground: 37 92% 50%;  /* Dark text */
+    --accent: 355 100% 97%;          /* Sky blue #93C5FD */
+    --accent-foreground: 349 89% 60%;  /* Dark text */
 
-    --muted: 0 0% 63%;           /* Slate-200 #E2E8F0 */
-    --muted-foreground: 0 0% 9%;  /* Slate-600 #475569 */
+    --muted: 240 4% 83%;           /* Slate-200 #E2E8F0 */
+    --muted-foreground: 240 5% 10%;  /* Slate-600 #475569 */
 
     --destructive: 0 72% 50%;
     --success: 16 185 129;
     --warning: 245 158 11;
     --info: 59 130 246;             /* Blue-500 #3B82F6 */
 
-    --border: 0 0% 83%;          /* Light blue border #BFDBFE */
-    --input: 0 0% 83%;
-    --ring: 20 90% 48%;              /* Blue-600 #2563EB */
+    --border: 240 4% 83%;          /* Light blue border #BFDBFE */
+    --input: 240 4% 83%;
+    --ring: 333 71% 50%;              /* Blue-600 #2563EB */
 
     /* Sidebar colors for mobile dark theme */
     --sidebar: 0 0% 98%;            /* slate-900 */
-    --sidebar-foreground: 0 0% 9%;  /* slate-50 */
-    --sidebar-accent: 0 0% 32%;     /* slate-800 */
+    --sidebar-foreground: 240 5% 10%;  /* slate-50 */
+    --sidebar-accent: 240 5% 33%;     /* slate-800 */
     --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 0 0% 83%;     /* slate-700 */
-    --sidebar-ring: 20 90% 48%;     /* blue-500 */
+    --sidebar-border: 240 4% 83%;     /* slate-700 */
+    --sidebar-ring: 333 71% 50%;     /* blue-500 */
 
-    --radius: 0.75rem;
+    --radius: 1.5rem;
 
-    --popover: 0 0% 89%;
+    --popover: 240 5% 90%;
 
-    --popover-foreground: 0 0% 9%;
+    --popover-foreground: 240 5% 10%;
 
     --destructive-foreground: 0 85% 97%;
 
-    --chart-1: 27 95% 60%;
+    --chart-1: 328 85% 70%;
 
-    --chart-2: 43 96% 56%;
+    --chart-2: 351 94% 71%;
 
-    --chart-3: 47 95% 53%;
+    --chart-3: 327 87% 81%;
 
-    --chart-4: 24 94% 53%;
+    --chart-4: 352 95% 81%;
 
-    --chart-5: 0 0% 45%;
+    --chart-5: 240 3% 46%;
 
-    --sidebar-primary: 20 90% 48%;
+    --sidebar-primary: 333 71% 50%;
 
-    --sidebar-primary-foreground: 33 100% 96%;
+    --sidebar-primary-foreground: 327 73% 97%;
 
-    --font-sans: 'Roboto', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+    --font-sans: 'Poppins', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
 
-    --font-serif: 'Libre Caslon Text', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
+    --font-serif: 'Merriweather', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
 
-    --font-mono: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
 
     --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
 
@@ -111,38 +114,38 @@
     @apply font-normal text-[#111827];
   }
   .dark {
-    --background: 0 0% 9%;
+    --background: 240 5% 10%;
     --foreground: 0 0% 98%;
-    --card: 0 0% 14%;
+    --card: 240 3% 15%;
     --card-foreground: 0 0% 98%;
-    --popover: 0 0% 25%;
+    --popover: 240 5% 26%;
     --popover-foreground: 0 0% 98%;
-    --primary: 27 95% 60%;
-    --primary-foreground: 12 81% 14%;
-    --secondary: 0 0% 45%;
+    --primary: 328 85% 70%;
+    --primary-foreground: 336 83% 17%;
+    --secondary: 240 3% 46%;
     --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 45%;
+    --muted: 240 3% 46%;
     --muted-foreground: 0 0% 98%;
-    --accent: 20 91% 14%;
-    --accent-foreground: 43 96% 56%;
+    --accent: 343 87% 15%;
+    --accent-foreground: 351 94% 71%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 85% 97%;
-    --border: 0 0% 32%;
-    --input: 0 0% 32%;
-    --ring: 27 95% 60%;
-    --chart-1: 30 97% 72%;
-    --chart-2: 45 96% 64%;
-    --chart-3: 48 96% 76%;
-    --chart-4: 27 95% 60%;
-    --chart-5: 0 0% 45%;
-    --sidebar: 0 0% 14%;
+    --border: 240 5% 33%;
+    --input: 240 5% 33%;
+    --ring: 328 85% 70%;
+    --chart-1: 327 87% 81%;
+    --chart-2: 352 95% 81%;
+    --chart-3: 328 85% 70%;
+    --chart-4: 351 94% 71%;
+    --chart-5: 240 5% 33%;
+    --sidebar: 240 3% 15%;
     --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 27 95% 60%;
-    --sidebar-primary-foreground: 12 81% 14%;
-    --sidebar-accent: 43 96% 56%;
-    --sidebar-accent-foreground: 20 91% 14%;
-    --sidebar-border: 0 0% 32%;
-    --sidebar-ring: 27 95% 60%;
+    --sidebar-primary: 328 85% 70%;
+    --sidebar-primary-foreground: 336 83% 17%;
+    --sidebar-accent: 351 94% 71%;
+    --sidebar-accent-foreground: 343 87% 15%;
+    --sidebar-border: 240 5% 33%;
+    --sidebar-ring: 328 85% 70%;
     --radius: 0rem;
     --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
     --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
