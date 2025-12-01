@@ -1,48 +1,96 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import 'react-big-calendar/lib/css/react-big-calendar.css';
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 @layer base {
   :root {
-    --background: 239 246 255;      /* Light blue background #EFF6FF */
-    --foreground: 17 24 39;         /* Dark text #111827 */
+    --background: 0 0% 100%;      /* Light blue background #EFF6FF */
+    --foreground: 0 0% 0%;         /* Dark text #111827 */
 
-    --card: 255 255 255;
-    --card-foreground: 17 24 39;    /* Dark text #111827 */
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;    /* Dark text #111827 */
 
-    --primary: 37 99 235;           /* Vibrant blue #2563EB */
+    --primary: 0 0% 0%;           /* Vibrant blue #2563EB */
     --primary-hover: 29 78 216;     /* Darker blue #1D4ED8 */
-    --primary-foreground: 255 255 255;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 219 234 254;       /* Light blue #DBEAFE */
-    --secondary-foreground: 17 24 39; /* Dark text */
+    --secondary: 0 0% 96%;       /* Light blue #DBEAFE */
+    --secondary-foreground: 0 0% 0%; /* Dark text */
 
-    --accent: 147 197 253;          /* Sky blue #93C5FD */
-    --accent-foreground: 17 24 39;  /* Dark text */
-    
-    --muted: 226 232 240;           /* Slate-200 #E2E8F0 */
-    --muted-foreground: 71 85 105;  /* Slate-600 #475569 */
-    
-    --destructive: 239 68 68;
+    --accent: 0 0% 90%;          /* Sky blue #93C5FD */
+    --accent-foreground: 0 0% 0%;  /* Dark text */
+
+    --muted: 0 0% 96%;           /* Slate-200 #E2E8F0 */
+    --muted-foreground: 0 0% 45%;  /* Slate-600 #475569 */
+
+    --destructive: 0 84% 60%;
     --success: 16 185 129;
     --warning: 245 158 11;
     --info: 59 130 246;             /* Blue-500 #3B82F6 */
 
-    --border: 191 219 254;          /* Light blue border #BFDBFE */
-    --input: 191 219 254;
-    --ring: 37 99 235;              /* Blue-600 #2563EB */
+    --border: 0 0% 0%;          /* Light blue border #BFDBFE */
+    --input: 0 0% 0%;
+    --ring: 0 0% 0%;              /* Blue-600 #2563EB */
 
     /* Sidebar colors for mobile dark theme */
-    --sidebar: 15 23 42;            /* slate-900 */
-    --sidebar-foreground: 248 250 252;  /* slate-50 */
-    --sidebar-accent: 30 41 59;     /* slate-800 */
-    --sidebar-accent-foreground: 248 250 252;
-    --sidebar-border: 51 65 85;     /* slate-700 */
-    --sidebar-ring: 59 130 246;     /* blue-500 */
+    --sidebar: 0 0% 98%;            /* slate-900 */
+    --sidebar-foreground: 0 0% 0%;  /* slate-50 */
+    --sidebar-accent: 0 0% 90%;     /* slate-800 */
+    --sidebar-accent-foreground: 0 0% 0%;
+    --sidebar-border: 0 0% 0%;     /* slate-700 */
+    --sidebar-ring: 0 0% 0%;     /* blue-500 */
 
-    --radius: 0.75rem;
+    --radius: 0rem;
+
+    --popover: 0 0% 100%;
+
+    --popover-foreground: 0 0% 0%;
+
+    --destructive-foreground: 0 0% 98%;
+
+    --chart-1: 12 76% 61%;
+
+    --chart-2: 173 58% 39%;
+
+    --chart-3: 197 37% 24%;
+
+    --chart-4: 43 74% 66%;
+
+    --chart-5: 27 87% 67%;
+
+    --sidebar-primary: 0 0% 0%;
+
+    --sidebar-primary-foreground: 0 0% 100%;
+
+    --font-sans: 'Space Grotesk', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+
+    --font-serif: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
+
+    --font-mono: 'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+
+    --shadow-2xs: 1px 1px 0px 0px #000000;
+
+    --shadow-xs: 2px 2px 0px 0px #000000;
+
+    --shadow-sm: 3px 3px 0px 0px #000000;
+
+    --shadow: 5px 5px 0px 0px #000000;
+
+    --shadow-md: 8px 8px 0px 0px #000000;
+
+    --shadow-lg: 12px 12px 0px 0px #000000;
+
+    --shadow-xl: 16px 16px 0px 0px #000000;
+
+    --shadow-2xl: 24px 24px 0px 0px #000000;
+
+    --tracking-normal: 0em;
+
+    --spacing: 0.25rem;
   }
 
   body {
@@ -55,6 +103,49 @@
   h5, h6 { @apply font-medium text-[#111827]; }
   p, span, label {
     @apply font-normal text-[#111827];
+  }
+  .dark {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 0%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 0%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 65%;
+    --accent: 0 0% 15%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 100%;
+    --input: 0 0% 100%;
+    --ring: 0 0% 100%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+    --sidebar: 0 0% 5%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary-foreground: 0 0% 0%;
+    --sidebar-accent: 0 0% 15%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 0 0% 100%;
+    --sidebar-ring: 0 0% 100%;
+    --radius: 0rem;
+    --shadow-2xs: 1px 1px 0px 0px #ffffff;
+    --shadow-xs: 2px 2px 0px 0px #ffffff;
+    --shadow-sm: 3px 3px 0px 0px #ffffff;
+    --shadow: 5px 5px 0px 0px #ffffff;
+    --shadow-md: 8px 8px 0px 0px #ffffff;
+    --shadow-lg: 12px 12px 0px 0px #ffffff;
+    --shadow-xl: 16px 16px 0px 0px #ffffff;
+    --shadow-2xl: 24px 24px 0px 0px #ffffff;
   }
 }
 
@@ -85,7 +176,7 @@
   .text-muted { color: #475569; }
   .bg-soft { background-color: #DBEAFE; }
   .whitespace-block { @apply p-4 md:p-6; }
-  
+
   /* Hide scrollbar but keep scrolling functionality */
   .scrollbar-hide {
     -ms-overflow-style: none;  /* IE and Edge */
@@ -99,7 +190,7 @@
   .touch-target {
     @apply min-h-[44px] min-w-[44px];
   }
-  
+
   .touch-feedback {
     @apply active:scale-95 transition-transform duration-150;
   }
@@ -108,11 +199,11 @@
   .text-mobile-title {
     @apply text-xl font-semibold leading-tight;
   }
-  
+
   .text-mobile-section {
     @apply text-lg font-medium;
   }
-  
+
   .text-mobile-body {
     @apply text-base leading-relaxed;
   }
