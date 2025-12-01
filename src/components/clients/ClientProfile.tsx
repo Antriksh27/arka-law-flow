@@ -1,13 +1,10 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Switch } from '@/components/ui/switch';
 import { Edit, Mail, Phone, MapPin, Building, Calendar, FileText } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 import { TimeUtils } from '@/lib/timeUtils';
 
 interface ClientProfileProps {
@@ -16,37 +13,6 @@ interface ClientProfileProps {
 }
 
 export const ClientProfile: React.FC<ClientProfileProps> = ({ client, onUpdate }) => {
-  const { toast } = useToast();
-  const [isUpdatingPortal, setIsUpdatingPortal] = useState(false);
-
-  const handlePortalToggle = async (enabled: boolean) => {
-    setIsUpdatingPortal(true);
-    try {
-      const { error } = await supabase
-        .from('clients')
-        .update({ client_portal_enabled: enabled })
-        .eq('id', client.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: `Client portal ${enabled ? 'enabled' : 'disabled'} successfully`,
-      });
-      
-      onUpdate();
-    } catch (error) {
-      console.error('Error updating portal access:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update portal access",
-        variant: "destructive",
-      });
-    } finally {
-      setIsUpdatingPortal(false);
-    }
-  };
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
@@ -152,23 +118,6 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({ client, onUpdate }
               </div>
             </div>
           )}
-
-          {/* Client Portal Access */}
-          <div className="space-y-4 border-t border-gray-200 pt-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-medium text-gray-900">Portal Access</h3>
-                <p className="text-xs text-gray-500">
-                  Enable client to access their portal
-                </p>
-              </div>
-              <Switch
-                checked={client.client_portal_enabled}
-                onCheckedChange={handlePortalToggle}
-                disabled={isUpdatingPortal}
-              />
-            </div>
-          </div>
 
           {/* Client Since */}
           <div className="text-center pt-4 border-t border-gray-200">

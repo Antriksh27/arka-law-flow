@@ -31,7 +31,6 @@ interface Client {
   phone: string;
   status: string;
   firm_id: string;
-  client_portal_enabled: boolean;
   created_at: string;
   is_vip?: boolean;
 }
@@ -71,7 +70,6 @@ const OfficeStaffClientList = () => {
           phone,
           status,
           firm_id,
-          client_portal_enabled,
           created_at,
           is_vip
         `)

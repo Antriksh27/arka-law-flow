@@ -138,10 +138,6 @@ export const ClientTabs: React.FC<ClientTabsProps> = ({
                       {client.organization && <div>
                           <span className="font-medium">Organization:</span> {client.organization}
                         </div>}
-                      
-                      {client.client_portal_enabled && <Badge variant="outline" className="text-xs">
-                          Portal Enabled
-                        </Badge>}
                     </div>
                     {(client.referred_by_name || client.source) && <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                         {client.referred_by_name && <div>
