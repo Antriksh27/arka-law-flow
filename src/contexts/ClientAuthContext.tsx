@@ -38,6 +38,19 @@ export const ClientAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         const { data: { session: currentSession } } = await supabase.auth.getSession();
         
         if (currentSession) {
+          // Check if this is actually a lawyer user (shouldn't be using client portal)
+          const { data: teamMember } = await supabase
+            .from('team_members')
+            .select('id')
+            .eq('user_id', currentSession.user.id)
+            .maybeSingle();
+          
+          if (teamMember) {
+            console.log('ClientAuthContext: User is a team member, not a client');
+            setLoading(false);
+            return;
+          }
+          
           setSession(currentSession);
           setUser(currentSession.user);
           
@@ -77,6 +90,19 @@ export const ClientAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         if (newSession?.user) {
           setTimeout(async () => {
             try {
+              // Check if this is actually a lawyer user
+              const { data: teamMember } = await supabase
+                .from('team_members')
+                .select('id')
+                .eq('user_id', newSession.user.id)
+                .maybeSingle();
+              
+              if (teamMember) {
+                console.log('ClientAuthContext: User is a team member, not a client');
+                setLoading(false);
+                return;
+              }
+              
               const { data: clientUser, error } = await supabase
                 .from('client_users')
                 .select('client_id, clients(id, full_name)')
