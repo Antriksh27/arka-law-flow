@@ -36,6 +36,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [firmError, setFirmError] = useState<string | null>(null);
 
   const fetchFirmIdAndRole = async (userId: string) => {
+    // Skip firm fetch for client routes
+    if (window.location.pathname.startsWith('/client')) {
+      console.log('AuthContext: Skipping firm fetch - on client portal route');
+      setLoading(false);
+      return;
+    }
+    
     if (!userId) {
       console.log('AuthContext: fetchFirmIdAndRole called with no userId. Setting firmId and role to undefined.');
       setFirmId(undefined);
@@ -117,6 +124,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
+    // Skip auth initialization completely for client portal routes
+    const isClientRoute = window.location.pathname.startsWith('/client');
+    if (isClientRoute) {
+      console.log('AuthContext: Skipping - on client portal route');
+      setLoading(false);
+      return;
+    }
+    
     setLoading(true);
     console.log('AuthContext: useEffect mounting. Subscribing to onAuthStateChange and checking initial session.');
 
@@ -136,6 +151,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (currentUser) {
         // Defer additional Supabase calls to avoid deadlocks
         setTimeout(async () => {
+          // Check if this is a client user (shouldn't be using lawyer routes)
+          const { data: clientUser } = await supabase
+            .from('client_users')
+            .select('id')
+            .eq('auth_user_id', currentUser.id)
+            .maybeSingle();
+          
+          if (clientUser) {
+            console.log('AuthContext: User is a client, skipping firm fetch');
+            setLoading(false);
+            return;
+          }
+          
           await fetchFirmIdAndRole(currentUser.id);
           initializeSessionSecurity();
         }, 0);
@@ -159,6 +187,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (currentUser) {
           // Defer fetch to avoid doing async work directly here
           setTimeout(async () => {
+            // Check if this is a client user (shouldn't be using lawyer routes)
+            const { data: clientUser } = await supabase
+              .from('client_users')
+              .select('id')
+              .eq('auth_user_id', currentUser.id)
+              .maybeSingle();
+            
+            if (clientUser) {
+              console.log('AuthContext: User is a client, skipping firm fetch');
+              setLoading(false);
+              return;
+            }
+            
             await fetchFirmIdAndRole(currentUser.id);
             initializeSessionSecurity();
           }, 0);
