@@ -90,7 +90,7 @@ const fetchDashboardData = async (firmId: string, userId: string, role: string) 
     supabase.from('contacts').select('id, name, phone, last_visited_at').eq('firm_id', firmId).order('last_visited_at', { ascending: false, nullsFirst: false }).limit(5),
     supabase.from('cases').select('id, case_title, case_number, status, next_hearing_date, client_id, clients(full_name)').eq('firm_id', firmId).eq('status', 'pending').not('next_hearing_date', 'is', null).gte('next_hearing_date', format(today, 'yyyy-MM-dd')).order('next_hearing_date', { ascending: true }).limit(5),
     // @ts-ignore - Type depth warning (safe to ignore)
-    supabase.from('case_activities').select('description, created_at, profiles(full_name)').eq('firm_id', firmId).order('created_at', { ascending: false }).limit(2),
+    supabase.from('case_activities').select('description, created_at, profiles(full_name), cases!inner(firm_id)').eq('cases.firm_id', firmId).order('created_at', { ascending: false }).limit(2),
   ]);
 
   // Build events by date

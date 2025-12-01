@@ -1477,6 +1477,54 @@ export type Database = {
           },
         ]
       }
+      client_users: {
+        Row: {
+          auth_user_id: string | null
+          client_id: string | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          last_login: string | null
+          phone: string
+          updated_at: string | null
+        }
+        Insert: {
+          auth_user_id?: string | null
+          client_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_login?: string | null
+          phone: string
+          updated_at?: string | null
+        }
+        Update: {
+          auth_user_id?: string | null
+          client_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_login?: string | null
+          phone?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_users_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_users_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           aadhaar_no: string | null
@@ -5080,6 +5128,7 @@ export type Database = {
           role: string
         }[]
       }
+      get_client_id_from_auth: { Args: never; Returns: string }
       get_current_user_firm_id: { Args: never; Returns: string }
       get_current_user_firm_id_secure: { Args: never; Returns: string }
       get_current_user_profile: {
@@ -5217,6 +5266,7 @@ export type Database = {
       is_admin: { Args: { user_id: string }; Returns: boolean }
       is_admin_or_lawyer: { Args: never; Returns: boolean }
       is_assigned_to_hearing: { Args: { hearing_id: string }; Returns: boolean }
+      is_client_user: { Args: never; Returns: boolean }
       is_current_user_active_member: { Args: never; Returns: boolean }
       is_current_user_admin_in_firm: { Args: never; Returns: boolean }
       is_current_user_admin_safe: { Args: never; Returns: boolean }
