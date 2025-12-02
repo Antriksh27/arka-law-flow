@@ -164,37 +164,61 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      // Add timeout for sign-in to prevent hanging
+      const signInPromise = supabase.auth.signInWithPassword({
         email,
         password,
       });
       
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Sign in timed out. Please try again.')), 15000)
+      );
+      
+      const { data, error } = await Promise.race([
+        signInPromise,
+        timeoutPromise
+      ]) as any;
+      
       if (error) {
         // Log failed login attempt
-        await AuditLogger.logAuthEvent('login_failed', { 
+        AuditLogger.logAuthEvent('login_failed', { 
           email: email.toLowerCase(),
           error_message: error.message 
-        });
+        }).catch(() => {}); // Don't block on audit logging
         throw error;
       }
       
       if (data.user) {
-        // Log successful login
-        await AuditLogger.logAuthEvent('login_success', { 
+        // Log successful login (don't await)
+        AuditLogger.logAuthEvent('login_success', { 
           email: email.toLowerCase(),
           user_id: data.user.id 
-        });
+        }).catch(() => {});
         
-        // Check user role and redirect accordingly
-        const { data: teamMember } = await supabase
-          .from('team_members')
-          .select('role')
-          .eq('user_id', data.user.id)
-          .single();
-        
-        if (teamMember?.role === 'receptionist') {
-          window.location.href = '/reception/home';
-        } else {
+        // Check user role with timeout
+        try {
+          const rolePromise = supabase
+            .from('team_members')
+            .select('role')
+            .eq('user_id', data.user.id)
+            .maybeSingle();
+          
+          const roleTimeoutPromise = new Promise((resolve) => 
+            setTimeout(() => resolve({ data: null }), 5000)
+          );
+          
+          const { data: teamMember } = await Promise.race([
+            rolePromise,
+            roleTimeoutPromise
+          ]) as any;
+          
+          if (teamMember?.role === 'receptionist') {
+            window.location.href = '/reception/home';
+          } else {
+            window.location.href = '/';
+          }
+        } catch {
+          // If role check fails, just redirect to home
           window.location.href = '/';
         }
       }
