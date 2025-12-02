@@ -19,6 +19,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown } from 'lucide-react';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 
 const DailyBoard = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -224,37 +225,39 @@ const DailyBoard = () => {
   }
   
   return (
-    <div className="min-h-screen bg-gray-50 pb-20 print:bg-white">
-      <div className="max-w-[1600px] mx-auto p-4 md:p-6 space-y-6 print:hidden">
-        <DailyBoardHeader
+    <DashboardLayout>
+      <div className="min-h-screen bg-gray-50 pb-20 print:bg-white">
+        <div className="max-w-[1600px] mx-auto p-4 md:p-6 space-y-6 print:hidden">
+          <DailyBoardHeader
+            selectedDate={selectedDate}
+            onDateChange={setSelectedDate}
+            filters={{
+              ...filters,
+              court: filters.court || 'all',
+              judge: filters.judge || 'all',
+            }}
+            onFiltersChange={handleFiltersChange}
+            courts={uniqueCourts}
+            judges={uniqueJudges}
+            onExportPDF={handleExportPDF}
+            onPrint={handlePrint}
+          />
+          
+          <DailyBoardSummary
+            groupedHearings={groupedHearings}
+            totalCount={hearings.length}
+          />
+          
+          <DailyBoardContent groupedHearings={groupedHearings} />
+        </div>
+        
+        <PrintView
+          ref={printViewRef}
           selectedDate={selectedDate}
-          onDateChange={setSelectedDate}
-          filters={{
-            ...filters,
-            court: filters.court || 'all',
-            judge: filters.judge || 'all',
-          }}
-          onFiltersChange={handleFiltersChange}
-          courts={uniqueCourts}
-          judges={uniqueJudges}
-          onExportPDF={handleExportPDF}
-          onPrint={handlePrint}
-        />
-        
-        <DailyBoardSummary
           groupedHearings={groupedHearings}
-          totalCount={hearings.length}
         />
-        
-        <DailyBoardContent groupedHearings={groupedHearings} />
       </div>
-      
-      <PrintView
-        ref={printViewRef}
-        selectedDate={selectedDate}
-        groupedHearings={groupedHearings}
-      />
-    </div>
+    </DashboardLayout>
   );
 };
 
