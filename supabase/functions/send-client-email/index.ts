@@ -65,8 +65,8 @@ const handler = async (req: Request): Promise<Response> => {
       subject: subject,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <div style="background-color: #1E3A8A; padding: 20px; text-align: center;">
-            <h1 style="color: white; margin: 0;">HRU Legal</h1>
+          <div style="background-color: #0f172a; padding: 20px; text-align: center;">
+            <img src="https://crm.hrulegal.com/lovable-uploads/89ea18cf-8c73-4793-9dcc-1a192855a630.png" alt="HRU Legal" style="height: 80px; width: auto; display: inline-block;" />
           </div>
           <div style="padding: 30px; background-color: #f9fafb;">
             <p style="color: #111827; font-size: 16px; line-height: 1.6; white-space: pre-wrap;">${body}</p>
