@@ -73,6 +73,7 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
         .select(`
           *
         `, { count: 'exact' })
+        .order('status', { ascending: true }) // pending comes before disposed alphabetically
         .order('created_at', { ascending: false });
 
       // Add firm scoping

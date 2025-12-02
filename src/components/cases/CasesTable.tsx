@@ -97,6 +97,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
         last_fetched_at,
         clients!client_id(full_name)
       `, { count: 'exact' })
+      .order('status', { ascending: true }) // pending comes before disposed alphabetically
       .order(sortField, { ascending: sortOrder === 'asc' })
       .range(startIndex, endIndex);
 
