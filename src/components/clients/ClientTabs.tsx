@@ -42,14 +42,48 @@ export const ClientTabs: React.FC<ClientTabsProps> = ({
   const [isUpdatingPortal, setIsUpdatingPortal] = useState(false);
 
   const handlePortalToggle = async (enabled: boolean) => {
+    if (!client.phone) {
+      toast.error('Client must have a phone number to enable portal access');
+      return;
+    }
+
     setIsUpdatingPortal(true);
     try {
-      const { error } = await supabase
+      // Update client portal status
+      const { error: updateError } = await supabase
         .from('clients')
         .update({ client_portal_enabled: enabled })
         .eq('id', client.id);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
+
+      if (enabled) {
+        // Add to client_users when enabling
+        const { error: insertError } = await supabase
+          .from('client_users')
+          .upsert({
+            client_id: client.id,
+            phone: client.phone,
+            is_active: true
+          }, { onConflict: 'client_id' });
+
+        if (insertError) {
+          console.error('Error adding client user:', insertError);
+          // Rollback client portal status
+          await supabase.from('clients').update({ client_portal_enabled: false }).eq('id', client.id);
+          throw insertError;
+        }
+      } else {
+        // Remove from client_users when disabling
+        const { error: deleteError } = await supabase
+          .from('client_users')
+          .delete()
+          .eq('client_id', client.id);
+
+        if (deleteError) {
+          console.error('Error removing client user:', deleteError);
+        }
+      }
 
       setPortalEnabled(enabled);
       toast.success(enabled ? 'Client portal enabled' : 'Client portal disabled');
