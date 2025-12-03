@@ -3,6 +3,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { ClientOverview } from './ClientOverview';
 import { ClientInformation } from './ClientInformation';
 import { ClientCases } from './ClientCases';
@@ -17,7 +19,9 @@ import { EditClientDialog } from './EditClientDialog';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileHeader } from '@/components/mobile/MobileHeader';
 import { BottomNavBar } from '@/components/mobile/BottomNavBar';
-import { BarChart3, CheckSquare, Calendar, Briefcase, DollarSign, StickyNote, FileText, Mail, User, Clock, Edit, Star } from 'lucide-react';
+import { BarChart3, CheckSquare, Calendar, Briefcase, StickyNote, FileText, Mail, User, Clock, Star } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 interface ClientTabsProps {
   clientId: string;
   client: any;
@@ -34,6 +38,29 @@ export const ClientTabs: React.FC<ClientTabsProps> = ({
 }) => {
   const isMobile = useIsMobile();
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [portalEnabled, setPortalEnabled] = useState(client.client_portal_enabled ?? false);
+  const [isUpdatingPortal, setIsUpdatingPortal] = useState(false);
+
+  const handlePortalToggle = async (enabled: boolean) => {
+    setIsUpdatingPortal(true);
+    try {
+      const { error } = await supabase
+        .from('clients')
+        .update({ client_portal_enabled: enabled })
+        .eq('id', client.id);
+
+      if (error) throw error;
+
+      setPortalEnabled(enabled);
+      toast.success(enabled ? 'Client portal enabled' : 'Client portal disabled');
+      onUpdate();
+    } catch (error) {
+      console.error('Error updating portal access:', error);
+      toast.error('Failed to update portal access');
+    } finally {
+      setIsUpdatingPortal(false);
+    }
+  };
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
@@ -151,7 +178,18 @@ export const ClientTabs: React.FC<ClientTabsProps> = ({
                 </div>
               </div>
               
-              <div className="flex gap-2">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="portal-toggle" className="text-sm text-muted-foreground">
+                    Client Portal
+                  </Label>
+                  <Switch
+                    id="portal-toggle"
+                    checked={portalEnabled}
+                    onCheckedChange={handlePortalToggle}
+                    disabled={isUpdatingPortal}
+                  />
+                </div>
                 <ClientQuickActions clientId={client.id} clientName={client.full_name} clientEmail={client.email} onAction={onUpdate} />
               </div>
             </div>
