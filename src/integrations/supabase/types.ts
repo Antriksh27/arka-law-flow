@@ -1512,14 +1512,14 @@ export type Database = {
           {
             foreignKeyName: "client_users_client_id_fkey"
             columns: ["client_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "client_stats"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "client_users_client_id_fkey"
             columns: ["client_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "clients"
             referencedColumns: ["id"]
           },
