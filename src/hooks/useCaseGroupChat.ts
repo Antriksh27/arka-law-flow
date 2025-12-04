@@ -72,32 +72,45 @@ export const useCaseGroupChat = ({ caseId, caseName, firmId }: UseCaseGroupChatO
         userIsAdmin
       );
 
-      // Fetch all team members assigned to this case
-      const { data: caseAssignments } = await supabase
-        .from('case_assignments')
-        .select(`
-          team_member_id,
-          team_members:team_member_id (
-            user_id,
-            full_name
-          )
-        `)
-        .eq('case_id', caseId);
+      // Fetch assigned users from the cases table (assigned_users array)
+      const { data: caseData } = await supabase
+        .from('cases')
+        .select('assigned_users, assigned_to, created_by')
+        .eq('id', caseId)
+        .single();
+
+      // Collect all user IDs that should be in the chat
+      const assignedUserIds = new Set<string>();
+      if (caseData?.assigned_users) {
+        caseData.assigned_users.forEach((userId: string) => assignedUserIds.add(userId));
+      }
+      if (caseData?.assigned_to) {
+        assignedUserIds.add(caseData.assigned_to);
+      }
+      if (caseData?.created_by) {
+        assignedUserIds.add(caseData.created_by);
+      }
+
+      // Fetch team member details for all assigned users
+      const { data: assignedTeamMembers } = await supabase
+        .from('team_members')
+        .select('user_id, full_name')
+        .eq('firm_id', firmId)
+        .in('user_id', Array.from(assignedUserIds));
 
       // Get current group members
       const groupMembers = await getCaseGroupMembers(caseId);
       const memberUids = new Set(groupMembers.map(m => m.getUid()));
 
       // Auto-add all assigned team members to the chat
-      if (caseAssignments && caseAssignments.length > 0) {
+      if (assignedTeamMembers && assignedTeamMembers.length > 0) {
         const membersToAdd: { userId: string; userName: string }[] = [];
         
-        for (const assignment of caseAssignments) {
-          const teamMemberData = assignment.team_members as any;
-          if (teamMemberData?.user_id && !memberUids.has(teamMemberData.user_id)) {
+        for (const tm of assignedTeamMembers) {
+          if (tm.user_id && !memberUids.has(tm.user_id)) {
             membersToAdd.push({
-              userId: teamMemberData.user_id,
-              userName: teamMemberData.full_name || 'Team Member'
+              userId: tm.user_id,
+              userName: tm.full_name || 'Team Member'
             });
           }
         }
@@ -127,9 +140,7 @@ export const useCaseGroupChat = ({ caseId, caseName, firmId }: UseCaseGroupChatO
       
       if (!isMember) {
         // Check if current user is assigned to the case
-        const isAssigned = caseAssignments?.some(
-          a => (a.team_members as any)?.user_id === cometChatUser.getUid()
-        );
+        const isAssigned = assignedUserIds.has(cometChatUser.getUid());
 
         if (userIsAdmin || isAssigned) {
           // Admin or assigned user can add themselves
