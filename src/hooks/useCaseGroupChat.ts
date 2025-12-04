@@ -72,13 +72,67 @@ export const useCaseGroupChat = ({ caseId, caseName, firmId }: UseCaseGroupChatO
         userIsAdmin
       );
 
-      // Check if current user is a member
+      // Fetch all team members assigned to this case
+      const { data: caseAssignments } = await supabase
+        .from('case_assignments')
+        .select(`
+          team_member_id,
+          team_members:team_member_id (
+            user_id,
+            full_name
+          )
+        `)
+        .eq('case_id', caseId);
+
+      // Get current group members
       const groupMembers = await getCaseGroupMembers(caseId);
-      const isMember = groupMembers.some(m => m.getUid() === cometChatUser.getUid());
+      const memberUids = new Set(groupMembers.map(m => m.getUid()));
+
+      // Auto-add all assigned team members to the chat
+      if (caseAssignments && caseAssignments.length > 0) {
+        const membersToAdd: { userId: string; userName: string }[] = [];
+        
+        for (const assignment of caseAssignments) {
+          const teamMemberData = assignment.team_members as any;
+          if (teamMemberData?.user_id && !memberUids.has(teamMemberData.user_id)) {
+            membersToAdd.push({
+              userId: teamMemberData.user_id,
+              userName: teamMemberData.full_name || 'Team Member'
+            });
+          }
+        }
+
+        // Add all missing assigned members
+        if (membersToAdd.length > 0) {
+          const memberNames: Record<string, string> = {};
+          membersToAdd.forEach(m => {
+            memberNames[m.userId] = m.userName;
+          });
+          
+          try {
+            await addMembersToCaseGroup(
+              caseId,
+              membersToAdd.map(m => m.userId),
+              memberNames
+            );
+          } catch (addErr) {
+            console.error('Error auto-adding assigned members:', addErr);
+          }
+        }
+      }
+
+      // Check if current user is a member (refresh after potential additions)
+      const updatedGroupMembers = await getCaseGroupMembers(caseId);
+      const isMember = updatedGroupMembers.some(m => m.getUid() === cometChatUser.getUid());
       
       if (!isMember) {
-        if (userIsAdmin) {
-          // Admin can add themselves
+        // Check if current user is assigned to the case
+        const isAssigned = caseAssignments?.some(
+          a => (a.team_members as any)?.user_id === cometChatUser.getUid()
+        );
+
+        if (userIsAdmin || isAssigned) {
+          // Admin or assigned user can add themselves
           await ensureUserIsMember(
             caseId,
             cometChatUser.getUid(),
@@ -94,8 +148,8 @@ export const useCaseGroupChat = ({ caseId, caseName, firmId }: UseCaseGroupChatO
       setGroup(caseGroup);
 
       // Fetch members
-      const updatedMembers = await getCaseGroupMembers(caseId);
-      setMembers(updatedMembers);
+      const finalMembers = await getCaseGroupMembers(caseId);
+      setMembers(finalMembers);
     } catch (err) {
       console.error('Error initializing case group:', err);
       setError(err instanceof Error ? err : new Error('Failed to initialize group'));
