@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Trash2, Download } from 'lucide-react';
 import getStroke from 'perfect-freehand';
@@ -28,13 +28,13 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange })
   const [strokes, setStrokes] = useState<Stroke[]>([]);
   const [currentStroke, setCurrentStroke] = useState<Point[]>([]);
 
-  const getStrokeOptions = (size: number) => ({
+  const getStrokeOptions = (size: number, hasPressure: boolean = false) => ({
     size,
     thinning: 0.5,
     smoothing: 0.5,
     streamline: 0.5,
     easing: (t: number) => t,
-    simulatePressure: true,
+    simulatePressure: !hasPressure, // Only simulate if no real pressure data
     start: {
       cap: true,
       taper: 0,
@@ -44,6 +44,9 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange })
       taper: 0,
     },
   });
+
+  // Track if we have real pressure data from stylus
+  const hasPressureData = useRef(false);
 
   const getSvgPathFromStroke = useCallback((stroke: number[][]): string => {
     if (!stroke.length) return '';
@@ -66,15 +69,31 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange })
     if (!svg) return { x: 0, y: 0, pressure: 0.5 };
 
     const rect = svg.getBoundingClientRect();
+    
+    // Detect real pressure from stylus (pen) or touch
+    const pressure = e.pointerType === 'pen' || e.pointerType === 'touch' 
+      ? (e.pressure > 0 ? e.pressure : 0.5)
+      : 0.5;
+    
+    // Track if we have real pressure data
+    if (e.pointerType === 'pen' && e.pressure > 0) {
+      hasPressureData.current = true;
+    }
+
     return {
       x: e.clientX - rect.left,
       y: e.clientY - rect.top,
-      pressure: e.pressure || 0.5,
+      pressure,
     };
   }, []);
 
   const startDrawing = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
     e.preventDefault();
+    e.stopPropagation();
+    
+    // Capture pointer for reliable tracking
+    (e.target as SVGSVGElement).setPointerCapture(e.pointerId);
+    
     setIsDrawing(true);
     const point = getEventPos(e);
     setCurrentStroke([point]);
@@ -82,14 +101,30 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange })
 
   const draw = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
     e.preventDefault();
+    e.stopPropagation();
     if (!isDrawing) return;
 
     const point = getEventPos(e);
     setCurrentStroke(prev => [...prev, point]);
   }, [isDrawing, getEventPos]);
 
-  const stopDrawing = useCallback(() => {
-    if (!isDrawing || currentStroke.length === 0) return;
+  const cancelDrawing = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
+    // Release pointer capture
+    (e.target as SVGSVGElement).releasePointerCapture(e.pointerId);
+    setCurrentStroke([]);
+    setIsDrawing(false);
+  }, []);
+
+  const stopDrawing = useCallback((e?: React.PointerEvent<SVGSVGElement>) => {
+    if (e) {
+      // Release pointer capture
+      (e.target as SVGSVGElement).releasePointerCapture(e.pointerId);
+    }
+    
+    if (!isDrawing || currentStroke.length === 0) {
+      setIsDrawing(false);
+      return;
+    }
 
     const newStroke: Stroke = {
       points: currentStroke,
@@ -271,11 +306,12 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange })
           onPointerMove={draw}
           onPointerUp={stopDrawing}
           onPointerLeave={stopDrawing}
+          onPointerCancel={cancelDrawing}
         >
           {/* Render completed strokes */}
           {strokes.map((stroke, i) => {
             const pathData = getSvgPathFromStroke(
-              getStroke(stroke.points, getStrokeOptions(stroke.size))
+              getStroke(stroke.points, getStrokeOptions(stroke.size, hasPressureData.current))
             );
             return (
               <path
@@ -291,7 +327,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange })
           {currentStroke.length > 0 && (
             <path
               d={getSvgPathFromStroke(
-                getStroke(currentStroke, getStrokeOptions(brushSize))
+                getStroke(currentStroke, getStrokeOptions(brushSize, hasPressureData.current))
               )}
               fill={currentColor}
               strokeWidth={0}
