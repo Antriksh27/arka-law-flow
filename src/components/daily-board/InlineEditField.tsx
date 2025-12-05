@@ -5,16 +5,22 @@ import { Check, X, Pencil } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-interface InlineEditReliefProps {
-  hearingId: string;
+interface InlineEditFieldProps {
+  id: string;
+  table: 'case_hearings' | 'cases';
+  field: string;
   currentValue: string | null;
   onUpdate?: () => void;
+  className?: string;
 }
 
-export const InlineEditRelief: React.FC<InlineEditReliefProps> = ({ 
-  hearingId, 
+export const InlineEditField: React.FC<InlineEditFieldProps> = ({ 
+  id, 
+  table,
+  field,
   currentValue,
-  onUpdate 
+  onUpdate,
+  className = ''
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [value, setValue] = useState(currentValue || '');
@@ -25,23 +31,23 @@ export const InlineEditRelief: React.FC<InlineEditReliefProps> = ({
     setIsSaving(true);
     try {
       const { error } = await supabase
-        .from('case_hearings')
-        .update({ relief: value || null })
-        .eq('id', hearingId);
+        .from(table)
+        .update({ [field]: value || null })
+        .eq('id', id);
 
       if (error) throw error;
 
       toast({
-        title: 'Relief updated',
-        description: 'The relief has been updated successfully.',
+        title: 'Updated',
+        description: `${field.replace(/_/g, ' ')} has been updated.`,
       });
       setIsEditing(false);
       onUpdate?.();
     } catch (error) {
-      console.error('Error updating relief:', error);
+      console.error(`Error updating ${field}:`, error);
       toast({
         title: 'Error',
-        description: 'Failed to update relief. Please try again.',
+        description: `Failed to update. Please try again.`,
         variant: 'destructive',
       });
     } finally {
@@ -54,28 +60,37 @@ export const InlineEditRelief: React.FC<InlineEditReliefProps> = ({
     setIsEditing(false);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSave();
+    } else if (e.key === 'Escape') {
+      handleCancel();
+    }
+  };
+
   if (!isEditing) {
     return (
-      <div className="flex items-center gap-2 group">
-        <span className="text-sm text-gray-700">{currentValue || '-'}</span>
+      <div className={`flex items-center gap-1 group min-h-[24px] ${className}`}>
+        <span className="text-sm text-gray-700 flex-1">{currentValue || '-'}</span>
         <Button
           variant="ghost"
           size="sm"
           onClick={() => setIsEditing(true)}
-          className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+          className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
         >
-          <Pencil className="h-3 w-3" />
+          <Pencil className="h-3 w-3 text-gray-500" />
         </Button>
       </div>
     );
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-1">
       <Input
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        className="h-8 text-sm"
+        onKeyDown={handleKeyDown}
+        className="h-7 text-sm min-w-[80px]"
         disabled={isSaving}
         autoFocus
       />
@@ -84,7 +99,7 @@ export const InlineEditRelief: React.FC<InlineEditReliefProps> = ({
         size="sm"
         onClick={handleSave}
         disabled={isSaving}
-        className="h-6 w-6 p-0"
+        className="h-5 w-5 p-0 shrink-0"
       >
         <Check className="h-3 w-3 text-green-600" />
       </Button>
@@ -93,7 +108,7 @@ export const InlineEditRelief: React.FC<InlineEditReliefProps> = ({
         size="sm"
         onClick={handleCancel}
         disabled={isSaving}
-        className="h-6 w-6 p-0"
+        className="h-5 w-5 p-0 shrink-0"
       >
         <X className="h-3 w-3 text-red-600" />
       </Button>

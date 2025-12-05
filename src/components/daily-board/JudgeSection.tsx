@@ -2,8 +2,8 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DailyHearing } from './types';
-import { formatAdvocatesSmart } from './utils';
-import { InlineEditRelief } from './InlineEditRelief';
+import { InlineEditField } from './InlineEditField';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface JudgeSectionProps {
   judgeName: string;
@@ -28,6 +28,12 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
   hearings,
   startingSerialNo,
 }) => {
+  const queryClient = useQueryClient();
+  
+  const handleUpdate = () => {
+    queryClient.invalidateQueries({ queryKey: ['daily-board-hearings'] });
+  };
+
   return (
     <div className="space-y-3">
       <div className="bg-gray-50 px-4 py-3 rounded-lg">
@@ -55,31 +61,76 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
                 <TableCell className="font-medium text-gray-600">
                   {startingSerialNo + index}
                 </TableCell>
-                <TableCell className="font-medium text-gray-900">
-                  {hearing.case_number || 'N/A'}
-                </TableCell>
-                <TableCell className="text-gray-900">{hearing.petitioner || '-'}</TableCell>
-                <TableCell className="text-gray-900">{hearing.respondent || '-'}</TableCell>
-                <TableCell className="text-sm text-gray-700">
-                  {hearing.formatted_aorp || '-'}
-                </TableCell>
-                <TableCell className="text-sm text-gray-700">
-                  {hearing.formatted_aorr || '-'}
-                </TableCell>
-                <TableCell className="text-sm text-gray-700 font-medium">
-                  CBU
+                <TableCell className="font-medium">
+                  <InlineEditField
+                    id={hearing.case_id}
+                    table="cases"
+                    field="case_number"
+                    currentValue={hearing.case_number}
+                    onUpdate={handleUpdate}
+                  />
                 </TableCell>
                 <TableCell>
-                  {hearing.purpose_of_hearing && (
-                    <Badge variant={getStageColor(hearing.purpose_of_hearing)}>
-                      {hearing.purpose_of_hearing}
-                    </Badge>
-                  )}
+                  <InlineEditField
+                    id={hearing.case_id}
+                    table="cases"
+                    field="petitioner"
+                    currentValue={hearing.petitioner}
+                    onUpdate={handleUpdate}
+                  />
                 </TableCell>
                 <TableCell>
-                  <InlineEditRelief 
-                    hearingId={hearing.hearing_id}
+                  <InlineEditField
+                    id={hearing.case_id}
+                    table="cases"
+                    field="respondent"
+                    currentValue={hearing.respondent}
+                    onUpdate={handleUpdate}
+                  />
+                </TableCell>
+                <TableCell>
+                  <InlineEditField
+                    id={hearing.case_id}
+                    table="cases"
+                    field="petitioner_advocate"
+                    currentValue={hearing.formatted_aorp || hearing.petitioner_advocate}
+                    onUpdate={handleUpdate}
+                  />
+                </TableCell>
+                <TableCell>
+                  <InlineEditField
+                    id={hearing.case_id}
+                    table="cases"
+                    field="respondent_advocate"
+                    currentValue={hearing.formatted_aorr || hearing.respondent_advocate}
+                    onUpdate={handleUpdate}
+                  />
+                </TableCell>
+                <TableCell>
+                  <InlineEditField
+                    id={hearing.hearing_id}
+                    table="case_hearings"
+                    field="coram"
+                    currentValue={hearing.coram || 'CBU'}
+                    onUpdate={handleUpdate}
+                  />
+                </TableCell>
+                <TableCell>
+                  <InlineEditField
+                    id={hearing.hearing_id}
+                    table="case_hearings"
+                    field="purpose_of_hearing"
+                    currentValue={hearing.purpose_of_hearing}
+                    onUpdate={handleUpdate}
+                  />
+                </TableCell>
+                <TableCell>
+                  <InlineEditField
+                    id={hearing.hearing_id}
+                    table="case_hearings"
+                    field="relief"
                     currentValue={hearing.relief}
+                    onUpdate={handleUpdate}
                   />
                 </TableCell>
               </TableRow>
