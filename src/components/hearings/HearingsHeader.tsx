@@ -41,6 +41,10 @@ export const HearingsHeader: React.FC<HearingsHeaderProps> = ({
           <ListOrdered className="h-4 w-4 mr-2" />
           Daily Board
         </Button>
+        <Button variant="outline" onClick={() => navigate('/stale-cases')}>
+          <Clock className="h-4 w-4 mr-2" />
+          Stale Cases
+        </Button>
         
         
         
