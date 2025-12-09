@@ -20,26 +20,28 @@ interface RefreshResult {
   skipped: Array<{ case_id: string; reason: string }>;
 }
 
+// Configuration - reduced batch size for reliability
+const BATCH_SIZE = 3; // Reduced from 5
+const DELAY_MS = 2000; // Increased from 1500ms
+const MAX_SUCCESSFUL = 35;
+const FUNCTION_TIMEOUT_MS = 50000; // 50 seconds (edge functions have 60s limit)
+
 function detectCourtType(cnr: string): 'high_court' | 'district_court' | 'supreme_court' {
   const normalized = cnr.toUpperCase().replace(/[-\s]/g, '');
   
-  // Check if starts with "SCIN" -> Supreme Court
   if (normalized.startsWith('SCIN')) {
     return 'supreme_court';
   }
   
-  // Check if 3rd and 4th characters are "HC" -> High Court
   if (normalized.length >= 4 && normalized.substring(2, 4) === 'HC') {
     return 'high_court';
   }
   
-  // Default to District Court
   return 'district_court';
 }
 
 function getTodayIST(): string {
   const now = new Date();
-  // Convert to IST (UTC + 5:30)
   const istOffset = 5.5 * 60 * 60 * 1000;
   const istTime = new Date(now.getTime() + istOffset);
   return istTime.toISOString().split('T')[0];
@@ -47,26 +49,20 @@ function getTodayIST(): string {
 
 async function refreshCaseViaLegalkart(
   supabase: any,
-  caseData: CaseToRefresh
+  caseData: CaseToRefresh,
+  timeoutMs: number = 15000
 ): Promise<void> {
   const searchType = detectCourtType(caseData.cnr_number);
   
-  console.log(`Refreshing case ${caseData.case_id} (${caseData.case_title}) with CNR: ${caseData.cnr_number}, type: ${searchType}`);
+  console.log(`🔄 Refreshing: ${caseData.case_title} (CNR: ${caseData.cnr_number}, type: ${searchType})`);
   
-  // Call legalkart-api with upsert_from_json action instead of search
-  // This avoids the user_id requirement issue
-  const { error: caseError } = await supabase
-    .from('cases')
-    .select('fetched_data')
-    .eq('id', caseData.case_id)
-    .single();
-    
-  if (caseError) {
-    throw new Error(`Failed to get case data: ${caseError.message}`);
-  }
+  // Create a timeout promise
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error('Request timeout after 15s')), timeoutMs);
+  });
   
-  // Call the legalkart-api to perform a fresh search
-  const { data, error } = await supabase.functions.invoke('legalkart-api', {
+  // Race between the actual request and timeout
+  const fetchPromise = supabase.functions.invoke('legalkart-api', {
     body: {
       action: 'search',
       cnr: caseData.cnr_number,
@@ -76,6 +72,8 @@ async function refreshCaseViaLegalkart(
       isSystemTriggered: true,
     },
   });
+
+  const { data, error } = await Promise.race([fetchPromise, timeoutPromise]) as any;
 
   if (error) {
     throw new Error(error.message || 'Failed to refresh case');
@@ -87,14 +85,13 @@ async function refreshCaseViaLegalkart(
 }
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   const startTime = Date.now();
+  const functionStartedAt = new Date().toISOString();
   
-  // Parse request body for custom date
   let targetDate = getTodayIST();
   try {
     const body = await req.json();
@@ -105,14 +102,62 @@ Deno.serve(async (req) => {
     // Use default date if no body
   }
 
-  console.log(`Auto-refresh triggered for date: ${targetDate}`);
+  console.log(`\n${'='.repeat(60)}`);
+  console.log(`🚀 AUTO-REFRESH STARTED at ${functionStartedAt}`);
+  console.log(`📅 Target date: ${targetDate}`);
+  console.log(`${'='.repeat(60)}\n`);
+
+  // Initialize Supabase client early
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+  // Create initial "started" log entry immediately
+  let logId: string | null = null;
+  try {
+    const { data: logData, error: logError } = await supabase
+      .from('auto_refresh_logs')
+      .insert({
+        execution_date: targetDate,
+        execution_time: functionStartedAt,
+        total_hearings: 0,
+        cases_processed: 0,
+        cases_succeeded: 0,
+        cases_failed: 0,
+        cases_skipped: 0,
+        execution_duration_ms: 0,
+        error_details: [{ status: 'started', started_at: functionStartedAt }],
+      })
+      .select('id')
+      .single();
+    
+    if (logData) {
+      logId = logData.id;
+      console.log(`📝 Created initial log entry: ${logId}`);
+    }
+    if (logError) {
+      console.error('⚠️ Failed to create initial log:', logError.message);
+    }
+  } catch (e: any) {
+    console.error('⚠️ Error creating initial log:', e.message);
+  }
+
+  // Helper to update log entry
+  const updateLog = async (updates: any) => {
+    if (!logId) return;
+    try {
+      await supabase
+        .from('auto_refresh_logs')
+        .update(updates)
+        .eq('id', logId);
+    } catch (e: any) {
+      console.error('⚠️ Failed to update log:', e.message);
+    }
+  };
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Query hearings scheduled for today (IST) from case_hearings table
+    // Query hearings scheduled for today
+    console.log('📋 Querying hearings...');
     const { data: hearings, error: hearingsError } = await supabase
       .from('case_hearings')
       .select(`
@@ -133,37 +178,39 @@ Deno.serve(async (req) => {
       throw new Error(`Failed to query hearings: ${hearingsError.message}`);
     }
 
-    console.log(`Found ${hearings?.length || 0} hearings for today`);
+    console.log(`📊 Found ${hearings?.length || 0} hearings for ${targetDate}`);
 
     if (!hearings || hearings.length === 0) {
-      const response = {
-        success: true,
-        date: targetDate,
-        total_hearings: 0,
-        cases_processed: 0,
-        results: { success: [], failed: [], skipped: [] },
-        execution_time_ms: Date.now() - startTime,
-        message: 'No hearings scheduled for today',
-      };
-
-      // Log execution
-      await supabase.from('auto_refresh_logs').insert({
-        execution_date: targetDate,
+      const executionTime = Date.now() - startTime;
+      
+      await updateLog({
         total_hearings: 0,
         cases_processed: 0,
         cases_succeeded: 0,
         cases_failed: 0,
         cases_skipped: 0,
-        execution_duration_ms: response.execution_time_ms,
+        execution_duration_ms: executionTime,
+        error_details: null,
+        success_details: { message: 'No hearings scheduled' },
       });
 
-      return new Response(JSON.stringify(response), {
+      console.log('✅ No hearings to process. Exiting.');
+      
+      return new Response(JSON.stringify({
+        success: true,
+        date: targetDate,
+        total_hearings: 0,
+        cases_processed: 0,
+        results: { success: [], failed: [], skipped: [] },
+        execution_time_ms: executionTime,
+        message: 'No hearings scheduled for today',
+      }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
       });
     }
 
-    // Extract unique cases from hearings
+    // Extract unique cases
     const uniqueCasesMap = new Map<string, CaseToRefresh>();
     hearings.forEach((h: any) => {
       const caseData = h.cases;
@@ -185,7 +232,13 @@ Deno.serve(async (req) => {
     });
 
     const casesToProcess = Array.from(uniqueCasesMap.values());
-    console.log(`Processing ${casesToProcess.length} unique cases`);
+    console.log(`\n📦 Processing ${casesToProcess.length} unique cases (batch size: ${BATCH_SIZE}, delay: ${DELAY_MS}ms)\n`);
+
+    // Update log with total hearings count
+    await updateLog({
+      total_hearings: hearings.length,
+      error_details: [{ status: 'processing', unique_cases: casesToProcess.length }],
+    });
 
     const results: RefreshResult = {
       success: [],
@@ -193,16 +246,33 @@ Deno.serve(async (req) => {
       skipped: [],
     };
 
-    // Process cases in batches with rate limiting
-    const BATCH_SIZE = 5;
-    const DELAY_MS = 1500;
-    const MAX_SUCCESSFUL = 35; // Hard limit on successful fetches per day
     let successfulFetches = 0;
-
-    const limitedCases = casesToProcess.slice(0, 100); // Allow more attempts but stop at 35 successful
+    let timedOut = false;
+    const limitedCases = casesToProcess.slice(0, 100);
 
     for (let i = 0; i < limitedCases.length; i += BATCH_SIZE) {
+      // Check if we're approaching the function timeout
+      const elapsedMs = Date.now() - startTime;
+      if (elapsedMs > FUNCTION_TIMEOUT_MS) {
+        console.log(`\n⏱️ TIMEOUT: Approaching function limit (${elapsedMs}ms elapsed). Saving progress...`);
+        timedOut = true;
+        
+        // Mark remaining cases as skipped
+        const remainingCases = limitedCases.slice(i);
+        remainingCases.forEach(c => {
+          results.skipped.push({
+            case_id: c.case_id,
+            reason: 'Function timeout - will retry next run',
+          });
+        });
+        break;
+      }
+
       const batch = limitedCases.slice(i, i + BATCH_SIZE);
+      const batchNum = Math.floor(i / BATCH_SIZE) + 1;
+      const totalBatches = Math.ceil(limitedCases.length / BATCH_SIZE);
+      
+      console.log(`\n📦 Batch ${batchNum}/${totalBatches} (${batch.length} cases)`);
 
       const batchResults = await Promise.allSettled(
         batch.map(async (caseData) => {
@@ -224,28 +294,33 @@ Deno.serve(async (req) => {
           if (result.value.success) {
             successfulFetches++;
             results.success.push(result.value.case_id);
+            console.log(`  ✅ Success: ${result.value.case_id}`);
           } else {
             results.failed.push({
               case_id: result.value.case_id,
               error: result.value.error,
             });
+            console.log(`  ❌ Failed: ${result.value.case_id} - ${result.value.error}`);
           }
         } else {
           results.failed.push({
             case_id: 'unknown',
             error: result.reason?.message || 'Unknown error',
           });
+          console.log(`  ❌ Error: ${result.reason?.message}`);
         }
       });
 
-      // Stop if we reached the daily limit of successful fetches
+      // Log progress after each batch
+      console.log(`  📊 Progress: ${results.success.length} succeeded, ${results.failed.length} failed`);
+
+      // Stop if we reached the daily limit
       if (successfulFetches >= MAX_SUCCESSFUL) {
-        console.log(`✅ Reached daily limit of ${MAX_SUCCESSFUL} successful fetches. Stopping.`);
+        console.log(`\n🎯 Reached daily limit of ${MAX_SUCCESSFUL} successful fetches.`);
         
-        // Mark remaining cases as skipped
         const remaining = limitedCases.length - (i + BATCH_SIZE);
         if (remaining > 0) {
-          console.log(`⏭️ Skipping ${remaining} remaining cases due to daily limit`);
+          console.log(`⏭️ Skipping ${remaining} remaining cases`);
           results.skipped.push({
             case_id: 'batch',
             reason: `Daily limit of ${MAX_SUCCESSFUL} successful fetches reached`,
@@ -254,24 +329,33 @@ Deno.serve(async (req) => {
         break;
       }
 
-      // Delay between batches
-      if (i + BATCH_SIZE < limitedCases.length) {
+      // Delay between batches (unless it's the last batch)
+      if (i + BATCH_SIZE < limitedCases.length && !timedOut) {
+        console.log(`  ⏳ Waiting ${DELAY_MS}ms before next batch...`);
         await new Promise((resolve) => setTimeout(resolve, DELAY_MS));
       }
     }
 
     const executionTime = Date.now() - startTime;
 
-    // Queue failed cases for retry in 2 minutes
+    console.log(`\n${'='.repeat(60)}`);
+    console.log(`📊 FINAL RESULTS:`);
+    console.log(`   ✅ Succeeded: ${results.success.length}`);
+    console.log(`   ❌ Failed: ${results.failed.length}`);
+    console.log(`   ⏭️ Skipped: ${results.skipped.length}`);
+    console.log(`   ⏱️ Duration: ${executionTime}ms`);
+    console.log(`   ⏱️ Timed out: ${timedOut}`);
+    console.log(`${'='.repeat(60)}\n`);
+
+    // Queue failed cases for retry
     if (results.failed.length > 0) {
-      console.log(`⏰ Queueing ${results.failed.length} failed cases for retry in 2 minutes`);
+      console.log(`\n⏰ Queueing ${results.failed.length} failed cases for retry...`);
       
       const failedCaseIds = results.failed
         .map(f => f.case_id)
         .filter(id => id && id !== 'unknown');
       
       if (failedCaseIds.length > 0) {
-        // Get case details for failed cases
         const { data: failedCaseDetails } = await supabase
           .from('cases')
           .select('id, cnr_number, court_type, firm_id, created_by')
@@ -285,13 +369,12 @@ Deno.serve(async (req) => {
             firm_id: c.firm_id,
             created_by: c.created_by,
             status: 'queued',
-            priority: 8, // High priority for retries
-            next_retry_at: new Date(Date.now() + 2 * 60 * 1000).toISOString(), // 2 minutes from now
+            priority: 8,
+            next_retry_at: new Date(Date.now() + 2 * 60 * 1000).toISOString(),
             retry_count: 0,
             max_retries: 100,
           }));
           
-          // Insert into queue (on conflict, update next_retry_at)
           const { error: queueError } = await supabase
             .from('case_fetch_queue')
             .upsert(queueItems, {
@@ -300,7 +383,7 @@ Deno.serve(async (req) => {
             });
           
           if (queueError) {
-            console.error('Failed to queue retry items:', JSON.stringify(queueError));
+            console.error('❌ Failed to queue retry items:', JSON.stringify(queueError));
           } else {
             console.log(`✅ Queued ${queueItems.length} cases for retry`);
           }
@@ -308,9 +391,8 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Log execution to database
-    await supabase.from('auto_refresh_logs').insert({
-      execution_date: targetDate,
+    // Update final log entry
+    await updateLog({
       total_hearings: hearings.length,
       cases_processed: results.success.length + results.failed.length,
       cases_succeeded: results.success.length,
@@ -318,52 +400,53 @@ Deno.serve(async (req) => {
       cases_skipped: results.skipped.length,
       execution_duration_ms: executionTime,
       error_details: results.failed.length > 0 ? results.failed : null,
-      success_details: results.success,
+      success_details: {
+        case_ids: results.success,
+        timed_out: timedOut,
+        completed_at: new Date().toISOString(),
+      },
     });
 
-    console.log(`Auto-refresh completed: ${results.success.length} succeeded, ${results.failed.length} failed`);
+    console.log('✅ Auto-refresh completed successfully');
 
-    const response = {
+    return new Response(JSON.stringify({
       success: true,
       date: targetDate,
       total_hearings: hearings.length,
       cases_processed: results.success.length + results.failed.length,
       results,
       execution_time_ms: executionTime,
-    };
-
-    return new Response(JSON.stringify(response), {
+      timed_out: timedOut,
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     });
+
   } catch (error: any) {
-    console.error('Auto-refresh error:', error);
+    const executionTime = Date.now() - startTime;
+    console.error(`\n❌ AUTO-REFRESH ERROR: ${error.message}`);
+    console.error(`Stack: ${error.stack}`);
 
-    // Try to log the error
-    try {
-      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-      const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-      await supabase.from('auto_refresh_logs').insert({
-        execution_date: targetDate,
-        total_hearings: 0,
-        cases_processed: 0,
-        cases_succeeded: 0,
-        cases_failed: 0,
-        cases_skipped: 0,
-        execution_duration_ms: Date.now() - startTime,
-        error_details: [{ error: error.message }],
-      });
-    } catch (logError) {
-      console.error('Failed to log error:', logError);
-    }
+    // Update log with error
+    await updateLog({
+      cases_processed: 0,
+      cases_succeeded: 0,
+      cases_failed: 0,
+      cases_skipped: 0,
+      execution_duration_ms: executionTime,
+      error_details: [{ 
+        error: error.message, 
+        stack: error.stack,
+        failed_at: new Date().toISOString(),
+      }],
+    });
 
     return new Response(
       JSON.stringify({
         success: false,
         error: error.message,
         date: targetDate,
+        execution_time_ms: executionTime,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
