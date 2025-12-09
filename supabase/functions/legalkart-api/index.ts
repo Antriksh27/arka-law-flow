@@ -11,14 +11,19 @@ const corsHeaders = {
 // Input validation schemas
 const searchTypeEnum = z.enum(['high_court', 'district_court', 'supreme_court', 'gujarat_display_board', 'district_cause_list'])
 
+// Helper to normalize CNR - converts to uppercase and removes non-alphanumeric characters
+const normalizeCnr = (cnr: string): string => {
+  return cnr.toUpperCase().replace(/[^A-Z0-9]/g, '');
+};
+
 const caseSearchSchema = z.object({
-  cnr: z.string().trim().min(1).max(50).regex(/^[A-Z0-9]+$/, "CNR must contain only uppercase letters and numbers"),
+  cnr: z.string().trim().min(1).max(50).transform(normalizeCnr),
   searchType: searchTypeEnum,
   caseId: z.string().uuid().optional()
 })
 
 const batchSearchSchema = z.object({
-  cnrs: z.array(z.string().trim().min(1).max(50).regex(/^[A-Z0-9]+$/)).min(1).max(100)
+  cnrs: z.array(z.string().trim().min(1).max(50).transform(normalizeCnr)).min(1).max(100)
 })
 
 const authSchema = z.object({
