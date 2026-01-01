@@ -20,9 +20,9 @@ interface RefreshResult {
   skipped: Array<{ case_id: string; reason: string }>;
 }
 
-// Configuration - reduced batch size for reliability
-const BATCH_SIZE = 3; // Reduced from 5
-const DELAY_MS = 2000; // Increased from 1500ms
+// Configuration - optimized for reliability
+const BATCH_SIZE = 2; // Reduced from 3 for better reliability
+const DELAY_MS = 2000; // Delay between batches
 const MAX_SUCCESSFUL = 35;
 const FUNCTION_TIMEOUT_MS = 50000; // 50 seconds (edge functions have 60s limit)
 
@@ -50,7 +50,7 @@ function getTodayIST(): string {
 async function refreshCaseViaLegalkart(
   supabase: any,
   caseData: CaseToRefresh,
-  timeoutMs: number = 15000
+  timeoutMs: number = 25000
 ): Promise<void> {
   const searchType = detectCourtType(caseData.cnr_number);
   
@@ -58,7 +58,7 @@ async function refreshCaseViaLegalkart(
   
   // Create a timeout promise
   const timeoutPromise = new Promise((_, reject) => {
-    setTimeout(() => reject(new Error('Request timeout after 15s')), timeoutMs);
+    setTimeout(() => reject(new Error('Request timeout after 25s')), timeoutMs);
   });
   
   // Race between the actual request and timeout
@@ -347,46 +347,46 @@ Deno.serve(async (req) => {
     console.log(`   ⏱️ Timed out: ${timedOut}`);
     console.log(`${'='.repeat(60)}\n`);
 
-    // Queue failed cases for retry
-    if (results.failed.length > 0) {
-      console.log(`\n⏰ Queueing ${results.failed.length} failed cases for retry...`);
+    // Queue failed AND skipped cases for retry
+    const casesToQueue = [
+      ...results.failed.map(f => f.case_id).filter(id => id && id !== 'unknown' && id !== 'batch'),
+      ...results.skipped.map(s => s.case_id).filter(id => id && id !== 'unknown' && id !== 'batch'),
+    ];
+    
+    if (casesToQueue.length > 0) {
+      console.log(`\n⏰ Queueing ${casesToQueue.length} cases for retry (${results.failed.length} failed, ${results.skipped.length} skipped)...`);
       
-      const failedCaseIds = results.failed
-        .map(f => f.case_id)
-        .filter(id => id && id !== 'unknown');
+      const { data: caseDetails } = await supabase
+        .from('cases')
+        .select('id, cnr_number, court_type, firm_id, created_by')
+        .in('id', casesToQueue);
       
-      if (failedCaseIds.length > 0) {
-        const { data: failedCaseDetails } = await supabase
-          .from('cases')
-          .select('id, cnr_number, court_type, firm_id, created_by')
-          .in('id', failedCaseIds);
+      if (caseDetails && caseDetails.length > 0) {
+        const queueItems = caseDetails.map(c => ({
+          case_id: c.id,
+          cnr_number: c.cnr_number,
+          court_type: c.court_type || detectCourtType(c.cnr_number),
+          firm_id: c.firm_id,
+          created_by: c.created_by,
+          status: 'queued',
+          priority: 8,
+          next_retry_at: new Date(Date.now() + 2 * 60 * 1000).toISOString(),
+          retry_count: 0,
+          max_retries: 100,
+          metadata: { source: 'auto-refresh-timeout', target_date: targetDate },
+        }));
         
-        if (failedCaseDetails && failedCaseDetails.length > 0) {
-          const queueItems = failedCaseDetails.map(c => ({
-            case_id: c.id,
-            cnr_number: c.cnr_number,
-            court_type: c.court_type || detectCourtType(c.cnr_number),
-            firm_id: c.firm_id,
-            created_by: c.created_by,
-            status: 'queued',
-            priority: 8,
-            next_retry_at: new Date(Date.now() + 2 * 60 * 1000).toISOString(),
-            retry_count: 0,
-            max_retries: 100,
-          }));
-          
-          const { error: queueError } = await supabase
-            .from('case_fetch_queue')
-            .upsert(queueItems, {
-              onConflict: 'case_id',
-              ignoreDuplicates: false,
-            });
-          
-          if (queueError) {
-            console.error('❌ Failed to queue retry items:', JSON.stringify(queueError));
-          } else {
-            console.log(`✅ Queued ${queueItems.length} cases for retry`);
-          }
+        const { error: queueError } = await supabase
+          .from('case_fetch_queue')
+          .upsert(queueItems, {
+            onConflict: 'case_id',
+            ignoreDuplicates: false,
+          });
+        
+        if (queueError) {
+          console.error('❌ Failed to queue retry items:', JSON.stringify(queueError));
+        } else {
+          console.log(`✅ Queued ${queueItems.length} cases for retry`);
         }
       }
     }
