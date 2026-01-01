@@ -5254,11 +5254,11 @@ export type Database = {
       has_admin_access: { Args: never; Returns: boolean }
       has_case_access: { Args: { case_id: string }; Returns: boolean }
       http_post:
+        | { Args: { payload: Json; url: string }; Returns: undefined }
         | {
             Args: { content_type: string; payload: Json; url: string }
             Returns: undefined
           }
-        | { Args: { payload: Json; url: string }; Returns: undefined }
       initialize_notification_preferences: {
         Args: { p_role: string; p_user_id: string }
         Returns: undefined
