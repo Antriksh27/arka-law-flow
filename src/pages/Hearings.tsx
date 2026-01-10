@@ -9,7 +9,6 @@ import { FilterState, ViewType } from '../components/hearings/types';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileHeader } from '@/components/mobile/MobileHeader';
 import { BottomNavBar } from '@/components/mobile/BottomNavBar';
-import { MobileFAB } from '@/components/mobile/MobileFAB';
 import { MobileHearingCard } from '../components/hearings/MobileHearingCard';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
