@@ -16,7 +16,7 @@ export const PrintView = React.forwardRef<HTMLDivElement, PrintViewProps>(
           <img 
             src="/lovable-uploads/89ea18cf-8c73-4793-9dcc-1a192855a630.png" 
             alt="HRU Legal" 
-            className="h-[180px] w-auto mx-auto mb-2"
+            className="h-[162px] w-auto mx-auto mb-2"
           />
           <h1 className="text-lg font-bold uppercase mb-1">Daily Cause List</h1>
           <p className="text-sm">{format(selectedDate, 'EEEE, MMMM d, yyyy')}</p>
