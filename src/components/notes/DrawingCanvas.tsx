@@ -1,6 +1,6 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Trash2, Download, Pencil, Eraser } from 'lucide-react';
+import { Trash2, Download, Pencil, Eraser, Undo2, Redo2 } from 'lucide-react';
 import getStroke from 'perfect-freehand';
 
 interface DrawingCanvasProps {
@@ -30,6 +30,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange })
   const [brushSize, setBrushSize] = useState(8);
   const [eraserSize, setEraserSize] = useState(20);
   const [strokes, setStrokes] = useState<Stroke[]>([]);
+  const [redoStack, setRedoStack] = useState<Stroke[]>([]);
   const [currentStroke, setCurrentStroke] = useState<Point[]>([]);
   const [activeTool, setActiveTool] = useState<Tool>('pen');
 
@@ -139,6 +140,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange })
     };
 
     setStrokes(prev => [...prev, newStroke]);
+    setRedoStack([]); // Clear redo stack when new stroke is added
     setCurrentStroke([]);
     setIsDrawing(false);
 
@@ -184,10 +186,53 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange })
 
   const clearCanvas = useCallback(() => {
     setStrokes([]);
+    setRedoStack([]);
     setCurrentStroke([]);
     setIsDrawing(false);
     onDrawingChange(null);
   }, [onDrawingChange]);
+
+  const undo = useCallback(() => {
+    if (strokes.length === 0) return;
+    
+    const lastStroke = strokes[strokes.length - 1];
+    setStrokes(prev => prev.slice(0, -1));
+    setRedoStack(prev => [...prev, lastStroke]);
+    
+    // Export updated canvas
+    setTimeout(() => {
+      exportToDataUrl();
+    }, 50);
+  }, [strokes, exportToDataUrl]);
+
+  const redo = useCallback(() => {
+    if (redoStack.length === 0) return;
+    
+    const strokeToRedo = redoStack[redoStack.length - 1];
+    setRedoStack(prev => prev.slice(0, -1));
+    setStrokes(prev => [...prev, strokeToRedo]);
+    
+    // Export updated canvas
+    setTimeout(() => {
+      exportToDataUrl();
+    }, 50);
+  }, [redoStack, exportToDataUrl]);
+
+  // Keyboard shortcuts for undo/redo
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      } else if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key === 'z'))) {
+        e.preventDefault();
+        redo();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [undo, redo]);
 
   const downloadDrawing = useCallback(() => {
     const svg = svgRef.current;
@@ -316,6 +361,28 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange })
         </div>
 
         <div className="flex gap-2 ml-auto">
+          <Button
+            type="button"
+            onClick={undo}
+            variant="outline"
+            size="sm"
+            disabled={strokes.length === 0}
+            className="hover:bg-gray-50 disabled:opacity-50"
+            title="Undo (Ctrl+Z)"
+          >
+            <Undo2 className="w-4 h-4" />
+          </Button>
+          <Button
+            type="button"
+            onClick={redo}
+            variant="outline"
+            size="sm"
+            disabled={redoStack.length === 0}
+            className="hover:bg-gray-50 disabled:opacity-50"
+            title="Redo (Ctrl+Y)"
+          >
+            <Redo2 className="w-4 h-4" />
+          </Button>
           <Button
             type="button"
             onClick={clearCanvas}
