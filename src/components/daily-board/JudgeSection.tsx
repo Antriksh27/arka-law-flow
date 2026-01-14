@@ -10,6 +10,7 @@ interface JudgeSectionProps {
   hearings: DailyHearing[];
   startingSerialNo: number;
   courtNumber?: string;
+  benchType?: string;
 }
 
 const getStageColor = (stage: string | null) => {
@@ -29,6 +30,7 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
   hearings,
   startingSerialNo,
   courtNumber,
+  benchType = 'DB',
 }) => {
   const queryClient = useQueryClient();
   
@@ -38,14 +40,14 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
 
   return (
     <div className="space-y-3">
-      {/* Judge Header with Court Number */}
-      <div className="bg-gray-50 px-4 py-3 rounded-lg">
+      {/* Judge Header with Court Number Badge */}
+      <div className="bg-gray-50 px-4 py-3 rounded-lg flex items-start justify-between">
         <h3 className="text-lg font-semibold text-gray-900 uppercase underline">{judgeName}</h3>
         {courtNumber && (
-          <div className="mt-2 flex gap-2">
-            <div className="border border-gray-400 px-3 py-1 text-center">
-              <div className="font-bold text-sm">{courtNumber}</div>
-              <div className="text-xs">DB</div>
+          <div className="flex gap-2">
+            <div className="border-2 border-gray-800 px-4 py-2 text-center bg-white">
+              <div className="font-bold text-base underline">{courtNumber}</div>
+              <div className="text-xs font-medium">{benchType}</div>
             </div>
           </div>
         )}
