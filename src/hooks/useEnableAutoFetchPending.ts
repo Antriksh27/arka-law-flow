@@ -1,36 +1,46 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function useEnableAutoFetchPending() {
   const { toast } = useToast();
+  const { firmId } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async () => {
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData.session) {
-        throw new Error('Not authenticated');
+      if (!firmId) {
+        throw new Error('No firm ID found');
       }
 
-      const response = await supabase.functions.invoke('enable-auto-fetch-pending', {
-        headers: {
-          Authorization: `Bearer ${sessionData.session.access_token}`,
-        },
-      });
+      // Update all pending cases with CNRs to enable auto-fetch
+      const { data: updatedCases, error, count } = await supabase
+        .from('cases')
+        .update({ cnr_auto_fetch_enabled: true })
+        .eq('firm_id', firmId)
+        .eq('status', 'pending')
+        .not('cnr_number', 'is', null)
+        .neq('cnr_number', '')
+        .eq('cnr_auto_fetch_enabled', false)
+        .select('id, case_number, cnr_number');
 
-      if (response.error) {
-        throw new Error(response.error.message || 'Failed to enable auto-fetch');
+      if (error) {
+        throw new Error(error.message || 'Failed to update cases');
       }
 
-      return response.data;
+      return {
+        updatedCount: updatedCases?.length || 0,
+        cases: updatedCases,
+      };
     },
     onSuccess: (data) => {
       toast({
         title: 'Auto-fetch enabled',
-        description: data.message || `Enabled auto-fetch for ${data.updatedCount} cases`,
+        description: `Enabled auto-fetch for ${data.updatedCount} pending cases with CNRs`,
       });
       queryClient.invalidateQueries({ queryKey: ['cases'] });
+      queryClient.invalidateQueries({ queryKey: ['stale-cases'] });
     },
     onError: (error: Error) => {
       toast({
