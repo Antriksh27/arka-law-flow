@@ -53,102 +53,107 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
               <TableHead>Arguing Counsel</TableHead>
               <TableHead className="w-32">Stage</TableHead>
               <TableHead>Relief</TableHead>
-              <TableHead>Acts</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {hearings.map((hearing) => (
-              <TableRow key={hearing.hearing_id}>
-                <TableCell className="font-medium text-gray-600">
-                  <InlineEditField
-                    id={hearing.hearing_id}
-                    table="case_hearings"
-                    field="serial_number"
-                    currentValue={hearing.serial_number}
-                    onUpdate={handleUpdate}
-                    placeholder=""
-                  />
-                </TableCell>
-                <TableCell className="font-medium">
-                  <InlineEditField
-                    id={hearing.case_id}
-                    table="cases"
-                    field="case_number"
-                    currentValue={hearing.case_number}
-                    onUpdate={handleUpdate}
-                  />
-                </TableCell>
-                <TableCell>
-                  <InlineEditField
-                    id={hearing.case_id}
-                    table="cases"
-                    field="petitioner"
-                    currentValue={hearing.petitioner}
-                    onUpdate={handleUpdate}
-                  />
-                </TableCell>
-                <TableCell>
-                  <InlineEditField
-                    id={hearing.case_id}
-                    table="cases"
-                    field="respondent"
-                    currentValue={hearing.respondent}
-                    onUpdate={handleUpdate}
-                  />
-                </TableCell>
-                <TableCell>
-                  <InlineEditField
-                    id={hearing.case_id}
-                    table="cases"
-                    field="petitioner_advocate"
-                    currentValue={hearing.formatted_aorp || hearing.petitioner_advocate}
-                    onUpdate={handleUpdate}
-                  />
-                </TableCell>
-                <TableCell>
-                  <InlineEditField
-                    id={hearing.case_id}
-                    table="cases"
-                    field="respondent_advocate"
-                    currentValue={hearing.formatted_aorr || hearing.respondent_advocate}
-                    onUpdate={handleUpdate}
-                  />
-                </TableCell>
-                <TableCell>
-                  <InlineEditField
-                    id={hearing.hearing_id}
-                    table="case_hearings"
-                    field="coram"
-                    currentValue={hearing.coram || 'CBU'}
-                    onUpdate={handleUpdate}
-                  />
-                </TableCell>
-                <TableCell>
-                  <InlineEditField
-                    id={hearing.hearing_id}
-                    table="case_hearings"
-                    field="purpose_of_hearing"
-                    currentValue={hearing.purpose_of_hearing}
-                    onUpdate={handleUpdate}
-                  />
-                </TableCell>
-                <TableCell>
-                  <InlineEditField
-                    id={hearing.hearing_id}
-                    table="case_hearings"
-                    field="relief"
-                    currentValue={hearing.relief}
-                    onUpdate={handleUpdate}
-                  />
-                </TableCell>
-                <TableCell>
-                  <span className="text-sm text-gray-700">
-                    {hearing.acts && hearing.acts.length > 0 
-                      ? hearing.acts.join(', ') 
-                      : '-'}
-                  </span>
-                </TableCell>
-              </TableRow>
+              <React.Fragment key={hearing.hearing_id}>
+                <TableRow>
+                  <TableCell className="font-medium text-gray-600">
+                    <InlineEditField
+                      id={hearing.hearing_id}
+                      table="case_hearings"
+                      field="serial_number"
+                      currentValue={hearing.serial_number}
+                      onUpdate={handleUpdate}
+                      placeholder=""
+                    />
+                  </TableCell>
+                  <TableCell className="font-medium">
+                    <InlineEditField
+                      id={hearing.case_id}
+                      table="cases"
+                      field="case_number"
+                      currentValue={hearing.case_number}
+                      onUpdate={handleUpdate}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <InlineEditField
+                      id={hearing.case_id}
+                      table="cases"
+                      field="petitioner"
+                      currentValue={hearing.petitioner}
+                      onUpdate={handleUpdate}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <InlineEditField
+                      id={hearing.case_id}
+                      table="cases"
+                      field="respondent"
+                      currentValue={hearing.respondent}
+                      onUpdate={handleUpdate}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <InlineEditField
+                      id={hearing.case_id}
+                      table="cases"
+                      field="petitioner_advocate"
+                      currentValue={hearing.formatted_aorp || hearing.petitioner_advocate}
+                      onUpdate={handleUpdate}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <InlineEditField
+                      id={hearing.case_id}
+                      table="cases"
+                      field="respondent_advocate"
+                      currentValue={hearing.formatted_aorr || hearing.respondent_advocate}
+                      onUpdate={handleUpdate}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <InlineEditField
+                      id={hearing.hearing_id}
+                      table="case_hearings"
+                      field="coram"
+                      currentValue={hearing.coram || 'CBU'}
+                      onUpdate={handleUpdate}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <InlineEditField
+                      id={hearing.hearing_id}
+                      table="case_hearings"
+                      field="purpose_of_hearing"
+                      currentValue={hearing.purpose_of_hearing}
+                      onUpdate={handleUpdate}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <InlineEditField
+                      id={hearing.hearing_id}
+                      table="case_hearings"
+                      field="relief"
+                      currentValue={hearing.relief}
+                      onUpdate={handleUpdate}
+                    />
+                  </TableCell>
+                </TableRow>
+                {/* Acts sub-row */}
+                <TableRow className="bg-gray-50/50 border-b">
+                  <TableCell colSpan={9} className="py-2 px-4">
+                    <span className="text-xs text-gray-500 font-medium mr-2">Acts:</span>
+                    <span className="text-sm text-gray-700">
+                      {hearing.acts && hearing.acts.length > 0 
+                        ? hearing.acts.join(', ') 
+                        : '-'}
+                    </span>
+                  </TableCell>
+                </TableRow>
+              </React.Fragment>
             ))}
           </TableBody>
         </Table>
