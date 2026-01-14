@@ -11,9 +11,17 @@ export const PrintView = React.forwardRef<HTMLDivElement, PrintViewProps>(
   ({ selectedDate, groupedHearings }, ref) => {
     return (
       <div ref={ref} className="hidden print:block bg-white p-4 print-view">
-        <div className="text-center mb-4">
-          <h1 className="text-lg font-bold uppercase mb-1">Daily Cause List</h1>
-          <p className="text-sm">{format(selectedDate, 'EEEE, MMMM d, yyyy')}</p>
+        {/* Header with Company Logo */}
+        <div className="flex items-center justify-center gap-4 mb-4 pb-3 border-b-2 border-gray-300">
+          <img 
+            src="/lovable-uploads/89ea18cf-8c73-4793-9dcc-1a192855a630.png" 
+            alt="HRU Legal" 
+            className="h-16 w-auto"
+          />
+          <div className="text-center">
+            <h1 className="text-lg font-bold uppercase mb-1">Daily Cause List</h1>
+            <p className="text-sm">{format(selectedDate, 'EEEE, MMMM d, yyyy')}</p>
+          </div>
         </div>
         
         {groupedHearings.map((courtGroup) => (
