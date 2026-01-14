@@ -6,7 +6,6 @@ import { useQueryClient } from '@tanstack/react-query';
 
 interface HearingCardProps {
   hearing: DailyHearing;
-  serialNo: number;
 }
 
 const getStageColor = (stage: string | null) => {
@@ -21,7 +20,7 @@ const getStageColor = (stage: string | null) => {
   return 'default';
 };
 
-export const HearingCard: React.FC<HearingCardProps> = ({ hearing, serialNo }) => {
+export const HearingCard: React.FC<HearingCardProps> = ({ hearing }) => {
   const queryClient = useQueryClient();
   
   const handleUpdate = () => {
@@ -33,7 +32,24 @@ export const HearingCard: React.FC<HearingCardProps> = ({ hearing, serialNo }) =
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-medium text-gray-500">#{serialNo}</span>
+            <span className="text-xs font-medium text-gray-500">#</span>
+            <InlineEditField
+              id={hearing.hearing_id}
+              table="case_hearings"
+              field="serial_number"
+              currentValue={hearing.serial_number}
+              onUpdate={handleUpdate}
+              placeholder=""
+              className="w-10"
+            />
+            <InlineEditField
+              id={hearing.case_id}
+              table="cases"
+              field="case_number"
+              currentValue={hearing.case_number}
+              onUpdate={handleUpdate}
+              className="font-semibold"
+            />
             <InlineEditField
               id={hearing.case_id}
               table="cases"

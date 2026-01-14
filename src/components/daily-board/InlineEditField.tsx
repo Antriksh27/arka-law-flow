@@ -12,6 +12,7 @@ interface InlineEditFieldProps {
   currentValue: string | null;
   onUpdate?: () => void;
   className?: string;
+  placeholder?: string;
 }
 
 export const InlineEditField: React.FC<InlineEditFieldProps> = ({ 
@@ -20,7 +21,8 @@ export const InlineEditField: React.FC<InlineEditFieldProps> = ({
   field,
   currentValue,
   onUpdate,
-  className = ''
+  className = '',
+  placeholder = '-'
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [value, setValue] = useState(currentValue || '');
@@ -71,7 +73,7 @@ export const InlineEditField: React.FC<InlineEditFieldProps> = ({
   if (!isEditing) {
     return (
       <div className={`flex items-center gap-1 group min-h-[24px] ${className}`}>
-        <span className="text-sm text-gray-700 flex-1">{currentValue || '-'}</span>
+        <span className={`text-sm flex-1 ${currentValue ? 'text-gray-700' : 'text-gray-400'}`}>{currentValue || placeholder}</span>
         <Button
           variant="ghost"
           size="sm"
