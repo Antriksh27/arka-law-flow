@@ -1,6 +1,6 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Trash2, Download } from 'lucide-react';
+import { Trash2, Download, Pencil, Eraser } from 'lucide-react';
 import getStroke from 'perfect-freehand';
 
 interface DrawingCanvasProps {
@@ -17,7 +17,10 @@ interface Stroke {
   points: Point[];
   color: string;
   size: number;
+  isEraser?: boolean;
 }
+
+type Tool = 'pen' | 'eraser';
 
 export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange }) => {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -25,8 +28,10 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange })
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentColor, setCurrentColor] = useState('#000000');
   const [brushSize, setBrushSize] = useState(8);
+  const [eraserSize, setEraserSize] = useState(20);
   const [strokes, setStrokes] = useState<Stroke[]>([]);
   const [currentStroke, setCurrentStroke] = useState<Point[]>([]);
+  const [activeTool, setActiveTool] = useState<Tool>('pen');
 
   const getStrokeOptions = (size: number, hasPressure: boolean = false) => ({
     size,
@@ -128,8 +133,9 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange })
 
     const newStroke: Stroke = {
       points: currentStroke,
-      color: currentColor,
-      size: brushSize,
+      color: activeTool === 'eraser' ? '#FFFFFF' : currentColor,
+      size: activeTool === 'eraser' ? eraserSize : brushSize,
+      isEraser: activeTool === 'eraser',
     };
 
     setStrokes(prev => [...prev, newStroke]);
@@ -140,7 +146,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange })
     setTimeout(() => {
       exportToDataUrl();
     }, 50);
-  }, [isDrawing, currentStroke, currentColor, brushSize]);
+  }, [isDrawing, currentStroke, currentColor, brushSize, eraserSize, activeTool]);
 
   const exportToDataUrl = useCallback(() => {
     const svg = svgRef.current;
@@ -228,43 +234,82 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange })
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
-        <div className="flex items-center gap-3">
-          <label className="text-sm font-medium text-gray-700">Color:</label>
-          <div className="flex gap-1.5">
-            {colors.map(color => (
-              <button
-                key={color}
-                type="button"
-                className={`w-7 h-7 rounded-full border-2 transition-all duration-200 hover:scale-110 ${
-                  currentColor === color 
-                    ? 'border-gray-800 ring-2 ring-gray-300' 
-                    : 'border-gray-300 hover:border-gray-400'
-                }`}
-                style={{ backgroundColor: color }}
-                onClick={() => setCurrentColor(color)}
-              />
-            ))}
+      <div className="flex flex-wrap items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+        {/* Tool Selection */}
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium text-gray-700">Tool:</label>
+          <div className="flex gap-1">
+            <Button
+              type="button"
+              variant={activeTool === 'pen' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setActiveTool('pen')}
+              className={activeTool === 'pen' ? 'bg-primary' : ''}
+            >
+              <Pencil className="w-4 h-4 mr-1" />
+              Pen
+            </Button>
+            <Button
+              type="button"
+              variant={activeTool === 'eraser' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setActiveTool('eraser')}
+              className={activeTool === 'eraser' ? 'bg-primary' : ''}
+            >
+              <Eraser className="w-4 h-4 mr-1" />
+              Eraser
+            </Button>
           </div>
         </div>
+
+        {/* Color picker - only show for pen tool */}
+        {activeTool === 'pen' && (
+          <div className="flex items-center gap-3">
+            <label className="text-sm font-medium text-gray-700">Color:</label>
+            <div className="flex gap-1.5">
+              {colors.map(color => (
+                <button
+                  key={color}
+                  type="button"
+                  className={`w-7 h-7 rounded-full border-2 transition-all duration-200 hover:scale-110 ${
+                    currentColor === color 
+                      ? 'border-gray-800 ring-2 ring-gray-300' 
+                      : 'border-gray-300 hover:border-gray-400'
+                  }`}
+                  style={{ backgroundColor: color }}
+                  onClick={() => setCurrentColor(color)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
         
+        {/* Size slider */}
         <div className="flex items-center gap-3">
-          <label className="text-sm font-medium text-gray-700">Brush:</label>
+          <label className="text-sm font-medium text-gray-700">
+            {activeTool === 'eraser' ? 'Eraser:' : 'Brush:'}
+          </label>
           <input
             type="range"
-            min="4"
-            max="24"
-            value={brushSize}
-            onChange={(e) => setBrushSize(parseInt(e.target.value))}
+            min={activeTool === 'eraser' ? '10' : '4'}
+            max={activeTool === 'eraser' ? '50' : '24'}
+            value={activeTool === 'eraser' ? eraserSize : brushSize}
+            onChange={(e) => {
+              if (activeTool === 'eraser') {
+                setEraserSize(parseInt(e.target.value));
+              } else {
+                setBrushSize(parseInt(e.target.value));
+              }
+            }}
             className="w-24 accent-slate-800"
           />
           <div className="flex items-center justify-center w-8 h-8">
             <div 
-              className="rounded-full border border-gray-300"
+              className={`rounded-full border ${activeTool === 'eraser' ? 'border-gray-400 bg-white' : 'border-gray-300'}`}
               style={{ 
-                width: `${Math.max(brushSize / 2, 4)}px`, 
-                height: `${Math.max(brushSize / 2, 4)}px`,
-                backgroundColor: currentColor 
+                width: `${Math.max((activeTool === 'eraser' ? eraserSize : brushSize) / 2, 4)}px`, 
+                height: `${Math.max((activeTool === 'eraser' ? eraserSize : brushSize) / 2, 4)}px`,
+                backgroundColor: activeTool === 'eraser' ? '#ffffff' : currentColor 
               }}
             />
           </div>
@@ -300,7 +345,9 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange })
       >
         <svg
           ref={svgRef}
-          className="block cursor-crosshair bg-white w-full h-96 touch-none"
+          className={`block bg-white w-full h-96 touch-none ${
+            activeTool === 'eraser' ? 'cursor-cell' : 'cursor-crosshair'
+          }`}
           style={{ touchAction: 'none' }}
           onPointerDown={startDrawing}
           onPointerMove={draw}
@@ -327,9 +374,9 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange })
           {currentStroke.length > 0 && (
             <path
               d={getSvgPathFromStroke(
-                getStroke(currentStroke, getStrokeOptions(brushSize, hasPressureData.current))
+                getStroke(currentStroke, getStrokeOptions(activeTool === 'eraser' ? eraserSize : brushSize, hasPressureData.current))
               )}
-              fill={currentColor}
+              fill={activeTool === 'eraser' ? '#FFFFFF' : currentColor}
               strokeWidth={0}
             />
           )}
