@@ -41,7 +41,8 @@ const DailyBoard = () => {
     const courtMap = new Map<string, Map<string, typeof hearings>>();
     
     hearings.forEach((hearing) => {
-      const court = hearing.court_name || 'Unknown Court';
+      // Use hearing court_name, fallback to case_court_name, then to 'Unknown Court'
+      const court = hearing.court_name || hearing.case_court_name || 'Unknown Court';
       const judge = hearing.judge || 'Unassigned';
       
       if (!courtMap.has(court)) {
