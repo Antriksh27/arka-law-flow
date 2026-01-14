@@ -59,22 +59,6 @@ interface User {
   role?: string;
 }
 
-// Helper to extract additional lawyers from notes
-const extractAdditionalLawyersFromNotes = (notes: string | undefined): string[] => {
-  if (!notes) return [];
-  const match = notes.match(/^Additional Lawyers: (.+?)(?:\n|$)/);
-  if (match) {
-    return match[1].split(', ').map(name => name.trim());
-  }
-  return [];
-};
-
-// Helper to remove additional lawyers line from notes
-const removeAdditionalLawyersFromNotes = (notes: string | undefined): string => {
-  if (!notes) return '';
-  return notes.replace(/^Additional Lawyers: .+?\n\n?/, '').trim();
-};
-
 export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({ 
   appointment, 
   onSuccess 
@@ -87,9 +71,6 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
   const [additionalLawyers, setAdditionalLawyers] = useState<string[]>([]);
   const [originalAdditionalLawyers, setOriginalAdditionalLawyers] = useState<string[]>([]);
   
-  // Clean notes by removing the additional lawyers line
-  const cleanNotes = removeAdditionalLawyersFromNotes(appointment.notes);
-  
   const [formData, setFormData] = useState({
     title: appointment.title || '',
     appointment_date: TimeUtils.toISTDate(appointment.appointment_date) || TimeUtils.nowDate(),
@@ -99,26 +80,32 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
     lawyer_id: appointment.lawyer_id || '',
     case_id: appointment.case_id || '',
     location: appointment.location || 'in_person', 
-    notes: cleanNotes,
+    notes: appointment.notes || '',
     status: appointment.status || 'upcoming'
   });
 
   useEffect(() => {
     fetchCases();
     fetchUsers();
+    fetchAdditionalLawyers();
   }, []);
 
-  // Once users are loaded, map the additional lawyer names to IDs
-  useEffect(() => {
-    if (users.length > 0 && appointment.notes) {
-      const lawyerNames = extractAdditionalLawyersFromNotes(appointment.notes);
-      const lawyerIds = lawyerNames
-        .map(name => users.find(u => u.full_name === name)?.id)
-        .filter((id): id is string => !!id);
-      setAdditionalLawyers(lawyerIds);
-      setOriginalAdditionalLawyers(lawyerIds);
+  const fetchAdditionalLawyers = async () => {
+    // Using any type since appointment_lawyers table is newly created and types aren't regenerated yet
+    const { data, error } = await (supabase as any)
+      .from('appointment_lawyers')
+      .select('lawyer_id')
+      .eq('appointment_id', appointment.id);
+    
+    if (error) {
+      console.error('Error fetching additional lawyers:', error);
+      return;
     }
-  }, [users, appointment.notes]);
+    
+    const lawyerIds = (data || []).map((row: any) => row.lawyer_id);
+    setAdditionalLawyers(lawyerIds);
+    setOriginalAdditionalLawyers(lawyerIds);
+  };
 
   const fetchCases = async () => {
     const { data } = await supabase
@@ -187,18 +174,6 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
     setLoading(true);
 
     try {
-      // Build additional lawyers note line
-      const additionalLawyerNames = additionalLawyers
-        .filter(id => id !== formData.lawyer_id)
-        .map(id => users.find(u => u.id === id)?.full_name)
-        .filter(Boolean);
-      
-      let notesWithLawyers = formData.notes;
-      if (additionalLawyerNames.length > 0) {
-        const lawyerInfo = `Additional Lawyers: ${additionalLawyerNames.join(', ')}`;
-        notesWithLawyers = formData.notes ? `${lawyerInfo}\n\n${formData.notes}` : lawyerInfo;
-      }
-
       const updateData = {
         title: formData.title,
         appointment_date: TimeUtils.formatDateInput(formData.appointment_date),
@@ -208,7 +183,7 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
         lawyer_id: formData.lawyer_id,
         case_id: formData.case_id || null,
         location: formData.location,
-        notes: notesWithLawyers,
+        notes: formData.notes,
         status: formData.status
       };
 
@@ -219,24 +194,44 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
 
       if (error) throw error;
 
-      // Find newly added lawyers and notify them
-      const newLawyerIds = additionalLawyers.filter(
-        id => id !== formData.lawyer_id && !originalAdditionalLawyers.includes(id)
-      );
+      // Sync additional lawyers in junction table
+      const currentLawyers = additionalLawyers.filter(id => id !== formData.lawyer_id);
+      const originalLawyers = originalAdditionalLawyers.filter(id => id !== formData.lawyer_id);
       
-      if (newLawyerIds.length > 0) {
+      // Find lawyers to remove and add
+      const lawyersToRemove = originalLawyers.filter(id => !currentLawyers.includes(id));
+      const lawyersToAdd = currentLawyers.filter(id => !originalLawyers.includes(id));
+
+      // Remove lawyers (using any type since appointment_lawyers is newly created)
+      if (lawyersToRemove.length > 0) {
+        await (supabase as any)
+          .from('appointment_lawyers')
+          .delete()
+          .eq('appointment_id', appointment.id)
+          .in('lawyer_id', lawyersToRemove);
+      }
+
+      // Add new lawyers
+      if (lawyersToAdd.length > 0) {
+        const newRecords = lawyersToAdd.map(lawyerId => ({
+          appointment_id: appointment.id,
+          lawyer_id: lawyerId,
+          added_by: user?.id
+        }));
+        await (supabase as any).from('appointment_lawyers').insert(newRecords);
+        
+        // Send notifications to newly added lawyers
         await sendNotificationsToNewLawyers(
-          newLawyerIds,
+          lawyersToAdd,
           formData.title,
           TimeUtils.formatDateInput(formData.appointment_date),
           formData.appointment_time
         );
       }
 
-      const notifiedCount = newLawyerIds.length;
       toast.success(
-        notifiedCount > 0 
-          ? `Appointment updated and ${notifiedCount} team member(s) notified`
+        lawyersToAdd.length > 0 
+          ? `Appointment updated and ${lawyersToAdd.length} team member(s) notified`
           : 'Appointment updated successfully'
       );
       onSuccess();
