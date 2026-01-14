@@ -402,7 +402,7 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
                 <Label className="text-sm font-medium text-gray-700">
                   Drawing Canvas
                 </Label>
-                <DrawingCanvas onDrawingChange={setDrawingData} />
+                <DrawingCanvas onDrawingChange={setDrawingData} isFullscreen={isFullscreen} />
                 {drawingData && <div className="mt-2 p-2 border border-gray-200 rounded-lg">
                     <p className="text-sm text-green-600 mb-2">✓ Drawing created</p>
                     <img src={drawingData} alt="Drawing preview" className="max-h-32 rounded border" />
