@@ -140,6 +140,15 @@ export const HearingCard: React.FC<HearingCardProps> = ({ hearing }) => {
             onUpdate={handleUpdate}
           />
         </div>
+        
+        <div>
+          <p className="text-xs text-gray-500 uppercase tracking-wide font-medium mb-1">Acts</p>
+          <span className="text-sm text-gray-700">
+            {hearing.acts && hearing.acts.length > 0 
+              ? hearing.acts.join(', ') 
+              : '-'}
+          </span>
+        </div>
       </div>
     </div>
   );

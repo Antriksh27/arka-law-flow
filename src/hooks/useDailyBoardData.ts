@@ -56,27 +56,38 @@ export const useDailyBoardData = (
       // Get unique case IDs
       const caseIds = [...new Set(hearings.map(h => h.case_id))];
       
-      // Batch fetch petitioners
-      const { data: petitioners } = await supabase
-        .from('petitioners')
-        .select('case_id, advocate_name')
-        .in('case_id', caseIds);
-      
-      // Batch fetch respondents
-      const { data: respondents } = await supabase
-        .from('respondents')
-        .select('case_id, advocate_name')
-        .in('case_id', caseIds);
+      // Batch fetch petitioners, respondents, and case acts
+      const [{ data: petitioners }, { data: respondents }, { data: casesData }] = await Promise.all([
+        supabase
+          .from('petitioners')
+          .select('case_id, advocate_name')
+          .in('case_id', caseIds),
+        supabase
+          .from('respondents')
+          .select('case_id, advocate_name')
+          .in('case_id', caseIds),
+        supabase
+          .from('cases')
+          .select('id, acts')
+          .in('id', caseIds)
+      ]);
       
       // Format advocates per case
       const aorpByCase = formatAdvocatesFromParties(petitioners || [], 'petitioner');
       const aorrByCase = formatAdvocatesFromParties(respondents || [], 'respondent');
+      
+      // Create acts lookup by case ID
+      const actsByCase: Record<string, string[] | null> = {};
+      (casesData || []).forEach(c => {
+        actsByCase[c.id] = c.acts;
+      });
       
       // Merge formatted data into hearings
       return hearings.map(h => ({
         ...h,
         formatted_aorp: aorpByCase[h.case_id] || '-',
         formatted_aorr: aorrByCase[h.case_id] || '-',
+        acts: actsByCase[h.case_id] || null,
       }));
     },
   });
