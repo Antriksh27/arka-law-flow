@@ -13,6 +13,7 @@ export interface DailyHearing {
   coram: string | null;
   firm_id: string;
   assigned_to: string | null;
+  serial_number: string | null;
   
   case_id: string;
   case_number: string | null;

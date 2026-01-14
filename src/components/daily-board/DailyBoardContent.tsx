@@ -32,32 +32,24 @@ export const DailyBoardContent: React.FC<DailyBoardContentProps> = ({
               </h2>
             </div>
             
-            {courtGroup.judges.map((judge) => {
-              let serialNo = 1;
-              return (
-                <div key={judge.judgeName} className="space-y-3">
-                  <div className="sticky top-14 z-10 bg-gray-50 px-4 py-2 rounded-lg">
-                    <h3 className="text-base font-semibold text-gray-900 uppercase">
-                      {judge.judgeName}
-                    </h3>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    {judge.hearings.map((hearing) => {
-                      const card = (
-                        <HearingCard
-                          key={hearing.hearing_id}
-                          hearing={hearing}
-                          serialNo={serialNo}
-                        />
-                      );
-                      serialNo++;
-                      return card;
-                    })}
-                  </div>
+            {courtGroup.judges.map((judge) => (
+              <div key={judge.judgeName} className="space-y-3">
+                <div className="sticky top-14 z-10 bg-gray-50 px-4 py-2 rounded-lg">
+                  <h3 className="text-base font-semibold text-gray-900 uppercase">
+                    {judge.judgeName}
+                  </h3>
                 </div>
-              );
-            })}
+                
+                <div className="space-y-3">
+                  {judge.hearings.map((hearing) => (
+                    <HearingCard
+                      key={hearing.hearing_id}
+                      hearing={hearing}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         ))}
       </div>

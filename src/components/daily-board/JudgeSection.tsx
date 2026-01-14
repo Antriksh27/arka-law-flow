@@ -56,10 +56,17 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {hearings.map((hearing, index) => (
+            {hearings.map((hearing) => (
               <TableRow key={hearing.hearing_id}>
                 <TableCell className="font-medium text-gray-600">
-                  {startingSerialNo + index}
+                  <InlineEditField
+                    id={hearing.hearing_id}
+                    table="case_hearings"
+                    field="serial_number"
+                    currentValue={hearing.serial_number}
+                    onUpdate={handleUpdate}
+                    placeholder=""
+                  />
                 </TableCell>
                 <TableCell className="font-medium">
                   <InlineEditField
