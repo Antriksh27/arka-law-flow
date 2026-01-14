@@ -78,3 +78,18 @@ verify_jwt = false
 
 [functions.enable-auto-fetch-pending]
 verify_jwt = false
+
+[functions.process-queued-notifications]
+verify_jwt = false
+
+[functions.process-notification-digest]
+verify_jwt = false
+
+[functions.send-digest-email]
+verify_jwt = false
+
+[functions.send-test-notification]
+verify_jwt = true
+
+[functions.send-smart-notification]
+verify_jwt = false
