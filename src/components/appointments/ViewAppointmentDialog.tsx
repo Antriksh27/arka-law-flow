@@ -35,22 +35,6 @@ interface ViewAppointmentDialogProps {
   };
 }
 
-// Helper to extract additional lawyers from notes
-const extractAdditionalLawyersFromNotes = (notes: string | null): string[] => {
-  if (!notes) return [];
-  const match = notes.match(/^Additional Lawyers: (.+?)(?:\n|$)/);
-  if (match) {
-    return match[1].split(', ').map(name => name.trim());
-  }
-  return [];
-};
-
-// Helper to get clean notes without additional lawyers line
-const getCleanNotes = (notes: string | null): string => {
-  if (!notes) return '';
-  return notes.replace(/^Additional Lawyers: .+?\n\n?/, '').trim();
-};
-
 export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
   appointment,
 }) => {
@@ -65,16 +49,30 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
       ? appointment.notes.replace('Contact: ', '').trim()
       : null);
   
-  // Extract additional lawyers from notes
+  // Fetch additional lawyers from junction table (using any type since table is newly created)
+  const { data: additionalLawyersData } = useQuery({
+    queryKey: ['appointment-lawyers', appointment.id],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from('appointment_lawyers')
+        .select(`
+          lawyer_id,
+          team_members!appointment_lawyers_lawyer_id_fkey(full_name)
+        `)
+        .eq('appointment_id', appointment.id);
+      
+      if (error) {
+        console.error('Error fetching additional lawyers:', error);
+        return [];
+      }
+      
+      return data || [];
+    }
+  });
+
   const additionalLawyerNames = useMemo(() => 
-    extractAdditionalLawyersFromNotes(appointment.notes),
-    [appointment.notes]
-  );
-  
-  // Get clean notes without the additional lawyers line
-  const cleanNotes = useMemo(() => 
-    getCleanNotes(appointment.notes),
-    [appointment.notes]
+    (additionalLawyersData || []).map((row: any) => row.team_members?.full_name).filter(Boolean),
+    [additionalLawyersData]
   );
   
   const { closeDialog, openDialog } = useDialog();
@@ -419,13 +417,13 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
             </div>
           )}
 
-          {/* Notes - showing clean notes without additional lawyers line */}
-          {cleanNotes && (
+          {/* Notes */}
+          {appointment.notes && (
             <div className="flex items-start gap-3">
               <FileText className="h-5 w-5 text-muted-foreground mt-0.5" />
               <div>
                 <p className="text-sm font-medium text-foreground">Notes</p>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{cleanNotes}</p>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{appointment.notes}</p>
               </div>
             </div>
           )}

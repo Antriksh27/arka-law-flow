@@ -180,8 +180,27 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
     return title;
   };
 
+  const saveAdditionalLawyers = async (appointmentId: string) => {
+    const lawyersToSave = additionalLawyers.filter(id => id !== formData.lawyer_id);
+    
+    if (lawyersToSave.length === 0) return;
+
+    const lawyerRecords = lawyersToSave.map(lawyerId => ({
+      appointment_id: appointmentId,
+      lawyer_id: lawyerId,
+      added_by: user?.id
+    }));
+
+    // Using any type since appointment_lawyers table is newly created and types aren't regenerated yet
+    const { error } = await (supabase as any).from('appointment_lawyers').insert(lawyerRecords);
+    
+    if (error) {
+      console.error('Error saving additional lawyers:', error);
+      throw error;
+    }
+  };
+
   const sendNotificationsToLawyers = async (appointmentId: string, title: string, appointmentDate: string, appointmentTime: string) => {
-    // Get all lawyers to notify (additional lawyers, not the primary assignee)
     const lawyersToNotify = additionalLawyers.filter(id => id !== formData.lawyer_id);
     
     if (lawyersToNotify.length === 0) return;
@@ -189,7 +208,6 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
     const primaryLawyer = users.find(u => u.id === formData.lawyer_id);
     const formattedDate = format(new Date(appointmentDate), 'MMM dd, yyyy');
     
-    // Create notifications for each additional lawyer
     const notifications = lawyersToNotify.map(lawyerId => ({
       recipient_id: lawyerId,
       title: 'New Appointment Assignment',
@@ -206,8 +224,6 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
     
     if (error) {
       console.error('Error sending notifications:', error);
-    } else {
-      console.log(`Sent notifications to ${lawyersToNotify.length} lawyers`);
     }
   };
 
@@ -230,16 +246,10 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
         }
       }
 
-      // Include additional lawyers in notes for reference
-      const additionalLawyerNames = additionalLawyers
-        .filter(id => id !== formData.lawyer_id)
-        .map(id => users.find(u => u.id === id)?.full_name)
-        .filter(Boolean);
-      
-      let notesWithLawyers = formData.notes;
-      if (additionalLawyerNames.length > 0) {
-        const lawyerInfo = `Additional Lawyers: ${additionalLawyerNames.join(', ')}`;
-        notesWithLawyers = formData.notes ? `${lawyerInfo}\n\n${formData.notes}` : lawyerInfo;
+      // Build notes - no longer include additional lawyers in notes
+      let finalNotes = formData.notes;
+      if (contactName) {
+        finalNotes = formData.notes ? `Contact: ${contactName}\n\n${formData.notes}` : `Contact: ${contactName}`;
       }
 
       const appointmentData = {
@@ -250,16 +260,12 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
         client_id: isClient ? formData.client_id : null,
         lawyer_id: formData.lawyer_id,
         case_id: formData.case_id || null,
-        notes: notesWithLawyers,
+        notes: finalNotes,
         status: formData.status,
         type: formData.type,
         firm_id: firmId,
         created_by: user?.id,
-        created_at: TimeUtils.createTimestamp(),
-        // Store contact information in notes or title for contacts
-        ...(contactName && {
-          notes: notesWithLawyers ? `Contact: ${contactName}\n\n${notesWithLawyers}` : `Contact: ${contactName}`
-        })
+        created_at: TimeUtils.createTimestamp()
       };
 
       const { data: newAppointment, error } = await supabase
@@ -270,8 +276,9 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
 
       if (error) throw error;
 
-      // Send notifications to additional lawyers
+      // Save additional lawyers to junction table and send notifications
       if (newAppointment?.id) {
+        await saveAdditionalLawyers(newAppointment.id);
         await sendNotificationsToLawyers(
           newAppointment.id,
           title,
@@ -280,10 +287,11 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
         );
       }
 
+      const addedCount = additionalLawyers.filter(id => id !== formData.lawyer_id).length;
       toast({
         title: "Success",
-        description: additionalLawyers.length > 0 
-          ? `Appointment created and ${additionalLawyers.filter(id => id !== formData.lawyer_id).length} team member(s) notified`
+        description: addedCount > 0 
+          ? `Appointment created and ${addedCount} team member(s) notified`
           : "Appointment created successfully"
       });
       closeDialog();
