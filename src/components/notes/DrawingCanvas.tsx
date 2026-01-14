@@ -414,7 +414,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange, i
         <svg
           ref={svgRef}
           className={`block bg-white w-full touch-none ${
-            isFullscreen ? 'h-[calc(100vh-20rem)]' : 'h-96'
+            isFullscreen ? 'h-[60vh]' : 'h-96'
           } ${activeTool === 'eraser' ? 'cursor-cell' : 'cursor-crosshair'}`}
           style={{ touchAction: 'none' }}
           onPointerDown={startDrawing}
