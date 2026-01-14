@@ -6,7 +6,7 @@ import { Textarea } from '../ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Calendar } from '../ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, X, UserPlus, Users } from 'lucide-react';
 import { format } from 'date-fns';
 import TimeUtils from '@/lib/timeUtils';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,6 +16,8 @@ import { toast } from '@/hooks/use-toast';
 import { SmartBookingCalendar } from '@/components/appointments/SmartBookingCalendar';
 import { ClientSelector } from '@/components/appointments/ClientSelector';
 import { CaseSelector } from '@/components/appointments/CaseSelector';
+import { Badge } from '../ui/badge';
+
 interface Client {
   id: string;
   full_name: string;
@@ -49,6 +51,7 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
   const [clients, setClients] = useState<Client[]>([]);
   const [cases, setCases] = useState<Case[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [additionalLawyers, setAdditionalLawyers] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     appointment_date: preSelectedDate || TimeUtils.nowDate(),
     appointment_time: '',
@@ -60,6 +63,7 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
     status: 'upcoming',
     type: 'in-person' as 'in-person' | 'other' | 'call' | 'video-call'
   });
+
   useEffect(() => {
     fetchClients();
     fetchCases(preSelectedClientId);
@@ -92,12 +96,14 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
       }
     }
   }, [user?.id, users, formData.lawyer_id]);
+
   const fetchClients = async () => {
     const {
       data
     } = await supabase.from('clients').select('id, full_name').order('full_name');
     setClients(data || []);
   };
+
   const fetchCases = async (clientId?: string) => {
     let query = supabase.from('cases').select('id, case_title, case_number');
     if (clientId) {
@@ -108,6 +114,7 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
     } = await query.order('case_title');
     setCases(data || []);
   };
+
   const fetchUsers = async () => {
     const {
       data,
@@ -141,6 +148,7 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
       role: user.role
     })));
   };
+
   const generateTitle = async () => {
     const client = clients.find(c => c.id === formData.client_id);
     const case_ = cases.find(c => c.id === formData.case_id);
@@ -171,6 +179,38 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
     }
     return title;
   };
+
+  const sendNotificationsToLawyers = async (appointmentId: string, title: string, appointmentDate: string, appointmentTime: string) => {
+    // Get all lawyers to notify (additional lawyers, not the primary assignee)
+    const lawyersToNotify = additionalLawyers.filter(id => id !== formData.lawyer_id);
+    
+    if (lawyersToNotify.length === 0) return;
+
+    const primaryLawyer = users.find(u => u.id === formData.lawyer_id);
+    const formattedDate = format(new Date(appointmentDate), 'MMM dd, yyyy');
+    
+    // Create notifications for each additional lawyer
+    const notifications = lawyersToNotify.map(lawyerId => ({
+      recipient_id: lawyerId,
+      title: 'New Appointment Assignment',
+      message: `You have been added to an appointment: "${title}" on ${formattedDate} at ${appointmentTime}${primaryLawyer ? ` with ${primaryLawyer.full_name}` : ''}`,
+      category: 'appointments',
+      notification_type: 'appointment' as const,
+      action_url: `/appointments`,
+      reference_id: appointmentId,
+      priority: 'normal',
+      read: false
+    }));
+
+    const { error } = await supabase.from('notifications').insert(notifications);
+    
+    if (error) {
+      console.error('Error sending notifications:', error);
+    } else {
+      console.log(`Sent notifications to ${lawyersToNotify.length} lawyers`);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -189,35 +229,62 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
           contactName = contactData.name;
         }
       }
+
+      // Include additional lawyers in notes for reference
+      const additionalLawyerNames = additionalLawyers
+        .filter(id => id !== formData.lawyer_id)
+        .map(id => users.find(u => u.id === id)?.full_name)
+        .filter(Boolean);
+      
+      let notesWithLawyers = formData.notes;
+      if (additionalLawyerNames.length > 0) {
+        const lawyerInfo = `Additional Lawyers: ${additionalLawyerNames.join(', ')}`;
+        notesWithLawyers = formData.notes ? `${lawyerInfo}\n\n${formData.notes}` : lawyerInfo;
+      }
+
       const appointmentData = {
         title,
         appointment_date: typeof formData.appointment_date === 'string' ? formData.appointment_date : TimeUtils.formatDateInput(formData.appointment_date),
         appointment_time: formData.appointment_time,
         duration_minutes: Number(formData.duration_minutes),
         client_id: isClient ? formData.client_id : null,
-        // Only set if it's a client
         lawyer_id: formData.lawyer_id,
         case_id: formData.case_id || null,
-        notes: formData.notes,
+        notes: notesWithLawyers,
         status: formData.status,
         type: formData.type,
         firm_id: firmId,
-        // Use firmId from AuthContext instead of fetching
         created_by: user?.id,
-        // Use user.id from AuthContext
         created_at: TimeUtils.createTimestamp(),
         // Store contact information in notes or title for contacts
         ...(contactName && {
-          notes: formData.notes ? `Contact: ${contactName}\n\n${formData.notes}` : `Contact: ${contactName}`
+          notes: notesWithLawyers ? `Contact: ${contactName}\n\n${notesWithLawyers}` : `Contact: ${contactName}`
         })
       };
-      const {
-        error
-      } = await supabase.from('appointments').insert([appointmentData]);
+
+      const { data: newAppointment, error } = await supabase
+        .from('appointments')
+        .insert([appointmentData])
+        .select('id')
+        .single();
+
       if (error) throw error;
+
+      // Send notifications to additional lawyers
+      if (newAppointment?.id) {
+        await sendNotificationsToLawyers(
+          newAppointment.id,
+          title,
+          typeof formData.appointment_date === 'string' ? formData.appointment_date : TimeUtils.formatDateInput(formData.appointment_date),
+          formData.appointment_time
+        );
+      }
+
       toast({
         title: "Success",
-        description: "Appointment created successfully"
+        description: additionalLawyers.length > 0 
+          ? `Appointment created and ${additionalLawyers.filter(id => id !== formData.lawyer_id).length} team member(s) notified`
+          : "Appointment created successfully"
       });
       closeDialog();
     } catch (error) {
@@ -231,6 +298,7 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
       setLoading(false);
     }
   };
+
   const handleInputChange = (field: keyof typeof formData, value: any) => {
     setFormData(prev => ({
       ...prev,
@@ -238,10 +306,29 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
     }));
   };
 
+  const handleAddLawyer = (lawyerId: string) => {
+    if (!additionalLawyers.includes(lawyerId)) {
+      setAdditionalLawyers(prev => [...prev, lawyerId]);
+    }
+  };
+
+  const handleRemoveLawyer = (lawyerId: string) => {
+    setAdditionalLawyers(prev => prev.filter(id => id !== lawyerId));
+  };
+
+  // Get available lawyers for additional selection (exclude already selected)
+  const getAvailableLawyers = () => {
+    return users.filter(u => 
+      u.id !== formData.lawyer_id && 
+      !additionalLawyers.includes(u.id)
+    );
+  };
+
   // Check if required fields are filled
   const isFormValid = () => {
     return formData.appointment_date && formData.appointment_time && formData.client_id && formData.lawyer_id;
   };
+
   return <div className="flex flex-col h-full">
       {/* Header */}
       <div className="px-6 py-5 border-b border-border">
@@ -261,7 +348,7 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
                 </svg>
               </div>
               <Label htmlFor="lawyer_id" className="text-base font-semibold text-foreground">
-                Assigned To <span className="text-destructive">*</span>
+                Primary Assignee <span className="text-destructive">*</span>
               </Label>
             </div>
             <Select value={formData.lawyer_id} onValueChange={value => handleInputChange('lawyer_id', value)} required>
@@ -274,6 +361,63 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
                   </SelectItem>)}
               </SelectContent>
             </Select>
+
+            {/* Additional Lawyers Section */}
+            <div className="pt-3 border-t border-border/50">
+              <div className="flex items-center gap-2 mb-3">
+                <Users className="h-4 w-4 text-muted-foreground" />
+                <Label className="text-sm font-medium text-foreground">Additional Team Members</Label>
+              </div>
+              
+              {/* Selected additional lawyers */}
+              {additionalLawyers.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {additionalLawyers.map(lawyerId => {
+                    const lawyer = users.find(u => u.id === lawyerId);
+                    if (!lawyer || lawyerId === formData.lawyer_id) return null;
+                    return (
+                      <Badge 
+                        key={lawyerId} 
+                        variant="outline" 
+                        className="flex items-center gap-1 pl-2 pr-1 py-1 bg-accent"
+                      >
+                        {lawyer.full_name}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveLawyer(lawyerId)}
+                          className="ml-1 rounded-full p-0.5 hover:bg-background/50 transition-colors"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    );
+                  })}
+                </div>
+              )}
+              
+              {/* Add lawyer dropdown */}
+              {getAvailableLawyers().length > 0 && (
+                <Select onValueChange={handleAddLawyer} value="">
+                  <SelectTrigger className="bg-background border-border text-foreground h-10">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <UserPlus className="h-4 w-4" />
+                      <span>Add team member...</span>
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border-border">
+                    {getAvailableLawyers().map(user => (
+                      <SelectItem key={user.id} value={user.id} className="text-foreground">
+                        {user.full_name} <span className="text-muted-foreground">({user.role})</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              
+              <p className="text-xs text-muted-foreground mt-2">
+                Added team members will receive a notification about this appointment
+              </p>
+            </div>
           </div>
 
           {/* Date & Time Selection */}
