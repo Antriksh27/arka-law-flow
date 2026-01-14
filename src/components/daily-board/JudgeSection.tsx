@@ -68,22 +68,13 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
             </div>
             
             {/* Red Status Box */}
-            <div className="border-2 border-red-600 px-4 py-2 text-center bg-red-50 min-w-[50px]">
-              <div className="font-bold text-base text-red-700">&nbsp;</div>
-              <div className="text-xs font-medium text-red-600">DB</div>
-            </div>
+            <div className="border-2 border-red-600 w-[60px] h-[52px] bg-red-500"></div>
             
             {/* Yellow Status Box */}
-            <div className="border-2 border-yellow-500 px-4 py-2 text-center bg-yellow-50 min-w-[50px]">
-              <div className="font-bold text-base text-yellow-700">&nbsp;</div>
-              <div className="text-xs font-medium text-yellow-600">SB-1</div>
-            </div>
+            <div className="border-2 border-yellow-500 w-[60px] h-[52px] bg-yellow-400"></div>
             
             {/* Green Status Box */}
-            <div className="border-2 border-green-600 px-4 py-2 text-center bg-green-50 min-w-[50px]">
-              <div className="font-bold text-base text-green-700">&nbsp;</div>
-              <div className="text-xs font-medium text-green-600">SB-5</div>
-            </div>
+            <div className="border-2 border-green-600 w-[60px] h-[52px] bg-green-500"></div>
           </div>
         )}
       </div>
