@@ -23,7 +23,7 @@ export const PrintView = React.forwardRef<HTMLDivElement, PrintViewProps>(
         </div>
         
         {groupedHearings.map((courtGroup) => (
-          <div key={courtGroup.courtName} className="mb-4">
+          <div key={courtGroup.courtName} className="mb-4 court-group">
             <div className="bg-gray-100 px-3 py-1 mb-2">
               <h2 className="text-sm font-bold uppercase">{courtGroup.courtName}</h2>
             </div>
@@ -32,9 +32,9 @@ export const PrintView = React.forwardRef<HTMLDivElement, PrintViewProps>(
               const firstHearing = judge.hearings[0];
               
               return (
-                <div key={judge.judgeName} className="mb-4">
+                <div key={judge.judgeName} className="mb-4 judge-section">
                   {/* Judge Header with Court Boxes - matching JudgeSection */}
-                  <div className="bg-gray-50 px-3 py-2 flex items-center justify-between mb-1">
+                  <div className="bg-gray-50 px-3 py-2 flex items-center justify-between mb-1 judge-header">
                     <h3 className="text-sm font-semibold uppercase underline flex-1">{judge.judgeName}</h3>
                     <div className="flex items-center gap-1">
                       {/* Court Number Box 1 */}
@@ -71,70 +71,68 @@ export const PrintView = React.forwardRef<HTMLDivElement, PrintViewProps>(
                         <th className="border border-gray-400 px-1 py-1 text-left w-[70px] font-semibold">ArguingCouncil</th>
                       </tr>
                     </thead>
-                    <tbody>
-                      {judge.hearings.map((hearing) => (
-                        <React.Fragment key={hearing.hearing_id}>
-                          {/* Main case row */}
-                          <tr>
-                            {/* Sr.No with bench type */}
-                            <td className="border border-gray-400 px-1 py-1 align-top">
-                              <div className="font-bold">{hearing.serial_number || ''}</div>
-                              <div className="text-[7px]">{hearing.bench || ''}</div>
-                            </td>
-                            {/* Case Number */}
-                            <td className="border border-gray-400 px-1 py-1 align-top font-medium">
-                              {hearing.case_number || 'N/A'}
-                            </td>
-                            {/* Name of Parties */}
-                            <td className="border border-gray-400 px-1 py-1 align-top">
-                              <div>{hearing.petitioner || '-'}</div>
-                              <div className="text-[7px] text-gray-500">VS</div>
-                              <div>{hearing.respondent || '-'}</div>
-                            </td>
-                            {/* AORP */}
-                            <td className="border border-gray-400 px-1 py-1 align-top text-center">
-                              <div>{hearing.formatted_aorp || '-'}</div>
-                              <div className="text-[7px] text-gray-500">(Pet.1)</div>
-                            </td>
-                            {/* AORR */}
-                            <td className="border border-gray-400 px-1 py-1 align-top">
-                              <div>{hearing.formatted_aorr || '-'}</div>
-                              <div className="text-[7px] text-gray-500">(Res.)</div>
-                            </td>
-                            {/* Arguing Council */}
-                            <td className="border border-gray-400 px-1 py-1 align-top">
-                              {hearing.coram || 'CBU'}
-                            </td>
-                          </tr>
-                          
-                          {/* Stage row */}
-                          <tr>
-                            <td className="border border-gray-400 px-1 py-0.5 font-medium text-[8px]">Stage</td>
-                            <td colSpan={5} className="border border-gray-400 px-1 py-0.5">
-                              {hearing.purpose_of_hearing || '-'}
-                            </td>
-                          </tr>
-                          
-                          {/* Relief row */}
-                          <tr>
-                            <td className="border border-gray-400 px-1 py-0.5 font-medium text-[8px]">Relief</td>
-                            <td colSpan={5} className="border border-gray-400 px-1 py-0.5">
-                              {hearing.relief || '-'}
-                            </td>
-                          </tr>
-                          
-                          {/* Acts row */}
-                          <tr className="bg-gray-50">
-                            <td className="border border-gray-400 px-1 py-0.5 font-medium text-[8px]">Acts</td>
-                            <td colSpan={5} className="border border-gray-400 px-1 py-0.5">
-                              {hearing.acts && hearing.acts.length > 0 
-                                ? hearing.acts.join(', ') 
-                                : '-'}
-                            </td>
-                          </tr>
-                        </React.Fragment>
-                      ))}
-                    </tbody>
+                    {judge.hearings.map((hearing) => (
+                      <tbody key={hearing.hearing_id} className="hearing-group">
+                        {/* Main case row */}
+                        <tr>
+                          {/* Sr.No with bench type */}
+                          <td className="border border-gray-400 px-1 py-1 align-top">
+                            <div className="font-bold">{hearing.serial_number || ''}</div>
+                            <div className="text-[7px]">{hearing.bench || ''}</div>
+                          </td>
+                          {/* Case Number */}
+                          <td className="border border-gray-400 px-1 py-1 align-top font-medium">
+                            {hearing.case_number || 'N/A'}
+                          </td>
+                          {/* Name of Parties */}
+                          <td className="border border-gray-400 px-1 py-1 align-top">
+                            <div>{hearing.petitioner || '-'}</div>
+                            <div className="text-[7px] text-gray-500">VS</div>
+                            <div>{hearing.respondent || '-'}</div>
+                          </td>
+                          {/* AORP */}
+                          <td className="border border-gray-400 px-1 py-1 align-top text-center">
+                            <div>{hearing.formatted_aorp || '-'}</div>
+                            <div className="text-[7px] text-gray-500">(Pet.1)</div>
+                          </td>
+                          {/* AORR */}
+                          <td className="border border-gray-400 px-1 py-1 align-top">
+                            <div>{hearing.formatted_aorr || '-'}</div>
+                            <div className="text-[7px] text-gray-500">(Res.)</div>
+                          </td>
+                          {/* Arguing Council */}
+                          <td className="border border-gray-400 px-1 py-1 align-top">
+                            {hearing.coram || 'CBU'}
+                          </td>
+                        </tr>
+                        
+                        {/* Stage row */}
+                        <tr>
+                          <td className="border border-gray-400 px-1 py-0.5 font-medium text-[8px]">Stage</td>
+                          <td colSpan={5} className="border border-gray-400 px-1 py-0.5">
+                            {hearing.purpose_of_hearing || '-'}
+                          </td>
+                        </tr>
+                        
+                        {/* Relief row */}
+                        <tr>
+                          <td className="border border-gray-400 px-1 py-0.5 font-medium text-[8px]">Relief</td>
+                          <td colSpan={5} className="border border-gray-400 px-1 py-0.5">
+                            {hearing.relief || '-'}
+                          </td>
+                        </tr>
+                        
+                        {/* Acts row */}
+                        <tr className="bg-gray-50">
+                          <td className="border border-gray-400 px-1 py-0.5 font-medium text-[8px]">Acts</td>
+                          <td colSpan={5} className="border border-gray-400 px-1 py-0.5">
+                            {hearing.acts && hearing.acts.length > 0 
+                              ? hearing.acts.join(', ') 
+                              : '-'}
+                          </td>
+                        </tr>
+                      </tbody>
+                    ))}
                   </table>
                 </div>
               );
@@ -146,7 +144,7 @@ export const PrintView = React.forwardRef<HTMLDivElement, PrintViewProps>(
           @media print {
             @page {
               size: A4 portrait;
-              margin: 8mm;
+              margin: 10mm;
             }
             body {
               print-color-adjust: exact;
@@ -165,12 +163,40 @@ export const PrintView = React.forwardRef<HTMLDivElement, PrintViewProps>(
               top: 0;
               width: 100%;
             }
+            /* Prevent page breaks inside hearing groups */
+            .print-view .hearing-group {
+              page-break-inside: avoid;
+              break-inside: avoid;
+            }
+            /* Prevent page breaks inside judge sections */
+            .print-view .judge-section {
+              page-break-inside: avoid;
+              break-inside: avoid;
+            }
+            /* Keep judge header with its table */
+            .print-view .judge-header {
+              page-break-after: avoid;
+              break-after: avoid;
+            }
+            /* Allow page breaks between court groups */
+            .print-view .court-group {
+              page-break-before: auto;
+              break-before: auto;
+            }
+            /* Prevent orphan rows */
             .print-view table {
               page-break-inside: auto;
             }
             .print-view tr {
               page-break-inside: avoid;
-              page-break-after: auto;
+              break-inside: avoid;
+            }
+            .print-view thead {
+              display: table-header-group;
+            }
+            .print-view tbody {
+              page-break-inside: avoid;
+              break-inside: avoid;
             }
           }
         `}</style>
