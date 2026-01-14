@@ -16,76 +16,106 @@ export const PrintView = React.forwardRef<HTMLDivElement, PrintViewProps>(
           <p className="text-xs">{format(selectedDate, 'EEEE, MMMM d, yyyy')}</p>
         </div>
         
-        {groupedHearings.map((courtGroup) => {
-          let serialNo = 1;
-          
-          return (
-            <div key={courtGroup.courtName} className="mb-2">
-              <div className="bg-gray-100 px-2 py-0.5 mb-1">
-                <h2 className="text-xs font-bold uppercase">{courtGroup.courtName}</h2>
-              </div>
+        {groupedHearings.map((courtGroup) => (
+          <div key={courtGroup.courtName} className="mb-3">
+            <div className="bg-gray-100 px-2 py-0.5 mb-1">
+              <h2 className="text-xs font-bold uppercase">{courtGroup.courtName}</h2>
+            </div>
+            
+            {courtGroup.judges.map((judge) => {
+              const firstHearing = judge.hearings[0];
               
-              {courtGroup.judges.map((judge) => (
-                <div key={judge.judgeName} className="mb-1">
-                  <div className="bg-gray-50 px-2 py-0.5 mb-0.5">
-                    <h3 className="text-[10px] font-semibold uppercase">{judge.judgeName}</h3>
+              return (
+                <div key={judge.judgeName} className="mb-2">
+                  {/* Judge Header with Court Boxes */}
+                  <div className="flex items-center justify-between border-2 border-gray-800 mb-1">
+                    {/* Judge Name */}
+                    <div className="flex-1 px-2 py-1">
+                      <span className="text-[10px] font-bold uppercase">{judge.judgeName}</span>
+                    </div>
+                    
+                    {/* Court Number Boxes */}
+                    <div className="flex">
+                      {/* Court Box 1 */}
+                      <div className="border-l-2 border-gray-800 px-2 py-1 text-center min-w-[40px]">
+                        <div className="text-[9px] font-bold">{firstHearing?.court_number || ''}</div>
+                        <div className="text-[7px]">{firstHearing?.bench || ''}</div>
+                      </div>
+                      
+                      {/* Court Box 2 */}
+                      <div className="border-l-2 border-gray-800 px-2 py-1 text-center min-w-[40px]">
+                        <div className="text-[9px] font-bold"></div>
+                        <div className="text-[7px]"></div>
+                      </div>
+                      
+                      {/* Court Box 3 */}
+                      <div className="border-l-2 border-gray-800 px-2 py-1 text-center min-w-[40px]">
+                        <div className="text-[9px] font-bold"></div>
+                        <div className="text-[7px]"></div>
+                      </div>
+                      
+                      {/* Status Boxes */}
+                      <div className="border-l-2 border-gray-800 w-[30px] h-[28px] bg-red-200"></div>
+                      <div className="border-l-2 border-gray-800 w-[30px] h-[28px] bg-yellow-200"></div>
+                      <div className="border-l-2 border-gray-800 w-[30px] h-[28px] bg-green-200"></div>
+                    </div>
                   </div>
                   
-                  <table className="w-full border-collapse border border-gray-300 text-[8px] leading-tight">
+                  {/* Hearings Table */}
+                  <table className="w-full border-collapse border border-gray-400 text-[8px] leading-tight">
                     <thead>
                       <tr className="bg-gray-100">
-                        <th className="border border-gray-300 px-0.5 py-0.5 text-left w-5">Sr.</th>
-                        <th className="border border-gray-300 px-0.5 py-0.5 text-left w-16">Case No.</th>
-                        <th className="border border-gray-300 px-0.5 py-0.5 text-left">Petitioner</th>
-                        <th className="border border-gray-300 px-0.5 py-0.5 text-left">Respondent</th>
-                        <th className="border border-gray-300 px-0.5 py-0.5 text-left w-14">AORP</th>
-                        <th className="border border-gray-300 px-0.5 py-0.5 text-left w-14">AORR</th>
-                        <th className="border border-gray-300 px-0.5 py-0.5 text-left w-8">Arguing</th>
-                        <th className="border border-gray-300 px-0.5 py-0.5 text-left w-12">Stage</th>
-                        <th className="border border-gray-300 px-0.5 py-0.5 text-left w-14">Relief</th>
+                        <th className="border border-gray-400 px-0.5 py-0.5 text-center w-[30px]">Sr.No</th>
+                        <th className="border border-gray-400 px-0.5 py-0.5 text-left w-[70px]">Case No.</th>
+                        <th className="border border-gray-400 px-0.5 py-0.5 text-left">Petitioner</th>
+                        <th className="border border-gray-400 px-0.5 py-0.5 text-left">Respondent</th>
+                        <th className="border border-gray-400 px-0.5 py-0.5 text-left w-[60px]">AOR(P)</th>
+                        <th className="border border-gray-400 px-0.5 py-0.5 text-left w-[60px]">AOR(R)</th>
+                        <th className="border border-gray-400 px-0.5 py-0.5 text-center w-[40px]">Arguing</th>
+                        <th className="border border-gray-400 px-0.5 py-0.5 text-left w-[50px]">Stage</th>
+                        <th className="border border-gray-400 px-0.5 py-0.5 text-left w-[60px]">Relief</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {judge.hearings.map((hearing) => {
-                        const row = (
-                          <tr key={hearing.hearing_id}>
-                            <td className="border border-gray-300 px-0.5 py-0.5">{serialNo}</td>
-                            <td className="border border-gray-300 px-0.5 py-0.5 font-medium">
-                              {hearing.case_number || 'N/A'}
-                            </td>
-                            <td className="border border-gray-300 px-0.5 py-0.5">
-                              {hearing.petitioner || '-'}
-                            </td>
-                            <td className="border border-gray-300 px-0.5 py-0.5">
-                              {hearing.respondent || '-'}
-                            </td>
-                            <td className="border border-gray-300 px-0.5 py-0.5">
-                              {hearing.formatted_aorp || '-'}
-                            </td>
-                            <td className="border border-gray-300 px-0.5 py-0.5">
-                              {hearing.formatted_aorr || '-'}
-                            </td>
-                            <td className="border border-gray-300 px-0.5 py-0.5 font-medium">
-                              CBU
-                            </td>
-                            <td className="border border-gray-300 px-0.5 py-0.5">
-                              {hearing.purpose_of_hearing || '-'}
-                            </td>
-                            <td className="border border-gray-300 px-0.5 py-0.5">
-                              {hearing.relief || '-'}
-                            </td>
-                          </tr>
-                        );
-                        serialNo++;
-                        return row;
-                      })}
+                      {judge.hearings.map((hearing, idx) => (
+                        <tr key={hearing.hearing_id}>
+                          <td className="border border-gray-400 px-0.5 py-0.5 text-center">
+                            <div className="font-bold">{hearing.serial_number || ''}</div>
+                            <div className="text-[6px]">{hearing.bench || ''}</div>
+                          </td>
+                          <td className="border border-gray-400 px-0.5 py-0.5 font-medium">
+                            {hearing.case_number || 'N/A'}
+                          </td>
+                          <td className="border border-gray-400 px-0.5 py-0.5">
+                            {hearing.petitioner || '-'}
+                          </td>
+                          <td className="border border-gray-400 px-0.5 py-0.5">
+                            {hearing.respondent || '-'}
+                          </td>
+                          <td className="border border-gray-400 px-0.5 py-0.5">
+                            {hearing.formatted_aorp || '-'}
+                          </td>
+                          <td className="border border-gray-400 px-0.5 py-0.5">
+                            {hearing.formatted_aorr || '-'}
+                          </td>
+                          <td className="border border-gray-400 px-0.5 py-0.5 text-center font-medium">
+                            CBU
+                          </td>
+                          <td className="border border-gray-400 px-0.5 py-0.5">
+                            {hearing.purpose_of_hearing || '-'}
+                          </td>
+                          <td className="border border-gray-400 px-0.5 py-0.5">
+                            {hearing.relief || '-'}
+                          </td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>
-              ))}
-            </div>
-          );
-        })}
+              );
+            })}
+          </div>
+        ))}
         
         <style>{`
           @media print {
