@@ -40,14 +40,30 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
 
   return (
     <div className="space-y-3">
-      {/* Judge Header with Court Number Badge */}
+      {/* Judge Header with Editable Court Number Badge */}
       <div className="bg-gray-50 px-4 py-3 rounded-lg flex items-start justify-between">
         <h3 className="text-lg font-semibold text-gray-900 uppercase underline">{judgeName}</h3>
-        {courtNumber && (
+        {hearings.length > 0 && (
           <div className="flex gap-2">
-            <div className="border-2 border-gray-800 px-4 py-2 text-center bg-white">
-              <div className="font-bold text-base underline">{courtNumber}</div>
-              <div className="text-xs font-medium">{benchType}</div>
+            <div className="border-2 border-gray-800 px-4 py-2 text-center bg-white min-w-[80px]">
+              <InlineEditField
+                id={hearings[0].hearing_id}
+                table="case_hearings"
+                field="court_number"
+                currentValue={hearings[0].court_number || courtNumber || ''}
+                onUpdate={handleUpdate}
+                placeholder="---"
+                className="justify-center font-bold text-base"
+              />
+              <InlineEditField
+                id={hearings[0].hearing_id}
+                table="case_hearings"
+                field="bench_type"
+                currentValue={hearings[0].bench_type || benchType}
+                onUpdate={handleUpdate}
+                placeholder="DB"
+                className="justify-center text-xs"
+              />
             </div>
           </div>
         )}
@@ -70,10 +86,26 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
               <React.Fragment key={hearing.hearing_id}>
                 {/* Main case row */}
                 <TableRow className="border-b border-gray-400">
-                  {/* Sr.No with DB indicator */}
+                  {/* Sr.No with editable serial number and bench type */}
                   <TableCell className="border-r border-gray-400 align-top">
-                    <div className="font-bold text-lg">{hearing.serial_number || startingSerialNo + index}</div>
-                    <div className="text-xs font-medium">DB</div>
+                    <InlineEditField
+                      id={hearing.hearing_id}
+                      table="case_hearings"
+                      field="serial_number"
+                      currentValue={hearing.serial_number || String(startingSerialNo + index)}
+                      onUpdate={handleUpdate}
+                      placeholder="-"
+                      className="font-bold text-lg"
+                    />
+                    <InlineEditField
+                      id={hearing.hearing_id}
+                      table="case_hearings"
+                      field="bench_type"
+                      currentValue={hearing.bench_type || 'DB'}
+                      onUpdate={handleUpdate}
+                      placeholder="DB"
+                      className="text-xs"
+                    />
                   </TableCell>
                   
                   {/* Case Number */}

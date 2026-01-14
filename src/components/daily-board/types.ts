@@ -14,6 +14,8 @@ export interface DailyHearing {
   firm_id: string;
   assigned_to: string | null;
   serial_number: string | null;
+  court_number: string | null;
+  bench_type: string | null;
   
   case_id: string;
   case_number: string | null;
