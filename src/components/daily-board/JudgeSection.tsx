@@ -71,6 +71,7 @@ const EditableCourtBox: React.FC<{
         className="text-xs text-center bg-transparent border-none outline-none cursor-pointer w-full"
         value={benchType}
         onChange={(e) => onBenchTypeChange(e.target.value)}
+        title="DB = Daily Board, SB = Supplementary Board"
       >
         <option value="">-</option>
         <option value="DB">DB</option>
@@ -143,6 +144,15 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
               onCourtNumChange={(val) => setBox3(prev => ({ ...prev, court: val }))}
               onBenchTypeChange={(val) => setBox3(prev => ({ ...prev, bench: val }))}
             />
+            
+            {/* Red Status Box */}
+            <div className="border-2 border-red-400 w-[60px] h-[52px] bg-red-200"></div>
+            
+            {/* Yellow Status Box */}
+            <div className="border-2 border-yellow-400 w-[60px] h-[52px] bg-yellow-200"></div>
+            
+            {/* Green Status Box */}
+            <div className="border-2 border-green-400 w-[60px] h-[52px] bg-green-200"></div>
           </div>
         )}
       </div>
@@ -179,6 +189,7 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
                       className="text-xs bg-transparent border-none outline-none cursor-pointer"
                       value={hearing.bench || ''}
                       onChange={(e) => updateHearingField(hearing.hearing_id, 'bench', e.target.value || null)}
+                      title="DB = Daily Board, SB = Supplementary Board"
                     >
                       <option value="">-</option>
                       <option value="DB">DB</option>
