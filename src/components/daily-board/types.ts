@@ -38,6 +38,8 @@ export interface GroupedHearings {
   courtName: string;
   judges: {
     judgeName: string;
+    courtNumber?: string;
+    benchType?: string; // 'DB' (Division Bench), 'SB' (Single Bench), etc.
     hearings: DailyHearing[];
   }[];
 }

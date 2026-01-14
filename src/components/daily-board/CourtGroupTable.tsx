@@ -35,13 +35,15 @@ export const CourtGroupTable: React.FC<CourtGroupTableProps> = ({ courtGroup }) 
       
       {isExpanded && (
         <div className="p-6 space-y-6">
-          {courtGroup.judges.map((judge) => {
+          {courtGroup.judges.map((judge, index) => {
             const section = (
               <JudgeSection
                 key={judge.judgeName}
                 judgeName={judge.judgeName}
                 hearings={judge.hearings}
                 startingSerialNo={serialNo}
+                courtNumber={judge.courtNumber || String(100 + index)}
+                benchType={judge.benchType || 'DB'}
               />
             );
             serialNo += judge.hearings.length;
