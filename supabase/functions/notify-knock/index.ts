@@ -1,4 +1,4 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
@@ -16,9 +16,6 @@ serve(async (req) => {
   }
 
   try {
-    const KNOCK_API_KEY = Deno.env.get("KNOCK_API_KEY");
-    if (!KNOCK_API_KEY) throw new Error("KNOCK_API_KEY not configured");
-
     const supabase = createClient(supabaseUrl, supabaseKey);
     const body = await req.json();
     const { table, eventType, record, oldRecord } = body;
@@ -33,8 +30,6 @@ serve(async (req) => {
         .insert({ event_key: eventKey });
 
       if (dedupError) {
-        // Unique violation means we've already processed this event key
-        // Postgres code 23505 or duplicate key in message
         const code = (dedupError as any).code;
         const msg = (dedupError as any).message || '';
         if (code === '23505' || msg.includes('duplicate key')) {
@@ -48,7 +43,7 @@ serve(async (req) => {
     }
 
     // Construct message and payload FIRST to decide if we should skip
-    const { subject, body: messageBody, data } = await constructMessageAndPayload(
+    const { subject, body: messageBody, data, category } = await constructMessageAndPayload(
       table, 
       eventType, 
       record, 
@@ -76,61 +71,183 @@ serve(async (req) => {
       return jsonResponse({ status: "skipped", reason: "no_recipients" });
     }
 
-    const workflowKey = "new-appointment-notification";
-
-    console.log("[notify-knock] Sending notification:", { 
-      recipients: uniqueRecipients.length,
+    console.log("[notify-knock] Sending notification to recipients:", { 
+      recipientCount: uniqueRecipients.length,
       subject,
       table,
       eventType
     });
 
-    const response = await fetch(`https://api.knock.app/v1/workflows/${workflowKey}/trigger`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${KNOCK_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        recipients: uniqueRecipients.map(id => ({ id })),
-        data: {
-          subject,
-          body: messageBody,
-          ...data,
-        },
-      }),
-    });
+    // Try Knock API if configured, otherwise fallback to direct DB insert
+    const KNOCK_API_KEY = Deno.env.get("KNOCK_API_KEY");
+    let sentViaKnock = false;
 
-    const result = await response.json();
-    console.log("[notify-knock] Notification sent successfully", { 
-      workflow_run_id: result.workflow_run_id,
-      recipients: uniqueRecipients.length,
-      table,
-      eventType
-    });
+    if (KNOCK_API_KEY) {
+      try {
+        const workflowKey = "new-appointment-notification";
+        const response = await fetch(`https://api.knock.app/v1/workflows/${workflowKey}/trigger`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${KNOCK_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            recipients: uniqueRecipients.map(id => ({ id })),
+            data: {
+              subject,
+              body: messageBody,
+              ...data,
+            },
+          }),
+        });
 
-    return jsonResponse({ status: "ok", result, recipientCount: uniqueRecipients.length });
+        if (response.ok) {
+          const result = await response.json();
+          console.log("[notify-knock] Knock notification sent successfully", { 
+            workflow_run_id: result.workflow_run_id,
+            recipients: uniqueRecipients.length
+          });
+          sentViaKnock = true;
+        } else {
+          console.warn("[notify-knock] Knock API failed, falling back to direct DB insert", {
+            status: response.status
+          });
+        }
+      } catch (knockError) {
+        console.warn("[notify-knock] Knock API error, falling back to direct DB insert", {
+          error: (knockError as Error).message
+        });
+      }
+    }
+
+    // Fallback: Insert notifications directly into the database
+    if (!sentViaKnock) {
+      console.log("[notify-knock] Using direct DB insert for notifications");
+      
+      for (const recipientId of uniqueRecipients) {
+        // Check user preferences before inserting
+        const { data: prefs } = await supabase
+          .from('notification_preferences')
+          .select('*')
+          .eq('user_id', recipientId)
+          .single();
+
+        const preferences = prefs || {
+          enabled: true,
+          quiet_hours_enabled: false,
+          categories: {},
+          delivery_preferences: { in_app: true, email: true, browser: true, sound: true }
+        };
+
+        // Skip if notifications are globally disabled
+        if (!preferences.enabled) {
+          console.log(`[notify-knock] Skipping notification for user ${recipientId} - disabled in preferences`);
+          continue;
+        }
+
+        // Check if category is disabled
+        const categoryPref = preferences.categories?.[category];
+        if (categoryPref && !categoryPref.enabled) {
+          console.log(`[notify-knock] Skipping notification for user ${recipientId} - category ${category} disabled`);
+          continue;
+        }
+
+        // Check quiet hours
+        let deliveryStatus = 'delivered';
+        let snoozedUntil = null;
+
+        if (preferences.quiet_hours_enabled) {
+          const now = new Date();
+          const currentTime = now.getHours() * 60 + now.getMinutes();
+          
+          const [startHour, startMin] = (preferences.quiet_hours_start || '22:00').split(':').map(Number);
+          const [endHour, endMin] = (preferences.quiet_hours_end || '08:00').split(':').map(Number);
+          
+          const startTime = startHour * 60 + startMin;
+          const endTime = endHour * 60 + endMin;
+
+          let isInQuietHours = false;
+          if (startTime < endTime) {
+            isInQuietHours = currentTime >= startTime && currentTime < endTime;
+          } else {
+            isInQuietHours = currentTime >= startTime || currentTime < endTime;
+          }
+
+          if (isInQuietHours) {
+            deliveryStatus = 'pending';
+            const deliverAt = new Date(now);
+            deliverAt.setHours(endHour, endMin, 0, 0);
+            if (deliverAt <= now) {
+              deliverAt.setDate(deliverAt.getDate() + 1);
+            }
+            snoozedUntil = deliverAt.toISOString();
+            console.log(`[notify-knock] Queueing notification for user ${recipientId} - quiet hours active`);
+          }
+        }
+
+        // Determine if digest mode
+        const frequency = categoryPref?.frequency || 'instant';
+        let digestBatchId = null;
+        
+        if (frequency === 'digest') {
+          digestBatchId = `digest_${recipientId}_${new Date().toISOString().split('T')[0]}`;
+          deliveryStatus = 'pending';
+        }
+
+        // Insert notification
+        const { error: insertError } = await supabase
+          .from('notifications')
+          .insert({
+            recipient_id: recipientId,
+            notification_type: `${table}_${eventType.toLowerCase()}`,
+            title: subject,
+            message: messageBody,
+            reference_id: record?.id,
+            category: category,
+            priority: data?.priority || 'normal',
+            action_url: data?.primary_action_url,
+            metadata: data || {},
+            delivery_channel: ['in_app'],
+            delivery_status: deliveryStatus,
+            read: false,
+            snoozed_until: snoozedUntil,
+            digest_batch_id: digestBatchId,
+          });
+
+        if (insertError) {
+          console.error(`[notify-knock] Failed to insert notification for user ${recipientId}:`, insertError);
+        } else {
+          console.log(`[notify-knock] Notification inserted for user ${recipientId}`);
+        }
+      }
+    }
+
+    return jsonResponse({ 
+      status: "ok", 
+      recipientCount: uniqueRecipients.length,
+      method: sentViaKnock ? 'knock' : 'direct_db'
+    });
   } catch (err) {
     console.error("Error in notify-knock:", err);
-    return jsonResponse({ error: err.message }, 500);
+    return jsonResponse({ error: (err as Error).message }, 500);
   }
 });
 
-function jsonResponse(data, status = 200) {
+function jsonResponse(data: any, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 }
 
-// 📅 Helper: Format date
+// Helper: Format date
 function formatDate(dateString: string | null): string {
   if (!dateString) return "Not specified";
   const date = new Date(dateString);
   return date.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 }
 
-// 👤 Helper: Get user name
+// Helper: Get user name
 async function getUserName(userId: string | null, supabase: any): Promise<string> {
   if (!userId) return "Someone";
   const { data } = await supabase
@@ -141,7 +258,7 @@ async function getUserName(userId: string | null, supabase: any): Promise<string
   return data?.full_name || "A team member";
 }
 
-// 🔗 Helper: Get related entity name
+// Helper: Get related entity name
 async function getRelatedEntityName(table: string, id: string | null, supabase: any): Promise<string> {
   if (!id) return "Unknown";
   
@@ -158,14 +275,16 @@ async function getRelatedEntityName(table: string, id: string | null, supabase: 
   return "Unknown";
 }
 
-// 🧠 Builds dynamic subject, body & data payload with smart templates
+// Builds dynamic subject, body & data payload with smart templates
 async function constructMessageAndPayload(table: string, eventType: string, record: any, oldRecord: any, supabase: any) {
   let subject = "";
   let body = "";
   let data: any = {};
+  let category = "system";
 
   switch (table) {
     case "clients": {
+      category = "client";
       const fullName = record.full_name || "Unnamed Client";
       const createdBy = await getUserName(record.created_by, supabase);
       
@@ -182,6 +301,7 @@ async function constructMessageAndPayload(table: string, eventType: string, reco
     }
 
     case "contacts": {
+      category = "client";
       const name = record.name || "Unnamed Contact";
       const createdBy = await getUserName(record.created_by, supabase);
       
@@ -198,6 +318,7 @@ async function constructMessageAndPayload(table: string, eventType: string, reco
     }
 
     case "cases": {
+      category = "case";
       const caseTitle = record.case_title || "Untitled Case";
       const caseNumber = record.case_number || "No case number";
       const createdBy = await getUserName(record.created_by, supabase);
@@ -220,6 +341,7 @@ async function constructMessageAndPayload(table: string, eventType: string, reco
     }
 
     case "case_orders": {
+      category = "case";
       const caseTitle = await getRelatedEntityName("cases", record.case_id, supabase);
       const orderTitle = record.order_title || record.order_summary || "Unnamed Order";
       const orderDate = formatDate(record.order_date);
@@ -231,6 +353,7 @@ async function constructMessageAndPayload(table: string, eventType: string, reco
     }
 
     case "appointments": {
+      category = "appointment";
       const clientName = record.client_name || await getRelatedEntityName("clients", record.client_id, supabase);
       const date = formatDate(record.appointment_date);
       const time = record.appointment_time || "unspecified time";
@@ -252,6 +375,7 @@ async function constructMessageAndPayload(table: string, eventType: string, reco
     }
 
     case "hearings": {
+      category = "hearing";
       const caseTitle = await getRelatedEntityName("cases", record.case_id, supabase);
       const hearingDate = formatDate(record.hearing_date);
       const courtName = record.court_name || "Court";
@@ -264,6 +388,7 @@ async function constructMessageAndPayload(table: string, eventType: string, reco
     }
 
     case "tasks": {
+      category = "task";
       const title = record.title || "Untitled Task";
       const assignedBy = await getUserName(record.created_by, supabase);
       const dueDate = formatDate(record.due_date);
@@ -286,6 +411,7 @@ async function constructMessageAndPayload(table: string, eventType: string, reco
     }
 
     case "documents": {
+      category = "document";
       const fileName = record.file_name || "Unnamed file";
       const uploadedBy = await getUserName(record.uploaded_by, supabase);
       const caseTitle = await getRelatedEntityName("cases", record.case_id, supabase);
@@ -303,6 +429,7 @@ async function constructMessageAndPayload(table: string, eventType: string, reco
     }
 
     case "notes_v2": {
+      category = "note";
       const noteTitle = record.title || "Untitled Note";
       const createdBy = await getUserName(record.created_by, supabase);
       const relatedTo = record.case_id 
@@ -335,17 +462,15 @@ async function constructMessageAndPayload(table: string, eventType: string, reco
     }
   }
 
-  return { subject, body, data };
+  return { subject, body, data, category };
 }
 
-// 🔍 Determines recipient(s) for notifications
+// Determines recipient(s) for notifications
 async function determineRecipients(table: string, record: any, supabase: any): Promise<string[]> {
   const recipients = new Set<string>();
 
-  // Special handling per table to avoid over-notifying
   switch (table) {
     case "appointments":
-      // For appointments, only notify the assigned lawyer (avoid duplicates)
       if (record.assigned_lawyer_id) {
         recipients.add(record.assigned_lawyer_id);
       } else if (record.lawyer_id) {
@@ -354,14 +479,12 @@ async function determineRecipients(table: string, record: any, supabase: any): P
       break;
 
     case "tasks":
-      // For tasks, notify assignee only
       if (record.assigned_to) {
         recipients.add(record.assigned_to);
       }
       break;
 
     case "clients":
-      // For clients, notify assigned lawyer
       if (record.assigned_lawyer_id) {
         recipients.add(record.assigned_lawyer_id);
       }
@@ -370,35 +493,36 @@ async function determineRecipients(table: string, record: any, supabase: any): P
     case "case_orders":
     case "documents":
     case "hearings":
-      // For case-related items, notify case's assigned lawyer
       if (record.case_id) {
         const { data: caseData } = await supabase
           .from("cases")
-          .select("assigned_lawyer_id")
+          .select("assigned_lawyer_id, assigned_to, assigned_users")
           .eq("id", record.case_id)
           .single();
+        
         if (caseData?.assigned_lawyer_id) {
           recipients.add(caseData.assigned_lawyer_id);
+        }
+        if (caseData?.assigned_to) {
+          recipients.add(caseData.assigned_to);
+        }
+        if (Array.isArray(caseData?.assigned_users)) {
+          caseData.assigned_users.forEach((userId: string) => recipients.add(userId));
         }
       }
       break;
 
     default:
-      // For other tables, use generic assignment fields
       if (record.assigned_to) recipients.add(record.assigned_to);
       if (record.lawyer_id) recipients.add(record.lawyer_id);
       if (record.assigned_lawyer_id) recipients.add(record.assigned_lawyer_id);
       if (record.uploaded_by) recipients.add(record.uploaded_by);
       
-      // Array of assigned users
       if (Array.isArray(record.assigned_users)) {
         record.assigned_users.forEach((userId: string) => recipients.add(userId));
       }
       break;
   }
 
-  // Remove null/undefined values
-  const validRecipients = Array.from(recipients).filter(Boolean);
-  
-  return validRecipients;
+  return Array.from(recipients).filter(Boolean);
 }
