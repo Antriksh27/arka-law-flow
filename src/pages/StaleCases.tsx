@@ -102,6 +102,27 @@ const StaleCases = () => {
     return 'district_court';
   };
 
+  const getInvokeErrorMessage = (err: any): string => {
+    // Supabase function invoke errors sometimes include a `context` with response body.
+    const msg = err?.message || 'Unknown error';
+
+    const body = err?.context?.body;
+    if (typeof body === 'string') {
+      try {
+        const parsed = JSON.parse(body);
+        return parsed?.error || parsed?.message || msg;
+      } catch {
+        // ignore
+      }
+    }
+
+    // Some errors come as plain objects
+    if (typeof err === 'string') return err;
+    if (err?.error) return String(err.error);
+
+    return msg;
+  };
+
   // Single case fetch mutation
   const fetchSingleCase = useMutation({
     mutationFn: async (caseData: StaleCase) => {
@@ -112,25 +133,31 @@ const StaleCases = () => {
       const searchType = detectCourtType(caseData.cnr_number);
 
       const { data, error } = await supabase.functions.invoke('legalkart-api', {
-        body: { 
-          action: 'search', 
-          cnr: caseData.cnr_number, 
+        body: {
+          action: 'search',
+          cnr: caseData.cnr_number,
           searchType,
           caseId: caseData.id,
-          firmId
+          firmId,
         },
       });
 
       if (error) throw error;
-      if (!data.success) throw new Error(data.error || 'Failed to fetch case data');
-      
+      if (!data?.success) throw new Error(data?.error || 'Failed to fetch case data');
+
       return { caseId: caseData.id, data };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['stale-cases'] });
     },
     onError: (error: any) => {
-      console.error('Fetch error:', error.message);
+      const message = getInvokeErrorMessage(error);
+      console.error('Fetch error:', message);
+      toast({
+        title: 'Fetch failed',
+        description: message,
+        variant: 'destructive',
+      });
     },
   });
 
@@ -164,7 +191,7 @@ const StaleCases = () => {
       setAutoFetchProgress({
         current: i + 1,
         total: casesToFetch.length,
-        currentCase: caseData.case_number || caseData.case_title
+        currentCase: caseData.case_number || caseData.case_title,
       });
 
       try {
@@ -174,8 +201,14 @@ const StaleCases = () => {
           title: "Case Updated",
           description: `${caseData.case_number || caseData.case_title}`,
         });
-      } catch (error) {
+      } catch (error: any) {
         failCount++;
+        const message = getInvokeErrorMessage(error);
+        toast({
+          title: `Failed: ${caseData.case_number || caseData.cnr_number}`,
+          description: message,
+          variant: 'destructive',
+        });
       }
 
       // Refresh the list after each fetch
