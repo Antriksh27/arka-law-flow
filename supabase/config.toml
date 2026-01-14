@@ -75,3 +75,6 @@ verify_jwt = true
 
 [functions.grammar-check]
 verify_jwt = false
+
+[functions.enable-auto-fetch-pending]
+verify_jwt = false

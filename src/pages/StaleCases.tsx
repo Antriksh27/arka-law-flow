@@ -33,7 +33,8 @@ import {
   Calendar,
   Eye,
   StopCircle,
-  ArrowLeft
+  ArrowLeft,
+  ToggleRight
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
@@ -43,6 +44,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { MobileHeader } from "@/components/mobile/MobileHeader";
 import { BottomNavBar } from "@/components/mobile/BottomNavBar";
 import { differenceInDays } from "date-fns";
+import { useEnableAutoFetchPending } from "@/hooks/useEnableAutoFetchPending";
 
 interface StaleCase {
   id: string;
@@ -63,6 +65,7 @@ const StaleCases = () => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const enableAutoFetchMutation = useEnableAutoFetchPending();
   
   const [selectedCases, setSelectedCases] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
@@ -493,9 +496,21 @@ const StaleCases = () => {
                 These cases have hearing dates in the past and may need their data refreshed
               </CardDescription>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               {!isAutoFetching ? (
                 <>
+                  <Button 
+                    onClick={() => enableAutoFetchMutation.mutate()} 
+                    variant="outline"
+                    disabled={enableAutoFetchMutation.isPending}
+                  >
+                    {enableAutoFetchMutation.isPending ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <ToggleRight className="mr-2 h-4 w-4" />
+                    )}
+                    Enable Auto-Fetch (All Pending)
+                  </Button>
                   {selectedCases.size > 0 && (
                     <Button onClick={handleFetchSelected} variant="secondary">
                       <RefreshCw className="mr-2 h-4 w-4" />
