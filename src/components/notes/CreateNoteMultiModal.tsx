@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { X, Plus, Mic, MicOff, Square, Play, Pause, Trash2, Loader2 } from 'lucide-react';
+import { X, Plus, Mic, MicOff, Square, Play, Pause, Trash2, Loader2, Maximize2, Minimize2 } from 'lucide-react';
 import { DrawingCanvas } from './DrawingCanvas';
 import { ClientSelector } from '@/components/appointments/ClientSelector';
 import { CaseSelector } from '@/components/appointments/CaseSelector';
@@ -46,6 +46,7 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
   const queryClient = useQueryClient();
   const [newTag, setNewTag] = useState('');
   const [activeTab, setActiveTab] = useState('write');
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [drawingData, setDrawingData] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
@@ -307,9 +308,24 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
     }
   };
   return <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="w-[calc(100vw-4rem)] max-w-6xl h-[calc(100vh-4rem)] max-h-[90vh] overflow-y-auto bg-white p-6">
+      <DialogContent className={`overflow-y-auto bg-white p-6 transition-all duration-200 ${
+        isFullscreen 
+          ? 'w-screen max-w-none h-screen max-h-none rounded-none' 
+          : 'w-[calc(100vw-4rem)] max-w-6xl h-[calc(100vh-4rem)] max-h-[90vh]'
+      }`}>
         <DialogHeader className="pb-4 border-b border-gray-100">
-          <DialogTitle className="text-xl font-semibold text-gray-900">Create New Note</DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="text-xl font-semibold text-gray-900">Create New Note</DialogTitle>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsFullscreen(!isFullscreen)}
+              className="h-8 w-8 text-gray-500 hover:text-gray-700"
+            >
+              {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+            </Button>
+          </div>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 pt-4">
