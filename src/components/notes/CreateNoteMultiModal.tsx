@@ -307,7 +307,7 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
     }
   };
   return <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white">
+      <DialogContent className="w-[calc(100vw-4rem)] max-w-6xl h-[calc(100vh-4rem)] max-h-[90vh] overflow-y-auto bg-white p-6">
         <DialogHeader className="pb-4 border-b border-gray-100">
           <DialogTitle className="text-xl font-semibold text-gray-900">Create New Note</DialogTitle>
         </DialogHeader>
