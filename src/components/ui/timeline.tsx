@@ -98,7 +98,7 @@ function DesktopTimelineEntry({
           >
             {item.title}
           </h3>
-          {item.description && (
+          {item.description && item.description !== '#' && (
             <p
               className={cn(
                 "text-sm text-muted-foreground group-hover:text-muted-foreground/80",
@@ -177,7 +177,7 @@ function MobileTimelineEntry({
         >
           {item.title}
         </h3>
-        {item.description && (
+        {item.description && item.description !== '#' && (
           <p
             className={cn(
               "text-sm text-muted-foreground",
