@@ -9,6 +9,7 @@ interface JudgeSectionProps {
   judgeName: string;
   hearings: DailyHearing[];
   startingSerialNo: number;
+  courtNumber?: string;
 }
 
 const getStageColor = (stage: string | null) => {
@@ -27,6 +28,7 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
   judgeName,
   hearings,
   startingSerialNo,
+  courtNumber,
 }) => {
   const queryClient = useQueryClient();
   
@@ -36,40 +38,44 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
 
   return (
     <div className="space-y-3">
+      {/* Judge Header with Court Number */}
       <div className="bg-gray-50 px-4 py-3 rounded-lg">
-        <h3 className="text-lg font-semibold text-gray-900 uppercase">{judgeName}</h3>
+        <h3 className="text-lg font-semibold text-gray-900 uppercase underline">{judgeName}</h3>
+        {courtNumber && (
+          <div className="mt-2 flex gap-2">
+            <div className="border border-gray-400 px-3 py-1 text-center">
+              <div className="font-bold text-sm">{courtNumber}</div>
+              <div className="text-xs">DB</div>
+            </div>
+          </div>
+        )}
       </div>
       
-      <div className="border border-gray-200 rounded-lg overflow-hidden">
+      <div className="border border-gray-400 overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="bg-gray-50">
-              <TableHead className="w-16">Sr. No.</TableHead>
-              <TableHead className="w-32">Case No.</TableHead>
-              <TableHead>Petitioner</TableHead>
-              <TableHead>Respondent</TableHead>
-              <TableHead>AORP</TableHead>
-              <TableHead>AORR</TableHead>
-              <TableHead>Arguing Counsel</TableHead>
-              <TableHead className="w-32">Stage</TableHead>
-              <TableHead>Relief</TableHead>
+            <TableRow className="bg-white border-b border-gray-400">
+              <TableHead className="w-16 border-r border-gray-400 font-semibold text-black">Sr.No</TableHead>
+              <TableHead className="w-36 border-r border-gray-400 font-semibold text-black">Case No</TableHead>
+              <TableHead className="border-r border-gray-400 font-semibold text-black">NameofParties</TableHead>
+              <TableHead className="w-20 border-r border-gray-400 font-semibold text-black">AORP</TableHead>
+              <TableHead className="w-28 border-r border-gray-400 font-semibold text-black">AORR</TableHead>
+              <TableHead className="w-32 font-semibold text-black">ArguingCouncil</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {hearings.map((hearing) => (
+            {hearings.map((hearing, index) => (
               <React.Fragment key={hearing.hearing_id}>
-                <TableRow>
-                  <TableCell className="font-medium text-gray-600">
-                    <InlineEditField
-                      id={hearing.hearing_id}
-                      table="case_hearings"
-                      field="serial_number"
-                      currentValue={hearing.serial_number}
-                      onUpdate={handleUpdate}
-                      placeholder=""
-                    />
+                {/* Main case row */}
+                <TableRow className="border-b border-gray-400">
+                  {/* Sr.No with DB indicator */}
+                  <TableCell className="border-r border-gray-400 align-top">
+                    <div className="font-bold text-lg">{hearing.serial_number || startingSerialNo + index}</div>
+                    <div className="text-xs font-medium">DB</div>
                   </TableCell>
-                  <TableCell className="font-medium">
+                  
+                  {/* Case Number */}
+                  <TableCell className="border-r border-gray-400 align-top">
                     <InlineEditField
                       id={hearing.case_id}
                       table="cases"
@@ -78,25 +84,30 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
                       onUpdate={handleUpdate}
                     />
                   </TableCell>
-                  <TableCell>
-                    <InlineEditField
-                      id={hearing.case_id}
-                      table="cases"
-                      field="petitioner"
-                      currentValue={hearing.petitioner}
-                      onUpdate={handleUpdate}
-                    />
+                  
+                  {/* Name of Parties (Petitioner VS Respondent) */}
+                  <TableCell className="border-r border-gray-400 align-top">
+                    <div className="space-y-1">
+                      <InlineEditField
+                        id={hearing.case_id}
+                        table="cases"
+                        field="petitioner"
+                        currentValue={hearing.petitioner}
+                        onUpdate={handleUpdate}
+                      />
+                      <div className="text-xs text-gray-500">VS</div>
+                      <InlineEditField
+                        id={hearing.case_id}
+                        table="cases"
+                        field="respondent"
+                        currentValue={hearing.respondent}
+                        onUpdate={handleUpdate}
+                      />
+                    </div>
                   </TableCell>
-                  <TableCell>
-                    <InlineEditField
-                      id={hearing.case_id}
-                      table="cases"
-                      field="respondent"
-                      currentValue={hearing.respondent}
-                      onUpdate={handleUpdate}
-                    />
-                  </TableCell>
-                  <TableCell>
+                  
+                  {/* AORP */}
+                  <TableCell className="border-r border-gray-400 align-top text-center">
                     <InlineEditField
                       id={hearing.case_id}
                       table="cases"
@@ -104,8 +115,11 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
                       currentValue={hearing.formatted_aorp || hearing.petitioner_advocate}
                       onUpdate={handleUpdate}
                     />
+                    <div className="text-xs text-gray-500">(Pet.1)</div>
                   </TableCell>
-                  <TableCell>
+                  
+                  {/* AORR */}
+                  <TableCell className="border-r border-gray-400 align-top">
                     <InlineEditField
                       id={hearing.case_id}
                       table="cases"
@@ -113,8 +127,11 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
                       currentValue={hearing.formatted_aorr || hearing.respondent_advocate}
                       onUpdate={handleUpdate}
                     />
+                    <div className="text-xs text-gray-500">(Res.)</div>
                   </TableCell>
-                  <TableCell>
+                  
+                  {/* Arguing Council */}
+                  <TableCell className="align-top">
                     <InlineEditField
                       id={hearing.hearing_id}
                       table="case_hearings"
@@ -123,7 +140,12 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
                       onUpdate={handleUpdate}
                     />
                   </TableCell>
-                  <TableCell>
+                </TableRow>
+                
+                {/* Stage row */}
+                <TableRow className="border-b border-gray-300">
+                  <TableCell className="border-r border-gray-400 font-medium text-sm py-1">Stage</TableCell>
+                  <TableCell colSpan={5} className="py-1">
                     <InlineEditField
                       id={hearing.hearing_id}
                       table="case_hearings"
@@ -132,7 +154,12 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
                       onUpdate={handleUpdate}
                     />
                   </TableCell>
-                  <TableCell>
+                </TableRow>
+                
+                {/* Relief row */}
+                <TableRow className="border-b border-gray-300">
+                  <TableCell className="border-r border-gray-400 font-medium text-sm py-1">Relief</TableCell>
+                  <TableCell colSpan={5} className="py-1">
                     <InlineEditField
                       id={hearing.hearing_id}
                       table="case_hearings"
@@ -142,15 +169,14 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
                     />
                   </TableCell>
                 </TableRow>
-                {/* Acts sub-row */}
-                <TableRow className="bg-gray-50/50 border-b">
-                  <TableCell colSpan={9} className="py-2 px-4">
-                    <span className="text-xs text-gray-500 font-medium mr-2">Acts:</span>
-                    <span className="text-sm text-gray-700">
-                      {hearing.acts && hearing.acts.length > 0 
-                        ? hearing.acts.join(', ') 
-                        : '-'}
-                    </span>
+                
+                {/* Acts row */}
+                <TableRow className="border-b border-gray-400 bg-gray-50">
+                  <TableCell className="border-r border-gray-400 font-medium text-sm py-1">Acts</TableCell>
+                  <TableCell colSpan={5} className="py-1 text-sm">
+                    {hearing.acts && hearing.acts.length > 0 
+                      ? hearing.acts.join(', ') 
+                      : '-'}
                   </TableCell>
                 </TableRow>
               </React.Fragment>
