@@ -5,6 +5,7 @@ import getStroke from 'perfect-freehand';
 
 interface DrawingCanvasProps {
   onDrawingChange: (data: string | null) => void;
+  isFullscreen?: boolean;
 }
 
 interface Point {
@@ -22,7 +23,7 @@ interface Stroke {
 
 type Tool = 'pen' | 'eraser';
 
-export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange }) => {
+export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange, isFullscreen = false }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -412,9 +413,9 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange })
       >
         <svg
           ref={svgRef}
-          className={`block bg-white w-full h-96 touch-none ${
-            activeTool === 'eraser' ? 'cursor-cell' : 'cursor-crosshair'
-          }`}
+          className={`block bg-white w-full touch-none ${
+            isFullscreen ? 'h-[calc(100vh-20rem)]' : 'h-96'
+          } ${activeTool === 'eraser' ? 'cursor-cell' : 'cursor-crosshair'}`}
           style={{ touchAction: 'none' }}
           onPointerDown={startDrawing}
           onPointerMove={draw}
