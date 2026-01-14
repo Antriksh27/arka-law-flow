@@ -30,7 +30,12 @@ export const GlobalSearch = () => {
       try {
         const [clientsRes, casesRes, contactsRes, tasksRes] = await Promise.all([
           supabase.from('clients').select('id, full_name, email').eq('firm_id', firmId).ilike('full_name', `%${query}%`).limit(5),
-          supabase.from('cases').select('id, case_title, case_number').eq('firm_id', firmId).or(`case_title.ilike.%${query}%,case_number.ilike.%${query}%`).limit(5),
+          supabase
+            .from('cases')
+            .select('id, case_title, case_number, cnr_number, registration_number, filing_number')
+            .eq('firm_id', firmId)
+            .or(`case_title.ilike.%${query}%,case_number.ilike.%${query}%,cnr_number.ilike.%${query}%,registration_number.ilike.%${query}%,filing_number.ilike.%${query}%`)
+            .limit(5),
           supabase.from('contacts').select('id, name, phone').eq('firm_id', firmId).ilike('name', `%${query}%`).limit(5),
           supabase.from('tasks').select('id, title, status').eq('firm_id', firmId).ilike('title', `%${query}%`).limit(5),
         ]);
@@ -131,19 +136,32 @@ export const GlobalSearch = () => {
               <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase">
                 Cases
               </div>
-              {results.cases.map((caseItem: any) => (
-                <button
-                  key={caseItem.id}
-                  onClick={() => handleSelect('case', caseItem.id)}
-                  className="w-full flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 text-left transition-colors"
-                >
-                  <Briefcase className="w-4 h-4 mt-0.5 text-primary flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-sm truncate">{caseItem.case_title}</div>
-                    <div className="text-xs text-muted-foreground truncate">{caseItem.case_number}</div>
-                  </div>
-                </button>
-              ))}
+              {results.cases.map((caseItem: any) => {
+                // Determine which identifier matched the query
+                const q = query.toLowerCase();
+                let matchedField = caseItem.case_number || '';
+                if (caseItem.cnr_number?.toLowerCase().includes(q)) {
+                  matchedField = `CNR: ${caseItem.cnr_number}`;
+                } else if (caseItem.registration_number?.toLowerCase().includes(q)) {
+                  matchedField = `Reg: ${caseItem.registration_number}`;
+                } else if (caseItem.filing_number?.toLowerCase().includes(q)) {
+                  matchedField = `Filing: ${caseItem.filing_number}`;
+                }
+
+                return (
+                  <button
+                    key={caseItem.id}
+                    onClick={() => handleSelect('case', caseItem.id)}
+                    className="w-full flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 text-left transition-colors"
+                  >
+                    <Briefcase className="w-4 h-4 mt-0.5 text-primary flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-sm truncate">{caseItem.case_title}</div>
+                      <div className="text-xs text-muted-foreground truncate">{matchedField}</div>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           )}
 
