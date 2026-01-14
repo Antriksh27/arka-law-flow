@@ -57,15 +57,46 @@ export const TimelineTab: React.FC<TimelineTabProps> = ({ caseData, legalkartDat
   if (hearings && hearings.length > 0) {
     hearings.forEach((hearing) => {
       if (hearing.hearing_date) {
-        // Filter out JSON/bracketed content from business_on_date
-        let description = hearing.purpose || 'Hearing scheduled';
-        if (hearing.business_on_date && !hearing.business_on_date.includes('{') && !hearing.business_on_date.includes('[')) {
-          description = hearing.business_on_date;
+        // Build a rich description with available details
+        const details: string[] = [];
+        
+        // Add hearing type if available
+        if (hearing.hearing_type) {
+          details.push(`Type: ${hearing.hearing_type}`);
         }
+        
+        // Add purpose
+        if (hearing.purpose_of_hearing) {
+          details.push(`Purpose: ${hearing.purpose_of_hearing}`);
+        } else if (hearing.business_on_date && !hearing.business_on_date.includes('{') && !hearing.business_on_date.includes('[')) {
+          details.push(hearing.business_on_date);
+        }
+        
+        // Add judge/coram info
+        if (hearing.judge) {
+          details.push(`Judge: ${hearing.judge}`);
+        } else if (hearing.coram) {
+          details.push(`Coram: ${hearing.coram}`);
+        }
+        
+        // Add court/bench info
+        if (hearing.court_name) {
+          details.push(`Court: ${hearing.court_name}`);
+        }
+        if (hearing.bench) {
+          details.push(`Bench: ${hearing.bench}`);
+        }
+        
+        // Add outcome if available
+        if (hearing.outcome) {
+          details.push(`Outcome: ${hearing.outcome}`);
+        }
+        
+        const description = details.length > 0 ? details.join(' • ') : 'Hearing scheduled';
         
         timelineEvents.push({
           date: hearing.hearing_date,
-          title: 'Hearing',
+          title: hearing.hearing_type || 'Hearing',
           description: description,
           icon: <Scale className="h-3 w-3" />,
         });
