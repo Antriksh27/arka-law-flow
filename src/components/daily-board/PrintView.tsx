@@ -16,7 +16,7 @@ export const PrintView = React.forwardRef<HTMLDivElement, PrintViewProps>(
           <img 
             src="/lovable-uploads/89ea18cf-8c73-4793-9dcc-1a192855a630.png" 
             alt="HRU Legal" 
-            className="h-16 w-auto mx-auto mb-2"
+            className="h-20 w-auto mx-auto mb-2"
           />
           <h1 className="text-lg font-bold uppercase mb-1">Daily Cause List</h1>
           <p className="text-sm">{format(selectedDate, 'EEEE, MMMM d, yyyy')}</p>
@@ -168,12 +168,13 @@ export const PrintView = React.forwardRef<HTMLDivElement, PrintViewProps>(
               page-break-inside: avoid;
               break-inside: avoid;
             }
-            /* Prevent page breaks inside judge sections */
+            /* NOTE: Do NOT prevent breaks for whole judge sections.
+               It creates large blank areas when a section doesn't fit at page end. */
             .print-view .judge-section {
-              page-break-inside: avoid;
-              break-inside: avoid;
+              page-break-inside: auto;
+              break-inside: auto;
             }
-            /* Keep judge header with its table */
+            /* Keep judge header with the next content when possible (but allow breaks if needed) */
             .print-view .judge-header {
               page-break-after: avoid;
               break-after: avoid;
