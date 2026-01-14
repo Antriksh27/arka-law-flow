@@ -53,6 +53,7 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
               <TableHead>Arguing Counsel</TableHead>
               <TableHead className="w-32">Stage</TableHead>
               <TableHead>Relief</TableHead>
+              <TableHead>Acts</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -139,6 +140,13 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
                     currentValue={hearing.relief}
                     onUpdate={handleUpdate}
                   />
+                </TableCell>
+                <TableCell>
+                  <span className="text-sm text-gray-700">
+                    {hearing.acts && hearing.acts.length > 0 
+                      ? hearing.acts.join(', ') 
+                      : '-'}
+                  </span>
                 </TableCell>
               </TableRow>
             ))}
