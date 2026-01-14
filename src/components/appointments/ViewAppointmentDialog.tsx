@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,7 @@ import { ConvertToClientDialog } from './ConvertToClientDialog';
 import { ConvertToClientDialog as ConvertContactDialog } from '@/components/contacts/ConvertToClientDialog';
 import { parseISO } from 'date-fns';
 import { TimeUtils } from '@/lib/timeUtils';
-import { Calendar, Clock, User, MapPin, FileText, Edit, RotateCcw, X, UserPlus, Users, Plus, Trash } from 'lucide-react';
+import { Calendar, Clock, User, MapPin, FileText, Edit, RotateCcw, X, UserPlus, Users, Trash } from 'lucide-react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -35,12 +35,26 @@ interface ViewAppointmentDialogProps {
   };
 }
 
+// Helper to extract additional lawyers from notes
+const extractAdditionalLawyersFromNotes = (notes: string | null): string[] => {
+  if (!notes) return [];
+  const match = notes.match(/^Additional Lawyers: (.+?)(?:\n|$)/);
+  if (match) {
+    return match[1].split(', ').map(name => name.trim());
+  }
+  return [];
+};
+
+// Helper to get clean notes without additional lawyers line
+const getCleanNotes = (notes: string | null): string => {
+  if (!notes) return '';
+  return notes.replace(/^Additional Lawyers: .+?\n\n?/, '').trim();
+};
+
 export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
   appointment,
 }) => {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  console.log('🎯 ViewAppointmentDialog: Full appointment object:', appointment);
-  console.log('🎯 ViewAppointmentDialog: Client name specifically:', appointment.client_name);
   
   // Extract client name from title if client_name is null
   const extractedClientName = appointment.client_name || 
@@ -51,7 +65,17 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
       ? appointment.notes.replace('Contact: ', '').trim()
       : null);
   
-  console.log('🎯 Extracted client name:', extractedClientName);
+  // Extract additional lawyers from notes
+  const additionalLawyerNames = useMemo(() => 
+    extractAdditionalLawyersFromNotes(appointment.notes),
+    [appointment.notes]
+  );
+  
+  // Get clean notes without the additional lawyers line
+  const cleanNotes = useMemo(() => 
+    getCleanNotes(appointment.notes),
+    [appointment.notes]
+  );
   
   const { closeDialog, openDialog } = useDialog();
   const { toast } = useToast();
@@ -62,57 +86,36 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
   const { data: contactData, isLoading: contactLoading, error: contactError } = useQuery({
     queryKey: ['contact-by-name', extractedClientName, firmId],
     queryFn: async () => {
-      console.log('🔍 ViewAppointmentDialog: Query function called with:', {
-        client_name: appointment.client_name,
-        extractedClientName: extractedClientName,
-        firmId: firmId,
-        enabled: !!extractedClientName && !!firmId
-      });
-      
       if (!extractedClientName || !firmId) {
-        console.log('❌ ViewAppointmentDialog: No extractedClientName or firmId - skipping query');
         return null;
       }
       
-      console.log('🔍 ViewAppointmentDialog: Executing contact search for:', extractedClientName);
-      
       // First try exact match
-      console.log('🔍 Trying exact match...');
       const { data: exactData, error: exactError } = await supabase
         .from('contacts')
         .select('*')
         .eq('firm_id', firmId)
         .eq('name', extractedClientName.trim());
       
-      console.log('🔍 Exact match result:', { data: exactData, error: exactError });
-      
       if (exactData && exactData.length > 0) {
-        console.log('✅ Found contact with exact match:', exactData[0]);
         return exactData[0];
       }
       
       // Try case-insensitive search  
-      console.log('🔍 Trying fuzzy match...');
       const { data: fuzzyData, error: fuzzyError } = await supabase
         .from('contacts')
         .select('*')
         .eq('firm_id', firmId)
         .ilike('name', `%${extractedClientName.trim()}%`);
       
-      console.log('🔍 Fuzzy match result:', { data: fuzzyData, error: fuzzyError });
-      
       if (fuzzyData && fuzzyData.length > 0) {
-        console.log('✅ Found contact with fuzzy match:', fuzzyData[0]);
         return fuzzyData[0];
       }
       
-      console.log('❌ No contact found for name:', extractedClientName);
       return null;
     },
     enabled: !!extractedClientName && !!firmId && extractedClientName !== 'Unknown Client',
   });
-
-  console.log('🔍 Contact query state:', { contactData, contactLoading, contactError });
 
   const cancelMutation = useMutation({
     mutationFn: async () => {
@@ -171,7 +174,6 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
 
   const handleEdit = () => {
     closeDialog();
-    // Convert the appointment to match EditAppointmentDialog's expected format
     const editAppointment = {
       id: appointment.id,
       title: appointment.title || '',
@@ -219,7 +221,7 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
           title: appointment.title,
           location: appointment.location,
           notes: appointment.notes,
-          firm_id: null, // Will be fetched in the dialog
+          firm_id: null,
           created_by_user_id: null,
           type: appointment.type
         }}
@@ -227,29 +229,16 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
     );
     
     closeDialog();
-    // Small delay to ensure dialog close completes before opening new one
     setTimeout(() => {
       openDialog(rescheduleDialog);
     }, 100);
   };
 
   const handleConvertToClient = () => {
-    console.log('🚀 ViewAppointmentDialog: handleConvertToClient called');
-    console.log('👤 Appointment details:', {
-      id: appointment.id,
-      client_name: appointment.client_name,
-      extractedClientName: extractedClientName,
-      title: appointment.title,
-      notes: appointment.notes
-    });
-    console.log('📄 Available contactData:', contactData);
-    
     closeDialog();
     
-    // Create contact data from appointment if no existing contact found
     const contactToConvert = contactData ? {
       ...contactData,
-      // Ensure all required fields exist
       referred_by_name: contactData.referred_by_name || '',
       referred_by_phone: contactData.referred_by_phone || ''
     } : {
@@ -272,41 +261,6 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
       created_by: null,
       last_visited_at: new Date().toISOString()
     };
-    
-    console.log('📝 Final contact data being passed to dialog:', contactToConvert);
-    
-    openDialog(
-      <ConvertContactDialog
-        contact={contactToConvert}
-        open={true}
-        onOpenChange={(open) => {
-          if (!open) {
-            closeDialog();
-          }
-        }}
-      />
-    );
-  };
-
-  const handleConvertContactToClient = () => {
-    closeDialog();
-    
-    // Use actual contact data if found, otherwise create a minimal contact object
-    const contactToConvert = contactData || {
-      id: 'temp-id',
-      name: appointment.client_name || '',
-      email: '',
-      phone: '',
-      notes: '',
-      address_line_1: '',
-      address_line_2: '',
-      pin_code: '',
-      state_id: '',
-      district_id: '',
-      visit_purpose: ''
-    };
-    
-    console.log('ViewAppointmentDialog: Converting contact with data:', contactToConvert);
     
     openDialog(
       <ConvertContactDialog
@@ -363,7 +317,7 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
     <Dialog open={true} onOpenChange={(open) => !open && closeDialog()}>
       <DialogContent className="max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto p-6">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold text-gray-900">
+          <DialogTitle className="text-xl font-semibold text-foreground">
             Appointment Details
           </DialogTitle>
         </DialogHeader>
@@ -371,7 +325,7 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
         <div className="space-y-6">
           {/* Title */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900">
+            <h3 className="text-lg font-medium text-foreground">
               {appointment.title || 'Untitled Appointment'}
             </h3>
             {appointment.status && (
@@ -384,17 +338,17 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
           {/* Date & Time */}
           <div className="grid grid-cols-1 gap-4">
             <div className="flex items-center gap-3">
-              <Calendar className="h-5 w-5 text-gray-500" />
+              <Calendar className="h-5 w-5 text-muted-foreground" />
               <div>
-                <p className="text-sm font-medium text-gray-700">Date</p>
-                <p className="text-sm text-gray-600">{formatDate(appointment.appointment_date)}</p>
+                <p className="text-sm font-medium text-foreground">Date</p>
+                <p className="text-sm text-muted-foreground">{formatDate(appointment.appointment_date)}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <Clock className="h-5 w-5 text-gray-500" />
+              <Clock className="h-5 w-5 text-muted-foreground" />
               <div>
-                <p className="text-sm font-medium text-gray-700">Time</p>
-                <p className="text-sm text-gray-600">{formatTime(appointment.appointment_time)}</p>
+                <p className="text-sm font-medium text-foreground">Time</p>
+                <p className="text-sm text-muted-foreground">{formatTime(appointment.appointment_time)}</p>
               </div>
             </div>
           </div>
@@ -402,51 +356,76 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
           {/* Client */}
           {appointment.client_name && (
             <div className="flex items-center gap-3">
-              <User className="h-5 w-5 text-gray-500" />
+              <User className="h-5 w-5 text-muted-foreground" />
               <div>
-                <p className="text-sm font-medium text-gray-700">Client</p>
-                <p className="text-sm text-gray-600">{appointment.client_name}</p>
+                <p className="text-sm font-medium text-foreground">Client</p>
+                <p className="text-sm text-muted-foreground">{appointment.client_name}</p>
               </div>
             </div>
           )}
 
-          {/* Assigned Lawyer */}
-          {appointment.lawyer_name && (
-            <div className="flex items-center gap-3">
-              <User className="h-5 w-5 text-gray-500" />
-              <div>
-                <p className="text-sm font-medium text-gray-700">Lawyer</p>
-                <p className="text-sm text-gray-600">{appointment.lawyer_name}</p>
+          {/* Assigned Lawyers Section */}
+          <div className="flex items-start gap-3">
+            <Users className="h-5 w-5 text-muted-foreground mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-foreground">Assigned Team</p>
+              <div className="mt-2 space-y-2">
+                {/* Primary Lawyer */}
+                {appointment.lawyer_name && (
+                  <div className="flex items-center gap-2">
+                    <Badge variant="default" className="bg-primary/10 text-primary border-primary/20">
+                      Primary
+                    </Badge>
+                    <span className="text-sm text-muted-foreground">{appointment.lawyer_name}</span>
+                  </div>
+                )}
+                
+                {/* Additional Lawyers */}
+                {additionalLawyerNames.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    {additionalLawyerNames.map((name, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <Badge variant="outline" className="bg-accent">
+                          {name}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {!appointment.lawyer_name && additionalLawyerNames.length === 0 && (
+                  <p className="text-sm text-muted-foreground">No team members assigned</p>
+                )}
               </div>
             </div>
-          )}
+          </div>
 
           {/* Type */}
           {appointment.type && (
             <div>
-              <p className="text-sm font-medium text-gray-700">Type</p>
-              <p className="text-sm text-gray-600 capitalize">{appointment.type.replace('_', ' ')}</p>
+              <p className="text-sm font-medium text-foreground">Type</p>
+              <p className="text-sm text-muted-foreground capitalize">{appointment.type.replace('_', ' ')}</p>
             </div>
           )}
 
           {/* Location */}
           {appointment.location && (
             <div className="flex items-center gap-3">
-              <MapPin className="h-5 w-5 text-gray-500" />
+              <MapPin className="h-5 w-5 text-muted-foreground" />
               <div>
-                <p className="text-sm font-medium text-gray-700">Location</p>
-                <p className="text-sm text-gray-600">{appointment.location}</p>
+                <p className="text-sm font-medium text-foreground">Location</p>
+                <p className="text-sm text-muted-foreground">{appointment.location}</p>
               </div>
             </div>
           )}
 
-          {/* Notes */}
-          {appointment.notes && (
+          {/* Notes - showing clean notes without additional lawyers line */}
+          {cleanNotes && (
             <div className="flex items-start gap-3">
-              <FileText className="h-5 w-5 text-gray-500 mt-0.5" />
+              <FileText className="h-5 w-5 text-muted-foreground mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-gray-700">Notes</p>
-                <p className="text-sm text-gray-600 whitespace-pre-wrap">{appointment.notes}</p>
+                <p className="text-sm font-medium text-foreground">Notes</p>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{cleanNotes}</p>
               </div>
             </div>
           )}
