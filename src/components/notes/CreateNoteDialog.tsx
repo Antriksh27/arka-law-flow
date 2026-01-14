@@ -69,25 +69,8 @@ export const CreateNoteDialog: React.FC<CreateNoteDialogProps> = ({
       const user = await supabase.auth.getUser();
       if (!user.data.user) throw new Error('Not authenticated');
 
-      // Determine if client_contact_id is a client or contact
-      let clientId = null;
-      let contactId = null;
-      
-      if (data.client_contact_id) {
-        // Check if it's a client
-        const { data: client } = await supabase
-          .from('clients')
-          .select('id')
-          .eq('id', data.client_contact_id)
-          .maybeSingle();
-        
-        if (client) {
-          clientId = data.client_contact_id;
-        } else {
-          // It's a contact
-          contactId = data.client_contact_id;
-        }
-      }
+      // Use client_contact_id as client_id (notes_v2 only supports client_id)
+      const clientId = data.client_contact_id || null;
 
       const noteData: any = {
         id: crypto.randomUUID(),
@@ -95,7 +78,6 @@ export const CreateNoteDialog: React.FC<CreateNoteDialogProps> = ({
         content: data.content || null,
         case_id: data.case_id === 'none' ? null : data.case_id || null,
         client_id: clientId,
-        contact_id: contactId,
         visibility: data.visibility,
         color: data.color,
         tags: data.tags,

@@ -102,30 +102,14 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
         finalContent = '[Drawing attached]';
       }
 
-      // Determine if client_contact_id is a client or contact
-      let clientId = null;
-      let contactId = null;
-      
-      if (data.client_contact_id) {
-        const { data: client } = await supabase
-          .from('clients')
-          .select('id')
-          .eq('id', data.client_contact_id)
-          .maybeSingle();
-        
-        if (client) {
-          clientId = data.client_contact_id;
-        } else {
-          contactId = data.client_contact_id;
-        }
-      }
+      // Use client_contact_id as client_id (notes_v2 only supports client_id)
+      const clientId = data.client_contact_id || null;
 
       const noteData = {
         title: data.title,
         content: finalContent || null,
         case_id: data.case_id === 'no-case' ? null : data.case_id,
         client_id: clientId,
-        contact_id: contactId,
         visibility: data.visibility,
         color: data.color,
         tags: data.tags,
