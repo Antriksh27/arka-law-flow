@@ -11,17 +11,15 @@ export const PrintView = React.forwardRef<HTMLDivElement, PrintViewProps>(
   ({ selectedDate, groupedHearings }, ref) => {
     return (
       <div ref={ref} className="hidden print:block bg-white p-4 print-view">
-        {/* Header with Company Logo */}
-        <div className="flex items-center justify-center gap-4 mb-4 pb-3 border-b-2 border-gray-300">
+        {/* Header with Company Logo - Centered */}
+        <div className="text-center mb-4 pb-3 border-b-2 border-gray-300">
           <img 
             src="/lovable-uploads/89ea18cf-8c73-4793-9dcc-1a192855a630.png" 
             alt="HRU Legal" 
-            className="h-16 w-auto"
+            className="h-16 w-auto mx-auto mb-2"
           />
-          <div className="text-center">
-            <h1 className="text-lg font-bold uppercase mb-1">Daily Cause List</h1>
-            <p className="text-sm">{format(selectedDate, 'EEEE, MMMM d, yyyy')}</p>
-          </div>
+          <h1 className="text-lg font-bold uppercase mb-1">Daily Cause List</h1>
+          <p className="text-sm">{format(selectedDate, 'EEEE, MMMM d, yyyy')}</p>
         </div>
         
         {groupedHearings.map((courtGroup) => (
@@ -37,27 +35,27 @@ export const PrintView = React.forwardRef<HTMLDivElement, PrintViewProps>(
                 <div key={judge.judgeName} className="mb-4">
                   {/* Judge Header with Court Boxes - matching JudgeSection */}
                   <div className="bg-gray-50 px-3 py-2 flex items-center justify-between mb-1">
-                    <h3 className="text-sm font-semibold uppercase underline">{judge.judgeName}</h3>
-                    <div className="flex gap-1">
+                    <h3 className="text-sm font-semibold uppercase underline flex-1">{judge.judgeName}</h3>
+                    <div className="flex items-center gap-1">
                       {/* Court Number Box 1 */}
-                      <div className="border-2 border-gray-800 px-2 py-1 text-center bg-white min-w-[40px]">
-                        <div className="font-bold text-[10px]">{firstHearing?.court_number || ''}</div>
-                        <div className="text-[8px]">{firstHearing?.bench || ''}</div>
+                      <div className="border-2 border-gray-800 text-center bg-white min-w-[40px] h-[32px] flex flex-col items-center justify-center">
+                        <div className="font-bold text-[10px] leading-tight">{firstHearing?.court_number || ''}</div>
+                        <div className="text-[8px] leading-tight">{firstHearing?.bench || ''}</div>
                       </div>
                       {/* Court Number Box 2 */}
-                      <div className="border-2 border-gray-800 px-2 py-1 text-center bg-white min-w-[40px]">
-                        <div className="font-bold text-[10px]"></div>
-                        <div className="text-[8px]"></div>
+                      <div className="border-2 border-gray-800 text-center bg-white min-w-[40px] h-[32px] flex flex-col items-center justify-center">
+                        <div className="font-bold text-[10px] leading-tight"></div>
+                        <div className="text-[8px] leading-tight"></div>
                       </div>
                       {/* Court Number Box 3 */}
-                      <div className="border-2 border-gray-800 px-2 py-1 text-center bg-white min-w-[40px]">
-                        <div className="font-bold text-[10px]"></div>
-                        <div className="text-[8px]"></div>
+                      <div className="border-2 border-gray-800 text-center bg-white min-w-[40px] h-[32px] flex flex-col items-center justify-center">
+                        <div className="font-bold text-[10px] leading-tight"></div>
+                        <div className="text-[8px] leading-tight"></div>
                       </div>
-                      {/* Status Boxes */}
-                      <div className="border-2 border-red-400 w-[30px] h-[28px] bg-red-200"></div>
-                      <div className="border-2 border-yellow-400 w-[30px] h-[28px] bg-yellow-200"></div>
-                      <div className="border-2 border-green-400 w-[30px] h-[28px] bg-green-200"></div>
+                      {/* Status Boxes - aligned height */}
+                      <div className="border-2 border-red-400 w-[30px] h-[32px] bg-red-200"></div>
+                      <div className="border-2 border-yellow-400 w-[30px] h-[32px] bg-yellow-200"></div>
+                      <div className="border-2 border-green-400 w-[30px] h-[32px] bg-green-200"></div>
                     </div>
                   </div>
                   
