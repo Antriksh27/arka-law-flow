@@ -26,7 +26,7 @@ max_rows = 1000
 verify_jwt = true
 
 [functions.reset-team-member-password]
-verify_jwt = true
+verify_jwt = false
 
 [functions.notify-appointment-changes]
 verify_jwt = false
