@@ -198,8 +198,12 @@ const ReceptionAppointments = () => {
               message: `${clientName} has arrived for their ${timeFormatted} appointment`,
               category: 'appointment',
               priority: 'high',
-              action_url: '/appointments',
+              action_url: `/appointments?id=${appointmentId}`,
               metadata: {
+                // Knock routing fields
+                module: 'appointments',
+                appointmentId: appointmentId,
+                // Additional context
                 appointment_id: appointmentId,
                 client_name: clientName,
                 appointment_time: appointment.appointment_time,
