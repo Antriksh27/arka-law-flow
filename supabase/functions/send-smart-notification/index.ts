@@ -34,7 +34,7 @@ serve(async (req) => {
 
     const request: NotificationRequest = await req.json();
     
-    console.log('Processing smart notification:', {
+    console.log('[send-smart-notification] Processing notification:', {
       event_type: request.event_type,
       category: request.category,
       priority: request.priority,
@@ -44,6 +44,7 @@ serve(async (req) => {
     let recipientIds: string[] = await resolveRecipients(supabase, request);
 
     if (recipientIds.length === 0) {
+      console.log('[send-smart-notification] No recipients found');
       return new Response(
         JSON.stringify({ success: true, message: 'No recipients found', sent: 0 }),
         { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
@@ -54,27 +55,30 @@ serve(async (req) => {
     let queuedCount = 0;
     let skippedCount = 0;
 
+    const KNOCK_API_KEY = Deno.env.get('KNOCK_API_KEY');
+    const knockRecipients: string[] = [];
+
     // 2. Process each recipient with their preferences
     for (const userId of recipientIds) {
       const prefs = await getUserPreferences(supabase, userId);
 
       // 3. Check if notification should be sent
       if (!shouldSendNotification(prefs, request)) {
-        console.log(`Skipping notification for user ${userId} - disabled in preferences`);
+        console.log(`[send-smart-notification] Skipping for user ${userId} - disabled in preferences`);
         skippedCount++;
         continue;
       }
 
       // 4. Check if entity is muted
       if (isEntityMuted(prefs, request)) {
-        console.log(`Skipping notification for user ${userId} - entity muted`);
+        console.log(`[send-smart-notification] Skipping for user ${userId} - entity muted`);
         skippedCount++;
         continue;
       }
 
       // 5. Check quiet hours
       if (isInQuietHours(prefs)) {
-        console.log(`Queueing notification for user ${userId} - quiet hours active`);
+        console.log(`[send-smart-notification] Queueing for user ${userId} - quiet hours active`);
         await queueForLater(supabase, userId, request);
         queuedCount++;
         continue;
@@ -84,17 +88,71 @@ serve(async (req) => {
       const frequency = getNotificationFrequency(prefs, request.category);
 
       if (frequency === 'instant') {
-        // Send immediately
+        // Add to Knock recipients list
+        knockRecipients.push(userId);
+        
+        // Also insert into DB for history/realtime
         await deliverNotification(supabase, userId, request, prefs);
         sentCount++;
       } else if (frequency === 'digest') {
-        // Add to digest batch
         await addToDigestBatch(supabase, userId, request);
         queuedCount++;
       }
     }
 
-    console.log(`Notification processing complete: ${sentCount} sent, ${queuedCount} queued, ${skippedCount} skipped`);
+    // 7. Send to Knock if we have recipients and API key
+    if (KNOCK_API_KEY && knockRecipients.length > 0) {
+      try {
+        const workflowKey = 'smart-notification';
+        
+        console.log('[send-smart-notification] Triggering Knock workflow:', {
+          workflow: workflowKey,
+          recipientCount: knockRecipients.length,
+          event_type: request.event_type
+        });
+
+        const knockResponse = await fetch(`https://api.knock.app/v1/workflows/${workflowKey}/trigger`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${KNOCK_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            recipients: knockRecipients.map(id => ({ id })),
+            data: {
+              subject: request.title,
+              body: request.message,
+              event_type: request.event_type,
+              category: request.category,
+              priority: request.priority || 'normal',
+              action_url: request.action_url,
+              reference_id: request.reference_id,
+              ...request.metadata,
+            },
+          }),
+        });
+
+        if (knockResponse.ok) {
+          const knockResult = await knockResponse.json();
+          console.log('[send-smart-notification] Knock notification sent:', {
+            workflow_run_id: knockResult.workflow_run_id,
+            recipients: knockRecipients.length
+          });
+        } else {
+          const errorText = await knockResponse.text();
+          console.error('[send-smart-notification] Knock API error:', {
+            status: knockResponse.status,
+            error: errorText
+          });
+        }
+      } catch (knockError) {
+        console.error('[send-smart-notification] Knock trigger failed:', knockError);
+      }
+    } else if (!KNOCK_API_KEY) {
+      console.warn('[send-smart-notification] KNOCK_API_KEY not configured, skipping Knock delivery');
+    }
+
+    console.log(`[send-smart-notification] Complete: ${sentCount} sent, ${queuedCount} queued, ${skippedCount} skipped`);
 
     return new Response(
       JSON.stringify({ 
@@ -108,7 +166,7 @@ serve(async (req) => {
     );
 
   } catch (error: any) {
-    console.error('Error in send-smart-notification:', error);
+    console.error('[send-smart-notification] Error:', error);
     return new Response(
       JSON.stringify({ error: error.message, success: false }),
       { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
