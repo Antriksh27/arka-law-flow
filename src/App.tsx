@@ -23,6 +23,7 @@ const Team = lazy(() => import('./pages/Team'));
 const NotificationDashboard = lazy(() => import('./components/notifications/NotificationDashboard'));
 const DailyBoard = lazy(() => import('./pages/DailyBoard'));
 const CauseList = lazy(() => import('./pages/CauseList'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 
 import { defaultQueryConfig } from './lib/queryConfig';
 import { useAuth } from './contexts/AuthContext';
@@ -95,8 +96,13 @@ function AppRoutes() {
               <Route path="/book/:lawyerId" element={<BookingPage />} />
               <Route path="/book" element={<LawyerSelection />} />
               
-              {/* Auth route */}
+              {/* Auth routes */}
               <Route path="/auth" element={<Auth />} />
+              <Route path="/reset-password" element={
+                <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+                  <ResetPassword />
+                </Suspense>
+              } />
               
               {/* Enhanced case details route */}
               <Route path="/cases/:id/legalkart-details" element={
