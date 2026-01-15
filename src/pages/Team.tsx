@@ -25,9 +25,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 // FIXED: Updated icon imports to available names in lucide-react
-import { UserPlus, Search, Check, Mail, Phone, MoreHorizontal, User, Briefcase, CheckSquare, Settings, X, Calendar, Edit, Trash2, SlidersHorizontal } from "lucide-react";
+import { UserPlus, Search, Check, Mail, Phone, MoreHorizontal, User, Briefcase, CheckSquare, Settings, X, Calendar, Edit, Trash2, SlidersHorizontal, KeyRound } from "lucide-react";
 import AddTeamMemberDialog from "@/components/team/AddTeamMemberDialog";
 import EditTeamMemberDialog from "@/components/team/EditTeamMemberDialog";
+import ResetPasswordDialog from "@/components/team/ResetPasswordDialog";
 import DeleteTeamMemberDialog from "@/components/team/DeleteTeamMemberDialog";
 
 const roleLabels: Record<string, string> = {
@@ -52,6 +53,7 @@ function TeamDirectory() {
   const [addMemberOpen, setAddMemberOpen] = useState(false);
   const [editMemberOpen, setEditMemberOpen] = useState(false);
   const [deleteMemberOpen, setDeleteMemberOpen] = useState(false);
+  const [resetPasswordOpen, setResetPasswordOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<any | null>(null);
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
@@ -100,6 +102,11 @@ function TeamDirectory() {
   const handleDeleteMember = (member: any) => {
     setSelectedMember(member);
     setDeleteMemberOpen(true);
+  };
+
+  const handleResetPassword = (member: any) => {
+    setSelectedMember(member);
+    setResetPasswordOpen(true);
   };
 
   if (authLoading) {
@@ -284,6 +291,12 @@ function TeamDirectory() {
                                       handleEditMember(member);
                                     }}>
                                       <Edit className="w-4 h-4 mr-2" /> Edit Member
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleResetPassword(member);
+                                    }}>
+                                      <KeyRound className="w-4 h-4 mr-2" /> Reset Password
                                     </DropdownMenuItem>
                                     <DropdownMenuItem 
                                       onClick={(e) => {
@@ -599,19 +612,31 @@ function TeamDirectory() {
               </div>
 
               {userRole === 'admin' && (
-                <div className="flex gap-2 mt-4">
+                <div className="flex flex-col gap-2 mt-4">
+                  <div className="flex gap-2">
+                    <Button 
+                      className="flex-1"
+                      variant="outline"
+                      onClick={() => {
+                        setShowMemberSheet(false);
+                        handleEditMember(detailMember);
+                      }}
+                    >
+                      <Edit className="w-4 h-4 mr-2" /> Edit
+                    </Button>
+                    <Button 
+                      className="flex-1"
+                      variant="outline"
+                      onClick={() => {
+                        setShowMemberSheet(false);
+                        handleResetPassword(detailMember);
+                      }}
+                    >
+                      <KeyRound className="w-4 h-4 mr-2" /> Reset Password
+                    </Button>
+                  </div>
                   <Button 
-                    className="flex-1"
-                    variant="outline"
-                    onClick={() => {
-                      setShowMemberSheet(false);
-                      handleEditMember(detailMember);
-                    }}
-                  >
-                    <Edit className="w-4 h-4 mr-2" /> Edit
-                  </Button>
-                  <Button 
-                    className="flex-1"
+                    className="w-full"
                     variant="destructive"
                     onClick={() => {
                       setShowMemberSheet(false);
@@ -695,6 +720,11 @@ function TeamDirectory() {
       <DeleteTeamMemberDialog 
         open={deleteMemberOpen} 
         onOpenChange={setDeleteMemberOpen}
+        member={selectedMember}
+      />
+      <ResetPasswordDialog 
+        open={resetPasswordOpen} 
+        onOpenChange={setResetPasswordOpen}
         member={selectedMember}
       />
     </>
