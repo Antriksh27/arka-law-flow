@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import {
   Dialog,
   DialogContent,
@@ -11,7 +10,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { KeyRound } from 'lucide-react';
+import { KeyRound, ExternalLink, Copy } from 'lucide-react';
 
 interface ResetPasswordDialogProps {
   open: boolean;
@@ -22,54 +21,22 @@ interface ResetPasswordDialogProps {
 const ResetPasswordDialog = ({ open, onOpenChange, member }: ResetPasswordDialogProps) => {
   const { role: userRole } = useAuth();
   const { toast } = useToast();
-  const [isResetting, setIsResetting] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  const handleResetPassword = async () => {
-    const canResetPassword = userRole === 'admin';
-    if (!canResetPassword) {
+  const handleCopyEmail = () => {
+    if (member?.email) {
+      navigator.clipboard.writeText(member.email);
+      setCopied(true);
       toast({
-        title: "Access Denied",
-        description: "Only administrators can reset passwords.",
-        variant: "destructive",
+        title: "Copied",
+        description: "Email address copied to clipboard.",
       });
-      return;
+      setTimeout(() => setCopied(false), 2000);
     }
+  };
 
-    if (!member?.user_id) {
-      toast({
-        title: "Error",
-        description: "Unable to identify the user. Please try again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsResetting(true);
-
-    try {
-      const { error } = await supabase.functions.invoke('reset-team-member-password', {
-        body: { user_id: member.user_id },
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      toast({
-        title: "Password Reset",
-        description: `Password for ${member.full_name} has been reset to the default value.`,
-      });
-      onOpenChange(false);
-    } catch (error: any) {
-      console.error('Error resetting password:', error);
-      toast({
-        title: "Error",
-        description: error?.message || "Failed to reset password. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsResetting(false);
-    }
+  const handleOpenSupabase = () => {
+    window.open('https://supabase.com/dashboard/project/hpcnipcbymruvsnqrmjx/auth/users', '_blank');
   };
 
   const canResetPassword = userRole === 'admin';
@@ -80,7 +47,7 @@ const ResetPasswordDialog = ({ open, onOpenChange, member }: ResetPasswordDialog
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[400px]">
+      <DialogContent className="sm:max-w-[450px]">
         <DialogHeader>
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
@@ -89,35 +56,45 @@ const ResetPasswordDialog = ({ open, onOpenChange, member }: ResetPasswordDialog
             <div>
               <DialogTitle>Reset Password</DialogTitle>
               <DialogDescription>
-                Reset password to default value
+                Reset password for {member.full_name}
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
-        <div className="py-4">
+        <div className="py-4 space-y-4">
           <p className="text-sm text-muted-foreground">
-            Are you sure you want to reset the password for <strong>{member.full_name}</strong>? 
-            Their password will be set to the default value: <code className="bg-muted px-1 py-0.5 rounded text-xs font-mono">Hrulegal@711</code>
+            To reset a team member's password, you need to do this directly in Supabase:
           </p>
-          <p className="text-sm text-muted-foreground mt-2">
-            Please inform the team member of their new password so they can log in.
-          </p>
+          
+          <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
+            <li>Open the Supabase Dashboard (link below)</li>
+            <li>Go to <strong>Authentication → Users</strong></li>
+            <li>Find <strong>{member.full_name}</strong> ({member.email})</li>
+            <li>Click the <strong>⋮</strong> menu → <strong>Send password recovery</strong></li>
+          </ol>
+
+          <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+            <span className="text-sm font-mono truncate flex-1">{member.email}</span>
+            <Button variant="ghost" size="sm" onClick={handleCopyEmail}>
+              <Copy className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex-col sm:flex-row gap-2">
           <Button 
             variant="outline" 
             onClick={() => onOpenChange(false)}
-            disabled={isResetting}
+            className="w-full sm:w-auto"
           >
-            Cancel
+            Close
           </Button>
           <Button 
-            onClick={handleResetPassword}
-            disabled={isResetting}
+            onClick={handleOpenSupabase}
+            className="w-full sm:w-auto"
           >
-            {isResetting ? 'Resetting...' : 'Reset Password'}
+            <ExternalLink className="w-4 h-4 mr-2" /> Open Supabase
           </Button>
         </DialogFooter>
       </DialogContent>
