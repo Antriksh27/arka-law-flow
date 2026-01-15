@@ -112,6 +112,30 @@ serve(async (req) => {
           },
         });
       }
+
+      // Status changed to arrived (client has arrived)
+      if (old_record.status !== 'arrived' && record.status === 'arrived') {
+        // Only notify the lawyer(s), not the client
+        const lawyerRecipients = [record.lawyer_id, record.created_by_user_id].filter(Boolean);
+        await sendNotif({
+          event_type: 'client_arrived',
+          recipients: 'custom',
+          recipient_ids: lawyerRecipients,
+          reference_id: record.id,
+          firm_id: record.firm_id,
+          title: 'Client Has Arrived',
+          message: `Client has arrived for their ${record.appointment_time?.slice(0, 5) || ''} appointment`,
+          category: 'appointment',
+          priority: 'high',
+          action_url: `/appointments`,
+          metadata: { 
+            date: record.appointment_date,
+            time: record.appointment_time,
+            title: record.title,
+            token_number: record.daily_serial_number
+          },
+        });
+      }
     }
 
     return new Response(

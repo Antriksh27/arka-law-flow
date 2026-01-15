@@ -21,7 +21,7 @@ const ReceptionSchedule = () => {
         .select('*')
         .eq('firm_id', firmId)
         .eq('appointment_date', today)
-        .order('appointment_time', { ascending: true });
+        .order('daily_serial_number', { ascending: true });
       
       if (error) throw error;
 
@@ -128,8 +128,8 @@ const ReceptionSchedule = () => {
               <p className="text-sm text-[#6B7280] mt-1">Enjoy your free day!</p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {todayAppointments?.map((appointment) => {
+          <div className="space-y-3">
+              {todayAppointments?.map((appointment, index) => {
                 const timeStatus = getTimeStatus(appointment.appointment_time);
                 
                 return (
@@ -146,6 +146,10 @@ const ReceptionSchedule = () => {
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-3">
+                          {/* Token Number Badge */}
+                          <Badge className="bg-[#1E3A8A] text-white font-bold px-3 py-1">
+                            Token #{(appointment as any).daily_serial_number || index + 1}
+                          </Badge>
                           <div className="flex items-center gap-2">
                             <Clock className="w-4 h-4 text-[#6B7280]" />
                             <span className="font-medium text-[#111827]">
