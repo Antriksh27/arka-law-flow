@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { ClientSelector } from './ClientSelector';
 import { CaseSelector } from '@/components/appointments/CaseSelector';
+import { ContactSelector } from '@/components/contacts/ContactSelector';
 
 interface EditTaskDialogProps {
   open: boolean;
@@ -28,9 +29,10 @@ interface TaskFormData {
   due_date?: string;
   reminder_time?: string;
   tags?: string;
-  link_type?: 'case' | 'client' | 'none';
+  link_type?: 'case' | 'client' | 'contact' | 'none';
   case_id?: string;
   client_id?: string;
+  contact_id?: string;
 }
 
 export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
@@ -92,6 +94,9 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
       } else if (taskData.client_id) {
         setValue('link_type', 'client');
         setValue('client_id', taskData.client_id);
+      } else if ((taskData as any).contact_id) {
+        setValue('link_type', 'contact');
+        setValue('contact_id', (taskData as any).contact_id);
       } else {
         setValue('link_type', 'none');
       }
@@ -170,6 +175,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
         reminder_time: data.reminder_time ? new Date(data.reminder_time).toISOString() : null,
         case_id: data.link_type === 'case' ? data.case_id || null : null,
         client_id: data.link_type === 'client' ? data.client_id || null : null,
+        contact_id: data.link_type === 'contact' ? data.contact_id || null : null,
         tags: data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(Boolean) : [],
         updated_at: new Date().toISOString()
       };
@@ -186,6 +192,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
       queryClient.invalidateQueries({ queryKey: ['task', taskId] });
       queryClient.invalidateQueries({ queryKey: ['case-tasks'] });
       queryClient.invalidateQueries({ queryKey: ['client-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['contact-tasks'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
       toast({ title: "Task updated successfully" });
       onClose();
@@ -265,6 +272,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
                 <SelectItem value="none" className="hover:bg-gray-50">No Link</SelectItem>
                 <SelectItem value="case" className="hover:bg-gray-50">Link to Case</SelectItem>
                 <SelectItem value="client" className="hover:bg-gray-50">Link to Client</SelectItem>
+                <SelectItem value="contact" className="hover:bg-gray-50">Link to Contact</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -292,6 +300,19 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
                 value={watch('client_id')}
                 onValueChange={(value) => setValue('client_id', value)}
                 placeholder="Search and select a client..."
+              />
+            </div>
+          )}
+
+          {linkType === 'contact' && (
+            <div className="space-y-2">
+              <Label htmlFor="contact_id" className="text-sm font-medium text-gray-700">
+                Select Contact
+              </Label>
+              <ContactSelector
+                value={watch('contact_id') || ''}
+                onValueChange={(value) => setValue('contact_id', value)}
+                placeholder="Search and select a contact..."
               />
             </div>
           )}
