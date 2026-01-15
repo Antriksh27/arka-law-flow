@@ -81,6 +81,16 @@ function AppRoutes() {
   useRealtimeNotifications();
 
   useEffect(() => {
+    // Detect password recovery tokens in URL hash and redirect to reset-password page
+    const hash = window.location.hash;
+    if (hash && hash.includes('type=recovery') && hash.includes('access_token')) {
+      // Redirect to reset-password page with the hash
+      window.location.href = '/reset-password' + hash;
+      return;
+    }
+  }, []);
+
+  useEffect(() => {
     // Prefetch when user logs in
     if (user) {
       prefetchCommonQueries();
