@@ -189,7 +189,7 @@ const ReceptionAppointments = () => {
         try {
           const { data, error: notifError } = await supabase.functions.invoke('send-smart-notification', {
             body: {
-              event_type: 'client_arrived',
+              event_type: 'appointment', // Using valid enum - metadata.event contains 'client_arrived'
               recipients: 'custom',
               recipient_ids: lawyerIds,
               reference_id: appointmentId,
@@ -203,6 +203,8 @@ const ReceptionAppointments = () => {
                 // Knock routing fields
                 module: 'appointments',
                 appointmentId: appointmentId,
+                // Specific event subtype
+                event: 'client_arrived',
                 // Additional context
                 appointment_id: appointmentId,
                 client_name: clientName,
