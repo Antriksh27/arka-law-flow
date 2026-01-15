@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Clock, User, Plus, UserCheck, Trash2 } from 'lucide-react';
+import { Calendar, Clock, User, Plus, UserCheck, Trash2, AlertTriangle, Monitor } from 'lucide-react';
 import { format, parseISO, isWithinInterval, subMinutes } from 'date-fns';
 import BookAppointmentDialog from '@/components/reception/BookAppointmentDialog';
 import EditAppointmentDialog from '@/components/reception/EditAppointmentDialog';
@@ -212,8 +212,40 @@ const ReceptionAppointments = () => {
     },
   });
 
+  // Mark late mutation
+  const markLateMutation = useMutation({
+    mutationFn: async (appointmentId: string) => {
+      const { error } = await supabase
+        .from('appointments')
+        .update({ status: 'late' })
+        .eq('id', appointmentId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reception-appointments'] });
+      
+      toast({
+        title: "Marked as Late",
+        description: "Client has been marked as late.",
+      });
+    },
+    onError: (error) => {
+      console.error('Error marking late:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to mark client as late.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const shouldShowArrivedButton = (appointment: any) => {
     return appointment.status === 'upcoming' || appointment.status === 'late' || appointment.status === 'rescheduled';
+  };
+
+  const shouldShowLateButton = (appointment: any) => {
+    return appointment.status === 'upcoming' || appointment.status === 'rescheduled';
   };
 
   const getArrivedButtonText = (appointment: any) => {
@@ -264,13 +296,23 @@ const ReceptionAppointments = () => {
           <h1 className="text-2xl font-semibold text-[#111827]">Appointments</h1>
           <p className="text-[#6B7280] mt-1">Manage appointments for all lawyers</p>
         </div>
-        <Button 
-          className="gap-2"
-          onClick={() => setBookAppointmentOpen(true)}
-        >
-          <Plus className="w-4 h-4" />
-          Book Appointment
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline"
+            className="gap-2"
+            onClick={() => window.open('/reception/display-board', '_blank')}
+          >
+            <Monitor className="w-4 h-4" />
+            Display Board
+          </Button>
+          <Button 
+            className="gap-2"
+            onClick={() => setBookAppointmentOpen(true)}
+          >
+            <Plus className="w-4 h-4" />
+            Book Appointment
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -392,6 +434,18 @@ const ReceptionAppointments = () => {
                         >
                           <UserCheck className="w-4 h-4 mr-1" />
                           {getArrivedButtonText(appointment)}
+                        </Button>
+                      )}
+                      {shouldShowLateButton(appointment) && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="text-orange-600 border-orange-200 hover:bg-orange-50"
+                          onClick={() => markLateMutation.mutate(appointment.id)}
+                          disabled={markLateMutation.isPending}
+                        >
+                          <AlertTriangle className="w-4 h-4 mr-1" />
+                          Mark Late
                         </Button>
                       )}
                       <Button 

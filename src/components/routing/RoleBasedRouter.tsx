@@ -33,6 +33,7 @@ import ReceptionContacts from '@/pages/reception/ReceptionContacts';
 import ReceptionAppointments from '@/pages/reception/ReceptionAppointments';
 import ReceptionSchedule from '@/pages/reception/ReceptionSchedule';
 import ReceptionCalendar from '@/pages/reception/ReceptionCalendar';
+import ReceptionDisplayBoard from '@/pages/reception/ReceptionDisplayBoard';
 
 // Office Staff pages
 import OfficeStaffLayout from '@/components/layout/OfficeStaffLayout';
@@ -70,6 +71,7 @@ const RoleBasedRouter = () => {
             <Route path="/reception/appointments" element={<ReceptionAppointments />} />
             <Route path="/reception/schedule" element={<ReceptionSchedule />} />
             <Route path="/reception/calendar" element={<ReceptionCalendar />} />
+            <Route path="/reception/display-board" element={<ReceptionDisplayBoard />} />
             <Route path="/chat" element={<ModernMessenger />} />
             <Route path="*" element={<ReceptionHome />} />
           </Routes>
