@@ -22,6 +22,7 @@ interface CreateTaskDialogProps {
   onClose: () => void;
   caseId?: string;
   clientId?: string;
+  contactId?: string;
 }
 
 interface TaskFormData {
@@ -42,7 +43,8 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   open,
   onClose,
   caseId,
-  clientId
+  clientId,
+  contactId
 }) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -204,7 +206,8 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
         due_date: data.due_date ? new Date(data.due_date).toISOString().split('T')[0] : null,
         reminder_time: data.reminder_time ? new Date(data.reminder_time).toISOString() : null,
         case_id: data.link_type === 'case' ? data.case_id || null : null,
-        client_id: clientId,
+        client_id: clientId || null,
+        contact_id: contactId || null,
         created_by: user.data.user.id,
         firm_id: firmId,
         tags: data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(Boolean) : []
