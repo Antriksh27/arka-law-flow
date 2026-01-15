@@ -9,9 +9,10 @@ import RescheduleAppointmentDialog from '../reception/RescheduleAppointmentDialo
 import { ConvertToClientDialog } from './ConvertToClientDialog';
 import { ConvertToClientDialog as ConvertContactDialog } from '@/components/contacts/ConvertToClientDialog';
 import { CreateNoteMultiModal } from '@/components/notes/CreateNoteMultiModal';
+import { CreateTaskDialog } from '@/components/tasks/CreateTaskDialog';
 import { parseISO } from 'date-fns';
 import { TimeUtils } from '@/lib/timeUtils';
-import { Calendar, Clock, User, MapPin, FileText, Edit, RotateCcw, X, UserPlus, Users, Trash, StickyNote } from 'lucide-react';
+import { Calendar, Clock, User, MapPin, FileText, Edit, RotateCcw, X, UserPlus, Users, Trash, StickyNote, CheckSquare } from 'lucide-react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -41,6 +42,7 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
 }) => {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [showNoteDialog, setShowNoteDialog] = useState(false);
+  const [showTaskDialog, setShowTaskDialog] = useState(false);
   
   // Extract client name from title if client_name is null
   const extractedClientName = appointment.client_name || 
@@ -443,6 +445,14 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
           </Button>
           <Button
             variant="outline"
+            onClick={() => setShowTaskDialog(true)}
+            className="flex-1"
+          >
+            <CheckSquare className="h-4 w-4 mr-2" />
+            Create Task
+          </Button>
+          <Button
+            variant="outline"
             onClick={handleEdit}
             className="flex-1"
           >
@@ -508,6 +518,14 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
       <CreateNoteMultiModal
         open={showNoteDialog}
         onClose={() => setShowNoteDialog(false)}
+        clientId={appointment.client_id || undefined}
+        contactId={contactData?.id || undefined}
+      />
+
+      {/* Task Dialog - Links to client or contact from appointment */}
+      <CreateTaskDialog
+        open={showTaskDialog}
+        onClose={() => setShowTaskDialog(false)}
         clientId={appointment.client_id || undefined}
         contactId={contactData?.id || undefined}
       />
