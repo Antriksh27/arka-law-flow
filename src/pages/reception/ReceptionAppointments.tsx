@@ -72,7 +72,7 @@ const ReceptionAppointments = () => {
         .select('*')
         .eq('firm_id', firmId)
         .eq('appointment_date', selectedDate)
-        .order('appointment_time', { ascending: true });
+        .order('daily_serial_number', { ascending: true });
 
       if (selectedLawyer !== 'all') {
         query = query.eq('lawyer_id', selectedLawyer);
@@ -136,22 +136,70 @@ const ReceptionAppointments = () => {
     enabled: !!firmId
   });
 
-  // Mark arrived mutation
+  // Mark arrived mutation with notification
   const markArrivedMutation = useMutation({
     mutationFn: async (appointmentId: string) => {
+      // First update the status
       const { error } = await supabase
         .from('appointments')
         .update({ status: 'arrived' })
         .eq('id', appointmentId);
       
       if (error) throw error;
+
+      // Fetch appointment details for notification
+      const appointment = appointments?.find(a => a.id === appointmentId);
+      if (!appointment) return;
+
+      // Get all assigned lawyers (primary)
+      const lawyerIds: string[] = [];
+      if (appointment.lawyer_id) {
+        lawyerIds.push(appointment.lawyer_id);
+      }
+
+      // Try to fetch additional lawyers (skipped if table doesn't exist in types)
+      // For now, just use primary lawyer - additional lawyers feature can be added later
+
+      // Send notification to all assigned lawyers
+      if (lawyerIds.length > 0) {
+        const timeFormatted = appointment.appointment_time?.slice(0, 5) || 'scheduled time';
+        const clientName = appointment.client_name || 'A client';
+        const apptWithSerial = appointment as any;
+
+        try {
+          await supabase.functions.invoke('send-smart-notification', {
+            body: {
+              event_type: 'client_arrived',
+              recipients: 'custom',
+              recipient_ids: lawyerIds,
+              reference_id: appointmentId,
+              firm_id: firmId,
+              title: 'Client Has Arrived',
+              message: `${clientName} has arrived for their ${timeFormatted} appointment`,
+              category: 'appointment',
+              priority: 'high',
+              action_url: '/appointments',
+              metadata: {
+                appointment_id: appointmentId,
+                client_name: clientName,
+                appointment_time: appointment.appointment_time,
+                token_number: apptWithSerial.daily_serial_number
+              }
+            }
+          });
+        } catch (notifError) {
+          console.error('Failed to send arrival notification:', notifError);
+          // Don't throw - the status update succeeded
+        }
+      }
     },
-    onSuccess: (_, appointmentId) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reception-appointments'] });
       
       toast({
         title: "Success",
-        description: "Client marked as arrived!",
+        description: "Client marked as arrived! Lawyers have been notified.",
+        sound: true,
       });
     },
     onError: (error) => {
@@ -163,40 +211,6 @@ const ReceptionAppointments = () => {
       });
     },
   });
-
-  // Mark late mutation
-  const markLateMutation = useMutation({
-    mutationFn: async (appointmentId: string) => {
-      const { error } = await supabase
-        .from('appointments')
-        .update({ status: 'late' })
-        .eq('id', appointmentId);
-      
-      if (error) throw error;
-    },
-    onSuccess: (_, appointmentId) => {
-      queryClient.invalidateQueries({ queryKey: ['reception-appointments'] });
-    },
-  });
-
-  // Check for late appointments and update them
-  React.useEffect(() => {
-    if (!appointments) return;
-    
-    const now = new Date();
-    appointments.forEach((appointment) => {
-      // Only mark as late if status is upcoming or rescheduled
-      if ((appointment.status === 'upcoming' || appointment.status === 'rescheduled') && appointment.appointment_date && appointment.appointment_time) {
-        const appointmentDateTime = parseISO(`${appointment.appointment_date}T${appointment.appointment_time}`);
-        // Mark as late if 15 minutes have passed after the scheduled time (end of arrival window)
-        const fifteenMinutesAfter = new Date(appointmentDateTime.getTime() + 15 * 60 * 1000);
-        
-        if (now > fifteenMinutesAfter) {
-          markLateMutation.mutate(appointment.id);
-        }
-      }
-    });
-  }, [appointments]); // Removed markLateMutation from dependencies to prevent infinite loop
 
   const shouldShowArrivedButton = (appointment: any) => {
     return appointment.status === 'upcoming' || appointment.status === 'late' || appointment.status === 'rescheduled';
@@ -312,11 +326,15 @@ const ReceptionAppointments = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {appointments?.map((appointment) => (
+              {appointments?.map((appointment, index) => (
                 <div key={appointment.id} className="border border-[#E5E7EB] rounded-lg p-4 hover:bg-[#F9FAFB] transition-colors">
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
+                        {/* Token Number Badge */}
+                        <Badge className="bg-[#1E3A8A] text-white font-bold px-3 py-1">
+                          Token #{(appointment as any).daily_serial_number || index + 1}
+                        </Badge>
                         <div className="flex items-center gap-1">
                           <Clock className="w-4 h-4 text-[#6B7280]" />
                            <span className="font-medium text-[#111827]">
