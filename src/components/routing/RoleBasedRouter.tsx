@@ -11,6 +11,7 @@ import NotFound from '@/pages/NotFound';
 
 // Lazy load heavy pages
 const Contacts = lazy(() => import('@/pages/Contacts'));
+const ContactInfo = lazy(() => import('@/pages/ContactInfo'));
 import Cases from '@/pages/Cases';
 const CaseDetailEnhanced = lazy(() => import('@/pages/CaseDetailEnhanced'));
 const Clients = lazy(() => import('@/pages/Clients'));
@@ -114,6 +115,7 @@ const RoleBasedRouter = () => {
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/contacts" element={<Contacts />} />
+            <Route path="/contacts/:id" element={<ContactInfo />} />
             <Route path="/cases" element={<Cases />} />
             <Route path="/cases/:id" element={<CaseDetailEnhanced />} />
             <Route path="/ecourts" element={<ECourts />} />
@@ -144,6 +146,7 @@ const RoleBasedRouter = () => {
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/contacts" element={<Contacts />} />
+          <Route path="/contacts/:id" element={<ContactInfo />} />
           <Route path="/cases" element={<Cases />} />
           <Route path="/cases/:id" element={<CaseDetailEnhanced />} />
           <Route path="/ecourts" element={<ECourts />} />

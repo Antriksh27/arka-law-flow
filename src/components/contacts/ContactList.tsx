@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { ContactsHeader } from './ContactsHeader';
@@ -13,6 +14,7 @@ import { DeleteContactDialog } from './DeleteContactDialog';
 import { ContactDetailsDialog } from './ContactDetailsDialog';
 
 export const ContactList = () => {
+  const navigate = useNavigate();
   const { firmId } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -80,8 +82,8 @@ export const ContactList = () => {
   };
 
   const handleViewContact = (contact: any) => {
-    setSelectedContact(contact);
-    setShowDetailsDialog(true);
+    // Navigate to contact detail page instead of opening dialog
+    navigate(`/contacts/${contact.id}`);
   };
 
   return (

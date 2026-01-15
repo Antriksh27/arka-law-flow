@@ -1,0 +1,226 @@
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Loader2, ListTodo, Calendar, User, Plus } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { TimeUtils } from '@/lib/timeUtils';
+import { CreateTaskDialog } from '../tasks/CreateTaskDialog';
+import { useIsMobile } from '@/hooks/use-mobile';
+
+interface ContactTasksProps {
+  contactId: string;
+}
+
+export const ContactTasks: React.FC<ContactTasksProps> = ({ contactId }) => {
+  const isMobile = useIsMobile();
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+
+  const { data: tasks = [], isLoading } = useQuery({
+    queryKey: ['contact-tasks', contactId],
+    queryFn: async () => {
+      const { data: simpleTasks, error: simpleError } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('contact_id', contactId)
+        .order('created_at', { ascending: false });
+      
+      if (simpleError) throw simpleError;
+      
+      // Get assigned user names separately
+      const tasksWithUsers = await Promise.all(
+        (simpleTasks || []).map(async (task) => {
+          if (task.assigned_to) {
+            const { data: teamMember } = await supabase
+              .from('team_members')
+              .select('full_name')
+              .eq('user_id', task.assigned_to)
+              .single();
+            
+            return {
+              ...task,
+              assigned_user: teamMember
+            };
+          }
+          return { ...task, assigned_user: null };
+        })
+      );
+      
+      return tasksWithUsers;
+    },
+  });
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'todo':
+        return 'bg-slate-100 text-slate-700 border-slate-200';
+      case 'in_progress':
+        return 'bg-blue-100 text-blue-700 border-blue-200';
+      case 'completed':
+        return 'bg-green-100 text-green-700 border-green-200';
+      default:
+        return 'bg-gray-100 text-gray-700 border-gray-200';
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high':
+        return 'bg-red-100 text-red-700 border-red-200';
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+      case 'low':
+        return 'bg-green-100 text-green-700 border-green-200';
+      default:
+        return 'bg-gray-100 text-gray-700 border-gray-200';
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <Card className="bg-white rounded-2xl shadow-sm">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-center gap-2 text-gray-500">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Loading tasks...
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (isMobile) {
+    return (
+      <>
+        <Card className="bg-white rounded-2xl shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="text-base font-semibold">Tasks</CardTitle>
+            <Button 
+              size="sm" 
+              className="bg-primary hover:bg-primary/90 h-9" 
+              onClick={() => setShowCreateDialog(true)}
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              Add
+            </Button>
+          </CardHeader>
+          <CardContent className="px-3 pb-3">
+            {tasks.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <ListTodo className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                <p className="text-sm">No tasks assigned</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {tasks.map((task) => (
+                  <Card key={task.id} className="active:scale-95 transition-transform">
+                    <CardContent className="p-3">
+                      <div className="font-medium text-sm text-gray-900 mb-2">
+                        {task.title}
+                      </div>
+                      <div className="flex items-center gap-1 flex-wrap mb-2">
+                        <Badge className={`${getStatusColor(task.status)} text-xs`}>
+                          {task.status?.replace('_', ' ')}
+                        </Badge>
+                        <Badge className={`${getPriorityColor(task.priority)} text-xs`}>
+                          {task.priority}
+                        </Badge>
+                      </div>
+                      {task.description && (
+                        <div className="text-xs text-gray-600 mb-2 line-clamp-2">
+                          {task.description}
+                        </div>
+                      )}
+                      <div className="flex items-center gap-3 text-xs text-gray-500">
+                        <div className="flex items-center gap-1">
+                          <User className="w-3 h-3" />
+                          {task.assigned_user?.full_name || 'Unassigned'}
+                        </div>
+                        {task.due_date && (
+                          <div className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            {TimeUtils.formatDate(task.due_date)}
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        <CreateTaskDialog 
+          open={showCreateDialog} 
+          onClose={() => setShowCreateDialog(false)} 
+          contactId={contactId} 
+        />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Card className="bg-white rounded-2xl shadow-sm">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-xl font-semibold">Tasks</CardTitle>
+          <Button 
+            size="sm" 
+            className="bg-primary hover:bg-primary/90" 
+            onClick={() => setShowCreateDialog(true)}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Task
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {tasks.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <ListTodo className="w-8 h-8 mx-auto mb-2" />
+              No tasks assigned to this contact
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {tasks.map((task) => (
+                <div key={task.id} className="border rounded-lg p-4 hover:bg-gray-50 space-y-1">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-gray-900">{task.title}</span>
+                      <Badge className={`${getStatusColor(task.status)} text-xs px-2 ml-1 rounded-full`}>
+                        {task.status?.replace('_', ' ')}
+                      </Badge>
+                      <Badge className={`${getPriorityColor(task.priority)} text-xs px-2 rounded-full`}>
+                        {task.priority}
+                      </Badge>
+                    </div>
+                  </div>
+                  {task.description && (
+                    <div className="text-gray-600 text-sm mb-1 line-clamp-2">{task.description}</div>
+                  )}
+                  <div className="flex items-center gap-4 text-xs text-gray-500 mt-1">
+                    <div className="flex items-center gap-1">
+                      <User className="w-3 h-3" />
+                      {task.assigned_user?.full_name || 'Unassigned'}
+                    </div>
+                    {task.due_date && (
+                      <div className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        {TimeUtils.formatDate(task.due_date)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+      <CreateTaskDialog 
+        open={showCreateDialog} 
+        onClose={() => setShowCreateDialog(false)} 
+        contactId={contactId} 
+      />
+    </>
+  );
+};
