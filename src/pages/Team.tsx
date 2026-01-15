@@ -25,10 +25,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 // FIXED: Updated icon imports to available names in lucide-react
-import { UserPlus, Search, Check, Mail, Phone, MoreHorizontal, User, Briefcase, CheckSquare, Settings, X, Calendar, Edit, Trash2, SlidersHorizontal, KeyRound } from "lucide-react";
+import { UserPlus, Search, Check, Mail, Phone, MoreHorizontal, User, Briefcase, CheckSquare, Settings, X, Calendar, Edit, Trash2, SlidersHorizontal, KeyRound, UserCheck } from "lucide-react";
 import AddTeamMemberDialog from "@/components/team/AddTeamMemberDialog";
 import EditTeamMemberDialog from "@/components/team/EditTeamMemberDialog";
 import ResetPasswordDialog from "@/components/team/ResetPasswordDialog";
+import ReactivateTeamMemberDialog from "@/components/team/ReactivateTeamMemberDialog";
 import DeleteTeamMemberDialog from "@/components/team/DeleteTeamMemberDialog";
 
 const roleLabels: Record<string, string> = {
@@ -54,6 +55,7 @@ function TeamDirectory() {
   const [editMemberOpen, setEditMemberOpen] = useState(false);
   const [deleteMemberOpen, setDeleteMemberOpen] = useState(false);
   const [resetPasswordOpen, setResetPasswordOpen] = useState(false);
+  const [reactivateMemberOpen, setReactivateMemberOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<any | null>(null);
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
@@ -107,6 +109,11 @@ function TeamDirectory() {
   const handleResetPassword = (member: any) => {
     setSelectedMember(member);
     setResetPasswordOpen(true);
+  };
+
+  const handleReactivateMember = (member: any) => {
+    setSelectedMember(member);
+    setReactivateMemberOpen(true);
   };
 
   if (authLoading) {
@@ -298,15 +305,27 @@ function TeamDirectory() {
                                     }}>
                                       <KeyRound className="w-4 h-4 mr-2" /> Reset Password
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem 
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDeleteMember(member);
-                                      }}
-                                      className="text-destructive focus:text-destructive"
-                                    >
-                                      <Trash2 className="w-4 h-4 mr-2" /> Remove Member
-                                    </DropdownMenuItem>
+                                    {member.status === 'suspended' ? (
+                                      <DropdownMenuItem 
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleReactivateMember(member);
+                                        }}
+                                        className="text-green-600 focus:text-green-600"
+                                      >
+                                        <UserCheck className="w-4 h-4 mr-2" /> Reactivate Member
+                                      </DropdownMenuItem>
+                                    ) : (
+                                      <DropdownMenuItem 
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDeleteMember(member);
+                                        }}
+                                        className="text-destructive focus:text-destructive"
+                                      >
+                                        <Trash2 className="w-4 h-4 mr-2" /> Suspend Member
+                                      </DropdownMenuItem>
+                                    )}
                                   </>
                                 )}
                               </DropdownMenuContent>
@@ -635,16 +654,28 @@ function TeamDirectory() {
                       <KeyRound className="w-4 h-4 mr-2" /> Reset Password
                     </Button>
                   </div>
-                  <Button 
-                    className="w-full"
-                    variant="destructive"
-                    onClick={() => {
-                      setShowMemberSheet(false);
-                      handleDeleteMember(detailMember);
-                    }}
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" /> Remove
-                  </Button>
+                  {detailMember.status === 'suspended' ? (
+                    <Button 
+                      className="w-full bg-green-600 hover:bg-green-700"
+                      onClick={() => {
+                        setShowMemberSheet(false);
+                        handleReactivateMember(detailMember);
+                      }}
+                    >
+                      <UserCheck className="w-4 h-4 mr-2" /> Reactivate
+                    </Button>
+                  ) : (
+                    <Button 
+                      className="w-full"
+                      variant="destructive"
+                      onClick={() => {
+                        setShowMemberSheet(false);
+                        handleDeleteMember(detailMember);
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" /> Suspend
+                    </Button>
+                  )}
                 </div>
               )}
             </div>
@@ -725,6 +756,11 @@ function TeamDirectory() {
       <ResetPasswordDialog 
         open={resetPasswordOpen} 
         onOpenChange={setResetPasswordOpen}
+        member={selectedMember}
+      />
+      <ReactivateTeamMemberDialog 
+        open={reactivateMemberOpen} 
+        onOpenChange={setReactivateMemberOpen}
         member={selectedMember}
       />
     </>
