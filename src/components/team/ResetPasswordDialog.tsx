@@ -47,26 +47,12 @@ const ResetPasswordDialog = ({ open, onOpenChange, member }: ResetPasswordDialog
     setIsResetting(true);
 
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      
-      const response = await fetch(
-        `https://hpcnipcbymruvsnqrmjx.supabase.co/functions/v1/reset-team-member-password`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${sessionData.session?.access_token}`,
-          },
-          body: JSON.stringify({
-            user_id: member.user_id,
-          }),
-        }
-      );
+      const { error } = await supabase.functions.invoke('reset-team-member-password', {
+        body: { user_id: member.user_id },
+      });
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to reset password');
+      if (error) {
+        throw error;
       }
 
       toast({
@@ -78,7 +64,7 @@ const ResetPasswordDialog = ({ open, onOpenChange, member }: ResetPasswordDialog
       console.error('Error resetting password:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to reset password. Please try again.",
+        description: error?.message || "Failed to reset password. Please try again.",
         variant: "destructive",
       });
     } finally {
