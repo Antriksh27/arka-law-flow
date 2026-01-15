@@ -42,6 +42,8 @@ export const NoteViewDialog: React.FC<NoteViewDialogProps> = ({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['client-notes-v2'] });
+      queryClient.invalidateQueries({ queryKey: ['contact-notes'] });
+      queryClient.invalidateQueries({ queryKey: ['notes'] });
       toast({
         title: note?.is_pinned ? 'Note unpinned' : 'Note pinned',
         description: note?.is_pinned ? 'Note has been unpinned' : 'Note has been pinned to top',
@@ -70,6 +72,9 @@ export const NoteViewDialog: React.FC<NoteViewDialogProps> = ({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['client-notes-v2'] });
+      queryClient.invalidateQueries({ queryKey: ['contact-notes'] });
+      queryClient.invalidateQueries({ queryKey: ['notes'] });
+      queryClient.invalidateQueries({ queryKey: ['case-notes'] });
       toast({
         title: 'Note deleted',
         description: 'Note has been permanently deleted',
