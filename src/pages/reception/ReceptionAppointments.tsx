@@ -147,9 +147,32 @@ const ReceptionAppointments = () => {
       
       if (error) throw error;
 
-      // Fetch appointment details for notification
-      const appointment = appointments?.find(a => a.id === appointmentId);
-      if (!appointment) return;
+      // FETCH FRESH appointment data (instead of using stale closure)
+      const { data: appointment, error: fetchError } = await supabase
+        .from('appointments')
+        .select('*')
+        .eq('id', appointmentId)
+        .single();
+
+      if (fetchError || !appointment) {
+        console.error('Failed to fetch appointment for notification:', fetchError);
+        return; // Status updated, but notification skipped
+      }
+
+      console.log('Fetched appointment for notification:', appointment);
+
+      // Fetch client name if needed
+      let clientName = 'A client';
+      if (appointment.client_id) {
+        const { data: client } = await supabase
+          .from('clients')
+          .select('full_name')
+          .eq('id', appointment.client_id)
+          .single();
+        clientName = client?.full_name || 'A client';
+      } else if (appointment.title?.startsWith('Appointment with ')) {
+        clientName = appointment.title.replace('Appointment with ', '');
+      }
 
       // Get all assigned lawyers (primary)
       const lawyerIds: string[] = [];
@@ -157,23 +180,20 @@ const ReceptionAppointments = () => {
         lawyerIds.push(appointment.lawyer_id);
       }
 
-      // Try to fetch additional lawyers (skipped if table doesn't exist in types)
-      // For now, just use primary lawyer - additional lawyers feature can be added later
-
       // Send notification to all assigned lawyers
       if (lawyerIds.length > 0) {
         const timeFormatted = appointment.appointment_time?.slice(0, 5) || 'scheduled time';
-        const clientName = appointment.client_name || 'A client';
-        const apptWithSerial = appointment as any;
+
+        console.log('Sending arrival notification to lawyers:', lawyerIds);
 
         try {
-          await supabase.functions.invoke('send-smart-notification', {
+          const { data, error: notifError } = await supabase.functions.invoke('send-smart-notification', {
             body: {
               event_type: 'client_arrived',
               recipients: 'custom',
               recipient_ids: lawyerIds,
               reference_id: appointmentId,
-              firm_id: firmId,
+              firm_id: appointment.firm_id,
               title: 'Client Has Arrived',
               message: `${clientName} has arrived for their ${timeFormatted} appointment`,
               category: 'appointment',
@@ -183,14 +203,22 @@ const ReceptionAppointments = () => {
                 appointment_id: appointmentId,
                 client_name: clientName,
                 appointment_time: appointment.appointment_time,
-                token_number: apptWithSerial.daily_serial_number
+                token_number: (appointment as any).daily_serial_number
               }
             }
           });
+
+          if (notifError) {
+            console.error('Notification error:', notifError);
+          } else {
+            console.log('Notification sent successfully:', data);
+          }
         } catch (notifError) {
           console.error('Failed to send arrival notification:', notifError);
           // Don't throw - the status update succeeded
         }
+      } else {
+        console.warn('No lawyers assigned to appointment, skipping notification');
       }
     },
     onSuccess: () => {
