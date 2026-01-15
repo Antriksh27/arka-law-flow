@@ -23,18 +23,18 @@ export const ContactNotes: React.FC<ContactNotesProps> = ({ contactId }) => {
 
   const { data: notes = [], isLoading } = useQuery({
     queryKey: ['contact-notes', contactId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('notes_v2')
+    queryFn: async (): Promise<any[]> => {
+      const { data, error } = await (supabase
+        .from('notes_v2' as any)
         .select(`
           *,
           created_by:profiles!notes_v2_created_by_fkey(full_name)
         `)
         .eq('contact_id', contactId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }));
       
       if (error) throw error;
-      return data;
+      return (data as any[]) || [];
     }
   });
 

@@ -29,17 +29,15 @@ export const ContactOverview: React.FC<ContactOverviewProps> = ({ contactId, con
   // Fetch activity counts
   const { data: stats } = useQuery({
     queryKey: ['contact-stats', contactId],
-    queryFn: async () => {
-      const [notesResult, tasksResult, documentsResult] = await Promise.all([
-        supabase.from('notes_v2').select('id', { count: 'exact', head: true }).eq('contact_id', contactId),
-        supabase.from('tasks').select('id', { count: 'exact', head: true }).eq('contact_id', contactId),
-        supabase.from('documents').select('id', { count: 'exact', head: true }).eq('contact_id', contactId)
-      ]);
+    queryFn: async (): Promise<{ notes: number; tasks: number; documents: number }> => {
+      const notesResult = await (supabase.from('notes_v2' as any).select('id', { count: 'exact', head: true }).eq('contact_id', contactId));
+      const tasksResult = await (supabase.from('tasks' as any).select('id', { count: 'exact', head: true }).eq('contact_id', contactId));
+      const documentsResult = await (supabase.from('documents' as any).select('id', { count: 'exact', head: true }).eq('contact_id', contactId));
       
       return {
-        notes: notesResult.count || 0,
-        tasks: tasksResult.count || 0,
-        documents: documentsResult.count || 0
+        notes: (notesResult as any).count || 0,
+        tasks: (tasksResult as any).count || 0,
+        documents: (documentsResult as any).count || 0
       };
     }
   });
