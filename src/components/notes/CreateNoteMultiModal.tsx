@@ -139,6 +139,9 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
         queryKey: ['client-notes-v2']
       });
       queryClient.invalidateQueries({
+        queryKey: ['contact-notes']
+      });
+      queryClient.invalidateQueries({
         queryKey: ['dashboard-data']
       });
       toast({

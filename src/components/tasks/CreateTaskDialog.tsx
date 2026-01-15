@@ -271,6 +271,9 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       if (clientId) {
         queryClient.invalidateQueries({ queryKey: ['client-tasks', clientId] });
       }
+      if (contactId) {
+        queryClient.invalidateQueries({ queryKey: ['contact-tasks', contactId] });
+      }
     }
   });
 
