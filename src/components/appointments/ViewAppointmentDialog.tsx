@@ -8,9 +8,10 @@ import { EditAppointmentDialog } from './EditAppointmentDialog';
 import RescheduleAppointmentDialog from '../reception/RescheduleAppointmentDialog';
 import { ConvertToClientDialog } from './ConvertToClientDialog';
 import { ConvertToClientDialog as ConvertContactDialog } from '@/components/contacts/ConvertToClientDialog';
+import { CreateNoteMultiModal } from '@/components/notes/CreateNoteMultiModal';
 import { parseISO } from 'date-fns';
 import { TimeUtils } from '@/lib/timeUtils';
-import { Calendar, Clock, User, MapPin, FileText, Edit, RotateCcw, X, UserPlus, Users, Trash } from 'lucide-react';
+import { Calendar, Clock, User, MapPin, FileText, Edit, RotateCcw, X, UserPlus, Users, Trash, StickyNote } from 'lucide-react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -39,6 +40,7 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
   appointment,
 }) => {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [showNoteDialog, setShowNoteDialog] = useState(false);
   
   // Extract client name from title if client_name is null
   const extractedClientName = appointment.client_name || 
@@ -433,6 +435,14 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
         <div className="flex flex-wrap gap-2 pt-6 border-t">
           <Button
             variant="outline"
+            onClick={() => setShowNoteDialog(true)}
+            className="flex-1"
+          >
+            <StickyNote className="h-4 w-4 mr-2" />
+            Add Note
+          </Button>
+          <Button
+            variant="outline"
             onClick={handleEdit}
             className="flex-1"
           >
@@ -493,6 +503,14 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Note Dialog - Links to client or contact from appointment */}
+      <CreateNoteMultiModal
+        open={showNoteDialog}
+        onClose={() => setShowNoteDialog(false)}
+        clientId={appointment.client_id || undefined}
+        contactId={contactData?.id || undefined}
+      />
     </Dialog>
   );
 };
