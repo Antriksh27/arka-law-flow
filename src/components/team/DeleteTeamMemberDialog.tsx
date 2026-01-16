@@ -31,16 +31,12 @@ const DeleteTeamMemberDialog = ({ open, onOpenChange, member }: DeleteTeamMember
       setIsDeleting(true);
       
       try {
-        // First, update the member status to suspended
-        const { error: updateError } = await supabase
+        const { error } = await supabase
           .from('team_members')
-          .update({ status: 'suspended' })
+          .delete()
           .eq('id', member.id);
 
-        if (updateError) throw updateError;
-
-        // Note: We don't actually delete the record to preserve data integrity
-        // The team member is just marked as suspended
+        if (error) throw error;
         return true;
       } finally {
         setIsDeleting(false);
@@ -50,15 +46,15 @@ const DeleteTeamMemberDialog = ({ open, onOpenChange, member }: DeleteTeamMember
       queryClient.invalidateQueries({ queryKey: ['team-members'] });
       toast({
         title: "Success",
-        description: "Team member has been suspended and removed from the team.",
+        description: "Team member has been permanently deleted.",
       });
       onOpenChange(false);
     },
     onError: (error: Error) => {
-      console.error('Error deactivating team member:', error);
+      console.error('Error deleting team member:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to remove team member. Please try again.",
+        description: error.message || "Failed to delete team member. Please try again.",
         variant: "destructive",
       });
     },
@@ -92,9 +88,9 @@ const DeleteTeamMemberDialog = ({ open, onOpenChange, member }: DeleteTeamMember
               <AlertTriangle className="h-5 w-5 text-destructive" />
             </div>
             <div>
-              <DialogTitle>Remove Team Member</DialogTitle>
+              <DialogTitle>Delete Team Member</DialogTitle>
               <DialogDescription>
-                This action will deactivate the team member's account.
+                This action is permanent and cannot be undone.
               </DialogDescription>
             </div>
           </div>
@@ -102,8 +98,8 @@ const DeleteTeamMemberDialog = ({ open, onOpenChange, member }: DeleteTeamMember
 
         <div className="py-4">
           <p className="text-sm text-muted-foreground">
-            Are you sure you want to remove <strong>{member.full_name}</strong> from the team? 
-            Their account will be suspended and they will no longer have access to the system, but their data will be preserved.
+            Are you sure you want to permanently delete <strong>{member.full_name}</strong>? 
+            This will remove all their data from the system and cannot be reversed.
           </p>
         </div>
 
@@ -120,7 +116,7 @@ const DeleteTeamMemberDialog = ({ open, onOpenChange, member }: DeleteTeamMember
             onClick={handleDelete}
             disabled={isDeleting}
           >
-            {isDeleting ? 'Removing...' : 'Remove Team Member'}
+            {isDeleting ? 'Deleting...' : 'Delete Permanently'}
           </Button>
         </DialogFooter>
       </DialogContent>
