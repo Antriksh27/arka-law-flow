@@ -14,7 +14,7 @@ const navItems: NavItem[] = [
   { icon: Briefcase, label: 'Cases', path: '/cases' },
   { icon: Calendar, label: 'Hearings', path: '/hearings' },
   { icon: CheckSquare, label: 'Tasks', path: '/tasks' },
-  { icon: MoreHorizontal, label: 'More', path: '/more' },
+  { icon: MoreHorizontal, label: 'Menu', path: '/more' },
 ];
 
 export const BottomNavBar: React.FC = () => {
@@ -37,6 +37,8 @@ export const BottomNavBar: React.FC = () => {
             <button
               key={item.path}
               onClick={() => navigate(item.path)}
+              aria-label={`Navigate to ${item.label}`}
+              aria-current={active ? 'page' : undefined}
               className={cn(
                 "flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg transition-all active:scale-95",
                 active ? "text-primary" : "text-muted-foreground"

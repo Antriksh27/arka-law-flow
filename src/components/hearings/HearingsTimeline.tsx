@@ -6,6 +6,7 @@ import { Calendar, MapPin, FileText } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import TimeUtils from '@/lib/timeUtils';
 import { FilterState } from './types';
+import { Skeleton } from '@/components/ui/skeleton';
 interface HearingsTimelineProps {
   filters: FilterState;
 }
@@ -56,9 +57,20 @@ export const HearingsTimeline: React.FC<HearingsTimelineProps> = ({
     }
   });
   if (isLoading) {
-    return <div className="w-full text-center py-8">
-        <div className="text-gray-600">Loading hearings...</div>
-      </div>;
+    return (
+      <div className="w-full space-y-4 p-4">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="flex items-start gap-4">
+            <Skeleton className="w-32 h-24 rounded-lg flex-shrink-0" />
+            <div className="flex-1 space-y-3">
+              <Skeleton className="h-5 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+              <Skeleton className="h-4 w-2/3" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
   }
 
   // Group hearings by date

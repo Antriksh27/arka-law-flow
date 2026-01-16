@@ -118,7 +118,12 @@ function TeamDirectory() {
 
   if (authLoading) {
     return (
-      <div className="text-center py-12">Loading team members...</div>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center space-y-4">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="text-muted-foreground">Loading team members...</p>
+        </div>
+      </div>
     );
   }
 
