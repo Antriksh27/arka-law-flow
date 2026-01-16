@@ -25,7 +25,8 @@ export const ContactDocuments: React.FC<ContactDocumentsProps> = ({ contactId })
   const { data: documents = [], isLoading, refetch } = useQuery({
     queryKey: ['contact-documents', contactId],
     queryFn: async (): Promise<any[]> => {
-      const { data, error } = await supabase
+      const client = supabase as any;
+      const { data, error } = await client
         .from('documents')
         .select(`
           *,
@@ -36,7 +37,7 @@ export const ContactDocuments: React.FC<ContactDocumentsProps> = ({ contactId })
         .order('uploaded_at', { ascending: false });
       
       if (error) throw error;
-      return data || [];
+      return (data as any[]) || [];
     }
   });
 
