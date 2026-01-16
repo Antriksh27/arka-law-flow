@@ -3,6 +3,7 @@ import { Phone, Mail, Star, Building2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
+import { getClientStatusColor } from '@/lib/statusColors';
 
 interface MobileClientCardProps {
   id: string;
@@ -39,17 +40,17 @@ export const MobileClientCard: React.FC<MobileClientCardProps> = ({
 
   const getStatusBadge = () => {
     const displayStatus = computed_status || status;
-    const statusConfig = {
-      active: { label: 'Active', className: 'bg-green-100 text-green-800 border-green-200' },
-      inactive: { label: 'Inactive', className: 'bg-gray-100 text-gray-800 border-gray-200' },
-      lead: { label: 'Lead', className: 'bg-blue-100 text-blue-800 border-blue-200' },
-      new: { label: 'New', className: 'bg-purple-100 text-purple-800 border-purple-200' },
+    const colors = getClientStatusColor(displayStatus);
+    const labelMap: Record<string, string> = {
+      active: 'Active',
+      inactive: 'Inactive',
+      lead: 'Lead',
+      new: 'New',
     };
-    const config = statusConfig[displayStatus] || statusConfig.lead;
     
     return (
-      <Badge variant="outline" className={cn("text-xs font-medium border", config.className)}>
-        {config.label}
+      <Badge variant="outline" className={cn("text-xs font-medium border", colors.bg, colors.text, colors.border)}>
+        {labelMap[displayStatus] || displayStatus}
       </Badge>
     );
   };

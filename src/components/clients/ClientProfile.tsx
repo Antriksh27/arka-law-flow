@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Edit, Mail, Phone, MapPin, Building, Calendar, FileText } from 'lucide-react';
 import { TimeUtils } from '@/lib/timeUtils';
+import { getClientStatusColor } from '@/lib/statusColors';
 
 interface ClientProfileProps {
   client: any;
@@ -14,18 +15,8 @@ interface ClientProfileProps {
 
 export const ClientProfile: React.FC<ClientProfileProps> = ({ client, onUpdate }) => {
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'inactive':
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-      case 'lead':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'prospect':
-        return 'bg-white text-gray-800 border-gray-300';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
+    const colors = getClientStatusColor(status);
+    return `${colors.bg} ${colors.text} ${colors.border}`;
   };
 
   return (
