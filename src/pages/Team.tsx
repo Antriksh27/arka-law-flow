@@ -316,7 +316,7 @@ function TeamDirectory() {
                                     }}>
                                       <KeyRound className="w-4 h-4 mr-2" /> Reset Password
                                     </DropdownMenuItem>
-                                    {member.status === 'suspended' ? (
+                                    {member.status === 'suspended' && (
                                       <DropdownMenuItem 
                                         onClick={(e) => {
                                           e.stopPropagation();
@@ -326,17 +326,16 @@ function TeamDirectory() {
                                       >
                                         <UserCheck className="w-4 h-4 mr-2" /> Reactivate Member
                                       </DropdownMenuItem>
-                                    ) : (
-                                      <DropdownMenuItem 
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleDeleteMember(member);
-                                        }}
-                                        className="text-destructive focus:text-destructive"
-                                      >
-                                        <Trash2 className="w-4 h-4 mr-2" /> Suspend Member
-                                      </DropdownMenuItem>
                                     )}
+                                    <DropdownMenuItem 
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteMember(member);
+                                      }}
+                                      className="text-destructive focus:text-destructive"
+                                    >
+                                      <Trash2 className="w-4 h-4 mr-2" /> Delete Member
+                                    </DropdownMenuItem>
                                   </>
                                 )}
                               </DropdownMenuContent>
@@ -670,7 +669,7 @@ function TeamDirectory() {
                       <KeyRound className="w-4 h-4 mr-2" /> Reset Password
                     </Button>
                   </div>
-                  {detailMember.status === 'suspended' ? (
+                  {detailMember.status === 'suspended' && (
                     <Button 
                       className="w-full bg-green-600 hover:bg-green-700"
                       onClick={() => {
@@ -680,18 +679,17 @@ function TeamDirectory() {
                     >
                       <UserCheck className="w-4 h-4 mr-2" /> Reactivate
                     </Button>
-                  ) : (
-                    <Button 
-                      className="w-full"
-                      variant="destructive"
-                      onClick={() => {
-                        setShowMemberSheet(false);
-                        handleDeleteMember(detailMember);
-                      }}
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" /> Suspend
-                    </Button>
                   )}
+                  <Button 
+                    className="w-full"
+                    variant="destructive"
+                    onClick={() => {
+                      setShowMemberSheet(false);
+                      handleDeleteMember(detailMember);
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" /> Delete Member
+                  </Button>
                 </div>
               )}
             </div>
