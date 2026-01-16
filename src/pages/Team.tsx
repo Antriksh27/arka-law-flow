@@ -31,6 +31,7 @@ import EditTeamMemberDialog from "@/components/team/EditTeamMemberDialog";
 import ResetPasswordDialog from "@/components/team/ResetPasswordDialog";
 import ReactivateTeamMemberDialog from "@/components/team/ReactivateTeamMemberDialog";
 import DeleteTeamMemberDialog from "@/components/team/DeleteTeamMemberDialog";
+import { getTeamMemberStatusColor } from "@/lib/statusColors";
 
 const roleLabels: Record<string, string> = {
   admin: "Admin",
@@ -251,9 +252,14 @@ function TeamDirectory() {
                         </TableCell>
                         {/* Status */}
                         <TableCell>
-                          <Badge className={`rounded-full px-3 py-1 text-xs font-medium ${member.status === "active" ? "bg-green-100 text-green-800" : member.status === "suspended" ? "bg-red-100 text-red-500" : "bg-blue-100 text-blue-800"}`}>
-                            {member.status ? member.status.charAt(0).toUpperCase() + member.status.slice(1) : 'Unknown'}
-                          </Badge>
+                          {(() => {
+                            const statusColors = getTeamMemberStatusColor(member.status || '');
+                            return (
+                              <Badge className={`rounded-full px-3 py-1 text-xs font-medium ${statusColors.bg} ${statusColors.text}`}>
+                                {member.status ? member.status.charAt(0).toUpperCase() + member.status.slice(1) : 'Unknown'}
+                              </Badge>
+                            );
+                          })()}
                         </TableCell>
                         {/* Real Cases Count */}
                         <TableCell>
@@ -376,9 +382,14 @@ function TeamDirectory() {
                           <p className="font-medium text-foreground truncate">{member.full_name}</p>
                           <p className="text-xs text-muted-foreground truncate">{member.email}</p>
                         </div>
-                        <Badge className={`rounded-full px-2 py-0.5 text-[10px] flex-shrink-0 ${member.status === "active" ? "bg-green-100 text-green-800" : member.status === "suspended" ? "bg-red-100 text-red-500" : "bg-blue-100 text-blue-800"}`}>
-                          {member.status ? member.status.charAt(0).toUpperCase() + member.status.slice(1) : 'Unknown'}
-                        </Badge>
+                        {(() => {
+                          const statusColors = getTeamMemberStatusColor(member.status || '');
+                          return (
+                            <Badge className={`rounded-full px-2 py-0.5 text-[10px] flex-shrink-0 ${statusColors.bg} ${statusColors.text}`}>
+                              {member.status ? member.status.charAt(0).toUpperCase() + member.status.slice(1) : 'Unknown'}
+                            </Badge>
+                          );
+                        })()}
                       </div>
                       <div className="flex items-center gap-2 mt-2">
                         <Badge className="rounded-full px-2 py-0.5 text-[10px]">

@@ -3,20 +3,15 @@ import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Scale } from 'lucide-react';
 import { TimeUtils } from '@/lib/timeUtils';
+import { getCaseStatusColor } from '@/lib/statusColors';
 
 interface MobileCaseCardProps {
   case: any;
 }
 
 const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'pending':
-      return 'bg-amber-100 text-amber-700 border-amber-200';
-    case 'disposed':
-      return 'bg-purple-100 text-purple-700 border-purple-200';
-    default:
-      return 'bg-gray-100 text-gray-700 border-gray-200';
-  }
+  const colors = getCaseStatusColor(status);
+  return `${colors.bg} ${colors.text} ${colors.border}`;
 };
 
 const getStageBadgeVariant = (stage: string | undefined) => {

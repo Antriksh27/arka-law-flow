@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TimeUtils } from '@/lib/timeUtils';
 import { useNavigate } from 'react-router-dom';
+import { getCaseStatusColor } from '@/lib/statusColors';
 
 interface CaseHighlight {
   id: string;
@@ -23,11 +24,8 @@ export const CaseHighlightsCard = ({ cases, isLoading }: CaseHighlightsCardProps
   const navigate = useNavigate();
 
   const getStatusColor = (status: string) => {
-    const statusLower = status.toLowerCase();
-    if (statusLower === 'open' || statusLower === 'active') return 'bg-blue-100 text-blue-800';
-    if (statusLower === 'closed') return 'bg-gray-100 text-gray-800';
-    if (statusLower === 'in_court') return 'bg-yellow-100 text-yellow-800';
-    return 'bg-gray-100 text-gray-800';
+    const colors = getCaseStatusColor(status);
+    return `${colors.bg} ${colors.text}`;
   };
 
   return (

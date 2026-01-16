@@ -7,6 +7,7 @@ import { format, parseISO } from 'date-fns';
 import TimeUtils from '@/lib/timeUtils';
 import { FilterState } from './types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { getAppointmentStatusColor } from '@/lib/statusColors';
 interface HearingsTimelineProps {
   filters: FilterState;
 }
@@ -101,7 +102,10 @@ export const HearingsTimeline: React.FC<HearingsTimelineProps> = ({
                     <div className="flex w-full items-start justify-between">
                       <div className="flex flex-col items-start gap-1">
                         <div className="flex items-center gap-2">
-                          <Badge className="bg-blue-100 text-blue-800 border-blue-200">Scheduled</Badge>
+                          {(() => {
+                            const colors = getAppointmentStatusColor('upcoming');
+                            return <Badge className={`${colors.bg} ${colors.text} ${colors.border}`}>Scheduled</Badge>;
+                          })()}
                           {hearing.hearing_time && (
                             <span className="text-sm font-medium text-gray-600">
                               {TimeUtils.formatTime(hearing.hearing_time, 'h:mm a')}
