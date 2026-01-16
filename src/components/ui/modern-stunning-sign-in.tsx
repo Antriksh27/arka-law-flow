@@ -78,10 +78,18 @@ const SignIn1 = () => {
             <button onClick={handleSignIn} disabled={isLoading} className="w-full bg-white/10 font-medium px-5 py-3 rounded-full shadow hover:bg-white/20 transition mb-3 text-sm disabled:opacity-50 disabled:cursor-not-allowed text-white">
               {isLoading ? "Signing in..." : "Sign in"}
             </button>
-            {/* Google Sign In */}
             
             <div className="w-full text-center mt-2">
-              
+              <button 
+                type="button"
+                className="text-sm text-gray-300 hover:text-white transition-colors"
+                onClick={() => {
+                  // TODO: Implement password reset flow
+                  alert('Password reset functionality coming soon. Please contact support.');
+                }}
+              >
+                Forgot Password?
+              </button>
             </div>
           </div>
         </div>

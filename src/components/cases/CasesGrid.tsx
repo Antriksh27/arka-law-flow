@@ -21,7 +21,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Trash2, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Trash2, Loader2, ChevronLeft, ChevronRight, Briefcase } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface CasesGridProps {
@@ -208,8 +208,16 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
 
   if (!cases || cases.length === 0) {
     return (
-      <div className="text-center py-12">
-        <p className="text-gray-500">No cases found matching your criteria.</p>
+      <div className="text-center py-12 bg-white rounded-2xl shadow-sm border border-gray-200">
+        <div className="mx-auto h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-4">
+          <Briefcase className="h-8 w-8 text-muted-foreground" />
+        </div>
+        <h3 className="text-lg font-semibold text-foreground mb-2">No cases found</h3>
+        <p className="text-muted-foreground max-w-sm mx-auto">
+          {searchQuery || statusFilter !== 'all' || typeFilter !== 'all' 
+            ? 'Try adjusting your search or filters to find cases.'
+            : 'Create your first case to get started with case management.'}
+        </p>
       </div>
     );
   }

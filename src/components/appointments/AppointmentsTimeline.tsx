@@ -8,10 +8,13 @@ import TimeUtils from '@/lib/timeUtils';
 import { Badge } from '../ui/badge';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { IconButton } from '../messages/ui/IconButton';
-import { MoreHorizontal, Video, MapPin, Phone } from 'lucide-react';
+import { MoreHorizontal, Video, MapPin, Phone, Calendar, Plus } from 'lucide-react';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { ViewAppointmentDialog } from './ViewAppointmentDialog';
 import { useDialog } from '@/hooks/use-dialog';
+import { EmptyState } from '../ui/empty-state';
+import { Skeleton } from '../ui/skeleton';
+import { useNavigate } from 'react-router-dom';
 
 interface AppointmentsTimelineProps {
   filters: FilterState;
@@ -38,6 +41,7 @@ interface Appointment {
 export const AppointmentsTimeline: React.FC<AppointmentsTimelineProps> = ({
   filters,
 }) => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { openDialog } = useDialog();
 
@@ -243,9 +247,17 @@ export const AppointmentsTimeline: React.FC<AppointmentsTimelineProps> = ({
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center p-10">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-        <span className="ml-4 text-lg text-gray-600">Loading appointments...</span>
+      <div className="space-y-4 p-4">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="flex gap-4">
+            <Skeleton className="w-24 h-20 rounded-lg" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-5 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+              <Skeleton className="h-4 w-1/3" />
+            </div>
+          </div>
+        ))}
       </div>
     );
   }
@@ -262,10 +274,14 @@ export const AppointmentsTimeline: React.FC<AppointmentsTimelineProps> = ({
 
   if (!appointments || appointments.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center p-10 text-gray-500">
-        <div className="text-lg">No appointments found</div>
-        <p className="text-sm">Your appointments will appear here</p>
-      </div>
+      <EmptyState
+        icon={Calendar}
+        title="No appointments scheduled"
+        description="Your upcoming appointments will appear here. Schedule your first appointment to get started."
+        actionLabel="Schedule Appointment"
+        actionIcon={Plus}
+        onAction={() => navigate('/appointments?create=true')}
+      />
     );
   }
 
