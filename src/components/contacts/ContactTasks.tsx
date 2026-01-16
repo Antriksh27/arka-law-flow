@@ -20,7 +20,8 @@ export const ContactTasks: React.FC<ContactTasksProps> = ({ contactId }) => {
   const { data: tasks = [], isLoading } = useQuery({
     queryKey: ['contact-tasks', contactId],
     queryFn: async (): Promise<any[]> => {
-      const { data: simpleTasks, error: simpleError } = await supabase
+      const client = supabase as any;
+      const { data: simpleTasks, error: simpleError } = await client
         .from('tasks')
         .select('*')
         .eq('contact_id', contactId)
@@ -30,9 +31,9 @@ export const ContactTasks: React.FC<ContactTasksProps> = ({ contactId }) => {
       
       // Get assigned user names separately
       const tasksWithUsers = await Promise.all(
-        (simpleTasks || []).map(async (task: any) => {
+        ((simpleTasks as any[]) || []).map(async (task: any) => {
           if (task.assigned_to) {
-            const { data: teamMember } = await supabase
+            const { data: teamMember } = await client
               .from('team_members')
               .select('full_name')
               .eq('user_id', task.assigned_to)
