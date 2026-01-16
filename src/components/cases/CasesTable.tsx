@@ -88,6 +88,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
         status,
         stage,
         reference_number,
+        registration_number,
         created_at,
         updated_at,
         client_id,
@@ -328,6 +329,9 @@ export const CasesTable: React.FC<CasesTableProps> = ({
                   )}
                 </div>
               </TableHead>
+              <TableHead className="bg-slate-800 text-white">
+                Registration No
+              </TableHead>
               <TableHead 
                 className="bg-slate-800 text-white cursor-pointer hover:bg-slate-700 select-none"
                 onClick={() => handleSort('case_title')}
@@ -370,6 +374,9 @@ export const CasesTable: React.FC<CasesTableProps> = ({
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
                   {caseItem.reference_number || '-'}
+                </TableCell>
+                <TableCell className="text-sm text-muted-foreground">
+                  {caseItem.registration_number || '-'}
                 </TableCell>
                 <TableCell 
                   className="font-medium text-primary cursor-pointer hover:underline"
