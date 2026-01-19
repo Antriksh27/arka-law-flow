@@ -62,7 +62,7 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
-      className="relative overflow-auto h-full"
+      className="relative"
     >
       {/* Pull indicator */}
       <div
