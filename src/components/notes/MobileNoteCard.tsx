@@ -1,38 +1,27 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Eye, EyeOff, Pin, Calendar, User, Mic, Pencil, ChevronRight } from 'lucide-react';
-import { TimeUtils } from '@/lib/timeUtils';
+import { Pin, Mic, Pencil } from 'lucide-react';
 
 interface MobileNoteCardProps {
   note: any;
   onClick: () => void;
 }
 
-const getColorAccent = (color: string) => {
+const getColorClasses = (color: string) => {
   switch (color) {
     case 'yellow':
-      return 'border-l-yellow-400 bg-yellow-50/50';
+      return 'bg-amber-100 border-amber-200';
     case 'blue':
-      return 'border-l-blue-400 bg-blue-50/50';
+      return 'bg-sky-100 border-sky-200';
     case 'green':
-      return 'border-l-green-400 bg-green-50/50';
+      return 'bg-emerald-100 border-emerald-200';
     case 'red':
-      return 'border-l-red-400 bg-red-50/50';
+      return 'bg-rose-100 border-rose-200';
     case 'purple':
-      return 'border-l-purple-400 bg-purple-50/50';
+      return 'bg-violet-100 border-violet-200';
     default:
-      return 'border-l-border bg-card';
+      return 'bg-white border-border';
   }
-};
-
-const getContentPreview = (content: string, maxLength: number = 80) => {
-  if (!content) return '';
-  // Filter out placeholder text
-  if (content.includes('[Drawing attached]') || content.includes('[Audio attached]')) {
-    return '';
-  }
-  if (content.length <= maxLength) return content;
-  return content.substring(0, maxLength) + '...';
 };
 
 const getDataValue = (data: any) => {
@@ -47,40 +36,41 @@ export const MobileNoteCard: React.FC<MobileNoteCardProps> = ({ note, onClick })
   const audioData = getDataValue(note.audio_data);
   const hasDrawing = drawingData && drawingData.startsWith('data:image');
   const hasAudio = audioData && audioData.startsWith('data:audio');
-  const contentPreview = getContentPreview(note.content);
+  
+  // Filter out placeholder content
+  const displayContent = note.content && 
+    !note.content.includes('[Drawing attached]') && 
+    !note.content.includes('[Audio attached]') 
+      ? note.content 
+      : '';
 
   return (
     <div
       onClick={onClick}
-      className={`rounded-2xl border border-border border-l-4 p-4 active:scale-[0.98] transition-all duration-200 shadow-sm ${getColorAccent(note.color)}`}
+      className={`rounded-xl border p-3 break-inside-avoid mb-3 cursor-pointer 
+        hover:shadow-md active:scale-[0.98] transition-all duration-200 ${getColorClasses(note.color)}`}
     >
-      {/* Header */}
-      <div className="flex items-start justify-between gap-2 mb-2">
-        <div className="flex items-center gap-2 flex-1 min-w-0">
-          {note.is_pinned && (
-            <Pin className="w-3.5 h-3.5 text-amber-500 fill-amber-500 flex-shrink-0" />
-          )}
-          <h3 className="font-semibold text-foreground text-base truncate">
-            {note.title || 'Untitled Note'}
-          </h3>
+      {/* Pin indicator */}
+      {note.is_pinned && (
+        <div className="flex justify-end mb-1">
+          <Pin className="w-3.5 h-3.5 text-muted-foreground fill-current" />
         </div>
-        <div className="flex items-center gap-1 flex-shrink-0">
-          {note.visibility === 'private' ? (
-            <EyeOff className="w-3.5 h-3.5 text-muted-foreground" />
-          ) : (
-            <Eye className="w-3.5 h-3.5 text-muted-foreground" />
-          )}
-          <ChevronRight className="w-4 h-4 text-muted-foreground" />
-        </div>
-      </div>
+      )}
 
-      {/* Drawing Preview */}
+      {/* Title */}
+      {note.title && (
+        <h3 className="font-medium text-foreground text-sm mb-1.5 line-clamp-2">
+          {note.title}
+        </h3>
+      )}
+
+      {/* Drawing Preview - shown prominently like Google Keep */}
       {hasDrawing && (
-        <div className="mb-3 rounded-xl overflow-hidden border border-border bg-white">
+        <div className="mb-2 -mx-3 -mt-1">
           <img 
             src={drawingData} 
-            alt="Drawing preview" 
-            className="w-full h-24 object-cover"
+            alt="Drawing" 
+            className="w-full object-cover max-h-40 rounded-t-lg"
             onError={(e) => {
               e.currentTarget.style.display = 'none';
             }}
@@ -89,67 +79,49 @@ export const MobileNoteCard: React.FC<MobileNoteCardProps> = ({ note, onClick })
       )}
 
       {/* Content Preview */}
-      {contentPreview && (
-        <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-          {contentPreview}
+      {displayContent && (
+        <p className="text-xs text-muted-foreground line-clamp-6 mb-2 whitespace-pre-wrap">
+          {displayContent}
         </p>
       )}
 
-      {/* Indicators Row */}
-      <div className="flex items-center gap-2 flex-wrap mb-3">
+      {/* Compact indicators row */}
+      <div className="flex items-center gap-1.5 flex-wrap">
         {hasAudio && (
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-purple-100 text-purple-700">
-            <Mic className="w-3 h-3" />
-            <span className="text-xs font-medium">Audio</span>
+          <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-violet-200/60">
+            <Mic className="w-3 h-3 text-violet-600" />
           </div>
         )}
         {hasDrawing && (
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-blue-100 text-blue-700">
-            <Pencil className="w-3 h-3" />
-            <span className="text-xs font-medium">Drawing</span>
+          <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-sky-200/60">
+            <Pencil className="w-3 h-3 text-sky-600" />
           </div>
         )}
         {note.cases?.case_title && (
-          <Badge variant="outline" className="text-xs bg-primary/5 text-primary border-primary/20 rounded-full px-2 py-0.5">
+          <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 bg-primary/10 text-primary border-0 rounded">
             {note.cases.case_title}
           </Badge>
         )}
       </div>
 
-      {/* Tags */}
+      {/* Tags - compact like Google Keep labels */}
       {note.tags && note.tags.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mb-3">
+        <div className="flex flex-wrap gap-1 mt-2">
           {note.tags.slice(0, 3).map((tag: string, index: number) => (
-            <Badge 
+            <span 
               key={index} 
-              variant="outline" 
-              className="text-xs bg-muted/50 text-muted-foreground rounded-full px-2 py-0.5"
+              className="text-[10px] text-muted-foreground bg-black/5 px-1.5 py-0.5 rounded"
             >
-              #{tag}
-            </Badge>
+              {tag}
+            </span>
           ))}
           {note.tags.length > 3 && (
-            <Badge 
-              variant="outline" 
-              className="text-xs bg-muted/50 text-muted-foreground rounded-full px-2 py-0.5"
-            >
+            <span className="text-[10px] text-muted-foreground">
               +{note.tags.length - 3}
-            </Badge>
+            </span>
           )}
         </div>
       )}
-
-      {/* Footer */}
-      <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t border-border/50">
-        <div className="flex items-center gap-1.5">
-          <User className="w-3 h-3" />
-          <span className="truncate max-w-[100px]">{note.profiles?.full_name || 'Unknown'}</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <Calendar className="w-3 h-3" />
-          <span>{TimeUtils.formatDate(note.updated_at, 'MMM d, h:mm a')}</span>
-        </div>
-      </div>
     </div>
   );
 };

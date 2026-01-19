@@ -1,10 +1,13 @@
-
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Eye, EyeOff, Pin, Edit, Trash2, FileText, Calendar, User, Mic } from 'lucide-react';
-import { TimeUtils } from '@/lib/timeUtils';
+import { Pin, Edit, Trash2, Mic, Pencil, MoreVertical } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface NoteCardProps {
   note: any;
@@ -14,6 +17,30 @@ interface NoteCardProps {
   onView: () => void;
 }
 
+const getColorClasses = (color: string) => {
+  switch (color) {
+    case 'yellow':
+      return 'bg-amber-100 border-amber-200 hover:shadow-amber-200/50';
+    case 'blue':
+      return 'bg-sky-100 border-sky-200 hover:shadow-sky-200/50';
+    case 'green':
+      return 'bg-emerald-100 border-emerald-200 hover:shadow-emerald-200/50';
+    case 'red':
+      return 'bg-rose-100 border-rose-200 hover:shadow-rose-200/50';
+    case 'purple':
+      return 'bg-violet-100 border-violet-200 hover:shadow-violet-200/50';
+    default:
+      return 'bg-white border-border hover:shadow-gray-200/50';
+  }
+};
+
+const getDataValue = (data: any) => {
+  if (!data) return null;
+  if (typeof data === 'string') return data;
+  if (typeof data === 'object' && data.value && data.value !== 'undefined') return data.value;
+  return null;
+};
+
 export const NoteCard: React.FC<NoteCardProps> = ({
   note,
   onEdit,
@@ -21,150 +48,136 @@ export const NoteCard: React.FC<NoteCardProps> = ({
   onTogglePin,
   onView
 }) => {
-  const getColorClasses = (color: string) => {
-    switch (color) {
-      case 'yellow':
-        return 'border-t-yellow-400 bg-yellow-50';
-      case 'blue':
-        return 'border-t-blue-400 bg-blue-50';
-      case 'green':
-        return 'border-t-green-400 bg-green-50';
-      case 'red':
-        return 'border-t-red-400 bg-red-50';
-      default:
-        return 'border-t-gray-400 bg-gray-50';
-    }
-  };
-
-  const getVisibilityIcon = () => {
-    return note.visibility === 'private' ? <EyeOff className="w-4 h-4 text-gray-500" /> : <Eye className="w-4 h-4 text-gray-500" />;
-  };
-
-  const getContentPreview = (content: string, maxLength: number = 120) => {
-    if (!content) return '';
-    if (content.length <= maxLength) return content;
-    return content.substring(0, maxLength) + '...';
-  };
-
-  // Helper function to get actual data value
-  const getDataValue = (data: any) => {
-    if (!data) return null;
-    if (typeof data === 'string') return data;
-    if (typeof data === 'object' && data.value && data.value !== 'undefined') return data.value;
-    return null;
-  };
-
+  const [isHovered, setIsHovered] = useState(false);
+  
   const drawingData = getDataValue(note.drawing_data);
   const audioData = getDataValue(note.audio_data);
-
-  console.log('Note data in card:', note);
-  console.log('Processed drawing data:', drawingData);
-  console.log('Processed audio data:', audioData);
+  const hasDrawing = drawingData && drawingData.startsWith('data:image');
+  const hasAudio = audioData && audioData.startsWith('data:audio');
+  
+  // Filter out placeholder content
+  const displayContent = note.content && 
+    !note.content.includes('[Drawing attached]') && 
+    !note.content.includes('[Audio attached]') 
+      ? note.content 
+      : '';
 
   return (
-    <Card className={`relative bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border-t-4 ${getColorClasses(note.color)} hover:scale-[1.02]`}>
-      <CardContent className="p-5">
-        {/* Header with pin and visibility */}
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center gap-2">
-            {getVisibilityIcon()}
-            {note.is_pinned}
-          </div>
-          <div className="flex gap-1">
-            <Button variant="ghost" size="sm" onClick={() => onTogglePin(!note.is_pinned)} className="h-8 w-8 p-0 hover:bg-gray-100">
-              <Pin className={`w-3 h-3 ${note.is_pinned ? 'text-yellow-600 fill-current' : 'text-gray-400'}`} />
-            </Button>
-            <Button variant="ghost" size="sm" onClick={onEdit} className="h-8 w-8 p-0 hover:bg-gray-100">
-              <Edit className="w-3 h-3 text-gray-600" />
-            </Button>
-            <Button variant="ghost" size="sm" onClick={onDelete} className="h-8 w-8 p-0 hover:bg-red-100">
-              <Trash2 className="w-3 h-3 text-red-600" />
-            </Button>
-          </div>
+    <div
+      className={`relative rounded-xl border p-4 cursor-pointer break-inside-avoid mb-4
+        hover:shadow-lg transition-all duration-200 group ${getColorClasses(note.color)}`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={onView}
+    >
+      {/* Hover actions - Google Keep style bottom bar */}
+      <div 
+        className={`absolute bottom-0 left-0 right-0 flex items-center justify-between px-2 py-1.5 
+          rounded-b-xl bg-black/5 backdrop-blur-sm transition-opacity duration-200
+          ${isHovered ? 'opacity-100' : 'opacity-0'}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center gap-1">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8 hover:bg-black/10"
+            onClick={() => onTogglePin(!note.is_pinned)}
+          >
+            <Pin className={`w-4 h-4 ${note.is_pinned ? 'fill-current text-foreground' : 'text-muted-foreground'}`} />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8 hover:bg-black/10"
+            onClick={onEdit}
+          >
+            <Edit className="w-4 h-4 text-muted-foreground" />
+          </Button>
         </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-black/10">
+              <MoreVertical className="w-4 h-4 text-muted-foreground" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={onDelete} className="text-destructive">
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete note
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
 
-        {/* Clickable Title */}
-        <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 text-base cursor-pointer hover:text-blue-600 transition-colors" onClick={onView}>
+      {/* Pin indicator - visible when pinned */}
+      {note.is_pinned && !isHovered && (
+        <div className="absolute top-2 right-2">
+          <Pin className="w-4 h-4 text-muted-foreground fill-current" />
+        </div>
+      )}
+
+      {/* Drawing Preview - full width like Google Keep */}
+      {hasDrawing && (
+        <div className="-mx-4 -mt-4 mb-3">
+          <img 
+            src={drawingData} 
+            alt="Drawing" 
+            className="w-full object-cover max-h-48 rounded-t-xl"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+        </div>
+      )}
+
+      {/* Title */}
+      {note.title && (
+        <h3 className="font-medium text-foreground mb-2 line-clamp-2">
           {note.title}
         </h3>
+      )}
 
-        {/* Audio Recording Preview */}
-        {audioData && audioData.startsWith('data:audio') && (
-          <div className="mb-3 p-2 border border-gray-200 rounded-lg bg-purple-50">
-            <div className="flex items-center gap-2 mb-2">
-              <Mic className="w-4 h-4 text-purple-600" />
-              <span className="text-sm text-purple-700 font-medium">Audio Recording</span>
-            </div>
-            <audio 
-              controls 
-              className="w-full h-8" 
-              style={{ height: '32px' }}
+      {/* Content Preview */}
+      {displayContent && (
+        <p className="text-sm text-muted-foreground line-clamp-8 mb-3 whitespace-pre-wrap">
+          {displayContent}
+        </p>
+      )}
+
+      {/* Compact indicators row */}
+      <div className="flex items-center gap-1.5 flex-wrap mb-8">
+        {hasAudio && (
+          <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-violet-200/60">
+            <Mic className="w-3 h-3 text-violet-600" />
+            <span className="text-[10px] text-violet-700">Audio</span>
+          </div>
+        )}
+        {note.cases?.case_title && (
+          <Badge variant="outline" className="text-xs px-2 py-0.5 bg-primary/10 text-primary border-0 rounded-full">
+            {note.cases.case_title}
+          </Badge>
+        )}
+      </div>
+
+      {/* Tags - compact labels like Google Keep */}
+      {note.tags && note.tags.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 absolute bottom-10 left-4 right-4">
+          {note.tags.slice(0, 3).map((tag: string, index: number) => (
+            <span 
+              key={index} 
+              className="text-xs text-muted-foreground bg-black/5 px-2 py-0.5 rounded-full"
             >
-              <source src={audioData} type="audio/wav" />
-              Your browser does not support the audio element.
-            </audio>
-          </div>
-        )}
-
-        {/* Drawing Preview */}
-        {drawingData && drawingData.startsWith('data:image') && (
-          <div className="mb-3 border border-gray-200 rounded-lg overflow-hidden bg-white">
-            <img 
-              src={drawingData} 
-              alt="Drawing preview" 
-              className="w-full h-32 object-cover cursor-pointer hover:opacity-90 transition-opacity" 
-              onClick={onView}
-              onError={(e) => {
-                console.error('Failed to load drawing image:', e);
-                e.currentTarget.style.display = 'none';
-              }}
-            />
-          </div>
-        )}
-
-        {/* Content Preview - Filter out the placeholder text */}
-        {note.content && !note.content.includes('[Drawing attached]') && !note.content.includes('[Audio attached]') && (
-          <p className="text-sm text-gray-600 mb-3 line-clamp-3">
-            {getContentPreview(note.content)}
-          </p>
-        )}
-
-        {/* Linked Case */}
-        {note.cases && (
-          <div className="flex items-center gap-1 mb-3 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
-            <FileText className="w-3 h-3" />
-            <span className="truncate">{note.cases.title}</span>
-          </div>
-        )}
-
-        {/* Tags */}
-        {note.tags && note.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-3">
-            {note.tags.slice(0, 3).map((tag: string, index: number) => (
-              <Badge key={index} variant="outline" className="text-xs bg-white">
-                {tag}
-              </Badge>
-            ))}
-            {note.tags.length > 3 && (
-              <Badge variant="outline" className="text-xs bg-white">
-                +{note.tags.length - 3}
-              </Badge>
-            )}
-          </div>
-        )}
-
-        {/* Footer */}
-        <div className="flex items-center justify-between text-xs text-gray-500 pt-2 border-t border-gray-100">
-          <div className="flex items-center gap-1">
-            <User className="w-3 h-3" />
-            <span className="truncate">{note.profiles?.full_name}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Calendar className="w-3 h-3" />
-            <span>{TimeUtils.formatDate(note.updated_at, 'MMM d')}</span>
-          </div>
+              {tag}
+            </span>
+          ))}
+          {note.tags.length > 3 && (
+            <span className="text-xs text-muted-foreground">
+              +{note.tags.length - 3}
+            </span>
+          )}
         </div>
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 };

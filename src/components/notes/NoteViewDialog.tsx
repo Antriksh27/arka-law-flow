@@ -1,10 +1,9 @@
-
 import React, { useRef, useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Eye, EyeOff, Pin, Calendar, User, FileText, Play, Pause, Download, Trash2, PinOff } from 'lucide-react';
+import { Pin, PinOff, Edit, Trash2, Play, Pause, Download, X, FileText, Mic } from 'lucide-react';
 import { TimeUtils } from '@/lib/timeUtils';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,6 +15,30 @@ interface NoteViewDialogProps {
   onClose: () => void;
   onEdit?: () => void;
 }
+
+const getColorClasses = (color: string) => {
+  switch (color) {
+    case 'yellow':
+      return 'bg-amber-100';
+    case 'blue':
+      return 'bg-sky-100';
+    case 'green':
+      return 'bg-emerald-100';
+    case 'red':
+      return 'bg-rose-100';
+    case 'purple':
+      return 'bg-violet-100';
+    default:
+      return 'bg-white';
+  }
+};
+
+const getDataValue = (data: any) => {
+  if (!data) return null;
+  if (typeof data === 'string') return data;
+  if (typeof data === 'object' && data.value && data.value !== 'undefined') return data.value;
+  return null;
+};
 
 export const NoteViewDialog: React.FC<NoteViewDialogProps> = ({
   note,
@@ -29,7 +52,6 @@ export const NoteViewDialog: React.FC<NoteViewDialogProps> = ({
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Pin/Unpin mutation
   const togglePinMutation = useMutation({
     mutationFn: async () => {
       if (!note) return;
@@ -41,25 +63,19 @@ export const NoteViewDialog: React.FC<NoteViewDialogProps> = ({
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['client-notes-v2'] });
-      queryClient.invalidateQueries({ queryKey: ['contact-notes'] });
       queryClient.invalidateQueries({ queryKey: ['notes'] });
       toast({
         title: note?.is_pinned ? 'Note unpinned' : 'Note pinned',
-        description: note?.is_pinned ? 'Note has been unpinned' : 'Note has been pinned to top',
       });
     },
-    onError: (error) => {
+    onError: () => {
       toast({
-        title: 'Error',
-        description: 'Failed to update note',
+        title: 'Failed to update note',
         variant: 'destructive',
       });
-      console.error('Error toggling pin:', error);
     },
   });
 
-  // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: async () => {
       if (!note) return;
@@ -71,62 +87,30 @@ export const NoteViewDialog: React.FC<NoteViewDialogProps> = ({
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['client-notes-v2'] });
-      queryClient.invalidateQueries({ queryKey: ['contact-notes'] });
       queryClient.invalidateQueries({ queryKey: ['notes'] });
-      queryClient.invalidateQueries({ queryKey: ['case-notes'] });
-      toast({
-        title: 'Note deleted',
-        description: 'Note has been permanently deleted',
-      });
+      toast({ title: 'Note deleted' });
       onClose();
     },
-    onError: (error) => {
+    onError: () => {
       toast({
-        title: 'Error',
-        description: 'Failed to delete note',
+        title: 'Failed to delete note',
         variant: 'destructive',
       });
-      console.error('Error deleting note:', error);
     },
   });
 
   if (!note) return null;
 
-  // Helper function to get actual data value
-  const getDataValue = (data: any) => {
-    if (!data) return null;
-    if (typeof data === 'string') return data;
-    if (typeof data === 'object' && data.value && data.value !== 'undefined') return data.value;
-    return null;
-  };
-
   const drawingData = getDataValue(note.drawing_data);
   const audioData = getDataValue(note.audio_data);
+  const hasDrawing = drawingData && drawingData.startsWith('data:image');
+  const hasAudio = audioData && audioData.startsWith('data:audio');
 
-  console.log('Drawing data in view dialog:', drawingData);
-  console.log('Audio data in view dialog:', audioData);
-
-  const getColorClasses = (color: string) => {
-    switch (color) {
-      case 'yellow':
-        return 'border-t-yellow-400 bg-yellow-50';
-      case 'blue':
-        return 'border-t-blue-400 bg-blue-50';
-      case 'green':
-        return 'border-t-green-400 bg-green-50';
-      case 'red':
-        return 'border-t-red-400 bg-red-50';
-      default:
-        return 'border-t-gray-400 bg-gray-50';
-    }
-  };
-
-  const getVisibilityIcon = () => {
-    return note.visibility === 'private' ? 
-      <EyeOff className="w-4 h-4 text-gray-500" /> : 
-      <Eye className="w-4 h-4 text-gray-500" />;
-  };
+  const displayContent = note.content && 
+    !note.content.includes('[Drawing attached]') && 
+    !note.content.includes('[Audio attached]') 
+      ? note.content 
+      : '';
 
   const handlePlayPause = () => {
     if (audioRef.current) {
@@ -153,182 +137,166 @@ export const NoteViewDialog: React.FC<NoteViewDialogProps> = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-white">
-        <DialogHeader className="pb-4 border-b border-gray-100">
-          <div className="flex items-start justify-between">
-            <DialogTitle className="text-xl font-semibold text-gray-900 flex-1 pr-4">
-              {note.title}
-            </DialogTitle>
-            <div className="flex items-center gap-2">
-              {note.id !== 'client-notes' && (
-                <>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      togglePinMutation.mutate();
-                    }}
-                    disabled={togglePinMutation.isPending}
-                  >
-                    {note.is_pinned ? (
-                      <>
-                        <PinOff className="w-4 h-4 mr-1" />
-                        Unpin
-                      </>
-                    ) : (
-                      <>
-                        <Pin className="w-4 h-4 mr-1" />
-                        Pin
-                      </>
-                    )}
-                  </Button>
-                  {onEdit && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={onEdit}
-                    >
-                      Edit
-                    </Button>
-                  )}
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowDeleteDialog(true);
-                    }}
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                  >
-                    <Trash2 className="w-4 h-4 mr-1" />
-                    Delete
-                  </Button>
-                </>
+    <>
+      <Dialog open={open} onOpenChange={onClose}>
+        <DialogContent 
+          className={`max-w-2xl max-h-[90vh] overflow-hidden p-0 border-0 ${getColorClasses(note.color)}`}
+        >
+          {/* Top action bar */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-black/5">
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 hover:bg-black/10"
+                onClick={() => togglePinMutation.mutate()}
+                disabled={togglePinMutation.isPending}
+              >
+                {note.is_pinned ? (
+                  <PinOff className="w-5 h-5 text-muted-foreground" />
+                ) : (
+                  <Pin className="w-5 h-5 text-muted-foreground" />
+                )}
+              </Button>
+              {onEdit && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 hover:bg-black/10"
+                  onClick={onEdit}
+                >
+                  <Edit className="w-5 h-5 text-muted-foreground" />
+                </Button>
               )}
-              {getVisibilityIcon()}
-              {note.is_pinned && <Pin className="w-4 h-4 text-yellow-600 fill-current" />}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 hover:bg-black/10"
+                onClick={() => setShowDeleteDialog(true)}
+              >
+                <Trash2 className="w-5 h-5 text-muted-foreground" />
+              </Button>
             </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 hover:bg-black/10"
+              onClick={onClose}
+            >
+              <X className="w-5 h-5 text-muted-foreground" />
+            </Button>
           </div>
-        </DialogHeader>
 
-        <div className={`rounded-lg border-t-4 p-6 ${getColorClasses(note.color)}`}>
-          {/* Linked Case */}
-          {note.cases && (
-            <div className="flex items-center gap-2 mb-4 text-sm text-blue-600 bg-blue-100 px-3 py-2 rounded">
-              <FileText className="w-4 h-4" />
-              <span>Linked to case: {note.cases.title}</span>
-            </div>
-          )}
+          {/* Content area */}
+          <div className="overflow-y-auto max-h-[calc(90vh-120px)]">
+            {/* Drawing - full width at top */}
+            {hasDrawing && (
+              <div className="w-full">
+                <img 
+                  src={drawingData} 
+                  alt="Note drawing" 
+                  className="w-full max-h-80 object-contain bg-white/50"
+                />
+              </div>
+            )}
 
-          {/* Audio Recording */}
-          {audioData && audioData.startsWith('data:audio') && (
-            <div className="mb-6">
-              <h3 className="text-sm font-medium text-gray-700 mb-3">Audio Recording</h3>
-              <div className="bg-white p-4 rounded border border-gray-200">
-                <div className="flex items-center gap-3">
+            <div className="px-6 py-4 space-y-4">
+              {/* Title */}
+              {note.title && (
+                <h2 className="text-xl font-medium text-foreground">
+                  {note.title}
+                </h2>
+              )}
+
+              {/* Linked Case */}
+              {note.cases?.case_title && (
+                <div className="flex items-center gap-2 text-sm text-primary">
+                  <FileText className="w-4 h-4" />
+                  <span>{note.cases.case_title}</span>
+                </div>
+              )}
+
+              {/* Audio Player */}
+              {hasAudio && (
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-white/50">
                   <Button
                     onClick={handlePlayPause}
-                    size="sm"
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    size="icon"
+                    className="h-10 w-10 rounded-full bg-primary hover:bg-primary/90"
                   >
-                    {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                    {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
                   </Button>
                   <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <Mic className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">Audio recording</span>
+                    </div>
                     <audio
                       ref={audioRef}
                       src={audioData}
                       onEnded={handleAudioEnded}
-                      className="w-full"
-                      controls
+                      className="hidden"
                     />
                   </div>
                   <Button
                     onClick={downloadAudio}
-                    size="sm"
-                    variant="outline"
+                    size="icon"
+                    variant="ghost"
+                    className="h-9 w-9 hover:bg-black/10"
                   >
                     <Download className="w-4 h-4" />
                   </Button>
                 </div>
-              </div>
-            </div>
-          )}
+              )}
 
-          {/* Drawing */}
-          {drawingData && drawingData.startsWith('data:image') && (
-            <div className="mb-6">
-              <h3 className="text-sm font-medium text-gray-700 mb-3">Drawing</h3>
-              <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
-                <img 
-                  src={drawingData} 
-                  alt="Note drawing" 
-                  className="w-full max-h-96 object-contain"
-                  onError={(e) => {
-                    console.error('Failed to load drawing in view dialog:', e);
-                  }}
-                />
-              </div>
-            </div>
-          )}
+              {/* Content */}
+              {displayContent && (
+                <div className="text-foreground whitespace-pre-wrap leading-relaxed">
+                  {displayContent}
+                </div>
+              )}
 
-          {/* Content */}
-          {note.content && !note.content.includes('[Drawing attached]') && !note.content.includes('[Audio attached]') && (
-            <div className="mb-6">
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Content</h3>
-              <div className="text-gray-800 whitespace-pre-wrap bg-white p-4 rounded border">
-                {note.content}
-              </div>
+              {/* Tags */}
+              {note.tags && note.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 pt-2">
+                  {note.tags.map((tag: string, index: number) => (
+                    <span 
+                      key={index} 
+                      className="text-sm text-muted-foreground bg-black/5 px-3 py-1 rounded-full"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
-
-          {/* Tags */}
-          {note.tags && note.tags.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Tags</h3>
-              <div className="flex flex-wrap gap-2">
-                {note.tags.map((tag: string, index: number) => (
-                  <Badge key={index} variant="outline" className="bg-white">
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Metadata */}
-          <div className="flex items-center justify-between text-sm text-gray-500 pt-4 border-t border-gray-200">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1">
-                <User className="w-4 h-4" />
-                <span>Created by {note.profiles?.full_name}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Calendar className="w-4 h-4" />
-                <span>Created {TimeUtils.formatDate(note.created_at, 'MMM d, yyyy')}</span>
-              </div>
-            </div>
-            <Badge variant="outline" className="bg-white">
-              {note.visibility}
-            </Badge>
           </div>
-        </div>
-      </DialogContent>
+
+          {/* Footer */}
+          <div className="flex items-center justify-between px-6 py-3 border-t border-black/5 text-xs text-muted-foreground">
+            <span>
+              {note.profiles?.full_name && `By ${note.profiles.full_name}`}
+            </span>
+            <span>
+              Edited {TimeUtils.formatDate(note.updated_at, 'MMM d, h:mm a')}
+            </span>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Note</AlertDialogTitle>
+            <AlertDialogTitle>Delete note?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this note? This action cannot be undone.
+              This note will be permanently deleted. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteMutation.mutate()}
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               disabled={deleteMutation.isPending}
             >
               {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
@@ -336,6 +304,6 @@ export const NoteViewDialog: React.FC<NoteViewDialogProps> = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </Dialog>
+    </>
   );
 };
