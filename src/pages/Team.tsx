@@ -178,12 +178,12 @@ function TeamDirectory() {
 
       {/* Mobile Search & Filter Bar */}
       {isMobile && (
-        <div className="flex items-center gap-2 px-4">
+        <div className="flex items-center gap-2 px-4 pt-4 pb-2">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <input 
               type="text" 
-              className="w-full rounded-lg bg-muted pl-10 pr-4 py-2 text-sm border-0 focus:ring-2 focus:ring-primary outline-none" 
+              className="w-full rounded-xl bg-muted pl-10 pr-4 py-3 text-base border-0 focus:ring-2 focus:ring-primary outline-none min-h-[48px]" 
               placeholder="Search team..." 
               value={search} 
               onChange={e => setSearch(e.target.value)} 
@@ -193,11 +193,11 @@ function TeamDirectory() {
             variant="outline" 
             size="icon"
             onClick={() => setShowMobileFilters(true)}
-            className="relative"
+            className="relative h-12 w-12 rounded-xl"
           >
-            <SlidersHorizontal className="w-4 h-4" />
+            <SlidersHorizontal className="w-5 h-5" />
             {selectedFilter !== "all" && (
-              <span className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full" />
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-primary rounded-full" />
             )}
           </Button>
         </div>
@@ -353,53 +353,94 @@ function TeamDirectory() {
         {isMobile && (
           <div className="flex flex-col gap-3 px-4 w-full">
             {isLoading ? (
-              <Skeleton className="h-24 w-full rounded-lg" />
+              <>
+                {[...Array(4)].map((_, i) => (
+                  <Skeleton key={i} className="h-28 w-full rounded-2xl" />
+                ))}
+              </>
             ) : filtered.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">
-                No team members found.
+              <div className="flex flex-col items-center justify-center py-16 px-4">
+                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                  <User className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <h3 className="text-lg font-medium text-foreground mb-1">No team members found</h3>
+                <p className="text-sm text-muted-foreground text-center">
+                  {search ? 'Try adjusting your search' : 'Add team members to get started'}
+                </p>
               </div>
             ) : (
               filtered.map((member: any) => (
                 <div
                   key={member.id}
-                  className="bg-white rounded-lg border border-border p-4 active:scale-[0.98] transition-transform"
+                  className="bg-card rounded-2xl border border-border p-4 active:scale-[0.98] transition-all duration-200 shadow-sm"
                   onClick={() => {
                     setSidebarMember(member);
                     setShowMemberSheet(true);
                   }}
                 >
                   <div className="flex items-start gap-3">
-                    <Avatar className="w-12 h-12 flex-shrink-0">
+                    <Avatar className="w-12 h-12 flex-shrink-0 ring-2 ring-primary/10">
                       <AvatarImage src={member.avatar_url} alt={member.full_name} />
-                      <AvatarFallback>
+                      <AvatarFallback className="bg-primary/10 text-primary font-medium">
                         {getInitials(member.full_name)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-foreground truncate">{member.full_name}</p>
-                          <p className="text-xs text-muted-foreground truncate">{member.email}</p>
+                          <p className="font-medium text-foreground truncate text-base">{member.full_name}</p>
+                          <p className="text-sm text-muted-foreground truncate">{member.email}</p>
                         </div>
                         {(() => {
                           const statusColors = getTeamMemberStatusColor(member.status || '');
                           return (
-                            <Badge className={`rounded-full px-2 py-0.5 text-[10px] flex-shrink-0 ${statusColors.bg} ${statusColors.text}`}>
+                            <Badge className={`rounded-full px-2.5 py-0.5 text-[10px] flex-shrink-0 ${statusColors.bg} ${statusColors.text}`}>
                               {member.status ? member.status.charAt(0).toUpperCase() + member.status.slice(1) : 'Unknown'}
                             </Badge>
                           );
                         })()}
                       </div>
                       <div className="flex items-center gap-2 mt-2">
-                        <Badge className="rounded-full px-2 py-0.5 text-[10px]">
+                        <Badge className="rounded-full px-2.5 py-0.5 text-[10px] bg-primary/10 text-primary">
                           {roleLabels[member.role] || member.role}
                         </Badge>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Briefcase className="w-3 h-3" />
                           <CaseCountCell memberId={member.user_id} /> cases
                         </span>
                       </div>
                     </div>
                   </div>
+                  
+                  {/* Quick contact actions */}
+                  {(member.email || member.phone_number) && (
+                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border">
+                      {member.phone_number && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(`tel:${member.phone_number}`);
+                          }}
+                          className="flex items-center gap-2 flex-1 py-2.5 px-3 rounded-xl bg-green-50 text-green-700 active:scale-95 transition-transform min-h-[44px]"
+                        >
+                          <Phone className="h-4 w-4" />
+                          <span className="text-sm font-medium">Call</span>
+                        </button>
+                      )}
+                      {member.email && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(`mailto:${member.email}`);
+                          }}
+                          className="flex items-center gap-2 flex-1 py-2.5 px-3 rounded-xl bg-blue-50 text-blue-700 active:scale-95 transition-transform min-h-[44px]"
+                        >
+                          <Mail className="h-4 w-4" />
+                          <span className="text-sm font-medium">Email</span>
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))
             )}

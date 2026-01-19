@@ -3,19 +3,27 @@ import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { ContactsHeader } from './ContactsHeader';
 import { ContactsTable } from './ContactsTable';
 import { ContactsFilters } from './ContactsFilters';
 import { ContactsGrid } from './ContactsGrid';
+import { MobileContactCard } from './MobileContactCard';
 import { AddContactDialog } from './AddContactDialog';
 import { EditContactDialog } from './EditContactDialog';
 import { ConvertToClientDialog } from './ConvertToClientDialog';
 import { DeleteContactDialog } from './DeleteContactDialog';
 import { ContactDetailsDialog } from './ContactDetailsDialog';
+import { MobileHeader } from '@/components/mobile/MobileHeader';
+import { MobileFAB } from '@/components/mobile/MobileFAB';
+import { MobilePageContainer } from '@/components/mobile/MobilePageContainer';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Plus, Search, Users } from 'lucide-react';
 
 export const ContactList = () => {
   const navigate = useNavigate();
   const { firmId } = useAuth();
+  const isMobile = useIsMobile();
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -82,10 +90,112 @@ export const ContactList = () => {
   };
 
   const handleViewContact = (contact: any) => {
-    // Navigate to contact detail page instead of opening dialog
     navigate(`/contacts/${contact.id}`);
   };
 
+  // Mobile Layout
+  if (isMobile) {
+    return (
+      <MobilePageContainer>
+        <MobileHeader 
+          title="Contacts" 
+          actions={
+            <span className="text-sm text-muted-foreground">
+              {totalCount} total
+            </span>
+          }
+        />
+        
+        {/* Mobile Search */}
+        <div className="px-4 pt-4 pb-2">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <input 
+              type="text" 
+              className="w-full rounded-xl bg-muted pl-10 pr-4 py-3 text-base border-0 focus:ring-2 focus:ring-primary outline-none min-h-[48px]" 
+              placeholder="Search contacts..." 
+              value={searchTerm} 
+              onChange={e => setSearchTerm(e.target.value)} 
+            />
+          </div>
+        </div>
+        
+        {/* Contact Cards */}
+        <div className="px-4 py-3 space-y-3">
+          {isLoading ? (
+            <>
+              {[...Array(5)].map((_, i) => (
+                <Skeleton key={i} className="h-28 w-full rounded-2xl" />
+              ))}
+            </>
+          ) : contacts.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 px-4">
+              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                <Users className="w-8 h-8 text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-medium text-foreground mb-1">No contacts yet</h3>
+              <p className="text-sm text-muted-foreground text-center mb-4">
+                Add your first contact to get started
+              </p>
+            </div>
+          ) : (
+            contacts.map((contact: any) => (
+              <MobileContactCard
+                key={contact.id}
+                contact={contact}
+                onClick={() => handleViewContact(contact)}
+              />
+            ))
+          )}
+        </div>
+        
+        {/* FAB */}
+        <MobileFAB 
+          onClick={handleAddContact} 
+          icon={Plus}
+        />
+        
+        {/* Dialogs */}
+        <AddContactDialog
+          open={showAddDialog}
+          onOpenChange={setShowAddDialog}
+        />
+
+        {selectedContact && (
+          <>
+            <EditContactDialog
+              open={showEditDialog}
+              onOpenChange={setShowEditDialog}
+              contact={selectedContact}
+            />
+            
+            <ConvertToClientDialog
+              open={showConvertDialog}
+              onOpenChange={setShowConvertDialog}
+              contact={selectedContact}
+            />
+            
+            <DeleteContactDialog
+              open={showDeleteDialog}
+              onOpenChange={setShowDeleteDialog}
+              contact={selectedContact}
+            />
+
+            <ContactDetailsDialog
+              open={showDetailsDialog}
+              onOpenChange={setShowDetailsDialog}
+              contact={selectedContact}
+              onConvertToClient={handleConvertToClient}
+              onEditContact={handleEditContact}
+              onDeleteContact={handleDeleteContact}
+            />
+          </>
+        )}
+      </MobilePageContainer>
+    );
+  }
+
+  // Desktop Layout
   return (
     <div className="space-y-6">
       <ContactsHeader 
