@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Users, MessageCircle, Sparkles, Search, ArrowLeft } from 'lucide-react';
+import { Send, Users, MessageCircle, Sparkles, Search, ArrowLeft, Check, CheckCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useCometChat } from '@/hooks/useCometChat';
@@ -43,6 +43,7 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [activeTab, setActiveTab] = useState<'chats' | 'team'>('chats');
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
+  const [messageStatuses, setMessageStatuses] = useState<Record<string, 'sent' | 'delivered' | 'read'>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -138,14 +139,48 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
         setMessages(messagesList);
         scrollToBottom();
 
+        // Set initial statuses for messages
+        const initialStatuses: Record<string, 'sent' | 'delivered' | 'read'> = {};
+        messagesList.forEach((msg: CometChat.BaseMessage) => {
+          const deliveredAt = (msg as any).getDeliveredAt?.();
+          const readAt = (msg as any).getReadAt?.();
+          if (readAt) {
+            initialStatuses[msg.getId().toString()] = 'read';
+          } else if (deliveredAt) {
+            initialStatuses[msg.getId().toString()] = 'delivered';
+          } else {
+            initialStatuses[msg.getId().toString()] = 'sent';
+          }
+        });
+        setMessageStatuses(initialStatuses);
+
+        // Mark messages as read
+        CometChat.markAsRead(messagesList[messagesList.length - 1]);
+
         // Set up real-time message listeners
         CometChat.addMessageListener(MESSAGE_LISTENER_ID, new CometChat.MessageListener({
           onTextMessageReceived: (message: CometChat.TextMessage) => {
             // Only add messages for the selected conversation
             if (message.getSender().getUid() === selectedUser.getUid() || message.getReceiverId() === selectedUser.getUid()) {
               setMessages(prevMessages => [...prevMessages, message]);
+              setMessageStatuses(prev => ({ ...prev, [message.getId().toString()]: 'sent' }));
               scrollToBottom();
+              // Mark as read immediately since we're viewing
+              CometChat.markAsRead(message);
             }
+          },
+          onMessagesDelivered: (messageReceipt: CometChat.MessageReceipt) => {
+            const messageId = messageReceipt.getMessageId();
+            setMessageStatuses(prev => {
+              if (prev[messageId] !== 'read') {
+                return { ...prev, [messageId]: 'delivered' };
+              }
+              return prev;
+            });
+          },
+          onMessagesRead: (messageReceipt: CometChat.MessageReceipt) => {
+            const messageId = messageReceipt.getMessageId();
+            setMessageStatuses(prev => ({ ...prev, [messageId]: 'read' }));
           },
           onTypingStarted: (typingIndicator: CometChat.TypingIndicator) => {
             if (typingIndicator.getSender().getUid() === selectedUser.getUid()) {
@@ -286,26 +321,49 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
             {messages.map((message, index) => {
               const isMe = message.getSender().getUid() === cometChatUser?.getUid();
               const messageText = (message as CometChat.TextMessage).getText?.() || '';
+              const messageId = message.getId().toString();
+              const status = messageStatuses[messageId] || 'sent';
+              const timestamp = new Date(message.getSentAt() * 1000).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit'
+              });
               
               return (
-                <div key={message.getId()} className={cn('flex items-end gap-2', isMe ? 'justify-end' : 'justify-start')}>
-                  {!isMe && (
-                    <Avatar className="h-6 w-6 flex-shrink-0 border border-white/20">
-                      <AvatarImage src={message.getSender().getAvatar()} />
-                      <AvatarFallback className="text-xs bg-slate-700 text-white">
-                        {getInitials(message.getSender().getName())}
-                      </AvatarFallback>
-                    </Avatar>
-                  )}
-                  <div
-                    className={cn(
-                      'max-w-[75%] px-3 py-2 rounded-2xl text-sm',
-                      isMe 
-                        ? 'bg-blue-50 text-gray-900' 
-                        : 'bg-gray-100 text-gray-900'
+                <div key={message.getId()} className={cn('flex flex-col', isMe ? 'items-end' : 'items-start')}>
+                  <div className={cn('flex items-end gap-2', isMe ? 'flex-row-reverse' : 'flex-row')}>
+                    {!isMe && (
+                      <Avatar className="h-6 w-6 flex-shrink-0 border border-white/20">
+                        <AvatarImage src={message.getSender().getAvatar()} />
+                        <AvatarFallback className="text-xs bg-slate-700 text-white">
+                          {getInitials(message.getSender().getName())}
+                        </AvatarFallback>
+                      </Avatar>
                     )}
-                  >
-                    <p className="break-words">{messageText}</p>
+                    <div
+                      className={cn(
+                        'max-w-[75%] px-3 py-2 rounded-2xl text-sm',
+                        isMe 
+                          ? 'bg-blue-50 text-gray-900' 
+                          : 'bg-gray-100 text-gray-900'
+                      )}
+                    >
+                      <p className="break-words">{messageText}</p>
+                    </div>
+                  </div>
+                  {/* Timestamp and read receipt */}
+                  <div className={cn('flex items-center gap-1 mt-0.5 px-1', isMe ? 'flex-row-reverse' : 'flex-row')}>
+                    <span className="text-[10px] text-gray-400">{timestamp}</span>
+                    {isMe && (
+                      <span className="flex items-center">
+                        {status === 'read' ? (
+                          <CheckCheck className="h-3 w-3 text-blue-500" />
+                        ) : status === 'delivered' ? (
+                          <CheckCheck className="h-3 w-3 text-gray-400" />
+                        ) : (
+                          <Check className="h-3 w-3 text-gray-400" />
+                        )}
+                      </span>
+                    )}
                   </div>
                 </div>
               );
@@ -558,6 +616,12 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
             const isMe = message.getSender().getUid() === cometChatUser?.getUid();
             const prevMessage = index > 0 ? messages[index - 1] : null;
             const nextMessage = index < messages.length - 1 ? messages[index + 1] : null;
+            const messageId = message.getId().toString();
+            const status = messageStatuses[messageId] || 'sent';
+            const timestamp = new Date(message.getSentAt() * 1000).toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit'
+            });
 
             // Check if this message is from the same sender as the previous one
             const isSameSenderAsPrev = prevMessage && prevMessage.getSender().getUid() === message.getSender().getUid();
@@ -580,51 +644,71 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
 
             const messageText = (message as CometChat.TextMessage).getText?.() || '';
             return <div key={message.getId()} className={spacingClass}>
-                    <div className={cn('flex items-end gap-3 max-w-[70%]', isMe ? 'ml-auto flex-row-reverse' : 'mr-auto')}>
-                      {/* Avatar with animation */}
-                      <AnimatePresence mode="wait">
-                        {shouldShowAvatar ? <motion.div key="avatar" initial={{
+                    <div className={cn('flex flex-col max-w-[70%]', isMe ? 'ml-auto items-end' : 'mr-auto items-start')}>
+                      <div className={cn('flex items-end gap-3', isMe ? 'flex-row-reverse' : '')}>
+                        {/* Avatar with animation */}
+                        <AnimatePresence mode="wait">
+                          {shouldShowAvatar ? <motion.div key="avatar" initial={{
+                      opacity: 0,
+                      scale: 0.8
+                    }} animate={{
+                      opacity: 1,
+                      scale: 1
+                    }} exit={{
+                      opacity: 0,
+                      scale: 0.8
+                    }} transition={{
+                      duration: 0.2
+                    }} className="flex-shrink-0">
+                              <Avatar className="h-8 w-8">
+                                <AvatarImage src={message.getSender().getAvatar()} />
+                                <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                                  {getInitials(message.getSender().getName())}
+                                </AvatarFallback>
+                              </Avatar>
+                            </motion.div> : <div className="w-8 flex-shrink-0" />}
+                        </AnimatePresence>
+
+                        {/* Message bubble with animation */}
+                        <motion.div initial={{
                     opacity: 0,
-                    scale: 0.8
+                    y: 10,
+                    scale: 0.95
                   }} animate={{
                     opacity: 1,
+                    y: 0,
                     scale: 1
-                  }} exit={{
-                    opacity: 0,
-                    scale: 0.8
                   }} transition={{
-                    duration: 0.2
-                  }} className="flex-shrink-0">
-                            <Avatar className="h-8 w-8">
-                              <AvatarImage src={message.getSender().getAvatar()} />
-                              <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                                {getInitials(message.getSender().getName())}
-                              </AvatarFallback>
-                            </Avatar>
-                          </motion.div> : <div className="w-8 flex-shrink-0" />}
-                      </AnimatePresence>
+                    duration: 0.3,
+                    ease: 'easeOut'
+                  }} className={cn('px-4 py-2.5 shadow-sm relative overflow-hidden', borderRadius, isMe ? 'bg-blue-100 text-black' : 'bg-green-100 text-black')}>
+                          {/* Subtle shine effect */}
+                          <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
 
-                      {/* Message bubble with animation */}
-                      <motion.div initial={{
-                  opacity: 0,
-                  y: 10,
-                  scale: 0.95
-                }} animate={{
-                  opacity: 1,
-                  y: 0,
-                  scale: 1
-                }} transition={{
-                  duration: 0.3,
-                  ease: 'easeOut'
-                }} className={cn('px-4 py-2.5 shadow-sm relative overflow-hidden', borderRadius, isMe ? 'bg-blue-100 text-black' : 'bg-green-100 text-black')}>
-                        {/* Subtle shine effect */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
-
-                        {/* Message content */}
-                        <div className="relative">
-                          <p className="text-sm leading-relaxed break-words">{messageText}</p>
+                          {/* Message content */}
+                          <div className="relative">
+                            <p className="text-sm leading-relaxed break-words">{messageText}</p>
+                          </div>
+                        </motion.div>
+                      </div>
+                      
+                      {/* Timestamp and read receipt */}
+                      {shouldShowAvatar && (
+                        <div className={cn('flex items-center gap-1 mt-1 px-11', isMe ? 'flex-row-reverse' : '')}>
+                          <span className="text-xs text-muted-foreground">{timestamp}</span>
+                          {isMe && (
+                            <span className="flex items-center">
+                              {status === 'read' ? (
+                                <CheckCheck className="h-3.5 w-3.5 text-blue-500" />
+                              ) : status === 'delivered' ? (
+                                <CheckCheck className="h-3.5 w-3.5 text-gray-400" />
+                              ) : (
+                                <Check className="h-3.5 w-3.5 text-gray-400" />
+                              )}
+                            </span>
+                          )}
                         </div>
-                      </motion.div>
+                      )}
                     </div>
                   </div>;
           })}
