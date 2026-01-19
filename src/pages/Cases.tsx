@@ -83,10 +83,9 @@ const Cases = () => {
     assignedFilter !== 'all'
   ].filter(Boolean).length;
 
-  return (
-    <>
-      {/* Mobile Sticky Header */}
-      {isMobile && (
+  if (isMobile) {
+    return (
+      <div className="h-full min-h-0 bg-background flex flex-col">
         <MobileStickyHeader
           title="Cases"
           searchValue={searchQuery}
@@ -101,73 +100,9 @@ const Cases = () => {
           activeTab={casesTab}
           onTabChange={(value) => setCasesTab(value as 'all' | 'my')}
         />
-      )}
 
-      <PullToRefresh onRefresh={handleRefresh}>
-        <div className={`max-w-7xl mx-auto space-y-4 pb-24 ${isMobile ? 'px-4 pt-4' : 'p-6 space-y-6 pb-6'}`}>
-          {/* Desktop Header - only show on desktop */}
-          {!isMobile && (
-            <CasesHeader onAddCase={() => setShowAddDialog(true)} />
-          )}
-
-          {/* Desktop Tabs and Filters */}
-          {!isMobile && (
-            <Tabs value={casesTab} onValueChange={(value) => setCasesTab(value as 'all' | 'my')} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 bg-white rounded-2xl shadow-sm border border-gray-200 mb-4 sm:mb-6 h-10">
-                <TabsTrigger value="all" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-sm">
-                  All Cases
-                </TabsTrigger>
-                <TabsTrigger value="my" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-sm">
-                  My Cases
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="all" className="space-y-6 mt-0">
-                <CasesFilters
-                  searchQuery={searchQuery}
-                  onSearchChange={setSearchQuery}
-                  statusFilter={statusFilter}
-                  onStatusChange={setStatusFilter}
-                  typeFilter={typeFilter}
-                  onTypeChange={setTypeFilter}
-                  assignedFilter={assignedFilter}
-                  onAssignedChange={setAssignedFilter}
-                  statusOptions={statusOptions}
-                />
-                <CasesTable 
-                  searchQuery={searchQuery}
-                  statusFilter={statusFilter}
-                  typeFilter={typeFilter}
-                  assignedFilter={assignedFilter}
-                  showOnlyMyCases={false}
-                />
-              </TabsContent>
-
-              <TabsContent value="my" className="space-y-6 mt-0">
-                <CasesFilters
-                  searchQuery={searchQuery}
-                  onSearchChange={setSearchQuery}
-                  statusFilter={statusFilter}
-                  onStatusChange={setStatusFilter}
-                  typeFilter={typeFilter}
-                  onTypeChange={setTypeFilter}
-                  assignedFilter={assignedFilter}
-                  onAssignedChange={setAssignedFilter}
-                  statusOptions={statusOptions}
-                />
-                <CasesTable 
-                  searchQuery={searchQuery}
-                  statusFilter={statusFilter}
-                  typeFilter={typeFilter}
-                  assignedFilter={assignedFilter}
-                  showOnlyMyCases={true}
-                />
-              </TabsContent>
-            </Tabs>
-          )}
-
-          {/* Mobile: Show grid based on active tab */}
-          {isMobile && (
+        <PullToRefresh onRefresh={handleRefresh}>
+          <div className="flex-1 min-h-0 overflow-y-auto pb-24 px-4 pt-4 space-y-4">
             <CasesGrid 
               searchQuery={searchQuery}
               statusFilter={statusFilter}
@@ -175,96 +110,79 @@ const Cases = () => {
               assignedFilter={assignedFilter}
               showOnlyMyCases={casesTab === 'my'}
             />
-          )}
+          </div>
+        </PullToRefresh>
 
-          {/* Mobile FAB with Bottom Sheet - Only on Mobile */}
-          {isMobile && (
-            <>
-              <CaseMobileFAB onClick={() => setShowMobileActions(true)} />
-              <BottomSheet
-                open={showMobileActions}
-                onClose={() => setShowMobileActions(false)}
-                title="Case Actions"
-              >
-                <div className="space-y-3 pb-6">
-                  <button
-                    onClick={() => {
-                      setShowMobileActions(false);
-                      setShowAddDialog(true);
-                    }}
-                    className="w-full flex items-center gap-3 p-4 rounded-xl bg-primary text-primary-foreground active:scale-98 transition-transform"
-                  >
-                    <Plus className="w-5 h-5" />
-                    <span className="font-medium">Add New Case</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowMobileActions(false);
-                      setShowBulkImportDialog(true);
-                    }}
-                    className="w-full flex items-center gap-3 p-4 rounded-xl bg-secondary text-secondary-foreground active:scale-98 transition-transform"
-                  >
-                    <Upload className="w-5 h-5" />
-                    <span className="font-medium">Import Cases</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowMobileActions(false);
-                      setShowLinkClientsDialog(true);
-                    }}
-                    className="w-full flex items-center gap-3 p-4 rounded-xl bg-secondary text-secondary-foreground active:scale-98 transition-transform"
-                  >
-                    <LinkIcon className="w-5 h-5" />
-                    <span className="font-medium">Link Clients</span>
-                  </button>
-                </div>
-              </BottomSheet>
-            </>
-          )}
-        </div>
-      </PullToRefresh>
+        <CaseMobileFAB onClick={() => setShowMobileActions(true)} />
+        
+        <BottomSheet
+          open={showMobileActions}
+          onClose={() => setShowMobileActions(false)}
+          title="Case Actions"
+        >
+          <div className="space-y-3 pb-6">
+            <button
+              onClick={() => {
+                setShowMobileActions(false);
+                setShowAddDialog(true);
+              }}
+              className="w-full flex items-center gap-3 p-4 rounded-xl bg-primary text-primary-foreground active:scale-98 transition-transform"
+            >
+              <Plus className="w-5 h-5" />
+              <span className="font-medium">Add New Case</span>
+            </button>
+            <button
+              onClick={() => {
+                setShowMobileActions(false);
+                setShowBulkImportDialog(true);
+              }}
+              className="w-full flex items-center gap-3 p-4 rounded-xl bg-secondary text-secondary-foreground active:scale-98 transition-transform"
+            >
+              <Upload className="w-5 h-5" />
+              <span className="font-medium">Import Cases</span>
+            </button>
+            <button
+              onClick={() => {
+                setShowMobileActions(false);
+                setShowLinkClientsDialog(true);
+              }}
+              className="w-full flex items-center gap-3 p-4 rounded-xl bg-secondary text-secondary-foreground active:scale-98 transition-transform"
+            >
+              <LinkIcon className="w-5 h-5" />
+              <span className="font-medium">Link Clients</span>
+            </button>
+          </div>
+        </BottomSheet>
 
+        <AddCaseDialog 
+          open={showAddDialog}
+          onClose={() => setShowAddDialog(false)}
+        />
 
-      {/* Dialogs */}
-      <AddCaseDialog 
-        open={showAddDialog}
-        onClose={() => setShowAddDialog(false)}
-      />
+        <BulkImportCasesDialog
+          open={showBulkImportDialog}
+          onOpenChange={setShowBulkImportDialog}
+          onSuccess={() => console.log('Cases imported successfully')}
+        />
 
-      <BulkImportCasesDialog
-        open={showBulkImportDialog}
-        onOpenChange={setShowBulkImportDialog}
-        onSuccess={() => {
-          console.log('Cases imported successfully');
-        }}
-      />
+        <BulkImportDisposedCasesDialog
+          open={showBulkImportDisposedDialog}
+          onOpenChange={setShowBulkImportDisposedDialog}
+          onSuccess={() => console.log('Disposed cases imported successfully')}
+        />
 
-      <BulkImportDisposedCasesDialog
-        open={showBulkImportDisposedDialog}
-        onOpenChange={setShowBulkImportDisposedDialog}
-        onSuccess={() => {
-          console.log('Disposed cases imported successfully');
-        }}
-      />
+        <StandardizeCNRDialog
+          open={showStandardizeCNRDialog}
+          onOpenChange={setShowStandardizeCNRDialog}
+          onSuccess={() => console.log('CNR numbers standardized successfully')}
+        />
 
-      <StandardizeCNRDialog
-        open={showStandardizeCNRDialog}
-        onOpenChange={setShowStandardizeCNRDialog}
-        onSuccess={() => {
-          console.log('CNR numbers standardized successfully');
-        }}
-      />
+        <LinkClientsDialog
+          open={showLinkClientsDialog}
+          onOpenChange={setShowLinkClientsDialog}
+          onSuccess={() => console.log('Clients linked successfully')}
+        />
 
-      <LinkClientsDialog
-        open={showLinkClientsDialog}
-        onOpenChange={setShowLinkClientsDialog}
-        onSuccess={() => {
-          console.log('Clients linked successfully');
-        }}
-      />
-
-      {/* Mobile Filters Bottom Sheet */}
-      {isMobile && (
         <MobileFiltersSheet
           open={showFiltersSheet}
           onClose={() => setShowFiltersSheet(false)}
@@ -280,7 +198,99 @@ const Cases = () => {
             setAssignedFilter('all');
           }}
         />
-      )}
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <PullToRefresh onRefresh={handleRefresh}>
+        <div className="max-w-7xl mx-auto p-6 space-y-6 pb-6">
+          <CasesHeader onAddCase={() => setShowAddDialog(true)} />
+
+          <Tabs value={casesTab} onValueChange={(value) => setCasesTab(value as 'all' | 'my')} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 bg-white rounded-2xl shadow-sm border border-gray-200 mb-4 sm:mb-6 h-10">
+              <TabsTrigger value="all" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-sm">
+                All Cases
+              </TabsTrigger>
+              <TabsTrigger value="my" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-sm">
+                My Cases
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="all" className="space-y-6 mt-0">
+              <CasesFilters
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                statusFilter={statusFilter}
+                onStatusChange={setStatusFilter}
+                typeFilter={typeFilter}
+                onTypeChange={setTypeFilter}
+                assignedFilter={assignedFilter}
+                onAssignedChange={setAssignedFilter}
+                statusOptions={statusOptions}
+              />
+              <CasesTable 
+                searchQuery={searchQuery}
+                statusFilter={statusFilter}
+                typeFilter={typeFilter}
+                assignedFilter={assignedFilter}
+                showOnlyMyCases={false}
+              />
+            </TabsContent>
+
+            <TabsContent value="my" className="space-y-6 mt-0">
+              <CasesFilters
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                statusFilter={statusFilter}
+                onStatusChange={setStatusFilter}
+                typeFilter={typeFilter}
+                onTypeChange={setTypeFilter}
+                assignedFilter={assignedFilter}
+                onAssignedChange={setAssignedFilter}
+                statusOptions={statusOptions}
+              />
+              <CasesTable 
+                searchQuery={searchQuery}
+                statusFilter={statusFilter}
+                typeFilter={typeFilter}
+                assignedFilter={assignedFilter}
+                showOnlyMyCases={true}
+              />
+            </TabsContent>
+          </Tabs>
+        </div>
+      </PullToRefresh>
+
+      <AddCaseDialog 
+        open={showAddDialog}
+        onClose={() => setShowAddDialog(false)}
+      />
+
+      <BulkImportCasesDialog
+        open={showBulkImportDialog}
+        onOpenChange={setShowBulkImportDialog}
+        onSuccess={() => console.log('Cases imported successfully')}
+      />
+
+      <BulkImportDisposedCasesDialog
+        open={showBulkImportDisposedDialog}
+        onOpenChange={setShowBulkImportDisposedDialog}
+        onSuccess={() => console.log('Disposed cases imported successfully')}
+      />
+
+      <StandardizeCNRDialog
+        open={showStandardizeCNRDialog}
+        onOpenChange={setShowStandardizeCNRDialog}
+        onSuccess={() => console.log('CNR numbers standardized successfully')}
+      />
+
+      <LinkClientsDialog
+        open={showLinkClientsDialog}
+        onOpenChange={setShowLinkClientsDialog}
+        onSuccess={() => console.log('Clients linked successfully')}
+      />
     </>
   );
 };

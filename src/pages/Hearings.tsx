@@ -87,7 +87,7 @@ const Hearings = () => {
 
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-background pb-24">
+      <div className="h-full min-h-0 bg-background flex flex-col">
         <MobileStickyHeader
           title="Hearings"
           searchValue={filters.searchQuery}
@@ -96,33 +96,34 @@ const Hearings = () => {
           onFilterClick={() => setShowMobileFilters(true)}
         />
 
-        <div className="p-4 space-y-4">
-
-          {isMobileLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : !mobileHearings || mobileHearings.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-              <Calendar className="h-16 w-16 mb-4 opacity-20" />
-              <p className="text-sm">No upcoming hearings</p>
-            </div>
-          ) : (
-            Object.entries(groupedHearings).map(([date, hearings]) => (
-              <div key={date} className="space-y-3">
-                <h3 className="text-sm font-semibold text-muted-foreground px-1">
-                  {TimeUtils.formatDate(TimeUtils.toISTDate(date)!, 'EEEE, MMMM d')}
-                </h3>
-                {hearings.map((hearing) => (
-                  <MobileHearingCard
-                    key={hearing.id}
-                    hearing={hearing}
-                    onClick={() => handleHearingClick(hearing)}
-                  />
-                ))}
+        <div className="flex-1 min-h-0 overflow-y-auto pb-24">
+          <div className="p-4 space-y-4">
+            {isMobileLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
-            ))
-          )}
+            ) : !mobileHearings || mobileHearings.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+                <Calendar className="h-16 w-16 mb-4 opacity-20" />
+                <p className="text-sm">No upcoming hearings</p>
+              </div>
+            ) : (
+              Object.entries(groupedHearings).map(([date, hearings]) => (
+                <div key={date} className="space-y-3">
+                  <h3 className="text-sm font-semibold text-muted-foreground px-1">
+                    {TimeUtils.formatDate(TimeUtils.toISTDate(date)!, 'EEEE, MMMM d')}
+                  </h3>
+                  {hearings.map((hearing) => (
+                    <MobileHearingCard
+                      key={hearing.id}
+                      hearing={hearing}
+                      onClick={() => handleHearingClick(hearing)}
+                    />
+                  ))}
+                </div>
+              ))
+            )}
+          </div>
         </div>
 
         <Sheet open={showMobileFilters} onOpenChange={setShowMobileFilters}>
@@ -135,8 +136,6 @@ const Hearings = () => {
             </div>
           </SheetContent>
         </Sheet>
-
-        
       </div>
     );
   }
