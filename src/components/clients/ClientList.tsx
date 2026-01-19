@@ -21,10 +21,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileClientCard } from './MobileClientCard';
 import { MobileFAB } from '@/components/mobile/MobileFAB';
+import { MobileStickyHeader } from '@/components/mobile/MobileStickyHeader';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
-import { MobileSearchBar } from '@/components/cases/MobileSearchBar';
-import { MobileHeader } from '@/components/mobile/MobileHeader';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 interface Client {
   id: string;
   full_name: string;
@@ -332,9 +331,22 @@ export const ClientList = () => {
   );
 
   return <div className="w-full">
-      {/* Mobile Header */}
+      {/* Mobile Sticky Header */}
       {isMobile && (
-        <MobileHeader title="Clients" />
+        <MobileStickyHeader
+          title="Clients"
+          searchValue={searchTerm}
+          onSearchChange={setSearchTerm}
+          searchPlaceholder="Search clients..."
+          onFilterClick={() => setShowMobileFilter(true)}
+          activeFiltersCount={statusFilter !== 'all' ? 1 : 0}
+          tabs={[
+            { value: 'all', label: 'All Clients' },
+            { value: 'vip', label: 'VIP', icon: <Star className="w-4 h-4 fill-current" />, activeClassName: 'data-[state=active]:bg-yellow-600' },
+          ]}
+          activeTab={activeTab}
+          onTabChange={(value) => setActiveTab(value as TabFilter)}
+        />
       )}
 
       {/* Desktop Header */}
@@ -349,29 +361,6 @@ export const ClientList = () => {
               New Client
             </Button>
           </div>
-        </div>
-      )}
-
-      {/* Mobile Search + Tabs - Sticky below header */}
-      {isMobile && (
-        <div className="sticky top-14 z-30 bg-background px-4 py-3 space-y-3 border-b border-border">
-          <MobileSearchBar
-            value={searchTerm}
-            onChange={setSearchTerm}
-            onFilterClick={() => setShowMobileFilter(true)}
-            activeFiltersCount={statusFilter !== 'all' ? 1 : 0}
-          />
-          <Tabs value={activeTab} onValueChange={(value: any) => setActiveTab(value)} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 bg-card rounded-2xl shadow-sm border border-border h-12 p-1">
-              <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl text-sm font-medium transition-all h-10">
-                All Clients
-              </TabsTrigger>
-              <TabsTrigger value="vip" className="data-[state=active]:bg-yellow-600 data-[state=active]:text-primary-foreground rounded-xl text-sm font-medium transition-all h-10 flex items-center gap-2">
-                <Star className="w-4 h-4 fill-current" />
-                VIP
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
         </div>
       )}
 
@@ -670,19 +659,8 @@ export const ClientList = () => {
         </TabsContent>
 
         <TabsContent value="vip" className="mt-4 sm:mt-6">
-          {/* Mobile Search & Filter */}
-          {isMobile ? (
-            <div className="mb-4">
-              <MobileSearchBar
-                value={searchTerm}
-                onChange={setSearchTerm}
-                onFilterClick={() => setShowMobileFilter(true)}
-                activeFiltersCount={statusFilter !== 'all' ? 1 : 0}
-              />
-            </div>
-          ) : (
-            /* Desktop Filters Bar */
-            <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-200 mb-6">
+          {/* Desktop Filters Bar */}
+          <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-200 mb-6">
             <div className="flex items-center gap-4">
               <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -779,7 +757,6 @@ export const ClientList = () => {
               </DropdownMenu>
             </div>
           </div>
-          )}
 
           {/* Mobile VIP Cards View */}
           {isMobile ? (

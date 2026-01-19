@@ -13,16 +13,15 @@ import { BulkImportDisposedCasesDialog } from '../components/cases/BulkImportDis
 import { StandardizeCNRDialog } from '../components/cases/StandardizeCNRDialog';
 import { LinkClientsDialog } from '../components/cases/LinkClientsDialog';
 import { CaseMobileFAB } from '../components/cases/CaseMobileFAB';
-import { MobileHeader } from '@/components/mobile/MobileHeader';
-import { MobileSearchBar } from '@/components/cases/MobileSearchBar';
 import { MobileFiltersSheet } from '@/components/cases/MobileFiltersSheet';
+import { MobileStickyHeader } from '@/components/mobile/MobileStickyHeader';
 
-//
 import { BottomSheet } from '@/components/mobile/BottomSheet';
 import { PullToRefresh } from '@/components/mobile/PullToRefresh';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Plus, Upload, Link as LinkIcon } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+
 const Cases = () => {
   const { user, firmId } = useAuth();
   const queryClient = useQueryClient();
@@ -40,6 +39,7 @@ const Cases = () => {
   const [showLinkClientsDialog, setShowLinkClientsDialog] = useState(false);
   const [showMobileActions, setShowMobileActions] = useState(false);
   const [showFiltersSheet, setShowFiltersSheet] = useState(false);
+
   // Fetch distinct case statuses for filters (from DB)
   const { data: statusOptions = [] } = useQuery({
     queryKey: ['case-status-options', user?.id, firmId],
@@ -60,7 +60,6 @@ const Cases = () => {
     },
     enabled: !!user && !!firmId,
   });
-
 
   useEffect(() => {
     console.log('Cases component mounted');
@@ -86,31 +85,22 @@ const Cases = () => {
 
   return (
     <>
-      {/* Mobile Header */}
+      {/* Mobile Sticky Header */}
       {isMobile && (
-        <MobileHeader title="Cases" />
-      )}
-
-      {/* Mobile Search + Tabs - Fixed below header */}
-      {isMobile && (
-        <div className="sticky top-14 z-30 bg-background px-4 py-3 space-y-3 border-b border-border">
-          <MobileSearchBar
-            value={searchQuery}
-            onChange={setSearchQuery}
-            onFilterClick={() => setShowFiltersSheet(true)}
-            activeFiltersCount={activeFiltersCount}
-          />
-          <Tabs value={casesTab} onValueChange={(value) => setCasesTab(value as 'all' | 'my')} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 bg-card rounded-2xl shadow-sm border border-border h-12 p-1">
-              <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl text-sm font-medium transition-all h-10">
-                All Cases
-              </TabsTrigger>
-              <TabsTrigger value="my" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl text-sm font-medium transition-all h-10">
-                My Cases
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
+        <MobileStickyHeader
+          title="Cases"
+          searchValue={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchPlaceholder="Search cases..."
+          onFilterClick={() => setShowFiltersSheet(true)}
+          activeFiltersCount={activeFiltersCount}
+          tabs={[
+            { value: 'all', label: 'All Cases' },
+            { value: 'my', label: 'My Cases' },
+          ]}
+          activeTab={casesTab}
+          onTabChange={(value) => setCasesTab(value as 'all' | 'my')}
+        />
       )}
 
       <PullToRefresh onRefresh={handleRefresh}>

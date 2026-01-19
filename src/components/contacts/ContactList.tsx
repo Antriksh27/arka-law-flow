@@ -14,11 +14,11 @@ import { EditContactDialog } from './EditContactDialog';
 import { ConvertToClientDialog } from './ConvertToClientDialog';
 import { DeleteContactDialog } from './DeleteContactDialog';
 import { ContactDetailsDialog } from './ContactDetailsDialog';
-import { MobileHeader } from '@/components/mobile/MobileHeader';
+import { MobileStickyHeader } from '@/components/mobile/MobileStickyHeader';
 import { MobileFAB } from '@/components/mobile/MobileFAB';
 import { MobilePageContainer } from '@/components/mobile/MobilePageContainer';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Plus, Search, Users } from 'lucide-react';
+import { Plus, Users } from 'lucide-react';
 
 export const ContactList = () => {
   const navigate = useNavigate();
@@ -97,28 +97,13 @@ export const ContactList = () => {
   if (isMobile) {
     return (
       <MobilePageContainer>
-        <MobileHeader 
-          title="Contacts" 
-          actions={
-            <span className="text-sm text-muted-foreground">
-              {totalCount} total
-            </span>
-          }
+        <MobileStickyHeader
+          title="Contacts"
+          subtitle={`${totalCount} total`}
+          searchValue={searchTerm}
+          onSearchChange={setSearchTerm}
+          searchPlaceholder="Search contacts..."
         />
-        
-        {/* Mobile Search - Sticky below header */}
-        <div className="sticky top-14 z-30 bg-background px-4 py-3 border-b border-border">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <input 
-              type="text" 
-              className="w-full rounded-xl bg-muted pl-10 pr-4 py-3 text-base border-0 focus:ring-2 focus:ring-primary outline-none min-h-[48px]" 
-              placeholder="Search contacts..." 
-              value={searchTerm} 
-              onChange={e => setSearchTerm(e.target.value)} 
-            />
-          </div>
-        </div>
         
         {/* Contact Cards */}
         <div className="px-4 py-3 space-y-3">
