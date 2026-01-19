@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { X, Home, Users, UserPlus, Briefcase, Calendar, Gavel, StickyNote, CheckSquare, FileText, LogOut, MessageSquare, Settings, UserCircle, UsersRound, ChevronRight } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Link } from "react-router-dom";
@@ -109,8 +110,8 @@ export function MobileSidebar({
             </Button>
           </div>
 
-          {/* Navigation - scrolls only if content overflows */}
-          <div className="flex-1 overflow-y-auto py-3">
+          {/* Navigation */}
+          <ScrollArea className="flex-1 py-3">
             <nav className="px-3 space-y-1">
               {navigationItems.map((item, index) => {
                 const isActive = item.url === "/" ? pathname === "/" : pathname?.startsWith(item.url);
@@ -124,12 +125,10 @@ export function MobileSidebar({
                       "active:scale-[0.98]",
                       isActive 
                         ? "bg-white text-slate-900 font-medium" 
-                        : "text-white hover:bg-white/10",
-                      isOpen && "animate-fade-in"
+                        : "text-white hover:bg-white/10"
                     )}
                     style={{
-                      animationDelay: isOpen ? `${index * 40}ms` : '0ms',
-                      opacity: isOpen ? 1 : 0
+                      animationDelay: isOpen ? `${index * 30}ms` : '0ms'
                     }}
                   >
                     <item.icon className={cn(
@@ -152,13 +151,8 @@ export function MobileSidebar({
                   "active:scale-[0.98]",
                   pathname === "/settings" 
                     ? "bg-white text-slate-900 font-medium" 
-                    : "text-white hover:bg-white/10",
-                  isOpen && "animate-fade-in"
+                    : "text-white hover:bg-white/10"
                 )}
-                style={{
-                  animationDelay: isOpen ? `${(navigationItems.length + 1) * 40}ms` : '0ms',
-                  opacity: isOpen ? 1 : 0
-                }}
               >
                 <Settings className={cn(
                   "h-5 w-5 flex-shrink-0",
@@ -168,7 +162,7 @@ export function MobileSidebar({
                 {pathname === "/settings" && <ChevronRight className="h-4 w-4 text-slate-900" />}
               </Link>
             </div>
-          </div>
+          </ScrollArea>
 
           {/* Footer - User Account */}
           <div className="border-t border-white/10 p-4 bg-slate-800/30">
