@@ -14,7 +14,7 @@ import { MessageLoading } from '@/components/ui/message-loading';
 import { createCometChatUser } from '@/lib/cometchat';
 import { toast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { MobileHeader } from '@/components/mobile/MobileHeader';
+import { MobileStickyHeader } from '@/components/mobile/MobileStickyHeader';
 import { MobileFAB } from '@/components/mobile/MobileFAB';
 interface TeamMember {
   user_id: string;
@@ -49,6 +49,7 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
   const MESSAGE_LISTENER_ID = 'modern_messenger_listener';
   const isMobile = useIsMobile();
   const [showMobileChat, setShowMobileChat] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Fetch team members and create CometChat users for them
   useEffect(() => {
@@ -380,23 +381,20 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
 
     // Chat list view
     return <div className="min-h-screen bg-background pb-24">
-        <MobileHeader title="Messages" />
+        <MobileStickyHeader 
+          title="Messages"
+          searchValue={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchPlaceholder="Search conversations..."
+          tabs={[
+            { value: 'chats', label: 'Chats', icon: <MessageCircle className="h-4 w-4" /> },
+            { value: 'team', label: 'Team', icon: <Users className="h-4 w-4" /> }
+          ]}
+          activeTab={activeTab}
+          onTabChange={(value) => setActiveTab(value as 'chats' | 'team')}
+        />
 
-        <div className="p-4 space-y-4">
-          <Input placeholder="Search conversations..." className="w-full bg-white text-slate-900 placeholder:text-slate-400 border-slate-200" />
-
-          <div className="flex gap-2">
-            <Button variant={activeTab === 'chats' ? 'default' : 'outline'} className={cn("flex-1", activeTab === 'chats' ? "bg-slate-900 text-white hover:bg-slate-800" : "bg-white text-slate-900 border-slate-200 hover:bg-slate-50")} onClick={() => setActiveTab('chats')}>
-              <MessageCircle className="h-4 w-4 mr-2" />
-              Chats
-            </Button>
-            <Button variant={activeTab === 'team' ? 'default' : 'outline'} className={cn("flex-1", activeTab === 'team' ? "bg-slate-900 text-white hover:bg-slate-800" : "bg-white text-slate-900 border-slate-200 hover:bg-slate-50")} onClick={() => setActiveTab('team')}>
-              <Users className="h-4 w-4 mr-2" />
-              Team
-            </Button>
-          </div>
-
-          <div className="space-y-2">
+        <div className="p-4 space-y-2">
             {activeTab === 'chats' && (conversations.length === 0 ? <div className="bg-slate-900 rounded-xl p-8 text-center">
                   <MessageCircle className="h-12 w-12 mx-auto mb-3 text-white opacity-40" />
                   <p className="text-sm text-white/70">No conversations yet</p>
@@ -439,10 +437,7 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
                       </div>
                     </div>
                   </div>))}
-          </div>
         </div>
-
-        
       </div>;
   }
 
