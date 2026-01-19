@@ -33,6 +33,24 @@ const SEARCH_TYPES = [
   { value: 'district_cause_list', label: 'District Court Cause List' },
 ];
 
+// Gujarat HC Case Types
+const GUJARAT_HC_CASE_TYPES = [
+  { value: 'SCA', label: 'SCA - Special Civil Application' },
+  { value: 'CA', label: 'CA - Civil Application' },
+  { value: 'FA', label: 'FA - First Appeal' },
+  { value: 'SA', label: 'SA - Second Appeal' },
+  { value: 'LPA', label: 'LPA - Letters Patent Appeal' },
+  { value: 'CR', label: 'CR - Criminal Revision' },
+  { value: 'CRA', label: 'CRA - Criminal Appeal' },
+  { value: 'MCA', label: 'MCA - Misc Civil Application' },
+  { value: 'AO', label: 'AO - Arbitration Order' },
+  { value: 'OP', label: 'OP - Original Petition' },
+  { value: 'WP', label: 'WP - Writ Petition' },
+  { value: 'RFA', label: 'RFA - Regular First Appeal' },
+  { value: 'RCSA', label: 'RCSA - Regular Civil Second Appeal' },
+  { value: 'TCA', label: 'TCA - Tax Appeal' },
+];
+
 // Auto-detect court type from CNR pattern
 const detectCourtTypeFromCNR = (cnr: string): string | null => {
   if (!cnr || cnr.length < 4) return null;
@@ -65,6 +83,12 @@ export const LegalkartCaseSearch: React.FC<LegalkartCaseSearchProps> = ({
   const [batchCnrs, setBatchCnrs] = useState('');
   const [searchResults, setSearchResults] = useState<Record<string, SearchResult>>({});
   const [autoDetected, setAutoDetected] = useState(false);
+  
+  // Gujarat HC REGISTRATION mode state
+  const [searchMode, setSearchMode] = useState<'CNR' | 'REGISTRATION'>('CNR');
+  const [caseType, setCaseType] = useState('');
+  const [caseNo, setCaseNo] = useState('');
+  const [caseYear, setCaseYear] = useState('');
 
   // Auto-detect court type when CNR changes
   useEffect(() => {
@@ -96,13 +120,31 @@ export const LegalkartCaseSearch: React.FC<LegalkartCaseSearchProps> = ({
 
   // Single case search mutation
   const searchCaseMutation = useMutation({
-    mutationFn: async ({ cnr, searchType }: { cnr: string; searchType: string }) => {
+    mutationFn: async ({ 
+      cnr, 
+      searchType, 
+      caseMode, 
+      caseType, 
+      caseNo, 
+      caseYear 
+    }: { 
+      cnr?: string; 
+      searchType: string; 
+      caseMode?: 'CNR' | 'REGISTRATION';
+      caseType?: string;
+      caseNo?: string;
+      caseYear?: string;
+    }) => {
       const { data, error } = await supabase.functions.invoke('legalkart-api', {
         body: { 
           action: 'search', 
-          cnr, 
+          cnr: cnr || undefined,
           searchType, 
-          caseId 
+          caseId,
+          caseMode: caseMode === 'REGISTRATION' ? 'REGISTRATION' : undefined,
+          caseType: caseMode === 'REGISTRATION' ? caseType : undefined,
+          caseNo: caseMode === 'REGISTRATION' ? caseNo : undefined,
+          caseYear: caseMode === 'REGISTRATION' ? caseYear : undefined,
         },
       });
 
@@ -110,7 +152,9 @@ export const LegalkartCaseSearch: React.FC<LegalkartCaseSearchProps> = ({
       return data;
     },
     onSuccess: (data, variables) => {
-      const key = `${variables.cnr}-${variables.searchType}`;
+      const key = variables.caseMode === 'REGISTRATION' 
+        ? `${variables.caseType}/${variables.caseNo}/${variables.caseYear}-${variables.searchType}`
+        : `${variables.cnr}-${variables.searchType}`;
       setSearchResults(prev => ({
         ...prev,
         [key]: data,
@@ -236,6 +280,28 @@ export const LegalkartCaseSearch: React.FC<LegalkartCaseSearchProps> = ({
   });
 
   const handleSingleSearch = () => {
+    // REGISTRATION mode validation
+    if (searchMode === 'REGISTRATION' && searchType === 'gujarat_high_court') {
+      if (!caseType || !caseNo || !caseYear) {
+        toast({
+          title: "Missing Fields",
+          description: "Please fill Case Type, Case Number, and Year for REGISTRATION mode search",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      searchCaseMutation.mutate({ 
+        searchType, 
+        caseMode: 'REGISTRATION',
+        caseType,
+        caseNo,
+        caseYear
+      });
+      return;
+    }
+
+    // CNR mode validation
     if (!cnr.trim()) {
       toast({
         title: "CNR Required",
@@ -333,16 +399,6 @@ export const LegalkartCaseSearch: React.FC<LegalkartCaseSearchProps> = ({
             <TabsContent value="single" className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="cnr">CNR Number</Label>
-                  <Input
-                    id="cnr"
-                    value={cnr}
-                    onChange={(e) => setCnr(e.target.value)}
-                    placeholder="e.g., GJHC240629522024"
-                  />
-                </div>
-                
-                <div className="space-y-2">
                   <Label htmlFor="search-type" className="flex items-center gap-2">
                     Search Type
                     {autoDetected && (
@@ -365,7 +421,77 @@ export const LegalkartCaseSearch: React.FC<LegalkartCaseSearchProps> = ({
                     </SelectContent>
                   </Select>
                 </div>
+                
+                {/* Show search mode selector only for Gujarat High Court */}
+                {searchType === 'gujarat_high_court' && (
+                  <div className="space-y-2">
+                    <Label>Search Mode</Label>
+                    <Select value={searchMode} onValueChange={(val: 'CNR' | 'REGISTRATION') => setSearchMode(val)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select search mode" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="CNR">CNR Number</SelectItem>
+                        <SelectItem value="REGISTRATION">Registration (Case Type/No/Year)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
               </div>
+              
+              {/* CNR input - show only when in CNR mode or not Gujarat HC */}
+              {(searchType !== 'gujarat_high_court' || searchMode === 'CNR') && (
+                <div className="space-y-2">
+                  <Label htmlFor="cnr">CNR Number</Label>
+                  <Input
+                    id="cnr"
+                    value={cnr}
+                    onChange={(e) => setCnr(e.target.value)}
+                    placeholder="e.g., GJHC240629522024"
+                  />
+                </div>
+              )}
+              
+              {/* REGISTRATION mode inputs - show only for Gujarat HC in REGISTRATION mode */}
+              {searchType === 'gujarat_high_court' && searchMode === 'REGISTRATION' && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="case-type">Case Type</Label>
+                    <Select value={caseType} onValueChange={setCaseType}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select case type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {GUJARAT_HC_CASE_TYPES.map((type) => (
+                          <SelectItem key={type.value} value={type.value}>
+                            {type.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="case-no">Case Number</Label>
+                    <Input
+                      id="case-no"
+                      value={caseNo}
+                      onChange={(e) => setCaseNo(e.target.value)}
+                      placeholder="e.g., 15981"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="case-year">Case Year</Label>
+                    <Input
+                      id="case-year"
+                      value={caseYear}
+                      onChange={(e) => setCaseYear(e.target.value)}
+                      placeholder="e.g., 2017"
+                    />
+                  </div>
+                </div>
+              )}
               
               <Button 
                 onClick={handleSingleSearch}

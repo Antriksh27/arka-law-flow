@@ -3,9 +3,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 
 interface LegalkartSearchOptions {
-  cnr: string;
+  cnr?: string;
   searchType: 'high_court' | 'district_court' | 'supreme_court' | 'gujarat_high_court' | 'gujarat_display_board' | 'district_cause_list';
   caseId?: string;
+  // Gujarat HC REGISTRATION mode fields
+  caseMode?: 'CNR Number' | 'REGISTRATION' | 'FILING';
+  caseType?: string;
+  caseNo?: string;
+  caseYear?: string;
 }
 
 interface BatchSearchOptions {
@@ -31,7 +36,7 @@ export const useLegalkartIntegration = () => {
 
   // Single case search
   const searchCase = useMutation({
-    mutationFn: async ({ cnr, searchType, caseId }: LegalkartSearchOptions) => {
+    mutationFn: async ({ cnr, searchType, caseId, caseMode, caseType, caseNo, caseYear }: LegalkartSearchOptions) => {
       const firmId = await getFirmId();
       if (!firmId) {
         throw new Error('Please sign in to fetch case details');
@@ -40,10 +45,15 @@ export const useLegalkartIntegration = () => {
       const { data, error } = await supabase.functions.invoke('legalkart-api', {
         body: { 
           action: 'search', 
-          cnr, 
+          cnr: cnr || undefined, 
           searchType, 
           caseId,
-          firmId
+          firmId,
+          // Gujarat HC REGISTRATION mode fields
+          caseMode,
+          caseType,
+          caseNo,
+          caseYear,
         },
       });
 
