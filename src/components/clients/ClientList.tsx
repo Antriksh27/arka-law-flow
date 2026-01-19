@@ -352,7 +352,31 @@ export const ClientList = () => {
         </div>
       )}
 
-      {/* Tabs */}
+      {/* Mobile Search + Tabs - Sticky below header */}
+      {isMobile && (
+        <div className="sticky top-14 z-30 bg-background px-4 py-3 space-y-3 border-b border-border">
+          <MobileSearchBar
+            value={searchTerm}
+            onChange={setSearchTerm}
+            onFilterClick={() => setShowMobileFilter(true)}
+            activeFiltersCount={statusFilter !== 'all' ? 1 : 0}
+          />
+          <Tabs value={activeTab} onValueChange={(value: any) => setActiveTab(value)} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 bg-card rounded-2xl shadow-sm border border-border h-12 p-1">
+              <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl text-sm font-medium transition-all h-10">
+                All Clients
+              </TabsTrigger>
+              <TabsTrigger value="vip" className="data-[state=active]:bg-yellow-600 data-[state=active]:text-primary-foreground rounded-xl text-sm font-medium transition-all h-10 flex items-center gap-2">
+                <Star className="w-4 h-4 fill-current" />
+                VIP
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+      )}
+
+      {/* Desktop Tabs */}
+      {!isMobile && (
       <Tabs value={activeTab} onValueChange={(value: any) => setActiveTab(value)} className="w-full px-3 sm:px-6">
         <TabsList className="grid w-full grid-cols-2 bg-white rounded-2xl shadow-sm border border-gray-200">
           <TabsTrigger value="all" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white">
@@ -365,19 +389,8 @@ export const ClientList = () => {
         </TabsList>
 
         <TabsContent value="all" className="mt-4 sm:mt-6">
-          {/* Mobile Search & Filter */}
-          {isMobile ? (
-            <div className="mb-4">
-              <MobileSearchBar
-                value={searchTerm}
-                onChange={setSearchTerm}
-                onFilterClick={() => setShowMobileFilter(true)}
-                activeFiltersCount={statusFilter !== 'all' ? 1 : 0}
-              />
-            </div>
-          ) : (
-            /* Desktop Filters Bar */
-            <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-200 mb-6">
+          {/* Desktop Filters Bar */}
+          <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-200 mb-6">
         <div className="flex items-center gap-4">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -474,7 +487,6 @@ export const ClientList = () => {
           </DropdownMenu>
         </div>
       </div>
-          )}
 
       {/* Mobile Cards View */}
       {isMobile ? (
@@ -944,6 +956,34 @@ export const ClientList = () => {
           )}
         </TabsContent>
       </Tabs>
+      )}
+
+      {/* Mobile Cards View */}
+      {isMobile && (
+        <div className="space-y-3 pb-24 px-4 pt-4">
+          {isLoading ? (
+            <div className="p-3">
+              <SkeletonList count={5} />
+            </div>
+          ) : clients.length === 0 ? (
+            <div className="text-center py-12 px-6">
+              <p className="text-gray-500 mb-4">No clients found matching your criteria.</p>
+              <Button onClick={() => setShowAddDialog(true)} className="bg-slate-800 hover:bg-slate-700 w-full sm:w-auto">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Your First Client
+              </Button>
+            </div>
+          ) : (
+            clients.map((client) => (
+              <MobileClientCard
+                key={client.id}
+                {...client}
+                onClick={() => navigate(`/clients/${client.id}`)}
+              />
+            ))
+          )}
+        </div>
+      )}
 
       {/* Mobile FAB */}
       {isMobile && (
