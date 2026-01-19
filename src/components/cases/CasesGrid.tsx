@@ -118,11 +118,19 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
       const { data, error, count } = await query;
       if (error) throw error;
       
-      // Sort cases: upcoming hearings (today and future) first, then by hearing date
+      // Sort cases: pending first, then by upcoming hearings (today and future), then by hearing date
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       
       const sortedCases = (data || []).sort((a, b) => {
+        // Pending cases come first
+        const aIsPending = a.status === 'pending';
+        const bIsPending = b.status === 'pending';
+        
+        if (aIsPending && !bIsPending) return -1;
+        if (!aIsPending && bIsPending) return 1;
+        
+        // Within same status, sort by upcoming hearings
         const aDate = a.next_hearing_date ? new Date(a.next_hearing_date) : null;
         const bDate = b.next_hearing_date ? new Date(b.next_hearing_date) : null;
         
@@ -138,11 +146,7 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
           return aDate.getTime() - bDate.getTime();
         }
         
-        // Neither has upcoming: sort by status then created_at
-        if (a.status !== b.status) {
-          return a.status === 'pending' ? -1 : 1;
-        }
-        
+        // Sort by created_at
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       });
       
