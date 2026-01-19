@@ -97,7 +97,7 @@ const WorkspaceDashboard = () => {
       {/* Mobile View */}
       {isMobile && (
         <PullToRefresh onRefresh={handleRefresh}>
-          <div className="min-h-screen bg-slate-50 pb-24">
+          <div className="h-screen bg-slate-50 overflow-hidden flex flex-col">
             {/* Custom Header with greeting and icons */}
             <MobileDashboardHeader userName={userName} />
 
