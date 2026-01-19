@@ -276,87 +276,87 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange, i
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2 overflow-hidden">
       {/* Mobile-optimized toolbar */}
       {isMobile ? (
-        <div className="space-y-3">
+        <div className="space-y-2 overflow-hidden">
           {/* Top row: Tools and actions */}
-          <div className="flex items-center justify-between gap-2 p-3 bg-muted/50 rounded-xl">
+          <div className="flex items-center justify-between p-2 bg-muted/50 rounded-xl">
             {/* Tool toggle */}
-            <div className="flex gap-1 p-1 bg-background rounded-lg">
+            <div className="flex gap-0.5 p-0.5 bg-background rounded-lg">
               <button
                 type="button"
                 onClick={() => setActiveTool('pen')}
-                className={`p-2.5 rounded-md transition-colors ${
+                className={`p-2 rounded-md transition-colors ${
                   activeTool === 'pen' 
                     ? 'bg-primary text-primary-foreground' 
-                    : 'text-muted-foreground hover:bg-muted'
+                    : 'text-muted-foreground'
                 }`}
               >
-                <Pencil className="w-5 h-5" />
+                <Pencil className="w-4 h-4" />
               </button>
               <button
                 type="button"
                 onClick={() => setActiveTool('eraser')}
-                className={`p-2.5 rounded-md transition-colors ${
+                className={`p-2 rounded-md transition-colors ${
                   activeTool === 'eraser' 
                     ? 'bg-primary text-primary-foreground' 
-                    : 'text-muted-foreground hover:bg-muted'
+                    : 'text-muted-foreground'
                 }`}
               >
-                <Eraser className="w-5 h-5" />
+                <Eraser className="w-4 h-4" />
               </button>
             </div>
 
             {/* Undo/Redo */}
-            <div className="flex gap-1">
+            <div className="flex gap-0.5">
               <button
                 type="button"
                 onClick={undo}
                 disabled={strokes.length === 0}
-                className="p-2.5 rounded-lg text-muted-foreground hover:bg-muted disabled:opacity-30"
+                className="p-2 rounded-lg text-muted-foreground disabled:opacity-30"
               >
-                <Undo2 className="w-5 h-5" />
+                <Undo2 className="w-4 h-4" />
               </button>
               <button
                 type="button"
                 onClick={redo}
                 disabled={redoStack.length === 0}
-                className="p-2.5 rounded-lg text-muted-foreground hover:bg-muted disabled:opacity-30"
+                className="p-2 rounded-lg text-muted-foreground disabled:opacity-30"
               >
-                <Redo2 className="w-5 h-5" />
+                <Redo2 className="w-4 h-4" />
               </button>
             </div>
 
             {/* Clear & Save */}
-            <div className="flex gap-1">
+            <div className="flex gap-0.5">
               <button
                 type="button"
                 onClick={clearCanvas}
-                className="p-2.5 rounded-lg text-destructive hover:bg-destructive/10"
+                className="p-2 rounded-lg text-destructive"
               >
-                <Trash2 className="w-5 h-5" />
+                <Trash2 className="w-4 h-4" />
               </button>
               <button
                 type="button"
                 onClick={downloadDrawing}
-                className="p-2.5 rounded-lg text-muted-foreground hover:bg-muted"
+                className="p-2 rounded-lg text-muted-foreground"
               >
-                <Download className="w-5 h-5" />
+                <Download className="w-4 h-4" />
               </button>
             </div>
           </div>
 
-          {/* Bottom row: Colors and size */}
-          <div className="flex items-center gap-3 px-2">
+          {/* Bottom row: Colors and size - wrapped to fit */}
+          <div className="flex items-center justify-between gap-2 px-1">
             {/* Color palette - only for pen */}
-            {activeTool === 'pen' && (
-              <div className="flex gap-2">
+            {activeTool === 'pen' ? (
+              <div className="flex gap-1.5 flex-shrink-0">
                 {colors.map(color => (
                   <button
                     key={color}
                     type="button"
-                    className={`w-8 h-8 rounded-full border-2 transition-transform active:scale-90 ${
+                    className={`w-6 h-6 rounded-full border-2 transition-transform active:scale-90 ${
                       currentColor === color 
                         ? 'border-foreground scale-110' 
                         : 'border-transparent'
@@ -366,10 +366,12 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange, i
                   />
                 ))}
               </div>
+            ) : (
+              <span className="text-xs text-muted-foreground">Eraser size</span>
             )}
 
             {/* Size slider */}
-            <div className="flex items-center gap-2 flex-1">
+            <div className="flex items-center gap-2 min-w-0 flex-1 max-w-[120px]">
               <input
                 type="range"
                 min={activeTool === 'eraser' ? '15' : '3'}
@@ -382,14 +384,14 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange, i
                     setBrushSize(parseInt(e.target.value));
                   }
                 }}
-                className="flex-1 h-2 accent-primary"
+                className="w-full h-2 accent-primary"
               />
               <div 
                 className="rounded-full border border-border flex-shrink-0"
                 style={{ 
-                  width: `${Math.max((activeTool === 'eraser' ? eraserSize : brushSize) / 1.5, 6)}px`, 
-                  height: `${Math.max((activeTool === 'eraser' ? eraserSize : brushSize) / 1.5, 6)}px`,
-                  backgroundColor: activeTool === 'eraser' ? '#e5e7eb' : currentColor 
+                  width: `${Math.max((activeTool === 'eraser' ? eraserSize : brushSize) / 2, 4)}px`, 
+                  height: `${Math.max((activeTool === 'eraser' ? eraserSize : brushSize) / 2, 4)}px`,
+                  backgroundColor: activeTool === 'eraser' ? 'hsl(var(--muted))' : currentColor 
                 }}
               />
             </div>
