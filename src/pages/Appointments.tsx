@@ -133,7 +133,7 @@ const Appointments = () => {
 
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-background pb-24">
+      <div className="h-full min-h-0 bg-background flex flex-col">
         <MobileStickyHeader
           title="Appointments"
           searchValue={filters.searchQuery}
@@ -142,39 +142,37 @@ const Appointments = () => {
           onFilterClick={() => setShowMobileFilters(true)}
         />
 
-        <div className="p-4 space-y-4">
-
-          {isMobileLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : !mobileAppointments || mobileAppointments.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-              <Calendar className="h-16 w-16 mb-4 opacity-20" />
-              <p className="text-sm">No appointments found</p>
-            </div>
-          ) : (
-            Object.entries(groupedAppointments).map(([date, appointments]) => (
-              <div key={date} className="space-y-3">
-                <h3 className="text-sm font-semibold text-muted-foreground px-1">
-                  {TimeUtils.formatDate(TimeUtils.toISTDate(date)!, 'EEEE, MMMM d')}
-                </h3>
-                {appointments.map((appointment) => (
-                  <MobileAppointmentCard
-                    key={appointment.id}
-                    appointment={appointment}
-                    onClick={() => handleAppointmentClick(appointment)}
-                  />
-                ))}
+        <div className="flex-1 min-h-0 overflow-y-auto pb-24">
+          <div className="p-4 space-y-4">
+            {isMobileLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
-            ))
-          )}
+            ) : !mobileAppointments || mobileAppointments.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+                <Calendar className="h-16 w-16 mb-4 opacity-20" />
+                <p className="text-sm">No appointments found</p>
+              </div>
+            ) : (
+              Object.entries(groupedAppointments).map(([date, appointments]) => (
+                <div key={date} className="space-y-3">
+                  <h3 className="text-sm font-semibold text-muted-foreground px-1">
+                    {TimeUtils.formatDate(TimeUtils.toISTDate(date)!, 'EEEE, MMMM d')}
+                  </h3>
+                  {appointments.map((appointment) => (
+                    <MobileAppointmentCard
+                      key={appointment.id}
+                      appointment={appointment}
+                      onClick={() => handleAppointmentClick(appointment)}
+                    />
+                  ))}
+                </div>
+              ))
+            )}
+          </div>
         </div>
 
-        <MobileFAB
-          onClick={() => openDialog(<CreateAppointmentDialog />)}
-          icon={Plus}
-        />
+        <MobileFAB onClick={() => openDialog(<CreateAppointmentDialog />)} icon={Plus} />
 
         <Sheet open={showMobileFilters} onOpenChange={setShowMobileFilters}>
           <SheetContent side="bottom" className="h-[80vh]">
@@ -186,8 +184,6 @@ const Appointments = () => {
             </div>
           </SheetContent>
         </Sheet>
-
-        
       </div>
     );
   }
