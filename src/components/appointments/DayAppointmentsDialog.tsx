@@ -24,6 +24,7 @@ interface AppointmentData {
   client_id?: string | null;
   case_id?: string | null;
   duration_minutes?: number;
+  daily_serial_number?: number;
 }
 
 interface DayAppointmentsDialogProps {
@@ -151,6 +152,14 @@ export const DayAppointmentsDialog: React.FC<DayAppointmentsDialogProps> = ({
                 className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
                 onClick={() => handleAppointmentClick(appointment)}
               >
+                {/* Token Number */}
+                {appointment.daily_serial_number && (
+                  <div className="flex-shrink-0 bg-primary text-primary-foreground rounded-lg px-3 py-2 text-center min-w-[56px]">
+                    <span className="text-[10px] font-medium uppercase tracking-wide">Token</span>
+                    <div className="text-lg font-bold">#{appointment.daily_serial_number}</div>
+                  </div>
+                )}
+                
                 {/* Time */}
                 <div className="flex flex-col items-center gap-1 min-w-[80px]">
                   <div className="flex items-center gap-1 text-sm font-semibold text-gray-700">

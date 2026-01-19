@@ -16,6 +16,7 @@ interface MobileAppointmentCardProps {
     status: string;
     location: string;
     type?: string;
+    daily_serial_number?: number;
   };
   onClick: () => void;
 }
@@ -94,6 +95,12 @@ export const MobileAppointmentCard: React.FC<MobileAppointmentCardProps> = ({
     >
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-center gap-3 flex-1 min-w-0">
+          {appointment.daily_serial_number && (
+            <div className="flex-shrink-0 bg-primary text-primary-foreground rounded-lg px-2.5 py-1.5 text-center min-w-[48px]">
+              <span className="text-[10px] font-medium uppercase tracking-wide">Token</span>
+              <div className="text-sm font-bold">#{appointment.daily_serial_number}</div>
+            </div>
+          )}
           <Avatar className="h-10 w-10 flex-shrink-0">
             <AvatarFallback className="text-sm bg-primary/10 text-primary">
               {appointment.client_name?.split(' ').map(n => n[0]).join('') || 'C'}

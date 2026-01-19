@@ -35,6 +35,7 @@ interface ViewAppointmentDialogProps {
     client_id?: string | null;
     case_id?: string | null;
     duration_minutes?: number;
+    daily_serial_number?: number;
   };
 }
 
@@ -318,16 +319,24 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Title */}
-          <div>
-            <h3 className="text-lg font-medium text-foreground">
-              {appointment.title || 'Untitled Appointment'}
-            </h3>
-            {appointment.status && (
-              <Badge className={`mt-2 ${getStatusColor(appointment.status)}`}>
-                {appointment.status}
-              </Badge>
+          {/* Token & Title */}
+          <div className="flex items-start gap-4">
+            {appointment.daily_serial_number && (
+              <div className="flex-shrink-0 bg-primary text-primary-foreground rounded-xl px-4 py-2 text-center">
+                <span className="text-xs font-medium uppercase tracking-wide">Token</span>
+                <div className="text-2xl font-bold">#{appointment.daily_serial_number}</div>
+              </div>
             )}
+            <div className="flex-1">
+              <h3 className="text-lg font-medium text-foreground">
+                {appointment.title || 'Untitled Appointment'}
+              </h3>
+              {appointment.status && (
+                <Badge className={`mt-2 ${getStatusColor(appointment.status)}`}>
+                  {appointment.status}
+                </Badge>
+              )}
+            </div>
           </div>
 
           {/* Date & Time */}
