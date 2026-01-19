@@ -2,6 +2,7 @@ import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Trash2, Download, Pencil, Eraser, Undo2, Redo2 } from 'lucide-react';
 import getStroke from 'perfect-freehand';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface DrawingCanvasProps {
   onDrawingChange: (data: string | null) => void;
@@ -26,10 +27,11 @@ type Tool = 'pen' | 'eraser';
 export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange, isFullscreen = false }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentColor, setCurrentColor] = useState('#000000');
-  const [brushSize, setBrushSize] = useState(8);
-  const [eraserSize, setEraserSize] = useState(20);
+  const [brushSize, setBrushSize] = useState(isMobile ? 6 : 8);
+  const [eraserSize, setEraserSize] = useState(isMobile ? 24 : 20);
   const [strokes, setStrokes] = useState<Stroke[]>([]);
   const [redoStack, setRedoStack] = useState<Stroke[]>([]);
   const [currentStroke, setCurrentStroke] = useState<Point[]>([]);
@@ -41,7 +43,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange, i
     smoothing: 0.5,
     streamline: 0.5,
     easing: (t: number) => t,
-    simulatePressure: !hasPressure, // Only simulate if no real pressure data
+    simulatePressure: !hasPressure,
     start: {
       cap: true,
       taper: 0,
@@ -52,7 +54,6 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange, i
     },
   });
 
-  // Track if we have real pressure data from stylus
   const hasPressureData = useRef(false);
 
   const getSvgPathFromStroke = useCallback((stroke: number[][]): string => {
@@ -77,12 +78,10 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange, i
 
     const rect = svg.getBoundingClientRect();
     
-    // Detect real pressure from stylus (pen) or touch
     const pressure = e.pointerType === 'pen' || e.pointerType === 'touch' 
       ? (e.pressure > 0 ? e.pressure : 0.5)
       : 0.5;
     
-    // Track if we have real pressure data
     if (e.pointerType === 'pen' && e.pressure > 0) {
       hasPressureData.current = true;
     }
@@ -98,7 +97,6 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange, i
     e.preventDefault();
     e.stopPropagation();
     
-    // Capture pointer for reliable tracking
     (e.target as SVGSVGElement).setPointerCapture(e.pointerId);
     
     setIsDrawing(true);
@@ -116,7 +114,6 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange, i
   }, [isDrawing, getEventPos]);
 
   const cancelDrawing = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
-    // Release pointer capture
     (e.target as SVGSVGElement).releasePointerCapture(e.pointerId);
     setCurrentStroke([]);
     setIsDrawing(false);
@@ -124,7 +121,6 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange, i
 
   const stopDrawing = useCallback((e?: React.PointerEvent<SVGSVGElement>) => {
     if (e) {
-      // Release pointer capture
       (e.target as SVGSVGElement).releasePointerCapture(e.pointerId);
     }
     
@@ -141,11 +137,10 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange, i
     };
 
     setStrokes(prev => [...prev, newStroke]);
-    setRedoStack([]); // Clear redo stack when new stroke is added
+    setRedoStack([]);
     setCurrentStroke([]);
     setIsDrawing(false);
 
-    // Export to data URL after a short delay to allow state to update
     setTimeout(() => {
       exportToDataUrl();
     }, 50);
@@ -200,7 +195,6 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange, i
     setStrokes(prev => prev.slice(0, -1));
     setRedoStack(prev => [...prev, lastStroke]);
     
-    // Export updated canvas
     setTimeout(() => {
       exportToDataUrl();
     }, 50);
@@ -213,13 +207,11 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange, i
     setRedoStack(prev => prev.slice(0, -1));
     setStrokes(prev => [...prev, strokeToRedo]);
     
-    // Export updated canvas
     setTimeout(() => {
       exportToDataUrl();
     }, 50);
   }, [redoStack, exportToDataUrl]);
 
-  // Keyboard shortcuts for undo/redo
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
@@ -268,154 +260,276 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange, i
   }, []);
 
   const colors = [
-    '#000000', // Black
-    '#1E40AF', // Blue
-    '#DC2626', // Red
-    '#059669', // Green
-    '#7C3AED', // Purple
-    '#EA580C', // Orange
-    '#0891B2', // Cyan
-    '#6B7280'  // Gray
+    '#000000',
+    '#1E40AF',
+    '#DC2626',
+    '#059669',
+    '#7C3AED',
+    '#EA580C',
   ];
 
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
-        {/* Tool Selection */}
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-gray-700">Tool:</label>
-          <div className="flex gap-1">
-            <Button
-              type="button"
-              variant={activeTool === 'pen' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setActiveTool('pen')}
-              className={activeTool === 'pen' ? 'bg-primary' : ''}
-            >
-              <Pencil className="w-4 h-4 mr-1" />
-              Pen
-            </Button>
-            <Button
-              type="button"
-              variant={activeTool === 'eraser' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setActiveTool('eraser')}
-              className={activeTool === 'eraser' ? 'bg-primary' : ''}
-            >
-              <Eraser className="w-4 h-4 mr-1" />
-              Eraser
-            </Button>
-          </div>
-        </div>
+  // Calculate canvas height based on context
+  const getCanvasHeight = () => {
+    if (isFullscreen) return 'h-[70vh]';
+    if (isMobile) return 'h-[50vh]';
+    return 'h-80';
+  };
 
-        {/* Color picker - only show for pen tool */}
-        {activeTool === 'pen' && (
-          <div className="flex items-center gap-3">
-            <label className="text-sm font-medium text-gray-700">Color:</label>
-            <div className="flex gap-1.5">
-              {colors.map(color => (
-                <button
-                  key={color}
-                  type="button"
-                  className={`w-7 h-7 rounded-full border-2 transition-all duration-200 hover:scale-110 ${
-                    currentColor === color 
-                      ? 'border-gray-800 ring-2 ring-gray-300' 
-                      : 'border-gray-300 hover:border-gray-400'
-                  }`}
-                  style={{ backgroundColor: color }}
-                  onClick={() => setCurrentColor(color)}
-                />
-              ))}
+  return (
+    <div className="space-y-3">
+      {/* Mobile-optimized toolbar */}
+      {isMobile ? (
+        <div className="space-y-3">
+          {/* Top row: Tools and actions */}
+          <div className="flex items-center justify-between gap-2 p-3 bg-muted/50 rounded-xl">
+            {/* Tool toggle */}
+            <div className="flex gap-1 p-1 bg-background rounded-lg">
+              <button
+                type="button"
+                onClick={() => setActiveTool('pen')}
+                className={`p-2.5 rounded-md transition-colors ${
+                  activeTool === 'pen' 
+                    ? 'bg-primary text-primary-foreground' 
+                    : 'text-muted-foreground hover:bg-muted'
+                }`}
+              >
+                <Pencil className="w-5 h-5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTool('eraser')}
+                className={`p-2.5 rounded-md transition-colors ${
+                  activeTool === 'eraser' 
+                    ? 'bg-primary text-primary-foreground' 
+                    : 'text-muted-foreground hover:bg-muted'
+                }`}
+              >
+                <Eraser className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Undo/Redo */}
+            <div className="flex gap-1">
+              <button
+                type="button"
+                onClick={undo}
+                disabled={strokes.length === 0}
+                className="p-2.5 rounded-lg text-muted-foreground hover:bg-muted disabled:opacity-30"
+              >
+                <Undo2 className="w-5 h-5" />
+              </button>
+              <button
+                type="button"
+                onClick={redo}
+                disabled={redoStack.length === 0}
+                className="p-2.5 rounded-lg text-muted-foreground hover:bg-muted disabled:opacity-30"
+              >
+                <Redo2 className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Clear & Save */}
+            <div className="flex gap-1">
+              <button
+                type="button"
+                onClick={clearCanvas}
+                className="p-2.5 rounded-lg text-destructive hover:bg-destructive/10"
+              >
+                <Trash2 className="w-5 h-5" />
+              </button>
+              <button
+                type="button"
+                onClick={downloadDrawing}
+                className="p-2.5 rounded-lg text-muted-foreground hover:bg-muted"
+              >
+                <Download className="w-5 h-5" />
+              </button>
             </div>
           </div>
-        )}
-        
-        {/* Size slider */}
-        <div className="flex items-center gap-3">
-          <label className="text-sm font-medium text-gray-700">
-            {activeTool === 'eraser' ? 'Eraser:' : 'Brush:'}
-          </label>
-          <input
-            type="range"
-            min={activeTool === 'eraser' ? '10' : '4'}
-            max={activeTool === 'eraser' ? '50' : '24'}
-            value={activeTool === 'eraser' ? eraserSize : brushSize}
-            onChange={(e) => {
-              if (activeTool === 'eraser') {
-                setEraserSize(parseInt(e.target.value));
-              } else {
-                setBrushSize(parseInt(e.target.value));
-              }
-            }}
-            className="w-24 accent-slate-800"
-          />
-          <div className="flex items-center justify-center w-8 h-8">
-            <div 
-              className={`rounded-full border ${activeTool === 'eraser' ? 'border-gray-400 bg-white' : 'border-gray-300'}`}
-              style={{ 
-                width: `${Math.max((activeTool === 'eraser' ? eraserSize : brushSize) / 2, 4)}px`, 
-                height: `${Math.max((activeTool === 'eraser' ? eraserSize : brushSize) / 2, 4)}px`,
-                backgroundColor: activeTool === 'eraser' ? '#ffffff' : currentColor 
-              }}
-            />
+
+          {/* Bottom row: Colors and size */}
+          <div className="flex items-center gap-3 px-2">
+            {/* Color palette - only for pen */}
+            {activeTool === 'pen' && (
+              <div className="flex gap-2">
+                {colors.map(color => (
+                  <button
+                    key={color}
+                    type="button"
+                    className={`w-8 h-8 rounded-full border-2 transition-transform active:scale-90 ${
+                      currentColor === color 
+                        ? 'border-foreground scale-110' 
+                        : 'border-transparent'
+                    }`}
+                    style={{ backgroundColor: color }}
+                    onClick={() => setCurrentColor(color)}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Size slider */}
+            <div className="flex items-center gap-2 flex-1">
+              <input
+                type="range"
+                min={activeTool === 'eraser' ? '15' : '3'}
+                max={activeTool === 'eraser' ? '50' : '20'}
+                value={activeTool === 'eraser' ? eraserSize : brushSize}
+                onChange={(e) => {
+                  if (activeTool === 'eraser') {
+                    setEraserSize(parseInt(e.target.value));
+                  } else {
+                    setBrushSize(parseInt(e.target.value));
+                  }
+                }}
+                className="flex-1 h-2 accent-primary"
+              />
+              <div 
+                className="rounded-full border border-border flex-shrink-0"
+                style={{ 
+                  width: `${Math.max((activeTool === 'eraser' ? eraserSize : brushSize) / 1.5, 6)}px`, 
+                  height: `${Math.max((activeTool === 'eraser' ? eraserSize : brushSize) / 1.5, 6)}px`,
+                  backgroundColor: activeTool === 'eraser' ? '#e5e7eb' : currentColor 
+                }}
+              />
+            </div>
           </div>
         </div>
+      ) : (
+        /* Desktop toolbar */
+        <div className="flex flex-wrap items-center gap-4 p-4 bg-muted/50 rounded-xl border border-border">
+          {/* Tool Selection */}
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-muted-foreground">Tool:</label>
+            <div className="flex gap-1">
+              <Button
+                type="button"
+                variant={activeTool === 'pen' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setActiveTool('pen')}
+              >
+                <Pencil className="w-4 h-4 mr-1" />
+                Pen
+              </Button>
+              <Button
+                type="button"
+                variant={activeTool === 'eraser' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setActiveTool('eraser')}
+              >
+                <Eraser className="w-4 h-4 mr-1" />
+                Eraser
+              </Button>
+            </div>
+          </div>
 
-        <div className="flex gap-2 ml-auto">
-          <Button
-            type="button"
-            onClick={undo}
-            variant="outline"
-            size="sm"
-            disabled={strokes.length === 0}
-            className="hover:bg-gray-50 disabled:opacity-50"
-            title="Undo (Ctrl+Z)"
-          >
-            <Undo2 className="w-4 h-4" />
-          </Button>
-          <Button
-            type="button"
-            onClick={redo}
-            variant="outline"
-            size="sm"
-            disabled={redoStack.length === 0}
-            className="hover:bg-gray-50 disabled:opacity-50"
-            title="Redo (Ctrl+Y)"
-          >
-            <Redo2 className="w-4 h-4" />
-          </Button>
-          <Button
-            type="button"
-            onClick={clearCanvas}
-            variant="outline"
-            size="sm"
-            className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
-          >
-            <Trash2 className="w-4 h-4 mr-1" />
-            Clear
-          </Button>
-          <Button
-            type="button"
-            onClick={downloadDrawing}
-            variant="outline"
-            size="sm"
-            className="hover:bg-gray-50"
-          >
-            <Download className="w-4 h-4 mr-1" />
-            Save
-          </Button>
+          {/* Color picker */}
+          {activeTool === 'pen' && (
+            <div className="flex items-center gap-3">
+              <label className="text-sm font-medium text-muted-foreground">Color:</label>
+              <div className="flex gap-1.5">
+                {colors.map(color => (
+                  <button
+                    key={color}
+                    type="button"
+                    className={`w-7 h-7 rounded-full border-2 transition-all duration-200 hover:scale-110 ${
+                      currentColor === color 
+                        ? 'border-foreground ring-2 ring-ring' 
+                        : 'border-border hover:border-muted-foreground'
+                    }`}
+                    style={{ backgroundColor: color }}
+                    onClick={() => setCurrentColor(color)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {/* Size slider */}
+          <div className="flex items-center gap-3">
+            <label className="text-sm font-medium text-muted-foreground">
+              {activeTool === 'eraser' ? 'Eraser:' : 'Brush:'}
+            </label>
+            <input
+              type="range"
+              min={activeTool === 'eraser' ? '10' : '4'}
+              max={activeTool === 'eraser' ? '50' : '24'}
+              value={activeTool === 'eraser' ? eraserSize : brushSize}
+              onChange={(e) => {
+                if (activeTool === 'eraser') {
+                  setEraserSize(parseInt(e.target.value));
+                } else {
+                  setBrushSize(parseInt(e.target.value));
+                }
+              }}
+              className="w-24 accent-primary"
+            />
+            <div className="flex items-center justify-center w-8 h-8">
+              <div 
+                className="rounded-full border border-border"
+                style={{ 
+                  width: `${Math.max((activeTool === 'eraser' ? eraserSize : brushSize) / 2, 4)}px`, 
+                  height: `${Math.max((activeTool === 'eraser' ? eraserSize : brushSize) / 2, 4)}px`,
+                  backgroundColor: activeTool === 'eraser' ? '#e5e7eb' : currentColor 
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-2 ml-auto">
+            <Button
+              type="button"
+              onClick={undo}
+              variant="outline"
+              size="sm"
+              disabled={strokes.length === 0}
+              title="Undo (Ctrl+Z)"
+            >
+              <Undo2 className="w-4 h-4" />
+            </Button>
+            <Button
+              type="button"
+              onClick={redo}
+              variant="outline"
+              size="sm"
+              disabled={redoStack.length === 0}
+              title="Redo (Ctrl+Y)"
+            >
+              <Redo2 className="w-4 h-4" />
+            </Button>
+            <Button
+              type="button"
+              onClick={clearCanvas}
+              variant="outline"
+              size="sm"
+              className="text-destructive border-destructive/30 hover:bg-destructive/10"
+            >
+              <Trash2 className="w-4 h-4 mr-1" />
+              Clear
+            </Button>
+            <Button
+              type="button"
+              onClick={downloadDrawing}
+              variant="outline"
+              size="sm"
+            >
+              <Download className="w-4 h-4 mr-1" />
+              Save
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
 
+      {/* Canvas */}
       <div 
         ref={containerRef}
-        className="border-2 border-gray-200 rounded-xl overflow-hidden shadow-sm bg-white"
+        className="border-2 border-border rounded-xl overflow-hidden bg-white"
       >
         <svg
           ref={svgRef}
-          className={`block bg-white w-full touch-none ${
-            isFullscreen ? 'h-[75vh]' : 'h-96'
-          } ${activeTool === 'eraser' ? 'cursor-cell' : 'cursor-crosshair'}`}
+          className={`block bg-white w-full touch-none ${getCanvasHeight()} ${
+            activeTool === 'eraser' ? 'cursor-cell' : 'cursor-crosshair'
+          }`}
           style={{ touchAction: 'none' }}
           onPointerDown={startDrawing}
           onPointerMove={draw}
@@ -423,7 +537,6 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange, i
           onPointerLeave={stopDrawing}
           onPointerCancel={cancelDrawing}
         >
-          {/* Render completed strokes */}
           {strokes.map((stroke, i) => {
             const pathData = getSvgPathFromStroke(
               getStroke(stroke.points, getStrokeOptions(stroke.size, hasPressureData.current))
@@ -438,7 +551,6 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingChange, i
             );
           })}
           
-          {/* Render current stroke being drawn */}
           {currentStroke.length > 0 && (
             <path
               d={getSvgPathFromStroke(
