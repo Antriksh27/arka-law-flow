@@ -1,5 +1,7 @@
 import React from 'react';
 import { format, addDays, startOfWeek, isSameDay } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
+import { useHapticFeedback } from '@/hooks/use-haptic-feedback';
 
 interface DayEvent {
   date: Date;
@@ -13,9 +15,17 @@ interface WeekCalendarProps {
 }
 
 export const WeekCalendar: React.FC<WeekCalendarProps> = ({ events, isLoading }) => {
+  const navigate = useNavigate();
+  const { trigger: haptic } = useHapticFeedback();
   const today = new Date();
-  const weekStart = startOfWeek(today, { weekStartsOn: 0 });
+  const weekStart = startOfWeek(today, { weekStartsOn: 1 });
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+
+  const handleDayTap = (day: Date) => {
+    haptic('light');
+    const dateStr = format(day, 'yyyy-MM-dd');
+    navigate(`/calendar?date=${dateStr}`);
+  };
 
   const getEventDots = (date: Date) => {
     const dayEvents = events.find((e) => isSameDay(e.date, date));
@@ -70,7 +80,11 @@ export const WeekCalendar: React.FC<WeekCalendarProps> = ({ events, isLoading })
           {weekDays.map((day, index) => {
             const isToday = isSameDay(day, today);
             return (
-              <div key={index} className="flex flex-col items-center flex-1">
+              <button 
+                key={index} 
+                onClick={() => handleDayTap(day)}
+                className="flex flex-col items-center flex-1 active:scale-95 transition-transform"
+              >
                 <span className="text-xs text-muted-foreground mb-1.5 font-medium">
                   {format(day, 'EEE')}
                 </span>
@@ -84,7 +98,7 @@ export const WeekCalendar: React.FC<WeekCalendarProps> = ({ events, isLoading })
                   {format(day, 'd')}
                 </div>
                 {getEventDots(day)}
-              </div>
+              </button>
             );
           })}
         </div>
