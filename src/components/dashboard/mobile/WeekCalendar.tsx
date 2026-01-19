@@ -1,7 +1,5 @@
 import React from 'react';
 import { format, addDays, startOfWeek, isSameDay } from 'date-fns';
-import { useNavigate } from 'react-router-dom';
-import { useHapticFeedback } from '@/hooks/use-haptic-feedback';
 
 interface DayEvent {
   date: Date;
@@ -15,17 +13,9 @@ interface WeekCalendarProps {
 }
 
 export const WeekCalendar: React.FC<WeekCalendarProps> = ({ events, isLoading }) => {
-  const navigate = useNavigate();
-  const { trigger: haptic } = useHapticFeedback();
   const today = new Date();
   const weekStart = startOfWeek(today, { weekStartsOn: 1 });
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
-
-  const handleDayTap = (day: Date) => {
-    haptic('light');
-    const dateStr = format(day, 'yyyy-MM-dd');
-    navigate(`/calendar?date=${dateStr}`);
-  };
 
   const getEventDots = (date: Date) => {
     const dayEvents = events.find((e) => isSameDay(e.date, date));
@@ -80,11 +70,7 @@ export const WeekCalendar: React.FC<WeekCalendarProps> = ({ events, isLoading })
           {weekDays.map((day, index) => {
             const isToday = isSameDay(day, today);
             return (
-              <button 
-                key={index} 
-                onClick={() => handleDayTap(day)}
-                className="flex flex-col items-center flex-1 active:scale-95 transition-transform"
-              >
+              <div key={index} className="flex flex-col items-center flex-1">
                 <span className="text-xs text-muted-foreground mb-1.5 font-medium">
                   {format(day, 'EEE')}
                 </span>
@@ -92,13 +78,13 @@ export const WeekCalendar: React.FC<WeekCalendarProps> = ({ events, isLoading })
                   className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold transition-colors ${
                     isToday
                       ? 'bg-primary text-primary-foreground'
-                      : 'text-foreground hover:bg-slate-100'
+                      : 'text-foreground'
                   }`}
                 >
                   {format(day, 'd')}
                 </div>
                 {getEventDots(day)}
-              </button>
+              </div>
             );
           })}
         </div>
