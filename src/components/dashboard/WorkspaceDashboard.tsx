@@ -27,6 +27,7 @@ import { MetricsStrip } from './mobile/MetricsStrip';
 import { CompactCases } from './mobile/CompactCases';
 import { WeekCalendar } from './mobile/WeekCalendar';
 import { QuickActionsBar } from './mobile/QuickActionsBar';
+import { MobileSearchModal } from './mobile/MobileSearchModal';
 
 const WorkspaceDashboard = () => {
   const { user } = useAuth();
@@ -71,6 +72,7 @@ const WorkspaceDashboard = () => {
   const [showCaseDialog, setShowCaseDialog] = useState(false);
   const [showAppointmentDialog, setShowAppointmentDialog] = useState(false);
   const [showTaskDialog, setShowTaskDialog] = useState(false);
+  const [showSearchModal, setShowSearchModal] = useState(false);
   const [showDocumentDialog, setShowDocumentDialog] = useState(false);
 
   return (
@@ -87,12 +89,8 @@ const WorkspaceDashboard = () => {
               {/* Prominent Search Bar */}
               <div className="mb-4">
                 <button 
-                  onClick={() => {
-                    // Trigger global search
-                    const searchInput = document.querySelector('[data-global-search]') as HTMLInputElement;
-                    if (searchInput) searchInput.focus();
-                  }}
-                  className="w-full flex items-center gap-3 px-4 py-3 bg-white rounded-2xl shadow-sm border border-slate-200 text-left"
+                  onClick={() => setShowSearchModal(true)}
+                  className="w-full flex items-center gap-3 px-4 py-3 bg-white rounded-2xl shadow-sm border border-slate-200 text-left active:scale-[0.98] transition-transform"
                 >
                   <Search className="w-5 h-5 text-slate-400" />
                   <span className="text-sm text-slate-400">Search cases, clients, documents...</span>
@@ -131,6 +129,9 @@ const WorkspaceDashboard = () => {
               {/* Weekly Overview */}
               <WeekCalendar events={weekCalendarEvents} isLoading={isLoading} />
             </div>
+
+            {/* Search Modal */}
+            <MobileSearchModal open={showSearchModal} onOpenChange={setShowSearchModal} />
           </div>
         </PullToRefresh>
       )}
