@@ -1,5 +1,5 @@
 import React from 'react';
-import { Briefcase, Calendar, CheckSquare } from 'lucide-react';
+import { Gavel, CalendarClock, CheckSquare } from 'lucide-react';
 
 interface Metric {
   label: string;
@@ -10,34 +10,32 @@ interface Metric {
 }
 
 interface MetricsStripProps {
-  activeCases: number;
-  todayEvents: number;
+  todayHearings: number;
+  todayAppointments: number;
   pendingTasks: number;
-  weekEvents?: number;
-  newMessages?: number;
   isLoading?: boolean;
 }
 
 export const MetricsStrip: React.FC<MetricsStripProps> = ({
-  activeCases,
-  todayEvents,
+  todayHearings,
+  todayAppointments,
   pendingTasks,
   isLoading,
 }) => {
   const metrics: Metric[] = [
     {
-      label: 'Active Cases',
-      value: activeCases,
-      icon: Briefcase,
-      iconBg: 'bg-blue-100',
-      iconColor: 'text-blue-600',
+      label: "Today's Hearings",
+      value: todayHearings,
+      icon: Gavel,
+      iconBg: 'bg-red-100',
+      iconColor: 'text-red-600',
     },
     {
-      label: "Today's Events",
-      value: todayEvents,
-      icon: Calendar,
-      iconBg: 'bg-purple-100',
-      iconColor: 'text-purple-600',
+      label: "Today's Appointments",
+      value: todayAppointments,
+      icon: CalendarClock,
+      iconBg: 'bg-blue-100',
+      iconColor: 'text-blue-600',
     },
     {
       label: 'Pending Tasks',

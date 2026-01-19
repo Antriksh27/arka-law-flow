@@ -52,8 +52,8 @@ const WorkspaceDashboard = () => {
   };
 
   // Calculate metrics
-  const activeCases = (data?.caseHighlights || []).length;
-  const todayEvents = (data?.timelineEvents || []).filter(e => e.type === 'hearing' || e.type === 'appointment').length;
+  const todayHearings = (data?.timelineEvents || []).filter(e => e.type === 'hearing').length;
+  const todayAppointments = (data?.timelineEvents || []).filter(e => e.type === 'appointment').length;
   const pendingTasks = (data?.myTasks || []).filter(t => t.status !== 'completed').length;
   const weekEvents = (data?.weekEvents || []).length;
 
@@ -99,10 +99,9 @@ const WorkspaceDashboard = () => {
 
               {/* At a Glance Metrics */}
               <MetricsStrip 
-                activeCases={activeCases} 
-                todayEvents={todayEvents} 
+                todayHearings={todayHearings} 
+                todayAppointments={todayAppointments} 
                 pendingTasks={pendingTasks} 
-                weekEvents={weekEvents} 
                 isLoading={isLoading} 
               />
 
