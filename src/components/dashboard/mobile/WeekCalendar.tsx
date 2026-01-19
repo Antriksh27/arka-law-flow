@@ -31,9 +31,9 @@ export const WeekCalendar: React.FC<WeekCalendarProps> = ({ events, isLoading })
     const uniqueTypes = [...new Set(dayEvents.types)].slice(0, 3);
 
     return (
-      <div className="flex gap-0.5 justify-center mt-1.5">
+      <div className="flex gap-1 justify-center mt-2 min-h-[8px]">
         {uniqueTypes.map((type, idx) => (
-          <div key={idx} className={`w-1.5 h-1.5 rounded-full ${colors[type as keyof typeof colors] || 'bg-slate-400'}`} />
+          <div key={idx} className={`w-2 h-2 rounded-full ${colors[type as keyof typeof colors] || 'bg-slate-400'}`} />
         ))}
       </div>
     );
@@ -90,18 +90,18 @@ export const WeekCalendar: React.FC<WeekCalendarProps> = ({ events, isLoading })
         </div>
         
         {/* Legend */}
-        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-center gap-4 text-xs">
-          <div className="flex items-center gap-1.5">
-            <div className="w-2 h-2 rounded-full bg-red-500" />
-            <span className="text-muted-foreground">Hearings</span>
+        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-center gap-5 text-xs">
+          <div className="flex items-center gap-2">
+            <div className="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0" />
+            <span className="text-muted-foreground font-medium">Hearings</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-2 h-2 rounded-full bg-blue-500" />
-            <span className="text-muted-foreground">Meetings</span>
+          <div className="flex items-center gap-2">
+            <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0" />
+            <span className="text-muted-foreground font-medium">Meetings</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-2 h-2 rounded-full bg-green-500" />
-            <span className="text-muted-foreground">Tasks</span>
+          <div className="flex items-center gap-2">
+            <div className="w-2.5 h-2.5 rounded-full bg-green-500 shrink-0" />
+            <span className="text-muted-foreground font-medium">Tasks</span>
           </div>
         </div>
       </div>
