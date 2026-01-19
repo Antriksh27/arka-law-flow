@@ -40,7 +40,7 @@ const Documents = () => {
 
   if (isMobile) {
     return (
-      <>
+      <div className="h-full min-h-0 flex flex-col bg-background">
         <MobileStickyHeader
           title="Documents"
           searchValue={searchQuery}
@@ -58,7 +58,7 @@ const Documents = () => {
           }
         />
         
-        <div className="pb-24">
+        <div className="flex-1 min-h-0 overflow-y-auto pb-24">
           <DocumentsMainView
             selectedFolder={selectedFolder}
             viewMode={viewMode}
@@ -88,15 +88,13 @@ const Documents = () => {
           icon={Upload}
           label="Upload"
         />
-        
-        
 
         <UploadDocumentDialog 
           open={showUploadDialog} 
           onClose={() => setShowUploadDialog(false)}
           onUploadSuccess={handleUploadSuccess}
         />
-      </>
+      </div>
     );
   }
 

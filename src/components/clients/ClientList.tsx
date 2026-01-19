@@ -937,7 +937,7 @@ export const ClientList = () => {
 
       {/* Mobile Cards View */}
       {isMobile && (
-        <div className="space-y-3 pb-24 px-4 pt-4 overflow-x-hidden">
+        <div className="flex-1 min-h-0 overflow-y-auto space-y-3 pb-24 px-4 pt-4">
           {isLoading ? (
             <div className="p-3">
               <SkeletonList count={5} />
