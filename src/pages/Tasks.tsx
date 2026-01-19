@@ -18,10 +18,10 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileTaskCard } from '@/components/tasks/MobileTaskCard';
 import { MobileFAB } from '@/components/mobile/MobileFAB';
 
-import { MobileSearchBar } from '@/components/cases/MobileSearchBar';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MobilePageContainer } from '@/components/mobile/MobilePageContainer';
+import { MobileStickyHeader } from '@/components/mobile/MobileStickyHeader';
 
 const Tasks = () => {
   const isMobile = useIsMobile();
@@ -392,35 +392,23 @@ const Tasks = () => {
         </div>
       )}
 
-      {/* Mobile Search & Filter - Sticky */}
+      {/* Mobile Sticky Header with Search and Tabs */}
       {isMobile && (
-        <div className="sticky top-14 z-30 bg-background px-4 py-3 border-b border-border">
-          <MobileSearchBar
-            value={searchTerm}
-            onChange={setSearchTerm}
-            onFilterClick={() => setShowMobileFilter(true)}
-            activeFiltersCount={activeFiltersCount}
-          />
-        </div>
-      )}
-
-      {/* Mobile Status Tabs - Sticky continuation */}
-      {isMobile && (
-        <div className="sticky top-[8.5rem] z-20 bg-background px-4 py-2 border-b border-border">
-          <Tabs value={activeTabMobile} onValueChange={(value) => setActiveTabMobile(value as 'todo' | 'in_progress' | 'completed')} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 bg-card rounded-2xl shadow-sm border border-border h-12 p-1">
-              <TabsTrigger value="todo" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl text-xs font-medium transition-all h-10">
-                To Do ({tasksByStatus.todo.length})
-              </TabsTrigger>
-              <TabsTrigger value="in_progress" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl text-xs font-medium transition-all h-10">
-                In Progress ({tasksByStatus.in_progress.length})
-              </TabsTrigger>
-              <TabsTrigger value="completed" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl text-xs font-medium transition-all h-10">
-                Done ({tasksByStatus.completed.length})
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
+        <MobileStickyHeader
+          title="Tasks"
+          searchValue={searchTerm}
+          onSearchChange={setSearchTerm}
+          searchPlaceholder="Search tasks..."
+          onFilterClick={() => setShowMobileFilter(true)}
+          activeFiltersCount={activeFiltersCount}
+          tabs={[
+            { value: 'todo', label: `To Do (${tasksByStatus.todo.length})` },
+            { value: 'in_progress', label: `In Progress (${tasksByStatus.in_progress.length})` },
+            { value: 'completed', label: `Done (${tasksByStatus.completed.length})` },
+          ]}
+          activeTab={activeTabMobile}
+          onTabChange={(value) => setActiveTabMobile(value as 'todo' | 'in_progress' | 'completed')}
+        />
       )}
 
       {/* Desktop Filters */}

@@ -7,7 +7,7 @@ import { HearingsCalendarView } from '../components/hearings/HearingsCalendarVie
 import { HearingsSummary } from '../components/hearings/HearingsSummary';
 import { FilterState, ViewType } from '../components/hearings/types';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { MobileHeader } from '@/components/mobile/MobileHeader';
+import { MobileStickyHeader } from '@/components/mobile/MobileStickyHeader';
 
 import { MobileHearingCard } from '../components/hearings/MobileHearingCard';
 import { useQuery } from '@tanstack/react-query';
@@ -88,28 +88,13 @@ const Hearings = () => {
   if (isMobile) {
     return (
       <div className="min-h-screen bg-background pb-24">
-        <MobileHeader 
-          title="Hearings" 
-          actions={
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setShowMobileFilters(true)}
-            >
-              <SlidersHorizontal className="w-5 h-5" />
-            </Button>
-          }
+        <MobileStickyHeader
+          title="Hearings"
+          searchValue={filters.searchQuery}
+          onSearchChange={(value) => setFilters({ ...filters, searchQuery: value })}
+          searchPlaceholder="Search hearings..."
+          onFilterClick={() => setShowMobileFilters(true)}
         />
-
-        {/* Sticky Search Bar */}
-        <div className="sticky top-14 z-30 bg-background px-4 py-3 border-b border-border">
-          <Input
-            placeholder="Search hearings..."
-            value={filters.searchQuery}
-            onChange={(e) => setFilters({ ...filters, searchQuery: e.target.value })}
-            className="w-full"
-          />
-        </div>
 
         <div className="p-4 space-y-4">
 

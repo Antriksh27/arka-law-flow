@@ -18,7 +18,7 @@ import { toast } from '@/components/ui/use-toast';
 import { getPublicBaseUrl } from '@/lib/appConfig';
 import { ALLOWED_BOOKING_ROLES } from '@/lib/bookingConfig';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { MobileHeader } from '@/components/mobile/MobileHeader';
+import { MobileStickyHeader } from '@/components/mobile/MobileStickyHeader';
 
 import { MobileFAB } from '@/components/mobile/MobileFAB';
 import { MobileAppointmentCard } from '../components/appointments/MobileAppointmentCard';
@@ -134,28 +134,13 @@ const Appointments = () => {
   if (isMobile) {
     return (
       <div className="min-h-screen bg-background pb-24">
-        <MobileHeader 
-          title="Appointments" 
-          actions={
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setShowMobileFilters(true)}
-            >
-              <SlidersHorizontal className="w-5 h-5" />
-            </Button>
-          }
+        <MobileStickyHeader
+          title="Appointments"
+          searchValue={filters.searchQuery}
+          onSearchChange={(value) => setFilters({ ...filters, searchQuery: value })}
+          searchPlaceholder="Search appointments..."
+          onFilterClick={() => setShowMobileFilters(true)}
         />
-
-        {/* Sticky Search Bar */}
-        <div className="sticky top-14 z-30 bg-background px-4 py-3 border-b border-border">
-          <Input
-            placeholder="Search appointments..."
-            value={filters.searchQuery}
-            onChange={handleSearchChange}
-            className="w-full"
-          />
-        </div>
 
         <div className="p-4 space-y-4">
 
