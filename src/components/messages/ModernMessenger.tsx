@@ -301,8 +301,8 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
                     className={cn(
                       'max-w-[75%] px-3 py-2 rounded-2xl text-sm',
                       isMe 
-                        ? 'bg-slate-900 text-white' 
-                        : 'bg-white text-slate-900 border border-slate-200'
+                        ? 'bg-blue-50 text-gray-900' 
+                        : 'bg-gray-100 text-gray-900'
                     )}
                   >
                     <p className="break-words">{messageText}</p>
