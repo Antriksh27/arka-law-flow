@@ -45,7 +45,7 @@ export const ContactOverview: React.FC<ContactOverviewProps> = ({ contactId, con
   const InfoItem = ({ icon: Icon, label, value }: { icon: any; label: string; value: string | undefined }) => {
     if (!value) return null;
     return (
-      <div className={`flex items-start gap-3 ${isMobile ? 'p-3 bg-muted/50 rounded-xl' : ''}`}>
+      <div className={`flex items-start gap-3 ${isMobile ? 'p-3 bg-white rounded-xl' : ''}`}>
         <div className={`${isMobile ? 'p-2 bg-background rounded-lg' : ''}`}>
           <Icon className={`w-5 h-5 ${isMobile ? 'text-primary' : 'text-muted-foreground'}`} />
         </div>
