@@ -19,7 +19,7 @@ interface ChatListItemProps {
 const ChatListItem: React.FC<ChatListItemProps> = ({ avatar, name, message, timestamp, selected = false, unread = false, onClick }) => (
   <li
     className={`flex items-start gap-3 p-2 rounded-lg cursor-pointer transition-colors w-full ${
-      selected ? 'bg-accent' : 'hover:bg-gray-100'
+      selected ? 'bg-accent' : 'bg-white hover:bg-gray-50'
     }`}
     onClick={onClick}
   >
@@ -35,7 +35,7 @@ const ChatListItem: React.FC<ChatListItemProps> = ({ avatar, name, message, time
     )}
     <div className="flex-1 min-w-0">
       <div className="flex justify-between items-center">
-        <p className={`font-semibold text-sm truncate ${selected ? 'text-accent-foreground' : 'text-gray-900'}`}>{name}</p>
+        <p className={`font-semibold text-sm truncate ${selected ? 'text-accent-foreground' : 'text-slate-900'}`}>{name}</p>
         <p className="text-xs text-gray-500 flex-shrink-0 ml-2">
           {TimeUtils.isToday(timestamp) ? TimeUtils.formatTime(timestamp) : TimeUtils.formatDate(timestamp)}
         </p>
