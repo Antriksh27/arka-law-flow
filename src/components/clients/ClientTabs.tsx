@@ -232,7 +232,7 @@ export const ClientTabs: React.FC<ClientTabsProps> = ({
 
 
         {/* Tabs List */}
-        <TabsList className={`w-full bg-white border-b border-gray-200 h-auto p-0 ${isMobile ? 'sticky top-14 z-30' : ''}`}>
+        <TabsList className={`w-full bg-white border-b border-gray-200 h-auto p-0 ${isMobile ? 'sticky top-14 z-[var(--z-sticky)]' : ''}`}>
           <div className={`flex ${isMobile ? 'overflow-x-auto scrollbar-hide' : 'flex-wrap sm:flex-nowrap overflow-x-auto'}`}>
             {tabs.map(tab => {
             const IconComponent = tab.icon;
