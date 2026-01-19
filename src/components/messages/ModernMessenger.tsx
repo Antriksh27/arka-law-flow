@@ -329,41 +329,43 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
               });
               
               return (
-                <div key={message.getId()} className={cn('flex flex-col', isMe ? 'items-end' : 'items-start')}>
-                  <div className={cn('flex items-end gap-2', isMe ? 'flex-row-reverse' : 'flex-row')}>
-                    {!isMe && (
-                      <Avatar className="h-6 w-6 flex-shrink-0 border border-white/20">
-                        <AvatarImage src={message.getSender().getAvatar()} />
-                        <AvatarFallback className="text-xs bg-slate-700 text-white">
-                          {getInitials(message.getSender().getName())}
-                        </AvatarFallback>
-                      </Avatar>
-                    )}
-                    <div
-                      className={cn(
-                        'max-w-[75%] px-3 py-2 rounded-2xl text-sm',
-                        isMe 
-                          ? 'bg-blue-50 text-gray-900' 
-                          : 'bg-gray-100 text-gray-900'
+                <div key={message.getId()} className={cn('flex w-full', isMe ? 'justify-end' : 'justify-start')}>
+                  <div className={cn('flex flex-col max-w-[75%]', isMe ? 'items-end' : 'items-start')}>
+                    <div className={cn('flex items-end gap-2', isMe ? 'flex-row-reverse' : 'flex-row')}>
+                      {!isMe && (
+                        <Avatar className="h-6 w-6 flex-shrink-0 border border-white/20">
+                          <AvatarImage src={message.getSender().getAvatar()} />
+                          <AvatarFallback className="text-xs bg-slate-700 text-white">
+                            {getInitials(message.getSender().getName())}
+                          </AvatarFallback>
+                        </Avatar>
                       )}
-                    >
-                      <p className="break-words">{messageText}</p>
-                    </div>
-                  </div>
-                  {/* Timestamp and read receipt */}
-                  <div className={cn('flex items-center gap-1 mt-0.5 px-1', isMe ? 'flex-row-reverse' : 'flex-row')}>
-                    <span className="text-[10px] text-gray-400">{timestamp}</span>
-                    {isMe && (
-                      <span className="flex items-center">
-                        {status === 'read' ? (
-                          <CheckCheck className="h-3 w-3 text-blue-500" />
-                        ) : status === 'delivered' ? (
-                          <CheckCheck className="h-3 w-3 text-gray-400" />
-                        ) : (
-                          <Check className="h-3 w-3 text-gray-400" />
+                      <div
+                        className={cn(
+                          'px-3 py-2 rounded-2xl text-sm',
+                          isMe 
+                            ? 'bg-blue-50 text-gray-900' 
+                            : 'bg-gray-100 text-gray-900'
                         )}
-                      </span>
-                    )}
+                      >
+                        <p className="break-words whitespace-pre-wrap">{messageText}</p>
+                      </div>
+                    </div>
+                    {/* Timestamp and read receipt */}
+                    <div className={cn('flex items-center gap-1 mt-0.5 px-1', isMe ? 'flex-row-reverse' : 'flex-row')}>
+                      <span className="text-[10px] text-gray-400">{timestamp}</span>
+                      {isMe && (
+                        <span className="flex items-center">
+                          {status === 'read' ? (
+                            <CheckCheck className="h-3 w-3 text-blue-500" />
+                          ) : status === 'delivered' ? (
+                            <CheckCheck className="h-3 w-3 text-gray-400" />
+                          ) : (
+                            <Check className="h-3 w-3 text-gray-400" />
+                          )}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
