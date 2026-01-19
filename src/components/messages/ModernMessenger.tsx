@@ -306,9 +306,9 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
   if (isMobile) {
     if (showMobileChat && selectedUser) {
       return (
-        <div className="fixed inset-0 flex flex-col bg-background">
+        <div className="fixed inset-0 flex flex-col bg-background overflow-hidden">
           {/* Header - Fixed top */}
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 z-10">
             <MobileHeader
               title={selectedUser.getName()}
               showBack
@@ -322,7 +322,8 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
           {/* Messages - Scrollable middle */}
           <div 
             ref={scrollContainerRef} 
-            className="flex-1 overflow-y-auto p-4 space-y-2 min-h-0"
+            className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-2"
+            style={{ minHeight: 0 }}
           >
             {messages.map((message, index) => {
               const isMe = message.getSender().getUid() === cometChatUser?.getUid();
