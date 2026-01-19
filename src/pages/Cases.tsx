@@ -91,33 +91,33 @@ const Cases = () => {
         <MobileHeader title="Cases" />
       )}
 
+      {/* Mobile Search + Tabs - Fixed below header */}
+      {isMobile && (
+        <div className="sticky top-14 z-30 bg-background px-4 py-3 space-y-3 border-b border-border">
+          <MobileSearchBar
+            value={searchQuery}
+            onChange={setSearchQuery}
+            onFilterClick={() => setShowFiltersSheet(true)}
+            activeFiltersCount={activeFiltersCount}
+          />
+          <Tabs value={casesTab} onValueChange={(value) => setCasesTab(value as 'all' | 'my')} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 bg-card rounded-2xl shadow-sm border border-border h-12 p-1">
+              <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl text-sm font-medium transition-all h-10">
+                All Cases
+              </TabsTrigger>
+              <TabsTrigger value="my" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl text-sm font-medium transition-all h-10">
+                My Cases
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+      )}
+
       <PullToRefresh onRefresh={handleRefresh}>
         <div className={`max-w-7xl mx-auto space-y-4 pb-24 ${isMobile ? 'px-4 pt-4' : 'p-6 space-y-6 pb-6'}`}>
           {/* Desktop Header - only show on desktop */}
           {!isMobile && (
             <CasesHeader onAddCase={() => setShowAddDialog(true)} />
-          )}
-
-          {/* Mobile Sticky Header: Search + Tabs */}
-          {isMobile && (
-            <div className="sticky top-14 z-30 -mx-4 px-4 py-3 bg-background space-y-3">
-              <MobileSearchBar
-                value={searchQuery}
-                onChange={setSearchQuery}
-                onFilterClick={() => setShowFiltersSheet(true)}
-                activeFiltersCount={activeFiltersCount}
-              />
-              <Tabs value={casesTab} onValueChange={(value) => setCasesTab(value as 'all' | 'my')} className="w-full">
-                <TabsList className="grid w-full grid-cols-2 bg-card rounded-2xl shadow-sm border border-border h-12 p-1">
-                  <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl text-sm font-medium transition-all h-10">
-                    All Cases
-                  </TabsTrigger>
-                  <TabsTrigger value="my" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl text-sm font-medium transition-all h-10">
-                    My Cases
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
           )}
 
           {/* Desktop Tabs and Filters */}
