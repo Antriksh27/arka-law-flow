@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Gavel, CalendarClock, CheckSquare } from 'lucide-react';
+import { useHapticFeedback } from '@/hooks/use-haptic-feedback';
 
 interface Metric {
   label: string;
@@ -25,6 +26,12 @@ export const MetricsStrip: React.FC<MetricsStripProps> = ({
   isLoading,
 }) => {
   const navigate = useNavigate();
+  const { trigger: haptic } = useHapticFeedback();
+
+  const handleMetricTap = (route: string) => {
+    haptic('light');
+    navigate(route);
+  };
 
   const metrics: Metric[] = [
     {
@@ -82,7 +89,7 @@ export const MetricsStrip: React.FC<MetricsStripProps> = ({
           return (
             <button
               key={index}
-              onClick={() => navigate(metric.route)}
+              onClick={() => handleMetricTap(metric.route)}
               className="flex-shrink-0 flex-1 min-w-[110px] bg-white rounded-2xl p-4 shadow-sm snap-start text-left active:scale-[0.97] transition-transform"
             >
               <div className={`w-10 h-10 rounded-xl ${metric.iconBg} flex items-center justify-center mb-3`}>
