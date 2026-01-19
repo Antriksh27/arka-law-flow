@@ -106,8 +106,8 @@ export const ContactList = () => {
           }
         />
         
-        {/* Mobile Search */}
-        <div className="px-4 pt-4 pb-2">
+        {/* Mobile Search - Sticky below header */}
+        <div className="sticky top-14 z-30 bg-background px-4 py-3 border-b border-border">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <input 
