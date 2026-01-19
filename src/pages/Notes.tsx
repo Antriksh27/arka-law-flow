@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { NotesGrid } from '../components/notes/NotesGrid';
 import { NotesHeader } from '../components/notes/NotesHeader';
@@ -9,7 +8,7 @@ import { MobilePageContainer } from '@/components/mobile/MobilePageContainer';
 import { MobileFAB } from '@/components/mobile/MobileFAB';
 import { MobileStickyHeader } from '@/components/mobile/MobileStickyHeader';
 import { NotesFilterSheet } from '../components/notes/NotesFilterSheet';
-
+import { MobileNotesView } from '../components/notes/MobileNotesView';
 import { Plus } from 'lucide-react';
 
 const Notes = () => {
@@ -42,11 +41,11 @@ const Notes = () => {
     selectedTags.length > 0,
   ].filter(Boolean).length;
 
-  return (
-    <MobilePageContainer>
-      <div className={isMobile ? "" : "max-w-7xl mx-auto p-6 space-y-6"}>
-      {/* Mobile Sticky Header */}
-      {isMobile && (
+  // Mobile Layout
+  if (isMobile) {
+    return (
+      <MobilePageContainer>
+        {/* Mobile Sticky Header */}
         <MobileStickyHeader
           title="Notes"
           searchValue={searchQuery}
@@ -55,58 +54,38 @@ const Notes = () => {
           onFilterClick={() => setShowFiltersSheet(true)}
           activeFiltersCount={activeFiltersCount}
         />
-      )}
-      
-      {/* Desktop Header */}
-      {!isMobile && (
-        <NotesHeader
-          onCreateNote={() => setShowCreateDialog(true)}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          selectedTags={selectedTags}
-          onTagsChange={setSelectedTags}
-          selectedColor={selectedColor}
-          onColorChange={handleColorChange}
-          selectedVisibility={selectedVisibility}
-          onVisibilityChange={handleVisibilityChange}
-          selectedCase={selectedCase}
-          onCaseChange={handleCaseChange}
-        />
-      )}
-      
-      <NotesGrid
-        searchQuery={searchQuery}
-        selectedTags={selectedTags}
-        selectedColor={selectedColor}
-        selectedVisibility={selectedVisibility}
-        selectedCase={selectedCase}
-        onEditNote={setEditingNote}
-      />
 
-      {/* Mobile FAB */}
-      {isMobile && (
+        {/* Mobile Notes List */}
+        <MobileNotesView
+          searchQuery={searchQuery}
+          selectedColor={selectedColor}
+          selectedVisibility={selectedVisibility}
+          selectedCase={selectedCase}
+          onEditNote={setEditingNote}
+        />
+
+        {/* Mobile FAB */}
         <MobileFAB
           onClick={() => setShowCreateDialog(true)}
           icon={Plus}
         />
-      )}
 
-
-      <CreateNoteMultiModal
-        open={showCreateDialog}
-        onClose={() => setShowCreateDialog(false)}
-      />
-
-      {editingNote && (
-        <EditNoteDialog
-          note={editingNote}
-          open={!!editingNote}
-          onClose={() => setEditingNote(null)}
+        {/* Create Note Modal */}
+        <CreateNoteMultiModal
+          open={showCreateDialog}
+          onClose={() => setShowCreateDialog(false)}
         />
-      )}
 
-      {/* Mobile Filters Sheet */}
-      {isMobile && (
+        {/* Edit Note Dialog */}
+        {editingNote && (
+          <EditNoteDialog
+            note={editingNote}
+            open={!!editingNote}
+            onClose={() => setEditingNote(null)}
+          />
+        )}
+
+        {/* Mobile Filters Sheet */}
         <NotesFilterSheet
           open={showFiltersSheet}
           onClose={() => setShowFiltersSheet(false)}
@@ -122,7 +101,49 @@ const Notes = () => {
             setSelectedCase('all-cases');
           }}
         />
-      )}
+      </MobilePageContainer>
+    );
+  }
+
+  // Desktop Layout
+  return (
+    <MobilePageContainer>
+      <div className="max-w-7xl mx-auto p-6 space-y-6">
+        <NotesHeader
+          onCreateNote={() => setShowCreateDialog(true)}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          selectedTags={selectedTags}
+          onTagsChange={setSelectedTags}
+          selectedColor={selectedColor}
+          onColorChange={handleColorChange}
+          selectedVisibility={selectedVisibility}
+          onVisibilityChange={handleVisibilityChange}
+          selectedCase={selectedCase}
+          onCaseChange={handleCaseChange}
+        />
+        
+        <NotesGrid
+          searchQuery={searchQuery}
+          selectedTags={selectedTags}
+          selectedColor={selectedColor}
+          selectedVisibility={selectedVisibility}
+          selectedCase={selectedCase}
+          onEditNote={setEditingNote}
+        />
+
+        <CreateNoteMultiModal
+          open={showCreateDialog}
+          onClose={() => setShowCreateDialog(false)}
+        />
+
+        {editingNote && (
+          <EditNoteDialog
+            note={editingNote}
+            open={!!editingNote}
+            onClose={() => setEditingNote(null)}
+          />
+        )}
       </div>
     </MobilePageContainer>
   );
