@@ -4,7 +4,7 @@ import { useToast } from '@/components/ui/use-toast';
 
 interface LegalkartSearchOptions {
   cnr: string;
-  searchType: 'high_court' | 'district_court' | 'supreme_court' | 'gujarat_display_board' | 'district_cause_list';
+  searchType: 'high_court' | 'district_court' | 'supreme_court' | 'gujarat_high_court' | 'gujarat_display_board' | 'district_cause_list';
   caseId?: string;
 }
 

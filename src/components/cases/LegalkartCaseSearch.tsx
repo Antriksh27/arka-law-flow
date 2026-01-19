@@ -27,6 +27,7 @@ interface SearchResult {
 
 const SEARCH_TYPES = [
   { value: 'high_court', label: 'High Court' },
+  { value: 'gujarat_high_court', label: 'Gujarat High Court' },
   { value: 'district_court', label: 'District Court' },
   { value: 'supreme_court', label: 'Supreme Court' },
   { value: 'district_cause_list', label: 'District Court Cause List' },
@@ -38,11 +39,14 @@ const detectCourtTypeFromCNR = (cnr: string): string | null => {
   
   const prefix = cnr.substring(0, 4).toUpperCase();
   
-  // High Court patterns
+  // Gujarat High Court pattern - GJHC
+  if (prefix === 'GJHC') return 'gujarat_high_court';
+  
+  // Other High Court patterns
   if (prefix.match(/^[A-Z]{2}HC/)) return 'high_court';
   
   // Supreme Court patterns
-  if (prefix.match(/^SCSL|^SC[A-Z]{2}/)) return 'supreme_court';
+  if (prefix.match(/^SCSL|^SC[A-Z]{2}|^SCIN/)) return 'supreme_court';
   
   // District Court patterns (usually 4 letters followed by numbers)
   if (prefix.match(/^[A-Z]{4}/) && !prefix.match(/HC|SC/)) return 'district_court';

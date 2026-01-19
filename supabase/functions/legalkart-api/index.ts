@@ -9,7 +9,7 @@ const corsHeaders = {
 };
 
 // Input validation schemas
-const searchTypeEnum = z.enum(['high_court', 'district_court', 'supreme_court', 'gujarat_display_board', 'district_cause_list'])
+const searchTypeEnum = z.enum(['high_court', 'district_court', 'supreme_court', 'gujarat_high_court', 'gujarat_display_board', 'district_cause_list'])
 
 // Helper to normalize CNR - converts to uppercase and removes non-alphanumeric characters
 const normalizeCnr = (cnr: string): string => {
@@ -39,8 +39,29 @@ interface LegalkartAuthResponse {
 
 interface LegalkartCaseSearchRequest {
   cnr: string;
-  searchType: 'high_court' | 'district_court' | 'supreme_court' | 'gujarat_display_board' | 'district_cause_list';
+  searchType: 'high_court' | 'district_court' | 'supreme_court' | 'gujarat_high_court' | 'gujarat_display_board' | 'district_cause_list';
   caseId?: string;
+}
+
+// Helper function to detect Gujarat High Court CNR pattern
+function isGujaratHighCourtCNR(cnr: string): boolean {
+  // Gujarat HC CNRs start with GJHC (e.g., GJHC240082762018)
+  return cnr.toUpperCase().startsWith('GJHC');
+}
+
+// Helper function to extract case info from Gujarat HC CNR
+function parseGujaratHCCNR(cnr: string): { caseNo: string; caseYear: string } | null {
+  // Pattern: GJHC + case number + year (last 4 digits)
+  // Example: GJHC240082762018 -> case might be embedded differently
+  // For now, we'll use the CNR mode directly with the full CNR
+  const normalized = cnr.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (normalized.length >= 8 && normalized.startsWith('GJHC')) {
+    return {
+      caseNo: normalized.slice(4, -4), // Extract middle part as case number
+      caseYear: normalized.slice(-4)   // Last 4 digits as year
+    };
+  }
+  return null;
 }
 
 // Helper function to upsert Supreme Court case data
@@ -1299,7 +1320,12 @@ async function performCaseSearch(token: string, cnr: string, searchType: string)
     let method = 'POST';
     let body = JSON.stringify({ cnr });
 
-    switch (searchType) {
+    // Auto-detect Gujarat HC from CNR pattern and override searchType if needed
+    const effectiveSearchType = isGujaratHighCourtCNR(cnr) && searchType === 'high_court' 
+      ? 'gujarat_high_court' 
+      : searchType;
+
+    switch (effectiveSearchType) {
       case 'high_court':
         endpoint = 'https://apiservices.legalkart.com/api/v1/application-service/case-search/high-court';
         break;
@@ -1309,11 +1335,20 @@ async function performCaseSearch(token: string, cnr: string, searchType: string)
       case 'supreme_court':
         endpoint = 'https://apiservices.legalkart.com/api/v1/application-service/case-search/supreme-court';
         break;
+      case 'gujarat_high_court':
+        endpoint = 'https://apiservices.legalkart.com/api/v1/application-service/case-search/gujarat-high-court';
+        // Gujarat HC API uses different body format - CNR Number mode with the full CNR
+        body = JSON.stringify({ 
+          caseMode: 'CNR Number',
+          cnr: cnr 
+        });
+        console.log('🏛️ Using Gujarat High Court specific endpoint with CNR mode');
+        break;
       case 'district_cause_list':
         endpoint = 'https://apiservices.legalkart.com/api/v1/application-service/case-search/district-court/cause-list-by-cnr';
         break;
       default:
-        throw new Error(`Unsupported search type: ${searchType}`);
+        throw new Error(`Unsupported search type: ${effectiveSearchType}`);
     }
 
     console.log(`Performing ${searchType} search for CNR: ${cnr}`);

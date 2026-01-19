@@ -264,6 +264,70 @@ export function parseECourtsData(rawData: any): ParsedCaseData {
 }
 
 /**
+ * Parse Gujarat High Court API response
+ * Handles the specific format returned by the Gujarat HC endpoint
+ */
+export interface GujaratHCCaseData {
+  caseNumber: string | null;
+  caseYear: string | null;
+  caseMode: string | null;
+  caseType: string | null;
+  status: string | null;
+  petitioner: string | null;
+  respondent: string | null;
+  courtJudge: string | null;
+  lastHearingDate: string | null;
+  nextHearingDate: string | null;
+}
+
+export function parseGujaratHighCourtData(rawData: any): GujaratHCCaseData & { rawResponse: any } {
+  console.log('🏛️ Gujarat HC Data Parser: Starting parse...');
+  
+  // Handle nested data structure - API returns { success: true, data: [...] }
+  const dataArray = rawData?.data ?? rawData ?? [];
+  const caseData = Array.isArray(dataArray) ? dataArray[0] : dataArray;
+  
+  if (!caseData) {
+    console.log('⚠️ No case data found in Gujarat HC response');
+    return {
+      caseNumber: null,
+      caseYear: null,
+      caseMode: null,
+      caseType: null,
+      status: null,
+      petitioner: null,
+      respondent: null,
+      courtJudge: null,
+      lastHearingDate: null,
+      nextHearingDate: null,
+      rawResponse: rawData
+    };
+  }
+
+  const result: GujaratHCCaseData & { rawResponse: any } = {
+    caseNumber: caseData.case_number || caseData.caseNumber || null,
+    caseYear: caseData.case_year || caseData.caseYear || null,
+    caseMode: caseData.case_mode || caseData.caseMode || null,
+    caseType: caseData.case_type || caseData.caseType || null,
+    status: caseData.status || null,
+    petitioner: caseData.petitioner || null,
+    respondent: caseData.respondent || null,
+    courtJudge: caseData.court_judge || caseData.courtJudge || caseData.coram || null,
+    lastHearingDate: parseDate(caseData.last_hearing_date || caseData.lastHearingDate),
+    nextHearingDate: parseDate(caseData.next_hearing_date || caseData.nextHearingDate || caseData.last_hearing_date),
+    rawResponse: rawData
+  };
+
+  console.log('✅ Gujarat HC Data Parser: Parse complete');
+  console.log(`   - Case Number: ${result.caseNumber}`);
+  console.log(`   - Case Year: ${result.caseYear}`);
+  console.log(`   - Status: ${result.status}`);
+  console.log(`   - Court Judge: ${result.courtJudge}`);
+
+  return result;
+}
+
+/**
  * Convert snake_case to camelCase for consistent JSON output
  */
 export function toCamelCase(obj: any): any {
