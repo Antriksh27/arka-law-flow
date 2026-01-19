@@ -111,6 +111,13 @@
     --tracking-normal: 0em;
 
     --spacing: 0.25rem;
+
+    /* Global z-index scale */
+    --z-base: 1;
+    --z-sticky: 30;
+    --z-header: 40;
+    --z-overlay: 50;
+    --z-modal: 60;
   }
 
   body {
