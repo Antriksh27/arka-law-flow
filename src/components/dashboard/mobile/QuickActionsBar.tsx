@@ -1,5 +1,6 @@
 import React from 'react';
 import { Plus, Calendar, ListTodo, Upload, StickyNote } from 'lucide-react';
+import { useHapticFeedback } from '@/hooks/use-haptic-feedback';
 
 interface QuickActionsBarProps {
   onNewCase: () => void;
@@ -16,6 +17,13 @@ export const QuickActionsBar: React.FC<QuickActionsBarProps> = ({
   onUpload,
   onAddNote,
 }) => {
+  const { trigger: haptic } = useHapticFeedback();
+
+  const handleAction = (callback: () => void) => {
+    haptic('light');
+    callback();
+  };
+
   const actions = [
     { 
       icon: Plus, 
@@ -63,7 +71,7 @@ export const QuickActionsBar: React.FC<QuickActionsBarProps> = ({
           return (
             <button
               key={index}
-              onClick={action.onClick}
+              onClick={() => handleAction(action.onClick)}
               className="flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform"
             >
               <div className={`w-12 h-12 rounded-2xl ${action.iconBg} flex items-center justify-center shadow-sm`}>
