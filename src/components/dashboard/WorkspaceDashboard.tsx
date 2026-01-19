@@ -18,7 +18,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { addDays, startOfWeek, isSameDay } from 'date-fns';
+import { addDays, startOfWeek, format } from 'date-fns';
 import { Search } from 'lucide-react';
 
 // Mobile-specific components
@@ -67,12 +67,20 @@ const WorkspaceDashboard = () => {
 
   // Prepare week calendar events
   const weekCalendarEvents = Array.from({ length: 7 }, (_, i) => {
-    const day = addDays(startOfWeek(new Date(), { weekStartsOn: 0 }), i);
-    const dayEvents = (data?.weekEvents || []).filter(e => isSameDay(new Date(e.date), day));
+    const day = addDays(startOfWeek(new Date(), { weekStartsOn: 1 }), i);
+    const dateStr = format(day, 'yyyy-MM-dd');
+    const dayData = (data?.weekEvents || []).find(e => e.date === dateStr);
+    
+    // Build types array based on what events exist for this day
+    const types: string[] = [];
+    if (dayData?.hearings > 0) types.push('hearing');
+    if (dayData?.appointments > 0) types.push('appointment');
+    if (dayData?.tasks > 0) types.push('task');
+    
     return {
       date: day,
-      count: dayEvents.length,
-      types: dayEvents.map(e => e.type)
+      count: (dayData?.hearings || 0) + (dayData?.appointments || 0) + (dayData?.tasks || 0),
+      types
     };
   });
 
