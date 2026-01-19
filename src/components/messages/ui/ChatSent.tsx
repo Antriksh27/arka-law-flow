@@ -36,7 +36,7 @@ const ChatSent: React.FC<ChatSentProps> = ({
         {onReactionAdd && (
           <ReactionPicker onEmojiSelect={onReactionAdd} />
         )}
-        <div className="bg-primary text-primary-foreground p-3 rounded-lg rounded-br-none shadow-sm">
+        <div className="bg-blue-50 text-gray-900 p-3 rounded-lg rounded-br-none shadow-sm">
           <p className="text-sm">{message}</p>
         </div>
       </div>
