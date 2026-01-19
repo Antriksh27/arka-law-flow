@@ -15,7 +15,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
   return (
-    <div className="flex h-screen w-screen flex-row bg-[#F9FAFB] overflow-x-hidden">
+    <div className="flex h-screen w-screen flex-row bg-background overflow-x-hidden">
       {/* Mobile only: Collapsible sidebar */}
       <MobileSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       
@@ -29,7 +29,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         {/* Desktop only: Render top nav bar */}
         {!isMobile && <TopNavBar />}
         
-        <main className="flex-1 overflow-auto bg-[#F9FAFB] pb-20 sm:pb-6">
+        <main className="flex-1 overflow-auto bg-background pb-6">
           {children}
         </main>
       </div>
