@@ -36,6 +36,7 @@ interface Appointment {
   case_id?: string;
   lawyer_id?: string;
   type?: string;
+  daily_serial_number?: number;
 }
 
 export const AppointmentsTimeline: React.FC<AppointmentsTimelineProps> = ({
@@ -48,9 +49,17 @@ export const AppointmentsTimeline: React.FC<AppointmentsTimelineProps> = ({
   const { data: appointments, isLoading, error } = useQuery<Appointment[], Error>({
     queryKey: ['appointments-timeline', user?.id, filters.showPastAppointments, filters.searchQuery],
     queryFn: async () => {
-      let query = supabase
-        .from('appointment_details')
-        .select('*')
+      // Fetch from appointments table directly to get daily_serial_number
+      let query = (supabase as any)
+        .from('appointments')
+        .select(`
+          id, title, appointment_date, appointment_time, duration_minutes,
+          location, status, type, notes, client_id, case_id, lawyer_id, firm_id,
+          daily_serial_number,
+          clients(full_name),
+          cases(case_title, case_number),
+          profiles:lawyer_id(full_name)
+        `)
         .order('appointment_date', { ascending: false })
         .order('appointment_time', { ascending: true });
       
@@ -66,15 +75,35 @@ export const AppointmentsTimeline: React.FC<AppointmentsTimelineProps> = ({
       }
       
       if (filters.searchQuery) {
-        query = query.or(`client_name.ilike.%${filters.searchQuery}%,case_title.ilike.%${filters.searchQuery}%,notes.ilike.%${filters.searchQuery}%`);
+        query = query.or(`title.ilike.%${filters.searchQuery}%,notes.ilike.%${filters.searchQuery}%`);
       }
 
       const { data, error } = await query;
       if (error) throw error;
 
+      // Map the data to the expected format
+      const mappedAppointments = (data || []).map((appointment: any) => ({
+        id: appointment.id,
+        title: appointment.title,
+        appointment_date: appointment.appointment_date,
+        appointment_time: appointment.appointment_time,
+        duration_minutes: appointment.duration_minutes,
+        client_name: appointment.clients?.full_name || null,
+        case_title: appointment.cases?.case_title || null,
+        assigned_user_name: appointment.profiles?.full_name || null,
+        status: appointment.status,
+        location: appointment.location,
+        notes: appointment.notes,
+        client_id: appointment.client_id,
+        case_id: appointment.case_id,
+        lawyer_id: appointment.lawyer_id,
+        type: appointment.type,
+        daily_serial_number: appointment.daily_serial_number
+      }));
+
       // Enrich appointments with contact names when no client is present
       const enrichedAppointments = await Promise.all(
-        (data || []).map(async (appointment) => {
+        mappedAppointments.map(async (appointment: any) => {
           // If no client_name but title exists, try to extract client name and find contact
           if (!appointment.client_name && appointment.title?.startsWith('Appointment with ')) {
             const extractedName = appointment.title.replace('Appointment with ', '');
@@ -239,7 +268,8 @@ export const AppointmentsTimeline: React.FC<AppointmentsTimelineProps> = ({
           client_name: appointment.client_name,
           client_id: appointment.client_id || null,
           case_id: appointment.case_id || null,
-          duration_minutes: appointment.duration_minutes
+          duration_minutes: appointment.duration_minutes,
+          daily_serial_number: appointment.daily_serial_number
         }}
       />
     );
@@ -315,6 +345,13 @@ export const AppointmentsTimeline: React.FC<AppointmentsTimelineProps> = ({
               className="flex w-full items-center gap-4 border-b border-gray-200 px-4 py-4 hover:bg-gray-50 cursor-pointer"
               onClick={() => handleAppointmentClick(appointment)}
             >
+              {/* Token Number */}
+              {appointment.daily_serial_number && (
+                <div className="flex-shrink-0 bg-primary text-primary-foreground rounded-lg px-3 py-2 text-center min-w-[52px]">
+                  <span className="text-[9px] font-medium uppercase tracking-wide">Token</span>
+                  <div className="text-base font-bold">#{appointment.daily_serial_number}</div>
+                </div>
+              )}
               <div className="flex flex-col items-start gap-1">
                 <span className="text-sm font-semibold text-gray-900">
                   {formatTime(appointment.appointment_time)}
