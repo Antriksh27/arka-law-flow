@@ -98,16 +98,14 @@ const Cases = () => {
             <CasesHeader onAddCase={() => setShowAddDialog(true)} />
           )}
 
-          {/* Mobile Search Bar - Sticky */}
+          {/* Mobile Search Bar */}
           {isMobile && (
-            <div className="sticky top-14 z-30 -mx-4 px-4 py-3 bg-background">
-              <MobileSearchBar
-                value={searchQuery}
-                onChange={setSearchQuery}
-                onFilterClick={() => setShowFiltersSheet(true)}
-                activeFiltersCount={activeFiltersCount}
-              />
-            </div>
+            <MobileSearchBar
+              value={searchQuery}
+              onChange={setSearchQuery}
+              onFilterClick={() => setShowFiltersSheet(true)}
+              activeFiltersCount={activeFiltersCount}
+            />
           )}
 
           {/* Mobile Tabs */}
