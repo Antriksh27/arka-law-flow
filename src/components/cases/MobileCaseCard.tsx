@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Scale, ChevronRight, Clock } from 'lucide-react';
+import { Calendar, Scale, ChevronRight, User } from 'lucide-react';
 import { TimeUtils } from '@/lib/timeUtils';
 import { getCaseStatusColor } from '@/lib/statusColors';
 
@@ -11,23 +12,18 @@ interface MobileCaseCardProps {
 
 const getStatusColor = (status: string) => {
   const colors = getCaseStatusColor(status);
-  return `${colors.bg} ${colors.text} ${colors.border}`;
+  return `${colors.bg} ${colors.text}`;
 };
 
-const getStageBadgeVariant = (stage: string | undefined) => {
-  if (!stage) return "default";
-  const stageLower = stage.toLowerCase();
-  
-  if (stageLower.includes('disposed') || stageLower.includes('decided') || stageLower.includes('completed')) {
-    return "disposed";
-  }
-  if (stageLower.includes('hearing') || stageLower.includes('listed') || stageLower.includes('returnable')) {
-    return "active";
-  }
-  if (stageLower.includes('pending') || stageLower.includes('admission') || stageLower.includes('adjourned')) {
-    return "warning";
-  }
-  return "default";
+const getInitials = (title: string) => {
+  if (!title) return '?';
+  // Get first letter of first two words
+  return title
+    .split(' ')
+    .slice(0, 2)
+    .map(w => w[0])
+    .join('')
+    .toUpperCase();
 };
 
 export const MobileCaseCard: React.FC<MobileCaseCardProps> = ({ case: caseItem }) => {
@@ -49,78 +45,79 @@ export const MobileCaseCard: React.FC<MobileCaseCardProps> = ({ case: caseItem }
     return 'Untitled Case';
   };
 
+  const displayTitle = getDisplayTitle();
+
   const isUrgent = caseItem.next_hearing_date && 
     new Date(caseItem.next_hearing_date) <= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
   return (
     <Link to={`/cases/${caseItem.id}`} className="block">
-      <div className="bg-card border border-border rounded-2xl shadow-sm active:scale-[0.98] transition-all duration-200 p-4">
+      <div className="bg-card rounded-2xl border border-border p-4 active:scale-[0.98] transition-all duration-200 shadow-sm">
         <div className="flex items-start gap-3">
+          {/* Avatar */}
+          <Avatar className="h-12 w-12 flex-shrink-0 ring-2 ring-primary/10">
+            <AvatarFallback className="bg-primary/10 text-primary font-medium text-sm">
+              {getInitials(displayTitle)}
+            </AvatarFallback>
+          </Avatar>
+          
           {/* Content */}
           <div className="flex-1 min-w-0">
-            {/* Reference Number */}
-            {caseItem.reference_number && (
-              <div className="mb-2">
-                <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-medium bg-muted text-muted-foreground uppercase tracking-wide">
-                  {caseItem.reference_number}
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1 min-w-0">
+                {/* Reference Number */}
+                {caseItem.reference_number && (
+                  <p className="text-xs text-muted-foreground mb-0.5 truncate">
+                    {caseItem.reference_number}
+                  </p>
+                )}
+                {/* Title */}
+                <p className="font-medium text-foreground text-base line-clamp-2 leading-tight">
+                  {displayTitle}
+                </p>
+                {/* Court */}
+                {caseItem.court_name && (
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <Scale className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                    <p className="text-sm text-muted-foreground truncate">
+                      {caseItem.court_name}
+                    </p>
+                  </div>
+                )}
+              </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+            </div>
+            
+            {/* Status badge */}
+            <div className="mt-2">
+              <Badge className={`${getStatusColor(caseItem.status)} text-[10px] font-medium px-2 py-0.5 rounded-full`}>
+                {caseItem.status?.replace('_', ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())}
+              </Badge>
+            </div>
+          </div>
+        </div>
+        
+        {/* Footer with hearing date and client */}
+        {(caseItem.next_hearing_date || caseItem.client_name) && (
+          <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border">
+            {caseItem.next_hearing_date && (
+              <div className={`flex items-center gap-2 flex-1 py-2 px-3 rounded-xl ${isUrgent ? 'bg-destructive/10 text-destructive' : 'bg-primary/10 text-primary'}`}>
+                <Calendar className="h-4 w-4 flex-shrink-0" />
+                <span className="text-sm font-medium truncate">
+                  {TimeUtils.formatDate(caseItem.next_hearing_date, 'MMM dd, yyyy')}
                 </span>
               </div>
             )}
-
-            {/* Title */}
-            <h3 className="font-semibold text-base text-foreground mb-2 leading-tight line-clamp-2">
-              {getDisplayTitle()}
-            </h3>
-
-            {/* Status Badges */}
-            <div className="flex flex-wrap gap-2 mb-3">
-              <Badge className={`${getStatusColor(caseItem.status)} rounded-full text-[10px] px-2.5 py-0.5 border`}>
-                {caseItem.status?.replace('_', ' ').toUpperCase()}
-              </Badge>
-              {caseItem.stage && (
-                <Badge variant={getStageBadgeVariant(caseItem.stage) as any} className="rounded-full px-2.5 py-0.5 text-[10px]">
-                  {caseItem.stage}
-                </Badge>
-              )}
-            </div>
-
-            {/* Key Info */}
-            <div className="space-y-2">
-              {caseItem.court_name && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <div className="p-1 bg-muted rounded">
-                    <Scale className="w-3.5 h-3.5" />
-                  </div>
-                  <span className="truncate">{caseItem.court_name}</span>
-                </div>
-              )}
-              {caseItem.next_hearing_date && (
-                <div className={`flex items-center gap-2 text-sm font-medium ${isUrgent ? 'text-destructive' : 'text-primary'}`}>
-                  <div className={`p-1 rounded ${isUrgent ? 'bg-destructive/10' : 'bg-primary/10'}`}>
-                    <Calendar className="w-3.5 h-3.5" />
-                  </div>
-                  <span>Next: {TimeUtils.formatDate(caseItem.next_hearing_date, 'MMM dd, yyyy')}</span>
-                </div>
-              )}
-            </div>
+            {caseItem.client_name && (
+              <div className="flex items-center gap-2 flex-1 py-2 px-3 rounded-xl bg-muted text-muted-foreground">
+                <User className="h-4 w-4 flex-shrink-0" />
+                <span className="text-sm font-medium truncate">
+                  {caseItem.client_name}
+                </span>
+              </div>
+            )}
           </div>
-
-          {/* Arrow */}
-          <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-1" />
-        </div>
-
-        {/* Footer */}
-        <div className="mt-3 pt-3 border-t border-border flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Clock className="w-3 h-3" />
-            <span>Updated {TimeUtils.formatDate(caseItem.updated_at, 'MMM d')}</span>
-          </div>
-          {caseItem.client_name && (
-            <span className="text-xs text-muted-foreground truncate max-w-[120px]">
-              {caseItem.client_name}
-            </span>
-          )}
-        </div>
+        )}
       </div>
     </Link>
   );
