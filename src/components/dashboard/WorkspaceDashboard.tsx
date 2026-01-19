@@ -92,7 +92,7 @@ const WorkspaceDashboard = () => {
             <MobileDashboardHeader userName={userName} />
 
             {/* Main Content */}
-            <div className="px-4 py-4 space-y-2">
+            <div className="px-4 py-4 space-y-6">
               {/* Prominent Search Bar */}
               <div className="mb-4">
                 <button 
