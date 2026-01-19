@@ -30,8 +30,12 @@ const caseSearchSchema = z.object({
   if (data.caseMode === 'REGISTRATION') {
     return !!data.caseType && !!data.caseNo && !!data.caseYear;
   }
-  // For CNR mode, cnr is required
-  return !!data.cnr;
+  // For CNR mode (when caseMode is undefined or 'CNR Number'), cnr is required
+  if (!data.caseMode || data.caseMode === 'CNR Number') {
+    return !!data.cnr;
+  }
+  // FILING mode - for future implementation
+  return true;
 }, {
   message: "CNR is required for CNR mode, or caseType/caseNo/caseYear are required for REGISTRATION mode",
   path: ["cnr"]
@@ -1349,11 +1353,12 @@ async function performCaseSearch(token: string, cnr: string, searchType: string,
   try {
     let endpoint = '';
     let method = 'POST';
-    let body = JSON.stringify({ cnr });
+    // Initialize body based on mode - for REGISTRATION mode, we'll set the body in the switch case
+    let body = options?.caseMode === 'REGISTRATION' ? '' : JSON.stringify({ cnr });
 
     // Auto-detect Gujarat HC from CNR pattern and override searchType if needed
-    const effectiveSearchType = isGujaratHighCourtCNR(cnr) && searchType === 'high_court' 
-      ? 'gujarat_high_court' 
+    const effectiveSearchType = (cnr && isGujaratHighCourtCNR(cnr) && searchType === 'high_court') 
+      ? 'gujarat_high_court'
       : searchType;
 
     switch (effectiveSearchType) {
