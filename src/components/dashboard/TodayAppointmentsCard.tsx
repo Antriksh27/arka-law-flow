@@ -68,9 +68,11 @@ export const TodayAppointmentsCard = ({ appointments, isLoading }: TodayAppointm
               <div key={appt.id} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
                 <div className="flex items-start justify-between mb-2">
                   {appt.daily_serial_number && (
-                    <div className="flex-shrink-0 bg-primary text-primary-foreground rounded-md px-2 py-1 text-center mr-3">
-                      <span className="text-[8px] font-medium uppercase">Token</span>
-                      <div className="text-xs font-bold">#{appt.daily_serial_number}</div>
+                    <div className="flex-shrink-0 relative mr-3">
+                      <div className="bg-gradient-to-br from-primary/90 to-primary text-primary-foreground rounded-lg px-2.5 py-1.5 text-center min-w-[44px] shadow-sm border border-primary/20">
+                        <div className="text-[8px] font-semibold uppercase tracking-widest opacity-80">Token</div>
+                        <div className="text-sm font-bold leading-none">{appt.daily_serial_number}</div>
+                      </div>
                     </div>
                   )}
                   <div className="flex-1">

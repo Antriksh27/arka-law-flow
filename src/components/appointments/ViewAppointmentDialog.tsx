@@ -322,9 +322,11 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
           {/* Token & Title */}
           <div className="flex items-start gap-4">
             {appointment.daily_serial_number && (
-              <div className="flex-shrink-0 bg-primary text-primary-foreground rounded-xl px-4 py-2 text-center">
-                <span className="text-xs font-medium uppercase tracking-wide">Token</span>
-                <div className="text-2xl font-bold">#{appointment.daily_serial_number}</div>
+              <div className="flex-shrink-0 relative">
+                <div className="bg-gradient-to-br from-primary/90 to-primary text-primary-foreground rounded-xl px-4 py-3 text-center min-w-[64px] shadow-md border border-primary/20">
+                  <div className="text-[9px] font-semibold uppercase tracking-widest opacity-80 mb-1">Token</div>
+                  <div className="text-2xl font-bold leading-none">{appointment.daily_serial_number}</div>
+                </div>
               </div>
             )}
             <div className="flex-1">
