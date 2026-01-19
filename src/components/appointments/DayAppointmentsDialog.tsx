@@ -154,9 +154,11 @@ export const DayAppointmentsDialog: React.FC<DayAppointmentsDialogProps> = ({
               >
                 {/* Token Number */}
                 {appointment.daily_serial_number && (
-                  <div className="flex-shrink-0 bg-primary text-primary-foreground rounded-lg px-3 py-2 text-center min-w-[56px]">
-                    <span className="text-[10px] font-medium uppercase tracking-wide">Token</span>
-                    <div className="text-lg font-bold">#{appointment.daily_serial_number}</div>
+                  <div className="flex-shrink-0 relative">
+                    <div className="bg-gradient-to-br from-primary/90 to-primary text-primary-foreground rounded-xl px-3.5 py-2.5 text-center min-w-[56px] shadow-sm border border-primary/20">
+                      <div className="text-[9px] font-semibold uppercase tracking-widest opacity-80 mb-0.5">Token</div>
+                      <div className="text-xl font-bold leading-none">{appointment.daily_serial_number}</div>
+                    </div>
                   </div>
                 )}
                 
