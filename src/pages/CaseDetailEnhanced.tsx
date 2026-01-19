@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useSearchParams } from 'react-router-dom';
+import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -58,6 +58,7 @@ export default function CaseDetailEnhanced() {
   } = useParams<{
     id: string;
   }>();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [searchParams] = useSearchParams();
   const initialTab = searchParams.get('tab') || 'details';
@@ -244,7 +245,7 @@ export default function CaseDetailEnhanced() {
   if ((caseLoading || legalkartLoading) && isMobile) {
     return (
       <div className="min-h-screen bg-background">
-        <MobileHeader title="Loading..." showBack />
+        <MobileHeader title="Loading..." showBack backTo="/cases" />
         <div className="p-4 space-y-4">
           {/* Hero Card skeleton */}
           <Skeleton className="h-40 w-full rounded-2xl" />
@@ -276,7 +277,7 @@ export default function CaseDetailEnhanced() {
   if (!caseData && isMobile) {
     return (
       <div className="min-h-screen bg-background">
-        <MobileHeader title="Case" showBack />
+        <MobileHeader title="Case" showBack backTo="/cases" />
         <div className="flex flex-col items-center justify-center py-20 px-4">
           <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
             <Scale className="w-8 h-8 text-muted-foreground" />
@@ -285,7 +286,7 @@ export default function CaseDetailEnhanced() {
           <p className="text-sm text-muted-foreground text-center mb-6">
             This case may have been deleted or you don't have access.
           </p>
-          <Button onClick={() => window.history.back()} className="min-h-[48px]">
+          <Button onClick={() => navigate('/cases')} className="min-h-[48px]">
             Go Back
           </Button>
         </div>
@@ -320,6 +321,7 @@ export default function CaseDetailEnhanced() {
           <MobileHeader
             title="Supreme Court Case"
             showBack
+            backTo="/cases"
           />
         )}
         <div className={isMobile ? 'p-4 pb-24' : 'p-8'}>
@@ -346,6 +348,7 @@ export default function CaseDetailEnhanced() {
         <MobileHeader
           title="Case Detail"
           showBack
+          backTo="/cases"
           actions={
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
