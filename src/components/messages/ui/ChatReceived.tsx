@@ -42,8 +42,8 @@ const ChatReceived: React.FC<ChatReceivedProps> = ({
         </div>
       )}
       <div className="flex items-start gap-2">
-        <div className="bg-white p-3 rounded-lg rounded-tl-none shadow-sm border border-gray-100">
-          <p className="text-sm text-gray-800">{message}</p>
+        <div className="bg-gray-100 text-gray-900 p-3 rounded-lg rounded-tl-none shadow-sm">
+          <p className="text-sm">{message}</p>
         </div>
         {onReactionAdd && (
           <ReactionPicker onEmojiSelect={onReactionAdd} />
