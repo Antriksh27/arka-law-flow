@@ -33,12 +33,12 @@ export const MobileFiltersSheet: React.FC<MobileFiltersSheetProps> = ({
   ].filter(Boolean).length;
 
   return (
-    <BottomSheet open={open} onClose={onClose} title="Filters">
-      <div className="space-y-4 pb-6">
-        <div>
-          <label className="text-sm font-medium mb-2 block">Status</label>
+    <BottomSheet open={open} onClose={onClose} title="Filter Cases">
+      <div className="space-y-5 pb-6">
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-foreground">Status</label>
           <Select value={statusFilter} onValueChange={onStatusChange}>
-            <SelectTrigger className="h-12">
+            <SelectTrigger className="h-12 rounded-xl bg-muted/50 border-border">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -49,10 +49,10 @@ export const MobileFiltersSheet: React.FC<MobileFiltersSheetProps> = ({
           </Select>
         </div>
 
-        <div>
-          <label className="text-sm font-medium mb-2 block">Case Type</label>
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-foreground">Case Type</label>
           <Select value={typeFilter} onValueChange={onTypeChange}>
-            <SelectTrigger className="h-12">
+            <SelectTrigger className="h-12 rounded-xl bg-muted/50 border-border">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -65,10 +65,10 @@ export const MobileFiltersSheet: React.FC<MobileFiltersSheetProps> = ({
           </Select>
         </div>
 
-        <div>
-          <label className="text-sm font-medium mb-2 block">Assigned To</label>
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-foreground">Assigned To</label>
           <Select value={assignedFilter} onValueChange={onAssignedChange}>
-            <SelectTrigger className="h-12">
+            <SelectTrigger className="h-12 rounded-xl bg-muted/50 border-border">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -79,11 +79,18 @@ export const MobileFiltersSheet: React.FC<MobileFiltersSheetProps> = ({
           </Select>
         </div>
 
-        <div className="flex gap-2 pt-2">
-          <Button variant="outline" onClick={onClearFilters} className="flex-1 h-12">
-            Clear All {activeFiltersCount > 0 && `(${activeFiltersCount})`}
+        <div className="flex gap-3 pt-4">
+          <Button 
+            variant="outline" 
+            onClick={onClearFilters} 
+            className="flex-1 h-12 rounded-xl border-border"
+          >
+            Clear {activeFiltersCount > 0 && `(${activeFiltersCount})`}
           </Button>
-          <Button onClick={onClose} className="flex-1 h-12">
+          <Button 
+            onClick={onClose} 
+            className="flex-1 h-12 rounded-xl"
+          >
             Apply Filters
           </Button>
         </div>

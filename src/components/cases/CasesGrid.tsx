@@ -186,9 +186,23 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
 
   if (isLoading) {
     return (
-      <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 sm:gap-6'}`}>
+      <div className="space-y-3">
         {[...Array(isMobile ? 5 : 6)].map((_, i) => (
-          <Skeleton key={i} className={`${isMobile ? 'h-44' : 'h-48'} rounded-2xl`} />
+          <div key={i} className="bg-card rounded-2xl border border-border p-4 shadow-sm">
+            <div className="flex items-start gap-3">
+              <Skeleton className="h-12 w-12 rounded-full flex-shrink-0" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-5 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-5 w-16 rounded-full" />
+              </div>
+            </div>
+            <div className="flex gap-2 mt-3 pt-3 border-t border-border">
+              <Skeleton className="h-10 flex-1 rounded-xl" />
+              <Skeleton className="h-10 flex-1 rounded-xl" />
+            </div>
+          </div>
         ))}
       </div>
     );
@@ -204,7 +218,7 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
         <p className="text-sm text-muted-foreground text-center mb-4">{(error as any)?.message || 'An error occurred'}</p>
         <Button 
           onClick={() => queryClient.invalidateQueries({ queryKey: ['cases'] })}
-          className="min-h-[44px]"
+          className="min-h-[44px] rounded-xl"
         >
           Try Again
         </Button>
@@ -265,7 +279,7 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
       {isLoading ? (
         <SkeletonGrid count={9} />
       ) : (
-        <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 sm:gap-6'}`}>
+        <div className={`${isMobile ? 'space-y-3' : 'grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3'}`}>
           {cases.map((caseItem) => (
           <div key={caseItem.id} className="relative">
             {/* Only show checkbox on desktop */}
@@ -290,61 +304,57 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
 
       {/* Pagination Controls */}
       {totalPages > 1 && (
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 py-4 bg-white rounded-2xl shadow-sm border border-gray-200">
-          {isMobile ? (
-            <div className="text-sm text-muted-foreground text-center">
-              Page {page} of {totalPages}
-            </div>
-          ) : (
-            <div className="text-sm text-muted-foreground">
-              Page {page} of {totalPages} (Total: {totalCount} cases)
-            </div>
-          )}
+        <div className={`flex items-center justify-between gap-3 px-4 py-4 bg-card rounded-2xl shadow-sm border border-border ${isMobile ? 'flex-col' : ''}`}>
+          <div className="text-sm text-muted-foreground">
+            {isMobile ? `Page ${page} of ${totalPages}` : `Page ${page} of ${totalPages} (Total: ${totalCount} cases)`}
+          </div>
           <div className="flex items-center justify-center gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setPage(p => p - 1)}
               disabled={page === 1}
-              className={isMobile ? "h-11 px-5" : "h-9 px-4"}
+              className={`${isMobile ? 'h-11 px-5' : 'h-9 px-4'} rounded-xl`}
             >
               <ChevronLeft className={isMobile ? "h-5 w-5" : "h-4 w-4"} />
               <span className="ml-1">Prev</span>
             </Button>
             
-            <div className="hidden sm:flex items-center gap-1">
-              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                let pageNum: number;
-                if (totalPages <= 5) {
-                  pageNum = i + 1;
-                } else if (page <= 3) {
-                  pageNum = i + 1;
-                } else if (page >= totalPages - 2) {
-                  pageNum = totalPages - 4 + i;
-                } else {
-                  pageNum = page - 2 + i;
-                }
-                
-                return (
-                  <Button
-                    key={pageNum}
-                    variant={page === pageNum ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setPage(pageNum)}
-                    className="min-w-[36px] h-9"
-                  >
-                    {pageNum}
-                  </Button>
-                );
-              })}
-            </div>
+            {!isMobile && (
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                  let pageNum: number;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (page <= 3) {
+                    pageNum = i + 1;
+                  } else if (page >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = page - 2 + i;
+                  }
+                  
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={page === pageNum ? "default" : "ghost"}
+                      size="sm"
+                      onClick={() => setPage(pageNum)}
+                      className="min-w-[36px] h-9 rounded-xl"
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
+              </div>
+            )}
             
             <Button
               variant="outline"
               size="sm"
               onClick={() => setPage(p => p + 1)}
               disabled={page === totalPages}
-              className={isMobile ? "h-11 px-5" : "h-9 px-4"}
+              className={`${isMobile ? 'h-11 px-5' : 'h-9 px-4'} rounded-xl`}
             >
               <span className="mr-1">Next</span>
               <ChevronRight className={isMobile ? "h-5 w-5" : "h-4 w-4"} />

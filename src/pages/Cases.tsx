@@ -140,26 +140,11 @@ const Cases = () => {
     <>
       {/* Mobile Header */}
       {isMobile && (
-        <MobileHeader
-          title="Cases"
-          actions={
-            <button
-              onClick={() => setShowFiltersSheet(true)}
-              className="p-2 rounded-lg active:scale-95 transition-transform relative"
-            >
-              <SlidersHorizontal className="w-5 h-5" />
-              {activeFiltersCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-white text-xs rounded-full flex items-center justify-center">
-                  {activeFiltersCount}
-                </span>
-              )}
-            </button>
-          }
-        />
+        <MobileHeader title="Cases" />
       )}
 
       <PullToRefresh onRefresh={handleRefresh}>
-        <div className="max-w-7xl mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6 pb-24 sm:pb-6">
+        <div className={`max-w-7xl mx-auto space-y-4 pb-24 ${isMobile ? 'px-4 pt-4' : 'p-6 space-y-6 pb-6'}`}>
           {/* Desktop Header - only show on desktop */}
           {!isMobile && (
             <CasesHeader onAddCase={() => setShowAddDialog(true)} />
@@ -178,53 +163,53 @@ const Cases = () => {
           {/* Mobile Hero Stats Card - Horizontal Scroll Strip */}
           {isMobile && (
             isLoadingStats ? (
-              <div className="overflow-x-auto -mx-3 px-3 pb-2">
+              <div className="overflow-x-auto -mx-4 px-4">
                 <div className="flex gap-3 min-w-max">
                   {[...Array(4)].map((_, i) => (
-                    <Skeleton key={i} className="h-24 w-[140px] rounded-2xl" />
+                    <Skeleton key={i} className="h-24 w-[120px] rounded-2xl" />
                   ))}
                 </div>
               </div>
             ) : caseStats ? (
-              <div className="overflow-x-auto -mx-3 px-3 pb-2">
+              <div className="overflow-x-auto -mx-4 px-4">
                 <div className="flex gap-3 min-w-max">
-                  <div className="flex flex-col items-center justify-center p-4 bg-card rounded-2xl border border-border shadow-sm min-w-[130px]">
+                  <div className="flex flex-col items-center justify-center p-4 bg-card rounded-2xl border border-border shadow-sm min-w-[110px]">
                     <div className="p-2 bg-primary/10 rounded-xl mb-2">
-                      <SlidersHorizontal className="w-5 h-5 text-primary" />
+                      <SlidersHorizontal className="w-4 h-4 text-primary" />
                     </div>
-                    <div className="text-2xl font-bold text-foreground">{caseStats.active}</div>
+                    <div className="text-xl font-bold text-foreground">{caseStats.active}</div>
                     <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Active</div>
                   </div>
                   
-                  <div className="flex flex-col items-center justify-center p-4 bg-card rounded-2xl border border-border shadow-sm min-w-[130px]">
-                    <div className="p-2 bg-destructive/10 rounded-xl mb-2">
+                  <div className="flex flex-col items-center justify-center p-4 bg-card rounded-2xl border border-border shadow-sm min-w-[110px]">
+                    <div className={`p-2 rounded-xl mb-2 ${caseStats.urgent === 0 ? 'bg-green-50' : 'bg-destructive/10'}`}>
                       {caseStats.urgent === 0 ? (
-                        <CheckCircle className="w-5 h-5 text-green-600" />
+                        <CheckCircle className="w-4 h-4 text-green-600" />
                       ) : (
-                        <Calendar className="w-5 h-5 text-destructive" />
+                        <Calendar className="w-4 h-4 text-destructive" />
                       )}
                     </div>
-                    <div className={`text-2xl font-bold ${caseStats.urgent === 0 ? 'text-green-600' : 'text-destructive'}`}>
+                    <div className={`text-xl font-bold ${caseStats.urgent === 0 ? 'text-green-600' : 'text-destructive'}`}>
                       {caseStats.urgent}
                     </div>
                     <div className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                      {caseStats.urgent === 0 ? 'All Clear!' : 'Urgent'}
+                      {caseStats.urgent === 0 ? 'All Clear' : 'Urgent'}
                     </div>
                   </div>
                   
-                  <div className="flex flex-col items-center justify-center p-4 bg-card rounded-2xl border border-border shadow-sm min-w-[130px]">
+                  <div className="flex flex-col items-center justify-center p-4 bg-card rounded-2xl border border-border shadow-sm min-w-[110px]">
                     <div className="p-2 bg-blue-50 rounded-xl mb-2">
-                      <Calendar className="w-5 h-5 text-blue-600" />
+                      <Calendar className="w-4 h-4 text-blue-600" />
                     </div>
-                    <div className="text-2xl font-bold text-blue-600">{caseStats.nextWeek}</div>
+                    <div className="text-xl font-bold text-blue-600">{caseStats.nextWeek}</div>
                     <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Next 7 Days</div>
                   </div>
                   
-                  <div className="flex flex-col items-center justify-center p-4 bg-card rounded-2xl border border-border shadow-sm min-w-[130px]">
+                  <div className="flex flex-col items-center justify-center p-4 bg-card rounded-2xl border border-border shadow-sm min-w-[110px]">
                     <div className="p-2 bg-amber-50 rounded-xl mb-2">
-                      <Plus className="w-5 h-5 text-amber-600" />
+                      <Plus className="w-4 h-4 text-amber-600" />
                     </div>
-                    <div className="text-2xl font-bold text-amber-600">{caseStats.highPriority}</div>
+                    <div className="text-xl font-bold text-amber-600">{caseStats.highPriority}</div>
                     <div className="text-[10px] text-muted-foreground uppercase tracking-wide">High Priority</div>
                   </div>
                 </div>
@@ -235,11 +220,11 @@ const Cases = () => {
           {/* Mobile Tabs */}
           {isMobile && (
             <Tabs value={casesTab} onValueChange={(value) => setCasesTab(value as 'all' | 'my')} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 bg-white rounded-xl shadow-sm border border-border h-11">
-                <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg text-sm font-medium transition-all">
+              <TabsList className="grid w-full grid-cols-2 bg-card rounded-2xl shadow-sm border border-border h-12 p-1">
+                <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl text-sm font-medium transition-all h-10">
                   All Cases
                 </TabsTrigger>
-                <TabsTrigger value="my" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg text-sm font-medium transition-all">
+                <TabsTrigger value="my" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl text-sm font-medium transition-all h-10">
                   My Cases
                 </TabsTrigger>
               </TabsList>
