@@ -32,7 +32,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
   
   return (
     <header className={cn(
-      "sticky top-0 z-30 w-full backdrop-blur-md bg-background/95 border-b border-border h-14 sm:hidden",
+      "sticky top-16 z-30 w-full backdrop-blur-md bg-background/95 border-b border-border h-14 sm:hidden",
       "supports-[padding-top:env(safe-area-inset-top)]:pt-[env(safe-area-inset-top)]",
       className
     )}>
