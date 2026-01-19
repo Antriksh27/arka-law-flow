@@ -240,20 +240,68 @@ export default function CaseDetailEnhanced() {
     label: 'Related Matters',
     icon: Scale
   }];
-  if (caseLoading || legalkartLoading) {
-    return <div className="min-h-screen bg-gray-50">
-      <div className="space-y-4">
-        <Skeleton className="h-32 w-full" />
-        <Skeleton className="h-96 w-full" />
+  // Mobile Loading State
+  if ((caseLoading || legalkartLoading) && isMobile) {
+    return (
+      <div className="min-h-screen bg-background">
+        <MobileHeader title="Loading..." showBack />
+        <div className="p-4 space-y-4">
+          {/* Hero Card skeleton */}
+          <Skeleton className="h-40 w-full rounded-2xl" />
+          
+          {/* Tabs skeleton */}
+          <Skeleton className="h-12 w-full rounded-xl" />
+          
+          {/* Content skeleton */}
+          <Skeleton className="h-48 w-full rounded-2xl" />
+          <Skeleton className="h-32 w-full rounded-2xl" />
+        </div>
       </div>
-    </div>;
+    );
   }
+
+  // Desktop Loading State
+  if (caseLoading || legalkartLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="p-8 space-y-4">
+          <Skeleton className="h-32 w-full rounded-2xl" />
+          <Skeleton className="h-96 w-full rounded-2xl" />
+        </div>
+      </div>
+    );
+  }
+
+  // Mobile Error/Not Found State
+  if (!caseData && isMobile) {
+    return (
+      <div className="min-h-screen bg-background">
+        <MobileHeader title="Case" showBack />
+        <div className="flex flex-col items-center justify-center py-20 px-4">
+          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+            <Scale className="w-8 h-8 text-muted-foreground" />
+          </div>
+          <h3 className="text-lg font-medium text-foreground mb-1">Case not found</h3>
+          <p className="text-sm text-muted-foreground text-center mb-6">
+            This case may have been deleted or you don't have access.
+          </p>
+          <Button onClick={() => window.history.back()} className="min-h-[48px]">
+            Go Back
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop Error/Not Found State
   if (!caseData) {
-    return <div className="min-h-screen bg-gray-50">
+    return (
+      <div className="min-h-screen bg-gray-50">
         <div className="text-center py-12">
           <p className="text-gray-500">Case not found</p>
         </div>
-      </div>;
+      </div>
+    );
   }
 
   // Detect Supreme Court cases
@@ -433,15 +481,15 @@ export default function CaseDetailEnhanced() {
               )}
 
               {/* Horizontal Scroll Tabs */}
-              <TabsList className={`w-full bg-white border-b border-gray-200 h-auto p-0 ${isMobile ? 'sticky top-14 z-30' : ''}`}>
-                <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide">
+              <TabsList className={`w-full bg-background border-b border-border h-auto p-0 ${isMobile ? 'sticky top-14 z-30' : ''}`}>
+                <div className={`flex overflow-x-auto scrollbar-hide ${isMobile ? 'px-4' : ''}`}>
                   {tabs.map(tab => {
                     const IconComponent = tab.icon;
                     return (
                       <TabsTrigger 
                         key={tab.value} 
                         value={tab.value} 
-                        className={`flex items-center gap-2 ${isMobile ? 'px-4 py-3' : 'px-4 py-3'} text-sm font-medium text-gray-600 hover:text-gray-900 border-b-2 border-transparent data-[state=active]:border-blue-700 data-[state=active]:text-blue-800 data-[state=active]:bg-blue-50 bg-transparent rounded-none whitespace-nowrap transition-colors snap-start flex-shrink-0`}
+                        className={`flex items-center gap-2 ${isMobile ? 'px-4 py-3 min-h-[48px]' : 'px-4 py-3'} text-sm font-medium text-muted-foreground hover:text-foreground border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary bg-transparent rounded-none whitespace-nowrap transition-colors flex-shrink-0`}
                       >
                         <IconComponent className="w-4 h-4" />
                         {isMobile ? tab.label.split(' ')[0] : tab.label}
@@ -451,7 +499,7 @@ export default function CaseDetailEnhanced() {
                 </div>
               </TabsList>
 
-              <div className={isMobile ? 'p-4' : 'p-6'}>
+              <div className={isMobile ? 'p-4 pb-8' : 'p-6'}>
                 <TabsContent value="details" className="m-0">
                   <DetailsTab caseData={caseData} legalkartData={legalkartCase} petitioners={petitioners} respondents={respondents} iaDetails={iaDetails} documents={documents} orders={orders} hearings={hearings} objections={objections} />
                 </TabsContent>
