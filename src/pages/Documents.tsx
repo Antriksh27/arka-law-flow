@@ -47,14 +47,17 @@ const Documents = () => {
         />
         
         <div className="pb-24">
-          <DocumentsHeader 
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            selectedFilters={selectedFilters}
-            onFiltersChange={setSelectedFilters}
-          />
+          {/* Sticky Search Header */}
+          <div className="sticky top-14 z-30">
+            <DocumentsHeader 
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              selectedFilters={selectedFilters}
+              onFiltersChange={setSelectedFilters}
+            />
+          </div>
           
           <DocumentsMainView
             selectedFolder={selectedFolder}

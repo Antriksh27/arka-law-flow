@@ -35,19 +35,41 @@ const Notes = () => {
   return (
     <MobilePageContainer>
       <div className={isMobile ? "" : "max-w-7xl mx-auto p-6 space-y-6"}>
-      <NotesHeader
-        onCreateNote={() => setShowCreateDialog(true)}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        selectedTags={selectedTags}
-        onTagsChange={setSelectedTags}
-        selectedColor={selectedColor}
-        onColorChange={handleColorChange}
-        selectedVisibility={selectedVisibility}
-        onVisibilityChange={handleVisibilityChange}
-        selectedCase={selectedCase}
-        onCaseChange={handleCaseChange}
-      />
+      {/* Mobile Sticky Header Section */}
+      {isMobile && (
+        <div className="sticky top-14 z-30 bg-background">
+          <NotesHeader
+            onCreateNote={() => setShowCreateDialog(true)}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            selectedTags={selectedTags}
+            onTagsChange={setSelectedTags}
+            selectedColor={selectedColor}
+            onColorChange={handleColorChange}
+            selectedVisibility={selectedVisibility}
+            onVisibilityChange={handleVisibilityChange}
+            selectedCase={selectedCase}
+            onCaseChange={handleCaseChange}
+          />
+        </div>
+      )}
+      
+      {/* Desktop Header */}
+      {!isMobile && (
+        <NotesHeader
+          onCreateNote={() => setShowCreateDialog(true)}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          selectedTags={selectedTags}
+          onTagsChange={setSelectedTags}
+          selectedColor={selectedColor}
+          onColorChange={handleColorChange}
+          selectedVisibility={selectedVisibility}
+          onVisibilityChange={handleVisibilityChange}
+          selectedCase={selectedCase}
+          onCaseChange={handleCaseChange}
+        />
+      )}
       
       <NotesGrid
         searchQuery={searchQuery}
