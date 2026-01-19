@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Gavel, CalendarClock, CheckSquare } from 'lucide-react';
 
 interface Metric {
@@ -7,6 +8,7 @@ interface Metric {
   icon: React.ElementType;
   iconBg: string;
   iconColor: string;
+  route: string;
 }
 
 interface MetricsStripProps {
@@ -22,6 +24,8 @@ export const MetricsStrip: React.FC<MetricsStripProps> = ({
   pendingTasks,
   isLoading,
 }) => {
+  const navigate = useNavigate();
+
   const metrics: Metric[] = [
     {
       label: "Today's Hearings",
@@ -29,6 +33,7 @@ export const MetricsStrip: React.FC<MetricsStripProps> = ({
       icon: Gavel,
       iconBg: 'bg-red-100',
       iconColor: 'text-red-600',
+      route: '/hearings',
     },
     {
       label: "Today's Appointments",
@@ -36,6 +41,7 @@ export const MetricsStrip: React.FC<MetricsStripProps> = ({
       icon: CalendarClock,
       iconBg: 'bg-blue-100',
       iconColor: 'text-blue-600',
+      route: '/appointments',
     },
     {
       label: 'Pending Tasks',
@@ -43,6 +49,7 @@ export const MetricsStrip: React.FC<MetricsStripProps> = ({
       icon: CheckSquare,
       iconBg: 'bg-green-100',
       iconColor: 'text-green-600',
+      route: '/tasks',
     },
   ];
 
@@ -73,16 +80,17 @@ export const MetricsStrip: React.FC<MetricsStripProps> = ({
         {metrics.map((metric, index) => {
           const Icon = metric.icon;
           return (
-            <div
+            <button
               key={index}
-              className="flex-shrink-0 flex-1 min-w-[110px] bg-white rounded-2xl p-4 shadow-sm snap-start"
+              onClick={() => navigate(metric.route)}
+              className="flex-shrink-0 flex-1 min-w-[110px] bg-white rounded-2xl p-4 shadow-sm snap-start text-left active:scale-[0.97] transition-transform"
             >
               <div className={`w-10 h-10 rounded-xl ${metric.iconBg} flex items-center justify-center mb-3`}>
                 <Icon className={`w-5 h-5 ${metric.iconColor}`} />
               </div>
               <div className="text-2xl font-bold text-foreground">{String(metric.value).padStart(2, '0')}</div>
               <div className="text-xs text-muted-foreground mt-1">{metric.label}</div>
-            </div>
+            </button>
           );
         })}
       </div>

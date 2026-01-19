@@ -29,12 +29,20 @@ import { WeekCalendar } from './mobile/WeekCalendar';
 import { QuickActionsBar } from './mobile/QuickActionsBar';
 import { MobileSearchModal } from './mobile/MobileSearchModal';
 
+// Dialogs for quick actions
+import { AddCaseDialog } from '@/components/cases/AddCaseDialog';
+import { CreateAppointmentDialog } from '@/components/appointments/CreateAppointmentDialog';
+import { CreateTaskDialog } from '@/components/tasks/CreateTaskDialog';
+import { CreateNoteDialog } from '@/components/notes/CreateNoteDialog';
+import { useDialog } from '@/hooks/use-dialog';
+
 const WorkspaceDashboard = () => {
   const { user } = useAuth();
   const { data, isLoading } = useDashboardDataOptimized();
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { openDialog } = useDialog();
   
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -70,10 +78,9 @@ const WorkspaceDashboard = () => {
 
   // Dialog states for mobile quick actions
   const [showCaseDialog, setShowCaseDialog] = useState(false);
-  const [showAppointmentDialog, setShowAppointmentDialog] = useState(false);
   const [showTaskDialog, setShowTaskDialog] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
-  const [showDocumentDialog, setShowDocumentDialog] = useState(false);
+  const [showNoteDialog, setShowNoteDialog] = useState(false);
 
   return (
     <>
@@ -108,9 +115,10 @@ const WorkspaceDashboard = () => {
               {/* Quick Actions */}
               <QuickActionsBar 
                 onNewCase={() => setShowCaseDialog(true)} 
-                onSchedule={() => setShowAppointmentDialog(true)} 
+                onSchedule={() => openDialog(<CreateAppointmentDialog />)} 
                 onAddTask={() => setShowTaskDialog(true)} 
                 onUpload={() => navigate('/documents')} 
+                onAddNote={() => setShowNoteDialog(true)}
               />
 
               {/* Active Cases */}
@@ -131,6 +139,11 @@ const WorkspaceDashboard = () => {
 
             {/* Search Modal */}
             <MobileSearchModal open={showSearchModal} onOpenChange={setShowSearchModal} />
+
+            {/* Quick Action Dialogs */}
+            <AddCaseDialog open={showCaseDialog} onClose={() => setShowCaseDialog(false)} />
+            <CreateTaskDialog open={showTaskDialog} onClose={() => setShowTaskDialog(false)} />
+            <CreateNoteDialog open={showNoteDialog} onClose={() => setShowNoteDialog(false)} />
           </div>
         </PullToRefresh>
       )}
