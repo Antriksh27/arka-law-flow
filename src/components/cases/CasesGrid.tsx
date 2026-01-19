@@ -68,14 +68,11 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
                               teamMember?.role === 'office_staff';
 
       // Build query with count and related data
-      // Sort by upcoming hearing first (nearest future dates first), then by status
       let query = supabase
         .from('cases')
         .select(`
           *
         `, { count: 'exact' })
-        .order('next_hearing_date', { ascending: true, nullsFirst: false })
-        .order('status', { ascending: true })
         .order('created_at', { ascending: false });
 
       // Add firm scoping
@@ -121,8 +118,36 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
       const { data, error, count } = await query;
       if (error) throw error;
       
+      // Sort cases: upcoming hearings (today and future) first, then by hearing date
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const sortedCases = (data || []).sort((a, b) => {
+        const aDate = a.next_hearing_date ? new Date(a.next_hearing_date) : null;
+        const bDate = b.next_hearing_date ? new Date(b.next_hearing_date) : null;
+        
+        const aIsUpcoming = aDate && aDate >= today;
+        const bIsUpcoming = bDate && bDate >= today;
+        
+        // Cases with upcoming hearings come first
+        if (aIsUpcoming && !bIsUpcoming) return -1;
+        if (!aIsUpcoming && bIsUpcoming) return 1;
+        
+        // Both have upcoming hearings: sort by nearest date
+        if (aIsUpcoming && bIsUpcoming && aDate && bDate) {
+          return aDate.getTime() - bDate.getTime();
+        }
+        
+        // Neither has upcoming: sort by status then created_at
+        if (a.status !== b.status) {
+          return a.status === 'pending' ? -1 : 1;
+        }
+        
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
+      
       return {
-        cases: data || [],
+        cases: sortedCases,
         totalCount: count || 0
       };
     },
