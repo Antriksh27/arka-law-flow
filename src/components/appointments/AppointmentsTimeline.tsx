@@ -50,15 +50,14 @@ export const AppointmentsTimeline: React.FC<AppointmentsTimelineProps> = ({
     queryKey: ['appointments-timeline', user?.id, filters.showPastAppointments, filters.searchQuery],
     queryFn: async () => {
       // Fetch from appointments table directly to get daily_serial_number
-      let query = (supabase as any)
+      let query = supabase
         .from('appointments')
         .select(`
           id, title, appointment_date, appointment_time, duration_minutes,
           location, status, type, notes, client_id, case_id, lawyer_id, firm_id,
           daily_serial_number,
           clients(full_name),
-          cases(case_title, case_number),
-          profiles:lawyer_id(full_name)
+          cases(case_title, case_number)
         `)
         .order('appointment_date', { ascending: false })
         .order('appointment_time', { ascending: true });
