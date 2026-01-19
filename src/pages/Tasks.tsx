@@ -495,7 +495,7 @@ const Tasks = () => {
 
       {/* Mobile Tasks Content */}
       {isMobile ? (
-        <div className="px-4 pt-4 space-y-3 pb-24">
+        <div className="flex-1 min-h-0 overflow-y-auto px-4 pt-4 space-y-3 pb-24">
           {tasksByStatus[activeTabMobile].length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <CheckSquare className="w-12 h-12 mx-auto mb-4 opacity-30" />
