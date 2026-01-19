@@ -27,6 +27,7 @@ const Team = lazy(() => import('@/pages/Team'));
 const Availability = lazy(() => import('@/pages/Availability'));
 const ECourts = lazy(() => import('@/pages/ECourts'));
 const ModernMessenger = lazy(() => import('@/components/messages/ModernMessenger'));
+const Search = lazy(() => import('@/pages/Search'));
 
 // Reception pages
 import ReceptionHome from '@/pages/reception/ReceptionHome';
@@ -130,6 +131,7 @@ const RoleBasedRouter = () => {
             <Route path="/notes" element={<Notes />} />
             <Route path="/availability" element={<Availability />} />
             <Route path="/chat" element={<ModernMessenger />} />
+            <Route path="/search" element={<Search />} />
             <Route path="/team" element={<Index />} />
             <Route path="/reception/*" element={<Index />} />
             <Route path="*" element={<NotFound />} />
@@ -162,6 +164,7 @@ const RoleBasedRouter = () => {
           <Route path="/availability" element={<Availability />} />
           <Route path="/team" element={<Team />} />
           <Route path="/chat" element={<ModernMessenger />} />
+          <Route path="/search" element={<Search />} />
           {/* Fallback for reception routes accessed by non-receptionists */}
           <Route path="/reception/*" element={<Index />} />
           <Route path="*" element={<NotFound />} />
