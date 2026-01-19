@@ -306,17 +306,23 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
   if (isMobile) {
     if (showMobileChat && selectedUser) {
       return (
-        <div className="fixed inset-0 flex flex-col bg-background overflow-hidden">
+        <div className="fixed inset-0 flex flex-col bg-background overflow-hidden z-50">
           {/* Header - Fixed top */}
-          <div className="flex-shrink-0 z-10">
-            <MobileHeader
-              title={selectedUser.getName()}
-              showBack
-              onBack={() => {
-                setShowMobileChat(false);
-                setSelectedUser(null);
-              }}
-            />
+          <div className="flex-shrink-0 bg-white border-b border-slate-200 safe-area-top">
+            <div className="flex items-center gap-3 h-14 px-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowMobileChat(false);
+                  setSelectedUser(null);
+                }}
+                className="flex-shrink-0 p-2 -ml-2 rounded-xl active:scale-95 transition-transform min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-slate-100"
+                aria-label="Go back"
+              >
+                <ArrowLeft className="w-5 h-5 text-slate-900" />
+              </button>
+              <h1 className="text-lg font-semibold text-slate-900 truncate">{selectedUser.getName()}</h1>
+            </div>
           </div>
 
           {/* Messages - Scrollable middle */}
