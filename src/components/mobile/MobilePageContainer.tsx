@@ -11,9 +11,9 @@ export const MobilePageContainer: React.FC<MobilePageContainerProps> = ({
   className,
 }) => {
   return (
-    <div 
+    <div
       className={cn(
-        "w-full min-h-[100dvh] overflow-x-hidden overflow-y-auto pb-6",
+        "w-full min-h-[100dvh] pb-6",
         className
       )}
     >

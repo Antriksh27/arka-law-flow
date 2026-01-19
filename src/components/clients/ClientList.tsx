@@ -331,7 +331,7 @@ export const ClientList = () => {
     </Sheet>
   );
 
-  return <div className="w-full overflow-x-hidden">
+  return <div className="w-full">
       {/* Mobile Header */}
       {isMobile && (
         <MobileHeader title="Clients" />
@@ -490,7 +490,7 @@ export const ClientList = () => {
 
       {/* Mobile Cards View */}
       {isMobile ? (
-        <div className="space-y-3 pb-24">
+        <div className="space-y-3 pb-24 overflow-x-hidden">
           {isLoading ? (
             <div className="p-3">
               <SkeletonList count={5} />
@@ -960,7 +960,7 @@ export const ClientList = () => {
 
       {/* Mobile Cards View */}
       {isMobile && (
-        <div className="space-y-3 pb-24 px-4 pt-4">
+        <div className="space-y-3 pb-24 px-4 pt-4 overflow-x-hidden">
           {isLoading ? (
             <div className="p-3">
               <SkeletonList count={5} />
