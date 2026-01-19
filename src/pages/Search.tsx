@@ -211,7 +211,7 @@ const Search = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {isMobile && <MobileHeader title="Search" showBack />}
+      {isMobile && <MobileHeader title="Search" showBack backTo="/" />}
       
       <div className={`${isMobile ? 'px-4 py-4' : 'max-w-4xl mx-auto px-6 py-8'}`}>
         {/* Search Input */}
