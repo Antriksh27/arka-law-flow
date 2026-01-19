@@ -186,9 +186,9 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-        {[...Array(6)].map((_, i) => (
-          <Skeleton key={i} className="h-56 sm:h-48 rounded-2xl" />
+      <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 sm:gap-6'}`}>
+        {[...Array(isMobile ? 5 : 6)].map((_, i) => (
+          <Skeleton key={i} className={`${isMobile ? 'h-44' : 'h-48'} rounded-2xl`} />
         ))}
       </div>
     );
@@ -196,11 +196,17 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
 
   if (isError) {
     return (
-      <div className="text-center py-12 space-y-4">
-        <div className="text-red-600 font-medium">Couldn't load cases</div>
-        <div className="text-sm text-muted-foreground">{(error as any)?.message || 'Unknown error'}</div>
-        <Button onClick={() => queryClient.invalidateQueries({ queryKey: ['cases'] })}>
-          Retry
+      <div className="flex flex-col items-center justify-center py-16 px-4 bg-card rounded-2xl border border-border">
+        <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
+          <Briefcase className="w-8 h-8 text-destructive" />
+        </div>
+        <h3 className="text-lg font-medium text-foreground mb-1">Couldn't load cases</h3>
+        <p className="text-sm text-muted-foreground text-center mb-4">{(error as any)?.message || 'An error occurred'}</p>
+        <Button 
+          onClick={() => queryClient.invalidateQueries({ queryKey: ['cases'] })}
+          className="min-h-[44px]"
+        >
+          Try Again
         </Button>
       </div>
     );
@@ -208,12 +214,12 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
 
   if (!cases || cases.length === 0) {
     return (
-      <div className="text-center py-12 bg-white rounded-2xl shadow-sm border border-gray-200">
-        <div className="mx-auto h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-4">
-          <Briefcase className="h-8 w-8 text-muted-foreground" />
+      <div className="flex flex-col items-center justify-center py-16 px-4 bg-card rounded-2xl border border-border">
+        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+          <Briefcase className="w-8 h-8 text-muted-foreground" />
         </div>
-        <h3 className="text-lg font-semibold text-foreground mb-2">No cases found</h3>
-        <p className="text-muted-foreground max-w-sm mx-auto">
+        <h3 className="text-lg font-medium text-foreground mb-1">No cases found</h3>
+        <p className="text-sm text-muted-foreground text-center max-w-sm">
           {searchQuery || statusFilter !== 'all' || typeFilter !== 'all' 
             ? 'Try adjusting your search or filters to find cases.'
             : 'Create your first case to get started with case management.'}

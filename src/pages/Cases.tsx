@@ -23,7 +23,7 @@ import { PullToRefresh } from '@/components/mobile/PullToRefresh';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { SlidersHorizontal, Plus, Upload, Link as LinkIcon, CheckCircle } from 'lucide-react';
+import { SlidersHorizontal, Plus, Upload, Link as LinkIcon, CheckCircle, Calendar } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 const Cases = () => {
   const { user, firmId } = useAuth();
@@ -178,35 +178,54 @@ const Cases = () => {
           {/* Mobile Hero Stats Card - Horizontal Scroll Strip */}
           {isMobile && (
             isLoadingStats ? (
-              <Skeleton className="h-24 rounded-2xl" />
+              <div className="overflow-x-auto -mx-3 px-3 pb-2">
+                <div className="flex gap-3 min-w-max">
+                  {[...Array(4)].map((_, i) => (
+                    <Skeleton key={i} className="h-24 w-[140px] rounded-2xl" />
+                  ))}
+                </div>
+              </div>
             ) : caseStats ? (
               <div className="overflow-x-auto -mx-3 px-3 pb-2">
                 <div className="flex gap-3 min-w-max">
-                  <div className="flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-border shadow-sm min-w-[140px]">
+                  <div className="flex flex-col items-center justify-center p-4 bg-card rounded-2xl border border-border shadow-sm min-w-[130px]">
+                    <div className="p-2 bg-primary/10 rounded-xl mb-2">
+                      <SlidersHorizontal className="w-5 h-5 text-primary" />
+                    </div>
                     <div className="text-2xl font-bold text-foreground">{caseStats.active}</div>
-                    <div className="text-xs text-muted-foreground whitespace-nowrap">Active Cases</div>
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Active</div>
                   </div>
                   
-                  <div className="flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-border shadow-sm min-w-[140px]">
-                    <div className="text-2xl font-bold text-destructive">{caseStats.urgent}</div>
-                    {caseStats.urgent === 0 ? (
-                      <div className="text-xs text-green-600 flex items-center gap-1 whitespace-nowrap">
-                        <CheckCircle className="w-3 h-3" />
-                        All clear!
-                      </div>
-                    ) : (
-                      <div className="text-xs text-muted-foreground whitespace-nowrap">Urgent Today</div>
-                    )}
+                  <div className="flex flex-col items-center justify-center p-4 bg-card rounded-2xl border border-border shadow-sm min-w-[130px]">
+                    <div className="p-2 bg-destructive/10 rounded-xl mb-2">
+                      {caseStats.urgent === 0 ? (
+                        <CheckCircle className="w-5 h-5 text-green-600" />
+                      ) : (
+                        <Calendar className="w-5 h-5 text-destructive" />
+                      )}
+                    </div>
+                    <div className={`text-2xl font-bold ${caseStats.urgent === 0 ? 'text-green-600' : 'text-destructive'}`}>
+                      {caseStats.urgent}
+                    </div>
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                      {caseStats.urgent === 0 ? 'All Clear!' : 'Urgent'}
+                    </div>
                   </div>
                   
-                  <div className="flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-border shadow-sm min-w-[140px]">
-                    <div className="text-2xl font-bold text-primary">{caseStats.nextWeek}</div>
-                    <div className="text-xs text-muted-foreground whitespace-nowrap">Next 7 Days</div>
+                  <div className="flex flex-col items-center justify-center p-4 bg-card rounded-2xl border border-border shadow-sm min-w-[130px]">
+                    <div className="p-2 bg-blue-50 rounded-xl mb-2">
+                      <Calendar className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div className="text-2xl font-bold text-blue-600">{caseStats.nextWeek}</div>
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Next 7 Days</div>
                   </div>
                   
-                  <div className="flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-border shadow-sm min-w-[140px]">
+                  <div className="flex flex-col items-center justify-center p-4 bg-card rounded-2xl border border-border shadow-sm min-w-[130px]">
+                    <div className="p-2 bg-amber-50 rounded-xl mb-2">
+                      <Plus className="w-5 h-5 text-amber-600" />
+                    </div>
                     <div className="text-2xl font-bold text-amber-600">{caseStats.highPriority}</div>
-                    <div className="text-xs text-muted-foreground whitespace-nowrap">High Priority</div>
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wide">High Priority</div>
                   </div>
                 </div>
               </div>
