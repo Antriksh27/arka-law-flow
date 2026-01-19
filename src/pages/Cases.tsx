@@ -98,28 +98,26 @@ const Cases = () => {
             <CasesHeader onAddCase={() => setShowAddDialog(true)} />
           )}
 
-          {/* Mobile Search Bar */}
+          {/* Mobile Sticky Header: Search + Tabs */}
           {isMobile && (
-            <MobileSearchBar
-              value={searchQuery}
-              onChange={setSearchQuery}
-              onFilterClick={() => setShowFiltersSheet(true)}
-              activeFiltersCount={activeFiltersCount}
-            />
-          )}
-
-          {/* Mobile Tabs */}
-          {isMobile && (
-            <Tabs value={casesTab} onValueChange={(value) => setCasesTab(value as 'all' | 'my')} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 bg-card rounded-2xl shadow-sm border border-border h-12 p-1">
-                <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl text-sm font-medium transition-all h-10">
-                  All Cases
-                </TabsTrigger>
-                <TabsTrigger value="my" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl text-sm font-medium transition-all h-10">
-                  My Cases
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
+            <div className="sticky top-14 z-30 -mx-4 px-4 py-3 bg-background space-y-3">
+              <MobileSearchBar
+                value={searchQuery}
+                onChange={setSearchQuery}
+                onFilterClick={() => setShowFiltersSheet(true)}
+                activeFiltersCount={activeFiltersCount}
+              />
+              <Tabs value={casesTab} onValueChange={(value) => setCasesTab(value as 'all' | 'my')} className="w-full">
+                <TabsList className="grid w-full grid-cols-2 bg-card rounded-2xl shadow-sm border border-border h-12 p-1">
+                  <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl text-sm font-medium transition-all h-10">
+                    All Cases
+                  </TabsTrigger>
+                  <TabsTrigger value="my" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl text-sm font-medium transition-all h-10">
+                    My Cases
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
           )}
 
           {/* Desktop Tabs and Filters */}
