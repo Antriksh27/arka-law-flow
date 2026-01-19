@@ -3,7 +3,7 @@ import { useLegalkartIntegration } from '@/hooks/useLegalkartIntegration';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { CauseListHeader } from '@/components/cause-list/CauseListHeader';
 import { CauseListContent } from '@/components/cause-list/CauseListContent';
-import { BottomNavBar } from '@/components/mobile/BottomNavBar';
+
 import { Card } from '@/components/ui/card';
 
 const CauseList = () => {
@@ -59,7 +59,7 @@ const CauseList = () => {
           </div>
         )}
       </div>
-      <BottomNavBar />
+      
     </>
   );
 };

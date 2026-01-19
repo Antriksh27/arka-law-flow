@@ -13,7 +13,7 @@ import { JoinHruLegal } from "@/components/team/JoinHruLegal";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { MobilePageContainer } from "@/components/mobile/MobilePageContainer";
 import { MobileHeader } from "@/components/mobile/MobileHeader";
-import { BottomNavBar } from "@/components/mobile/BottomNavBar";
+
 import { MobileFAB } from "@/components/mobile/MobileFAB";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
@@ -794,7 +794,7 @@ function TeamDirectory() {
             label="Add Member"
           />
         )}
-        <BottomNavBar />
+        
       </MobilePageContainer>
     );
   }

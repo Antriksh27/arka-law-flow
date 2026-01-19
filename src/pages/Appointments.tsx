@@ -19,7 +19,7 @@ import { getPublicBaseUrl } from '@/lib/appConfig';
 import { ALLOWED_BOOKING_ROLES } from '@/lib/bookingConfig';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileHeader } from '@/components/mobile/MobileHeader';
-import { BottomNavBar } from '@/components/mobile/BottomNavBar';
+
 import { MobileFAB } from '@/components/mobile/MobileFAB';
 import { MobileAppointmentCard } from '../components/appointments/MobileAppointmentCard';
 import { useQuery } from '@tanstack/react-query';
@@ -198,7 +198,7 @@ const Appointments = () => {
           </SheetContent>
         </Sheet>
 
-        <BottomNavBar />
+        
       </div>
     );
   }

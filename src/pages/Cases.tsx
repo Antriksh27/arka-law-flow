@@ -16,7 +16,7 @@ import { CaseMobileFAB } from '../components/cases/CaseMobileFAB';
 import { MobileHeader } from '@/components/mobile/MobileHeader';
 import { MobileSearchBar } from '@/components/cases/MobileSearchBar';
 import { MobileFiltersSheet } from '@/components/cases/MobileFiltersSheet';
-import { BottomNavBar } from '@/components/mobile/BottomNavBar';
+
 //
 import { BottomSheet } from '@/components/mobile/BottomSheet';
 import { PullToRefresh } from '@/components/mobile/PullToRefresh';
@@ -341,8 +341,6 @@ const Cases = () => {
         </div>
       </PullToRefresh>
 
-      {/* Bottom Navigation */}
-      {isMobile && <BottomNavBar />}
 
       {/* Dialogs */}
       <AddCaseDialog 

@@ -11,7 +11,7 @@ import { ContactQuickActions } from './ContactQuickActions';
 import { EditContactDialog } from './EditContactDialog';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileHeader } from '@/components/mobile/MobileHeader';
-import { BottomNavBar } from '@/components/mobile/BottomNavBar';
+
 import { BarChart3, CheckSquare, StickyNote, FileText, User, Mail, Phone, Building } from 'lucide-react';
 
 interface ContactTabsProps {
@@ -176,8 +176,6 @@ export const ContactTabs: React.FC<ContactTabsProps> = ({
         )}
       </div>
       
-      {/* Mobile Bottom Nav */}
-      {isMobile && <BottomNavBar />}
     </>
   );
 };

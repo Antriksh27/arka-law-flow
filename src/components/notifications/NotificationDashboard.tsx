@@ -6,7 +6,7 @@ import { NotificationSettingsPanel } from './NotificationSettingsPanel';
 import { NotificationInbox } from './NotificationInbox';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileHeader } from '@/components/mobile/MobileHeader';
-import { BottomNavBar } from '@/components/mobile/BottomNavBar';
+
 
 export const NotificationDashboard = () => {
   const [activeTab, setActiveTab] = useState('inbox');
@@ -56,7 +56,7 @@ export const NotificationDashboard = () => {
           </Tabs>
         </div>
 
-        <BottomNavBar />
+        
       </div>
     );
   }

@@ -19,7 +19,7 @@ import EditAppointmentDialog from '@/components/reception/EditAppointmentDialog'
 import RescheduleAppointmentDialog from '@/components/reception/RescheduleAppointmentDialog';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileHeader } from '@/components/mobile/MobileHeader';
-import { BottomNavBar } from '@/components/mobile/BottomNavBar';
+
 import { MobileFAB } from '@/components/mobile/MobileFAB';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 const ReceptionHome = () => {
@@ -312,7 +312,7 @@ const ReceptionHome = () => {
           icon={CalendarPlus}
         />
 
-        <BottomNavBar />
+        
 
         {/* Modals */}
         <AddContactDialog open={addContactOpen} onOpenChange={setAddContactOpen} />

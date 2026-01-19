@@ -11,7 +11,7 @@ import html2pdf from 'html2pdf.js';
 import { format } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileHeader } from '@/components/mobile/MobileHeader';
-import { BottomNavBar } from '@/components/mobile/BottomNavBar';
+
 import { MobileDailyBoardCard } from '@/components/daily-board/MobileDailyBoardCard';
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarIcon, Loader2 } from 'lucide-react';
@@ -220,7 +220,7 @@ const DailyBoard = () => {
           )}
         </div>
 
-        <BottomNavBar />
+        
       </div>
     );
   }
