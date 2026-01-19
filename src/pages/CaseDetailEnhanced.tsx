@@ -379,9 +379,10 @@ export default function CaseDetailEnhanced() {
         />
       )}
 
-      <PullToRefresh onRefresh={handleFetchDetails}>
-        <div className={`bg-gray-50 ${isMobile ? 'pb-24' : 'min-h-screen pb-8'}`}>
-          {/* Mobile Hero Card */}
+      <div className={isMobile ? "h-[calc(100vh-56px)]" : undefined}>
+        <PullToRefresh onRefresh={handleFetchDetails}>
+          <div className={`bg-gray-50 ${isMobile ? 'pb-24' : 'min-h-screen pb-8'}`}>
+            {/* Mobile Hero Card */}
           {isMobile && (
             <div className="p-4">
               <HeroCard
@@ -484,7 +485,7 @@ export default function CaseDetailEnhanced() {
               )}
 
               {/* Horizontal Scroll Tabs */}
-              <TabsList className={`w-full bg-background border-b border-border h-auto p-0 ${isMobile ? 'sticky top-14 z-30' : ''}`}>
+              <TabsList className={`w-full bg-background border-b border-border h-auto p-0 ${isMobile ? 'sticky top-0 z-40 shadow-sm isolate' : ''}`}>
                 <div className={`flex overflow-x-auto scrollbar-hide ${isMobile ? 'px-4' : ''}`}>
                   {tabs.map(tab => {
                     const IconComponent = tab.icon;
@@ -531,10 +532,11 @@ export default function CaseDetailEnhanced() {
                   <RelatedMattersTab caseId={id!} />
                 </TabsContent>
               </div>
-            </Tabs>
+              </Tabs>
+            </div>
           </div>
-        </div>
-      </PullToRefresh>
+        </PullToRefresh>
+      </div>
 
 
       {/* Modals */}
