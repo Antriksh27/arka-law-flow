@@ -34,6 +34,7 @@ import { AddCaseDialog } from '@/components/cases/AddCaseDialog';
 import { CreateAppointmentDialog } from '@/components/appointments/CreateAppointmentDialog';
 import { CreateTaskDialog } from '@/components/tasks/CreateTaskDialog';
 import { CreateNoteDialog } from '@/components/notes/CreateNoteDialog';
+import { UploadDocumentDialog } from '@/components/documents/UploadDocumentDialog';
 import { useDialog } from '@/hooks/use-dialog';
 
 const WorkspaceDashboard = () => {
@@ -89,6 +90,7 @@ const WorkspaceDashboard = () => {
   const [showTaskDialog, setShowTaskDialog] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [showNoteDialog, setShowNoteDialog] = useState(false);
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
 
   return (
     <>
@@ -125,7 +127,7 @@ const WorkspaceDashboard = () => {
                 onNewCase={() => setShowCaseDialog(true)} 
                 onSchedule={() => openDialog(<CreateAppointmentDialog />)} 
                 onAddTask={() => setShowTaskDialog(true)} 
-                onUpload={() => navigate('/documents')} 
+                onUpload={() => setShowUploadDialog(true)} 
                 onAddNote={() => setShowNoteDialog(true)}
               />
 
@@ -141,6 +143,7 @@ const WorkspaceDashboard = () => {
             <AddCaseDialog open={showCaseDialog} onClose={() => setShowCaseDialog(false)} />
             <CreateTaskDialog open={showTaskDialog} onClose={() => setShowTaskDialog(false)} />
             <CreateNoteDialog open={showNoteDialog} onClose={() => setShowNoteDialog(false)} />
+            <UploadDocumentDialog open={showUploadDialog} onClose={() => setShowUploadDialog(false)} />
           </div>
         </PullToRefresh>
       )}
