@@ -194,7 +194,7 @@ const Appointments = () => {
 
   return (
     <DefaultPageLayout>
-      <div className="container max-w-none flex h-full w-full flex-col items-start gap-6 bg-white py-12 overflow-auto">
+      <div className="container max-w-none flex min-h-full w-full flex-col items-start gap-6 bg-white py-12">
         <div className="flex w-full items-center justify-between">
           <span className="text-2xl font-semibold text-gray-900">
             My Appointments
