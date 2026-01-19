@@ -17,9 +17,14 @@ const normalizeCnr = (cnr: string): string => {
 };
 
 const caseSearchSchema = z.object({
-  cnr: z.string().trim().min(1).max(50).transform(normalizeCnr),
+  cnr: z.string().trim().max(50).transform(normalizeCnr).optional(),
   searchType: searchTypeEnum,
-  caseId: z.string().uuid().optional()
+  caseId: z.string().uuid().optional(),
+  // Gujarat HC REGISTRATION mode fields
+  caseMode: z.enum(['CNR Number', 'REGISTRATION', 'FILING']).optional(),
+  caseType: z.string().optional(),
+  caseNo: z.string().optional(),
+  caseYear: z.string().optional(),
 })
 
 const batchSearchSchema = z.object({
@@ -815,10 +820,10 @@ serve(async (req) => {
     }
 
     if (action === 'search') {
-      const { cnr, searchType, caseId, isSystemTriggered }: LegalkartCaseSearchRequest & { isSystemTriggered?: boolean } = requestBody;
+      const { cnr, searchType, caseId, isSystemTriggered, caseMode, caseType, caseNo, caseYear }: LegalkartCaseSearchRequest & { isSystemTriggered?: boolean; caseMode?: string; caseType?: string; caseNo?: string; caseYear?: string } = requestBody;
       
       // Validate input using Zod
-      const validation = caseSearchSchema.safeParse({ cnr, searchType, caseId })
+      const validation = caseSearchSchema.safeParse({ cnr, searchType, caseId, caseMode, caseType, caseNo, caseYear })
       
       if (!validation.success) {
         console.error('Validation failed for search:', validation.error.flatten())
@@ -832,11 +837,17 @@ serve(async (req) => {
       }
 
       const validatedData = validation.data
-      console.log(`Starting Legalkart search for CNR: ${validatedData.cnr}, Type: ${validatedData.searchType}, System: ${isSystemTriggered || false}`);
       
-      // Normalize CNR: remove hyphens and spaces before searching
-      const normalizedCnr = validatedData.cnr.replace(/[-\s]/g, '');
-      console.log('Normalized CNR for API:', normalizedCnr);
+      // For REGISTRATION mode, CNR is optional
+      const isRegistrationMode = validatedData.caseMode === 'REGISTRATION';
+      const normalizedCnr = validatedData.cnr ? validatedData.cnr.replace(/[-\s]/g, '') : '';
+      
+      console.log(`Starting Legalkart search - Mode: ${validatedData.caseMode || 'CNR'}, Type: ${validatedData.searchType}, System: ${isSystemTriggered || false}`);
+      if (isRegistrationMode) {
+        console.log(`REGISTRATION search: ${validatedData.caseType}/${validatedData.caseNo}/${validatedData.caseYear}`);
+      } else {
+        console.log('Normalized CNR for API:', normalizedCnr);
+      }
 
       // First authenticate
       const authResult = await authenticateWithLegalkart(legalkartUserId, legalkartHashKey);
@@ -873,8 +884,11 @@ serve(async (req) => {
         console.log('⚙️ System-triggered search - skipping search record creation');
       }
 
-      // Perform the search using normalized CNR
-      const searchResult = await performCaseSearch(authResult.token, normalizedCnr, validatedData.searchType);
+      // Perform the search using normalized CNR or REGISTRATION mode options
+      const searchOptions: CaseSearchOptions | undefined = validatedData.caseMode === 'REGISTRATION' 
+        ? { caseMode: 'REGISTRATION', caseType: validatedData.caseType, caseNo: validatedData.caseNo, caseYear: validatedData.caseYear }
+        : undefined;
+      const searchResult = await performCaseSearch(authResult.token, normalizedCnr, validatedData.searchType, searchOptions);
 
       // Update search record with results (if one was created)
       if (searchRecord) {
@@ -1314,7 +1328,14 @@ async function authenticateWithLegalkart(userId: string, hashKey: string): Promi
   }
 }
 
-async function performCaseSearch(token: string, cnr: string, searchType: string) {
+interface CaseSearchOptions {
+  caseMode?: 'CNR Number' | 'REGISTRATION' | 'FILING';
+  caseType?: string;
+  caseNo?: string;
+  caseYear?: string;
+}
+
+async function performCaseSearch(token: string, cnr: string, searchType: string, options?: CaseSearchOptions) {
   try {
     let endpoint = '';
     let method = 'POST';
@@ -1337,12 +1358,24 @@ async function performCaseSearch(token: string, cnr: string, searchType: string)
         break;
       case 'gujarat_high_court':
         endpoint = 'https://apiservices.legalkart.com/api/v1/application-service/case-search/gujarat-high-court';
-        // Gujarat HC API uses different body format - CNR Number mode with the full CNR
-        body = JSON.stringify({ 
-          caseMode: 'CNR Number',
-          cnr: cnr 
-        });
-        console.log('🏛️ Using Gujarat High Court specific endpoint with CNR mode');
+        
+        // Check if using REGISTRATION mode
+        if (options?.caseMode === 'REGISTRATION' && options?.caseType && options?.caseNo && options?.caseYear) {
+          body = JSON.stringify({ 
+            caseMode: 'REGISTRATION',
+            caseType: options.caseType,
+            caseNo: options.caseNo,
+            caseYear: options.caseYear
+          });
+          console.log('🏛️ Using Gujarat High Court REGISTRATION mode:', { caseType: options.caseType, caseNo: options.caseNo, caseYear: options.caseYear });
+        } else {
+          // Default CNR Number mode
+          body = JSON.stringify({ 
+            caseMode: 'CNR Number',
+            cnr: cnr 
+          });
+          console.log('🏛️ Using Gujarat High Court CNR Number mode');
+        }
         break;
       case 'district_cause_list':
         endpoint = 'https://apiservices.legalkart.com/api/v1/application-service/case-search/district-court/cause-list-by-cnr';
