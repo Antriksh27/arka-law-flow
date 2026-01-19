@@ -4,7 +4,7 @@ import { DocumentsSidebar } from '../components/documents/DocumentsSidebar';
 import { DocumentsMainView } from '../components/documents/DocumentsMainView';
 import { DocumentsHeader } from '../components/documents/DocumentsHeader';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { MobileHeader } from '@/components/mobile/MobileHeader';
+import { MobileStickyHeader } from '@/components/mobile/MobileStickyHeader';
 
 import { MobileFAB } from '@/components/mobile/MobileFAB';
 import { Upload, FolderOpen } from 'lucide-react';
@@ -25,18 +25,30 @@ const Documents = () => {
   });
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [showFolderSheet, setShowFolderSheet] = useState(false);
+  const [showFiltersSheet, setShowFiltersSheet] = useState(false);
 
   const handleUploadSuccess = () => {
     queryClient.invalidateQueries({ queryKey: ['documents'] });
     queryClient.invalidateQueries({ queryKey: ['document-folders'] });
   };
 
+  const activeFiltersCount = [
+    selectedFilters.fileType !== 'all',
+    selectedFilters.uploadedBy !== 'all',
+    selectedFilters.caseId !== 'all',
+  ].filter(Boolean).length;
+
   if (isMobile) {
     return (
       <>
-        <MobileHeader 
+        <MobileStickyHeader
           title="Documents"
-          actions={
+          searchValue={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchPlaceholder="Search documents..."
+          onFilterClick={() => setShowFiltersSheet(true)}
+          activeFiltersCount={activeFiltersCount}
+          headerActions={
             <button 
               onClick={() => setShowFolderSheet(true)}
               className="p-2 rounded-lg active:scale-95 transition-transform"
@@ -47,18 +59,6 @@ const Documents = () => {
         />
         
         <div className="pb-24">
-          {/* Sticky Search Header */}
-          <div className="sticky top-14 z-30">
-            <DocumentsHeader 
-              viewMode={viewMode}
-              onViewModeChange={setViewMode}
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-              selectedFilters={selectedFilters}
-              onFiltersChange={setSelectedFilters}
-            />
-          </div>
-          
           <DocumentsMainView
             selectedFolder={selectedFolder}
             viewMode={viewMode}
