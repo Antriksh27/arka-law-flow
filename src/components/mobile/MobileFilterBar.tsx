@@ -22,7 +22,7 @@ export const MobileFilterBar: React.FC<MobileFilterBarProps> = ({
   className,
 }) => {
   return (
-    <div className={cn("sticky top-[112px] z-[var(--z-sticky)] bg-gray-50 overflow-x-auto scrollbar-hide", className)}>
+    <div className={cn("sticky top-[112px] z-20 bg-gray-50 overflow-x-auto scrollbar-hide", className)}>
       <div className="flex gap-2 px-3 pb-4">
         {filters.map((filter) => (
           <button

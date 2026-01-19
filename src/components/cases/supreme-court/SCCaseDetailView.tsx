@@ -413,7 +413,7 @@ export function SCCaseDetailView({
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             {/* Main Tabs */}
-            <TabsList className={`w-full bg-white border-b border-border h-auto p-0 ${isMobile ? 'sticky top-14 z-[var(--z-sticky)]' : ''}`}>
+            <TabsList className={`w-full bg-white border-b border-border h-auto p-0 ${isMobile ? 'sticky top-14 z-30' : ''}`}>
               <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide">
                 {tabs.map(tab => {
                   const IconComponent = tab.icon;

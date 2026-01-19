@@ -84,14 +84,14 @@ export function MobileSidebar({
       {/* Backdrop Overlay */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-[var(--z-header)] md:hidden animate-fade-in backdrop-blur-sm" 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden animate-fade-in backdrop-blur-sm" 
           onClick={onClose} 
         />
       )}
 
       {/* Sidebar */}
       <div className={cn(
-        "fixed top-0 left-0 h-full w-80 bg-background shadow-2xl z-[var(--z-overlay)] transform transition-transform duration-300 ease-out md:hidden",
+        "fixed top-0 left-0 h-full w-80 bg-background shadow-2xl z-50 transform transition-transform duration-300 ease-out md:hidden",
         isOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="flex flex-col h-full">

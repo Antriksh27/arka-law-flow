@@ -16,7 +16,6 @@ import { CaseMobileFAB } from '../components/cases/CaseMobileFAB';
 import { MobileHeader } from '@/components/mobile/MobileHeader';
 import { MobileSearchBar } from '@/components/cases/MobileSearchBar';
 import { MobileFiltersSheet } from '@/components/cases/MobileFiltersSheet';
-import { StickySubheader } from '@/components/mobile/StickySubheader';
 
 //
 import { BottomSheet } from '@/components/mobile/BottomSheet';
@@ -94,7 +93,7 @@ const Cases = () => {
 
       {/* Mobile Search + Tabs - Fixed below header */}
       {isMobile && (
-        <StickySubheader className="px-4 py-3 space-y-3 border-b border-border">
+        <div className="sticky top-14 z-30 bg-background px-4 py-3 space-y-3 border-b border-border">
           <MobileSearchBar
             value={searchQuery}
             onChange={setSearchQuery}
@@ -111,7 +110,7 @@ const Cases = () => {
               </TabsTrigger>
             </TabsList>
           </Tabs>
-        </StickySubheader>
+        </div>
       )}
 
       <PullToRefresh onRefresh={handleRefresh}>

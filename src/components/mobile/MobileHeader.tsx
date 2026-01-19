@@ -48,7 +48,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
   return (
     <header
       className={cn(
-        'sticky top-0 z-[var(--z-header)] w-full bg-background border-b border-border h-14 sm:hidden',
+        'sticky top-0 z-40 w-full bg-background border-b border-border h-14 sm:hidden',
         'supports-[padding-top:env(safe-area-inset-top)]:pt-[env(safe-area-inset-top)]',
         className
       )}
