@@ -19,7 +19,6 @@ import { MobileTaskCard } from '@/components/tasks/MobileTaskCard';
 import { MobileFAB } from '@/components/mobile/MobileFAB';
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MobilePageContainer } from '@/components/mobile/MobilePageContainer';
 import { MobileStickyHeader } from '@/components/mobile/MobileStickyHeader';
 
@@ -370,11 +369,6 @@ const Tasks = () => {
   // Get active filters count for mobile
   const activeFiltersCount = (priorityFilter !== 'all' ? 1 : 0) + (assigneeFilter !== 'all' ? 1 : 0);
 
-  // Filter tasks by mobile tab
-  const filteredTasksByTab = isMobile && statusFilter === 'all' 
-    ? tasksByStatus[activeTabMobile]
-    : tasks;
-
   return (
     <MobilePageContainer>
       <div className={isMobile ? "" : "max-w-7xl mx-auto p-6 space-y-6"}>
@@ -499,68 +493,28 @@ const Tasks = () => {
         </div>
       )}
 
-      {/* Mobile Tasks with Tabs */}
+      {/* Mobile Tasks Content */}
       {isMobile ? (
-        <Tabs value={activeTabMobile} onValueChange={(v) => setActiveTabMobile(v as any)} className="px-3">
-          <TabsList className="w-full grid grid-cols-3 h-11 bg-white rounded-xl shadow-sm border border-border mb-4">
-            <TabsTrigger
-              value="todo"
-              className="data-[state=active]:bg-blue-600 data-[state=active]:text-white rounded-lg text-sm font-medium"
-            >
-              <span className="flex items-center gap-1.5">
-                To Do
-                <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold data-[state=active]:bg-white/20 data-[state=active]:text-white">
-                  {tasksByStatus.todo.length}
-                </span>
-              </span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="in_progress"
-              className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white rounded-lg text-sm font-medium"
-            >
-              <span className="flex items-center gap-1.5">
-                In Progress
-                <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-yellow-100 text-yellow-700 text-xs font-semibold data-[state=active]:bg-white/20 data-[state=active]:text-white">
-                  {tasksByStatus.in_progress.length}
-                </span>
-              </span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="completed"
-              className="data-[state=active]:bg-green-600 data-[state=active]:text-white rounded-lg text-sm font-medium"
-            >
-              <span className="flex items-center gap-1.5">
-                Done
-                <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-green-100 text-green-700 text-xs font-semibold data-[state=active]:bg-white/20 data-[state=active]:text-white">
-                  {tasksByStatus.completed.length}
-                </span>
-              </span>
-            </TabsTrigger>
-          </TabsList>
-
-          {(['todo', 'in_progress', 'completed'] as const).map((status) => (
-            <TabsContent key={status} value={status} className="space-y-3 mt-0">
-              {tasksByStatus[status].length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  <CheckSquare className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                  <p className="text-sm">No {status.replace('_', ' ')} tasks</p>
-                </div>
-              ) : (
-                tasksByStatus[status].map((task) => (
-                  <MobileTaskCard
-                    key={task.id}
-                    task={task}
-                    onView={() => handleViewTask(task.id)}
-                    onEdit={() => handleEditTask(task.id)}
-                    onDelete={() => handleDeleteTask(task.id, task.title)}
-                    onStatusChange={(newStatus) => handleStatusChange(task.id, newStatus)}
-                    memberMap={memberMap}
-                  />
-                ))
-              )}
-            </TabsContent>
-          ))}
-        </Tabs>
+        <div className="px-4 pt-4 space-y-3 pb-24">
+          {tasksByStatus[activeTabMobile].length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <CheckSquare className="w-12 h-12 mx-auto mb-4 opacity-30" />
+              <p className="text-sm">No {activeTabMobile.replace('_', ' ')} tasks</p>
+            </div>
+          ) : (
+            tasksByStatus[activeTabMobile].map((task) => (
+              <MobileTaskCard
+                key={task.id}
+                task={task}
+                onView={() => handleViewTask(task.id)}
+                onEdit={() => handleEditTask(task.id)}
+                onDelete={() => handleDeleteTask(task.id, task.title)}
+                onStatusChange={(newStatus) => handleStatusChange(task.id, newStatus)}
+                memberMap={memberMap}
+              />
+            ))
+          )}
+        </div>
       ) : (
         /* Desktop Kanban View */
         tasks.length > 0 ? (
