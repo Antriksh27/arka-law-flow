@@ -7,6 +7,8 @@ interface MobileHeaderProps {
   title: string;
   showBack?: boolean;
   onBack?: () => void;
+  /** Fallback route when there's no browser history entry to go back to */
+  backTo?: string;
   actions?: React.ReactNode;
   className?: string;
 }
@@ -15,24 +17,32 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
   title,
   showBack = false,
   onBack,
+  backTo,
   actions,
   className
 }) => {
   const navigate = useNavigate();
-  
+
   const handleBack = () => {
-    console.log('[MobileHeader] Back button clicked, onBack:', !!onBack);
     if (onBack) {
       onBack();
-    } else {
-      console.log('[MobileHeader] Navigating back with navigate(-1)');
-      navigate(-1);
+      return;
     }
+
+    // react-router keeps an internal history index in window.history.state.idx
+    // If idx is 0/undefined, there's nothing to go back to (e.g. opened via direct link)
+    const idx = (window.history.state as { idx?: number } | null)?.idx ?? 0;
+    if (idx > 0) {
+      navigate(-1);
+      return;
+    }
+
+    navigate(backTo ?? '/');
   };
   
   return (
     <header className={cn(
-      "sticky top-16 z-30 w-full backdrop-blur-md bg-background/95 border-b border-border h-14 sm:hidden",
+      "sticky top-0 z-30 w-full backdrop-blur-md bg-background/95 border-b border-border h-14 sm:hidden",
       "supports-[padding-top:env(safe-area-inset-top)]:pt-[env(safe-area-inset-top)]",
       className
     )}>
