@@ -6,6 +6,7 @@ import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
 };
 
 // Input validation schemas
@@ -15,6 +16,21 @@ const searchTypeEnum = z.enum(['high_court', 'district_court', 'supreme_court', 
 const normalizeCnr = (cnr: string): string => {
   return cnr.toUpperCase().replace(/[^A-Z0-9]/g, '');
 };
+
+// Safety: avoid hanging requests to external APIs
+async function fetchWithTimeout(
+  input: RequestInfo | URL,
+  init: RequestInit,
+  timeoutMs: number
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
 
 const caseSearchSchema = z.object({
   cnr: z.string().trim().max(50).transform(normalizeCnr).optional(),
@@ -1288,24 +1304,25 @@ serve(async (req) => {
 async function authenticateWithLegalkart(userId: string, hashKey: string): Promise<LegalkartAuthResponse> {
   try {
     console.log('Authenticating with Legalkart API...');
-    console.log('User ID provided:', userId ? 'YES' : 'NO');
-    console.log('Hash key provided:', hashKey ? 'YES' : 'NO');
-    
+    // Do not log secrets (user_id/hash_key)
+
     const requestBody = {
       user_id: userId,
       hash_key: hashKey,
     };
     
-    console.log('Request body:', JSON.stringify(requestBody, null, 2));
-    
-    const response = await fetch('https://apiservices.legalkart.com/api/v1/application-service/auth/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
+    const response = await fetchWithTimeout(
+      'https://apiservices.legalkart.com/api/v1/application-service/auth/login',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
       },
-      body: JSON.stringify(requestBody),
-    });
+      15000
+    );
 
     console.log('Response status:', response.status);
     console.log('Response headers:', Object.fromEntries(response.headers.entries()));
@@ -1411,15 +1428,19 @@ async function performCaseSearch(token: string, cnr: string, searchType: string,
       body
     });
 
-    const response = await fetch(endpoint, {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': token,
-        'Accept': 'application/json',
+    const response = await fetchWithTimeout(
+      endpoint,
+      {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token,
+          'Accept': 'application/json',
+        },
+        body,
       },
-      body,
-    });
+      25000
+    );
 
     if (!response.ok) {
       const errorText = await response.text();
