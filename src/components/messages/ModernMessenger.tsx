@@ -426,7 +426,7 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
             {activeTab === 'team' && (teamMembers.length === 0 ? <div className="bg-slate-900 rounded-xl p-8 text-center">
                   <Users className="h-12 w-12 mx-auto mb-3 text-white opacity-40" />
                   <p className="text-sm text-white/70">No team members</p>
-                </div> : teamMembers.map(member => <div key={member.user_id} onClick={() => handleStartDM(member)} className="bg-slate-900 rounded-xl p-4 active:scale-[0.98] transition-all cursor-pointer">
+                </div> : teamMembers.map(member => <div key={member.user_id} onClick={() => handleStartDM(member)} className="rounded-xl p-4 active:scale-[0.98] transition-all cursor-pointer bg-sidebar">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-12 w-12 border-2 border-white/20">
                         <AvatarFallback className="bg-slate-700 text-white">
@@ -434,8 +434,8 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-sm truncate text-white">{member.full_name || member.email}</h3>
-                        <p className="text-xs text-white/60">{member.role}</p>
+                        <h3 className="font-semibold text-sm truncate text-sidebar-foreground">{member.full_name || member.email}</h3>
+                        <p className="text-xs text-sidebar-foreground">{member.role}</p>
                       </div>
                     </div>
                   </div>))}
