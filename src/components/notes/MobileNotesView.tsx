@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { MobileNoteCard } from './MobileNoteCard';
 import { NoteViewDialog } from './NoteViewDialog';
 import { Skeleton } from '@/components/ui/skeleton';
-import { StickyNote } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { StickyNote, Lightbulb } from 'lucide-react';
 
 interface MobileNotesViewProps {
   searchQuery: string;
@@ -22,8 +21,6 @@ export const MobileNotesView: React.FC<MobileNotesViewProps> = ({
   selectedCase,
   onEditNote,
 }) => {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [viewingNote, setViewingNote] = useState<any>(null);
 
   const { data: notes = [], isLoading } = useQuery({
@@ -66,46 +63,42 @@ export const MobileNotesView: React.FC<MobileNotesViewProps> = ({
     (selectedVisibility && selectedVisibility !== 'all-visibility') || 
     (selectedCase && selectedCase !== 'all-cases');
 
-  // Skeleton Loader
+  // Google Keep style skeleton loader
   if (isLoading) {
     return (
-      <div className="px-4 py-3 space-y-3">
-        {[...Array(4)].map((_, i) => (
-          <div key={i} className="rounded-2xl border border-border p-4 space-y-3 bg-card">
-            <div className="flex items-center justify-between">
-              <Skeleton className="h-5 w-2/3" />
-              <Skeleton className="h-4 w-4 rounded-full" />
+      <div className="px-3 py-4">
+        <div className="columns-2 gap-3">
+          {[40, 60, 50, 70, 45, 55].map((height, i) => (
+            <div 
+              key={i} 
+              className="break-inside-avoid mb-3 rounded-xl border border-border bg-muted/30 p-3"
+              style={{ minHeight: `${height * 2}px` }}
+            >
+              <Skeleton className="h-4 w-3/4 mb-2" />
+              <Skeleton className="h-3 w-full mb-1" />
+              <Skeleton className="h-3 w-5/6 mb-1" />
+              <Skeleton className="h-3 w-4/6" />
             </div>
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-4/5" />
-            <div className="flex gap-2 pt-2">
-              <Skeleton className="h-5 w-14 rounded-full" />
-              <Skeleton className="h-5 w-16 rounded-full" />
-            </div>
-            <div className="flex justify-between pt-2 border-t border-border/50">
-              <Skeleton className="h-3 w-20" />
-              <Skeleton className="h-3 w-16" />
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     );
   }
 
-  // Empty State
+  // Empty State - Google Keep style
   if (notes.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 px-6">
-        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-          <StickyNote className="w-8 h-8 text-muted-foreground" />
+      <div className="flex flex-col items-center justify-center py-20 px-6">
+        <div className="w-24 h-24 mb-6 opacity-30">
+          <Lightbulb className="w-full h-full text-muted-foreground" strokeWidth={1} />
         </div>
-        <h3 className="text-lg font-medium text-foreground mb-1">
-          {hasActiveFilters ? 'No notes found' : 'No notes yet'}
+        <h3 className="text-lg font-medium text-foreground mb-2">
+          {hasActiveFilters ? 'No matching notes' : 'Notes you add appear here'}
         </h3>
-        <p className="text-sm text-muted-foreground text-center mb-4">
+        <p className="text-sm text-muted-foreground text-center max-w-xs">
           {hasActiveFilters 
-            ? 'Try adjusting your search or filters'
-            : 'Tap the + button to create your first note'
+            ? 'Try different search terms or filters'
+            : 'Tap the + button to capture thoughts, ideas, and more'
           }
         </p>
       </div>
@@ -118,23 +111,24 @@ export const MobileNotesView: React.FC<MobileNotesViewProps> = ({
 
   return (
     <>
-      <div className="px-4 py-3 space-y-3 pb-24">
+      <div className="px-3 py-4 pb-24">
         {/* Pinned Notes Section */}
         {pinnedNotes.length > 0 && (
           <>
-            <div className="flex items-center gap-2 pt-1">
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
                 Pinned
               </span>
-              <div className="flex-1 h-px bg-border" />
             </div>
-            {pinnedNotes.map((note) => (
-              <MobileNoteCard
-                key={note.id}
-                note={note}
-                onClick={() => setViewingNote(note)}
-              />
-            ))}
+            <div className="columns-2 gap-3">
+              {pinnedNotes.map((note) => (
+                <MobileNoteCard
+                  key={note.id}
+                  note={note}
+                  onClick={() => setViewingNote(note)}
+                />
+              ))}
+            </div>
           </>
         )}
 
@@ -142,20 +136,21 @@ export const MobileNotesView: React.FC<MobileNotesViewProps> = ({
         {unpinnedNotes.length > 0 && (
           <>
             {pinnedNotes.length > 0 && (
-              <div className="flex items-center gap-2 pt-2">
-                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              <div className="flex items-center gap-2 mb-3 mt-4">
+                <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
                   Others
                 </span>
-                <div className="flex-1 h-px bg-border" />
               </div>
             )}
-            {unpinnedNotes.map((note) => (
-              <MobileNoteCard
-                key={note.id}
-                note={note}
-                onClick={() => setViewingNote(note)}
-              />
-            ))}
+            <div className="columns-2 gap-3">
+              {unpinnedNotes.map((note) => (
+                <MobileNoteCard
+                  key={note.id}
+                  note={note}
+                  onClick={() => setViewingNote(note)}
+                />
+              ))}
+            </div>
           </>
         )}
       </div>
@@ -164,6 +159,12 @@ export const MobileNotesView: React.FC<MobileNotesViewProps> = ({
         note={viewingNote}
         open={!!viewingNote}
         onClose={() => setViewingNote(null)}
+        onEdit={() => {
+          if (viewingNote) {
+            onEditNote(viewingNote);
+            setViewingNote(null);
+          }
+        }}
       />
     </>
   );
