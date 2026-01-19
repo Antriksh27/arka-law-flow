@@ -101,13 +101,17 @@ const Hearings = () => {
           }
         />
 
-        <div className="p-4 space-y-4">
+        {/* Sticky Search Bar */}
+        <div className="sticky top-14 z-30 bg-background px-4 py-3 border-b border-border">
           <Input
             placeholder="Search hearings..."
             value={filters.searchQuery}
             onChange={(e) => setFilters({ ...filters, searchQuery: e.target.value })}
             className="w-full"
           />
+        </div>
+
+        <div className="p-4 space-y-4">
 
           {isMobileLoading ? (
             <div className="flex items-center justify-center py-12">
