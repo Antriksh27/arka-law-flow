@@ -27,10 +27,13 @@ export const WeekCalendar: React.FC<WeekCalendarProps> = ({ events, isLoading })
       task: 'bg-green-500',
     };
 
+    // Get unique event types for this day
+    const uniqueTypes = [...new Set(dayEvents.types)].slice(0, 3);
+
     return (
-      <div className="flex gap-0.5 justify-center mt-1">
-        {dayEvents.types.slice(0, 3).map((type, idx) => (
-          <div key={idx} className={`w-1 h-1 rounded-full ${colors[type as keyof typeof colors] || 'bg-gray-400'}`} />
+      <div className="flex gap-0.5 justify-center mt-1.5">
+        {uniqueTypes.map((type, idx) => (
+          <div key={idx} className={`w-1.5 h-1.5 rounded-full ${colors[type as keyof typeof colors] || 'bg-slate-400'}`} />
         ))}
       </div>
     );
@@ -39,15 +42,20 @@ export const WeekCalendar: React.FC<WeekCalendarProps> = ({ events, isLoading })
   if (isLoading) {
     return (
       <section className="mb-6">
-        <h2 className="text-base font-semibold text-foreground mb-3">This Week</h2>
-        <div className="bg-card rounded-xl border border-border p-4 animate-pulse">
+        <h2 className="text-base font-semibold text-foreground mb-3">Weekly Overview</h2>
+        <div className="bg-white rounded-2xl p-4 animate-pulse shadow-sm">
           <div className="flex justify-between mb-4">
             {weekDays.map((_, i) => (
-              <div key={i} className="flex flex-col items-center w-10">
-                <div className="h-3 bg-muted rounded w-6 mb-2" />
-                <div className="h-8 bg-muted rounded-full w-8" />
+              <div key={i} className="flex flex-col items-center flex-1">
+                <div className="h-3 bg-slate-100 rounded w-6 mb-2" />
+                <div className="h-9 w-9 bg-slate-100 rounded-full" />
               </div>
             ))}
+          </div>
+          <div className="flex justify-center gap-4 pt-3 border-t border-slate-100">
+            <div className="h-4 bg-slate-100 rounded w-16" />
+            <div className="h-4 bg-slate-100 rounded w-16" />
+            <div className="h-4 bg-slate-100 rounded w-16" />
           </div>
         </div>
       </section>
@@ -56,21 +64,21 @@ export const WeekCalendar: React.FC<WeekCalendarProps> = ({ events, isLoading })
 
   return (
     <section className="mb-6">
-      <h2 className="text-base font-semibold text-foreground mb-3">This Week</h2>
-      <div className="bg-card rounded-xl border border-border p-4">
+      <h2 className="text-base font-semibold text-foreground mb-3">Weekly Overview</h2>
+      <div className="bg-white rounded-2xl p-4 shadow-sm">
         <div className="flex justify-between mb-2">
           {weekDays.map((day, index) => {
             const isToday = isSameDay(day, today);
             return (
               <div key={index} className="flex flex-col items-center flex-1">
-                <span className="text-xs text-muted-foreground mb-1">
-                  {format(day, 'EEE').charAt(0)}
+                <span className="text-xs text-muted-foreground mb-1.5 font-medium">
+                  {format(day, 'EEE')}
                 </span>
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium transition-colors ${
+                  className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold transition-colors ${
                     isToday
                       ? 'bg-primary text-primary-foreground'
-                      : 'text-foreground hover:bg-muted'
+                      : 'text-foreground hover:bg-slate-100'
                   }`}
                 >
                   {format(day, 'd')}
@@ -80,16 +88,18 @@ export const WeekCalendar: React.FC<WeekCalendarProps> = ({ events, isLoading })
             );
           })}
         </div>
-        <div className="mt-3 pt-3 border-t border-border flex items-center justify-center gap-3 text-xs">
-          <div className="flex items-center gap-1">
+        
+        {/* Legend */}
+        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-center gap-4 text-xs">
+          <div className="flex items-center gap-1.5">
             <div className="w-2 h-2 rounded-full bg-red-500" />
             <span className="text-muted-foreground">Hearings</span>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             <div className="w-2 h-2 rounded-full bg-blue-500" />
-            <span className="text-muted-foreground">Appointments</span>
+            <span className="text-muted-foreground">Meetings</span>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             <div className="w-2 h-2 rounded-full bg-green-500" />
             <span className="text-muted-foreground">Tasks</span>
           </div>
