@@ -176,30 +176,32 @@ function TeamDirectory() {
         </div>
       )}
 
-      {/* Mobile Search & Filter Bar */}
+      {/* Mobile Search & Filter Bar - Sticky */}
       {isMobile && (
-        <div className="flex items-center gap-2 px-4 pt-4 pb-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <input 
-              type="text" 
-              className="w-full rounded-xl bg-muted pl-10 pr-4 py-3 text-base border-0 focus:ring-2 focus:ring-primary outline-none min-h-[48px]" 
-              placeholder="Search team..." 
-              value={search} 
-              onChange={e => setSearch(e.target.value)} 
-            />
+        <div className="sticky top-14 z-30 bg-background px-4 py-3 border-b border-border">
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <input 
+                type="text" 
+                className="w-full rounded-xl bg-muted pl-10 pr-4 py-3 text-base border-0 focus:ring-2 focus:ring-primary outline-none min-h-[48px]" 
+                placeholder="Search team..." 
+                value={search} 
+                onChange={e => setSearch(e.target.value)} 
+              />
+            </div>
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={() => setShowMobileFilters(true)}
+              className="relative h-12 w-12 rounded-xl"
+            >
+              <SlidersHorizontal className="w-5 h-5" />
+              {selectedFilter !== "all" && (
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-primary rounded-full" />
+              )}
+            </Button>
           </div>
-          <Button 
-            variant="outline" 
-            size="icon"
-            onClick={() => setShowMobileFilters(true)}
-            className="relative h-12 w-12 rounded-xl"
-          >
-            <SlidersHorizontal className="w-5 h-5" />
-            {selectedFilter !== "all" && (
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-primary rounded-full" />
-            )}
-          </Button>
         </div>
       )}
       {/* Main table + details */}

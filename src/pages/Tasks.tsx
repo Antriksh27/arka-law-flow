@@ -392,9 +392,9 @@ const Tasks = () => {
         </div>
       )}
 
-      {/* Mobile Search & Filter */}
-      {isMobile ? (
-        <div className="px-3 pt-3">
+      {/* Mobile Search & Filter - Sticky */}
+      {isMobile && (
+        <div className="sticky top-14 z-30 bg-background px-4 py-3 border-b border-border">
           <MobileSearchBar
             value={searchTerm}
             onChange={setSearchTerm}
@@ -402,8 +402,29 @@ const Tasks = () => {
             activeFiltersCount={activeFiltersCount}
           />
         </div>
-      ) : (
-        /* Desktop Filters */
+      )}
+
+      {/* Mobile Status Tabs - Sticky continuation */}
+      {isMobile && (
+        <div className="sticky top-[8.5rem] z-20 bg-background px-4 py-2 border-b border-border">
+          <Tabs value={activeTabMobile} onValueChange={(value) => setActiveTabMobile(value as 'todo' | 'in_progress' | 'completed')} className="w-full">
+            <TabsList className="grid w-full grid-cols-3 bg-card rounded-2xl shadow-sm border border-border h-12 p-1">
+              <TabsTrigger value="todo" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl text-xs font-medium transition-all h-10">
+                To Do ({tasksByStatus.todo.length})
+              </TabsTrigger>
+              <TabsTrigger value="in_progress" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl text-xs font-medium transition-all h-10">
+                In Progress ({tasksByStatus.in_progress.length})
+              </TabsTrigger>
+              <TabsTrigger value="completed" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl text-xs font-medium transition-all h-10">
+                Done ({tasksByStatus.completed.length})
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+      )}
+
+      {/* Desktop Filters */}
+      {!isMobile && (
         <Card className="bg-white border-gray-200">
           <CardContent className="p-6">
             <div className="flex flex-wrap gap-4 items-center">
