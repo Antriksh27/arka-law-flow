@@ -5,7 +5,7 @@ import { DocumentsMainView } from '../components/documents/DocumentsMainView';
 import { DocumentsHeader } from '../components/documents/DocumentsHeader';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileHeader } from '@/components/mobile/MobileHeader';
-import { BottomNavBar } from '@/components/mobile/BottomNavBar';
+
 import { MobileFAB } from '@/components/mobile/MobileFAB';
 import { Upload, FolderOpen } from 'lucide-react';
 import { UploadDocumentDialog } from '@/components/documents/UploadDocumentDialog';
@@ -86,7 +86,7 @@ const Documents = () => {
           label="Upload"
         />
         
-        <BottomNavBar />
+        
 
         <UploadDocumentDialog 
           open={showUploadDialog} 

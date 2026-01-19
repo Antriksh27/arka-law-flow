@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { EditCaseDialog } from '@/components/cases/EditCaseDialog';
 import { MobileHeader } from '@/components/mobile/MobileHeader';
-import { BottomNavBar } from '@/components/mobile/BottomNavBar';
+
 import { HeroCard } from '@/components/mobile/HeroCard';
 import { BottomSheet } from '@/components/mobile/BottomSheet';
 import { PullToRefresh } from '@/components/mobile/PullToRefresh';
@@ -287,7 +287,6 @@ export default function CaseDetailEnhanced() {
             onAddTask={() => setIsTaskModalOpen(true)}
           />
         </div>
-        {isMobile && <BottomNavBar />}
       </div>
     );
   }
@@ -486,8 +485,6 @@ export default function CaseDetailEnhanced() {
         </div>
       </PullToRefresh>
 
-      {/* Bottom Navigation */}
-      {isMobile && <BottomNavBar />}
 
       {/* Modals */}
       {isNoteModalOpen && <CreateNoteMultiModal open={isNoteModalOpen} onClose={() => setIsNoteModalOpen(false)} caseId={id} />}

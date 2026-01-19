@@ -42,7 +42,7 @@ import TimeUtils from "@/lib/timeUtils";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { MobileHeader } from "@/components/mobile/MobileHeader";
-import { BottomNavBar } from "@/components/mobile/BottomNavBar";
+
 import { differenceInDays } from "date-fns";
 import { useEnableAutoFetchPending } from "@/hooks/useEnableAutoFetchPending";
 
@@ -452,7 +452,7 @@ const StaleCases = () => {
           </div>
         </div>
 
-        <BottomNavBar />
+        
       </div>
     );
   }

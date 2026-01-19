@@ -17,7 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileTaskCard } from '@/components/tasks/MobileTaskCard';
 import { MobileFAB } from '@/components/mobile/MobileFAB';
-import { BottomNavBar } from '@/components/mobile/BottomNavBar';
+
 import { MobileSearchBar } from '@/components/cases/MobileSearchBar';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -599,8 +599,6 @@ const Tasks = () => {
         />
       )}
 
-      {/* Mobile Bottom Nav */}
-      {isMobile && <BottomNavBar />}
 
       {/* Mobile Filter Sheet */}
       <MobileFilterSheet />

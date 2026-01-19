@@ -15,7 +15,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileHeader } from '@/components/mobile/MobileHeader';
-import { BottomNavBar } from '@/components/mobile/BottomNavBar';
+
 
 export const ECourts = () => {
   const [selectedCase, setSelectedCase] = useState<any>(null);
@@ -194,7 +194,7 @@ export const ECourts = () => {
           </Tabs>
         </div>
 
-        <BottomNavBar />
+        
       </div>
     );
   }

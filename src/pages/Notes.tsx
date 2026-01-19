@@ -7,7 +7,7 @@ import { EditNoteDialog } from '../components/notes/EditNoteDialog';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobilePageContainer } from '@/components/mobile/MobilePageContainer';
 import { MobileFAB } from '@/components/mobile/MobileFAB';
-import { BottomNavBar } from '@/components/mobile/BottomNavBar';
+
 import { Plus } from 'lucide-react';
 
 const Notes = () => {
@@ -66,8 +66,6 @@ const Notes = () => {
         />
       )}
 
-      {/* Mobile Bottom Nav */}
-      {isMobile && <BottomNavBar />}
 
       <CreateNoteMultiModal
         open={showCreateDialog}

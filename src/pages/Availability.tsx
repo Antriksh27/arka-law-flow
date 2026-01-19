@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar, Clock, AlertCircle, List, LayoutGrid } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileHeader } from '@/components/mobile/MobileHeader';
-import { BottomNavBar } from '@/components/mobile/BottomNavBar';
+
 
 const Availability = () => {
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
@@ -67,7 +67,7 @@ const Availability = () => {
           </Tabs>
         </div>
 
-        <BottomNavBar />
+        
       </div>
     );
   }

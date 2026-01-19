@@ -15,7 +15,7 @@ import { createCometChatUser } from '@/lib/cometchat';
 import { toast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileHeader } from '@/components/mobile/MobileHeader';
-import { BottomNavBar } from '@/components/mobile/BottomNavBar';
+
 import { MobileFAB } from '@/components/mobile/MobileFAB';
 interface TeamMember {
   user_id: string;
@@ -435,7 +435,7 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
           </div>
         </div>
 
-        <BottomNavBar />
+        
       </div>
     );
   }

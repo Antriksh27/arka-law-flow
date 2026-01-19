@@ -8,7 +8,7 @@ import { HearingsSummary } from '../components/hearings/HearingsSummary';
 import { FilterState, ViewType } from '../components/hearings/types';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileHeader } from '@/components/mobile/MobileHeader';
-import { BottomNavBar } from '@/components/mobile/BottomNavBar';
+
 import { MobileHearingCard } from '../components/hearings/MobileHearingCard';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -147,7 +147,7 @@ const Hearings = () => {
           </SheetContent>
         </Sheet>
 
-        <BottomNavBar />
+        
       </div>
     );
   }

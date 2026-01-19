@@ -18,7 +18,7 @@ import { ClientQuickActions } from './ClientQuickActions';
 import { EditClientDialog } from './EditClientDialog';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileHeader } from '@/components/mobile/MobileHeader';
-import { BottomNavBar } from '@/components/mobile/BottomNavBar';
+
 import { BarChart3, CheckSquare, Calendar, Briefcase, StickyNote, FileText, Mail, User, Clock, Star } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -288,7 +288,5 @@ export const ClientTabs: React.FC<ClientTabsProps> = ({
       {showEditDialog && <EditClientDialog open={showEditDialog} onOpenChange={setShowEditDialog} client={client} onSuccess={onUpdate} />}
     </div>
     
-    {/* Mobile Bottom Nav */}
-    {isMobile && <BottomNavBar />}
   </>;
 };

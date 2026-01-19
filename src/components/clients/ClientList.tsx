@@ -21,7 +21,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileClientCard } from './MobileClientCard';
 import { MobileFAB } from '@/components/mobile/MobileFAB';
-import { BottomNavBar } from '@/components/mobile/BottomNavBar';
+
 import { MobileSearchBar } from '@/components/cases/MobileSearchBar';
 import { MobileHeader } from '@/components/mobile/MobileHeader';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -953,8 +953,6 @@ export const ClientList = () => {
         />
       )}
 
-      {/* Mobile Bottom Nav */}
-      {isMobile && <BottomNavBar />}
 
       {/* Mobile Filter Sheet */}
       <MobileFilterSheet />

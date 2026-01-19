@@ -8,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileHeader } from '@/components/mobile/MobileHeader';
-import { BottomNavBar } from '@/components/mobile/BottomNavBar';
+
 import { MobileFAB } from '@/components/mobile/MobileFAB';
 interface DashboardStats {
   pendingTasks: number;
@@ -287,7 +287,7 @@ const StaffDashboard = () => {
           icon={Plus}
         />
 
-        <BottomNavBar />
+        
       </div>
     );
   }
