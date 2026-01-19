@@ -24,7 +24,7 @@ import { Search } from 'lucide-react';
 // Mobile-specific components
 import { MobileDashboardHeader } from './mobile/MobileDashboardHeader';
 import { MetricsStrip } from './mobile/MetricsStrip';
-import { CompactCases } from './mobile/CompactCases';
+
 import { WeekCalendar } from './mobile/WeekCalendar';
 import { QuickActionsBar } from './mobile/QuickActionsBar';
 import { MobileSearchModal } from './mobile/MobileSearchModal';
@@ -121,17 +121,6 @@ const WorkspaceDashboard = () => {
                 onAddNote={() => setShowNoteDialog(true)}
               />
 
-              {/* Active Cases */}
-              <CompactCases 
-                cases={(data?.caseHighlights || []).slice(0, 3).map(c => ({
-                  id: c.id,
-                  title: c.case_title,
-                  client_name: (c as any).client?.full_name || 'Unknown Client',
-                  status: c.status,
-                  next_hearing_date: c.next_hearing_date
-                }))} 
-                isLoading={isLoading} 
-              />
 
               {/* Weekly Overview */}
               <WeekCalendar events={weekCalendarEvents} isLoading={isLoading} />
