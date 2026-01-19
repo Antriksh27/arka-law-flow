@@ -13,7 +13,7 @@ export const MobilePageContainer: React.FC<MobilePageContainerProps> = ({
   return (
     <div
       className={cn(
-        "w-full min-h-[100dvh] pb-6",
+        "w-full h-full min-h-0 flex flex-col",
         className
       )}
     >
