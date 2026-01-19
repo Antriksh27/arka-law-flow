@@ -135,11 +135,11 @@ export const LegalkartCaseSearch: React.FC<LegalkartCaseSearchProps> = ({
       caseNo?: string;
       caseYear?: string;
     }) => {
-      const { data, error } = await supabase.functions.invoke('legalkart-api', {
-        body: { 
-          action: 'search', 
+      const invokePromise = supabase.functions.invoke('legalkart-api', {
+        body: {
+          action: 'search',
           cnr: cnr || undefined,
-          searchType, 
+          searchType,
           caseId,
           caseMode: caseMode === 'REGISTRATION' ? 'REGISTRATION' : undefined,
           caseType: caseMode === 'REGISTRATION' ? caseType : undefined,
@@ -147,6 +147,15 @@ export const LegalkartCaseSearch: React.FC<LegalkartCaseSearchProps> = ({
           caseYear: caseMode === 'REGISTRATION' ? caseYear : undefined,
         },
       });
+
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Search timed out. Please retry.')), 30000);
+      });
+
+      const { data, error } = (await Promise.race([
+        invokePromise,
+        timeoutPromise,
+      ])) as { data: any; error: any };
 
       if (error) throw error;
       return data;
