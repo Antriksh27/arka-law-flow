@@ -13,7 +13,7 @@ export const MobilePageContainer: React.FC<MobilePageContainerProps> = ({
   return (
     <div 
       className={cn(
-        "w-full min-h-screen overflow-x-hidden pb-6",
+        "w-full min-h-[100dvh] overflow-x-hidden overflow-y-auto pb-6",
         className
       )}
     >
