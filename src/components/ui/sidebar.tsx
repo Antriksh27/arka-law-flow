@@ -135,7 +135,7 @@ export function MobileSidebar({
                       "h-5 w-5 flex-shrink-0",
                       isActive ? "text-slate-900" : "text-white"
                     )} />
-                    <span className="flex-1">{item.title}</span>
+                    <span className={cn("flex-1", isActive ? "text-slate-900" : "text-white")}>{item.title}</span>
                     {isActive && <ChevronRight className="h-4 w-4 text-slate-900" />}
                   </Link>
                 );
@@ -158,7 +158,7 @@ export function MobileSidebar({
                   "h-5 w-5 flex-shrink-0",
                   pathname === "/settings" ? "text-slate-900" : "text-white"
                 )} />
-                <span className="flex-1">Settings</span>
+                <span className={cn("flex-1", pathname === "/settings" ? "text-slate-900" : "text-white")}>Settings</span>
                 {pathname === "/settings" && <ChevronRight className="h-4 w-4 text-slate-900" />}
               </Link>
             </div>
