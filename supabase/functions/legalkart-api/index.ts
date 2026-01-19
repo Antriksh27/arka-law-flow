@@ -25,6 +25,16 @@ const caseSearchSchema = z.object({
   caseType: z.string().optional(),
   caseNo: z.string().optional(),
   caseYear: z.string().optional(),
+}).refine((data) => {
+  // For REGISTRATION mode, cnr is not required but caseType, caseNo, caseYear are
+  if (data.caseMode === 'REGISTRATION') {
+    return !!data.caseType && !!data.caseNo && !!data.caseYear;
+  }
+  // For CNR mode, cnr is required
+  return !!data.cnr;
+}, {
+  message: "CNR is required for CNR mode, or caseType/caseNo/caseYear are required for REGISTRATION mode",
+  path: ["cnr"]
 })
 
 const batchSearchSchema = z.object({
