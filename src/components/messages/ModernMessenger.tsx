@@ -15,7 +15,6 @@ import { createCometChatUser } from '@/lib/cometchat';
 import { toast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileHeader } from '@/components/mobile/MobileHeader';
-
 import { MobileFAB } from '@/components/mobile/MobileFAB';
 interface TeamMember {
   user_id: string;
@@ -93,25 +92,21 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
     const fetchConversations = async () => {
       if (!isCometChatReady || !cometChatUser) return;
       try {
-        const conversationsRequest = new CometChat.ConversationsRequestBuilder()
-          .setLimit(50)
-          .setConversationType(CometChat.RECEIVER_TYPE.USER) // Only fetch 1-on-1 user conversations
-          .build();
+        const conversationsRequest = new CometChat.ConversationsRequestBuilder().setLimit(50).setConversationType(CometChat.RECEIVER_TYPE.USER) // Only fetch 1-on-1 user conversations
+        .build();
         const conversationsList: CometChat.Conversation[] = await conversationsRequest.fetchNext();
-        
+
         // Filter to only show conversations where current user is involved
         const currentUserId = cometChatUser.getUid();
         const filteredConversations = conversationsList.filter((conv: CometChat.Conversation) => {
           const lastMessage = conv.getLastMessage();
           if (!lastMessage) return false;
-          
           const senderId = lastMessage.getSender()?.getUid();
           const receiverId = lastMessage.getReceiverId();
-          
+
           // Only include if current user is sender or receiver
           return senderId === currentUserId || receiverId === currentUserId;
         });
-        
         setConversations(filteredConversations);
         console.log('Filtered conversations for user:', currentUserId, filteredConversations);
       } catch (error) {
@@ -163,7 +158,10 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
             // Only add messages for the selected conversation
             if (message.getSender().getUid() === selectedUser.getUid() || message.getReceiverId() === selectedUser.getUid()) {
               setMessages(prevMessages => [...prevMessages, message]);
-              setMessageStatuses(prev => ({ ...prev, [message.getId().toString()]: 'sent' }));
+              setMessageStatuses(prev => ({
+                ...prev,
+                [message.getId().toString()]: 'sent'
+              }));
               scrollToBottom();
               // Mark as read immediately since we're viewing
               CometChat.markAsRead(message);
@@ -173,14 +171,20 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
             const messageId = messageReceipt.getMessageId();
             setMessageStatuses(prev => {
               if (prev[messageId] !== 'read') {
-                return { ...prev, [messageId]: 'delivered' };
+                return {
+                  ...prev,
+                  [messageId]: 'delivered'
+                };
               }
               return prev;
             });
           },
           onMessagesRead: (messageReceipt: CometChat.MessageReceipt) => {
             const messageId = messageReceipt.getMessageId();
-            setMessageStatuses(prev => ({ ...prev, [messageId]: 'read' }));
+            setMessageStatuses(prev => ({
+              ...prev,
+              [messageId]: 'read'
+            }));
           },
           onTypingStarted: (typingIndicator: CometChat.TypingIndicator) => {
             if (typingIndicator.getSender().getUid() === selectedUser.getUid()) {
@@ -305,20 +309,14 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
   // Mobile view
   if (isMobile) {
     if (showMobileChat && selectedUser) {
-      return (
-        <div className="fixed inset-0 flex flex-col bg-background overflow-hidden z-50">
+      return <div className="fixed inset-0 flex flex-col bg-background overflow-hidden z-50">
           {/* Header - Fixed top */}
           <div className="flex-shrink-0 bg-white border-b border-slate-200 safe-area-top">
             <div className="flex items-center gap-3 h-14 px-4">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowMobileChat(false);
-                  setSelectedUser(null);
-                }}
-                className="flex-shrink-0 p-2 -ml-2 rounded-xl active:scale-95 transition-transform min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-slate-100"
-                aria-label="Go back"
-              >
+              <button type="button" onClick={() => {
+              setShowMobileChat(false);
+              setSelectedUser(null);
+            }} className="flex-shrink-0 p-2 -ml-2 rounded-xl active:scale-95 transition-transform min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-slate-100" aria-label="Go back">
                 <ArrowLeft className="w-5 h-5 text-slate-900" />
               </button>
               <h1 className="text-lg font-semibold text-slate-900 truncate">{selectedUser.getName()}</h1>
@@ -326,155 +324,90 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
           </div>
 
           {/* Messages - Scrollable middle */}
-          <div 
-            ref={scrollContainerRef} 
-            className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-2"
-            style={{ minHeight: 0 }}
-          >
+          <div ref={scrollContainerRef} className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-2" style={{
+          minHeight: 0
+        }}>
             {messages.map((message, index) => {
-              const isMe = message.getSender().getUid() === cometChatUser?.getUid();
-              const messageText = (message as CometChat.TextMessage).getText?.() || '';
-              const messageId = message.getId().toString();
-              const status = messageStatuses[messageId] || 'sent';
-              const timestamp = new Date(message.getSentAt() * 1000).toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit'
-              });
-              
-              return (
-                <div key={message.getId()} className={cn('flex w-full', isMe ? 'justify-end' : 'justify-start')}>
+            const isMe = message.getSender().getUid() === cometChatUser?.getUid();
+            const messageText = (message as CometChat.TextMessage).getText?.() || '';
+            const messageId = message.getId().toString();
+            const status = messageStatuses[messageId] || 'sent';
+            const timestamp = new Date(message.getSentAt() * 1000).toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit'
+            });
+            return <div key={message.getId()} className={cn('flex w-full', isMe ? 'justify-end' : 'justify-start')}>
                   <div className={cn('flex flex-col max-w-[75%]', isMe ? 'items-end' : 'items-start')}>
                     <div className={cn('flex items-end gap-2', isMe ? 'flex-row-reverse' : 'flex-row')}>
-                      {!isMe && (
-                        <Avatar className="h-6 w-6 flex-shrink-0 border border-white/20">
+                      {!isMe && <Avatar className="h-6 w-6 flex-shrink-0 border border-white/20">
                           <AvatarImage src={message.getSender().getAvatar()} />
                           <AvatarFallback className="text-xs bg-slate-700 text-white">
                             {getInitials(message.getSender().getName())}
                           </AvatarFallback>
-                        </Avatar>
-                      )}
-                      <div
-                        className={cn(
-                          'px-3 py-2 rounded-2xl text-sm',
-                          isMe 
-                            ? 'bg-blue-50 text-gray-900' 
-                            : 'bg-gray-100 text-gray-900'
-                        )}
-                      >
+                        </Avatar>}
+                      <div className={cn('px-3 py-2 rounded-2xl text-sm', isMe ? 'bg-blue-50 text-gray-900' : 'bg-gray-100 text-gray-900')}>
                         <p className="break-words whitespace-pre-wrap">{messageText}</p>
                       </div>
                     </div>
                     {/* Timestamp and read receipt */}
                     <div className={cn('flex items-center gap-1 mt-0.5 px-1', isMe ? 'flex-row-reverse' : 'flex-row')}>
                       <span className="text-[10px] text-gray-400">{timestamp}</span>
-                      {isMe && (
-                        <span className="flex items-center">
-                          {status === 'read' ? (
-                            <CheckCheck className="h-3 w-3 text-blue-500" />
-                          ) : status === 'delivered' ? (
-                            <CheckCheck className="h-3 w-3 text-gray-400" />
-                          ) : (
-                            <Check className="h-3 w-3 text-gray-400" />
-                          )}
-                        </span>
-                      )}
+                      {isMe && <span className="flex items-center">
+                          {status === 'read' ? <CheckCheck className="h-3 w-3 text-blue-500" /> : status === 'delivered' ? <CheckCheck className="h-3 w-3 text-gray-400" /> : <Check className="h-3 w-3 text-gray-400" />}
+                        </span>}
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                </div>;
+          })}
             <div ref={messagesEndRef} />
           </div>
 
           {/* Input - Fixed bottom */}
           <div className="flex-shrink-0 border-t border-slate-200 bg-white p-3 pb-safe">
             <div className="flex items-center gap-2">
-              <Input
-                placeholder="Type a message..."
-                value={inputValue}
-                onChange={handleInputChange}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    handleSendMessage();
-                  }
-                }}
-                className="flex-1 bg-slate-50 text-slate-900 placeholder:text-slate-400 border-slate-200 rounded-full px-4"
-              />
-              <Button 
-                onClick={handleSendMessage} 
-                size="icon" 
-                className="bg-slate-900 text-white hover:bg-slate-800 rounded-full h-10 w-10 flex-shrink-0"
-              >
+              <Input placeholder="Type a message..." value={inputValue} onChange={handleInputChange} onKeyPress={e => {
+              if (e.key === 'Enter') {
+                handleSendMessage();
+              }
+            }} className="flex-1 bg-slate-50 text-slate-900 placeholder:text-slate-400 border-slate-200 rounded-full px-4" />
+              <Button onClick={handleSendMessage} size="icon" className="bg-slate-900 text-white hover:bg-slate-800 rounded-full h-10 w-10 flex-shrink-0">
                 <Send className="h-4 w-4" />
               </Button>
             </div>
           </div>
-        </div>
-      );
+        </div>;
     }
 
     // Chat list view
-    return (
-      <div className="min-h-screen bg-background pb-24">
+    return <div className="min-h-screen bg-background pb-24">
         <MobileHeader title="Messages" />
 
         <div className="p-4 space-y-4">
-          <Input
-            placeholder="Search conversations..."
-            className="w-full bg-white text-slate-900 placeholder:text-slate-400 border-slate-200"
-          />
+          <Input placeholder="Search conversations..." className="w-full bg-white text-slate-900 placeholder:text-slate-400 border-slate-200" />
 
           <div className="flex gap-2">
-            <Button
-              variant={activeTab === 'chats' ? 'default' : 'outline'}
-              className={cn(
-                "flex-1",
-                activeTab === 'chats' 
-                  ? "bg-slate-900 text-white hover:bg-slate-800" 
-                  : "bg-white text-slate-900 border-slate-200 hover:bg-slate-50"
-              )}
-              onClick={() => setActiveTab('chats')}
-            >
+            <Button variant={activeTab === 'chats' ? 'default' : 'outline'} className={cn("flex-1", activeTab === 'chats' ? "bg-slate-900 text-white hover:bg-slate-800" : "bg-white text-slate-900 border-slate-200 hover:bg-slate-50")} onClick={() => setActiveTab('chats')}>
               <MessageCircle className="h-4 w-4 mr-2" />
               Chats
             </Button>
-            <Button
-              variant={activeTab === 'team' ? 'default' : 'outline'}
-              className={cn(
-                "flex-1",
-                activeTab === 'team' 
-                  ? "bg-slate-900 text-white hover:bg-slate-800" 
-                  : "bg-white text-slate-900 border-slate-200 hover:bg-slate-50"
-              )}
-              onClick={() => setActiveTab('team')}
-            >
+            <Button variant={activeTab === 'team' ? 'default' : 'outline'} className={cn("flex-1", activeTab === 'team' ? "bg-slate-900 text-white hover:bg-slate-800" : "bg-white text-slate-900 border-slate-200 hover:bg-slate-50")} onClick={() => setActiveTab('team')}>
               <Users className="h-4 w-4 mr-2" />
               Team
             </Button>
           </div>
 
           <div className="space-y-2">
-            {activeTab === 'chats' && (
-              conversations.length === 0 ? (
-                <div className="bg-slate-900 rounded-xl p-8 text-center">
+            {activeTab === 'chats' && (conversations.length === 0 ? <div className="bg-slate-900 rounded-xl p-8 text-center">
                   <MessageCircle className="h-12 w-12 mx-auto mb-3 text-white opacity-40" />
                   <p className="text-sm text-white/70">No conversations yet</p>
-                </div>
-              ) : (
-                conversations.map((conversation) => {
-                  const lastMessage = conversation.getLastMessage();
-                  const lastMessageText = lastMessage ? (lastMessage as CometChat.TextMessage).getText?.() || 'Media' : 'No messages';
-                  const conversationWith = conversation.getConversationWith() as CometChat.User;
-                  
-                  return (
-                    <div
-                      key={conversation.getConversationId()}
-                      onClick={() => {
-                        setSelectedUser(conversationWith);
-                        setShowMobileChat(true);
-                      }}
-                      className="bg-slate-900 rounded-xl p-4 active:scale-[0.98] transition-all cursor-pointer"
-                    >
+                </div> : conversations.map(conversation => {
+            const lastMessage = conversation.getLastMessage();
+            const lastMessageText = lastMessage ? (lastMessage as CometChat.TextMessage).getText?.() || 'Media' : 'No messages';
+            const conversationWith = conversation.getConversationWith() as CometChat.User;
+            return <div key={conversation.getConversationId()} onClick={() => {
+              setSelectedUser(conversationWith);
+              setShowMobileChat(true);
+            }} className="rounded-xl p-4 active:scale-[0.98] transition-all cursor-pointer bg-sidebar text-sidebar-foreground">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-12 w-12 border-2 border-white/20">
                           <AvatarImage src={conversationWith.getAvatar()} />
@@ -483,29 +416,17 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-sm truncate text-white">{conversationWith.getName()}</h3>
-                          <p className="text-xs text-white/60 truncate">{lastMessageText}</p>
+                          <h3 className="font-semibold text-sm truncate text-sidebar-foreground">{conversationWith.getName()}</h3>
+                          <p className="text-xs truncate text-sidebar-foreground">{lastMessageText}</p>
                         </div>
                       </div>
-                    </div>
-                  );
-                })
-              )
-            )}
+                    </div>;
+          }))}
 
-            {activeTab === 'team' && (
-              teamMembers.length === 0 ? (
-                <div className="bg-slate-900 rounded-xl p-8 text-center">
+            {activeTab === 'team' && (teamMembers.length === 0 ? <div className="bg-slate-900 rounded-xl p-8 text-center">
                   <Users className="h-12 w-12 mx-auto mb-3 text-white opacity-40" />
                   <p className="text-sm text-white/70">No team members</p>
-                </div>
-              ) : (
-                teamMembers.map((member) => (
-                  <div
-                    key={member.user_id}
-                    onClick={() => handleStartDM(member)}
-                    className="bg-slate-900 rounded-xl p-4 active:scale-[0.98] transition-all cursor-pointer"
-                  >
+                </div> : teamMembers.map(member => <div key={member.user_id} onClick={() => handleStartDM(member)} className="bg-slate-900 rounded-xl p-4 active:scale-[0.98] transition-all cursor-pointer">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-12 w-12 border-2 border-white/20">
                         <AvatarFallback className="bg-slate-700 text-white">
@@ -517,16 +438,12 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
                         <p className="text-xs text-white/60">{member.role}</p>
                       </div>
                     </div>
-                  </div>
-                ))
-              )
-            )}
+                  </div>))}
           </div>
         </div>
 
         
-      </div>
-    );
+      </div>;
   }
 
   // Desktop view
@@ -712,22 +629,12 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
                       </div>
                       
                       {/* Timestamp and read receipt */}
-                      {shouldShowAvatar && (
-                        <div className={cn('flex items-center gap-1 mt-1 px-11', isMe ? 'flex-row-reverse' : '')}>
+                      {shouldShowAvatar && <div className={cn('flex items-center gap-1 mt-1 px-11', isMe ? 'flex-row-reverse' : '')}>
                           <span className="text-xs text-muted-foreground">{timestamp}</span>
-                          {isMe && (
-                            <span className="flex items-center">
-                              {status === 'read' ? (
-                                <CheckCheck className="h-3.5 w-3.5 text-blue-500" />
-                              ) : status === 'delivered' ? (
-                                <CheckCheck className="h-3.5 w-3.5 text-gray-400" />
-                              ) : (
-                                <Check className="h-3.5 w-3.5 text-gray-400" />
-                              )}
-                            </span>
-                          )}
-                        </div>
-                      )}
+                          {isMe && <span className="flex items-center">
+                              {status === 'read' ? <CheckCheck className="h-3.5 w-3.5 text-blue-500" /> : status === 'delivered' ? <CheckCheck className="h-3.5 w-3.5 text-gray-400" /> : <Check className="h-3.5 w-3.5 text-gray-400" />}
+                            </span>}
+                        </div>}
                     </div>
                   </div>;
           })}
