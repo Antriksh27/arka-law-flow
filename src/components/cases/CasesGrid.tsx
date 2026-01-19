@@ -68,12 +68,14 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
                               teamMember?.role === 'office_staff';
 
       // Build query with count and related data
+      // Sort by upcoming hearing first (nearest future dates first), then by status
       let query = supabase
         .from('cases')
         .select(`
           *
         `, { count: 'exact' })
-        .order('status', { ascending: true }) // pending comes before disposed alphabetically
+        .order('next_hearing_date', { ascending: true, nullsFirst: false })
+        .order('status', { ascending: true })
         .order('created_at', { ascending: false });
 
       // Add firm scoping

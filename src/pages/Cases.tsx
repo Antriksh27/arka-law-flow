@@ -21,9 +21,7 @@ import { MobileFiltersSheet } from '@/components/cases/MobileFiltersSheet';
 import { BottomSheet } from '@/components/mobile/BottomSheet';
 import { PullToRefresh } from '@/components/mobile/PullToRefresh';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Card } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { SlidersHorizontal, Plus, Upload, Link as LinkIcon, CheckCircle, Calendar } from 'lucide-react';
+import { Plus, Upload, Link as LinkIcon } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 const Cases = () => {
   const { user, firmId } = useAuth();
@@ -63,56 +61,6 @@ const Cases = () => {
     enabled: !!user && !!firmId,
   });
 
-  // Fetch case stats for mobile hero section with proper logic
-  const { data: caseStats, isLoading: isLoadingStats } = useQuery({
-    queryKey: ['case-stats', user?.id],
-    queryFn: async () => {
-      const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const endOfToday = new Date(today);
-      endOfToday.setHours(23, 59, 59, 999);
-      const next7Days = new Date(now);
-      next7Days.setDate(next7Days.getDate() + 7);
-      const thirtyDaysAgo = new Date(now);
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-      // Active cases (all non-disposed)
-      const { count: activeCount } = await supabase
-        .from('cases')
-        .select('*', { count: 'exact', head: true })
-        .neq('status', 'disposed');
-      
-      // Urgent: Hearings today or overdue (within last 30 days)
-      const { count: urgentCount } = await supabase
-        .from('cases')
-        .select('*', { count: 'exact', head: true })
-        .lte('next_hearing_date', endOfToday.toISOString())
-        .gte('next_hearing_date', thirtyDaysAgo.toISOString())
-        .neq('status', 'disposed');
-
-      // Next 7 days: Hearings in next week
-      const { count: nextWeekCount } = await supabase
-        .from('cases')
-        .select('*', { count: 'exact', head: true })
-        .gte('next_hearing_date', now.toISOString())
-        .lte('next_hearing_date', next7Days.toISOString());
-
-      // High Priority cases
-      const { count: highPriorityCount } = await supabase
-        .from('cases')
-        .select('*', { count: 'exact', head: true })
-        .eq('priority', 'high')
-        .neq('status', 'disposed');
-
-      return {
-        active: activeCount || 0,
-        urgent: urgentCount || 0,
-        nextWeek: nextWeekCount || 0,
-        highPriority: highPriorityCount || 0,
-      };
-    },
-    enabled: !!user && isMobile,
-  });
 
   useEffect(() => {
     console.log('Cases component mounted');
@@ -150,71 +98,16 @@ const Cases = () => {
             <CasesHeader onAddCase={() => setShowAddDialog(true)} />
           )}
 
-          {/* Mobile Search Bar */}
+          {/* Mobile Search Bar - Sticky */}
           {isMobile && (
-            <MobileSearchBar
-              value={searchQuery}
-              onChange={setSearchQuery}
-              onFilterClick={() => setShowFiltersSheet(true)}
-              activeFiltersCount={activeFiltersCount}
-            />
-          )}
-
-          {/* Mobile Hero Stats Card - Horizontal Scroll Strip */}
-          {isMobile && (
-            isLoadingStats ? (
-              <div className="overflow-x-auto -mx-4 px-4">
-                <div className="flex gap-3 min-w-max">
-                  {[...Array(4)].map((_, i) => (
-                    <Skeleton key={i} className="h-24 w-[120px] rounded-2xl" />
-                  ))}
-                </div>
-              </div>
-            ) : caseStats ? (
-              <div className="overflow-x-auto -mx-4 px-4">
-                <div className="flex gap-3 min-w-max">
-                  <div className="flex flex-col items-center justify-center p-4 bg-card rounded-2xl border border-border shadow-sm min-w-[110px]">
-                    <div className="p-2 bg-primary/10 rounded-xl mb-2">
-                      <SlidersHorizontal className="w-4 h-4 text-primary" />
-                    </div>
-                    <div className="text-xl font-bold text-foreground">{caseStats.active}</div>
-                    <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Active</div>
-                  </div>
-                  
-                  <div className="flex flex-col items-center justify-center p-4 bg-card rounded-2xl border border-border shadow-sm min-w-[110px]">
-                    <div className={`p-2 rounded-xl mb-2 ${caseStats.urgent === 0 ? 'bg-green-50' : 'bg-destructive/10'}`}>
-                      {caseStats.urgent === 0 ? (
-                        <CheckCircle className="w-4 h-4 text-green-600" />
-                      ) : (
-                        <Calendar className="w-4 h-4 text-destructive" />
-                      )}
-                    </div>
-                    <div className={`text-xl font-bold ${caseStats.urgent === 0 ? 'text-green-600' : 'text-destructive'}`}>
-                      {caseStats.urgent}
-                    </div>
-                    <div className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                      {caseStats.urgent === 0 ? 'All Clear' : 'Urgent'}
-                    </div>
-                  </div>
-                  
-                  <div className="flex flex-col items-center justify-center p-4 bg-card rounded-2xl border border-border shadow-sm min-w-[110px]">
-                    <div className="p-2 bg-blue-50 rounded-xl mb-2">
-                      <Calendar className="w-4 h-4 text-blue-600" />
-                    </div>
-                    <div className="text-xl font-bold text-blue-600">{caseStats.nextWeek}</div>
-                    <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Next 7 Days</div>
-                  </div>
-                  
-                  <div className="flex flex-col items-center justify-center p-4 bg-card rounded-2xl border border-border shadow-sm min-w-[110px]">
-                    <div className="p-2 bg-amber-50 rounded-xl mb-2">
-                      <Plus className="w-4 h-4 text-amber-600" />
-                    </div>
-                    <div className="text-xl font-bold text-amber-600">{caseStats.highPriority}</div>
-                    <div className="text-[10px] text-muted-foreground uppercase tracking-wide">High Priority</div>
-                  </div>
-                </div>
-              </div>
-            ) : null
+            <div className="sticky top-14 z-30 -mx-4 px-4 py-3 bg-background">
+              <MobileSearchBar
+                value={searchQuery}
+                onChange={setSearchQuery}
+                onFilterClick={() => setShowFiltersSheet(true)}
+                activeFiltersCount={activeFiltersCount}
+              />
+            </div>
           )}
 
           {/* Mobile Tabs */}
