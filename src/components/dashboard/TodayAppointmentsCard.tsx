@@ -13,6 +13,7 @@ interface Appointment {
   meeting_type: string;
   status: string;
   purpose?: string;
+  daily_serial_number?: number;
 }
 
 interface TodayAppointmentsCardProps {
@@ -66,6 +67,12 @@ export const TodayAppointmentsCard = ({ appointments, isLoading }: TodayAppointm
             {appointments.slice(0, 5).map((appt) => (
               <div key={appt.id} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
                 <div className="flex items-start justify-between mb-2">
+                  {appt.daily_serial_number && (
+                    <div className="flex-shrink-0 bg-primary text-primary-foreground rounded-md px-2 py-1 text-center mr-3">
+                      <span className="text-[8px] font-medium uppercase">Token</span>
+                      <div className="text-xs font-bold">#{appt.daily_serial_number}</div>
+                    </div>
+                  )}
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="font-medium text-sm">{appt.client_name}</span>
