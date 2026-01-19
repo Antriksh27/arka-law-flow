@@ -306,18 +306,24 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
   if (isMobile) {
     if (showMobileChat && selectedUser) {
       return (
-        <div className="flex flex-col h-screen bg-background">
-          <MobileHeader
-            title={selectedUser.getName()}
-            showBack
-            onBack={() => {
-              setShowMobileChat(false);
-              setSelectedUser(null);
-            }}
-          />
+        <div className="fixed inset-0 flex flex-col bg-background">
+          {/* Header - Fixed top */}
+          <div className="flex-shrink-0">
+            <MobileHeader
+              title={selectedUser.getName()}
+              showBack
+              onBack={() => {
+                setShowMobileChat(false);
+                setSelectedUser(null);
+              }}
+            />
+          </div>
 
-          {/* Messages */}
-          <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 space-y-2">
+          {/* Messages - Scrollable middle */}
+          <div 
+            ref={scrollContainerRef} 
+            className="flex-1 overflow-y-auto p-4 space-y-2 min-h-0"
+          >
             {messages.map((message, index) => {
               const isMe = message.getSender().getUid() === cometChatUser?.getUid();
               const messageText = (message as CometChat.TextMessage).getText?.() || '';
@@ -373,8 +379,8 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input */}
-          <div className="border-t border-slate-200 bg-white p-4 pb-safe">
+          {/* Input - Fixed bottom */}
+          <div className="flex-shrink-0 border-t border-slate-200 bg-white p-3 pb-safe">
             <div className="flex items-center gap-2">
               <Input
                 placeholder="Type a message..."
@@ -385,9 +391,13 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
                     handleSendMessage();
                   }
                 }}
-                className="flex-1 bg-slate-50 text-slate-900 placeholder:text-slate-400 border-slate-200"
+                className="flex-1 bg-slate-50 text-slate-900 placeholder:text-slate-400 border-slate-200 rounded-full px-4"
               />
-              <Button onClick={handleSendMessage} size="icon" className="bg-slate-900 text-white hover:bg-slate-800">
+              <Button 
+                onClick={handleSendMessage} 
+                size="icon" 
+                className="bg-slate-900 text-white hover:bg-slate-800 rounded-full h-10 w-10 flex-shrink-0"
+              >
                 <Send className="h-4 w-4" />
               </Button>
             </div>
