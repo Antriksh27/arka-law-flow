@@ -29,6 +29,7 @@ import { defaultQueryConfig } from './lib/queryConfig';
 import { useAuth } from './contexts/AuthContext';
 import { supabase } from './integrations/supabase/client';
 import { useRealtimeNotifications } from './hooks/useRealtimeNotifications';
+import { useCometChatPushNotifications } from './hooks/useCometChatPushNotifications';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -79,6 +80,9 @@ function AppRoutes() {
 
   // Initialize real-time notifications (inside QueryClientProvider)
   useRealtimeNotifications();
+  
+  // Initialize CometChat push notifications for messages
+  useCometChatPushNotifications();
 
   useEffect(() => {
     // Detect password recovery tokens in URL hash and redirect to reset-password page
