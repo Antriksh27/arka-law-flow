@@ -4,10 +4,11 @@ import { useCometChat } from './useCometChat';
 import { useLocation } from 'react-router-dom';
 import { BrowserNotifications } from '@/lib/browserNotifications';
 import { useToast } from './use-toast';
+import NotificationSounds from '@/lib/notificationSounds';
 
 /**
  * Global hook for CometChat push notifications
- * Shows browser notifications and toasts when new messages arrive
+ * Shows browser notifications, toasts, and plays sounds when new messages arrive
  * and the user is NOT on the chat page
  */
 export const useCometChatPushNotifications = () => {
@@ -65,6 +66,16 @@ export const useCometChatPushNotifications = () => {
     }
 
     console.log(`📱 Showing push notification from ${senderName}: ${messageText}`);
+
+    // Play notification sound
+    try {
+      if (NotificationSounds.isAudioEnabled()) {
+        console.log('🔊 Playing message notification sound');
+        await NotificationSounds.play('info');
+      }
+    } catch (soundError) {
+      console.error('❌ Failed to play message sound:', soundError);
+    }
 
     // Show in-app toast
     toast({
