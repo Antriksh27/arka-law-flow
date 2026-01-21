@@ -56,18 +56,41 @@ export const ChatDropdown = () => {
         const conversationType = conversation.getConversationType();
         totalUnread += unreadCount;
 
+        // Safely get message text - handle different message types
+        let messageText = 'No messages yet';
+        if (lastMessage) {
+          if (typeof lastMessage.getText === 'function') {
+            messageText = lastMessage.getText() || 'No messages yet';
+          } else if (lastMessage.getType() === 'image') {
+            messageText = '📷 Image';
+          } else if (lastMessage.getType() === 'video') {
+            messageText = '🎥 Video';
+          } else if (lastMessage.getType() === 'audio') {
+            messageText = '🎵 Audio';
+          } else if (lastMessage.getType() === 'file') {
+            messageText = '📎 File';
+          } else if (lastMessage.getCategory() === 'action') {
+            messageText = 'Action message';
+          } else {
+            messageText = 'New message';
+          }
+        }
+
+        // Safely get sender name
+        const senderName = conversationWith?.getName?.() || 'Unknown';
+
         return {
           id: conversation.getConversationId(),
-          name: conversationWith.getName(),
-          message: lastMessage?.getText() || 'No messages yet',
+          name: senderName,
+          message: messageText,
           time: lastMessage
             ? formatDistanceToNow(new Date(lastMessage.getSentAt() * 1000), {
                 addSuffix: true,
               })
             : 'Just now',
           unread: unreadCount > 0,
-          lastMessageId: lastMessage?.getId(),
-          lastMessageSenderId: lastMessage?.getSender()?.getUid(),
+          lastMessageId: lastMessage?.getId?.(),
+          lastMessageSenderId: lastMessage?.getSender?.()?.getUid?.(),
           conversationType: conversationType,
         };
       });
