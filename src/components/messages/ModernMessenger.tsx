@@ -17,6 +17,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileStickyHeader } from '@/components/mobile/MobileStickyHeader';
 import { MobileFAB } from '@/components/mobile/MobileFAB';
 import TimeUtils from '@/lib/timeUtils';
+import TimelineDivider from '@/components/messages/ui/TimelineDivider';
+import { format } from 'date-fns';
 interface TeamMember {
   user_id: string;
   full_name: string;
@@ -339,28 +341,47 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
             const timestamp = isToday 
               ? TimeUtils.formatTime(messageDate)
               : TimeUtils.formatDateTime(messageDate, 'dd/MM h:mm a');
-            return <div key={message.getId()} className={cn('flex w-full', isMe ? 'justify-end' : 'justify-start')}>
-                  <div className={cn('flex flex-col max-w-[75%]', isMe ? 'items-end' : 'items-start')}>
-                    <div className={cn('flex items-end gap-2', isMe ? 'flex-row-reverse' : 'flex-row')}>
-                      {!isMe && <Avatar className="h-6 w-6 flex-shrink-0 border border-white/20">
-                          <AvatarImage src={message.getSender().getAvatar()} />
-                          <AvatarFallback className="text-xs bg-slate-700 text-white">
-                            {getInitials(message.getSender().getName())}
-                          </AvatarFallback>
-                        </Avatar>}
-                      <div className={cn('px-3 py-2 rounded-2xl text-sm', isMe ? 'bg-blue-50 text-gray-900' : 'bg-gray-100 text-gray-900')}>
-                        <p className="break-words whitespace-pre-wrap">{messageText}</p>
+            
+            // Check if we need a date divider
+            const prevMessage = index > 0 ? messages[index - 1] : null;
+            const prevMessageDate = prevMessage ? new Date(prevMessage.getSentAt() * 1000) : null;
+            const showDateDivider = index === 0 || 
+              (prevMessageDate && format(prevMessageDate, 'yyyy-MM-dd') !== format(messageDate, 'yyyy-MM-dd'));
+            
+            // Get date divider text
+            const getDateDividerText = () => {
+              if (TimeUtils.isToday(messageDate)) return 'Today';
+              const yesterday = new Date();
+              yesterday.setDate(yesterday.getDate() - 1);
+              if (format(messageDate, 'yyyy-MM-dd') === format(yesterday, 'yyyy-MM-dd')) return 'Yesterday';
+              return format(messageDate, 'MMMM d, yyyy');
+            };
+            
+            return <React.Fragment key={message.getId()}>
+                  {showDateDivider && <TimelineDivider>{getDateDividerText()}</TimelineDivider>}
+                  <div className={cn('flex w-full', isMe ? 'justify-end' : 'justify-start')}>
+                    <div className={cn('flex flex-col max-w-[75%]', isMe ? 'items-end' : 'items-start')}>
+                      <div className={cn('flex items-end gap-2', isMe ? 'flex-row-reverse' : 'flex-row')}>
+                        {!isMe && <Avatar className="h-6 w-6 flex-shrink-0 border border-white/20">
+                            <AvatarImage src={message.getSender().getAvatar()} />
+                            <AvatarFallback className="text-xs bg-slate-700 text-white">
+                              {getInitials(message.getSender().getName())}
+                            </AvatarFallback>
+                          </Avatar>}
+                        <div className={cn('px-3 py-2 rounded-2xl text-sm', isMe ? 'bg-blue-50 text-gray-900' : 'bg-gray-100 text-gray-900')}>
+                          <p className="break-words whitespace-pre-wrap">{messageText}</p>
+                        </div>
+                      </div>
+                      {/* Timestamp and read receipt */}
+                      <div className={cn('flex items-center gap-1 mt-0.5 px-1', isMe ? 'flex-row-reverse' : 'flex-row')}>
+                        <span className="text-[10px] text-gray-400">{timestamp}</span>
+                        {isMe && <span className="flex items-center">
+                            {status === 'read' ? <CheckCheck className="h-3 w-3 text-blue-500" /> : status === 'delivered' ? <CheckCheck className="h-3 w-3 text-gray-400" /> : <Check className="h-3 w-3 text-gray-400" />}
+                          </span>}
                       </div>
                     </div>
-                    {/* Timestamp and read receipt */}
-                    <div className={cn('flex items-center gap-1 mt-0.5 px-1', isMe ? 'flex-row-reverse' : 'flex-row')}>
-                      <span className="text-[10px] text-gray-400">{timestamp}</span>
-                      {isMe && <span className="flex items-center">
-                          {status === 'read' ? <CheckCheck className="h-3 w-3 text-blue-500" /> : status === 'delivered' ? <CheckCheck className="h-3 w-3 text-gray-400" /> : <Check className="h-3 w-3 text-gray-400" />}
-                        </span>}
-                    </div>
                   </div>
-                </div>;
+                </React.Fragment>;
           })}
             <div ref={messagesEndRef} />
           </div>
@@ -555,9 +576,24 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
               ? TimeUtils.formatTime(messageDate)
               : TimeUtils.formatDateTime(messageDate, 'dd/MM h:mm a');
 
-            // Check if this message is from the same sender as the previous one
-            const isSameSenderAsPrev = prevMessage && prevMessage.getSender().getUid() === message.getSender().getUid();
-            const isSameSenderAsNext = nextMessage && nextMessage.getSender().getUid() === message.getSender().getUid();
+            // Check if we need a date divider
+            const prevMessageDate = prevMessage ? new Date(prevMessage.getSentAt() * 1000) : null;
+            const showDateDivider = index === 0 || 
+              (prevMessageDate && format(prevMessageDate, 'yyyy-MM-dd') !== format(messageDate, 'yyyy-MM-dd'));
+            
+            // Get date divider text
+            const getDateDividerText = () => {
+              if (TimeUtils.isToday(messageDate)) return 'Today';
+              const yesterday = new Date();
+              yesterday.setDate(yesterday.getDate() - 1);
+              if (format(messageDate, 'yyyy-MM-dd') === format(yesterday, 'yyyy-MM-dd')) return 'Yesterday';
+              return format(messageDate, 'MMMM d, yyyy');
+            };
+
+            // Check if this message is from the same sender as the previous one (considering date divider)
+            const isSameSenderAsPrev = !showDateDivider && prevMessage && prevMessage.getSender().getUid() === message.getSender().getUid();
+            const isSameSenderAsNext = nextMessage && nextMessage.getSender().getUid() === message.getSender().getUid() &&
+              format(new Date(nextMessage.getSentAt() * 1000), 'yyyy-MM-dd') === format(messageDate, 'yyyy-MM-dd');
 
             // Show avatar only for the last message in a group
             const shouldShowAvatar = !isSameSenderAsNext;
@@ -575,64 +611,67 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
             : 'rounded-br-lg rounded-tl-lg rounded-tr-lg'; // Last in group (left)
 
             const messageText = (message as CometChat.TextMessage).getText?.() || '';
-            return <div key={message.getId()} className={spacingClass}>
-                    <div className={cn('flex flex-col max-w-[70%]', isMe ? 'ml-auto items-end' : 'mr-auto items-start')}>
-                      <div className={cn('flex items-end gap-3', isMe ? 'flex-row-reverse' : '')}>
-                        {/* Avatar with animation */}
-                        <AnimatePresence mode="wait">
-                          {shouldShowAvatar ? <motion.div key="avatar" initial={{
+            return <React.Fragment key={message.getId()}>
+                    {showDateDivider && <TimelineDivider>{getDateDividerText()}</TimelineDivider>}
+                    <div className={spacingClass}>
+                      <div className={cn('flex flex-col max-w-[70%]', isMe ? 'ml-auto items-end' : 'mr-auto items-start')}>
+                        <div className={cn('flex items-end gap-3', isMe ? 'flex-row-reverse' : '')}>
+                          {/* Avatar with animation */}
+                          <AnimatePresence mode="wait">
+                            {shouldShowAvatar ? <motion.div key="avatar" initial={{
+                        opacity: 0,
+                        scale: 0.8
+                      }} animate={{
+                        opacity: 1,
+                        scale: 1
+                      }} exit={{
+                        opacity: 0,
+                        scale: 0.8
+                      }} transition={{
+                        duration: 0.2
+                      }} className="flex-shrink-0">
+                                <Avatar className="h-8 w-8">
+                                  <AvatarImage src={message.getSender().getAvatar()} />
+                                  <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                                    {getInitials(message.getSender().getName())}
+                                  </AvatarFallback>
+                                </Avatar>
+                              </motion.div> : <div className="w-8 flex-shrink-0" />}
+                          </AnimatePresence>
+
+                          {/* Message bubble with animation */}
+                          <motion.div initial={{
                       opacity: 0,
-                      scale: 0.8
+                      y: 10,
+                      scale: 0.95
                     }} animate={{
                       opacity: 1,
+                      y: 0,
                       scale: 1
-                    }} exit={{
-                      opacity: 0,
-                      scale: 0.8
                     }} transition={{
-                      duration: 0.2
-                    }} className="flex-shrink-0">
-                              <Avatar className="h-8 w-8">
-                                <AvatarImage src={message.getSender().getAvatar()} />
-                                <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                                  {getInitials(message.getSender().getName())}
-                                </AvatarFallback>
-                              </Avatar>
-                            </motion.div> : <div className="w-8 flex-shrink-0" />}
-                        </AnimatePresence>
+                      duration: 0.3,
+                      ease: 'easeOut'
+                    }} className={cn('px-4 py-2.5 shadow-sm relative overflow-hidden', borderRadius, isMe ? 'bg-blue-100 text-black' : 'bg-green-100 text-black')}>
+                            {/* Subtle shine effect */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
 
-                        {/* Message bubble with animation */}
-                        <motion.div initial={{
-                    opacity: 0,
-                    y: 10,
-                    scale: 0.95
-                  }} animate={{
-                    opacity: 1,
-                    y: 0,
-                    scale: 1
-                  }} transition={{
-                    duration: 0.3,
-                    ease: 'easeOut'
-                  }} className={cn('px-4 py-2.5 shadow-sm relative overflow-hidden', borderRadius, isMe ? 'bg-blue-100 text-black' : 'bg-green-100 text-black')}>
-                          {/* Subtle shine effect */}
-                          <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
-
-                          {/* Message content */}
-                          <div className="relative">
-                            <p className="text-sm leading-relaxed break-words">{messageText}</p>
-                          </div>
-                        </motion.div>
+                            {/* Message content */}
+                            <div className="relative">
+                              <p className="text-sm leading-relaxed break-words">{messageText}</p>
+                            </div>
+                          </motion.div>
+                        </div>
+                        
+                        {/* Timestamp and read receipt */}
+                        {shouldShowAvatar && <div className={cn('flex items-center gap-1 mt-1 px-11', isMe ? 'flex-row-reverse' : '')}>
+                            <span className="text-xs text-muted-foreground">{timestamp}</span>
+                            {isMe && <span className="flex items-center">
+                                {status === 'read' ? <CheckCheck className="h-3.5 w-3.5 text-blue-500" /> : status === 'delivered' ? <CheckCheck className="h-3.5 w-3.5 text-gray-400" /> : <Check className="h-3.5 w-3.5 text-gray-400" />}
+                              </span>}
+                          </div>}
                       </div>
-                      
-                      {/* Timestamp and read receipt */}
-                      {shouldShowAvatar && <div className={cn('flex items-center gap-1 mt-1 px-11', isMe ? 'flex-row-reverse' : '')}>
-                          <span className="text-xs text-muted-foreground">{timestamp}</span>
-                          {isMe && <span className="flex items-center">
-                              {status === 'read' ? <CheckCheck className="h-3.5 w-3.5 text-blue-500" /> : status === 'delivered' ? <CheckCheck className="h-3.5 w-3.5 text-gray-400" /> : <Check className="h-3.5 w-3.5 text-gray-400" />}
-                            </span>}
-                        </div>}
                     </div>
-                  </div>;
+                  </React.Fragment>;
           })}
               <div ref={messagesEndRef} />
             </div>
