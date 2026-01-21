@@ -16,6 +16,7 @@ import { toast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileStickyHeader } from '@/components/mobile/MobileStickyHeader';
 import { MobileFAB } from '@/components/mobile/MobileFAB';
+import TimeUtils from '@/lib/timeUtils';
 interface TeamMember {
   user_id: string;
   full_name: string;
@@ -333,10 +334,11 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
             const messageText = (message as CometChat.TextMessage).getText?.() || '';
             const messageId = message.getId().toString();
             const status = messageStatuses[messageId] || 'sent';
-            const timestamp = new Date(message.getSentAt() * 1000).toLocaleTimeString([], {
-              hour: '2-digit',
-              minute: '2-digit'
-            });
+            const messageDate = new Date(message.getSentAt() * 1000);
+            const isToday = TimeUtils.isToday(messageDate);
+            const timestamp = isToday 
+              ? TimeUtils.formatTime(messageDate)
+              : TimeUtils.formatDateTime(messageDate, 'dd/MM h:mm a');
             return <div key={message.getId()} className={cn('flex w-full', isMe ? 'justify-end' : 'justify-start')}>
                   <div className={cn('flex flex-col max-w-[75%]', isMe ? 'items-end' : 'items-start')}>
                     <div className={cn('flex items-end gap-2', isMe ? 'flex-row-reverse' : 'flex-row')}>
@@ -483,10 +485,8 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
                 </div> : conversations.map(conversation => {
             const lastMessage = conversation.getLastMessage();
             const lastMessageText = lastMessage ? (lastMessage as CometChat.TextMessage).getText?.() || 'Media message' : 'No messages yet';
-            const lastMessageTime = lastMessage ? new Date(lastMessage.getSentAt() * 1000).toLocaleTimeString([], {
-              hour: '2-digit',
-              minute: '2-digit'
-            }) : '';
+            // Pass ISO string for proper date/time formatting in ChatList
+            const lastMessageTime = lastMessage ? new Date(lastMessage.getSentAt() * 1000).toISOString() : '';
             return <ChatList.ChatListItem key={conversation.getConversationId()} avatar={getConversationAvatar(conversation)} name={getConversationName(conversation)} message={lastMessageText} timestamp={lastMessageTime} selected={selectedUser?.getUid() === (conversation.getConversationWith() as CometChat.User).getUid()} onClick={() => {
               const conversationWith = conversation.getConversationWith() as CometChat.User;
               setSelectedUser(conversationWith);
@@ -549,10 +549,11 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
             const nextMessage = index < messages.length - 1 ? messages[index + 1] : null;
             const messageId = message.getId().toString();
             const status = messageStatuses[messageId] || 'sent';
-            const timestamp = new Date(message.getSentAt() * 1000).toLocaleTimeString([], {
-              hour: '2-digit',
-              minute: '2-digit'
-            });
+            const messageDate = new Date(message.getSentAt() * 1000);
+            const isToday = TimeUtils.isToday(messageDate);
+            const timestamp = isToday 
+              ? TimeUtils.formatTime(messageDate)
+              : TimeUtils.formatDateTime(messageDate, 'dd/MM h:mm a');
 
             // Check if this message is from the same sender as the previous one
             const isSameSenderAsPrev = prevMessage && prevMessage.getSender().getUid() === message.getSender().getUid();
