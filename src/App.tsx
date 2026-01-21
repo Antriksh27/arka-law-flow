@@ -30,6 +30,7 @@ import { useAuth } from './contexts/AuthContext';
 import { supabase } from './integrations/supabase/client';
 import { useRealtimeNotifications } from './hooks/useRealtimeNotifications';
 import { useCometChatPushNotifications } from './hooks/useCometChatPushNotifications';
+import NotificationSounds from './lib/notificationSounds';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -100,6 +101,27 @@ function AppRoutes() {
       prefetchCommonQueries();
     }
   }, [user]);
+
+  // Initialize audio context on first user interaction (required by browser autoplay policy)
+  useEffect(() => {
+    const initializeAudio = () => {
+      NotificationSounds.initialize();
+      // Remove listeners after first interaction
+      document.removeEventListener('click', initializeAudio);
+      document.removeEventListener('keydown', initializeAudio);
+      document.removeEventListener('touchstart', initializeAudio);
+    };
+
+    document.addEventListener('click', initializeAudio);
+    document.addEventListener('keydown', initializeAudio);
+    document.addEventListener('touchstart', initializeAudio);
+
+    return () => {
+      document.removeEventListener('click', initializeAudio);
+      document.removeEventListener('keydown', initializeAudio);
+      document.removeEventListener('touchstart', initializeAudio);
+    };
+  }, []);
 
   return (
     <DialogProvider>
