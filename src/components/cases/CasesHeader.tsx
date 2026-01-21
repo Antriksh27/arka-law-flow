@@ -19,7 +19,7 @@ export const CasesHeader: React.FC<CasesHeaderProps> = ({
   } = useToast();
   const queryClient = useQueryClient();
   const [isUpdating, setIsUpdating] = useState(false);
-  const isAdmin = role === 'admin';
+  const canAddCase = role === 'admin' || role === 'office_staff';
   const handleBatchUpdatePriority = async () => {
     setIsUpdating(true);
     try {
@@ -52,12 +52,12 @@ export const CasesHeader: React.FC<CasesHeaderProps> = ({
       </div>
 
       <div className="flex items-center gap-3">
-        {isAdmin && <>
-            <Button onClick={onAddCase} className="bg-slate-800 hover:bg-slate-700 w-full sm:w-auto h-12 sm:h-10 hidden sm:flex">
-              <Plus className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
-              New Case
-            </Button>
-          </>}
+        {canAddCase && (
+          <Button onClick={onAddCase} className="bg-slate-800 hover:bg-slate-700 w-full sm:w-auto h-12 sm:h-10 hidden sm:flex">
+            <Plus className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
+            New Case
+          </Button>
+        )}
       </div>
     </div>;
 };
