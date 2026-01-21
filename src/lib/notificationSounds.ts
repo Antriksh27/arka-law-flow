@@ -4,12 +4,31 @@ export type NotificationSoundType = 'success' | 'error' | 'warning' | 'info' | '
 export class NotificationSounds {
   private static audioContext: AudioContext | null = null;
   private static isEnabled = true;
+  private static isInitialized = false;
 
   private static getAudioContext(): AudioContext {
     if (!this.audioContext) {
       this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
     return this.audioContext;
+  }
+
+  // Initialize audio context on user interaction (required by browser autoplay policy)
+  static async initialize(): Promise<boolean> {
+    if (this.isInitialized) return true;
+    
+    try {
+      const audioContext = this.getAudioContext();
+      if (audioContext.state === 'suspended') {
+        await audioContext.resume();
+      }
+      this.isInitialized = audioContext.state === 'running';
+      console.log('🔊 NotificationSounds initialized, state:', audioContext.state);
+      return this.isInitialized;
+    } catch (error) {
+      console.error('🔇 Failed to initialize NotificationSounds:', error);
+      return false;
+    }
   }
 
   static setEnabled(enabled: boolean) {
