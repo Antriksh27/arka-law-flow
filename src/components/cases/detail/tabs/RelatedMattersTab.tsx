@@ -168,9 +168,10 @@ export const RelatedMattersTab: React.FC<RelatedMattersTabProps> = ({ caseId }) 
     return availableCases.filter(c => {
       const displayTitle = getDisplayTitle(c);
       
-      // Search across all relevant fields
+      // Search across all relevant fields including case_title explicitly
       const searchableFields = [
         displayTitle,
+        c.case_title,
         c.case_number,
         c.cnr_number,
         c.registration_number,
@@ -181,7 +182,7 @@ export const RelatedMattersTab: React.FC<RelatedMattersTabProps> = ({ caseId }) 
       ];
       
       return searchableFields.some(field => 
-        field && field.toLowerCase().includes(query)
+        field && String(field).toLowerCase().includes(query)
       );
     });
   }, [availableCases, searchQuery]);
