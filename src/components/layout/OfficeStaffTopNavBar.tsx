@@ -1,4 +1,4 @@
-import { Home, UserPlus, Briefcase, Calendar, Gavel, CheckSquare, FileText, Receipt, MessageSquare } from "lucide-react";
+import { Home, UserPlus, Briefcase, Gavel, CheckSquare, FileText, MessageSquare } from "lucide-react";
 import { MenuBar } from "@/components/ui/glow-menu";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -23,13 +23,6 @@ const navigationItems = [
     icon: Briefcase,
     gradient: "radial-gradient(circle, rgba(239,68,68,0.15) 0%, rgba(220,38,38,0.06) 50%, rgba(185,28,28,0) 100%)",
     iconColor: "text-red-500",
-  },
-  {
-    label: "Appointments",
-    href: "/appointments",
-    icon: Calendar,
-    gradient: "radial-gradient(circle, rgba(168,85,247,0.15) 0%, rgba(147,51,234,0.06) 50%, rgba(126,34,206,0) 100%)",
-    iconColor: "text-purple-500",
   },
   {
     label: "Hearings",
