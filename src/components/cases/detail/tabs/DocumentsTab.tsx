@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { FileText, Upload, Download, Trash2 } from 'lucide-react';
+import { FileText, Upload, Download, Trash2, Eye } from 'lucide-react';
 import TimeUtils from '@/lib/timeUtils';
 import { Button } from '@/components/ui/button';
 import { UploadDocumentDialog } from '@/components/documents/UploadDocumentDialog';
+import { FileViewer } from '@/components/documents/FileViewer';
 import { toast } from 'sonner';
 interface DocumentsTabProps {
   caseId: string;
@@ -13,6 +14,7 @@ export const DocumentsTab: React.FC<DocumentsTabProps> = ({
   caseId
 }) => {
   const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const [viewingDocument, setViewingDocument] = useState<any>(null);
   const queryClient = useQueryClient();
   const {
     data: documents,
@@ -128,10 +130,13 @@ export const DocumentsTab: React.FC<DocumentsTabProps> = ({
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button variant="ghost" size="sm" onClick={() => handleDownload(doc)}>
+                <Button variant="ghost" size="sm" onClick={() => setViewingDocument(doc)} title="View">
+                  <Eye className="w-4 h-4" />
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => handleDownload(doc)} title="Download">
                   <Download className="w-4 h-4" />
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => deleteDocument.mutate(doc.id)}>
+                <Button variant="ghost" size="sm" onClick={() => deleteDocument.mutate(doc.id)} title="Delete">
                   <Trash2 className="w-4 h-4 text-destructive" />
                 </Button>
               </div>
@@ -158,5 +163,12 @@ export const DocumentsTab: React.FC<DocumentsTabProps> = ({
 
       {/* Upload Document Dialog */}
       <UploadDocumentDialog open={showUploadDialog} onClose={() => setShowUploadDialog(false)} caseId={caseId} onUploadSuccess={handleUploadSuccess} />
+      
+      {/* File Viewer */}
+      <FileViewer
+        open={!!viewingDocument}
+        onClose={() => setViewingDocument(null)}
+        document={viewingDocument}
+      />
     </div>;
 };
