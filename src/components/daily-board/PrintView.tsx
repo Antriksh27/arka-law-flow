@@ -37,20 +37,10 @@ export const PrintView = React.forwardRef<HTMLDivElement, PrintViewProps>(
                   <div className="bg-gray-50 px-3 py-2 flex items-center justify-between mb-1 judge-header">
                     <h3 className="text-sm font-semibold uppercase underline flex-1">{judge.judgeName}</h3>
                     <div className="flex items-center gap-1">
-                      {/* Court Number Box 1 */}
-                      <div className="border-2 border-gray-800 text-center bg-white min-w-[40px] h-[32px] flex flex-col items-center justify-center">
+                      {/* Court Number Box - shows first hearing's data */}
+                      <div className="border-2 border-gray-800 text-center bg-white min-w-[40px] h-[32px] flex flex-col items-center justify-center px-2">
                         <div className="font-bold text-[10px] leading-tight">{firstHearing?.court_number || ''}</div>
-                        <div className="text-[8px] leading-tight">{firstHearing?.bench || ''}</div>
-                      </div>
-                      {/* Court Number Box 2 */}
-                      <div className="border-2 border-gray-800 text-center bg-white min-w-[40px] h-[32px] flex flex-col items-center justify-center">
-                        <div className="font-bold text-[10px] leading-tight"></div>
-                        <div className="text-[8px] leading-tight"></div>
-                      </div>
-                      {/* Court Number Box 3 */}
-                      <div className="border-2 border-gray-800 text-center bg-white min-w-[40px] h-[32px] flex flex-col items-center justify-center">
-                        <div className="font-bold text-[10px] leading-tight"></div>
-                        <div className="text-[8px] leading-tight"></div>
+                        <div className="text-[8px] leading-tight text-gray-600">{firstHearing?.bench || ''}</div>
                       </div>
                       {/* Status Boxes */}
                       <div className="border-2 border-red-400 w-[30px] h-[32px] bg-red-200"></div>
