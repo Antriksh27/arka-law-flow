@@ -75,16 +75,22 @@ const StaleCases = () => {
   const [autoFetchProgress, setAutoFetchProgress] = useState({ current: 0, total: 0, currentCase: '' });
   const [stopAutoFetch, setStopAutoFetch] = useState(false);
 
-  // Fetch stale cases (next_hearing_date in the past)
+  // Fetch stale cases (next_hearing_date in the past, but not older than 1 year)
   const { data: staleCases, isLoading } = useQuery({
     queryKey: ['stale-cases', firmId],
     queryFn: async () => {
       const today = new Date().toISOString().split('T')[0];
+      // Calculate date 1 year ago
+      const oneYearAgo = new Date();
+      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+      const oneYearAgoStr = oneYearAgo.toISOString().split('T')[0];
+      
       const { data, error } = await supabase
         .from('cases')
         .select('id, case_title, case_number, cnr_number, court_name, next_hearing_date, last_fetched_at, fetch_status, is_auto_fetched, court_type')
         .eq('firm_id', firmId!)
         .lt('next_hearing_date', today)
+        .gte('next_hearing_date', oneYearAgoStr) // Exclude cases older than 1 year
         .not('next_hearing_date', 'is', null)
         .order('next_hearing_date', { ascending: true });
       
