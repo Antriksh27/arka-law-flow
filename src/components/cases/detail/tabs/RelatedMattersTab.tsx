@@ -160,12 +160,22 @@ export const RelatedMattersTab: React.FC<RelatedMattersTabProps> = ({ caseId }) 
 
   // Filter cases based on search query - universal search across multiple fields
   const filteredCases = useMemo(() => {
-    if (!availableCases) return [];
-    if (!searchQuery.trim()) return availableCases;
+    if (!availableCases) {
+      console.log('RelatedMatters: No available cases loaded');
+      return [];
+    }
+    
+    console.log('RelatedMatters: Available cases count:', availableCases.length);
+    
+    if (!searchQuery.trim()) {
+      // Return all cases when search is empty (limited to show in dropdown)
+      return availableCases;
+    }
     
     const query = searchQuery.toLowerCase().trim();
+    console.log('RelatedMatters: Searching for:', query);
     
-    return availableCases.filter(c => {
+    const results = availableCases.filter(c => {
       const displayTitle = getDisplayTitle(c);
       
       // Search across all relevant fields including case_title explicitly
@@ -181,10 +191,19 @@ export const RelatedMattersTab: React.FC<RelatedMattersTabProps> = ({ caseId }) 
         c.respondent
       ];
       
-      return searchableFields.some(field => 
+      const matches = searchableFields.some(field => 
         field && String(field).toLowerCase().includes(query)
       );
+      
+      if (matches) {
+        console.log('RelatedMatters: Match found:', c.case_title);
+      }
+      
+      return matches;
     });
+    
+    console.log('RelatedMatters: Results count:', results.length);
+    return results;
   }, [availableCases, searchQuery]);
 
   if (isLoading) {
