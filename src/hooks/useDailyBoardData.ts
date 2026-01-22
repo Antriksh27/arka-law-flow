@@ -13,6 +13,9 @@ export const useDailyBoardData = (
   
   return useQuery({
     queryKey: ['daily-hearings', format(selectedDate, 'yyyy-MM-dd'), filters, user?.id],
+    enabled: false, // Disable auto-fetch - user must click "Generate Board"
+    staleTime: 0,   // Always treat data as stale
+    gcTime: 0,      // Don't cache results
     queryFn: async () => {
       const dateStr = format(selectedDate, 'yyyy-MM-dd');
       
