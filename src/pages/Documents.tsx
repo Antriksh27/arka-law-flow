@@ -1,11 +1,9 @@
-
 import React, { useState } from 'react';
 import { DocumentsSidebar } from '../components/documents/DocumentsSidebar';
 import { DocumentsMainView } from '../components/documents/DocumentsMainView';
-import { DocumentsHeader } from '../components/documents/DocumentsHeader';
+import { DocumentsFilterBar } from '../components/documents/DocumentsFilterBar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileStickyHeader } from '@/components/mobile/MobileStickyHeader';
-
 import { MobileFAB } from '@/components/mobile/MobileFAB';
 import { Upload, FolderOpen } from 'lucide-react';
 import { UploadDocumentDialog } from '@/components/documents/UploadDocumentDialog';
@@ -30,6 +28,7 @@ const Documents = () => {
   const handleUploadSuccess = () => {
     queryClient.invalidateQueries({ queryKey: ['documents'] });
     queryClient.invalidateQueries({ queryKey: ['document-folders'] });
+    queryClient.invalidateQueries({ queryKey: ['document-folder-structure'] });
   };
 
   const activeFiltersCount = [
@@ -100,31 +99,53 @@ const Documents = () => {
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
-      <DocumentsHeader 
+      {/* Header with Title */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">Documents</h1>
+          <p className="text-muted-foreground mt-1">Manage and organize your legal documents</p>
+        </div>
+      </div>
+
+      {/* Filter Bar */}
+      <DocumentsFilterBar
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         selectedFilters={selectedFilters}
         onFiltersChange={setSelectedFilters}
+        onUploadClick={() => setShowUploadDialog(true)}
       />
       
-      <div className="h-[calc(100vh-200px)] flex border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-sm">
-        <DocumentsSidebar
-          selectedFolder={selectedFolder}
-          onFolderSelect={setSelectedFolder}
-        />
+      {/* Main Content with Sidebar */}
+      <div className="flex gap-6 h-[calc(100vh-280px)]">
+        {/* Sidebar Card */}
+        <div className="w-72 bg-card rounded-2xl shadow-sm border border-border overflow-hidden flex flex-col">
+          <DocumentsSidebar
+            selectedFolder={selectedFolder}
+            onFolderSelect={setSelectedFolder}
+          />
+        </div>
         
-        <DocumentsMainView
-          selectedFolder={selectedFolder}
-          viewMode={viewMode}
-          searchQuery={searchQuery}
-          selectedFilters={selectedFilters}
-        />
+        {/* Documents Grid/List Card */}
+        <div className="flex-1 bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
+          <DocumentsMainView
+            selectedFolder={selectedFolder}
+            viewMode={viewMode}
+            searchQuery={searchQuery}
+            selectedFilters={selectedFilters}
+          />
+        </div>
       </div>
+
+      <UploadDocumentDialog 
+        open={showUploadDialog} 
+        onClose={() => setShowUploadDialog(false)}
+        onUploadSuccess={handleUploadSuccess}
+      />
     </div>
   );
 };
 
 export default Documents;
-
