@@ -35,12 +35,52 @@ export const DocumentsMainView: React.FC<DocumentsMainViewProps> = ({
         `)
         .order('uploaded_at', { ascending: false });
 
-      // Apply folder filter
+      // Parse the selectedFolder path to determine filter type
+      // Format: "all", "recent", "starred", "client:uuid", "case:uuid", "primary:caseId:folderName", "sub:caseId:folderName:subType"
       if (selectedFolder === 'recent') {
         query = query.gte('uploaded_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
       } else if (selectedFolder === 'starred') {
         query = query.eq('is_evidence', true);
+      } else if (selectedFolder.startsWith('client:')) {
+        const clientId = selectedFolder.replace('client:', '');
+        if (clientId === 'no-client') {
+          query = query.is('client_id', null);
+        } else {
+          query = query.eq('client_id', clientId);
+        }
+      } else if (selectedFolder.startsWith('case:')) {
+        const caseId = selectedFolder.replace('case:', '');
+        if (caseId === 'no-case') {
+          query = query.is('case_id', null);
+        } else {
+          query = query.eq('case_id', caseId);
+        }
+      } else if (selectedFolder.startsWith('primary:')) {
+        // Format: primary:caseId:folderName
+        const parts = selectedFolder.split(':');
+        const caseId = parts[1];
+        const folderName = parts.slice(2).join(':'); // In case folder name has colons
+        if (caseId === 'no-case') {
+          query = query.is('case_id', null);
+        } else {
+          query = query.eq('case_id', caseId);
+        }
+        query = query.eq('folder_name', folderName);
+      } else if (selectedFolder.startsWith('sub:')) {
+        // Format: sub:caseId:folderName:subType
+        const parts = selectedFolder.split(':');
+        const caseId = parts[1];
+        const folderName = parts[2];
+        const subType = parts.slice(3).join(':');
+        if (caseId === 'no-case') {
+          query = query.is('case_id', null);
+        } else {
+          query = query.eq('case_id', caseId);
+        }
+        query = query.eq('folder_name', folderName);
+        query = query.ilike('file_type', `%${subType.toLowerCase()}%`);
       } else if (selectedFolder !== 'all') {
+        // Fallback: treat as folder_name for backward compatibility
         query = query.eq('folder_name', selectedFolder);
       }
 
