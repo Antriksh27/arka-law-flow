@@ -27,49 +27,88 @@ const getStageColor = (stage: string | null) => {
   return 'default';
 };
 
-// Simple editable text box for court numbers
+// Editable text box with main text and subtext
 const EditableTextBox: React.FC<{
   value: string;
+  subtext: string;
   onChange: (val: string) => void;
+  onSubtextChange: (val: string) => void;
   onRemove?: () => void;
   showRemove?: boolean;
-}> = ({ value, onChange, onRemove, showRemove }) => {
-  const [isEditing, setIsEditing] = useState(false);
+}> = ({ value, subtext, onChange, onSubtextChange, onRemove, showRemove }) => {
+  const [isEditingMain, setIsEditingMain] = useState(false);
+  const [isEditingSub, setIsEditingSub] = useState(false);
   const [localValue, setLocalValue] = useState(value);
+  const [localSubtext, setLocalSubtext] = useState(subtext);
 
   return (
-    <div className="border-2 border-gray-800 px-3 py-2 text-center bg-white min-w-[60px] relative group">
-      {isEditing ? (
+    <div className="border-2 border-gray-800 px-3 py-1 text-center bg-white min-w-[60px] relative group">
+      {/* Main text */}
+      {isEditingMain ? (
         <input
           type="text"
           value={localValue}
           onChange={(e) => setLocalValue(e.target.value)}
           onBlur={() => {
             onChange(localValue);
-            setIsEditing(false);
+            setIsEditingMain(false);
           }}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               onChange(localValue);
-              setIsEditing(false);
+              setIsEditingMain(false);
             }
             if (e.key === 'Escape') {
               setLocalValue(value);
-              setIsEditing(false);
+              setIsEditingMain(false);
             }
           }}
           className="w-full text-center font-bold text-base border-b border-blue-500 outline-none bg-transparent"
           autoFocus
-          placeholder="Type..."
+          placeholder="Main"
         />
       ) : (
         <div
-          onClick={() => setIsEditing(true)}
-          className="font-bold text-base cursor-pointer hover:bg-gray-100 min-h-[24px]"
+          onClick={() => setIsEditingMain(true)}
+          className="font-bold text-base cursor-pointer hover:bg-gray-100 min-h-[20px]"
         >
-          {value || <span className="text-gray-400 text-sm">Click to edit</span>}
+          {value || <span className="text-gray-400 text-xs">Main</span>}
         </div>
       )}
+      
+      {/* Subtext */}
+      {isEditingSub ? (
+        <input
+          type="text"
+          value={localSubtext}
+          onChange={(e) => setLocalSubtext(e.target.value)}
+          onBlur={() => {
+            onSubtextChange(localSubtext);
+            setIsEditingSub(false);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              onSubtextChange(localSubtext);
+              setIsEditingSub(false);
+            }
+            if (e.key === 'Escape') {
+              setLocalSubtext(subtext);
+              setIsEditingSub(false);
+            }
+          }}
+          className="w-full text-center text-xs border-b border-blue-500 outline-none bg-transparent"
+          autoFocus
+          placeholder="Sub"
+        />
+      ) : (
+        <div
+          onClick={() => setIsEditingSub(true)}
+          className="text-xs cursor-pointer hover:bg-gray-100 min-h-[14px] text-gray-600"
+        >
+          {subtext || <span className="text-gray-400">Sub</span>}
+        </div>
+      )}
+      
       {showRemove && onRemove && (
         <button
           onClick={onRemove}
@@ -92,8 +131,10 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
 }) => {
   const queryClient = useQueryClient();
   
-  // Local state for dynamic court boxes (start with 1, max 5)
-  const [boxes, setBoxes] = useState<string[]>([hearings[0]?.court_number || '']);
+  // Local state for dynamic court boxes (start with 1, max 5) - each has main + subtext
+  const [boxes, setBoxes] = useState<{ main: string; sub: string }[]>([
+    { main: hearings[0]?.court_number || '', sub: hearings[0]?.bench || '' }
+  ]);
   
   const handleUpdate = () => {
     queryClient.invalidateQueries({ queryKey: ['daily-board-hearings'] });
@@ -110,7 +151,7 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
 
   const addBox = () => {
     if (boxes.length < 5) {
-      setBoxes([...boxes, '']);
+      setBoxes([...boxes, { main: '', sub: '' }]);
     }
   };
 
@@ -120,14 +161,25 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
     }
   };
 
-  const updateBox = (index: number, value: string) => {
+  const updateBoxMain = (index: number, value: string) => {
     const newBoxes = [...boxes];
-    newBoxes[index] = value;
+    newBoxes[index] = { ...newBoxes[index], main: value };
     setBoxes(newBoxes);
     
     // Update first hearing's court_number if it's the first box
     if (index === 0 && hearings[0]) {
       updateHearingField(hearings[0].hearing_id, 'court_number', value || null);
+    }
+  };
+
+  const updateBoxSub = (index: number, value: string) => {
+    const newBoxes = [...boxes];
+    newBoxes[index] = { ...newBoxes[index], sub: value };
+    setBoxes(newBoxes);
+    
+    // Update first hearing's bench if it's the first box
+    if (index === 0 && hearings[0]) {
+      updateHearingField(hearings[0].hearing_id, 'bench', value || null);
     }
   };
 
@@ -139,11 +191,13 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
         {hearings.length > 0 && (
           <div className="flex gap-2 items-center">
             {/* Dynamic Court Number Boxes */}
-            {boxes.map((boxValue, index) => (
+            {boxes.map((box, index) => (
               <EditableTextBox
                 key={index}
-                value={boxValue}
-                onChange={(val) => updateBox(index, val)}
+                value={box.main}
+                subtext={box.sub}
+                onChange={(val) => updateBoxMain(index, val)}
+                onSubtextChange={(val) => updateBoxSub(index, val)}
                 onRemove={() => removeBox(index)}
                 showRemove={boxes.length > 1}
               />
