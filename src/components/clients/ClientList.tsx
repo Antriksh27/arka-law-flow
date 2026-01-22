@@ -87,6 +87,11 @@ export const ClientList = () => {
           clientsQuery = clientsQuery.eq('is_vip', true);
         }
         
+        // Apply server-side search filter
+        if (searchTerm) {
+          clientsQuery = clientsQuery.or(`full_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%`);
+        }
+        
         const clientsResult = await clientsQuery
           .order(dbSortField === 'active_case_count' ? 'created_at' : dbSortField, {
             ascending: sortDirection === 'asc'
@@ -147,14 +152,7 @@ export const ClientList = () => {
         // Apply client-side filters
         let filteredData = data;
         
-        if (searchTerm) {
-          filteredData = filteredData.filter(client => 
-            client.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-            client.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            client.phone?.toLowerCase().includes(searchTerm.toLowerCase())
-          );
-        }
-        
+        // Apply client-side status filter (computed_status is derived from cases)
         if (statusFilter !== 'all') {
           filteredData = filteredData.filter(client => client.computed_status === statusFilter);
         }
