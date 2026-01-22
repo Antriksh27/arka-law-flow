@@ -53,10 +53,14 @@ const RoleBasedRouter = () => {
     }
   }, [role, loading, location.pathname, navigate]);
 
-  if (loading) {
+  // Show loading while auth is loading OR while role is being fetched
+  if (loading || role === null) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-[#6B7280]">Loading...</div>
+      <div className="flex items-center justify-center min-h-screen bg-[#F9FAFB]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-3"></div>
+          <div className="text-[#6B7280] text-sm">Loading...</div>
+        </div>
       </div>
     );
   }
