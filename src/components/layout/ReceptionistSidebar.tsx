@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, Users, Calendar, UserPlus, CalendarPlus, Clock, Phone, Settings, LogOut, MessageSquare } from 'lucide-react';
+import { Home, Users, Calendar, UserPlus, CalendarPlus, LayoutDashboard, Phone, Settings, LogOut, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 const ReceptionistSidebar = () => {
@@ -21,9 +21,9 @@ const ReceptionistSidebar = () => {
     href: '/reception/contacts',
     icon: Users
   }, {
-    name: 'Schedule',
-    href: '/reception/calendar',
-    icon: Clock
+    name: 'Daily Board',
+    href: '/daily-board',
+    icon: LayoutDashboard
   }, {
     name: 'Chat',
     href: '/chat',

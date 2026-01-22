@@ -75,9 +75,8 @@ const RoleBasedRouter = () => {
             <Route path="/reception/home" element={<ReceptionHome />} />
             <Route path="/reception/contacts" element={<ReceptionContacts />} />
             <Route path="/reception/appointments" element={<ReceptionAppointments />} />
-            <Route path="/reception/schedule" element={<ReceptionSchedule />} />
-            <Route path="/reception/calendar" element={<ReceptionCalendar />} />
             <Route path="/reception/display-board" element={<ReceptionDisplayBoard />} />
+            <Route path="/daily-board" element={<DailyBoard />} />
             <Route path="/chat" element={<ModernMessenger />} />
             <Route path="*" element={<ReceptionHome />} />
           </Routes>
