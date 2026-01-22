@@ -89,7 +89,7 @@ export const ClientList = () => {
         
         // Apply server-side search filter
         if (searchTerm) {
-          clientsQuery = clientsQuery.or(`full_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%`);
+          clientsQuery = clientsQuery.or(`full_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%,organization.ilike.%${searchTerm}%`);
         }
         
         const clientsResult = await clientsQuery
