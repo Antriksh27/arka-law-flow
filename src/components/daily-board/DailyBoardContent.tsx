@@ -1,15 +1,19 @@
 import React from 'react';
 import { CourtGroupTable } from './CourtGroupTable';
 import { HearingCard } from './HearingCard';
-import { GroupedHearings } from './types';
+import { GroupedHearings, CourtBox, JudgeBoxesMap } from './types';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface DailyBoardContentProps {
   groupedHearings: GroupedHearings[];
+  judgeBoxes: JudgeBoxesMap;
+  onJudgeBoxesChange: (judgeName: string, boxes: CourtBox[]) => void;
 }
 
 export const DailyBoardContent: React.FC<DailyBoardContentProps> = ({
   groupedHearings,
+  judgeBoxes,
+  onJudgeBoxesChange,
 }) => {
   const isMobile = useIsMobile();
   
@@ -59,7 +63,12 @@ export const DailyBoardContent: React.FC<DailyBoardContentProps> = ({
   return (
     <div className="space-y-6">
       {groupedHearings.map((courtGroup) => (
-        <CourtGroupTable key={courtGroup.courtName} courtGroup={courtGroup} />
+        <CourtGroupTable 
+          key={courtGroup.courtName} 
+          courtGroup={courtGroup}
+          judgeBoxes={judgeBoxes}
+          onJudgeBoxesChange={onJudgeBoxesChange}
+        />
       ))}
     </div>
   );

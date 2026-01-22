@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { DailyHearing } from './types';
+import { DailyHearing, CourtBox } from './types';
 import { InlineEditField } from './InlineEditField';
 import { useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
@@ -13,6 +13,8 @@ interface JudgeSectionProps {
   startingSerialNo: number;
   courtNumber?: string;
   benchType?: string;
+  boxes: CourtBox[];
+  onBoxesChange: (boxes: CourtBox[]) => void;
 }
 
 const getStageColor = (stage: string | null) => {
@@ -128,13 +130,10 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
   startingSerialNo,
   courtNumber,
   benchType = 'DB',
+  boxes,
+  onBoxesChange,
 }) => {
   const queryClient = useQueryClient();
-  
-  // Local state for dynamic court boxes (start with 1, max 5) - each has main + subtext
-  const [boxes, setBoxes] = useState<{ main: string; sub: string }[]>([
-    { main: hearings[0]?.court_number || '', sub: hearings[0]?.bench || '' }
-  ]);
   
   const handleUpdate = () => {
     queryClient.invalidateQueries({ queryKey: ['daily-board-hearings'] });
@@ -151,20 +150,20 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
 
   const addBox = () => {
     if (boxes.length < 5) {
-      setBoxes([...boxes, { main: '', sub: '' }]);
+      onBoxesChange([...boxes, { main: '', sub: '' }]);
     }
   };
 
   const removeBox = (index: number) => {
     if (boxes.length > 1) {
-      setBoxes(boxes.filter((_, i) => i !== index));
+      onBoxesChange(boxes.filter((_, i) => i !== index));
     }
   };
 
   const updateBoxMain = (index: number, value: string) => {
     const newBoxes = [...boxes];
     newBoxes[index] = { ...newBoxes[index], main: value };
-    setBoxes(newBoxes);
+    onBoxesChange(newBoxes);
     
     // Update first hearing's court_number if it's the first box
     if (index === 0 && hearings[0]) {
@@ -175,7 +174,7 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
   const updateBoxSub = (index: number, value: string) => {
     const newBoxes = [...boxes];
     newBoxes[index] = { ...newBoxes[index], sub: value };
-    setBoxes(newBoxes);
+    onBoxesChange(newBoxes);
     
     // Update first hearing's bench if it's the first box
     if (index === 0 && hearings[0]) {

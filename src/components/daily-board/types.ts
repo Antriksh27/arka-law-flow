@@ -36,12 +36,21 @@ export interface DailyHearing {
   formatted_aorr?: string;
 }
 
+// Box type for court number boxes
+export interface CourtBox {
+  main: string;
+  sub: string;
+}
+
+// Map of judge name to their boxes
+export type JudgeBoxesMap = Record<string, CourtBox[]>;
+
 export interface GroupedHearings {
   courtName: string;
   judges: {
     judgeName: string;
     courtNumber?: string;
-    benchType?: string; // 'DB' (Division Bench), 'SB' (Single Bench), etc.
+    benchType?: string;
     hearings: DailyHearing[];
   }[];
 }

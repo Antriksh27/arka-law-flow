@@ -1,10 +1,10 @@
-import React, { useState, useRef, useMemo, useEffect } from 'react';
+import React, { useState, useRef, useMemo, useEffect, useCallback } from 'react';
 import { DailyBoardHeader } from '@/components/daily-board/DailyBoardHeader';
 import { DailyBoardSummary } from '@/components/daily-board/DailyBoardSummary';
 import { DailyBoardContent } from '@/components/daily-board/DailyBoardContent';
 import { PrintView } from '@/components/daily-board/PrintView';
 import { useDailyBoardData } from '@/hooks/useDailyBoardData';
-import { DailyBoardFilters, GroupedHearings } from '@/components/daily-board/types';
+import { DailyBoardFilters, GroupedHearings, CourtBox, JudgeBoxesMap } from '@/components/daily-board/types';
 import { useToast } from '@/hooks/use-toast';
 import html2pdf from 'html2pdf.js';
 import { format } from 'date-fns';
@@ -30,6 +30,7 @@ const DailyBoard = () => {
     judge: 'all',
     myHearingsOnly: false,
   });
+  const [judgeBoxes, setJudgeBoxes] = useState<JudgeBoxesMap>({});
   
   const printViewRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -37,15 +38,23 @@ const DailyBoard = () => {
   
   const { data: hearings = [], isFetching, refetch } = useDailyBoardData(selectedDate, filters);
   
-  // Reset isGenerated when date changes
+  // Reset isGenerated and judgeBoxes when date changes
   useEffect(() => {
     setIsGenerated(false);
+    setJudgeBoxes({});
   }, [selectedDate]);
 
   const handleGenerate = async () => {
     await refetch();
     setIsGenerated(true);
   };
+
+  const handleJudgeBoxesChange = useCallback((judgeName: string, boxes: CourtBox[]) => {
+    setJudgeBoxes(prev => ({
+      ...prev,
+      [judgeName]: boxes,
+    }));
+  }, []);
   
   // Group hearings by court and judge
   const groupedHearings = useMemo((): GroupedHearings[] => {
@@ -299,7 +308,11 @@ const DailyBoard = () => {
                 groupedHearings={groupedHearings}
                 totalCount={hearings.length}
               />
-              <DailyBoardContent groupedHearings={groupedHearings} />
+              <DailyBoardContent 
+                groupedHearings={groupedHearings}
+                judgeBoxes={judgeBoxes}
+                onJudgeBoxesChange={handleJudgeBoxesChange}
+              />
             </>
           )}
         </div>
@@ -308,6 +321,7 @@ const DailyBoard = () => {
           ref={printViewRef}
           selectedDate={selectedDate}
           groupedHearings={groupedHearings}
+          judgeBoxes={judgeBoxes}
         />
       </div>
     </DashboardLayout>

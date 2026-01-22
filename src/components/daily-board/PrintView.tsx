@@ -1,14 +1,15 @@
 import React from 'react';
 import { format } from 'date-fns';
-import { GroupedHearings } from './types';
+import { GroupedHearings, CourtBox, JudgeBoxesMap } from './types';
 
 interface PrintViewProps {
   selectedDate: Date;
   groupedHearings: GroupedHearings[];
+  judgeBoxes: JudgeBoxesMap;
 }
 
 export const PrintView = React.forwardRef<HTMLDivElement, PrintViewProps>(
-  ({ selectedDate, groupedHearings }, ref) => {
+  ({ selectedDate, groupedHearings, judgeBoxes }, ref) => {
     return (
       <div ref={ref} className="hidden print:block bg-white p-4 print-view">
         {/* Header with Company Logo - Centered */}
@@ -30,6 +31,11 @@ export const PrintView = React.forwardRef<HTMLDivElement, PrintViewProps>(
             
             {courtGroup.judges.map((judge) => {
               const firstHearing = judge.hearings[0];
+              // Get boxes for this judge, or use default from first hearing
+              const defaultBoxes: CourtBox[] = [
+                { main: firstHearing?.court_number || '', sub: firstHearing?.bench || '' }
+              ];
+              const boxes = judgeBoxes[judge.judgeName] || defaultBoxes;
               
               return (
                 <div key={judge.judgeName} className="mb-4 judge-section">
@@ -37,11 +43,16 @@ export const PrintView = React.forwardRef<HTMLDivElement, PrintViewProps>(
                   <div className="bg-gray-50 px-3 py-2 flex items-center justify-between mb-1 judge-header">
                     <h3 className="text-sm font-semibold uppercase underline flex-1">{judge.judgeName}</h3>
                     <div className="flex items-center gap-1">
-                      {/* Court Number Box - shows first hearing's data */}
-                      <div className="border-2 border-gray-800 text-center bg-white min-w-[40px] h-[32px] flex flex-col items-center justify-center px-2">
-                        <div className="font-bold text-[10px] leading-tight">{firstHearing?.court_number || ''}</div>
-                        <div className="text-[8px] leading-tight text-gray-600">{firstHearing?.bench || ''}</div>
-                      </div>
+                      {/* Dynamic Court Number Boxes */}
+                      {boxes.map((box, boxIndex) => (
+                        <div 
+                          key={boxIndex}
+                          className="border-2 border-gray-800 text-center bg-white min-w-[40px] h-[32px] flex flex-col items-center justify-center px-2"
+                        >
+                          <div className="font-bold text-[10px] leading-tight">{box.main || ''}</div>
+                          <div className="text-[8px] leading-tight text-gray-600">{box.sub || ''}</div>
+                        </div>
+                      ))}
                       {/* Status Boxes */}
                       <div className="border-2 border-red-400 w-[30px] h-[32px] bg-red-200"></div>
                       <div className="border-2 border-yellow-400 w-[30px] h-[32px] bg-yellow-200"></div>
