@@ -160,7 +160,7 @@ export const InlineEditFieldWithSubtext: React.FC<InlineEditFieldWithSubtextProp
       ) : (
         <div
           onClick={() => setIsEditingSub(true)}
-          className="text-xs text-gray-500 cursor-pointer hover:bg-gray-100 px-1 rounded min-h-[16px] flex items-center opacity-0 group-hover:opacity-100 transition-opacity"
+          className="text-xs text-gray-500 cursor-pointer hover:bg-gray-100 px-1 rounded min-h-[16px] flex items-center"
         >
           {parsed.sub || <span className="text-gray-400">{subPlaceholder}</span>}
         </div>
