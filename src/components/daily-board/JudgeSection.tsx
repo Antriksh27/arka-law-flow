@@ -229,10 +229,8 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
                     <InlineEditFieldWithSubtext
                       id={hearing.hearing_id}
                       table="case_hearings"
-                      mainField="serial_number"
-                      subField="serial_number_sub"
-                      mainValue={hearing.serial_number}
-                      subValue={hearing.serial_number_sub}
+                      field="serial_number"
+                      currentValue={hearing.serial_number}
                       mainPlaceholder="#"
                       subPlaceholder="sub"
                     />

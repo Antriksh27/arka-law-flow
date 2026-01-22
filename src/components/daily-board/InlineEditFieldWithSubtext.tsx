@@ -7,34 +7,47 @@ import { DailyHearing } from './types';
 interface InlineEditFieldWithSubtextProps {
   id: string;
   table: 'case_hearings' | 'cases';
-  mainField: string;
-  subField: string;
-  mainValue: string | null;
-  subValue: string | null;
+  field: string; // Single field that stores "main|sub" format
+  currentValue: string | null;
   className?: string;
   mainPlaceholder?: string;
   subPlaceholder?: string;
 }
 
+// Parse "main|sub" format
+const parseValue = (value: string | null): { main: string; sub: string } => {
+  if (!value) return { main: '', sub: '' };
+  const parts = value.split('|');
+  return { main: parts[0] || '', sub: parts[1] || '' };
+};
+
+// Combine to "main|sub" format (omit pipe if no sub)
+const combineValue = (main: string, sub: string): string | null => {
+  if (!main && !sub) return null;
+  if (!sub) return main;
+  return `${main}|${sub}`;
+};
+
 export const InlineEditFieldWithSubtext: React.FC<InlineEditFieldWithSubtextProps> = ({
   id,
   table,
-  mainField,
-  subField,
-  mainValue,
-  subValue,
+  field,
+  currentValue,
   className = '',
   mainPlaceholder = 'Main',
   subPlaceholder = 'Sub',
 }) => {
+  const parsed = parseValue(currentValue);
   const [isEditingMain, setIsEditingMain] = useState(false);
   const [isEditingSub, setIsEditingSub] = useState(false);
-  const [localMain, setLocalMain] = useState(mainValue || '');
-  const [localSub, setLocalSub] = useState(subValue || '');
+  const [localMain, setLocalMain] = useState(parsed.main);
+  const [localSub, setLocalSub] = useState(parsed.sub);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const saveField = async (field: string, value: string | null, originalValue: string | null) => {
+  const saveField = async (newMain: string, newSub: string) => {
+    const newValue = combineValue(newMain, newSub);
+    
     // Optimistic update
     queryClient.setQueriesData<DailyHearing[]>(
       { queryKey: ['daily-hearings'] },
@@ -46,7 +59,7 @@ export const InlineEditFieldWithSubtext: React.FC<InlineEditFieldWithSubtextProp
             : hearing.case_id === id;
 
           if (shouldUpdate) {
-            return { ...hearing, [field]: value };
+            return { ...hearing, [field]: newValue };
           }
           return hearing;
         });
@@ -56,7 +69,7 @@ export const InlineEditFieldWithSubtext: React.FC<InlineEditFieldWithSubtextProp
     try {
       const { error } = await supabase
         .from(table)
-        .update({ [field]: value })
+        .update({ [field]: newValue })
         .eq('id', id);
 
       if (error) throw error;
@@ -73,7 +86,7 @@ export const InlineEditFieldWithSubtext: React.FC<InlineEditFieldWithSubtextProp
               : hearing.case_id === id;
 
             if (shouldUpdate) {
-              return { ...hearing, [field]: originalValue };
+              return { ...hearing, [field]: currentValue };
             }
             return hearing;
           });
@@ -88,12 +101,12 @@ export const InlineEditFieldWithSubtext: React.FC<InlineEditFieldWithSubtextProp
   };
 
   const handleMainSave = () => {
-    saveField(mainField, localMain || null, mainValue);
+    saveField(localMain, localSub);
     setIsEditingMain(false);
   };
 
   const handleSubSave = () => {
-    saveField(subField, localSub || null, subValue);
+    saveField(localMain, localSub);
     setIsEditingSub(false);
   };
 
@@ -109,7 +122,7 @@ export const InlineEditFieldWithSubtext: React.FC<InlineEditFieldWithSubtextProp
           onKeyDown={(e) => {
             if (e.key === 'Enter') handleMainSave();
             if (e.key === 'Escape') {
-              setLocalMain(mainValue || '');
+              setLocalMain(parsed.main);
               setIsEditingMain(false);
             }
           }}
@@ -122,7 +135,7 @@ export const InlineEditFieldWithSubtext: React.FC<InlineEditFieldWithSubtextProp
           onClick={() => setIsEditingMain(true)}
           className="font-bold text-lg cursor-pointer hover:bg-gray-100 px-1 rounded min-h-[24px] flex items-center"
         >
-          {mainValue || <span className="text-gray-400 text-sm">{mainPlaceholder}</span>}
+          {parsed.main || <span className="text-gray-400 text-sm">{mainPlaceholder}</span>}
         </div>
       )}
 
@@ -136,7 +149,7 @@ export const InlineEditFieldWithSubtext: React.FC<InlineEditFieldWithSubtextProp
           onKeyDown={(e) => {
             if (e.key === 'Enter') handleSubSave();
             if (e.key === 'Escape') {
-              setLocalSub(subValue || '');
+              setLocalSub(parsed.sub);
               setIsEditingSub(false);
             }
           }}
@@ -149,7 +162,7 @@ export const InlineEditFieldWithSubtext: React.FC<InlineEditFieldWithSubtextProp
           onClick={() => setIsEditingSub(true)}
           className="text-xs text-gray-500 cursor-pointer hover:bg-gray-100 px-1 rounded min-h-[16px] flex items-center opacity-0 group-hover:opacity-100 transition-opacity"
         >
-          {subValue || <span className="text-gray-400">{subPlaceholder}</span>}
+          {parsed.sub || <span className="text-gray-400">{subPlaceholder}</span>}
         </div>
       )}
     </div>
