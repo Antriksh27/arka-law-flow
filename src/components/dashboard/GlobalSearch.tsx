@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Search, FileText, Users, Briefcase, CheckSquare, Loader2, X } from 'lucide-react';
+import { Search, FileText, Users, Briefcase, CheckSquare, Loader2, X, File } from 'lucide-react';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,7 +11,7 @@ export const GlobalSearch = () => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState<any>({ clients: [], cases: [], contacts: [], tasks: [] });
+  const [results, setResults] = useState<any>({ clients: [], cases: [], contacts: [], tasks: [], documents: [] });
   const navigate = useNavigate();
   const { firmId } = useAuth();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -19,25 +19,47 @@ export const GlobalSearch = () => {
   useEffect(() => {
     const searchAllModules = async () => {
       if (!query || query.length < 2 || !firmId) {
-        setResults({ clients: [], cases: [], contacts: [], tasks: [] });
+        setResults({ clients: [], cases: [], contacts: [], tasks: [], documents: [] });
         if (query.length === 0) setOpen(false);
         return;
       }
 
       setLoading(true);
-      setOpen(true); // Auto-open when user types
+      setOpen(true);
       
       try {
-        const [clientsRes, casesRes, contactsRes, tasksRes] = await Promise.all([
-          supabase.from('clients').select('id, full_name, email').eq('firm_id', firmId).ilike('full_name', `%${query}%`).limit(5),
+        const searchTerm = `%${query}%`;
+        const [clientsRes, casesRes, contactsRes, tasksRes, documentsRes] = await Promise.all([
+          supabase
+            .from('clients')
+            .select('id, full_name, email, phone')
+            .eq('firm_id', firmId)
+            .or(`full_name.ilike.${searchTerm},email.ilike.${searchTerm},phone.ilike.${searchTerm}`)
+            .limit(5),
           supabase
             .from('cases')
-            .select('id, case_title, case_number, cnr_number, registration_number, filing_number')
+            .select('id, case_title, case_number, cnr_number, registration_number, filing_number, reference_number, petitioner, respondent')
             .eq('firm_id', firmId)
-            .or(`case_title.ilike.%${query}%,case_number.ilike.%${query}%,cnr_number.ilike.%${query}%,registration_number.ilike.%${query}%,filing_number.ilike.%${query}%`)
+            .or(`case_title.ilike.${searchTerm},case_number.ilike.${searchTerm},cnr_number.ilike.${searchTerm},registration_number.ilike.${searchTerm},filing_number.ilike.${searchTerm},reference_number.ilike.${searchTerm},petitioner.ilike.${searchTerm},respondent.ilike.${searchTerm}`)
             .limit(5),
-          supabase.from('contacts').select('id, name, phone').eq('firm_id', firmId).ilike('name', `%${query}%`).limit(5),
-          supabase.from('tasks').select('id, title, status').eq('firm_id', firmId).ilike('title', `%${query}%`).limit(5),
+          supabase
+            .from('contacts')
+            .select('id, name, phone, email')
+            .eq('firm_id', firmId)
+            .or(`name.ilike.${searchTerm},phone.ilike.${searchTerm},email.ilike.${searchTerm}`)
+            .limit(5),
+          supabase
+            .from('tasks')
+            .select('id, title, status')
+            .eq('firm_id', firmId)
+            .ilike('title', searchTerm)
+            .limit(5),
+          supabase
+            .from('documents')
+            .select('id, file_name, document_type, case_id')
+            .eq('firm_id', firmId)
+            .or(`file_name.ilike.${searchTerm},document_type.ilike.${searchTerm}`)
+            .limit(5),
         ]);
 
         setResults({
@@ -45,6 +67,7 @@ export const GlobalSearch = () => {
           cases: casesRes.data || [],
           contacts: contactsRes.data || [],
           tasks: tasksRes.data || [],
+          documents: documentsRes.data || [],
         });
       } catch (error) {
         console.error('Search error:', error);
@@ -57,22 +80,30 @@ export const GlobalSearch = () => {
     return () => clearTimeout(debounce);
   }, [query, firmId]);
 
-  const handleSelect = (type: string, id: string) => {
+  const handleSelect = (type: string, id: string, caseId?: string) => {
     setOpen(false);
     setQuery('');
     if (type === 'client') navigate(`/client-info/${id}`);
     if (type === 'case') navigate(`/cases/${id}`);
     if (type === 'contact') navigate(`/contacts`);
     if (type === 'task') navigate(`/tasks`);
+    if (type === 'document') {
+      // Navigate to case if document has case_id, otherwise to documents page
+      if (caseId) {
+        navigate(`/cases/${caseId}?tab=documents`);
+      } else {
+        navigate(`/documents`);
+      }
+    }
   };
 
   const clearSearch = () => {
     setQuery('');
-    setResults({ clients: [], cases: [], contacts: [], tasks: [] });
+    setResults({ clients: [], cases: [], contacts: [], tasks: [], documents: [] });
     setOpen(false);
   };
 
-  const totalResults = results.clients.length + results.cases.length + results.contacts.length + results.tasks.length;
+  const totalResults = results.clients.length + results.cases.length + results.contacts.length + results.tasks.length + results.documents.length;
 
   return (
     <div className="w-full max-w-2xl relative">
@@ -137,7 +168,6 @@ export const GlobalSearch = () => {
                 Cases
               </div>
               {results.cases.map((caseItem: any) => {
-                // Determine which identifier matched the query
                 const q = query.toLowerCase();
                 let matchedField = caseItem.case_number || '';
                 if (caseItem.cnr_number?.toLowerCase().includes(q)) {
@@ -146,6 +176,12 @@ export const GlobalSearch = () => {
                   matchedField = `Reg: ${caseItem.registration_number}`;
                 } else if (caseItem.filing_number?.toLowerCase().includes(q)) {
                   matchedField = `Filing: ${caseItem.filing_number}`;
+                } else if (caseItem.reference_number?.toLowerCase().includes(q)) {
+                  matchedField = `Ref: ${caseItem.reference_number}`;
+                } else if (caseItem.petitioner?.toLowerCase().includes(q)) {
+                  matchedField = `Petitioner: ${caseItem.petitioner}`;
+                } else if (caseItem.respondent?.toLowerCase().includes(q)) {
+                  matchedField = `Respondent: ${caseItem.respondent}`;
                 }
 
                 return (
@@ -200,6 +236,29 @@ export const GlobalSearch = () => {
                   <CheckSquare className="w-4 h-4 mt-0.5 text-primary flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-sm truncate">{task.title}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {results.documents.length > 0 && (
+            <div className="p-2 border-t border-gray-100">
+              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase">
+                Documents
+              </div>
+              {results.documents.map((doc: any) => (
+                <button
+                  key={doc.id}
+                  onClick={() => handleSelect('document', doc.id, doc.case_id)}
+                  className="w-full flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 text-left transition-colors"
+                >
+                  <File className="w-4 h-4 mt-0.5 text-amber-600 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-sm truncate">{doc.file_name}</div>
+                    {doc.document_type && (
+                      <div className="text-xs text-muted-foreground truncate">{doc.document_type}</div>
+                    )}
                   </div>
                 </button>
               ))}
