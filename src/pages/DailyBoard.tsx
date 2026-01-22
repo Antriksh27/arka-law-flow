@@ -1,11 +1,10 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { DailyBoardHeader } from '@/components/daily-board/DailyBoardHeader';
 import { DailyBoardSummary } from '@/components/daily-board/DailyBoardSummary';
 import { DailyBoardContent } from '@/components/daily-board/DailyBoardContent';
 import { PrintView } from '@/components/daily-board/PrintView';
 import { useDailyBoardData } from '@/hooks/useDailyBoardData';
 import { DailyBoardFilters, GroupedHearings } from '@/components/daily-board/types';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { useToast } from '@/hooks/use-toast';
 import html2pdf from 'html2pdf.js';
 import { format } from 'date-fns';
@@ -14,15 +13,17 @@ import { MobileHeader } from '@/components/mobile/MobileHeader';
 
 import { MobileDailyBoardCard } from '@/components/daily-board/MobileDailyBoardCard';
 import { Button } from '@/components/ui/button';
-import { Calendar as CalendarIcon, Loader2 } from 'lucide-react';
+import { Calendar as CalendarIcon, Loader2, RefreshCw } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown } from 'lucide-react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import { cn } from '@/lib/utils';
 
 const DailyBoard = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [isGenerated, setIsGenerated] = useState(false);
   const [filters, setFilters] = useState<DailyBoardFilters>({
     searchQuery: '',
     court: 'all',
@@ -34,14 +35,23 @@ const DailyBoard = () => {
   const { toast } = useToast();
   const isMobile = useIsMobile();
   
-  const { data: hearings = [], isLoading } = useDailyBoardData(selectedDate, filters);
+  const { data: hearings = [], isFetching, refetch } = useDailyBoardData(selectedDate, filters);
+  
+  // Reset isGenerated when date changes
+  useEffect(() => {
+    setIsGenerated(false);
+  }, [selectedDate]);
+
+  const handleGenerate = async () => {
+    await refetch();
+    setIsGenerated(true);
+  };
   
   // Group hearings by court and judge
   const groupedHearings = useMemo((): GroupedHearings[] => {
     const courtMap = new Map<string, Map<string, typeof hearings>>();
     
     hearings.forEach((hearing) => {
-      // Use hearing court_name, fallback to case_court_name, then to 'Gujarat High Court'
       const court = hearing.court_name || hearing.case_court_name || 'Gujarat High Court';
       const judge = hearing.judge || 'Unassigned';
       
@@ -84,7 +94,6 @@ const DailyBoard = () => {
     toast({ title: 'Generating PDF...', description: 'Please wait' });
     
     try {
-      // Temporarily show the print view for PDF generation
       printViewRef.current.classList.remove('hidden');
       printViewRef.current.classList.add('block');
       
@@ -98,14 +107,12 @@ const DailyBoard = () => {
       
       await html2pdf().set(options).from(printViewRef.current).save();
       
-      // Hide it again
       printViewRef.current.classList.add('hidden');
       printViewRef.current.classList.remove('block');
       
       toast({ title: 'PDF exported successfully!' });
     } catch (error) {
       console.error('PDF export error:', error);
-      // Ensure we hide it even on error
       if (printViewRef.current) {
         printViewRef.current.classList.add('hidden');
         printViewRef.current.classList.remove('block');
@@ -123,21 +130,12 @@ const DailyBoard = () => {
   };
   
   const handleFiltersChange = (newFilters: DailyBoardFilters) => {
-    // Handle "all" values
     setFilters({
       ...newFilters,
       court: newFilters.court === 'all' ? '' : newFilters.court,
       judge: newFilters.judge === 'all' ? '' : newFilters.judge,
     });
   };
-  
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <LoadingSpinner message="Loading hearings..." />
-      </div>
-    );
-  }
 
   if (isMobile) {
     return (
@@ -156,6 +154,7 @@ const DailyBoard = () => {
                   mode="single"
                   selected={selectedDate}
                   onSelect={(date) => date && setSelectedDate(date)}
+                  className={cn("p-3 pointer-events-auto")}
                 />
               </PopoverContent>
             </Popover>
@@ -167,12 +166,36 @@ const DailyBoard = () => {
             <p className="text-sm text-muted-foreground mb-1">
               {format(selectedDate, 'EEEE, MMMM d, yyyy')}
             </p>
-            <p className="text-2xl font-bold text-primary">
-              {hearings.length} Hearings
-            </p>
+            {isGenerated ? (
+              <p className="text-2xl font-bold text-primary">
+                {hearings.length} Hearings
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Click generate to load hearings
+              </p>
+            )}
           </div>
 
-          {isLoading ? (
+          {!isGenerated ? (
+            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+              <CalendarIcon className="h-16 w-16 mb-4 opacity-20" />
+              <p className="text-sm mb-4">Select a date and generate the board</p>
+              <Button onClick={handleGenerate} disabled={isFetching} className="min-w-[160px]">
+                {isFetching ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Generate Board
+                  </>
+                )}
+              </Button>
+            </div>
+          ) : isFetching ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
@@ -180,9 +203,22 @@ const DailyBoard = () => {
             <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
               <CalendarIcon className="h-16 w-16 mb-4 opacity-20" />
               <p className="text-sm">No hearings for this date</p>
+              <Button variant="outline" onClick={handleGenerate} className="mt-4">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Regenerate
+              </Button>
             </div>
           ) : (
             <div className="space-y-4">
+              <Button variant="outline" onClick={handleGenerate} disabled={isFetching} className="w-full">
+                {isFetching ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                )}
+                Regenerate
+              </Button>
+              
               {groupedHearings.map((court) => (
                 <Collapsible key={court.courtName} defaultOpen>
                   <CollapsibleTrigger className="w-full">
@@ -219,8 +255,6 @@ const DailyBoard = () => {
             </div>
           )}
         </div>
-
-        
       </div>
     );
   }
@@ -242,14 +276,32 @@ const DailyBoard = () => {
             judges={uniqueJudges}
             onExportPDF={handleExportPDF}
             onPrint={handlePrint}
+            onGenerate={handleGenerate}
+            isGenerating={isFetching}
+            isGenerated={isGenerated}
           />
           
-          <DailyBoardSummary
-            groupedHearings={groupedHearings}
-            totalCount={hearings.length}
-          />
-          
-          <DailyBoardContent groupedHearings={groupedHearings} />
+          {!isGenerated ? (
+            <div className="bg-white rounded-2xl shadow-sm p-12 text-center">
+              <CalendarIcon className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-20" />
+              <p className="text-muted-foreground">
+                Select a date and click "Generate Board" to fetch the latest hearing data
+              </p>
+            </div>
+          ) : isFetching ? (
+            <div className="bg-white rounded-2xl shadow-sm p-12 text-center">
+              <Loader2 className="h-8 w-8 mx-auto mb-4 animate-spin text-primary" />
+              <p className="text-muted-foreground">Loading hearings...</p>
+            </div>
+          ) : (
+            <>
+              <DailyBoardSummary
+                groupedHearings={groupedHearings}
+                totalCount={hearings.length}
+              />
+              <DailyBoardContent groupedHearings={groupedHearings} />
+            </>
+          )}
         </div>
         
         <PrintView

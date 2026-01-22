@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Calendar as CalendarIcon, Search, Download, Printer, User } from 'lucide-react';
+import { Calendar as CalendarIcon, Search, Download, Printer, User, RefreshCw, Loader2 } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -18,6 +18,9 @@ interface DailyBoardHeaderProps {
   judges: string[];
   onExportPDF: () => void;
   onPrint: () => void;
+  onGenerate: () => void;
+  isGenerating: boolean;
+  isGenerated: boolean;
 }
 
 export const DailyBoardHeader: React.FC<DailyBoardHeaderProps> = ({
@@ -29,6 +32,9 @@ export const DailyBoardHeader: React.FC<DailyBoardHeaderProps> = ({
   judges,
   onExportPDF,
   onPrint,
+  onGenerate,
+  isGenerating,
+  isGenerated,
 }) => {
   return (
     <div className="bg-white rounded-2xl shadow-sm p-6 space-y-4">
@@ -54,66 +60,96 @@ export const DailyBoardHeader: React.FC<DailyBoardHeaderProps> = ({
                 selected={selectedDate}
                 onSelect={(date) => date && onDateChange(date)}
                 initialFocus
+                className={cn("p-3 pointer-events-auto")}
               />
             </PopoverContent>
           </Popover>
           
-          <Button variant="outline" onClick={onPrint}>
-            <Printer className="h-4 w-4 mr-2" />
-            Print
-          </Button>
-          
-          <Button variant="outline" onClick={onExportPDF}>
-            <Download className="h-4 w-4 mr-2" />
-            PDF
-          </Button>
+          {!isGenerated ? (
+            <Button onClick={onGenerate} disabled={isGenerating} className="min-w-[140px]">
+              {isGenerating ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Generate Board
+                </>
+              )}
+            </Button>
+          ) : (
+            <>
+              <Button variant="outline" onClick={onGenerate} disabled={isGenerating}>
+                {isGenerating ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                )}
+                Regenerate
+              </Button>
+              
+              <Button variant="outline" onClick={onPrint}>
+                <Printer className="h-4 w-4 mr-2" />
+                Print
+              </Button>
+              
+              <Button variant="outline" onClick={onExportPDF}>
+                <Download className="h-4 w-4 mr-2" />
+                PDF
+              </Button>
+            </>
+          )}
         </div>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            placeholder="Search cases, parties, lawyers..."
-            value={filters.searchQuery}
-            onChange={(e) => onFiltersChange({ ...filters, searchQuery: e.target.value })}
-            className="pl-9"
-          />
+      {isGenerated && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search cases, parties, lawyers..."
+              value={filters.searchQuery}
+              onChange={(e) => onFiltersChange({ ...filters, searchQuery: e.target.value })}
+              className="pl-9"
+            />
+          </div>
+          
+          <Select value={filters.court} onValueChange={(value) => onFiltersChange({ ...filters, court: value })}>
+            <SelectTrigger>
+              <SelectValue placeholder="Filter by Court" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Courts</SelectItem>
+              {courts.map((court) => (
+                <SelectItem key={court} value={court}>{court}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          <Select value={filters.judge} onValueChange={(value) => onFiltersChange({ ...filters, judge: value })}>
+            <SelectTrigger>
+              <SelectValue placeholder="Filter by Judge" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Judges</SelectItem>
+              {judges.map((judge) => (
+                <SelectItem key={judge} value={judge}>{judge}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          <Button
+            variant={filters.myHearingsOnly ? "default" : "outline"}
+            onClick={() => onFiltersChange({ ...filters, myHearingsOnly: !filters.myHearingsOnly })}
+            className="w-full"
+          >
+            <User className="h-4 w-4 mr-2" />
+            My Hearings
+          </Button>
         </div>
-        
-        <Select value={filters.court} onValueChange={(value) => onFiltersChange({ ...filters, court: value })}>
-          <SelectTrigger>
-            <SelectValue placeholder="Filter by Court" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Courts</SelectItem>
-            {courts.map((court) => (
-              <SelectItem key={court} value={court}>{court}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        
-        <Select value={filters.judge} onValueChange={(value) => onFiltersChange({ ...filters, judge: value })}>
-          <SelectTrigger>
-            <SelectValue placeholder="Filter by Judge" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Judges</SelectItem>
-            {judges.map((judge) => (
-              <SelectItem key={judge} value={judge}>{judge}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        
-        <Button
-          variant={filters.myHearingsOnly ? "default" : "outline"}
-          onClick={() => onFiltersChange({ ...filters, myHearingsOnly: !filters.myHearingsOnly })}
-          className="w-full"
-        >
-          <User className="h-4 w-4 mr-2" />
-          My Hearings
-        </Button>
-      </div>
+      )}
     </div>
   );
 };
