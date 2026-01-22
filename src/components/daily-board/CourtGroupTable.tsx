@@ -2,13 +2,19 @@ import React, { useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { JudgeSection } from './JudgeSection';
-import { GroupedHearings } from './types';
+import { GroupedHearings, CourtBox, JudgeBoxesMap } from './types';
 
 interface CourtGroupTableProps {
   courtGroup: GroupedHearings;
+  judgeBoxes: JudgeBoxesMap;
+  onJudgeBoxesChange: (judgeName: string, boxes: CourtBox[]) => void;
 }
 
-export const CourtGroupTable: React.FC<CourtGroupTableProps> = ({ courtGroup }) => {
+export const CourtGroupTable: React.FC<CourtGroupTableProps> = ({ 
+  courtGroup, 
+  judgeBoxes,
+  onJudgeBoxesChange,
+}) => {
   const [isExpanded, setIsExpanded] = useState(true);
   
   let serialNo = 1;
@@ -36,6 +42,11 @@ export const CourtGroupTable: React.FC<CourtGroupTableProps> = ({ courtGroup }) 
       {isExpanded && (
         <div className="p-6 space-y-6">
           {courtGroup.judges.map((judge, index) => {
+            const defaultBoxes: CourtBox[] = [
+              { main: judge.hearings[0]?.court_number || '', sub: judge.hearings[0]?.bench || '' }
+            ];
+            const boxes = judgeBoxes[judge.judgeName] || defaultBoxes;
+            
             const section = (
               <JudgeSection
                 key={judge.judgeName}
@@ -44,6 +55,8 @@ export const CourtGroupTable: React.FC<CourtGroupTableProps> = ({ courtGroup }) 
                 startingSerialNo={serialNo}
                 courtNumber={judge.courtNumber || String(100 + index)}
                 benchType={judge.benchType || 'DB'}
+                boxes={boxes}
+                onBoxesChange={(newBoxes) => onJudgeBoxesChange(judge.judgeName, newBoxes)}
               />
             );
             serialNo += judge.hearings.length;
