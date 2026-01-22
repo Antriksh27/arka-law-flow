@@ -4,6 +4,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { DailyHearing } from './types';
 import { InlineEditField } from './InlineEditField';
 import { useQueryClient } from '@tanstack/react-query';
+import { Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface JudgeSectionProps {
   judgeName: string;
@@ -25,58 +27,58 @@ const getStageColor = (stage: string | null) => {
   return 'default';
 };
 
-// Editable Box Component for court numbers
-const EditableCourtBox: React.FC<{
-  courtNum: string;
-  benchType: string;
-  onCourtNumChange: (val: string) => void;
-  onBenchTypeChange: (val: string) => void;
-}> = ({ courtNum, benchType, onCourtNumChange, onBenchTypeChange }) => {
+// Simple editable text box for court numbers
+const EditableTextBox: React.FC<{
+  value: string;
+  onChange: (val: string) => void;
+  onRemove?: () => void;
+  showRemove?: boolean;
+}> = ({ value, onChange, onRemove, showRemove }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [localValue, setLocalValue] = useState(courtNum);
+  const [localValue, setLocalValue] = useState(value);
 
   return (
-    <div className="border-2 border-gray-800 px-4 py-2 text-center bg-white min-w-[60px]">
+    <div className="border-2 border-gray-800 px-3 py-2 text-center bg-white min-w-[60px] relative group">
       {isEditing ? (
         <input
           type="text"
           value={localValue}
           onChange={(e) => setLocalValue(e.target.value)}
           onBlur={() => {
-            onCourtNumChange(localValue);
+            onChange(localValue);
             setIsEditing(false);
           }}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
-              onCourtNumChange(localValue);
+              onChange(localValue);
               setIsEditing(false);
             }
             if (e.key === 'Escape') {
-              setLocalValue(courtNum);
+              setLocalValue(value);
               setIsEditing(false);
             }
           }}
           className="w-full text-center font-bold text-base border-b border-blue-500 outline-none bg-transparent"
           autoFocus
+          placeholder="Type..."
         />
       ) : (
         <div
           onClick={() => setIsEditing(true)}
-          className="font-bold text-base cursor-pointer hover:bg-gray-100 min-h-[20px]"
+          className="font-bold text-base cursor-pointer hover:bg-gray-100 min-h-[24px]"
         >
-          {courtNum || ''}
+          {value || <span className="text-gray-400 text-sm">Click to edit</span>}
         </div>
       )}
-      <select
-        className="text-xs text-center bg-transparent border-none outline-none cursor-pointer w-full"
-        value={benchType}
-        onChange={(e) => onBenchTypeChange(e.target.value)}
-        title="DB = Daily Board, SB = Supplementary Board"
-      >
-        <option value="">-</option>
-        <option value="DB">DB</option>
-        <option value="SB">SB</option>
-      </select>
+      {showRemove && onRemove && (
+        <button
+          onClick={onRemove}
+          className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+          title="Remove box"
+        >
+          ×
+        </button>
+      )}
     </div>
   );
 };
@@ -90,10 +92,8 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
 }) => {
   const queryClient = useQueryClient();
   
-  // Local state for the 3 court boxes (stored per judge section)
-  const [box1, setBox1] = useState({ court: hearings[0]?.court_number || '', bench: hearings[0]?.bench || '' });
-  const [box2, setBox2] = useState({ court: '', bench: '' });
-  const [box3, setBox3] = useState({ court: '', bench: '' });
+  // Local state for dynamic court boxes (start with 1, max 5)
+  const [boxes, setBoxes] = useState<string[]>([hearings[0]?.court_number || '']);
   
   const handleUpdate = () => {
     queryClient.invalidateQueries({ queryKey: ['daily-board-hearings'] });
@@ -108,51 +108,68 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
     handleUpdate();
   };
 
+  const addBox = () => {
+    if (boxes.length < 5) {
+      setBoxes([...boxes, '']);
+    }
+  };
+
+  const removeBox = (index: number) => {
+    if (boxes.length > 1) {
+      setBoxes(boxes.filter((_, i) => i !== index));
+    }
+  };
+
+  const updateBox = (index: number, value: string) => {
+    const newBoxes = [...boxes];
+    newBoxes[index] = value;
+    setBoxes(newBoxes);
+    
+    // Update first hearing's court_number if it's the first box
+    if (index === 0 && hearings[0]) {
+      updateHearingField(hearings[0].hearing_id, 'court_number', value || null);
+    }
+  };
+
   return (
     <div className="space-y-3">
       {/* Judge Header with Editable Court Number Boxes */}
       <div className="bg-gray-50 px-4 py-3 rounded-lg flex items-start justify-between">
         <h3 className="text-lg font-semibold text-gray-900 uppercase underline">{judgeName}</h3>
         {hearings.length > 0 && (
-          <div className="flex gap-2">
-            {/* Court Number Box 1 */}
-            <EditableCourtBox
-              courtNum={box1.court}
-              benchType={box1.bench}
-              onCourtNumChange={(val) => {
-                setBox1(prev => ({ ...prev, court: val }));
-                updateHearingField(hearings[0].hearing_id, 'court_number', val || null);
-              }}
-              onBenchTypeChange={(val) => {
-                setBox1(prev => ({ ...prev, bench: val }));
-                updateHearingField(hearings[0].hearing_id, 'bench', val || null);
-              }}
-            />
+          <div className="flex gap-2 items-center">
+            {/* Dynamic Court Number Boxes */}
+            {boxes.map((boxValue, index) => (
+              <EditableTextBox
+                key={index}
+                value={boxValue}
+                onChange={(val) => updateBox(index, val)}
+                onRemove={() => removeBox(index)}
+                showRemove={boxes.length > 1}
+              />
+            ))}
             
-            {/* Court Number Box 2 */}
-            <EditableCourtBox
-              courtNum={box2.court}
-              benchType={box2.bench}
-              onCourtNumChange={(val) => setBox2(prev => ({ ...prev, court: val }))}
-              onBenchTypeChange={(val) => setBox2(prev => ({ ...prev, bench: val }))}
-            />
-            
-            {/* Court Number Box 3 */}
-            <EditableCourtBox
-              courtNum={box3.court}
-              benchType={box3.bench}
-              onCourtNumChange={(val) => setBox3(prev => ({ ...prev, court: val }))}
-              onBenchTypeChange={(val) => setBox3(prev => ({ ...prev, bench: val }))}
-            />
+            {/* Add Box Button (max 5) */}
+            {boxes.length < 5 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={addBox}
+                className="h-[44px] w-[44px] p-0 border-2 border-dashed border-gray-400 hover:border-gray-600"
+                title="Add box (max 5)"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            )}
             
             {/* Red Status Box */}
-            <div className="border-2 border-red-400 w-[60px] h-[52px] bg-red-200"></div>
+            <div className="border-2 border-red-400 w-[60px] h-[44px] bg-red-200"></div>
             
             {/* Yellow Status Box */}
-            <div className="border-2 border-yellow-400 w-[60px] h-[52px] bg-yellow-200"></div>
+            <div className="border-2 border-yellow-400 w-[60px] h-[44px] bg-yellow-200"></div>
             
             {/* Green Status Box */}
-            <div className="border-2 border-green-400 w-[60px] h-[52px] bg-green-200"></div>
+            <div className="border-2 border-green-400 w-[60px] h-[44px] bg-green-200"></div>
           </div>
         )}
       </div>
@@ -174,7 +191,7 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
               <React.Fragment key={hearing.hearing_id}>
                 {/* Main case row */}
                 <TableRow className="border-b border-gray-400">
-                  {/* Sr.No with editable serial number and bench type - blank unless edited */}
+                  {/* Sr.No with editable serial number */}
                   <TableCell className="border-r border-gray-400 align-top">
                     <InlineEditField
                       id={hearing.hearing_id}
@@ -185,16 +202,6 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
                       placeholder=""
                       className="font-bold text-lg"
                     />
-                    <select
-                      className="text-xs bg-transparent border-none outline-none cursor-pointer"
-                      value={hearing.bench || ''}
-                      onChange={(e) => updateHearingField(hearing.hearing_id, 'bench', e.target.value || null)}
-                      title="DB = Daily Board, SB = Supplementary Board"
-                    >
-                      <option value="">-</option>
-                      <option value="DB">DB</option>
-                      <option value="SB">SB</option>
-                    </select>
                   </TableCell>
                   
                   {/* Case Number */}
