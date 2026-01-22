@@ -3,13 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { CheckSquare, Clock, AlertTriangle, FileText, Upload, Plus, Calendar, MessageSquareText, FolderOpen } from 'lucide-react';
+import { CheckSquare, Clock, AlertTriangle, FileText, Upload, Plus, Calendar, MessageSquareText, FolderOpen, Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileHeader } from '@/components/mobile/MobileHeader';
-
 import { MobileFAB } from '@/components/mobile/MobileFAB';
+import { GlobalSearch } from '@/components/dashboard/GlobalSearch';
+import { MobileSearchModal } from '@/components/dashboard/mobile/MobileSearchModal';
 interface DashboardStats {
   pendingTasks: number;
   inProgressTasks: number;
@@ -41,6 +42,7 @@ const StaffDashboard = () => {
   });
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showSearchModal, setShowSearchModal] = useState(false);
   useEffect(() => {
     fetchDashboardData();
   }, [user]);
@@ -174,6 +176,14 @@ const StaffDashboard = () => {
         />
 
         <div className="p-4 space-y-4">
+          {/* Search Bar */}
+          <button
+            onClick={() => setShowSearchModal(true)}
+            className="w-full flex items-center gap-3 px-4 py-3 bg-white rounded-xl border border-border shadow-sm text-left"
+          >
+            <Search className="w-5 h-5 text-muted-foreground" />
+            <span className="text-muted-foreground text-sm">Search cases, clients, tasks...</span>
+          </button>
           {/* Stats Strip - Horizontal Scroll */}
           <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
             <div className="flex-shrink-0 bg-white rounded-xl p-4 shadow-sm w-32">
@@ -287,7 +297,7 @@ const StaffDashboard = () => {
           icon={Plus}
         />
 
-        
+        <MobileSearchModal open={showSearchModal} onOpenChange={setShowSearchModal} />
       </div>
     );
   }
@@ -313,6 +323,11 @@ const StaffDashboard = () => {
             </Link>
           </Button>
         </div>
+      </div>
+
+      {/* Global Search */}
+      <div className="flex justify-center">
+        <GlobalSearch />
       </div>
 
       {/* Stats Cards */}
