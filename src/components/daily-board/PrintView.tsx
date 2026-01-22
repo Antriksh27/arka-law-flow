@@ -47,10 +47,10 @@ export const PrintView = React.forwardRef<HTMLDivElement, PrintViewProps>(
                       {boxes.map((box, boxIndex) => (
                         <div 
                           key={boxIndex}
-                          className="border-2 border-gray-800 text-center bg-white min-w-[40px] h-[32px] flex flex-col items-center justify-center px-2"
+                          className="border-2 border-gray-800 text-center bg-white min-w-[50px] px-2 py-1 flex flex-col items-center justify-center"
                         >
-                          <div className="font-bold text-[10px] leading-tight">{box.main || ''}</div>
-                          <div className="text-[8px] leading-tight text-gray-600">{box.sub || ''}</div>
+                          <div className="font-bold text-[11px] leading-normal whitespace-nowrap">{box.main || ''}</div>
+                          <div className="text-[9px] leading-normal text-gray-600 whitespace-nowrap">{box.sub || ''}</div>
                         </div>
                       ))}
                       {/* Status Boxes */}

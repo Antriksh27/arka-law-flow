@@ -44,7 +44,7 @@ const EditableTextBox: React.FC<{
   const [localSubtext, setLocalSubtext] = useState(subtext);
 
   return (
-    <div className="border-2 border-gray-800 px-3 py-1 text-center bg-white min-w-[60px] relative group">
+    <div className="border-2 border-gray-800 px-3 py-2 text-center bg-white min-w-[70px] relative group flex flex-col justify-center">
       {/* Main text */}
       {isEditingMain ? (
         <input
