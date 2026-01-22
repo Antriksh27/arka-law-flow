@@ -72,18 +72,6 @@ export const DocumentsFilterBar: React.FC<DocumentsFilterBarProps> = ({
           />
         </div>
 
-        {/* Case Filter - Searchable by case title */}
-        <div className="w-full lg:w-56">
-          <CaseSelector
-            value={selectedFilters.caseId === 'all' ? '' : selectedFilters.caseId}
-            onValueChange={(value) => 
-              onFiltersChange({ ...selectedFilters, caseId: value || 'all' })
-            }
-            placeholder="Search cases..."
-            clientId={selectedFilters.clientId === 'all' ? undefined : selectedFilters.clientId}
-          />
-        </div>
-
         {/* Document Type Filter */}
         <Select
           value={selectedFilters.fileType}
