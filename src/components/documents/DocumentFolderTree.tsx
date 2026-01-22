@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { 
@@ -12,9 +12,9 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { DOCUMENT_TYPE_ICONS } from '@/lib/documentTypes';
+import { HighlightedText } from './HighlightedText';
 
 interface FolderNode {
   id: string;
@@ -28,11 +28,13 @@ interface FolderNode {
 interface DocumentFolderTreeProps {
   onFolderSelect: (path: string, type: string, id?: string) => void;
   selectedPath?: string;
+  searchQuery?: string;
 }
 
 export const DocumentFolderTree: React.FC<DocumentFolderTreeProps> = ({
   onFolderSelect,
-  selectedPath
+  selectedPath,
+  searchQuery = ''
 }) => {
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set(['clients']));
 
@@ -63,7 +65,6 @@ export const DocumentFolderTree: React.FC<DocumentFolderTreeProps> = ({
         const caseId = doc.case_id || 'no-case';
         const caseTitle = doc.cases?.case_title || 'Uncategorized';
         const caseNumber = doc.cases?.case_number;
-        // Use existing columns until migration is applied
         const primaryType = doc.folder_name || 'Miscellaneous';
         const subType = doc.file_type?.toUpperCase() || 'Other';
 
@@ -130,6 +131,72 @@ export const DocumentFolderTree: React.FC<DocumentFolderTreeProps> = ({
     }
   });
 
+  // Filter nodes based on search query
+  const filterNodes = (nodes: FolderNode[], query: string): FolderNode[] => {
+    if (!query.trim()) return nodes;
+    
+    const lowerQuery = query.toLowerCase();
+    
+    return nodes.reduce<FolderNode[]>((acc, node) => {
+      const matchesQuery = node.name.toLowerCase().includes(lowerQuery);
+      const filteredChildren = node.children ? filterNodes(node.children, query) : [];
+      const hasMatchingChildren = filteredChildren.length > 0;
+      
+      if (matchesQuery || hasMatchingChildren) {
+        acc.push({
+          ...node,
+          children: hasMatchingChildren ? filteredChildren : node.children
+        });
+      }
+      
+      return acc;
+    }, []);
+  };
+
+  // Get all node IDs that should be expanded when searching
+  const getMatchingNodeIds = (nodes: FolderNode[], query: string): Set<string> => {
+    const ids = new Set<string>();
+    if (!query.trim()) return ids;
+    
+    const lowerQuery = query.toLowerCase();
+    
+    const traverse = (node: FolderNode): boolean => {
+      const matchesQuery = node.name.toLowerCase().includes(lowerQuery);
+      let hasMatchingChild = false;
+      
+      if (node.children) {
+        for (const child of node.children) {
+          if (traverse(child)) {
+            hasMatchingChild = true;
+          }
+        }
+      }
+      
+      if (matchesQuery || hasMatchingChild) {
+        ids.add(node.id);
+        return true;
+      }
+      
+      return false;
+    };
+    
+    nodes.forEach(traverse);
+    return ids;
+  };
+
+  const filteredStructure = useMemo(() => 
+    filterNodes(folderStructure, searchQuery), 
+    [folderStructure, searchQuery]
+  );
+
+  // Auto-expand matching nodes when searching
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      const matchingIds = getMatchingNodeIds(folderStructure, searchQuery);
+      setExpandedNodes(prev => new Set([...prev, ...matchingIds]));
+    }
+  }, [searchQuery, folderStructure]);
+
   const toggleNode = (nodeId: string) => {
     setExpandedNodes(prev => {
       const next = new Set(prev);
@@ -152,7 +219,7 @@ export const DocumentFolderTree: React.FC<DocumentFolderTreeProps> = ({
       if (node.type === 'case') return Briefcase;
       if (node.type === 'primary_type') {
         const emoji = DOCUMENT_TYPE_ICONS[node.name];
-        if (emoji) return null; // Will use emoji instead
+        if (emoji) return null;
       }
       return isExpanded ? FolderOpen : Folder;
     };
@@ -165,16 +232,16 @@ export const DocumentFolderTree: React.FC<DocumentFolderTreeProps> = ({
         <Collapsible open={isExpanded} onOpenChange={() => toggleNode(node.id)}>
           <div
             className={cn(
-              "flex items-center gap-2 py-1.5 px-2 rounded-md cursor-pointer transition-colors",
+              "flex items-center gap-2 py-1.5 px-2 rounded-lg cursor-pointer transition-all",
               "hover:bg-accent/50",
-              isSelected && "bg-primary/10 text-primary"
+              isSelected && "bg-primary/10 text-primary font-medium"
             )}
             style={{ paddingLeft: `${(level * 12) + 8}px` }}
             onClick={() => onFolderSelect(node.path || '', node.type, node.id)}
           >
             {hasChildren ? (
               <CollapsibleTrigger asChild onClick={(e) => e.stopPropagation()}>
-                <button className="p-0.5 hover:bg-accent rounded">
+                <button className="p-0.5 hover:bg-accent rounded transition-colors">
                   {isExpanded ? (
                     <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
                   ) : (
@@ -190,29 +257,29 @@ export const DocumentFolderTree: React.FC<DocumentFolderTreeProps> = ({
               <span className="text-sm">{emoji}</span>
             ) : Icon ? (
               <Icon className={cn(
-                "w-4 h-4",
+                "w-4 h-4 flex-shrink-0",
                 node.type === 'client' && "text-blue-500",
                 node.type === 'case' && "text-amber-500",
                 node.type === 'sub_type' && "text-muted-foreground"
               )} />
             ) : (
-              <FileText className="w-4 h-4 text-muted-foreground" />
+              <FileText className="w-4 h-4 text-muted-foreground flex-shrink-0" />
             )}
 
             <span className={cn(
               "text-sm truncate flex-1",
               isSelected ? "font-medium" : "font-normal"
             )}>
-              {node.name}
+              <HighlightedText text={node.name} query={searchQuery} />
             </span>
 
-            <Badge variant="outline" className="text-xs h-5 px-1.5 bg-muted">
+            <Badge variant="outline" className="text-xs h-5 px-1.5 bg-muted/80 text-muted-foreground font-normal">
               {node.count}
             </Badge>
           </div>
 
           {hasChildren && (
-            <CollapsibleContent>
+            <CollapsibleContent className="animate-in slide-in-from-top-1 duration-200">
               {node.children?.map(child => renderNode(child, level + 1))}
             </CollapsibleContent>
           )}
@@ -223,27 +290,25 @@ export const DocumentFolderTree: React.FC<DocumentFolderTreeProps> = ({
 
   if (isLoading) {
     return (
-      <div className="p-4 space-y-2">
+      <div className="p-2 space-y-2">
         {[1, 2, 3].map(i => (
-          <div key={i} className="h-8 bg-muted animate-pulse rounded" />
+          <div key={i} className="h-8 bg-muted animate-pulse rounded-lg" />
         ))}
       </div>
     );
   }
 
-  if (folderStructure.length === 0) {
+  if (filteredStructure.length === 0) {
     return (
       <div className="p-4 text-center text-muted-foreground text-sm">
-        No documents yet
+        {searchQuery ? 'No matching folders' : 'No documents yet'}
       </div>
     );
   }
 
   return (
-    <ScrollArea className="h-full">
-      <div className="p-2 space-y-0.5">
-        {folderStructure.map(node => renderNode(node))}
-      </div>
-    </ScrollArea>
+    <div className="space-y-0.5">
+      {filteredStructure.map(node => renderNode(node))}
+    </div>
   );
 };
