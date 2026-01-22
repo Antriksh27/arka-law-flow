@@ -78,8 +78,8 @@ export const DocumentsSidebar: React.FC<DocumentsSidebarProps> = ({
                     : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                 )}
               >
-                <IconComponent className="w-4 h-4" />
-                <span className="flex-1 text-left">{item.name}</span>
+                <IconComponent className={cn("w-4 h-4", isSelected && "text-white")} />
+                <span className={cn("flex-1 text-left", isSelected && "text-white")}>{item.name}</span>
               </button>
             );
           })}
