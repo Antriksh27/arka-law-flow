@@ -18,7 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown } from 'lucide-react';
-import DashboardLayout from '@/components/layout/DashboardLayout';
+
 import { cn } from '@/lib/utils';
 
 const DailyBoard = () => {
@@ -269,62 +269,60 @@ const DailyBoard = () => {
   }
   
   return (
-    <DashboardLayout>
-      <div className="min-h-screen bg-gray-50 pb-20 print:bg-white">
-        <div className="max-w-[1600px] mx-auto p-4 md:p-6 space-y-6 print:hidden">
-          <DailyBoardHeader
-            selectedDate={selectedDate}
-            onDateChange={setSelectedDate}
-            filters={{
-              ...filters,
-              court: filters.court || 'all',
-              judge: filters.judge || 'all',
-            }}
-            onFiltersChange={handleFiltersChange}
-            courts={uniqueCourts}
-            judges={uniqueJudges}
-            onExportPDF={handleExportPDF}
-            onPrint={handlePrint}
-            onGenerate={handleGenerate}
-            isGenerating={isFetching}
-            isGenerated={isGenerated}
-          />
-          
-          {!isGenerated ? (
-            <div className="bg-white rounded-2xl shadow-sm p-12 text-center">
-              <CalendarIcon className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-20" />
-              <p className="text-muted-foreground">
-                Select a date and click "Generate Board" to fetch the latest hearing data
-              </p>
-            </div>
-          ) : isFetching ? (
-            <div className="bg-white rounded-2xl shadow-sm p-12 text-center">
-              <Loader2 className="h-8 w-8 mx-auto mb-4 animate-spin text-primary" />
-              <p className="text-muted-foreground">Loading hearings...</p>
-            </div>
-          ) : (
-            <>
-              <DailyBoardSummary
-                groupedHearings={groupedHearings}
-                totalCount={hearings.length}
-              />
-              <DailyBoardContent 
-                groupedHearings={groupedHearings}
-                judgeBoxes={judgeBoxes}
-                onJudgeBoxesChange={handleJudgeBoxesChange}
-              />
-            </>
-          )}
-        </div>
-        
-        <PrintView
-          ref={printViewRef}
+    <div className="min-h-screen bg-gray-50 pb-20 print:bg-white">
+      <div className="max-w-[1600px] mx-auto p-4 md:p-6 space-y-6 print:hidden">
+        <DailyBoardHeader
           selectedDate={selectedDate}
-          groupedHearings={groupedHearings}
-          judgeBoxes={judgeBoxes}
+          onDateChange={setSelectedDate}
+          filters={{
+            ...filters,
+            court: filters.court || 'all',
+            judge: filters.judge || 'all',
+          }}
+          onFiltersChange={handleFiltersChange}
+          courts={uniqueCourts}
+          judges={uniqueJudges}
+          onExportPDF={handleExportPDF}
+          onPrint={handlePrint}
+          onGenerate={handleGenerate}
+          isGenerating={isFetching}
+          isGenerated={isGenerated}
         />
+        
+        {!isGenerated ? (
+          <div className="bg-white rounded-2xl shadow-sm p-12 text-center">
+            <CalendarIcon className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-20" />
+            <p className="text-muted-foreground">
+              Select a date and click "Generate Board" to fetch the latest hearing data
+            </p>
+          </div>
+        ) : isFetching ? (
+          <div className="bg-white rounded-2xl shadow-sm p-12 text-center">
+            <Loader2 className="h-8 w-8 mx-auto mb-4 animate-spin text-primary" />
+            <p className="text-muted-foreground">Loading hearings...</p>
+          </div>
+        ) : (
+          <>
+            <DailyBoardSummary
+              groupedHearings={groupedHearings}
+              totalCount={hearings.length}
+            />
+            <DailyBoardContent 
+              groupedHearings={groupedHearings}
+              judgeBoxes={judgeBoxes}
+              onJudgeBoxesChange={handleJudgeBoxesChange}
+            />
+          </>
+        )}
       </div>
-    </DashboardLayout>
+      
+      <PrintView
+        ref={printViewRef}
+        selectedDate={selectedDate}
+        groupedHearings={groupedHearings}
+        judgeBoxes={judgeBoxes}
+      />
+    </div>
   );
 };
 
