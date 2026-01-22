@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
-import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DailyHearing, CourtBox } from './types';
 import { InlineEditField } from './InlineEditField';
-import { useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -16,18 +14,6 @@ interface JudgeSectionProps {
   boxes: CourtBox[];
   onBoxesChange: (boxes: CourtBox[]) => void;
 }
-
-const getStageColor = (stage: string | null) => {
-  if (!stage) return 'default';
-  const stageLower = stage.toLowerCase();
-  
-  if (stageLower.includes('admission')) return 'active';
-  if (stageLower.includes('notice')) return 'warning';
-  if (stageLower.includes('order') || stageLower.includes('direction')) return 'error';
-  if (stageLower.includes('final')) return 'success';
-  
-  return 'default';
-};
 
 // Editable text box with main text and subtext
 const EditableTextBox: React.FC<{
@@ -133,19 +119,12 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
   boxes,
   onBoxesChange,
 }) => {
-  const queryClient = useQueryClient();
-  
-  const handleUpdate = () => {
-    queryClient.invalidateQueries({ queryKey: ['daily-board-hearings'] });
-  };
-
   const updateHearingField = async (hearingId: string, field: string, value: string | null) => {
     const { supabase } = await import('@/integrations/supabase/client');
     await supabase
       .from('case_hearings')
       .update({ [field]: value })
       .eq('id', hearingId);
-    handleUpdate();
   };
 
   const addBox = () => {
@@ -251,7 +230,6 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
                       table="case_hearings"
                       field="serial_number"
                       currentValue={hearing.serial_number || ''}
-                      onUpdate={handleUpdate}
                       placeholder=""
                       className="font-bold text-lg"
                     />
@@ -264,7 +242,6 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
                       table="cases"
                       field="case_number"
                       currentValue={hearing.case_number}
-                      onUpdate={handleUpdate}
                     />
                   </TableCell>
                   
@@ -276,7 +253,6 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
                         table="cases"
                         field="petitioner"
                         currentValue={hearing.petitioner}
-                        onUpdate={handleUpdate}
                       />
                       <div className="text-xs text-gray-500">VS</div>
                       <InlineEditField
@@ -284,7 +260,6 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
                         table="cases"
                         field="respondent"
                         currentValue={hearing.respondent}
-                        onUpdate={handleUpdate}
                       />
                     </div>
                   </TableCell>
@@ -296,7 +271,6 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
                       table="cases"
                       field="petitioner_advocate"
                       currentValue={hearing.formatted_aorp || hearing.petitioner_advocate}
-                      onUpdate={handleUpdate}
                     />
                     <div className="text-xs text-gray-500">(Pet.1)</div>
                   </TableCell>
@@ -308,7 +282,6 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
                       table="cases"
                       field="respondent_advocate"
                       currentValue={hearing.formatted_aorr || hearing.respondent_advocate}
-                      onUpdate={handleUpdate}
                     />
                     <div className="text-xs text-gray-500">(Res.)</div>
                   </TableCell>
@@ -320,7 +293,6 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
                       table="case_hearings"
                       field="coram"
                       currentValue={hearing.coram || 'CBU'}
-                      onUpdate={handleUpdate}
                     />
                   </TableCell>
                 </TableRow>
@@ -334,7 +306,6 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
                       table="case_hearings"
                       field="purpose_of_hearing"
                       currentValue={hearing.purpose_of_hearing}
-                      onUpdate={handleUpdate}
                     />
                   </TableCell>
                 </TableRow>
@@ -348,7 +319,6 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
                       table="case_hearings"
                       field="relief"
                       currentValue={hearing.relief}
-                      onUpdate={handleUpdate}
                     />
                   </TableCell>
                 </TableRow>

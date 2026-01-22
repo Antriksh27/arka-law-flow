@@ -4,6 +4,8 @@ import { Input } from '@/components/ui/input';
 import { Check, X, Pencil } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
+import { DailyHearing } from './types';
 
 interface InlineEditFieldProps {
   id: string;
@@ -13,6 +15,7 @@ interface InlineEditFieldProps {
   onUpdate?: () => void;
   className?: string;
   placeholder?: string;
+  hearingId?: string; // For optimistic updates - the hearing_id in the view
 }
 
 export const InlineEditField: React.FC<InlineEditFieldProps> = ({ 
@@ -22,19 +25,44 @@ export const InlineEditField: React.FC<InlineEditFieldProps> = ({
   currentValue,
   onUpdate,
   className = '',
-  placeholder = '-'
+  placeholder = '-',
+  hearingId
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [value, setValue] = useState(currentValue || '');
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const handleSave = async () => {
     setIsSaving(true);
+    const newValue = value || null;
+    
+    // Optimistic update - immediately update all matching queries
+    queryClient.setQueriesData<DailyHearing[]>(
+      { queryKey: ['daily-hearings'] },
+      (oldData) => {
+        if (!oldData) return oldData;
+        return oldData.map(hearing => {
+          // Match by hearing_id for case_hearings table, or case_id for cases table
+          const shouldUpdate = table === 'case_hearings' 
+            ? hearing.hearing_id === id
+            : hearing.case_id === id;
+          
+          if (shouldUpdate) {
+            return { ...hearing, [field]: newValue };
+          }
+          return hearing;
+        });
+      }
+    );
+    
+    setIsEditing(false);
+    
     try {
       const { error } = await supabase
         .from(table)
-        .update({ [field]: value || null })
+        .update({ [field]: newValue })
         .eq('id', id);
 
       if (error) throw error;
@@ -43,10 +71,26 @@ export const InlineEditField: React.FC<InlineEditFieldProps> = ({
         title: 'Updated',
         description: `${field.replace(/_/g, ' ')} has been updated.`,
       });
-      setIsEditing(false);
       onUpdate?.();
     } catch (error) {
       console.error(`Error updating ${field}:`, error);
+      // Revert optimistic update on error
+      queryClient.setQueriesData<DailyHearing[]>(
+        { queryKey: ['daily-hearings'] },
+        (oldData) => {
+          if (!oldData) return oldData;
+          return oldData.map(hearing => {
+            const shouldUpdate = table === 'case_hearings' 
+              ? hearing.hearing_id === id
+              : hearing.case_id === id;
+            
+            if (shouldUpdate) {
+              return { ...hearing, [field]: currentValue };
+            }
+            return hearing;
+          });
+        }
+      );
       toast({
         title: 'Error',
         description: `Failed to update. Please try again.`,
