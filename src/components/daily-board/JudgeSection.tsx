@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DailyHearing, CourtBox } from './types';
 import { InlineEditField } from './InlineEditField';
+import { InlineEditFieldWithSubtext } from './InlineEditFieldWithSubtext';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -223,15 +224,17 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
               <React.Fragment key={hearing.hearing_id}>
                 {/* Main case row */}
                 <TableRow className="border-b border-gray-400">
-                  {/* Sr.No with editable serial number */}
+                  {/* Sr.No with editable serial number and subtext */}
                   <TableCell className="border-r border-gray-400 align-top">
-                    <InlineEditField
+                    <InlineEditFieldWithSubtext
                       id={hearing.hearing_id}
                       table="case_hearings"
-                      field="serial_number"
-                      currentValue={hearing.serial_number || ''}
-                      placeholder=""
-                      className="font-bold text-lg"
+                      mainField="serial_number"
+                      subField="serial_number_sub"
+                      mainValue={hearing.serial_number}
+                      subValue={hearing.serial_number_sub}
+                      mainPlaceholder="#"
+                      subPlaceholder="sub"
                     />
                   </TableCell>
                   
