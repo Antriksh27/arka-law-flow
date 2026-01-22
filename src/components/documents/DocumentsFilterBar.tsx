@@ -3,10 +3,9 @@ import { Search, Grid3X3, List, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { PRIMARY_DOCUMENT_TYPES } from '@/lib/documentTypes';
 import { CaseSelector } from '@/components/appointments/CaseSelector';
+import { ClientSelector } from '@/components/appointments/ClientSelector';
 
 interface DocumentsFilterBarProps {
   viewMode: 'grid' | 'list';
@@ -32,19 +31,6 @@ export const DocumentsFilterBar: React.FC<DocumentsFilterBarProps> = ({
   onFiltersChange,
   onUploadClick
 }) => {
-  // Fetch clients for filter dropdown
-  const { data: clients = [] } = useQuery({
-    queryKey: ['clients-for-filter'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('clients')
-        .select('id, full_name')
-        .order('full_name');
-      if (error) throw error;
-      return data || [];
-    }
-  });
-
   return (
     <div className="bg-card rounded-2xl shadow-sm p-4 sm:p-6 border border-border">
       <div className="flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-4">
@@ -59,25 +45,32 @@ export const DocumentsFilterBar: React.FC<DocumentsFilterBarProps> = ({
           />
         </div>
 
-        {/* Client Filter */}
-        <Select
-          value={selectedFilters.clientId || 'all'}
-          onValueChange={(value) => 
-            onFiltersChange({ ...selectedFilters, clientId: value, caseId: value === 'all' ? selectedFilters.caseId : 'all' })
-          }
-        >
-          <SelectTrigger className="w-full lg:w-44 bg-background border-border h-10">
-            <SelectValue placeholder="All Clients" />
-          </SelectTrigger>
-          <SelectContent className="bg-background z-50">
-            <SelectItem value="all">All Clients</SelectItem>
-            {clients.map((client) => (
-              <SelectItem key={client.id} value={client.id}>
-                {client.full_name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {/* Client/Contact Filter - Searchable */}
+        <div className="w-full lg:w-56">
+          <ClientSelector
+            value={selectedFilters.clientId === 'all' ? '' : selectedFilters.clientId}
+            onValueChange={(value) => 
+              onFiltersChange({ 
+                ...selectedFilters, 
+                clientId: value || 'all', 
+                caseId: value ? 'all' : selectedFilters.caseId 
+              })
+            }
+            placeholder="Search clients..."
+          />
+        </div>
+
+        {/* Case Filter - Searchable by case title */}
+        <div className="w-full lg:w-56">
+          <CaseSelector
+            value={selectedFilters.caseId === 'all' ? '' : selectedFilters.caseId}
+            onValueChange={(value) => 
+              onFiltersChange({ ...selectedFilters, caseId: value || 'all' })
+            }
+            placeholder="Search cases..."
+            clientId={selectedFilters.clientId === 'all' ? undefined : selectedFilters.clientId}
+          />
+        </div>
 
         {/* Case Filter - Searchable by case title */}
         <div className="w-full lg:w-56">
