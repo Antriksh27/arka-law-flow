@@ -90,7 +90,7 @@ export const RelatedMattersTab: React.FC<RelatedMattersTabProps> = ({ caseId }) 
 
       const { data, error } = await supabase
         .from('cases')
-        .select('id, case_title, case_number, petitioner, respondent, vs')
+        .select('id, case_title, case_number, petitioner, respondent, vs, cnr_number, registration_number, filing_number, reference_number')
         .eq('firm_id', firmData.firm_id)
         .neq('id', caseId)
         .order('case_title');
@@ -158,16 +158,31 @@ export const RelatedMattersTab: React.FC<RelatedMattersTabProps> = ({ caseId }) 
     addRelationMutation.mutate(selectedCaseId);
   };
 
-  // Filter cases based on search query
+  // Filter cases based on search query - universal search across multiple fields
   const filteredCases = useMemo(() => {
     if (!availableCases) return [];
     if (!searchQuery.trim()) return availableCases;
     
-    const query = searchQuery.toLowerCase();
+    const query = searchQuery.toLowerCase().trim();
+    
     return availableCases.filter(c => {
       const displayTitle = getDisplayTitle(c);
-      return displayTitle.toLowerCase().includes(query) ||
-        (c.case_number && c.case_number.toLowerCase().includes(query));
+      
+      // Search across all relevant fields
+      const searchableFields = [
+        displayTitle,
+        c.case_number,
+        c.cnr_number,
+        c.registration_number,
+        c.filing_number,
+        c.reference_number,
+        c.petitioner,
+        c.respondent
+      ];
+      
+      return searchableFields.some(field => 
+        field && field.toLowerCase().includes(query)
+      );
     });
   }, [availableCases, searchQuery]);
 
@@ -193,7 +208,10 @@ export const RelatedMattersTab: React.FC<RelatedMattersTabProps> = ({ caseId }) 
             <div className="space-y-4">
               <div>
                 <Label>Search Case</Label>
-                <div className="relative mt-1">
+                <p className="text-xs text-muted-foreground mt-0.5 mb-1">
+                  Search by case name, case number, CNR, registration, filing, or reference number
+                </p>
+                <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <Input
                     placeholder="Type to search cases..."
@@ -220,9 +238,23 @@ export const RelatedMattersTab: React.FC<RelatedMattersTabProps> = ({ caseId }) 
                           }`}
                         >
                           <p className="font-medium text-sm">{getDisplayTitle(c)}</p>
-                          {c.case_number && (
-                            <p className="text-xs text-gray-500 mt-1">Case #: {c.case_number}</p>
-                          )}
+                          <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
+                            {c.case_number && (
+                              <p className="text-xs text-gray-500">Case #: {c.case_number}</p>
+                            )}
+                            {c.cnr_number && (
+                              <p className="text-xs text-gray-500">CNR: {c.cnr_number}</p>
+                            )}
+                            {c.registration_number && (
+                              <p className="text-xs text-gray-500">Reg: {c.registration_number}</p>
+                            )}
+                            {c.filing_number && (
+                              <p className="text-xs text-gray-500">Filing: {c.filing_number}</p>
+                            )}
+                            {c.reference_number && (
+                              <p className="text-xs text-gray-500">Ref: {c.reference_number}</p>
+                            )}
+                          </div>
                         </button>
                       ))}
                     </div>
