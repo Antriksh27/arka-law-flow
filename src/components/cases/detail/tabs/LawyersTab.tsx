@@ -55,72 +55,55 @@ export const LawyersTab: React.FC<LawyersTabProps> = ({ caseId }) => {
     return ids;
   }, [caseData]);
 
-  // Fetch assigned lawyers details
+  // Fetch assigned lawyers details from team_members (which has full_name directly)
   const { data: assignedLawyers = [], isLoading: isLoadingAssigned } = useQuery({
     queryKey: ['assigned-lawyers-details', Array.from(assignedLawyerIds)],
     queryFn: async () => {
       if (assignedLawyerIds.size === 0) return [];
       
-      // Fetch team members
+      // Fetch team members with full_name directly
       const { data: teamData, error: teamError } = await supabase
         .from('team_members')
-        .select('id, user_id, role')
+        .select('id, user_id, role, full_name, email')
         .in('user_id', Array.from(assignedLawyerIds));
       
       if (teamError) throw teamError;
       if (!teamData || teamData.length === 0) return [];
 
-      // Fetch profiles for these users
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, full_name, email')
-        .in('id', Array.from(assignedLawyerIds));
-      
-      if (profilesError) throw profilesError;
-
-      // Combine data
+      // Map data to expected format
       return teamData.map(tm => ({
         ...tm,
-        profiles: profilesData?.find(p => p.id === tm.user_id) || {
+        profiles: {
           id: tm.user_id,
-          full_name: 'Unknown',
-          email: 'No email'
+          full_name: tm.full_name || 'Unknown',
+          email: tm.email || 'No email'
         }
       }));
     },
     enabled: assignedLawyerIds.size > 0
   });
 
-  // Fetch all firm lawyers for assignment
+  // Fetch all firm lawyers for assignment from team_members
   const { data: availableLawyers = [] } = useQuery({
     queryKey: ['firm-lawyers', firmId],
     queryFn: async () => {
-      // Fetch team members
+      // Fetch team members with full_name directly
       const { data: teamData, error: teamError } = await supabase
         .from('team_members')
-        .select('id, user_id, role')
+        .select('id, user_id, role, full_name, email')
         .eq('firm_id', firmId)
         .in('role', ['admin', 'lawyer']);
       
       if (teamError) throw teamError;
       if (!teamData || teamData.length === 0) return [];
 
-      // Fetch profiles for these users
-      const userIds = teamData.map(tm => tm.user_id);
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, full_name, email')
-        .in('id', userIds);
-      
-      if (profilesError) throw profilesError;
-
-      // Combine data
+      // Map data to expected format
       return teamData.map(tm => ({
         ...tm,
-        profiles: profilesData?.find(p => p.id === tm.user_id) || {
+        profiles: {
           id: tm.user_id,
-          full_name: 'Unknown',
-          email: 'No email'
+          full_name: tm.full_name || 'Unknown',
+          email: tm.email || 'No email'
         }
       }));
     },
