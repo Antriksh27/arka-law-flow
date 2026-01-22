@@ -78,10 +78,15 @@ export const PrintView = React.forwardRef<HTMLDivElement, PrintViewProps>(
                       {/* Main case row */}
                       <div className="flex w-full border-l border-r border-b border-gray-400 text-[9px] leading-normal">
                         <div className="border-r border-gray-400 px-2 py-2 w-[40px] align-top text-center">
-                          <div className="font-bold">{hearing.serial_number || ''}</div>
-                          {hearing.serial_number_sub && (
-                            <div className="text-[8px] text-gray-500">{hearing.serial_number_sub}</div>
-                          )}
+                          {(() => {
+                            const parts = (hearing.serial_number || '').split('|');
+                            return (
+                              <>
+                                <div className="font-bold">{parts[0] || ''}</div>
+                                {parts[1] && <div className="text-[8px] text-gray-500">{parts[1]}</div>}
+                              </>
+                            );
+                          })()}
                         </div>
                         <div className="border-r border-gray-400 px-2 py-2 w-[80px] font-medium">
                           {hearing.case_number || 'N/A'}
