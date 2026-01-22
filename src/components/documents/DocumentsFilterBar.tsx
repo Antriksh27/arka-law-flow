@@ -93,7 +93,7 @@ export const DocumentsFilterBar: React.FC<DocumentsFilterBarProps> = ({
         </Select>
 
         {/* View Mode Toggle */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 ml-auto">
           <div className="flex border border-border rounded-lg overflow-hidden">
             <Button
               variant={viewMode === 'grid' ? 'default' : 'ghost'}
