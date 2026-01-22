@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { FileText, Upload, Download, Trash2, Eye } from 'lucide-react';
 import TimeUtils from '@/lib/timeUtils';
@@ -7,15 +7,19 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { UploadDocumentDialog } from '@/components/documents/UploadDocumentDialog';
 import { FileViewer } from '@/components/documents/FileViewer';
+import { DeleteDocumentDialog } from '@/components/documents/DeleteDocumentDialog';
 import { toast } from 'sonner';
+
 interface DocumentsTabProps {
   caseId: string;
 }
+
 export const DocumentsTab: React.FC<DocumentsTabProps> = ({
   caseId
 }) => {
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [viewingDocument, setViewingDocument] = useState<any>(null);
+  const [documentToDelete, setDocumentToDelete] = useState<any>(null);
   const queryClient = useQueryClient();
 
   const getDocTypeBadges = (doc: any) => {
@@ -79,23 +83,12 @@ export const DocumentsTab: React.FC<DocumentsTabProps> = ({
       return data || [];
     }
   });
-  const deleteDocument = useMutation({
-    mutationFn: async (documentId: string) => {
-      const {
-        error
-      } = await supabase.from('documents').delete().eq('id', documentId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['case-documents', caseId]
-      });
-      toast.success('Document deleted successfully');
-    },
-    onError: () => {
-      toast.error('Failed to delete document');
-    }
-  });
+  const handleDocumentDeleted = () => {
+    queryClient.invalidateQueries({
+      queryKey: ['uploaded-documents', caseId]
+    });
+    setDocumentToDelete(null);
+  };
   const handleDownload = async (document: any) => {
     try {
       const {
@@ -181,7 +174,7 @@ export const DocumentsTab: React.FC<DocumentsTabProps> = ({
                 <Button variant="ghost" size="sm" onClick={() => handleDownload(doc)} title="Download">
                   <Download className="w-4 h-4" />
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => deleteDocument.mutate(doc.id)} title="Delete">
+                <Button variant="ghost" size="sm" onClick={() => setDocumentToDelete(doc)} title="Delete">
                   <Trash2 className="w-4 h-4 text-destructive" />
                 </Button>
               </div>
@@ -214,6 +207,14 @@ export const DocumentsTab: React.FC<DocumentsTabProps> = ({
         open={!!viewingDocument}
         onClose={() => setViewingDocument(null)}
         document={viewingDocument}
+      />
+
+      {/* Delete Document Dialog with Password Confirmation */}
+      <DeleteDocumentDialog
+        open={!!documentToDelete}
+        onClose={() => setDocumentToDelete(null)}
+        document={documentToDelete}
+        onDeleted={handleDocumentDeleted}
       />
     </div>;
 };
