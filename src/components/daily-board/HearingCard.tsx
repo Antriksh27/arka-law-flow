@@ -1,6 +1,7 @@
 import React from 'react';
 import { DailyHearing } from './types';
 import { InlineEditField } from './InlineEditField';
+import { InlineEditFieldWithSubtext } from './InlineEditFieldWithSubtext';
 
 interface HearingCardProps {
   hearing: DailyHearing;
@@ -12,14 +13,16 @@ export const HearingCard: React.FC<HearingCardProps> = ({ hearing }) => {
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-medium text-gray-500">#</span>
-            <InlineEditField
+            <InlineEditFieldWithSubtext
               id={hearing.hearing_id}
               table="case_hearings"
-              field="serial_number"
-              currentValue={hearing.serial_number}
-              placeholder=""
-              className="w-10"
+              mainField="serial_number"
+              subField="serial_number_sub"
+              mainValue={hearing.serial_number}
+              subValue={hearing.serial_number_sub}
+              mainPlaceholder="#"
+              subPlaceholder="sub"
+              className="w-14"
             />
             <InlineEditField
               id={hearing.case_id}
