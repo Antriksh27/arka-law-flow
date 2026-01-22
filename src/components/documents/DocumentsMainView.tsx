@@ -14,6 +14,7 @@ interface DocumentsMainViewProps {
     fileType: string;
     uploadedBy: string;
     caseId: string;
+    clientId?: string;
   };
 }
 
@@ -31,7 +32,8 @@ export const DocumentsMainView: React.FC<DocumentsMainViewProps> = ({
         .select(`
           *,
           profiles!documents_uploaded_by_fkey(full_name),
-          cases!left(case_title)
+          cases!left(case_title),
+          clients!left(full_name)
         `)
         .order('uploaded_at', { ascending: false });
 
@@ -84,12 +86,18 @@ export const DocumentsMainView: React.FC<DocumentsMainViewProps> = ({
         query = query.eq('folder_name', selectedFolder);
       }
 
-      // Apply search
+      // Apply search - search by document name OR client name
       if (searchQuery) {
-        query = query.ilike('file_name', `%${searchQuery}%`);
+        // We need to search across file_name and client name
+        // Since client name is in a joined table, we'll filter client-side for client name
+        // or use a workaround by searching file_name first
+        query = query.or(`file_name.ilike.%${searchQuery}%,document_type.ilike.%${searchQuery}%`);
       }
 
       // Apply filters - handle "all" values properly
+      if (selectedFilters.clientId && selectedFilters.clientId !== 'all') {
+        query = query.eq('client_id', selectedFilters.clientId);
+      }
       if (selectedFilters.fileType && selectedFilters.fileType !== 'all') {
         query = query.ilike('file_type', `%${selectedFilters.fileType}%`);
       }

@@ -19,7 +19,8 @@ const Documents = () => {
   const [selectedFilters, setSelectedFilters] = useState({
     fileType: 'all',
     uploadedBy: 'all',
-    caseId: 'all'
+    caseId: 'all',
+    clientId: 'all'
   });
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [showFolderSheet, setShowFolderSheet] = useState(false);
@@ -35,6 +36,7 @@ const Documents = () => {
     selectedFilters.fileType !== 'all',
     selectedFilters.uploadedBy !== 'all',
     selectedFilters.caseId !== 'all',
+    selectedFilters.clientId !== 'all',
   ].filter(Boolean).length;
 
   if (isMobile) {

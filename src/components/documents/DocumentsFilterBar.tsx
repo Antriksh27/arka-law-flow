@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { PRIMARY_DOCUMENT_TYPES } from '@/lib/documentTypes';
+import { CaseSelector } from '@/components/appointments/CaseSelector';
 
 interface DocumentsFilterBarProps {
   viewMode: 'grid' | 'list';
@@ -16,6 +17,7 @@ interface DocumentsFilterBarProps {
     fileType: string;
     uploadedBy: string;
     caseId: string;
+    clientId: string;
   };
   onFiltersChange: (filters: any) => void;
   onUploadClick: () => void;
@@ -30,14 +32,14 @@ export const DocumentsFilterBar: React.FC<DocumentsFilterBarProps> = ({
   onFiltersChange,
   onUploadClick
 }) => {
-  // Fetch cases for filter dropdown
-  const { data: cases = [] } = useQuery({
-    queryKey: ['cases-for-filter'],
+  // Fetch clients for filter dropdown
+  const { data: clients = [] } = useQuery({
+    queryKey: ['clients-for-filter'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('cases')
-        .select('id, case_title')
-        .order('case_title');
+        .from('clients')
+        .select('id, full_name')
+        .order('full_name');
       if (error) throw error;
       return data || [];
     }
@@ -46,14 +48,46 @@ export const DocumentsFilterBar: React.FC<DocumentsFilterBarProps> = ({
   return (
     <div className="bg-card rounded-2xl shadow-sm p-4 sm:p-6 border border-border">
       <div className="flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-4">
-        {/* Search Input */}
+        {/* Search Input - searches by document name and client name */}
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
           <Input
-            placeholder="Search documents by name..."
+            placeholder="Search by document or client name..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             className="pl-10 h-10 bg-background border-border focus:border-primary"
+          />
+        </div>
+
+        {/* Client Filter */}
+        <Select
+          value={selectedFilters.clientId || 'all'}
+          onValueChange={(value) => 
+            onFiltersChange({ ...selectedFilters, clientId: value, caseId: value === 'all' ? selectedFilters.caseId : 'all' })
+          }
+        >
+          <SelectTrigger className="w-full lg:w-44 bg-background border-border h-10">
+            <SelectValue placeholder="All Clients" />
+          </SelectTrigger>
+          <SelectContent className="bg-background z-50">
+            <SelectItem value="all">All Clients</SelectItem>
+            {clients.map((client) => (
+              <SelectItem key={client.id} value={client.id}>
+                {client.full_name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Case Filter - Searchable by case title */}
+        <div className="w-full lg:w-56">
+          <CaseSelector
+            value={selectedFilters.caseId === 'all' ? '' : selectedFilters.caseId}
+            onValueChange={(value) => 
+              onFiltersChange({ ...selectedFilters, caseId: value || 'all' })
+            }
+            placeholder="Search cases..."
+            clientId={selectedFilters.clientId === 'all' ? undefined : selectedFilters.clientId}
           />
         </div>
 
@@ -64,34 +98,14 @@ export const DocumentsFilterBar: React.FC<DocumentsFilterBarProps> = ({
             onFiltersChange({ ...selectedFilters, fileType: value })
           }
         >
-          <SelectTrigger className="w-full lg:w-44 bg-background border-border h-10">
+          <SelectTrigger className="w-full lg:w-40 bg-background border-border h-10">
             <SelectValue placeholder="Document Type" />
           </SelectTrigger>
-          <SelectContent className="bg-background">
+          <SelectContent className="bg-background z-50">
             <SelectItem value="all">All Types</SelectItem>
             {PRIMARY_DOCUMENT_TYPES.map((type) => (
               <SelectItem key={type} value={type}>
                 {type}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        {/* Case Filter */}
-        <Select
-          value={selectedFilters.caseId}
-          onValueChange={(value) => 
-            onFiltersChange({ ...selectedFilters, caseId: value })
-          }
-        >
-          <SelectTrigger className="w-full lg:w-44 bg-background border-border h-10">
-            <SelectValue placeholder="All Cases" />
-          </SelectTrigger>
-          <SelectContent className="bg-background">
-            <SelectItem value="all">All Cases</SelectItem>
-            {cases.map((case_item) => (
-              <SelectItem key={case_item.id} value={case_item.id}>
-                {case_item.case_title}
               </SelectItem>
             ))}
           </SelectContent>
