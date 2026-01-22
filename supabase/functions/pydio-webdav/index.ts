@@ -11,12 +11,12 @@ const ALLOWED_EXTENSIONS = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'png', '
 const MAX_FILE_SIZE_MB = 10
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
 
-// Input validation schema
+// Input validation schema - permissive for legal case names while blocking dangerous path characters
 const uploadSchema = z.object({
-  clientName: z.string().trim().min(1).max(255).regex(/^[a-zA-Z0-9\s._\-&',()]+$/, "Invalid client name format"),
-  caseName: z.string().trim().min(1).max(255).regex(/^[a-zA-Z0-9\s._\-/:&',()#]+$/, "Invalid case name format"),
-  category: z.string().trim().min(1).max(100).regex(/^[a-zA-Z0-9\s._/()\-&',]+$/, "Invalid category format"),
-  docType: z.string().trim().min(1).max(100).regex(/^[a-zA-Z0-9\s._/()\-&',]+$/, "Invalid document type format"),
+  clientName: z.string().trim().min(1).max(255).regex(/^[^<>"|?*\\]+$/, "Invalid client name format"),
+  caseName: z.string().trim().min(1).max(255).regex(/^[^<>"|?*\\]+$/, "Invalid case name format"),
+  category: z.string().trim().min(1).max(100).regex(/^[^<>"|?*\\]+$/, "Invalid category format"),
+  docType: z.string().trim().min(1).max(100).regex(/^[^<>"|?*\\]+$/, "Invalid document type format"),
   fileName: z.string().trim().min(1).max(255),
   fileContent: z.string().min(1)
 })
