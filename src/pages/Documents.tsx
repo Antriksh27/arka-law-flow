@@ -5,10 +5,13 @@ import { DocumentsFilterBar } from '../components/documents/DocumentsFilterBar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileStickyHeader } from '@/components/mobile/MobileStickyHeader';
 import { MobileFAB } from '@/components/mobile/MobileFAB';
-import { Upload, FolderOpen } from 'lucide-react';
+import { Upload, FolderOpen, RefreshCw } from 'lucide-react';
 import { UploadDocumentDialog } from '@/components/documents/UploadDocumentDialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { toast } from '@/hooks/use-toast';
 
 const Documents = () => {
   const isMobile = useIsMobile();
@@ -25,6 +28,7 @@ const Documents = () => {
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [showFolderSheet, setShowFolderSheet] = useState(false);
   const [showFiltersSheet, setShowFiltersSheet] = useState(false);
+  const [isBackfilling, setIsBackfilling] = useState(false);
 
   const handleUploadSuccess = () => {
     queryClient.invalidateQueries({ queryKey: ['documents'] });
@@ -38,6 +42,38 @@ const Documents = () => {
     selectedFilters.caseId !== 'all',
     selectedFilters.clientId !== 'all',
   ].filter(Boolean).length;
+
+  const handleBackfill = async () => {
+    setIsBackfilling(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('backfill-document-types');
+      
+      if (error) {
+        toast({
+          title: 'Backfill failed',
+          description: error.message,
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      toast({
+        title: 'Backfill complete',
+        description: `Updated: ${data.stats?.updated || 0}, Skipped: ${data.stats?.skipped || 0}, Errors: ${data.stats?.errors || 0}`,
+      });
+      
+      // Refresh documents
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
+    } catch (err) {
+      toast({
+        title: 'Backfill error',
+        description: err instanceof Error ? err.message : 'Unknown error',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsBackfilling(false);
+    }
+  };
 
   if (isMobile) {
     return (
@@ -107,6 +143,15 @@ const Documents = () => {
           <h1 className="text-2xl font-semibold text-foreground">Documents</h1>
           <p className="text-muted-foreground mt-1">Manage and organize your legal documents</p>
         </div>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleBackfill}
+          disabled={isBackfilling}
+        >
+          <RefreshCw className={`w-4 h-4 mr-2 ${isBackfilling ? 'animate-spin' : ''}`} />
+          {isBackfilling ? 'Backfilling...' : 'Backfill Types'}
+        </Button>
       </div>
 
       {/* Filter Bar */}
