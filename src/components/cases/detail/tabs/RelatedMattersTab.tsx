@@ -1,13 +1,14 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, ExternalLink, Trash2, Search } from 'lucide-react';
+import { Plus, ExternalLink, Trash2, Search, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface RelatedMattersTabProps {
   caseId: string;
@@ -17,6 +18,16 @@ export const RelatedMattersTab: React.FC<RelatedMattersTabProps> = ({ caseId }) 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedCaseId, setSelectedCaseId] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const { firmId } = useAuth();
+
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const queryClient = useQueryClient();
 
@@ -73,31 +84,29 @@ export const RelatedMattersTab: React.FC<RelatedMattersTabProps> = ({ caseId }) 
     }
   });
 
-  // Fetch all available cases to link
-  const { data: availableCases } = useQuery({
-    queryKey: ['available-cases', caseId],
+  // Search cases with server-side filtering for better performance
+  const { data: searchResults = [], isLoading: isSearching } = useQuery({
+    queryKey: ['search-cases-for-linking', firmId, caseId, debouncedSearch],
     queryFn: async () => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData?.user) return [];
+      if (!firmId) return [];
+      if (!debouncedSearch.trim()) return [];
 
-      const { data: firmData } = await supabase
-        .from('team_members')
-        .select('firm_id')
-        .eq('user_id', userData.user.id)
-        .single();
-
-      if (!firmData) return [];
-
+      const searchTerm = `%${debouncedSearch.trim()}%`;
+      
+      // Search across multiple fields using OR conditions
       const { data, error } = await supabase
         .from('cases')
         .select('id, case_title, case_number, petitioner, respondent, vs, cnr_number, registration_number, filing_number, reference_number')
-        .eq('firm_id', firmData.firm_id)
+        .eq('firm_id', firmId)
         .neq('id', caseId)
-        .order('case_title');
+        .or(`case_title.ilike.${searchTerm},case_number.ilike.${searchTerm},cnr_number.ilike.${searchTerm},registration_number.ilike.${searchTerm},filing_number.ilike.${searchTerm},reference_number.ilike.${searchTerm},petitioner.ilike.${searchTerm},respondent.ilike.${searchTerm}`)
+        .order('case_title')
+        .limit(50);
       
       if (error) throw error;
-      return data;
-    }
+      return data || [];
+    },
+    enabled: !!firmId && !!debouncedSearch.trim()
   });
 
   const addRelationMutation = useMutation({
@@ -158,53 +167,8 @@ export const RelatedMattersTab: React.FC<RelatedMattersTabProps> = ({ caseId }) 
     addRelationMutation.mutate(selectedCaseId);
   };
 
-  // Filter cases based on search query - universal search across multiple fields
-  const filteredCases = useMemo(() => {
-    if (!availableCases) {
-      console.log('RelatedMatters: No available cases loaded');
-      return [];
-    }
-    
-    console.log('RelatedMatters: Available cases count:', availableCases.length);
-    
-    if (!searchQuery.trim()) {
-      // Return all cases when search is empty (limited to show in dropdown)
-      return availableCases;
-    }
-    
-    const query = searchQuery.toLowerCase().trim();
-    console.log('RelatedMatters: Searching for:', query);
-    
-    const results = availableCases.filter(c => {
-      const displayTitle = getDisplayTitle(c);
-      
-      // Search across all relevant fields including case_title explicitly
-      const searchableFields = [
-        displayTitle,
-        c.case_title,
-        c.case_number,
-        c.cnr_number,
-        c.registration_number,
-        c.filing_number,
-        c.reference_number,
-        c.petitioner,
-        c.respondent
-      ];
-      
-      const matches = searchableFields.some(field => 
-        field && String(field).toLowerCase().includes(query)
-      );
-      
-      if (matches) {
-        console.log('RelatedMatters: Match found:', c.case_title);
-      }
-      
-      return matches;
-    });
-    
-    console.log('RelatedMatters: Results count:', results.length);
-    return results;
-  }, [availableCases, searchQuery]);
+  // Use server-side search results directly
+  const filteredCases = searchResults;
 
   if (isLoading) {
     return <div className="p-6">Loading related matters...</div>;
@@ -244,7 +208,12 @@ export const RelatedMattersTab: React.FC<RelatedMattersTabProps> = ({ caseId }) 
               
               {searchQuery && (
                 <div className="max-h-64 overflow-y-auto border rounded-md">
-                  {filteredCases.length > 0 ? (
+                  {isSearching ? (
+                    <div className="p-4 text-center text-sm text-gray-500 flex items-center justify-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Searching...
+                    </div>
+                  ) : filteredCases.length > 0 ? (
                     <div className="divide-y">
                       {filteredCases.map((c) => (
                         <button
@@ -278,9 +247,13 @@ export const RelatedMattersTab: React.FC<RelatedMattersTabProps> = ({ caseId }) 
                         </button>
                       ))}
                     </div>
-                  ) : (
+                  ) : debouncedSearch ? (
                     <div className="p-4 text-center text-sm text-gray-500">
                       No cases found matching "{searchQuery}"
+                    </div>
+                  ) : (
+                    <div className="p-4 text-center text-sm text-gray-500">
+                      Type at least one character to search
                     </div>
                   )}
                 </div>
