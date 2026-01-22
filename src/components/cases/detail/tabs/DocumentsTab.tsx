@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { FileText, Upload, Download, Trash2, Eye } from 'lucide-react';
 import TimeUtils from '@/lib/timeUtils';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { UploadDocumentDialog } from '@/components/documents/UploadDocumentDialog';
 import { FileViewer } from '@/components/documents/FileViewer';
 import { toast } from 'sonner';
@@ -119,7 +120,19 @@ export const DocumentsTab: React.FC<DocumentsTabProps> = ({
               <div className="flex items-start gap-3 flex-1">
                 <FileText className="w-5 h-5 text-primary mt-1" />
                 <div className="flex-1">
-                  <p className="font-medium">{doc.file_name}</p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="font-medium">{doc.file_name}</p>
+                    {doc.primary_document_type && (
+                      <Badge variant="default" className="text-xs">
+                        {doc.primary_document_type}
+                      </Badge>
+                    )}
+                    {doc.sub_document_type && (
+                      <Badge variant="outline" className="text-xs bg-accent/50">
+                        {doc.sub_document_type}
+                      </Badge>
+                    )}
+                  </div>
                   <p className="text-sm text-muted-foreground">
                     {formatFileSize(doc.file_size)} • {doc.uploaded_at ? TimeUtils.formatDate(doc.uploaded_at, 'dd/MM/yyyy') : 'N/A'}
                   </p>
