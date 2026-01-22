@@ -96,3 +96,6 @@ verify_jwt = true
 
 [functions.send-smart-notification]
 verify_jwt = false
+
+[functions.backfill-document-types]
+verify_jwt = true
