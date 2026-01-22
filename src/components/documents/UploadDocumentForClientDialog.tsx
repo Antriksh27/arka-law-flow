@@ -12,6 +12,13 @@ import { Upload, X, FileText, Info } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { StoragePathPreview } from './StoragePathPreview';
+import { 
+  PRIMARY_DOCUMENT_TYPES, 
+  getSubTypes,
+  generateStoragePath,
+  DOCUMENT_TYPE_ICONS 
+} from '@/lib/documentTypes';
 
 interface UploadDocumentForClientDialogProps {
   open: boolean;
@@ -24,9 +31,8 @@ interface UploadDocumentForClientDialogProps {
 interface UploadFormData {
   files: FileList;
   case_id?: string;
-  document_category?: string;
-  document_type?: string;
-  custom_document_type?: string;
+  primary_document_type?: string;
+  sub_document_type?: string;
   notes?: string;
   is_evidence: boolean;
   confidential: boolean;
@@ -55,9 +61,8 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
   } = useForm<UploadFormData>({
     defaultValues: {
       case_id: caseId || 'no-case',
-      document_category: '',
-      document_type: '',
-      custom_document_type: '',
+      primary_document_type: '',
+      sub_document_type: '',
       notes: '',
       is_evidence: false,
       confidential: false,
@@ -67,88 +72,17 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
   });
   
   const selectedCaseId = watch('case_id');
-  const selectedCategory = watch('document_category');
+  const selectedPrimaryType = watch('primary_document_type');
+  const selectedSubType = watch('sub_document_type');
 
-  // Document category to type mapping (same as in main upload dialog)
-  const documentTypeMapping = {
-    'client_case_setup': [
-      'Engagement Letters',
-      'Power of Attorney', 
-      'Retainer Agreement',
-      'Identity Documents'
-    ],
-    'court_filings': [
-      'Complaints / Petitions',
-      'Responses / Answers',
-      'Motions',
-      'Orders',
-      'Judgments',
-      'Appeals'
-    ],
-    'evidence': [
-      'Witness Statements',
-      'Affidavits',
-      'Expert Reports',
-      'Photos',
-      'Audio Recordings',
-      'Video Evidence',
-      'Digital Evidence'
-    ],
-    'correspondence': [
-      'Client Correspondence',
-      'Opposing Counsel Correspondence',
-      'Court Correspondence',
-      'Government Correspondence'
-    ],
-    'contracts_agreements': [
-      'Contracts',
-      'Amendments',
-      'Settlement Agreements',
-      'Non-Disclosure Agreements'
-    ],
-    'financials': [
-      'Invoices',
-      'Receipts',
-      'Bank Statements',
-      'Payroll Records',
-      'Tax Documents',
-      'Expert Financial Reports'
-    ],
-    'discovery': [
-      'Interrogatories',
-      'Depositions',
-      'Production Requests',
-      'Discovery Responses'
-    ],
-    'research_notes': [
-      'Legal Research',
-      'Internal Memos',
-      'Case Notes',
-      'Strategy Documents'
-    ],
-    'others': []
-  };
-
-  const categoryLabels = {
-    'client_case_setup': 'Client & Case Setup',
-    'court_filings': 'Court Filings',
-    'evidence': 'Evidence',
-    'correspondence': 'Correspondence',
-    'contracts_agreements': 'Contracts & Agreements',
-    'financials': 'Financials',
-    'discovery': 'Discovery',
-    'research_notes': 'Research & Notes',
-    'others': 'Others'
-  };
-
-  // Fetch client details (only when dialog is open) without polluting main client cache
+  // Fetch client details
   const { data: client } = useQuery({
     queryKey: ['client-basic', clientId],
     enabled: open && !!clientId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('clients')
-        .select('full_name')
+        .select('id, full_name')
         .eq('id', clientId)
         .single();
       if (error) throw error;
@@ -172,9 +106,11 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
     enabled: !!clientId
   });
 
+  // Get selected case details for path preview
+  const selectedCase = cases.find(c => c.id === selectedCaseId);
+
   const uploadMutation = useMutation({
     mutationFn: async (data: UploadFormData) => {
-      // Same upload logic as main dialog but with fixed client
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError || !user) throw new Error('Not authenticated');
 
@@ -206,19 +142,33 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
           });
         }
 
-        const selectedCase = cases.find(c => c.id === selectedCaseId);
         const clientName = client?.full_name || 'Unknown Client';
-        const caseName = (selectedCaseId && selectedCaseId !== 'no-case' && selectedCase) ? selectedCase.case_title : 'General Documents';
-        const category = data.document_category ? categoryLabels[data.document_category as keyof typeof categoryLabels] : 'Others';
-        const docType = data.document_type || data.custom_document_type || 'Unspecified';
+        const caseTitle = (selectedCaseId && selectedCaseId !== 'no-case' && selectedCase) 
+          ? selectedCase.case_title 
+          : 'General Documents';
+        const caseNumber = selectedCase?.case_number || null;
         
-        // Upload to WebDAV and gracefully fallback to Supabase Storage on failure
+        const primaryType = data.primary_document_type || 'Miscellaneous';
+        const subType = data.sub_document_type || 'Other Documents';
+        
+        // Generate structured storage path
+        const storagePath = generateStoragePath({
+          clientName,
+          clientId,
+          caseTitle,
+          caseNumber,
+          primaryType,
+          subType,
+          fileName: file.name
+        });
+        
+        // Upload to WebDAV with graceful fallback to Supabase Storage
         const { data: pydioResult, error: pydioError } = await supabase.functions.invoke('pydio-webdav', {
           body: {
             clientName,
-            caseName,
-            category,
-            docType,
+            caseName: caseNumber ? `${caseTitle}_${caseNumber}` : caseTitle,
+            category: primaryType,
+            docType: subType,
             fileName: file.name,
             fileContent: fileContent
           }
@@ -232,20 +182,19 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
           webdavErrorMessage = pydioError?.message || pydioResult?.error || 'Unknown WebDAV error';
           console.warn('⚠️ WebDAV upload failed, falling back to Supabase Storage:', webdavErrorMessage);
 
-          const storagePath = `uploads/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${file.name}`;
+          const storagePathFallback = `uploads/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${file.name}`;
           const { error: storageError } = await supabase.storage
             .from('documents')
-            .upload(storagePath, file);
+            .upload(storagePathFallback, file);
 
           if (storageError) {
             console.error('❌ Supabase storage upload failed as fallback:', storageError);
             throw new Error(`Upload failed (WebDAV + fallback): ${webdavErrorMessage}`);
           }
 
-          // Insert document record pointing to Supabase Storage (not WebDAV)
           const fallbackDocumentData = {
             file_name: file.name,
-            file_url: storagePath,
+            file_url: storagePathFallback,
             file_type: file.name.split('.').pop()?.toLowerCase() || null,
             file_size: file.size,
             client_id: clientId,
@@ -254,13 +203,13 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
             is_evidence: data.is_evidence,
             uploaded_at: new Date().toISOString(),
             firm_id: teamMember.firm_id,
-            folder_name: (!data.case_id || data.case_id === 'no-case') ? 'General Documents' : null,
+            folder_name: primaryType,
             notes: data.notes || null,
             confidential: data.confidential || false,
             original_copy_retained: data.original_copy_retained || false,
             certified_copy: data.certified_copy || false,
             webdav_synced: false,
-            webdav_path: null,
+            webdav_path: storagePath,
             webdav_error: webdavErrorMessage,
             sync_attempted_at: new Date().toISOString(),
           };
@@ -278,7 +227,7 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
         // Insert document record (WebDAV success)
         const documentData = {
           file_name: file.name,
-          file_url: webdavPath || `${clientName}/${caseName}/${category}/${docType}/${file.name}`,
+          file_url: webdavPath || storagePath,
           file_type: file.name.split('.').pop()?.toLowerCase() || null,
           file_size: file.size,
           client_id: clientId,
@@ -287,13 +236,13 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
           is_evidence: data.is_evidence,
           uploaded_at: new Date().toISOString(),
           firm_id: teamMember.firm_id,
-          folder_name: (!data.case_id || data.case_id === 'no-case') ? 'General Documents' : null,
+          folder_name: primaryType,
           notes: data.notes || null,
           confidential: data.confidential || false,
           original_copy_retained: data.original_copy_retained || false,
           certified_copy: data.certified_copy || false,
           webdav_synced: true,
-          webdav_path: webdavPath,
+          webdav_path: storagePath,
           synced_at: new Date().toISOString()
         };
 
@@ -312,6 +261,7 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documents'] });
       queryClient.invalidateQueries({ queryKey: ['client-documents'] });
+      queryClient.invalidateQueries({ queryKey: ['document-folder-structure'] });
       
       toast({
         title: "Documents uploaded successfully",
@@ -351,10 +301,19 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
       return;
     }
 
-    if (!data.document_category) {
+    if (!data.primary_document_type) {
       toast({
-        title: "Document category required",
-        description: "Please select a document category",
+        title: "Document type required",
+        description: "Please select a primary document type",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!data.sub_document_type) {
+      toast({
+        title: "Sub-type required",
+        description: "Please select a document sub-type",
         variant: "destructive"
       });
       return;
@@ -369,11 +328,14 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
     return `${(kb / 1024).toFixed(1)} MB`;
   };
 
+  // Get available sub-types based on selected primary type
+  const availableSubTypes = selectedPrimaryType ? getSubTypes(selectedPrimaryType) : [];
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="pb-4 border-b border-gray-100">
-          <DialogTitle className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+        <DialogHeader className="pb-4 border-b border-border">
+          <DialogTitle className="text-xl font-semibold flex items-center gap-2">
             <Upload className="w-5 h-5" />
             Upload Documents for {client?.full_name}
           </DialogTitle>
@@ -382,10 +344,10 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 pt-4">
           {/* File Upload Area */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium text-gray-700">
+            <Label className="text-sm font-medium">
               Select Files
             </Label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+            <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
               <input 
                 type="file" 
                 multiple 
@@ -395,11 +357,11 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
                 id="file-upload-client" 
               />
               <label htmlFor="file-upload-client" className="cursor-pointer">
-                <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-600">
+                <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">
                   Click to select files or drag and drop
                 </p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   PDF, Word, Images, Text files up to 50MB
                 </p>
               </label>
@@ -408,17 +370,17 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
             {/* Selected Files */}
             {selectedFiles.length > 0 && (
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-700">
+                <Label className="text-sm font-medium">
                   Selected Files ({selectedFiles.length})
                 </Label>
-                <div className="max-h-40 overflow-y-auto border border-gray-200 rounded-lg">
+                <div className="max-h-40 overflow-y-auto border border-border rounded-lg">
                   {selectedFiles.map((file, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 border-b border-gray-100 last:border-b-0">
+                    <div key={index} className="flex items-center justify-between p-3 border-b border-border last:border-b-0">
                       <div className="flex items-center gap-3">
-                        <FileText className="w-4 h-4 text-gray-500" />
+                        <FileText className="w-4 h-4 text-muted-foreground" />
                         <div>
-                          <p className="text-sm font-medium text-gray-900">{file.name}</p>
-                          <p className="text-xs text-gray-500">{formatFileSize(file.size)}</p>
+                          <p className="text-sm font-medium">{file.name}</p>
+                          <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
                         </div>
                       </div>
                       <Button 
@@ -426,7 +388,7 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
                         variant="ghost" 
                         size="sm" 
                         onClick={() => removeFile(index)} 
-                        className="h-8 w-8 p-0 text-gray-400 hover:text-red-600"
+                        className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
                       >
                         <X className="w-4 h-4" />
                       </Button>
@@ -439,17 +401,17 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
 
           {/* Case Assignment */}
           <div className="space-y-2">
-            <Label htmlFor="case_id" className="text-sm font-medium text-gray-700">
+            <Label htmlFor="case_id" className="text-sm font-medium">
               Assign to Case (Optional)
             </Label>
             <Select onValueChange={value => setValue('case_id', value)} value={selectedCaseId}>
-              <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+              <SelectTrigger className="bg-background">
                 <SelectValue placeholder="Select a case..." />
               </SelectTrigger>
-              <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                <SelectItem value="no-case" className="hover:bg-gray-50">No Case (General Documents)</SelectItem>
+              <SelectContent className="bg-background border shadow-lg z-50">
+                <SelectItem value="no-case">No Case (General Documents)</SelectItem>
                 {cases.map(case_item => (
-                  <SelectItem key={case_item.id} value={case_item.id} className="hover:bg-gray-50">
+                  <SelectItem key={case_item.id} value={case_item.id}>
                     {case_item.case_title} {case_item.case_number && `(${case_item.case_number})`}
                   </SelectItem>
                 ))}
@@ -457,41 +419,50 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
             </Select>
           </div>
 
-          {/* Document Category */}
+          {/* Primary Document Type */}
           <div className="space-y-2">
-            <Label htmlFor="document_category" className="text-sm font-medium text-gray-700">
-              Document Category <span className="text-red-500">*</span>
+            <Label htmlFor="primary_document_type" className="text-sm font-medium">
+              Document Type <span className="text-destructive">*</span>
             </Label>
-            <Select onValueChange={value => {
-              setValue('document_category', value);
-              setValue('document_type', '');
-            }} value={selectedCategory}>
-              <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                <SelectValue placeholder="Select category..." />
+            <Select 
+              onValueChange={value => {
+                setValue('primary_document_type', value);
+                setValue('sub_document_type', '');
+              }} 
+              value={selectedPrimaryType}
+            >
+              <SelectTrigger className="bg-background">
+                <SelectValue placeholder="Select document type..." />
               </SelectTrigger>
-              <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                {Object.entries(categoryLabels).map(([key, label]) => (
-                  <SelectItem key={key} value={key} className="hover:bg-gray-50">
-                    {label}
+              <SelectContent className="bg-background border shadow-lg z-50 max-h-[300px]">
+                {PRIMARY_DOCUMENT_TYPES.map(type => (
+                  <SelectItem key={type} value={type}>
+                    <span className="flex items-center gap-2">
+                      <span>{DOCUMENT_TYPE_ICONS[type] || '📄'}</span>
+                      <span>{type}</span>
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-          {/* Document Type */}
-          {selectedCategory && selectedCategory !== 'others' && (
+          {/* Sub Document Type */}
+          {selectedPrimaryType && (
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-700">
-                Document Type <span className="text-red-500">*</span>
+              <Label className="text-sm font-medium">
+                Sub Type <span className="text-destructive">*</span>
               </Label>
-              <Select onValueChange={value => setValue('document_type', value)} value={watch('document_type')}>
-                <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                  <SelectValue placeholder="Select document type..." />
+              <Select 
+                onValueChange={value => setValue('sub_document_type', value)} 
+                value={selectedSubType}
+              >
+                <SelectTrigger className="bg-background">
+                  <SelectValue placeholder="Select sub-type..." />
                 </SelectTrigger>
-                <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                  {documentTypeMapping[selectedCategory as keyof typeof documentTypeMapping]?.map(type => (
-                    <SelectItem key={type} value={type} className="hover:bg-gray-50">
+                <SelectContent className="bg-background border shadow-lg z-50">
+                  {availableSubTypes.map(type => (
+                    <SelectItem key={type} value={type}>
                       {type}
                     </SelectItem>
                   ))}
@@ -500,56 +471,52 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
             </div>
           )}
 
-          {/* Custom Document Type for Others */}
-          {selectedCategory === 'others' && (
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-700">
-                Custom Document Type <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                {...register('custom_document_type')}
-                placeholder="Enter document type..."
-                className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
-          )}
+          {/* Storage Path Preview */}
+          <StoragePathPreview
+            clientName={client?.full_name}
+            caseTitle={selectedCase?.case_title}
+            caseNumber={selectedCase?.case_number}
+            primaryType={selectedPrimaryType}
+            subType={selectedSubType}
+            fileName={selectedFiles.length === 1 ? selectedFiles[0].name : selectedFiles.length > 1 ? `${selectedFiles.length} files` : undefined}
+          />
 
           {/* Notes */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium text-gray-700">
+            <Label className="text-sm font-medium">
               Notes (Optional)
             </Label>
             <Textarea
               {...register('notes')}
               placeholder="Add any additional notes about this document..."
               rows={3}
-              className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+              className="bg-background"
             />
           </div>
 
           {/* Document Properties */}
           <div className="space-y-3">
-            <Label className="text-sm font-medium text-gray-700">
+            <Label className="text-sm font-medium">
               Document Properties
             </Label>
             <div className="space-y-2">
               <div className="flex items-center space-x-2">
                 <Checkbox
-                  id="is_evidence"
+                  id="is_evidence_client"
                   {...register('is_evidence')}
                   onCheckedChange={(checked) => setValue('is_evidence', !!checked)}
                 />
-                <Label htmlFor="is_evidence" className="text-sm text-gray-600">
+                <Label htmlFor="is_evidence_client" className="text-sm text-muted-foreground">
                   Mark as important/evidence
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox
-                  id="confidential"
+                  id="confidential_client"
                   {...register('confidential')}
                   onCheckedChange={(checked) => setValue('confidential', !!checked)}
                 />
-                <Label htmlFor="confidential" className="text-sm text-gray-600">
+                <Label htmlFor="confidential_client" className="text-sm text-muted-foreground">
                   Confidential document
                 </Label>
                 <TooltipProvider>
@@ -558,28 +525,28 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
                       <Info className="h-4 w-4 text-muted-foreground cursor-help" />
                     </TooltipTrigger>
                     <TooltipContent className="max-w-xs">
-                      <p className="text-sm">Only you, admins, and office staff can view confidential documents</p>
+                      <p className="text-sm">Only you, admins, and office staff can view confidential documents. Lawyers can see all documents unless marked confidential.</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox
-                  id="certified_copy"
+                  id="certified_copy_client"
                   {...register('certified_copy')}
                   onCheckedChange={(checked) => setValue('certified_copy', !!checked)}
                 />
-                <Label htmlFor="certified_copy" className="text-sm text-gray-600">
+                <Label htmlFor="certified_copy_client" className="text-sm text-muted-foreground">
                   Certified copy
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox
-                  id="original_copy_retained"
+                  id="original_copy_retained_client"
                   {...register('original_copy_retained')}
                   onCheckedChange={(checked) => setValue('original_copy_retained', !!checked)}
                 />
-                <Label htmlFor="original_copy_retained" className="text-sm text-gray-600">
+                <Label htmlFor="original_copy_retained_client" className="text-sm text-muted-foreground">
                   Original copy retained
                 </Label>
               </div>
@@ -587,7 +554,7 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
+          <div className="flex justify-end gap-3 pt-6 border-t border-border">
             <Button
               type="button"
               variant="outline"
@@ -603,7 +570,7 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
             >
               {uploadMutation.isPending ? (
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-4 h-4 border-2 border-background border-t-transparent rounded-full animate-spin"></div>
                   Uploading...
                 </div>
               ) : (
