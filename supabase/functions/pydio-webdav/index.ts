@@ -8,7 +8,7 @@ const corsHeaders = {
 
 // Allowed file types
 const ALLOWED_EXTENSIONS = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'png', 'jpg', 'jpeg', 'gif']
-const MAX_FILE_SIZE_MB = 10
+const MAX_FILE_SIZE_MB = 200
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
 
 // Input validation schema - permissive for legal case names while blocking dangerous path characters

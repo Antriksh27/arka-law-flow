@@ -11,7 +11,7 @@ export type FileAttachment = {
   url: string;
 };
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200MB
 const ALLOWED_TYPES = [
   'image/jpeg',
   'image/png',
