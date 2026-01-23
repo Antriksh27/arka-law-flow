@@ -12,7 +12,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { uploadResumableToSupabaseStorage } from '@/lib/supabaseResumableUpload';
-import { uploadWebDAVStreaming } from '@/lib/webdavStreamingUpload';
 import { StoragePathPreview } from './StoragePathPreview';
 import { UploadProgress, UploadProgressState } from './UploadProgress';
 import { 
@@ -126,9 +125,11 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
       if (firmError) throw firmError;
       if (!teamMember?.firm_id) throw new Error('Could not determine your firm.');
 
-      // Max size for JSON(base64) WebDAV upload. Larger files use streaming upload.
-      const MAX_WEBDAV_JSON_SIZE = 10 * 1024 * 1024;
-      const MAX_WEBDAV_STREAM_SIZE = 200 * 1024 * 1024; // 200MB limit for streaming
+      // Max size for JSON(base64) WebDAV upload via edge function
+      // Edge functions have ~6MB body limit, so we use 5MB as safe threshold
+      const MAX_WEBDAV_JSON_SIZE = 5 * 1024 * 1024;
+      // For larger files, we use Supabase Storage TUS (resumable uploads)
+      const MAX_UPLOAD_SIZE = 200 * 1024 * 1024; // 200MB limit
       
       const uploadPromises = selectedFiles.map(async file => {
         const clientName = client?.full_name || 'Unknown Client';
@@ -162,7 +163,12 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
         let webdavPath: string | undefined = undefined;
         let webdavErrorMessage: string | undefined = undefined;
         
-        // For smaller files, use JSON + base64
+        // Check file size limit
+        if (file.size > MAX_UPLOAD_SIZE) {
+          throw new Error(`File too large (${(file.size / 1024 / 1024).toFixed(1)}MB > 200MB limit)`);
+        }
+        
+        // For smaller files (< 5MB), use JSON + base64 via edge function
         if (file.size <= MAX_WEBDAV_JSON_SIZE) {
           let fileContent: string;
           if (file.type.startsWith('text/') || file.name.endsWith('.txt')) {
@@ -196,9 +202,10 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
           if (!webdavOk) {
             webdavErrorMessage = pydioError?.message || pydioResult?.error || 'Unknown WebDAV error';
           }
-        } else if (file.size <= MAX_WEBDAV_STREAM_SIZE) {
-          // Large files: use streaming upload to WebDAV with progress tracking
-          console.log(`📤 Starting WebDAV streaming upload for ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
+        } else {
+          // Large files (>5MB): Use Supabase Storage TUS upload with progress
+          // This bypasses edge function body limits entirely
+          console.log(`📤 Starting TUS upload for large file: ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
           
           // Set up progress tracking
           setUploadProgress(prev => [
@@ -206,61 +213,74 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
             { fileName: file.name, progress: 0, status: 'uploading' }
           ]);
           
-          // Create abort controller for this upload
-          const abortController = new AbortController();
-          abortControllersRef.current.set(file.name, abortController);
+          const uniqueStoragePath = `uploads/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${file.name}`;
           
           try {
-            const result = await uploadWebDAVStreaming({
+            await uploadResumableToSupabaseStorage({
+              bucket: 'documents',
+              objectPath: uniqueStoragePath,
               file,
-              clientName: sanitizedClientName,
-              caseName: sanitizedCaseName,
-              category: sanitizedCategory,
-              docType: sanitizedDocType,
+              upsert: false,
               onProgress: (percent) => {
                 setUploadProgress(prev => 
                   prev.map(p => p.fileName === file.name ? { ...p, progress: percent } : p)
                 );
               },
-              abortSignal: abortController.signal,
             });
             
-            // Clean up abort controller
-            abortControllersRef.current.delete(file.name);
-            
-            if (result.success) {
-              webdavOk = true;
-              webdavPath = result.path;
-              setUploadProgress(prev => 
-                prev.map(p => p.fileName === file.name ? { ...p, progress: 100, status: 'completed' } : p)
-              );
-            } else {
-              webdavErrorMessage = result.error || 'Streaming upload failed';
-              setUploadProgress(prev => 
-                prev.map(p => p.fileName === file.name ? { ...p, status: 'error', error: webdavErrorMessage } : p)
-              );
-            }
-          } catch (streamErr: any) {
-            console.error('❌ WebDAV streaming upload error:', streamErr);
-            webdavErrorMessage = streamErr?.message || String(streamErr);
-            abortControllersRef.current.delete(file.name);
             setUploadProgress(prev => 
-              prev.map(p => p.fileName === file.name ? { ...p, status: 'error', error: webdavErrorMessage } : p)
+              prev.map(p => p.fileName === file.name ? { ...p, progress: 100, status: 'completed' } : p)
             );
+            
+            // Large file uploaded to Supabase Storage successfully
+            webdavPath = storagePath;
+            webdavErrorMessage = 'Pending WebDAV sync (file stored in Supabase)';
+            
+            // Insert document record with webdav_synced = false
+            const { error: insertError } = await supabase.from('documents').insert({
+              file_name: file.name,
+              file_url: uniqueStoragePath,
+              file_type: file.name.split('.').pop()?.toLowerCase() || null,
+              file_size: file.size,
+              client_id: clientId,
+              case_id: (data.case_id && data.case_id !== 'no-case') ? data.case_id : null,
+              uploaded_by: user.id,
+              is_evidence: data.is_evidence,
+              uploaded_at: new Date().toISOString(),
+              firm_id: teamMember.firm_id,
+              folder_name: primaryType,
+              primary_document_type: primaryType,
+              sub_document_type: subType,
+              document_type_id: null,
+              notes: data.notes || null,
+              confidential: data.confidential || false,
+              original_copy_retained: data.original_copy_retained || false,
+              certified_copy: data.certified_copy || false,
+              webdav_synced: false,
+              webdav_path: storagePath,
+              webdav_error: 'Pending sync - large file uploaded to Supabase Storage',
+              sync_attempted_at: new Date().toISOString(),
+            });
+            
+            if (insertError) {
+              console.error('❌ Failed to insert document record:', insertError);
+              throw new Error(`Failed to save document record: ${insertError.message}`);
+            }
+            
+            console.log(`✅ Large file uploaded and document record created: ${file.name}`);
+            return; // Skip the rest of the upload logic for this file
+            
+          } catch (tusError: any) {
+            console.error('❌ TUS upload error:', tusError);
+            setUploadProgress(prev => 
+              prev.map(p => p.fileName === file.name ? { ...p, status: 'error', error: tusError?.message } : p)
+            );
+            throw new Error(`Upload failed: ${tusError?.message || String(tusError)}`);
           }
-        } else {
-          // File too large even for streaming
-          webdavOk = false;
-          webdavErrorMessage = `File too large (${(file.size / 1024 / 1024).toFixed(1)}MB > 200MB limit)`;
         }
         
-         // If WebDAV failed:
-         // - For large files (streaming path), DO NOT fall back to Supabase Storage because it may 413 and mask the real issue.
-         // - For small files (JSON/base64 path), we can still fall back.
-         if (!webdavOk) {
-           if (file.size > MAX_WEBDAV_JSON_SIZE) {
-             throw new Error(webdavErrorMessage || 'Upload failed: WebDAV streaming upload failed');
-           }
+        // If WebDAV failed for small files, fall back to Supabase Storage
+        if (!webdavOk) {
 
            console.warn('⚠️ WebDAV upload failed, falling back to Supabase Storage:', webdavErrorMessage);
 
