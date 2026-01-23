@@ -70,9 +70,11 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
   const [clients, setClients] = useState<Client[]>([]);
   const [cases, setCases] = useState<Case[]>([]);
   const [users, setUsers] = useState<User[]>([]);
-  const [step, setStep] = useState<'form' | 'date' | 'time' | 'client' | 'lawyer'>('form');
+  const [step, setStep] = useState<'form' | 'date' | 'time' | 'client' | 'lawyer' | 'add-team'>('form');
   const [clientSearch, setClientSearch] = useState('');
   const [lawyerSearch, setLawyerSearch] = useState('');
+  const [additionalLawyers, setAdditionalLawyers] = useState<string[]>([]);
+  const [teamSearch, setTeamSearch] = useState('');
   
   const [formData, setFormData] = useState({
     appointment_date: preSelectedDate || TimeUtils.nowDate(),
@@ -92,6 +94,7 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
       fetchUsers();
       // Reset form when opening
       setStep('form');
+      setAdditionalLawyers([]);
     }
   }, [open]);
 
@@ -191,13 +194,47 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
         created_at: TimeUtils.createTimestamp()
       };
 
-      const { error } = await supabase.from('appointments').insert([appointmentData]);
+      const { data: newAppointment, error } = await supabase
+        .from('appointments')
+        .insert([appointmentData])
+        .select('id')
+        .single();
 
       if (error) throw error;
 
+      // Save additional lawyers if any
+      if (newAppointment?.id && additionalLawyers.length > 0) {
+        const lawyersToSave = additionalLawyers.filter(id => id !== formData.lawyer_id);
+        if (lawyersToSave.length > 0) {
+          const lawyerRecords = lawyersToSave.map(lawyerId => ({
+            appointment_id: newAppointment.id,
+            lawyer_id: lawyerId,
+            added_by: user?.id
+          }));
+          await (supabase as any).from('appointment_lawyers').insert(lawyerRecords);
+
+          // Send notifications to additional team members
+          const notifications = lawyersToSave.map(lawyerId => ({
+            recipient_id: lawyerId,
+            title: 'New Appointment Assignment',
+            message: `You have been added to an appointment: "${title}" on ${format(formData.appointment_date, 'MMM dd, yyyy')} at ${formData.appointment_time}`,
+            category: 'appointments',
+            notification_type: 'appointment' as const,
+            action_url: `/appointments`,
+            reference_id: newAppointment.id,
+            priority: 'normal',
+            read: false
+          }));
+          await supabase.from('notifications').insert(notifications);
+        }
+      }
+
+      const addedCount = additionalLawyers.filter(id => id !== formData.lawyer_id).length;
       toast({
         title: "Success",
-        description: "Appointment created successfully"
+        description: addedCount > 0 
+          ? `Appointment created and ${addedCount} team member(s) notified`
+          : "Appointment created successfully"
       });
       onSuccess?.();
       onClose();
@@ -227,6 +264,24 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
   const filteredLawyers = users.filter(u => 
     u.full_name.toLowerCase().includes(lawyerSearch.toLowerCase())
   );
+
+  const availableTeamMembers = users.filter(u => 
+    u.id !== formData.lawyer_id && 
+    !additionalLawyers.includes(u.id) &&
+    u.full_name.toLowerCase().includes(teamSearch.toLowerCase())
+  );
+
+  const handleAddTeamMember = (lawyerId: string) => {
+    if (!additionalLawyers.includes(lawyerId)) {
+      setAdditionalLawyers(prev => [...prev, lawyerId]);
+    }
+    setTeamSearch('');
+    setStep('form');
+  };
+
+  const handleRemoveTeamMember = (lawyerId: string) => {
+    setAdditionalLawyers(prev => prev.filter(id => id !== lawyerId));
+  };
 
   const renderFormView = () => (
     <div className="flex flex-col h-full">
@@ -369,6 +424,51 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
             </div>
             <ChevronRight className="w-5 h-5 text-muted-foreground" />
           </button>
+
+          {/* Additional Team Members */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4 text-muted-foreground" />
+                <Label className="text-xs text-muted-foreground">Additional Team Members</Label>
+              </div>
+              <button
+                type="button"
+                onClick={() => setStep('add-team')}
+                className="flex items-center gap-1 text-xs text-primary font-medium active:opacity-70"
+              >
+                <UserPlus className="w-3.5 h-3.5" />
+                Add
+              </button>
+            </div>
+            
+            {additionalLawyers.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {additionalLawyers.map(lawyerId => {
+                  const lawyer = users.find(u => u.id === lawyerId);
+                  if (!lawyer) return null;
+                  return (
+                    <Badge 
+                      key={lawyerId} 
+                      variant="outline"
+                      className="flex items-center gap-1 pl-2 pr-1 py-1.5 bg-accent"
+                    >
+                      {lawyer.full_name}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveTeamMember(lawyerId)}
+                        className="ml-1 rounded-full p-0.5 hover:bg-background/50 transition-colors"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">No additional team members</p>
+            )}
+          </div>
 
           {/* Case Selector (optional) */}
           {cases.length > 0 && (
@@ -577,6 +677,55 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
     </div>
   );
 
+  const renderAddTeamPicker = () => (
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+        <button onClick={() => setStep('form')} className="p-2 -ml-2">
+          <X className="w-5 h-5" />
+        </button>
+        <h3 className="font-semibold">Add Team Member</h3>
+        <div className="w-9" />
+      </div>
+      <div className="p-4 border-b border-border">
+        <Input
+          placeholder="Search team members..."
+          value={teamSearch}
+          onChange={e => setTeamSearch(e.target.value)}
+          className="h-12 rounded-xl"
+        />
+      </div>
+      <div className="flex-1 overflow-y-auto">
+        {availableTeamMembers.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+            <Users className="w-12 h-12 mb-3 opacity-30" />
+            <p className="text-sm">No more team members to add</p>
+          </div>
+        ) : (
+          availableTeamMembers.map(lawyer => (
+            <button
+              key={lawyer.id}
+              onClick={() => handleAddTeamMember(lawyer.id)}
+              className="w-full flex items-center justify-between px-4 py-4 border-b border-border active:bg-accent transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center">
+                  <span className="text-sm font-semibold text-accent-foreground">
+                    {lawyer.full_name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                  </span>
+                </div>
+                <div className="text-left">
+                  <p className="font-medium text-foreground">{lawyer.full_name}</p>
+                  <p className="text-sm text-muted-foreground capitalize">{lawyer.role}</p>
+                </div>
+              </div>
+              <UserPlus className="w-5 h-5 text-primary" />
+            </button>
+          ))
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <Sheet open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <SheetContent side="bottom" className="h-[95vh] rounded-t-3xl p-0">
@@ -595,6 +744,7 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
           {step === 'time' && renderTimePicker()}
           {step === 'client' && renderClientPicker()}
           {step === 'lawyer' && renderLawyerPicker()}
+          {step === 'add-team' && renderAddTeamPicker()}
         </div>
       </SheetContent>
     </Sheet>
