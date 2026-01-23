@@ -5,6 +5,7 @@ import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-client-name, x-case-name, x-category, x-doc-type, x-file-name',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
 // Allowed file types
