@@ -122,8 +122,9 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
       if (firmError) throw firmError;
       if (!teamMember?.firm_id) throw new Error('Could not determine your firm.');
 
-      // Max size for JSON(base64) WebDAV upload. Larger files use streaming upload to avoid edge memory limits.
+      // Max size for JSON(base64) WebDAV upload. Larger files use streaming upload.
       const MAX_WEBDAV_JSON_SIZE = 10 * 1024 * 1024;
+      const MAX_WEBDAV_STREAM_SIZE = 200 * 1024 * 1024; // 200MB limit for streaming
       
       const uploadPromises = selectedFiles.map(async file => {
         const clientName = client?.full_name || 'Unknown Client';
@@ -191,16 +192,54 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
           if (!webdavOk) {
             webdavErrorMessage = pydioError?.message || pydioResult?.error || 'Unknown WebDAV error';
           }
+        } else if (file.size <= MAX_WEBDAV_STREAM_SIZE) {
+          // Large files: use streaming upload to WebDAV (sends raw binary body with headers)
+          console.log(`📤 Starting WebDAV streaming upload for ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
+          
+          try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.access_token) throw new Error('Not authenticated');
+            
+            const supabaseUrl = 'https://hpcnipcbymruvsnqrmjx.supabase.co';
+            const functionUrl = `${supabaseUrl}/functions/v1/pydio-webdav`;
+            
+            const response = await fetch(functionUrl, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${session.access_token}`,
+                'x-client-name': encodeURIComponent(sanitizedClientName),
+                'x-case-name': encodeURIComponent(sanitizedCaseName),
+                'x-category': encodeURIComponent(sanitizedCategory),
+                'x-doc-type': encodeURIComponent(sanitizedDocType),
+                'x-file-name': encodeURIComponent(file.name),
+                'Content-Type': 'application/octet-stream',
+                'Content-Length': String(file.size),
+              },
+              body: file,
+            });
+            
+            const result = await response.json();
+            console.log('📤 WebDAV streaming response:', result);
+            
+            if (result.success) {
+              webdavOk = true;
+              webdavPath = result.path;
+            } else {
+              webdavErrorMessage = result.error || result.details || 'Streaming upload failed';
+            }
+          } catch (streamErr: any) {
+            console.error('❌ WebDAV streaming upload error:', streamErr);
+            webdavErrorMessage = streamErr?.message || String(streamErr);
+          }
         } else {
-          // Large files: don't call the edge function (it can be unreliable for big payloads).
-          // Instead upload directly to Supabase Storage.
+          // File too large even for streaming
           webdavOk = false;
-          webdavErrorMessage = `Skipped WebDAV for large file (${(file.size / 1024 / 1024).toFixed(1)}MB > 10MB)`;
+          webdavErrorMessage = `File too large (${(file.size / 1024 / 1024).toFixed(1)}MB > 200MB limit)`;
         }
         
-        // If WebDAV failed or wasn't attempted, use Supabase Storage
+        // If WebDAV failed, fall back to Supabase Storage
         if (!webdavOk) {
-          console.warn('⚠️ WebDAV upload failed or skipped, falling back to Supabase Storage:', webdavErrorMessage);
+          console.warn('⚠️ WebDAV upload failed, falling back to Supabase Storage:', webdavErrorMessage);
 
           const storagePathFallback = `uploads/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${file.name}`;
           const useResumable = file.size > 45 * 1024 * 1024; // avoid /object endpoint limits
@@ -231,7 +270,7 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
             const looksLikeTooLarge = /payload too large|maximum allowed size|exceeded the maximum/i.test(msg);
             if (looksLikeTooLarge) {
               throw new Error(
-                `Upload failed: Supabase Storage rejected the file as too large. Increase the 'documents' bucket file size limit to 200MB.`
+                `Upload failed: Both WebDAV and Supabase Storage rejected the file. WebDAV error: ${webdavErrorMessage}`
               );
             }
             throw new Error(`Upload failed: ${msg}`);
