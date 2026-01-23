@@ -29,28 +29,28 @@ export const UploadProgress: React.FC<UploadProgressProps> = ({
       {uploads.map((upload) => (
         <div 
           key={upload.fileName}
-          className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm"
+          className="bg-card text-card-foreground rounded-xl border border-border p-4 shadow-sm"
         >
           <div className="flex items-center gap-3">
             {/* Icon */}
             <div className={cn(
               "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0",
-              upload.status === 'uploading' && "bg-sky-50",
-              upload.status === 'completed' && "bg-emerald-50",
-              upload.status === 'error' && "bg-rose-50",
-              upload.status === 'cancelled' && "bg-slate-50"
+              upload.status === 'uploading' && "bg-primary/10",
+              upload.status === 'completed' && "bg-primary/10",
+              upload.status === 'error' && "bg-destructive/10",
+              upload.status === 'cancelled' && "bg-muted"
             )}>
               {upload.status === 'uploading' && (
-                <Upload className="w-5 h-5 text-sky-500 animate-pulse" />
+                <Upload className="w-5 h-5 text-primary animate-pulse" />
               )}
               {upload.status === 'completed' && (
-                <CheckCircle className="w-5 h-5 text-emerald-500" />
+                <CheckCircle className="w-5 h-5 text-primary" />
               )}
               {upload.status === 'error' && (
-                <AlertCircle className="w-5 h-5 text-rose-500" />
+                <AlertCircle className="w-5 h-5 text-destructive" />
               )}
               {upload.status === 'cancelled' && (
-                <X className="w-5 h-5 text-slate-400" />
+                <X className="w-5 h-5 text-muted-foreground" />
               )}
             </div>
             
@@ -66,7 +66,7 @@ export const UploadProgress: React.FC<UploadProgressProps> = ({
                     variant="ghost"
                     size="sm"
                     onClick={() => onCancel(upload.fileName)}
-                    className="h-7 w-7 p-0 rounded-full text-muted-foreground hover:text-destructive hover:bg-rose-50 flex-shrink-0"
+                    className="h-7 w-7 p-0 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 flex-shrink-0"
                   >
                     <X className="w-4 h-4" />
                   </Button>
@@ -83,11 +83,11 @@ export const UploadProgress: React.FC<UploadProgressProps> = ({
               )}
               
               {upload.status === 'completed' && (
-                <p className="text-xs text-emerald-600">Upload complete</p>
+                <p className="text-xs text-primary">Upload complete</p>
               )}
               
               {upload.status === 'error' && (
-                <p className="text-xs text-rose-600">{upload.error || 'Upload failed'}</p>
+                <p className="text-xs text-destructive">{upload.error || 'Upload failed'}</p>
               )}
               
               {upload.status === 'cancelled' && (

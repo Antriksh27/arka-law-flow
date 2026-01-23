@@ -282,9 +282,15 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
             webdavErrorMessage = `File too large (${(file.size / 1024 / 1024).toFixed(1)}MB > 200MB limit)`;
           }
           
-          // If WebDAV failed, fall back to Supabase Storage
-          if (!webdavOk) {
-            console.warn('⚠️ WebDAV upload failed, falling back to Supabase Storage:', webdavErrorMessage);
+           // If WebDAV failed:
+           // - For large files (streaming path), DO NOT fall back to Supabase Storage because it may 413 and mask the real issue.
+           // - For small files (JSON/base64 path), we can still fall back.
+           if (!webdavOk) {
+             if (file.size > MAX_WEBDAV_JSON_SIZE) {
+               throw new Error(webdavErrorMessage || 'Upload failed: WebDAV streaming upload failed');
+             }
+
+             console.warn('⚠️ WebDAV upload failed, falling back to Supabase Storage:', webdavErrorMessage);
             
             const storagePathFallback = `uploads/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${file.name}`;
             const useResumable = file.size > 45 * 1024 * 1024; // avoid /object endpoint limits
