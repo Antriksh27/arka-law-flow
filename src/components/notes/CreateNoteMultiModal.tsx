@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { X, Plus, Mic, MicOff, Square, Play, Pause, Trash2, Loader2, Maximize2, Minimize2, FileText, Palette, Eye, Link2, Tag } from 'lucide-react';
+import { X, Plus, Mic, MicOff, Square, Play, Pause, Trash2, Loader2, FileText, Palette, Link2, Tag } from 'lucide-react';
 import { DrawingCanvas } from './DrawingCanvas';
 import { ClientSelector } from '@/components/appointments/ClientSelector';
 import { CaseSelector } from '@/components/appointments/CaseSelector';
@@ -49,7 +49,6 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
   const queryClient = useQueryClient();
   const [newTag, setNewTag] = useState('');
   const [activeTab, setActiveTab] = useState('write');
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const [drawingData, setDrawingData] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
@@ -271,11 +270,7 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className={`p-0 gap-0 overflow-hidden transition-all duration-200 ${
-        isFullscreen 
-          ? 'w-screen max-w-none h-screen max-h-none rounded-none' 
-          : 'sm:max-w-2xl max-h-[90vh] w-[calc(100vw-2rem)]'
-      }`}>
+      <DialogContent className="p-0 gap-0 overflow-hidden w-screen max-w-none h-screen max-h-none rounded-none sm:max-w-4xl sm:h-[90vh] sm:max-h-[90vh] sm:rounded-2xl">
         <div className="flex flex-col h-full bg-slate-50">
           {/* Header */}
           <div className="px-6 py-5 bg-white border-b border-slate-100">
@@ -284,21 +279,12 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
                 <h2 className="text-xl font-semibold text-foreground">Create New Note</h2>
                 <p className="text-sm text-muted-foreground mt-1">Add a note with text, drawing, or audio</p>
               </div>
-              <div className="flex items-center gap-2">
-                <button 
-                  type="button"
-                  onClick={() => setIsFullscreen(!isFullscreen)}
-                  className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors"
-                >
-                  {isFullscreen ? <Minimize2 className="w-4 h-4 text-slate-500" /> : <Maximize2 className="w-4 h-4 text-slate-500" />}
-                </button>
-                <button 
-                  onClick={onClose}
-                  className="md:hidden w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center"
-                >
-                  <X className="w-4 h-4 text-slate-500" />
-                </button>
-              </div>
+              <button 
+                onClick={onClose}
+                className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors"
+              >
+                <X className="w-4 h-4 text-slate-500" />
+              </button>
             </div>
           </div>
 
@@ -375,7 +361,7 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
                   
                   <TabsContent value="draw" className="mt-4 space-y-4">
                     <Label className="text-sm font-medium text-foreground">Drawing Canvas</Label>
-                    <DrawingCanvas onDrawingChange={setDrawingData} isFullscreen={isFullscreen} />
+                    <DrawingCanvas onDrawingChange={setDrawingData} isFullscreen={true} />
                     {drawingData && (
                       <div className="mt-2 p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
                         <p className="text-sm text-emerald-600 mb-2">✓ Drawing created</p>
