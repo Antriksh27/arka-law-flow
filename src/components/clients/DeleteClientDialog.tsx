@@ -1,10 +1,9 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogContent, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, AlertTriangle, FileText, Calendar, Briefcase, ListTodo, File, Receipt } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { Loader2, AlertTriangle, FileText, Calendar, Briefcase, ListTodo, File, Receipt, X } from 'lucide-react';
 import { AuditLogger } from '@/lib/auditLogger';
 
 interface DeleteClientDialogProps {
@@ -18,9 +17,6 @@ interface DeleteClientDialogProps {
 export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, onSuccess }: DeleteClientDialogProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-
-  // Debug logging
-  console.log('DeleteClientDialog props:', { clientId, clientName, open });
 
   // Fetch all related data
   const { data: relatedData, isLoading } = useQuery({
@@ -51,16 +47,9 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
-      console.log('Delete mutation started with clientId:', clientId);
-      
-      if (!clientId) {
-        console.error('No client ID provided to delete mutation');
-        throw new Error('No client ID');
-      }
+      if (!clientId) throw new Error('No client ID');
 
       // Delete in the correct order (child records first)
-      
-      // 1. Delete notes associated with the client
       if (relatedData?.notes && relatedData.notes.length > 0) {
         const { error: notesError } = await supabase
           .from('notes_v2')
@@ -69,7 +58,6 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
         if (notesError) throw notesError;
       }
 
-      // 2. Delete tasks associated with the client
       if (relatedData?.tasks && relatedData.tasks.length > 0) {
         const { error: tasksError } = await supabase
           .from('tasks')
@@ -78,7 +66,6 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
         if (tasksError) throw tasksError;
       }
 
-      // 3. Delete documents associated with the client
       if (relatedData?.documents && relatedData.documents.length > 0) {
         const { error: docsError } = await supabase
           .from('documents')
@@ -87,7 +74,6 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
         if (docsError) throw docsError;
       }
 
-      // 4. Delete invoices associated with the client
       if (relatedData?.invoices && relatedData.invoices.length > 0) {
         const { error: invoicesError } = await supabase
           .from('invoices')
@@ -96,7 +82,6 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
         if (invoicesError) throw invoicesError;
       }
 
-      // 5. Delete case-related records for each case
       if (relatedData?.cases && relatedData.cases.length > 0) {
         const caseIds = relatedData.cases.map(c => c.id);
 
@@ -115,7 +100,6 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
         ]);
       }
 
-      // 3. Delete cases
       if (relatedData?.cases && relatedData.cases.length > 0) {
         const { error: casesError } = await supabase
           .from('cases')
@@ -124,7 +108,6 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
         if (casesError) throw casesError;
       }
 
-      // 4. Delete appointments
       if (relatedData?.appointments && relatedData.appointments.length > 0) {
         const { error: appointmentsError } = await supabase
           .from('appointments')
@@ -133,7 +116,6 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
         if (appointmentsError) throw appointmentsError;
       }
 
-      // 5. Finally, delete the client and verify it was deleted
       const { data: deletedClient, error: clientError } = await supabase
         .from('clients')
         .delete()
@@ -145,7 +127,6 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
         throw new Error('Client was not deleted. It may not exist anymore or you may not have permission.');
       }
 
-      // Log the deletion
       await AuditLogger.logDataAccess('client', 'delete', clientId, {
         client_name: clientName,
         deleted_cases: relatedData?.cases?.length || 0,
@@ -162,7 +143,6 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
         description: `${clientName} and all related data deleted successfully`
       });
       
-      // Invalidate all client-related queries
       queryClient.invalidateQueries({ queryKey: ['clients'] });
       queryClient.invalidateQueries({ queryKey: ['client-related-data'] });
       
@@ -180,7 +160,6 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
   });
 
   const handleDelete = () => {
-    console.log('handleDelete called with clientId:', clientId);
     if (!clientId) {
       toast({
         title: "Error",
@@ -194,192 +173,116 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
 
   const totalItems = (relatedData?.cases?.length || 0) + (relatedData?.appointments?.length || 0) + (relatedData?.notes?.length || 0) + (relatedData?.tasks?.length || 0) + (relatedData?.documents?.length || 0) + (relatedData?.invoices?.length || 0);
 
+  const dataCategories = [
+    { key: 'cases', icon: Briefcase, label: 'Cases', color: 'blue', data: relatedData?.cases, titleField: 'case_title', subtitleField: 'case_number' },
+    { key: 'notes', icon: FileText, label: 'Notes', color: 'violet', data: relatedData?.notes, titleField: 'title' },
+    { key: 'tasks', icon: ListTodo, label: 'Tasks', color: 'indigo', data: relatedData?.tasks, titleField: 'title' },
+    { key: 'documents', icon: File, label: 'Documents', color: 'slate', data: relatedData?.documents, titleField: 'file_name' },
+    { key: 'invoices', icon: Receipt, label: 'Invoices', color: 'amber', data: relatedData?.invoices, titleField: 'invoice_number' },
+    { key: 'appointments', icon: Calendar, label: 'Appointments', color: 'emerald', data: relatedData?.appointments, titleField: 'title', subtitleField: 'start_time' },
+  ];
+
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="bg-white max-w-2xl max-h-[80vh] overflow-y-auto">
-        <AlertDialogHeader>
-          <AlertDialogTitle className="flex items-center gap-2 text-red-600">
-            <AlertTriangle className="w-5 h-5" />
-            Delete Client - {clientName}
-          </AlertDialogTitle>
-          <div className="text-left space-y-4 text-sm text-gray-600 mt-2">
+      <AlertDialogContent className="sm:max-w-2xl p-0 gap-0 overflow-hidden max-h-[90vh]">
+        <div className="flex flex-col h-full bg-slate-50">
+          {/* Header */}
+          <div className="px-6 py-5 bg-white border-b border-slate-100">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                  <AlertTriangle className="w-6 h-6 text-red-600" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-slate-900">Delete Client</h2>
+                  <p className="text-sm text-muted-foreground">{clientName}</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => onOpenChange(false)}
+                className="md:hidden w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors"
+              >
+                <X className="w-4 h-4 text-slate-500" />
+              </button>
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
             {isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
               </div>
             ) : (
               <>
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <p className="text-sm text-red-800 font-medium">
-                    ⚠️ This action cannot be undone. The following data will be permanently deleted:
-                  </p>
+                {/* Warning Card */}
+                <div className="bg-red-50 rounded-2xl p-4 border border-red-100">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-semibold text-red-800">This action cannot be undone</p>
+                      <p className="text-sm text-red-700 mt-1">
+                        The following data will be permanently deleted:
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
                 {totalItems === 0 ? (
-                  <div className="text-center py-4 text-gray-600">
-                    No related data found. Only the client record will be deleted.
+                  <div className="bg-white rounded-2xl shadow-sm p-6 text-center">
+                    <p className="text-sm text-slate-600">
+                      No related data found. Only the client record will be deleted.
+                    </p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {/* Cases */}
-                    {relatedData?.cases && relatedData.cases.length > 0 && (
-                      <div className="border rounded-lg p-4 bg-gray-50">
-                        <div className="flex items-center gap-2 mb-3">
-                          <Briefcase className="w-4 h-4 text-blue-600" />
-                          <h4 className="font-semibold text-gray-900">
-                            Cases ({relatedData.cases.length})
-                          </h4>
-                        </div>
-                        <div className="space-y-2 max-h-40 overflow-y-auto">
-                          {relatedData.cases.slice(0, 10).map((case_) => (
-                            <div key={case_.id} className="text-sm text-gray-700 bg-white p-2 rounded border">
-                              <div className="font-medium">{case_.case_title}</div>
-                              {case_.case_number && (
-                                <div className="text-xs text-gray-500">{case_.case_number}</div>
-                              )}
+                  <div className="space-y-3">
+                    {dataCategories.map(({ key, icon: Icon, label, color, data, titleField, subtitleField }) => {
+                      if (!data || data.length === 0) return null;
+                      
+                      return (
+                        <div key={key} className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                          <div className="p-4">
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className={`w-10 h-10 rounded-xl bg-${color}-50 flex items-center justify-center`}>
+                                <Icon className={`w-5 h-5 text-${color}-500`} />
+                              </div>
+                              <div>
+                                <p className="text-sm font-semibold text-slate-900">{label}</p>
+                                <p className="text-xs text-muted-foreground">{data.length} item{data.length !== 1 ? 's' : ''}</p>
+                              </div>
                             </div>
-                          ))}
-                          {relatedData.cases.length > 10 && (
-                            <div className="text-xs text-gray-500 italic">
-                              + {relatedData.cases.length - 10} more cases
-                            </div>
-                          )}
-                        </div>
-                        <div className="mt-2 text-xs text-gray-600 bg-white p-2 rounded border">
-                          This includes all case documents, hearings, orders, objections, contacts, and activities.
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Notes */}
-                    {relatedData?.notes && relatedData.notes.length > 0 && (
-                      <div className="border rounded-lg p-4 bg-gray-50">
-                        <div className="flex items-center gap-2 mb-3">
-                          <FileText className="w-4 h-4 text-purple-600" />
-                          <h4 className="font-semibold text-gray-900">
-                            Notes ({relatedData.notes.length})
-                          </h4>
-                        </div>
-                        <div className="space-y-2 max-h-40 overflow-y-auto">
-                          {relatedData.notes.slice(0, 10).map((note) => (
-                            <div key={note.id} className="text-sm text-gray-700 bg-white p-2 rounded border">
-                              <div className="font-medium">{note.title || 'Untitled Note'}</div>
-                            </div>
-                          ))}
-                          {relatedData.notes.length > 10 && (
-                            <div className="text-xs text-gray-500 italic">
-                              + {relatedData.notes.length - 10} more notes
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Tasks */}
-                    {relatedData?.tasks && relatedData.tasks.length > 0 && (
-                      <div className="border rounded-lg p-4 bg-gray-50">
-                        <div className="flex items-center gap-2 mb-3">
-                          <ListTodo className="w-4 h-4 text-indigo-600" />
-                          <h4 className="font-semibold text-gray-900">
-                            Tasks ({relatedData.tasks.length})
-                          </h4>
-                        </div>
-                        <div className="space-y-2 max-h-40 overflow-y-auto">
-                          {relatedData.tasks.slice(0, 10).map((task) => (
-                            <div key={task.id} className="text-sm text-gray-700 bg-white p-2 rounded border">
-                              <div className="font-medium">{task.title || 'Task'}</div>
-                            </div>
-                          ))}
-                          {relatedData.tasks.length > 10 && (
-                            <div className="text-xs text-gray-500 italic">
-                              + {relatedData.tasks.length - 10} more tasks
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Documents */}
-                    {relatedData?.documents && relatedData.documents.length > 0 && (
-                      <div className="border rounded-lg p-4 bg-gray-50">
-                        <div className="flex items-center gap-2 mb-3">
-                          <File className="w-4 h-4 text-slate-600" />
-                          <h4 className="font-semibold text-gray-900">
-                            Documents ({relatedData.documents.length})
-                          </h4>
-                        </div>
-                        <div className="space-y-2 max-h-40 overflow-y-auto">
-                          {relatedData.documents.slice(0, 10).map((doc) => (
-                            <div key={doc.id} className="text-sm text-gray-700 bg-white p-2 rounded border">
-                              <div className="font-medium">{doc.file_name || 'Document'}</div>
-                            </div>
-                          ))}
-                          {relatedData.documents.length > 10 && (
-                            <div className="text-xs text-gray-500 italic">
-                              + {relatedData.documents.length - 10} more documents
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Invoices */}
-                    {relatedData?.invoices && relatedData.invoices.length > 0 && (
-                      <div className="border rounded-lg p-4 bg-gray-50">
-                        <div className="flex items-center gap-2 mb-3">
-                          <Receipt className="w-4 h-4 text-amber-600" />
-                          <h4 className="font-semibold text-gray-900">
-                            Invoices ({relatedData.invoices.length})
-                          </h4>
-                        </div>
-                        <div className="space-y-2 max-h-40 overflow-y-auto">
-                          {relatedData.invoices.slice(0, 10).map((inv) => (
-                            <div key={inv.id} className="text-sm text-gray-700 bg-white p-2 rounded border">
-                              <div className="font-medium">Invoice #{inv.invoice_number || inv.id.substring(0,6)}</div>
-                            </div>
-                          ))}
-                          {relatedData.invoices.length > 10 && (
-                            <div className="text-xs text-gray-500 italic">
-                              + {relatedData.invoices.length - 10} more invoices
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Appointments */}
-                    {relatedData?.appointments && relatedData.appointments.length > 0 && (
-                      <div className="border rounded-lg p-4 bg-gray-50">
-                        <div className="flex items-center gap-2 mb-3">
-                          <Calendar className="w-4 h-4 text-green-600" />
-                          <h4 className="font-semibold text-gray-900">
-                            Appointments ({relatedData.appointments.length})
-                          </h4>
-                        </div>
-                        <div className="space-y-2 max-h-40 overflow-y-auto">
-                          {relatedData.appointments.slice(0, 10).map((apt) => (
-                            <div key={apt.id} className="text-sm text-gray-700 bg-white p-2 rounded border">
-                              <div className="font-medium">{apt.title || 'Appointment'}</div>
-                              {apt.start_time && (
-                                <div className="text-xs text-gray-500">
-                                  {new Date(apt.start_time).toLocaleDateString()}
+                            
+                            <div className="space-y-2 max-h-32 overflow-y-auto">
+                              {data.slice(0, 5).map((item: any) => (
+                                <div key={item.id} className="p-2 rounded-xl bg-slate-50 text-sm">
+                                  <p className="font-medium text-slate-900 truncate">
+                                    {item[titleField] || `Untitled ${label.slice(0, -1)}`}
+                                  </p>
+                                  {subtitleField && item[subtitleField] && (
+                                    <p className="text-xs text-slate-500 truncate">
+                                      {subtitleField === 'start_time' 
+                                        ? new Date(item[subtitleField]).toLocaleDateString()
+                                        : item[subtitleField]
+                                      }
+                                    </p>
+                                  )}
                                 </div>
+                              ))}
+                              {data.length > 5 && (
+                                <p className="text-xs text-slate-500 italic px-2">
+                                  + {data.length - 5} more {label.toLowerCase()}
+                                </p>
                               )}
                             </div>
-                          ))}
-                          {relatedData.appointments.length > 10 && (
-                            <div className="text-xs text-gray-500 italic">
-                              + {relatedData.appointments.length - 10} more appointments
-                            </div>
-                          )}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      );
+                    })}
 
                     {/* Summary */}
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                      <p className="text-sm text-yellow-800">
-                        <strong>Total items to be deleted:</strong> {totalItems} record{totalItems !== 1 ? 's' : ''} plus all their associated data
+                    <div className="bg-amber-50 rounded-2xl p-4 border border-amber-100">
+                      <p className="text-sm text-amber-800">
+                        <strong>Total items to be deleted:</strong> {totalItems} record{totalItems !== 1 ? 's' : ''} plus all associated data
                       </p>
                     </div>
                   </div>
@@ -387,24 +290,28 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
               </>
             )}
           </div>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={deleteMutation.isPending}>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleDelete}
-            disabled={isLoading || deleteMutation.isPending || !clientId}
-            className="bg-red-600 hover:bg-red-700 text-white"
-          >
-            {deleteMutation.isPending ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Deleting...
-              </>
-            ) : (
-              'Delete Everything'
-            )}
-          </AlertDialogAction>
-        </AlertDialogFooter>
+
+          {/* Footer */}
+          <AlertDialogFooter className="px-6 py-4 bg-white border-t border-slate-100 flex-row gap-3 sm:gap-3">
+            <AlertDialogCancel className="flex-1 rounded-full" disabled={deleteMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDelete}
+              disabled={isLoading || !clientId || deleteMutation.isPending}
+              className="flex-1 rounded-full bg-red-600 hover:bg-red-700 text-white"
+            >
+              {deleteMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete Client'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </div>
       </AlertDialogContent>
     </AlertDialog>
   );

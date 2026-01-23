@@ -1,8 +1,8 @@
 import React, { useState, useRef } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Upload, Download, AlertCircle, CheckCircle, Trash2 } from 'lucide-react';
+import { Upload, Download, AlertCircle, CheckCircle, Trash2, FileSpreadsheet, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -46,7 +46,7 @@ export const BulkImportClientsDialog = ({
       const { data: recentContacts } = await supabase
         .from('clients')
         .select('id')
-        .gte('created_at', new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()) // Last 2 hours
+        .gte('created_at', new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString())
         .is('email', null)
         .is('phone', null);
 
@@ -112,7 +112,6 @@ export const BulkImportClientsDialog = ({
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Clients');
       
-      // Auto-size columns
       const colWidths = Object.keys(sampleData[0]).map(key => ({
         wch: Math.max(key.length, ...sampleData.map(row => String(row[key as keyof typeof row] || '').length)) + 2
       }));
@@ -148,19 +147,15 @@ export const BulkImportClientsDialog = ({
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
       
-      // Parse with raw values to handle different data types properly
       const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
-        raw: false, // This ensures we get string values
-        defval: '' // Default value for empty cells
+        raw: false,
+        defval: ''
       }) as any[];
-
-      console.log('Raw parsed data sample:', jsonData.slice(0, 3));
 
       if (jsonData.length === 0) {
         throw new Error('No data found in the Excel file');
       }
 
-      // Get user's firm_id
       const { data: teamMember } = await supabase
         .from('team_members')
         .select('firm_id')
@@ -176,37 +171,26 @@ export const BulkImportClientsDialog = ({
 
       for (let i = 0; i < jsonData.length; i++) {
         const row = jsonData[i];
-        const rowNumber = i + 2; // Excel row number (1-indexed + header row)
+        const rowNumber = i + 2;
 
         try {
-          // Helper function to clean and validate field values
           const cleanField = (value: any): string | null => {
             if (value === null || value === undefined || value === '') return null;
             const cleaned = String(value).trim();
             return cleaned === '' ? null : cleaned;
           };
 
-          // Validate required fields - try multiple column name variations
           const fullName = cleanField(row.full_name || row['Full Name'] || row['full_name'] || row['NAME'] || row['Name']);
           if (!fullName) {
             errors.push(`Row ${rowNumber}: Full name is required`);
             continue;
           }
 
-          // Clean and validate email - try multiple column name variations
           const rawEmail = cleanField(row.email || row['Email'] || row['EMAIL'] || row['E-mail'] || row['e-mail']);
           let email = rawEmail;
-          if (email && !email.includes('@')) {
-            console.log(`Row ${rowNumber}: Invalid email format: ${email}`);
-            // Keep the value anyway in case it's a valid email format we didn't recognize
-          }
 
-          // Clean phone number - try multiple column name variations
           const phone = cleanField(row.phone || row['Phone'] || row['PHONE'] || row['Mobile'] || row['mobile'] || row['Contact']);
 
-          console.log(`Row ${rowNumber}:`, { fullName, email, phone });
-
-          // Prepare client data
           const clientData = {
             full_name: fullName,
             email: email,
@@ -222,20 +206,16 @@ export const BulkImportClientsDialog = ({
             created_by: user.id
           };
 
-          // Validate status
           const validStatuses = ['active', 'inactive', 'lead', 'prospect', 'new'];
           if (!validStatuses.includes(clientData.status)) {
             clientData.status = 'new';
           }
 
-          // Insert client
           const { error } = await supabase
             .from('clients')
             .insert([clientData]);
 
-          if (error) {
-            throw error;
-          }
+          if (error) throw error;
 
           successCount++;
         } catch (error: any) {
@@ -279,148 +259,199 @@ export const BulkImportClientsDialog = ({
       if (!open) resetDialog();
       onOpenChange(open);
     }}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Bulk Import Clients</DialogTitle>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-2xl p-0 gap-0 overflow-hidden max-h-[90vh]">
+        <div className="flex flex-col h-full bg-slate-50">
+          {/* Header */}
+          <div className="px-6 py-5 bg-white border-b border-slate-100">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+                  <Upload className="w-5 h-5 text-emerald-500" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-slate-900">Bulk Import Clients</h2>
+                  <p className="text-sm text-muted-foreground">Import from Excel file</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => onOpenChange(false)}
+                className="md:hidden w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors"
+              >
+                <X className="w-4 h-4 text-slate-500" />
+              </button>
+            </div>
+          </div>
 
-        <div className="space-y-6">
-          {/* Clean up recent uploads */}
-          <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
-            <div className="flex items-start gap-3">
-              <Trash2 className="w-5 h-5 text-orange-600 mt-0.5" />
-              <div className="flex-1">
-                <h3 className="font-medium text-orange-900 mb-1">Clean Up Failed Imports</h3>
-                <p className="text-sm text-orange-700 mb-3">
-                  Delete recent contacts that were uploaded without email/phone data.
-                </p>
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
+            {/* Clean Up Card */}
+            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div className="p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center">
+                    <Trash2 className="w-5 h-5 text-orange-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">Clean Up Failed Imports</p>
+                    <p className="text-xs text-muted-foreground">Delete recent contacts without email/phone</p>
+                  </div>
+                </div>
                 <Button 
                   variant="outline" 
                   size="sm" 
                   onClick={deleteRecentContacts}
-                  className="border-orange-300 text-orange-700 hover:bg-orange-100"
+                  className="w-full rounded-xl border-orange-200 text-orange-700 hover:bg-orange-50"
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
-                  Delete Recent Incomplete Contacts
+                  Delete Incomplete Contacts
                 </Button>
               </div>
             </div>
-          </div>
 
-          {/* Template Download */}
-          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-            <div className="flex items-start gap-3">
-              <Download className="w-5 h-5 text-blue-600 mt-0.5" />
-              <div className="flex-1">
-                <h3 className="font-medium text-blue-900 mb-1">Download Template</h3>
-                <p className="text-sm text-blue-700 mb-3">
-                  Download the sample Excel template to see the required format and columns.
-                </p>
+            {/* Template Download Card */}
+            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div className="p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center">
+                    <Download className="w-5 h-5 text-sky-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">Download Template</p>
+                    <p className="text-xs text-muted-foreground">Get the sample Excel format</p>
+                  </div>
+                </div>
                 <Button 
                   variant="outline" 
                   size="sm" 
                   onClick={downloadSampleTemplate}
-                  className="border-blue-300 text-blue-700 hover:bg-blue-100"
+                  className="w-full rounded-xl border-sky-200 text-sky-700 hover:bg-sky-50"
                 >
                   <Download className="w-4 h-4 mr-2" />
                   Download Template
                 </Button>
               </div>
             </div>
-          </div>
 
-          {/* File Upload */}
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Select Excel File (.xlsx or .xls)
-              </label>
-              <div className="flex items-center gap-3">
-                <Input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".xlsx,.xls"
-                  onChange={handleFileSelect}
-                  className="border-gray-300"
-                />
-                {file && (
-                  <div className="flex items-center gap-2 text-sm text-green-600">
-                    <CheckCircle className="w-4 h-4" />
-                    {file.name}
+            {/* File Upload Card */}
+            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div className="p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
+                    <FileSpreadsheet className="w-5 h-5 text-violet-500" />
                   </div>
-                )}
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">Select Excel File</p>
+                    <p className="text-xs text-muted-foreground">.xlsx or .xls format</p>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <Input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".xlsx,.xls"
+                    onChange={handleFileSelect}
+                    className="bg-slate-50 border-slate-200 rounded-xl"
+                  />
+                  {file && (
+                    <div className="flex items-center gap-2 text-sm text-emerald-600 p-2 rounded-xl bg-emerald-50">
+                      <CheckCircle className="w-4 h-4" />
+                      {file.name}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
-            {/* Import Button */}
-            <Button
-              onClick={processImport}
-              disabled={!file || importing}
-              className="w-full bg-slate-800 hover:bg-slate-700"
-            >
-              {importing ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                  Importing...
-                </>
-              ) : (
-                <>
-                  <Upload className="w-4 h-4 mr-2" />
-                  Import Clients
-                </>
-              )}
-            </Button>
-          </div>
-
-          {/* Results */}
-          {results && (
-            <div className="space-y-4">
-              {results.success > 0 && (
-                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                  <div className="flex items-center gap-2 text-green-800">
-                    <CheckCircle className="w-5 h-5" />
-                    <span className="font-medium">
-                      Successfully imported {results.success} client(s)
-                    </span>
+            {/* Results */}
+            {results && (
+              <div className="space-y-3">
+                {results.success > 0 && (
+                  <div className="bg-emerald-50 rounded-2xl p-4 border border-emerald-100">
+                    <div className="flex items-center gap-2 text-emerald-800">
+                      <CheckCircle className="w-5 h-5" />
+                      <span className="font-medium">
+                        Successfully imported {results.success} client(s)
+                      </span>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {results.errors.length > 0 && (
-                <div className="bg-red-50 p-4 rounded-lg border border-red-200">
-                  <div className="flex items-start gap-2">
-                    <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
-                    <div className="flex-1">
-                      <h3 className="font-medium text-red-800 mb-2">
-                        {results.errors.length} error(s) occurred:
-                      </h3>
-                      <div className="space-y-1 max-h-40 overflow-y-auto">
-                        {results.errors.map((error, index) => (
-                          <p key={index} className="text-sm text-red-700">
-                            • {error}
-                          </p>
-                        ))}
+                {results.errors.length > 0 && (
+                  <div className="bg-red-50 rounded-2xl p-4 border border-red-100">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <h3 className="font-medium text-red-800 mb-2">
+                          {results.errors.length} error(s) occurred:
+                        </h3>
+                        <div className="space-y-1 max-h-32 overflow-y-auto">
+                          {results.errors.map((error, index) => (
+                            <p key={index} className="text-sm text-red-700">
+                              • {error}
+                            </p>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
-            </div>
-          )}
+                )}
+              </div>
+            )}
 
-          {/* Instructions */}
-          <div className="bg-gray-50 p-4 rounded-lg text-sm text-gray-600">
-            <h3 className="font-medium text-gray-800 mb-2">Instructions:</h3>
-            <ul className="space-y-1 list-disc list-inside">
-              <li>Download the template first to see the required format</li>
-              <li>Fill in your client data following the template structure</li>
-              <li>Full name is required for each client</li>
-              <li>Column names are flexible (e.g., "Email", "email", "E-mail" all work)</li>
-              <li>Valid status values: active, inactive, lead, prospect, new</li>
-              <li>Type can be: Individual or Corporate</li>
-              <li>Save your file as .xlsx or .xls format</li>
-              <li>Use the "Delete Recent Incomplete Contacts" button if upload fails</li>
-            </ul>
+            {/* Instructions */}
+            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div className="p-4">
+                <p className="text-sm font-semibold text-slate-900 mb-3">Instructions</p>
+                <ul className="space-y-2 text-sm text-slate-600">
+                  <li className="flex items-start gap-2">
+                    <span className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center text-xs font-medium flex-shrink-0">1</span>
+                    <span>Download the template to see the required format</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center text-xs font-medium flex-shrink-0">2</span>
+                    <span>Fill in your client data following the template structure</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center text-xs font-medium flex-shrink-0">3</span>
+                    <span>Full name is required for each client</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center text-xs font-medium flex-shrink-0">4</span>
+                    <span>Valid status: active, inactive, lead, prospect, new</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="px-6 py-4 bg-white border-t border-slate-100">
+            <div className="flex gap-3">
+              <Button 
+                variant="outline" 
+                onClick={() => onOpenChange(false)}
+                className="flex-1 rounded-full"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={processImport}
+                disabled={!file || importing}
+                className="flex-1 rounded-full bg-slate-800 hover:bg-slate-700"
+              >
+                {importing ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                    Importing...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-4 h-4 mr-2" />
+                    Import Clients
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>
