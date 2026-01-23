@@ -1,19 +1,12 @@
-
 import React, { useState } from 'react';
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogContent } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Trash2, AlertTriangle, X, FileText } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface DeleteDocumentDialogProps {
   open: boolean;
@@ -29,6 +22,7 @@ export const DeleteDocumentDialog: React.FC<DeleteDocumentDialogProps> = ({
   onDeleted
 }) => {
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [isDeleting, setIsDeleting] = useState(false);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -49,7 +43,6 @@ export const DeleteDocumentDialog: React.FC<DeleteDocumentDialogProps> = ({
         return false;
       }
 
-      // Attempt to sign in with current email and provided password
       const { error } = await supabase.auth.signInWithPassword({
         email: user.user.email,
         password: password
@@ -78,39 +71,31 @@ export const DeleteDocumentDialog: React.FC<DeleteDocumentDialogProps> = ({
     setPasswordError('');
     
     try {
-      // First verify the password
       const isPasswordValid = await verifyPassword(password);
       if (!isPasswordValid) {
         setIsDeleting(false);
         return;
       }
 
-      // Delete file from Supabase storage
       const { error: storageError } = await supabase.storage
         .from('documents')
         .remove([document.file_url]);
 
       if (storageError) {
         console.warn('Storage deletion error:', storageError);
-        // Continue with database deletion even if storage fails
       }
 
-      // Delete document record from database using secure function
       const { error: dbError } = await supabase.rpc('delete_document_secure', {
         p_document_id: document.id
       });
 
       if (dbError) throw dbError;
 
-      // If document was synced to WebDAV, attempt to delete from there too
       if (document.webdav_synced && document.webdav_path) {
         try {
           console.log('🗑️ Attempting to delete from WebDAV:', document.webdav_path);
-          // Note: We don't have a delete operation in the WebDAV function yet,
-          // but we can add it later if needed
         } catch (webdavError) {
           console.warn('WebDAV deletion failed:', webdavError);
-          // Don't fail the entire operation if WebDAV deletion fails
         }
       }
 
@@ -135,76 +120,124 @@ export const DeleteDocumentDialog: React.FC<DeleteDocumentDialogProps> = ({
 
   return (
     <AlertDialog open={open} onOpenChange={handleClose}>
-      <AlertDialogContent className="bg-white border border-gray-200 max-w-md">
-        <AlertDialogHeader>
-          <AlertDialogTitle className="text-lg font-semibold text-gray-900">
-            Delete Document
-          </AlertDialogTitle>
-          <AlertDialogDescription className="text-sm text-gray-600">
-            Are you sure you want to delete "{document?.file_name}"? This action cannot be undone.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-
-        <div className="py-4">
-          <Label htmlFor="password" className="text-sm font-medium text-gray-700">
-            Enter your password to confirm deletion
-          </Label>
-          <div className="relative mt-2">
-            <Input
-              id="password"
-              type={showPassword ? 'text' : 'password'}
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                setPasswordError('');
-              }}
-              placeholder="Enter your password"
-              className="pr-10"
-              disabled={isDeleting}
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-              onClick={() => setShowPassword(!showPassword)}
-              disabled={isDeleting}
-            >
-              {showPassword ? (
-                <EyeOff className="h-4 w-4 text-gray-400" />
-              ) : (
-                <Eye className="h-4 w-4 text-gray-400" />
-              )}
-            </Button>
-          </div>
-          {passwordError && (
-            <p className="text-sm text-red-600 mt-1">{passwordError}</p>
-          )}
-        </div>
-
-        <AlertDialogFooter>
-          <Button
-            variant="outline"
-            onClick={handleClose}
-            disabled={isDeleting}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="destructive"
-            onClick={handleDelete}
-            disabled={isDeleting || !password.trim()}
-          >
-            {isDeleting ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Deleting...
-              </>
-            ) : (
-              'Delete Document'
+      <AlertDialogContent className={`${isMobile ? 'h-auto max-h-[90dvh] w-[95%] rounded-2xl' : 'sm:max-w-md'} p-0 gap-0 overflow-hidden`}>
+        <div className="flex flex-col bg-slate-50">
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 bg-white border-b border-slate-200">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center">
+                <Trash2 className="w-5 h-5 text-red-500" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900">Delete Document</h2>
+                <p className="text-xs text-slate-500">This action cannot be undone</p>
+              </div>
+            </div>
+            {isMobile && (
+              <Button variant="ghost" size="icon" onClick={handleClose} className="rounded-full">
+                <X className="w-5 h-5" />
+              </Button>
             )}
-          </Button>
-        </AlertDialogFooter>
+          </div>
+
+          {/* Content */}
+          <div className="p-4 space-y-4">
+            {/* Document Preview Card */}
+            <div className="bg-white rounded-2xl shadow-sm p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center">
+                  <FileText className="w-6 h-6 text-red-500" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-slate-900 truncate">{document?.file_name}</p>
+                  <p className="text-sm text-slate-500">Document will be permanently deleted</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Password Input Card */}
+            <div className="bg-white rounded-2xl shadow-sm p-4">
+              <Label htmlFor="password" className="text-sm font-medium text-slate-700">
+                Enter your password to confirm
+              </Label>
+              <div className="relative mt-2">
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setPasswordError('');
+                  }}
+                  placeholder="Enter your password"
+                  className="pr-10 rounded-xl h-11"
+                  disabled={isDeleting}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent rounded-full"
+                  onClick={() => setShowPassword(!showPassword)}
+                  disabled={isDeleting}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 text-slate-400" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-slate-400" />
+                  )}
+                </Button>
+              </div>
+              {passwordError && (
+                <p className="text-sm text-red-600 mt-2">{passwordError}</p>
+              )}
+            </div>
+
+            {/* Warning Card */}
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+                  <AlertTriangle className="w-4 h-4 text-amber-600" />
+                </div>
+                <div>
+                  <p className="font-medium text-amber-800 text-sm">Warning</p>
+                  <p className="text-sm text-amber-700 mt-1">
+                    This will permanently remove the document from storage and cannot be recovered.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="p-4 bg-white border-t border-slate-200">
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={handleClose}
+                disabled={isDeleting}
+                className="flex-1 rounded-full h-11"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={isDeleting || !password.trim()}
+                className="flex-1 rounded-full h-11"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  'Delete Document'
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
       </AlertDialogContent>
     </AlertDialog>
   );

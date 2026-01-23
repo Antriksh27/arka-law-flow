@@ -2,16 +2,10 @@ import React from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Trash2, Building, Mail, Phone } from 'lucide-react';
+import { Trash2, Building, Mail, Phone, AlertTriangle, X, Loader2 } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface DeleteContactDialogProps {
   open: boolean;
@@ -22,6 +16,7 @@ interface DeleteContactDialogProps {
 export const DeleteContactDialog = ({ open, onOpenChange, contact }: DeleteContactDialogProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
 
   const deleteContactMutation = useMutation({
     mutationFn: async () => {
@@ -61,84 +56,109 @@ export const DeleteContactDialog = ({ open, onOpenChange, contact }: DeleteConta
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-full sm:max-w-[500px] max-h-[90vh] overflow-y-auto p-4 sm:p-6">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-red-600 text-lg sm:text-xl">
-            <Trash2 className="h-5 w-5" />
-            Delete Contact
-          </DialogTitle>
-          <DialogDescription className="text-sm">
-            Are you sure you want to delete this contact? This action cannot be undone.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-4 py-4">
-          <div className="bg-red-50 rounded-lg p-3 sm:p-4 space-y-3">
-            <div className="flex items-center space-x-3">
-              <div className="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center">
-                <span className="text-red-600 font-medium">
-                  {contact.name?.charAt(0)?.toUpperCase()}
-                </span>
+      <DialogContent className={`${isMobile ? 'h-auto max-h-[90dvh] w-[95%] rounded-2xl' : 'sm:max-w-md'} p-0 gap-0 overflow-hidden`}>
+        <div className="flex flex-col bg-slate-50">
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 bg-white border-b border-slate-200">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center">
+                <Trash2 className="w-5 h-5 text-red-500" />
               </div>
               <div>
-                <h3 className="font-medium text-gray-900">{contact.name}</h3>
-                {contact.organization && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Building className="h-3 w-3" />
-                    {contact.organization}
+                <h2 className="text-lg font-semibold text-slate-900">Delete Contact</h2>
+                <p className="text-xs text-slate-500">This action cannot be undone</p>
+              </div>
+            </div>
+            {isMobile && (
+              <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="rounded-full">
+                <X className="w-5 h-5" />
+              </Button>
+            )}
+          </div>
+
+          {/* Content */}
+          <div className="p-4 space-y-4">
+            {/* Contact Preview Card */}
+            <div className="bg-white rounded-2xl shadow-sm p-4">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center">
+                  <span className="text-red-600 font-semibold text-lg">
+                    {contact.name?.charAt(0)?.toUpperCase()}
+                  </span>
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-medium text-slate-900">{contact.name}</h3>
+                  {contact.organization && (
+                    <div className="flex items-center gap-1.5 text-sm text-slate-500">
+                      <Building className="h-3.5 w-3.5" />
+                      {contact.organization}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                {contact.email && (
+                  <div className="flex items-center gap-2 text-sm text-slate-600 p-2 bg-slate-50 rounded-lg">
+                    <Mail className="h-4 w-4 text-slate-400" />
+                    {contact.email}
+                  </div>
+                )}
+                {contact.phone && (
+                  <div className="flex items-center gap-2 text-sm text-slate-600 p-2 bg-slate-50 rounded-lg">
+                    <Phone className="h-4 w-4 text-slate-400" />
+                    {contact.phone}
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="space-y-2">
-              {contact.email && (
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Mail className="h-3 w-3" />
-                  {contact.email}
+            {/* Warning Card */}
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+                  <AlertTriangle className="w-4 h-4 text-amber-600" />
                 </div>
-              )}
-              {contact.phone && (
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Phone className="h-3 w-3" />
-                  {contact.phone}
+                <div>
+                  <p className="font-medium text-amber-800 text-sm">Warning</p>
+                  <p className="text-sm text-amber-700 mt-1">
+                    This will permanently remove all contact information from your system.
+                  </p>
                 </div>
-              )}
-            </div>
-
-            {contact.notes && (
-              <div className="pt-2 border-t border-red-200">
-                <p className="text-sm text-gray-600">{contact.notes}</p>
               </div>
-            )}
+            </div>
           </div>
 
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-            <p className="text-sm text-yellow-800">
-              <strong>Warning:</strong> This will permanently remove all contact information from your system.
-            </p>
+          {/* Footer */}
+          <div className="p-4 bg-white border-t border-slate-200">
+            <div className="flex gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                className="flex-1 rounded-full h-11"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => deleteContactMutation.mutate()}
+                disabled={deleteContactMutation.isPending}
+                className="flex-1 rounded-full h-11"
+              >
+                {deleteContactMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  'Delete Contact'
+                )}
+              </Button>
+            </div>
           </div>
         </div>
-
-        <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            className="w-full sm:w-auto order-2 sm:order-1"
-          >
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            variant="destructive"
-            onClick={() => deleteContactMutation.mutate()}
-            disabled={deleteContactMutation.isPending}
-            className="w-full sm:w-auto order-1 sm:order-2"
-          >
-            {deleteContactMutation.isPending ? 'Deleting...' : 'Delete Contact'}
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
