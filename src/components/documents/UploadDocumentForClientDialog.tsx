@@ -226,15 +226,15 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
           }
 
           if (storageError) {
-            console.error('❌ Supabase storage upload failed as fallback:', storageError);
             const msg = storageError.message || 'Storage upload failed';
+            console.error('❌ Storage upload failed:', msg);
             const looksLikeTooLarge = /payload too large|maximum allowed size|exceeded the maximum/i.test(msg);
             if (looksLikeTooLarge) {
               throw new Error(
-                `Upload failed: Supabase Storage rejected the file as too large. Increase the 'documents' bucket file size limit to 200MB (see SQL below).`
+                `Upload failed: Supabase Storage rejected the file as too large. Increase the 'documents' bucket file size limit to 200MB.`
               );
             }
-            throw new Error(`Upload failed: ${webdavErrorMessage || msg}`);
+            throw new Error(`Upload failed: ${msg}`);
           }
 
           const fallbackDocumentData = {

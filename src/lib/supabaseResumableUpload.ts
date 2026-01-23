@@ -1,5 +1,4 @@
 import * as tus from 'tus-js-client';
-
 import { supabase } from '@/integrations/supabase/client';
 
 type ResumableUploadParams = {
@@ -11,31 +10,12 @@ type ResumableUploadParams = {
   onProgress?: (percent: number) => void;
 };
 
-function getProjectRefFromSupabaseUrl(url: string): string | null {
-  try {
-    const hostname = new URL(url).hostname;
-    const ref = hostname.split('.')[0];
-    return ref || null;
-  } catch {
-    return null;
-  }
-}
-
-function getSupabaseUrlFromClient(): string | null {
-  // SupabaseClient isn't guaranteed to expose this publicly in types, but it does at runtime.
-  const anyClient = supabase as any;
-  return (anyClient?.supabaseUrl as string | undefined) ?? null;
-}
+// Hardcoded Supabase project ref (extracted from client URL)
+const SUPABASE_PROJECT_REF = 'hpcnipcbymruvsnqrmjx';
 
 function getTusEndpoint(): string {
-  const supabaseUrl = getSupabaseUrlFromClient();
-  const ref = supabaseUrl ? getProjectRefFromSupabaseUrl(supabaseUrl) : null;
-  if (!ref) {
-    // Fallback for unexpected client shapes
-    throw new Error('Could not determine Supabase project ref for resumable upload');
-  }
   // Supabase docs recommend using the direct storage hostname for TUS
-  return `https://${ref}.storage.supabase.co/storage/v1/upload/resumable`;
+  return `https://${SUPABASE_PROJECT_REF}.supabase.co/storage/v1/upload/resumable`;
 }
 
 export async function uploadResumableToSupabaseStorage({
@@ -51,6 +31,7 @@ export async function uploadResumableToSupabaseStorage({
   if (!token) throw new Error('Not authenticated');
 
   const endpoint = getTusEndpoint();
+  console.log(`📤 Starting resumable upload to ${endpoint}, bucket=${bucket}, path=${objectPath}, size=${(file.size / 1024 / 1024).toFixed(1)}MB`);
 
   await new Promise<void>((resolve, reject) => {
     const upload = new tus.Upload(file, {
@@ -70,18 +51,29 @@ export async function uploadResumableToSupabaseStorage({
       },
       // Supabase currently requires 6MB chunkSize for resumable uploads
       chunkSize: 6 * 1024 * 1024,
-      onError: (error) => reject(error),
+      onError: (error) => {
+        console.error('❌ Resumable upload error:', error);
+        reject(new Error(`Resumable upload failed: ${error.message || error}`));
+      },
       onProgress: (bytesUploaded, bytesTotal) => {
         const pct = bytesTotal ? (bytesUploaded / bytesTotal) * 100 : 0;
+        console.log(`📤 Upload progress: ${pct.toFixed(1)}%`);
         onProgress?.(pct);
       },
-      onSuccess: () => resolve(),
+      onSuccess: () => {
+        console.log('✅ Resumable upload completed successfully');
+        resolve();
+      },
     });
 
     upload.findPreviousUploads().then((previousUploads) => {
       if (previousUploads.length) {
+        console.log('🔄 Resuming previous upload...');
         upload.resumeFromPreviousUpload(previousUploads[0]);
       }
+      upload.start();
+    }).catch((err) => {
+      console.error('❌ Error finding previous uploads:', err);
       upload.start();
     });
   });
