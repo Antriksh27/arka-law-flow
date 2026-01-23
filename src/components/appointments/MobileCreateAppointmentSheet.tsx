@@ -70,11 +70,12 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
   const [clients, setClients] = useState<Client[]>([]);
   const [cases, setCases] = useState<Case[]>([]);
   const [users, setUsers] = useState<User[]>([]);
-  const [step, setStep] = useState<'form' | 'date' | 'time' | 'client' | 'lawyer' | 'add-team'>('form');
+  const [step, setStep] = useState<'form' | 'date' | 'time' | 'client' | 'lawyer' | 'add-team' | 'case'>('form');
   const [clientSearch, setClientSearch] = useState('');
   const [lawyerSearch, setLawyerSearch] = useState('');
   const [additionalLawyers, setAdditionalLawyers] = useState<string[]>([]);
   const [teamSearch, setTeamSearch] = useState('');
+  const [caseSearch, setCaseSearch] = useState('');
   
   const [formData, setFormData] = useState({
     appointment_date: preSelectedDate || TimeUtils.nowDate(),
@@ -270,6 +271,13 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
     !additionalLawyers.includes(u.id) &&
     u.full_name.toLowerCase().includes(teamSearch.toLowerCase())
   );
+
+  const filteredCases = cases.filter(c => 
+    c.case_title.toLowerCase().includes(caseSearch.toLowerCase()) ||
+    (c.case_number && c.case_number.toLowerCase().includes(caseSearch.toLowerCase()))
+  );
+
+  const selectedCase = cases.find(c => c.id === formData.case_id);
 
   const handleAddTeamMember = (lawyerId: string) => {
     if (!additionalLawyers.includes(lawyerId)) {
@@ -470,26 +478,28 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
             )}
           </div>
 
-          {/* Case Selector (optional) */}
-          {cases.length > 0 && (
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">Related Case (Optional)</Label>
-              <Select 
-                value={formData.case_id || "__none__"} 
-                onValueChange={v => handleInputChange('case_id', v === "__none__" ? "" : v)}
-              >
-                <SelectTrigger className="h-12 rounded-xl">
-                  <SelectValue placeholder="Select case" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none__">No case</SelectItem>
-                  {cases.map(c => (
-                    <SelectItem key={c.id} value={c.id}>{c.case_title}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          {/* Case Selector (optional) - Searchable */}
+          <button
+            type="button"
+            onClick={() => setStep('case')}
+            className="w-full flex items-center justify-between p-4 bg-card rounded-2xl border border-border active:scale-[0.98] transition-all"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+                <FileText className="w-5 h-5 text-muted-foreground" />
+              </div>
+              <div className="text-left">
+                <p className="text-sm text-muted-foreground">Related Case (Optional)</p>
+                <p className={cn("font-semibold", selectedCase ? "text-foreground" : "text-muted-foreground")}>
+                  {selectedCase ? selectedCase.case_title : 'Search & select case'}
+                </p>
+                {selectedCase?.case_number && (
+                  <p className="text-xs text-muted-foreground">{selectedCase.case_number}</p>
+                )}
+              </div>
             </div>
-          )}
+            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+          </button>
         </div>
 
         {/* Notes Section */}
@@ -726,6 +736,99 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
     </div>
   );
 
+  const renderCasePicker = () => (
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+        <button onClick={() => { setStep('form'); setCaseSearch(''); }} className="p-2 -ml-2">
+          <X className="w-5 h-5" />
+        </button>
+        <h3 className="font-semibold">Select Case</h3>
+        <div className="w-9" />
+      </div>
+      <div className="p-4 border-b border-border">
+        <Input
+          placeholder="Search by case title or number..."
+          value={caseSearch}
+          onChange={e => setCaseSearch(e.target.value)}
+          className="h-12 rounded-xl"
+          autoFocus
+        />
+      </div>
+      <div className="flex-1 overflow-y-auto">
+        {/* No case option */}
+        <button
+          onClick={() => {
+            handleInputChange('case_id', '');
+            setCaseSearch('');
+            setStep('form');
+          }}
+          className={cn(
+            "w-full flex items-center justify-between px-4 py-4 border-b border-border active:bg-accent transition-colors",
+            !formData.case_id && "bg-primary/10"
+          )}
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+              <X className="w-5 h-5 text-muted-foreground" />
+            </div>
+            <p className="font-medium text-foreground">No case</p>
+          </div>
+          {!formData.case_id && (
+            <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+              <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+          )}
+        </button>
+
+        {filteredCases.length === 0 && caseSearch ? (
+          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+            <FileText className="w-12 h-12 mb-3 opacity-30" />
+            <p className="text-sm">No cases found</p>
+          </div>
+        ) : (
+          filteredCases.map(caseItem => {
+            const isSelected = formData.case_id === caseItem.id;
+            return (
+              <button
+                key={caseItem.id}
+                onClick={() => {
+                  handleInputChange('case_id', caseItem.id);
+                  setCaseSearch('');
+                  setStep('form');
+                }}
+                className={cn(
+                  "w-full flex items-center justify-between px-4 py-4 border-b border-border active:bg-accent transition-colors",
+                  isSelected && "bg-primary/10"
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-primary" />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-medium text-foreground">{caseItem.case_title}</p>
+                    {caseItem.case_number && (
+                      <p className="text-sm text-muted-foreground">{caseItem.case_number}</p>
+                    )}
+                  </div>
+                </div>
+                {isSelected && (
+                  <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                )}
+              </button>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <Sheet open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <SheetContent side="bottom" className="h-[95vh] rounded-t-3xl p-0">
@@ -745,6 +848,7 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
           {step === 'client' && renderClientPicker()}
           {step === 'lawyer' && renderLawyerPicker()}
           {step === 'add-team' && renderAddTeamPicker()}
+          {step === 'case' && renderCasePicker()}
         </div>
       </SheetContent>
     </Sheet>
