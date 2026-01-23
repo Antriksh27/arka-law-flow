@@ -4,7 +4,7 @@ import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -12,12 +12,14 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Plus } from 'lucide-react';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Plus, X, User, Building2, Mail, Phone, MapPin, UserCheck, FileText, Loader2 } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
+
 interface AddContactDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
 interface ContactFormData {
   name: string;
   type: 'Individual' | 'Organization';
@@ -38,53 +40,39 @@ interface ContactFormData {
   company_phone?: string;
   company_email?: string;
 }
+
 export const AddContactDialog = ({
   open,
   onOpenChange
 }: AddContactDialogProps) => {
-  const {
-    user,
-    firmId
-  } = useAuth();
-  const {
-    toast
-  } = useToast();
+  const { user, firmId } = useAuth();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   const [selectedStateId, setSelectedStateId] = useState<string>('');
   const [showAddDistrict, setShowAddDistrict] = useState(false);
   const [newDistrictName, setNewDistrictName] = useState('');
 
-  // Fetch states
-  const {
-    data: states = []
-  } = useQuery({
+  const { data: states = [] } = useQuery({
     queryKey: ['states'],
     queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from('states').select('id, name').order('name');
+      const { data, error } = await supabase.from('states').select('id, name').order('name');
       if (error) throw error;
       return data;
     }
   });
 
-  // Fetch districts based on selected state
-  const {
-    data: districts = []
-  } = useQuery({
+  const { data: districts = [] } = useQuery({
     queryKey: ['districts', selectedStateId],
     queryFn: async () => {
       if (!selectedStateId) return [];
-      const {
-        data,
-        error
-      } = await supabase.from('districts').select('id, name').eq('state_id', selectedStateId).order('name');
+      const { data, error } = await supabase.from('districts').select('id, name').eq('state_id', selectedStateId).order('name');
       if (error) throw error;
       return data;
     },
     enabled: !!selectedStateId
   });
+
   const form = useForm<ContactFormData>({
     defaultValues: {
       name: '',
@@ -108,14 +96,10 @@ export const AddContactDialog = ({
     }
   });
 
-  // Add district mutation
   const addDistrictMutation = useMutation({
     mutationFn: async (districtName: string) => {
       if (!selectedStateId) throw new Error('No state selected');
-      const {
-        data,
-        error
-      } = await supabase.from('districts').insert({
+      const { data, error } = await supabase.from('districts').insert({
         name: districtName,
         state_id: selectedStateId
       }).select('id, name').single();
@@ -123,37 +107,24 @@ export const AddContactDialog = ({
       return data;
     },
     onSuccess: newDistrict => {
-      queryClient.invalidateQueries({
-        queryKey: ['districts', selectedStateId]
-      });
+      queryClient.invalidateQueries({ queryKey: ['districts', selectedStateId] });
       form.setValue('district_id', newDistrict.id);
       setShowAddDistrict(false);
       setNewDistrictName('');
-      toast({
-        title: "Success",
-        description: "District added successfully!"
-      });
+      toast({ title: "Success", description: "District added successfully!" });
     },
     onError: error => {
       console.error('Error adding district:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add district. Please try again.",
-        variant: "destructive"
-      });
+      toast({ title: "Error", description: "Failed to add district. Please try again.", variant: "destructive" });
     }
   });
+
   const addContactMutation = useMutation({
     mutationFn: async (data: ContactFormData) => {
-      if (!data.name?.trim()) {
-        throw new Error('Name is required');
-      }
-      if (!firmId) {
-        throw new Error('User is not associated with a firm');
-      }
-      if (!user?.id) {
-        throw new Error('User is not authenticated');
-      }
+      if (!data.name?.trim()) throw new Error('Name is required');
+      if (!firmId) throw new Error('User is not associated with a firm');
+      if (!user?.id) throw new Error('User is not authenticated');
+
       const cleanedData = {
         name: data.name.trim(),
         type: data.type,
@@ -177,22 +148,13 @@ export const AddContactDialog = ({
         created_by: user.id,
         last_visited_at: new Date().toISOString()
       };
-      const {
-        error
-      } = await supabase.from('contacts').insert(cleanedData);
-      if (error) {
-        console.error('Database error:', error);
-        throw error;
-      }
+
+      const { error } = await supabase.from('contacts').insert(cleanedData);
+      if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['contacts']
-      });
-      toast({
-        title: "Success",
-        description: "Contact added successfully!"
-      });
+      queryClient.invalidateQueries({ queryKey: ['contacts'] });
+      toast({ title: "Success", description: "Contact added successfully!" });
       form.reset();
       setSelectedStateId('');
       setShowAddDistrict(false);
@@ -202,364 +164,466 @@ export const AddContactDialog = ({
     onError: (error: any) => {
       console.error('Error adding contact:', error);
       let errorMessage = "Failed to add contact. Please try again.";
-      if (error?.message === 'Name is required') {
-        errorMessage = "Please enter a contact name.";
-      } else if (error?.message === 'User is not associated with a firm') {
-        errorMessage = "You are not associated with a firm. Please contact your administrator.";
-      } else if (error?.message === 'User is not authenticated') {
-        errorMessage = "Please log in again and try.";
-      } else if (error?.code === '22P02') {
-        errorMessage = "Invalid data format. Please check your input and try again.";
-      } else if (error?.code === '23505') {
-        errorMessage = "A contact with this information already exists.";
-      } else if (error?.message) {
-        errorMessage = error.message;
-      }
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive"
-      });
+      if (error?.message === 'Name is required') errorMessage = "Please enter a contact name.";
+      else if (error?.message === 'User is not associated with a firm') errorMessage = "You are not associated with a firm.";
+      else if (error?.message === 'User is not authenticated') errorMessage = "Please log in again.";
+      toast({ title: "Error", description: errorMessage, variant: "destructive" });
     }
   });
+
   const onSubmit = (data: ContactFormData) => {
     addContactMutation.mutate(data);
   };
+
   const handleAddDistrict = () => {
     if (!newDistrictName.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a district name.",
-        variant: "destructive"
-      });
+      toast({ title: "Error", description: "Please enter a district name.", variant: "destructive" });
       return;
     }
     addDistrictMutation.mutate(newDistrictName.trim());
   };
-  return <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-full sm:max-w-[700px] max-h-[90vh] overflow-y-auto p-4 sm:p-6">
-        <DialogHeader>
-          <DialogTitle className="text-lg sm:text-xl">Add New Contact</DialogTitle>
-          <DialogDescription className="text-sm">
-            Add a new contact to your contact management system.
-          </DialogDescription>
-        </DialogHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6 mt-4">
-            {/* Contact Type */}
-            <FormField control={form.control} name="type" render={({
-            field
-          }) => <FormItem>
-                  <FormLabel>Contact Type *</FormLabel>
-                  <FormControl>
-                    <RadioGroup value={field.value} onValueChange={field.onChange} className="flex gap-4 mt-2">
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="Individual" id="individual" />
-                        <Label htmlFor="individual" className="font-normal cursor-pointer">Individual</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="Organization" id="organization" />
-                        <Label htmlFor="organization" className="font-normal cursor-pointer">Organization</Label>
-                      </div>
-                    </RadioGroup>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>} />
+  const contactType = form.watch('type');
 
-            {/* Basic Information */}
-            <div className="space-y-3 sm:space-y-4">
-              <h3 className="text-sm sm:text-base font-semibold text-foreground border-b-2 border-border pb-2 sm:pb-3 mb-3 sm:mb-4">Basic Information</h3>
-              
-              <FormField control={form.control} name="name" rules={{
-              required: "Name is required"
-            }} render={({
-              field
-            }) => <FormItem>
-                    <FormLabel className="text-sm">
-                      {form.watch('type') === 'Organization' ? 'Contact Person Name' : 'Name'} *
-                    </FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter contact name" {...field} className="h-12 text-base" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>} />
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className={`${isMobile ? 'h-[100dvh] max-h-[100dvh] w-full max-w-full rounded-none m-0' : 'sm:max-w-2xl max-h-[90vh]'} p-0 gap-0 overflow-hidden`}>
+        <div className="flex flex-col h-full bg-slate-50">
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 bg-white border-b border-slate-200">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
+                <User className="w-5 h-5 text-violet-500" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900">Add Contact</h2>
+                <p className="text-xs text-slate-500">Create a new contact record</p>
+              </div>
             </div>
-
-            {/* Organization Details - Only for Organization */}
-            {form.watch('type') === 'Organization' && (
-              <Accordion type="single" collapsible className="border rounded-lg">
-                <AccordionItem value="organization" className="border-0">
-                  <AccordionTrigger className="px-4 text-sm sm:text-base font-semibold hover:no-underline">
-                    Organization Details
-                  </AccordionTrigger>
-                  <AccordionContent className="px-4 pb-4 space-y-3 sm:space-y-4">
-                    <FormField control={form.control} name="organization" rules={{
-                      required: form.watch('type') === 'Organization' ? "Organization name is required" : false
-                    }} render={({
-                      field
-                    }) => <FormItem>
-                          <FormLabel className="text-sm">Organization Name *</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter organization/company name" {...field} className="h-12 text-base" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>} />
-
-                    <FormField control={form.control} name="designation" render={({
-                      field
-                    }) => <FormItem>
-                          <FormLabel className="text-sm">Designation</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter designation in company" {...field} className="h-12 text-base" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>} />
-
-                    <FormField control={form.control} name="company_address" render={({
-                      field
-                    }) => <FormItem>
-                          <FormLabel className="text-sm">Company Address</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter company address" {...field} className="h-12 text-base" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>} />
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                      <FormField control={form.control} name="company_phone" render={({
-                        field
-                      }) => <FormItem>
-                            <FormLabel className="text-sm">Company Phone</FormLabel>
-                            <FormControl>
-                              <Input type="tel" placeholder="Enter company phone number" {...field} className="h-12 text-base" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>} />
-
-                      <FormField control={form.control} name="company_email" render={({
-                        field
-                      }) => <FormItem>
-                            <FormLabel className="text-sm">Company Email</FormLabel>
-                            <FormControl>
-                              <Input type="email" placeholder="Enter company email address" {...field} className="h-12 text-base" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>} />
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
+            {isMobile && (
+              <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="rounded-full">
+                <X className="w-5 h-5" />
+              </Button>
             )}
+          </div>
 
-            {/* Contact Details */}
-            <Accordion type="single" collapsible defaultValue="contact" className="border rounded-lg">
-              <AccordionItem value="contact" className="border-0">
-                <AccordionTrigger className="px-4 text-sm sm:text-base font-semibold hover:no-underline">
-                  {form.watch('type') === 'Organization' ? 'Contact Person Details' : 'Contact Details'}
-                </AccordionTrigger>
-                <AccordionContent className="px-4 pb-4 space-y-3 sm:space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <FormField control={form.control} name="email" render={({
-                    field
-                  }) => <FormItem>
-                          <FormLabel className="text-sm">Email</FormLabel>
-                          <FormControl>
-                            <Input type="email" placeholder="Enter email address" {...field} className="h-12 text-base" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>} />
-
-                    <FormField control={form.control} name="phone" render={({
-                    field
-                  }) => <FormItem>
-                          <FormLabel className="text-sm">Phone</FormLabel>
-                          <FormControl>
-                            <Input type="tel" placeholder="Enter phone number" {...field} className="h-12 text-base" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>} />
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <Form {...form}>
+              <form id="add-contact-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                {/* Contact Type Card */}
+                <div className="bg-white rounded-2xl shadow-sm p-4">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+                      <User className="w-4 h-4 text-slate-600" />
+                    </div>
+                    <span className="font-medium text-slate-700">Contact Type</span>
                   </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-
-            {/* Address Information */}
-            <Accordion type="single" collapsible className="border rounded-lg">
-              <AccordionItem value="address" className="border-0">
-                <AccordionTrigger className="px-4 text-sm sm:text-base font-semibold hover:no-underline">
-                  Address Information
-                </AccordionTrigger>
-                <AccordionContent className="px-4 pb-4 space-y-3 sm:space-y-4">
-                  <FormField control={form.control} name="address_line_1" render={({
-                  field
-                }) => <FormItem>
-                        <FormLabel className="text-sm">Address Line 1</FormLabel>
+                  <FormField
+                    control={form.control}
+                    name="type"
+                    render={({ field }) => (
+                      <FormItem>
                         <FormControl>
-                          <Input placeholder="Enter address line 1" {...field} className="h-12 text-base" />
+                          <div className="flex gap-2">
+                            {['Individual', 'Organization'].map((type) => (
+                              <button
+                                key={type}
+                                type="button"
+                                onClick={() => field.onChange(type)}
+                                className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
+                                  field.value === type
+                                    ? 'bg-violet-100 text-violet-700 ring-2 ring-violet-200'
+                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                }`}
+                              >
+                                {type}
+                              </button>
+                            ))}
+                          </div>
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Basic Information Card */}
+                <div className="bg-white rounded-2xl shadow-sm p-4 space-y-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-8 h-8 rounded-lg bg-sky-50 flex items-center justify-center">
+                      <User className="w-4 h-4 text-sky-500" />
+                    </div>
+                    <span className="font-medium text-slate-700">Basic Information</span>
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    rules={{ required: "Name is required" }}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm text-slate-600">
+                          {contactType === 'Organization' ? 'Contact Person Name' : 'Name'} *
+                        </FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter name" {...field} className="rounded-xl h-11" />
                         </FormControl>
                         <FormMessage />
-                      </FormItem>} />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-                  <FormField control={form.control} name="address_line_2" render={({
-                  field
-                }) => <FormItem>
-                        <FormLabel className="text-sm">Address Line 2</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter address line 2 (optional)" {...field} className="h-12 text-base" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>} />
+                {/* Organization Details Card */}
+                {contactType === 'Organization' && (
+                  <div className="bg-white rounded-2xl shadow-sm p-4 space-y-4">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
+                        <Building2 className="w-4 h-4 text-amber-500" />
+                      </div>
+                      <span className="font-medium text-slate-700">Organization Details</span>
+                    </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-                    <FormField control={form.control} name="pin_code" render={({
-                    field
-                  }) => <FormItem>
-                          <FormLabel className="text-sm">PIN Code</FormLabel>
+                    <FormField
+                      control={form.control}
+                      name="organization"
+                      rules={{ required: contactType === 'Organization' ? "Organization name is required" : false }}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm text-slate-600">Organization Name *</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter PIN code" {...field} className="h-12 text-base" />
+                            <Input placeholder="Enter organization name" {...field} className="rounded-xl h-11" />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>} />
+                        </FormItem>
+                      )}
+                    />
 
-                    <FormField control={form.control} name="state_id" render={({
-                    field
-                  }) => <FormItem>
-                          <FormLabel className="text-sm">State</FormLabel>
-                          <Select onValueChange={value => {
-                      field.onChange(value);
-                      setSelectedStateId(value);
-                      form.setValue('district_id', '');
-                    }} value={field.value}>
+                    <FormField
+                      control={form.control}
+                      name="designation"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm text-slate-600">Designation</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter designation" {...field} className="rounded-xl h-11" />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="company_address"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm text-slate-600">Company Address</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter company address" {...field} className="rounded-xl h-11" />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="company_phone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm text-slate-600">Company Phone</FormLabel>
                             <FormControl>
-                              <SelectTrigger className="h-12">
+                              <Input type="tel" placeholder="Phone" {...field} className="rounded-xl h-11" />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="company_email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm text-slate-600">Company Email</FormLabel>
+                            <FormControl>
+                              <Input type="email" placeholder="Email" {...field} className="rounded-xl h-11" />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Contact Details Card */}
+                <div className="bg-white rounded-2xl shadow-sm p-4 space-y-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
+                      <Phone className="w-4 h-4 text-emerald-500" />
+                    </div>
+                    <span className="font-medium text-slate-700">
+                      {contactType === 'Organization' ? 'Contact Person Details' : 'Contact Details'}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm text-slate-600">Email</FormLabel>
+                          <FormControl>
+                            <Input type="email" placeholder="email@example.com" {...field} className="rounded-xl h-11" />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm text-slate-600">Phone</FormLabel>
+                          <FormControl>
+                            <Input type="tel" placeholder="+91 XXXXX XXXXX" {...field} className="rounded-xl h-11" />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                {/* Address Card */}
+                <div className="bg-white rounded-2xl shadow-sm p-4 space-y-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center">
+                      <MapPin className="w-4 h-4 text-rose-500" />
+                    </div>
+                    <span className="font-medium text-slate-700">Address</span>
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="address_line_1"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm text-slate-600">Address Line 1</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Street address" {...field} className="rounded-xl h-11" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="address_line_2"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm text-slate-600">Address Line 2</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Apartment, suite, etc." {...field} className="rounded-xl h-11" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="pin_code"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm text-slate-600">PIN Code</FormLabel>
+                          <FormControl>
+                            <Input placeholder="000000" maxLength={6} {...field} className="rounded-xl h-11" />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="state_id"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm text-slate-600">State</FormLabel>
+                          <Select
+                            onValueChange={value => {
+                              field.onChange(value);
+                              setSelectedStateId(value);
+                              form.setValue('district_id', '');
+                            }}
+                            value={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="rounded-xl h-11">
                                 <SelectValue placeholder="Select state" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {states.map(state => <SelectItem key={state.id} value={state.id}>
-                                  {state.name}
-                                </SelectItem>)}
+                              {states.map(state => (
+                                <SelectItem key={state.id} value={state.id}>{state.name}</SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
-                          <FormMessage />
-                        </FormItem>} />
+                        </FormItem>
+                      )}
+                    />
 
-                    <FormField control={form.control} name="district_id" render={({
-                    field
-                  }) => <FormItem>
-                          <FormLabel className="text-sm">District</FormLabel>
-                          {showAddDistrict ? <div className="space-y-2">
-                              <div className="flex gap-2">
-                                <Input placeholder="Enter new district name" value={newDistrictName} onChange={e => setNewDistrictName(e.target.value)} className="h-12 text-base" onKeyPress={e => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            handleAddDistrict();
-                          }
-                        }} />
-                                <Button type="button" onClick={handleAddDistrict} disabled={addDistrictMutation.isPending} size="sm" className="h-12">
-                                  {addDistrictMutation.isPending ? 'Adding...' : 'Add'}
-                                </Button>
-                                <Button type="button" variant="outline" onClick={() => {
-                          setShowAddDistrict(false);
-                          setNewDistrictName('');
-                        }} size="sm" className="h-12">
-                                  Cancel
-                                </Button>
-                              </div>
-                            </div> : <Select onValueChange={value => {
-                    if (value === 'add_new') {
-                      setShowAddDistrict(true);
-                    } else {
-                      field.onChange(value);
-                    }
-                  }} value={field.value} disabled={!selectedStateId}>
+                    <FormField
+                      control={form.control}
+                      name="district_id"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm text-slate-600">District</FormLabel>
+                          {showAddDistrict ? (
+                            <div className="flex gap-2">
+                              <Input
+                                placeholder="District name"
+                                value={newDistrictName}
+                                onChange={e => setNewDistrictName(e.target.value)}
+                                className="rounded-xl h-11"
+                              />
+                              <Button type="button" size="sm" onClick={handleAddDistrict} disabled={addDistrictMutation.isPending} className="rounded-full">
+                                Add
+                              </Button>
+                              <Button type="button" size="sm" variant="outline" onClick={() => setShowAddDistrict(false)} className="rounded-full">
+                                ✕
+                              </Button>
+                            </div>
+                          ) : (
+                            <Select
+                              onValueChange={value => {
+                                if (value === 'add_new') setShowAddDistrict(true);
+                                else field.onChange(value);
+                              }}
+                              value={field.value}
+                              disabled={!selectedStateId}
+                            >
                               <FormControl>
-                                <SelectTrigger className="h-12">
-                                  <SelectValue placeholder={!selectedStateId ? "Select state first" : "Select district"} />
+                                <SelectTrigger className="rounded-xl h-11">
+                                  <SelectValue placeholder={!selectedStateId ? "Select state first" : "Select"} />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                {districts.map(district => <SelectItem key={district.id} value={district.id}>
-                                    {district.name}
-                                  </SelectItem>)}
-                                {selectedStateId && <SelectItem value="add_new" className="border-t">
+                                {districts.map(district => (
+                                  <SelectItem key={district.id} value={district.id}>{district.name}</SelectItem>
+                                ))}
+                                {selectedStateId && (
+                                  <SelectItem value="add_new" className="border-t">
                                     <div className="flex items-center gap-2">
                                       <Plus className="h-4 w-4" />
-                                      Add New District
+                                      Add New
                                     </div>
-                                  </SelectItem>}
+                                  </SelectItem>
+                                )}
                               </SelectContent>
-                            </Select>}
-                          <FormMessage />
-                        </FormItem>} />
+                            </Select>
+                          )}
+                        </FormItem>
+                      )}
+                    />
                   </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
+                </div>
 
-            {/* Referral Information */}
-            <Accordion type="single" collapsible className="border rounded-lg">
-              <AccordionItem value="referral" className="border-0">
-                <AccordionTrigger className="px-4 text-sm sm:text-base font-semibold hover:no-underline">
-                  Referral Information
-                </AccordionTrigger>
-                <AccordionContent className="px-4 pb-4 space-y-3 sm:space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <FormField control={form.control} name="referred_by_name" render={({
-                field
-              }) => <FormItem>
-                      <FormLabel className="text-sm">Referred By (Name)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter referrer's name" {...field} className="h-12 text-base" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>} />
+                {/* Referral Information Card */}
+                <div className="bg-white rounded-2xl shadow-sm p-4 space-y-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center">
+                      <UserCheck className="w-4 h-4 text-violet-500" />
+                    </div>
+                    <span className="font-medium text-slate-700">Referral Information</span>
+                  </div>
 
-                <FormField control={form.control} name="referred_by_phone" render={({
-                field
-              }) => <FormItem>
-                      <FormLabel className="text-sm">Referred By (Phone)</FormLabel>
-                      <FormControl>
-                        <Input type="tel" placeholder="Enter referrer's phone" {...field} className="h-12 text-base" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>} />
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="referred_by_name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm text-slate-600">Referred By (Name)</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Referrer's name" {...field} className="rounded-xl h-11" />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="referred_by_phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm text-slate-600">Referred By (Phone)</FormLabel>
+                          <FormControl>
+                            <Input type="tel" placeholder="Referrer's phone" {...field} className="rounded-xl h-11" />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
 
-        {/* Additional Notes */}
-        <Accordion type="single" collapsible className="border rounded-lg">
-          <AccordionItem value="notes" className="border-0">
-            <AccordionTrigger className="px-4 text-sm sm:text-base font-semibold hover:no-underline">
-              Additional Notes
-            </AccordionTrigger>
-            <AccordionContent className="px-4 pb-4">
-              <FormField control={form.control} name="notes" render={({
-              field
-            }) => <FormItem>
-                    <FormLabel className="text-sm">Notes</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="Additional notes about the contact" rows={3} {...field} className="text-base" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>} />
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+                {/* Notes Card */}
+                <div className="bg-white rounded-2xl shadow-sm p-4 space-y-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+                      <FileText className="w-4 h-4 text-slate-500" />
+                    </div>
+                    <span className="font-medium text-slate-700">Notes</span>
+                  </div>
 
-            <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-4 border-t sticky bottom-0 bg-white pb-2">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto h-11 sm:h-10">
+                  <FormField
+                    control={form.control}
+                    name="notes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Additional notes about the contact..."
+                            rows={3}
+                            {...field}
+                            className="rounded-xl"
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </form>
+            </Form>
+          </div>
+
+          {/* Footer */}
+          <div className="p-4 bg-white border-t border-slate-200">
+            <div className="flex gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                className="flex-1 rounded-full h-11"
+              >
                 Cancel
               </Button>
-              <Button type="submit" disabled={addContactMutation.isPending} className="w-full sm:w-auto h-11 sm:h-10">
-                {addContactMutation.isPending ? 'Adding...' : 'Add Contact'}
+              <Button
+                type="submit"
+                form="add-contact-form"
+                disabled={addContactMutation.isPending}
+                className="flex-1 rounded-full h-11"
+              >
+                {addContactMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Adding...
+                  </>
+                ) : (
+                  'Add Contact'
+                )}
               </Button>
             </div>
-          </form>
-        </Form>
+          </div>
+        </div>
       </DialogContent>
-    </Dialog>;
+    </Dialog>
+  );
 };
