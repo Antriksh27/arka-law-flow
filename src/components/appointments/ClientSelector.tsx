@@ -91,18 +91,18 @@ export const ClientSelector: React.FC<ClientSelectorProps> = ({
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            className="w-full justify-between bg-white border-gray-300 text-gray-900 hover:bg-gray-50"
+            className="w-full justify-between bg-white border-gray-300 text-gray-900 hover:bg-gray-50 overflow-hidden"
           >
             {selectedOption ? (
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4 text-gray-500" />
-                <span>{selectedOption.full_name}</span>
-                <span className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+              <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
+                <User className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                <span className="truncate">{selectedOption.full_name}</span>
+                <span className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded flex-shrink-0">
                   {selectedOption.type}
                 </span>
               </div>
             ) : (
-              placeholder
+              <span className="truncate">{placeholder}</span>
             )}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
