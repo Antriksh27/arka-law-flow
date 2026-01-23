@@ -313,7 +313,7 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
                     className={cn(
                       "flex-1 flex items-center justify-center gap-2 py-3 px-3 rounded-xl border transition-all active:scale-95",
                       isActive 
-                        ? "bg-primary/70 text-white border-primary/70" 
+                        ? "bg-primary/40 text-white border-primary/50" 
                         : "bg-card border-border text-foreground"
                     )}
                   >
