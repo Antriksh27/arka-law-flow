@@ -153,150 +153,191 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
       }
       const firmId = teamMember.firm_id;
       
-      // Max size for JSON(base64) WebDAV upload. Larger files use streaming upload to avoid edge memory limits.
-      const MAX_WEBDAV_JSON_SIZE = 10 * 1024 * 1024;
-      
-      const uploadPromises = selectedFiles.map(async file => {
-        const clientName = selectedClient?.full_name || 'General';
-        const caseTitle = selectedCase?.case_title || 'General Documents';
-        const caseNumber = selectedCase?.case_number || null;
-        const primaryType = data.primary_document_type || 'Miscellaneous';
-        const subType = data.sub_document_type || 'Other Documents';
+        // Max size for JSON(base64) WebDAV upload. Larger files use streaming upload.
+        const MAX_WEBDAV_JSON_SIZE = 10 * 1024 * 1024;
+        const MAX_WEBDAV_STREAM_SIZE = 200 * 1024 * 1024; // 200MB limit for streaming
         
-        const storagePath = generateStoragePath({
-          clientName,
-          clientId: selectedClientId || 'general',
-          caseTitle,
-          caseNumber,
-          primaryType,
-          subType,
-          fileName: file.name
-        });
-        
-        // Sanitize names for WebDAV compatibility
-        const sanitizedClientName = sanitizeFolderName(clientName);
-        const sanitizedCaseName = caseNumber 
-          ? `${sanitizeFolderName(caseTitle)}_${sanitizeFolderName(caseNumber)}`
-          : sanitizeFolderName(caseTitle);
-        const sanitizedCategory = sanitizeFolderName(primaryType);
-        const sanitizedDocType = sanitizeFolderName(subType);
-        
-        let webdavOk = false;
-        let webdavPath: string | undefined = undefined;
-        let webdavErrorMessage: string | undefined = undefined;
-        
-        // For smaller files, use JSON + base64
-        if (file.size <= MAX_WEBDAV_JSON_SIZE) {
-          let fileContent: string;
-          if (file.type.startsWith('text/') || file.name.endsWith('.txt')) {
-            fileContent = await file.text();
-          } else {
-            fileContent = await new Promise((resolve, reject) => {
-              const reader = new FileReader();
-              reader.onload = () => {
-                const result = reader.result as string;
-                const base64 = result.split(',')[1] || result;
-                resolve(base64);
-              };
-              reader.onerror = reject;
-              reader.readAsDataURL(file);
-            });
-          }
+        const uploadPromises = selectedFiles.map(async file => {
+          const clientName = selectedClient?.full_name || 'General';
+          const caseTitle = selectedCase?.case_title || 'General Documents';
+          const caseNumber = selectedCase?.case_number || null;
+          const primaryType = data.primary_document_type || 'Miscellaneous';
+          const subType = data.sub_document_type || 'Other Documents';
           
-          const { data: pydioResult, error: pydioError } = await supabase.functions.invoke('pydio-webdav', {
-            body: {
-              clientName: sanitizedClientName,
-              caseName: sanitizedCaseName,
-              category: sanitizedCategory,
-              docType: sanitizedDocType,
-              fileName: file.name,
-              fileContent: fileContent
-            }
+          const storagePath = generateStoragePath({
+            clientName,
+            clientId: selectedClientId || 'general',
+            caseTitle,
+            caseNumber,
+            primaryType,
+            subType,
+            fileName: file.name
           });
           
-          webdavOk = !!pydioResult?.success && !pydioError;
-          webdavPath = pydioResult?.path;
-          if (!webdavOk) {
-            webdavErrorMessage = pydioError?.message || pydioResult?.error || 'Unknown WebDAV error';
-          }
-        } else {
-          // Large files: don't call the edge function (it can be unreliable for big payloads).
-          // Instead upload directly to Supabase Storage.
-          webdavOk = false;
-          webdavErrorMessage = `Skipped WebDAV for large file (${(file.size / 1024 / 1024).toFixed(1)}MB > 10MB)`;
-        }
-        
-        // If WebDAV failed or wasn't attempted, use Supabase Storage
-        if (!webdavOk) {
-          const storagePathFallback = `uploads/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${file.name}`;
-          const useResumable = file.size > 45 * 1024 * 1024; // avoid /object endpoint limits
-
-          let storageError: { message?: string } | null = null;
-
-          if (useResumable) {
-            try {
-              await uploadResumableToSupabaseStorage({
-                bucket: 'documents',
-                objectPath: storagePathFallback,
-                file,
-                upsert: false,
+          // Sanitize names for WebDAV compatibility
+          const sanitizedClientName = sanitizeFolderName(clientName);
+          const sanitizedCaseName = caseNumber 
+            ? `${sanitizeFolderName(caseTitle)}_${sanitizeFolderName(caseNumber)}`
+            : sanitizeFolderName(caseTitle);
+          const sanitizedCategory = sanitizeFolderName(primaryType);
+          const sanitizedDocType = sanitizeFolderName(subType);
+          
+          let webdavOk = false;
+          let webdavPath: string | undefined = undefined;
+          let webdavErrorMessage: string | undefined = undefined;
+          
+          // For smaller files, use JSON + base64
+          if (file.size <= MAX_WEBDAV_JSON_SIZE) {
+            let fileContent: string;
+            if (file.type.startsWith('text/') || file.name.endsWith('.txt')) {
+              fileContent = await file.text();
+            } else {
+              fileContent = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                  const result = reader.result as string;
+                  const base64 = result.split(',')[1] || result;
+                  resolve(base64);
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
               });
-            } catch (e: any) {
-              storageError = { message: e?.message || String(e) };
+            }
+            
+            const { data: pydioResult, error: pydioError } = await supabase.functions.invoke('pydio-webdav', {
+              body: {
+                clientName: sanitizedClientName,
+                caseName: sanitizedCaseName,
+                category: sanitizedCategory,
+                docType: sanitizedDocType,
+                fileName: file.name,
+                fileContent: fileContent
+              }
+            });
+            
+            webdavOk = !!pydioResult?.success && !pydioError;
+            webdavPath = pydioResult?.path;
+            if (!webdavOk) {
+              webdavErrorMessage = pydioError?.message || pydioResult?.error || 'Unknown WebDAV error';
+            }
+          } else if (file.size <= MAX_WEBDAV_STREAM_SIZE) {
+            // Large files: use streaming upload to WebDAV (sends raw binary body with headers)
+            console.log(`📤 Starting WebDAV streaming upload for ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
+            
+            try {
+              const { data: { session } } = await supabase.auth.getSession();
+              if (!session?.access_token) throw new Error('Not authenticated');
+              
+              const supabaseUrl = 'https://hpcnipcbymruvsnqrmjx.supabase.co';
+              const functionUrl = `${supabaseUrl}/functions/v1/pydio-webdav`;
+              
+              const response = await fetch(functionUrl, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${session.access_token}`,
+                  'x-client-name': encodeURIComponent(sanitizedClientName),
+                  'x-case-name': encodeURIComponent(sanitizedCaseName),
+                  'x-category': encodeURIComponent(sanitizedCategory),
+                  'x-doc-type': encodeURIComponent(sanitizedDocType),
+                  'x-file-name': encodeURIComponent(file.name),
+                  'Content-Type': 'application/octet-stream',
+                  'Content-Length': String(file.size),
+                },
+                body: file,
+              });
+              
+              const result = await response.json();
+              console.log('📤 WebDAV streaming response:', result);
+              
+              if (result.success) {
+                webdavOk = true;
+                webdavPath = result.path;
+              } else {
+                webdavErrorMessage = result.error || result.details || 'Streaming upload failed';
+              }
+            } catch (streamErr: any) {
+              console.error('❌ WebDAV streaming upload error:', streamErr);
+              webdavErrorMessage = streamErr?.message || String(streamErr);
             }
           } else {
-            const { error } = await supabase.storage
-              .from('documents')
-              .upload(storagePathFallback, file);
-            storageError = error ? { message: error.message } : null;
+            // File too large even for streaming
+            webdavOk = false;
+            webdavErrorMessage = `File too large (${(file.size / 1024 / 1024).toFixed(1)}MB > 200MB limit)`;
           }
+          
+          // If WebDAV failed, fall back to Supabase Storage
+          if (!webdavOk) {
+            console.warn('⚠️ WebDAV upload failed, falling back to Supabase Storage:', webdavErrorMessage);
+            
+            const storagePathFallback = `uploads/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${file.name}`;
+            const useResumable = file.size > 45 * 1024 * 1024; // avoid /object endpoint limits
 
-          if (storageError) {
-            const msg = storageError.message || 'Storage upload failed';
-            console.error('❌ Storage upload failed:', msg);
-            const looksLikeTooLarge = /payload too large|maximum allowed size|exceeded the maximum/i.test(msg);
-            if (looksLikeTooLarge) {
-              throw new Error(
-                `Upload failed: Supabase Storage rejected the file as too large. Increase the 'documents' bucket file size limit to 200MB.`
-              );
+            let storageError: { message?: string } | null = null;
+
+            if (useResumable) {
+              try {
+                await uploadResumableToSupabaseStorage({
+                  bucket: 'documents',
+                  objectPath: storagePathFallback,
+                  file,
+                  upsert: false,
+                });
+              } catch (e: any) {
+                storageError = { message: e?.message || String(e) };
+              }
+            } else {
+              const { error } = await supabase.storage
+                .from('documents')
+                .upload(storagePathFallback, file);
+              storageError = error ? { message: error.message } : null;
             }
-            throw new Error(`Upload failed: ${msg}`);
+
+            if (storageError) {
+              const msg = storageError.message || 'Storage upload failed';
+              console.error('❌ Storage upload failed:', msg);
+              const looksLikeTooLarge = /payload too large|maximum allowed size|exceeded the maximum/i.test(msg);
+              if (looksLikeTooLarge) {
+                throw new Error(
+                  `Upload failed: Both WebDAV and Supabase Storage rejected the file. WebDAV error: ${webdavErrorMessage}`
+                );
+              }
+              throw new Error(`Upload failed: ${msg}`);
+            }
+
+            const fallbackDocumentData = {
+              file_name: file.name,
+              file_url: storagePathFallback,
+              file_type: file.name.split('.').pop()?.toLowerCase() || null,
+              file_size: file.size,
+              case_id: (data.case_id && data.case_id !== 'no-case') ? data.case_id : null,
+              client_id: data.client_id || null,
+              uploaded_by: user.id,
+              is_evidence: data.is_evidence,
+              uploaded_at: new Date().toISOString(),
+              firm_id: firmId,
+              folder_name: primaryType,
+              primary_document_type: primaryType,
+              sub_document_type: subType,
+              document_type_id: null,
+              notes: data.notes || null,
+              confidential: data.confidential || false,
+              original_copy_retained: data.original_copy_retained || false,
+              certified_copy: data.certified_copy || false,
+              webdav_synced: false,
+              webdav_path: storagePath,
+              webdav_error: webdavErrorMessage,
+              sync_attempted_at: new Date().toISOString(),
+            };
+
+            const { data: insertData, error: insertError } = await supabase
+              .from('documents')
+              .insert(fallbackDocumentData)
+              .select('id, file_name, file_url')
+              .single();
+
+            if (insertError) throw insertError;
+            return insertData;
           }
-
-          const fallbackDocumentData = {
-            file_name: file.name,
-            file_url: storagePathFallback,
-            file_type: file.name.split('.').pop()?.toLowerCase() || null,
-            file_size: file.size,
-            case_id: (data.case_id && data.case_id !== 'no-case') ? data.case_id : null,
-            client_id: data.client_id || null,
-            uploaded_by: user.id,
-            is_evidence: data.is_evidence,
-            uploaded_at: new Date().toISOString(),
-            firm_id: firmId,
-            folder_name: primaryType,
-            primary_document_type: primaryType,
-            sub_document_type: subType,
-            document_type_id: null,
-            notes: data.notes || null,
-            confidential: data.confidential || false,
-            original_copy_retained: data.original_copy_retained || false,
-            certified_copy: data.certified_copy || false,
-            webdav_synced: false,
-            webdav_path: storagePath,
-            webdav_error: webdavErrorMessage,
-            sync_attempted_at: new Date().toISOString(),
-          };
-
-          const { data: insertData, error: insertError } = await supabase
-            .from('documents')
-            .insert(fallbackDocumentData)
-            .select('id, file_name, file_url')
-            .single();
-
-          if (insertError) throw insertError;
-          return insertData;
-        }
 
         // WebDAV succeeded
         const documentData = {
