@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { AddCaseDialog } from '@/components/cases/AddCaseDialog';
-import { Plus, FileText, ArrowLeft, Search } from 'lucide-react';
+import { Plus, FileText, ArrowLeft, Search, Link2, X, Briefcase } from 'lucide-react';
 
 interface AssignToCaseDialogProps {
   open: boolean;
@@ -48,7 +47,6 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
     enabled: view === 'existing'
   });
 
-  // Filter cases based on search query
   const filteredCases = cases.filter(case_item =>
     case_item.case_title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     case_item.case_type.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -74,15 +72,17 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'open':
-        return 'bg-blue-100 text-blue-800';
+      case 'pending':
+        return 'bg-amber-100 text-amber-700';
       case 'in_court':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-blue-100 text-blue-700';
       case 'on_hold':
-        return 'bg-orange-100 text-orange-800';
+        return 'bg-orange-100 text-orange-700';
       case 'closed':
-        return 'bg-gray-100 text-gray-800';
+      case 'disposed':
+        return 'bg-slate-100 text-slate-700';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-slate-100 text-slate-700';
     }
   };
 
@@ -100,116 +100,169 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
   return (
     <>
       <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent className="max-w-4xl w-full max-h-[90vh] bg-white flex flex-col">
-          <DialogHeader className="flex-shrink-0">
-            <DialogTitle className="text-xl font-semibold">
-              {view === 'selection' && `Link ${clientName} to Case`}
-              {view === 'existing' && 'Select Existing Case'}
-              {view === 'new' && 'Create New Case'}
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="flex-1 overflow-hidden">
-            {view === 'selection' && (
-              <div className="space-y-4 py-6">
-                <Button
-                  onClick={() => setView('existing')}
-                  className="w-full h-20 flex items-center justify-start gap-4 text-left bg-white border border-gray-200 hover:bg-gray-50 text-gray-900"
-                  variant="outline"
-                >
-                  <FileText className="w-8 h-8 text-blue-600" />
-                  <div>
-                    <div className="text-lg font-medium">Link Existing Case</div>
-                    <div className="text-sm text-gray-500">Choose from existing cases in your system</div>
+        <DialogContent className="sm:max-w-2xl p-0 gap-0 overflow-hidden max-h-[90vh]">
+          <div className="flex flex-col h-full bg-slate-50">
+            {/* Header */}
+            <div className="px-6 py-5 bg-white border-b border-slate-100">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {view !== 'selection' && (
+                    <button
+                      onClick={() => setView('selection')}
+                      className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors"
+                    >
+                      <ArrowLeft className="w-4 h-4 text-slate-600" />
+                    </button>
+                  )}
+                  <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
+                    <Link2 className="w-5 h-5 text-violet-500" />
                   </div>
-                </Button>
-
-                <Button
-                  onClick={() => setShowAddCaseDialog(true)}
-                  className="w-full h-20 flex items-center justify-start gap-4 text-left bg-white border border-gray-200 hover:bg-gray-50 text-gray-900"
-                  variant="outline"
-                >
-                  <Plus className="w-8 h-8 text-green-600" />
                   <div>
-                    <div className="text-lg font-medium">Add New Case</div>
-                    <div className="text-sm text-gray-500">Create a new case for this client</div>
+                    <h2 className="text-xl font-semibold text-slate-900">
+                      {view === 'selection' && 'Link to Case'}
+                      {view === 'existing' && 'Select Case'}
+                    </h2>
+                    <p className="text-sm text-muted-foreground">{clientName}</p>
                   </div>
-                </Button>
+                </div>
+                <button 
+                  onClick={handleClose}
+                  className="md:hidden w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors"
+                >
+                  <X className="w-4 h-4 text-slate-500" />
+                </button>
               </div>
-            )}
+            </div>
 
-            {view === 'existing' && (
-              <div className="space-y-4 h-full flex flex-col">
-                <div className="flex items-center justify-between flex-shrink-0">
-                  <Button
-                    variant="outline"
-                    onClick={() => setView('selection')}
-                    size="sm"
-                    className="flex items-center gap-2"
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
+              {view === 'selection' && (
+                <div className="space-y-3">
+                  {/* Link Existing Case Option */}
+                  <button
+                    onClick={() => setView('existing')}
+                    className="w-full bg-white rounded-2xl shadow-sm p-5 text-left hover:shadow-md transition-shadow active:scale-[0.98]"
                   >
-                    <ArrowLeft className="w-4 h-4" />
-                    Back
-                  </Button>
-                </div>
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 rounded-2xl bg-sky-50 flex items-center justify-center">
+                        <FileText className="w-7 h-7 text-sky-500" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-base font-semibold text-slate-900">Link Existing Case</p>
+                        <p className="text-sm text-muted-foreground">Choose from existing cases in your system</p>
+                      </div>
+                    </div>
+                  </button>
 
-                <div className="relative flex-shrink-0">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <Input
-                    placeholder="Search cases by title, type, or client..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
-                  />
+                  {/* Add New Case Option */}
+                  <button
+                    onClick={() => setShowAddCaseDialog(true)}
+                    className="w-full bg-white rounded-2xl shadow-sm p-5 text-left hover:shadow-md transition-shadow active:scale-[0.98]"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center">
+                        <Plus className="w-7 h-7 text-emerald-500" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-base font-semibold text-slate-900">Add New Case</p>
+                        <p className="text-sm text-muted-foreground">Create a new case for this client</p>
+                      </div>
+                    </div>
+                  </button>
                 </div>
+              )}
 
-                <div className="flex-1 min-h-0 max-h-[500px]">
-                  <ScrollArea className="h-[500px] w-full rounded-md border">
+              {view === 'existing' && (
+                <div className="space-y-4">
+                  {/* Search */}
+                  <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
                     <div className="p-4">
-                      {isLoading ? (
-                        <div className="text-center py-8 text-gray-500">
-                          Loading cases...
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center">
+                          <Search className="w-5 h-5 text-slate-500" />
                         </div>
-                      ) : filteredCases.length === 0 ? (
-                        <div className="text-center py-8 text-gray-500">
-                          {searchQuery ? 'No cases found matching your search' : 'No cases found'}
+                        <div>
+                          <p className="text-sm font-semibold text-slate-900">Search Cases</p>
+                          <p className="text-xs text-muted-foreground">Find by title, type, or client</p>
                         </div>
-                      ) : (
-                        <div className="space-y-3">
-                          {filteredCases.map((case_item) => (
+                      </div>
+                      <Input
+                        placeholder="Search cases..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Cases List */}
+                  <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                    <div className="p-4">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
+                          <Briefcase className="w-5 h-5 text-amber-500" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-slate-900">Available Cases</p>
+                          <p className="text-xs text-muted-foreground">{filteredCases.length} case{filteredCases.length !== 1 ? 's' : ''} found</p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                        {isLoading ? (
+                          <div className="text-center py-8 text-slate-500">
+                            Loading cases...
+                          </div>
+                        ) : filteredCases.length === 0 ? (
+                          <div className="text-center py-8 text-slate-500">
+                            {searchQuery ? 'No cases found matching your search' : 'No cases found'}
+                          </div>
+                        ) : (
+                          filteredCases.map((case_item) => (
                             <div
                               key={case_item.id}
-                              className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors"
+                              className="p-4 rounded-xl bg-slate-50 hover:bg-slate-100 cursor-pointer transition-colors"
                               onClick={() => handleAssignToCase(case_item.id)}
                             >
-                              <div className="flex items-start justify-between">
-                                <div className="flex-1">
-                                  <h3 className="font-medium text-gray-900 mb-2">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-slate-900 truncate mb-1">
                                     {case_item.case_title}
-                                  </h3>
-                                  <div className="flex items-center gap-4 text-sm text-gray-500">
-                                    <Badge
-                                      variant="default"
-                                      className={getStatusColor(case_item.status)}
-                                    >
+                                  </p>
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <Badge className={`${getStatusColor(case_item.status)} border-0 rounded-full px-2 py-0.5 text-xs`}>
                                       {case_item.status?.replace('_', ' ')}
                                     </Badge>
-                                    <span className="capitalize">{case_item.case_type}</span>
+                                    <span className="text-xs text-slate-500 capitalize">{case_item.case_type}</span>
                                     {case_item.clients && (
-                                      <span>Current client: {case_item.clients.full_name}</span>
+                                      <span className="text-xs text-slate-500">• {case_item.clients.full_name}</span>
                                     )}
                                   </div>
                                 </div>
-                                <Button size="sm" variant="outline">
-                                  Link Case
+                                <Button size="sm" className="rounded-full bg-slate-800 hover:bg-slate-700 flex-shrink-0">
+                                  Link
                                 </Button>
                               </div>
                             </div>
-                          ))}
-                        </div>
-                      )}
+                          ))
+                        )}
+                      </div>
                     </div>
-                  </ScrollArea>
+                  </div>
                 </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            {view === 'selection' && (
+              <div className="px-6 py-4 bg-white border-t border-slate-100">
+                <Button 
+                  variant="outline" 
+                  onClick={handleClose}
+                  className="w-full rounded-full"
+                >
+                  Cancel
+                </Button>
               </div>
             )}
           </div>
