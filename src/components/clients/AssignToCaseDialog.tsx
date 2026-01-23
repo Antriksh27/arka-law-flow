@@ -1,18 +1,29 @@
-import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { AddCaseDialog } from '@/components/cases/AddCaseDialog';
-import { Plus, FileText, ArrowLeft, Search, Link2, X, Briefcase } from 'lucide-react';
+import { Plus, FileText, ArrowLeft, Search, Link2, X, Briefcase, Loader2 } from 'lucide-react';
 
 interface AssignToCaseDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   clientId: string;
   clientName: string;
+}
+
+interface CaseItem {
+  id: string;
+  case_title: string;
+  status: string;
+  case_type: string;
+  created_at: string;
+  client_id: string | null;
+  case_number: string | null;
+  cnr_number: string | null;
+  clients: { full_name: string } | null;
 }
 
 export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
@@ -24,34 +35,62 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
   const [view, setView] = useState<'selection' | 'existing' | 'new'>('selection');
   const [showAddCaseDialog, setShowAddCaseDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [cases, setCases] = useState<CaseItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const { data: cases = [], isLoading } = useQuery({
-    queryKey: ['all-cases'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('cases')
-        .select(`
-          id,
-          case_title,
-          status,
-          case_type,
-          created_at,
-          client_id,
-          clients(full_name)
-        `)
-        .order('created_at', { ascending: false });
+  // Server-side search function
+  const searchCases = useCallback(async (searchTerm: string) => {
+    setIsLoading(true);
+    
+    let query = supabase
+      .from('cases')
+      .select(`
+        id,
+        case_title,
+        status,
+        case_type,
+        created_at,
+        client_id,
+        case_number,
+        cnr_number,
+        clients(full_name)
+      `);
 
-      if (error) throw error;
-      return data;
-    },
-    enabled: view === 'existing'
-  });
+    if (searchTerm && searchTerm.length >= 2) {
+      // Server-side search across multiple fields
+      query = query.or(
+        `case_title.ilike.%${searchTerm}%,case_number.ilike.%${searchTerm}%,cnr_number.ilike.%${searchTerm}%,case_type.ilike.%${searchTerm}%,petitioner.ilike.%${searchTerm}%,respondent.ilike.%${searchTerm}%`
+      );
+    }
 
-  const filteredCases = cases.filter(case_item =>
-    case_item.case_title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    case_item.case_type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (case_item.clients?.full_name || '').toLowerCase().includes(searchQuery.toLowerCase())
-  );
+    query = query.order('created_at', { ascending: false }).limit(50);
+
+    const { data, error } = await query;
+    
+    if (!error && data) {
+      setCases(data as CaseItem[]);
+    }
+    
+    setIsLoading(false);
+  }, []);
+
+  // Debounced search
+  useEffect(() => {
+    if (view !== 'existing') return;
+    
+    const timer = setTimeout(() => {
+      searchCases(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, searchCases, view]);
+
+  // Initial load when view changes to existing
+  useEffect(() => {
+    if (view === 'existing') {
+      searchCases('');
+    }
+  }, [view, searchCases]);
 
   const handleAssignToCase = async (caseId: string) => {
     try {
@@ -204,21 +243,25 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
                         </div>
                         <div>
                           <p className="text-sm font-semibold text-slate-900">Available Cases</p>
-                          <p className="text-xs text-muted-foreground">{filteredCases.length} case{filteredCases.length !== 1 ? 's' : ''} found</p>
+                          <p className="text-xs text-muted-foreground">
+                            {cases.length} case{cases.length !== 1 ? 's' : ''} found
+                            {searchQuery.length < 2 && cases.length === 50 && ' (type to search all)'}
+                          </p>
                         </div>
                       </div>
 
                       <div className="space-y-2 max-h-[400px] overflow-y-auto">
                         {isLoading ? (
-                          <div className="text-center py-8 text-slate-500">
-                            Loading cases...
+                          <div className="text-center py-8 text-slate-500 flex items-center justify-center gap-2">
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Searching all cases...
                           </div>
-                        ) : filteredCases.length === 0 ? (
+                        ) : cases.length === 0 ? (
                           <div className="text-center py-8 text-slate-500">
-                            {searchQuery ? 'No cases found matching your search' : 'No cases found'}
+                            {searchQuery.length >= 2 ? 'No cases found matching your search' : 'No cases found. Type at least 2 characters to search.'}
                           </div>
                         ) : (
-                          filteredCases.map((case_item) => (
+                          cases.map((case_item) => (
                             <div
                               key={case_item.id}
                               className="p-4 rounded-xl bg-slate-50 hover:bg-slate-100 cursor-pointer transition-colors"
