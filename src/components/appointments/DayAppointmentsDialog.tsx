@@ -1,5 +1,4 @@
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -7,7 +6,7 @@ import { useDialog } from '@/hooks/use-dialog';
 import { ViewAppointmentDialog } from './ViewAppointmentDialog';
 import { CreateAppointmentDialog } from './CreateAppointmentDialog';
 import { format, parseISO } from 'date-fns';
-import { Calendar, Clock, User, MapPin, Plus, Video, Phone } from 'lucide-react';
+import { Calendar, Clock, User, MapPin, Plus, Video, Phone, X } from 'lucide-react';
 
 interface AppointmentData {
   id: string;
@@ -50,40 +49,29 @@ export const DayAppointmentsDialog: React.FC<DayAppointmentsDialogProps> = ({
   };
 
   const getStatusBadge = (status: string | null) => {
-    switch (status?.toLowerCase()) {
-      case 'upcoming':
-        return <Badge className="bg-blue-100 text-blue-800">Upcoming</Badge>;
-      case 'arrived':
-        return <Badge className="bg-green-100 text-green-800">Arrived</Badge>;
-      case 'late':
-        return <Badge className="bg-orange-100 text-orange-800">Late</Badge>;
-      case 'completed':
-        return <Badge className="bg-green-100 text-green-800">Completed</Badge>;
-      case 'cancelled':
-        return <Badge className="bg-red-100 text-red-800">Cancelled</Badge>;
-      case 'rescheduled':
-        return <Badge className="bg-purple-100 text-purple-800">Rescheduled</Badge>;
-      case 'in-progress':
-        return <Badge className="bg-yellow-100 text-yellow-800">In Progress</Badge>;
-      default:
-        return <Badge className="bg-gray-100 text-gray-800">Pending</Badge>;
-    }
+    const statusConfig: Record<string, { bg: string; text: string; label: string }> = {
+      upcoming: { bg: 'bg-sky-50', text: 'text-sky-700', label: 'Upcoming' },
+      arrived: { bg: 'bg-emerald-50', text: 'text-emerald-700', label: 'Arrived' },
+      late: { bg: 'bg-amber-50', text: 'text-amber-700', label: 'Late' },
+      completed: { bg: 'bg-emerald-50', text: 'text-emerald-700', label: 'Completed' },
+      cancelled: { bg: 'bg-red-50', text: 'text-red-700', label: 'Cancelled' },
+      rescheduled: { bg: 'bg-violet-50', text: 'text-violet-700', label: 'Rescheduled' },
+      'in-progress': { bg: 'bg-amber-50', text: 'text-amber-700', label: 'In Progress' },
+    };
+    const config = statusConfig[status?.toLowerCase() || ''] || { bg: 'bg-slate-100', text: 'text-slate-700', label: 'Pending' };
+    return <Badge className={`${config.bg} ${config.text} border-0 rounded-full`}>{config.label}</Badge>;
   };
 
   const getLocationIcon = (location: string | null) => {
     switch (location?.toLowerCase()) {
-      case 'online':
-        return <Video className="w-4 h-4 text-gray-400" />;
-      case 'phone':
-        return <Phone className="w-4 h-4 text-gray-400" />;
-      case 'in_person':
-      default:
-        return <MapPin className="w-4 h-4 text-gray-400" />;
+      case 'online': return <Video className="w-4 h-4 text-slate-400" />;
+      case 'phone': return <Phone className="w-4 h-4 text-slate-400" />;
+      default: return <MapPin className="w-4 h-4 text-slate-400" />;
     }
   };
 
   const handleAppointmentClick = (appointment: AppointmentData) => {
-    closeDialog(); // Close the current dialog first
+    closeDialog();
     openDialog(
       <ViewAppointmentDialog 
         appointment={{
@@ -107,11 +95,10 @@ export const DayAppointmentsDialog: React.FC<DayAppointmentsDialogProps> = ({
   };
 
   const handleNewAppointment = () => {
-    closeDialog(); // Close the current dialog first
+    closeDialog();
     openDialog(<CreateAppointmentDialog preSelectedDate={selectedDate} />);
   };
 
-  // Sort appointments by time
   const sortedAppointments = [...appointments].sort((a, b) => {
     if (!a.appointment_time && !b.appointment_time) return 0;
     if (!a.appointment_time) return 1;
@@ -120,103 +107,122 @@ export const DayAppointmentsDialog: React.FC<DayAppointmentsDialogProps> = ({
   });
 
   return (
-    <div className="max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto p-6">
-      <DialogHeader>
-        <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-gray-900">
-          <Calendar className="h-5 w-5 text-blue-600" />
-          Appointments for {format(selectedDate, 'EEEE, MMMM d, yyyy')}
-        </DialogTitle>
-      </DialogHeader>
-
-      <div className="space-y-6">
-        {/* Add New Appointment Button */}
-        <div className="flex justify-end">
-          <Button onClick={handleNewAppointment} className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            New Appointment
-          </Button>
+    <div className="flex flex-col h-full bg-slate-50">
+      {/* Header */}
+      <div className="px-6 py-5 bg-white border-b border-slate-100">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-sky-50 flex items-center justify-center">
+              <Calendar className="w-6 h-6 text-sky-500" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-slate-900">
+                {format(selectedDate, 'EEEE, MMMM d')}
+              </h2>
+              <p className="text-sm text-slate-500">{sortedAppointments.length} appointment(s)</p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors"
+          >
+            <X className="w-4 h-4 text-slate-500" />
+          </button>
         </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto px-6 py-6">
+        {/* Add New Appointment Button */}
+        <Button 
+          onClick={handleNewAppointment} 
+          className="w-full mb-4 rounded-xl h-12 bg-slate-800 hover:bg-slate-700"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          New Appointment
+        </Button>
 
         {/* Appointments List */}
         {sortedAppointments.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <Calendar className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-            <p className="text-lg font-medium">No appointments scheduled</p>
-            <p className="text-sm">Click "New Appointment" to schedule one for this date.</p>
+          <div className="bg-white rounded-2xl shadow-sm p-8 text-center">
+            <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
+              <Calendar className="h-8 w-8 text-slate-400" />
+            </div>
+            <p className="text-lg font-medium text-slate-900">No appointments scheduled</p>
+            <p className="text-sm text-slate-500 mt-1">Click "New Appointment" to schedule one for this date.</p>
           </div>
         ) : (
           <div className="space-y-3">
             {sortedAppointments.map((appointment) => (
               <div
                 key={appointment.id}
-                className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
+                className="bg-white rounded-2xl shadow-sm p-4 hover:shadow-md cursor-pointer transition-all active:scale-[0.99]"
                 onClick={() => handleAppointmentClick(appointment)}
               >
-                {/* Token Number */}
-                {appointment.daily_serial_number && (
-                  <div className="flex-shrink-0 relative">
-                    <div className="bg-gradient-to-br from-primary/90 to-primary text-primary-foreground rounded-xl px-3.5 py-2.5 text-center min-w-[56px] shadow-sm border border-primary/20">
-                      <div className="text-[9px] font-semibold uppercase tracking-widest opacity-80 mb-0.5">Token</div>
-                      <div className="text-xl font-bold leading-none">{appointment.daily_serial_number}</div>
+                <div className="flex items-start gap-4">
+                  {/* Token Number */}
+                  {appointment.daily_serial_number && (
+                    <div className="flex-shrink-0">
+                      <div className="bg-gradient-to-br from-slate-800 to-slate-900 text-white rounded-xl px-3 py-2 text-center min-w-[50px] shadow-sm">
+                        <div className="text-[8px] font-semibold uppercase tracking-widest opacity-70 mb-0.5">Token</div>
+                        <div className="text-lg font-bold leading-none">{appointment.daily_serial_number}</div>
+                      </div>
                     </div>
-                  </div>
-                )}
-                
-                {/* Time */}
-                <div className="flex flex-col items-center gap-1 min-w-[80px]">
-                  <div className="flex items-center gap-1 text-sm font-semibold text-gray-700">
-                    <Clock className="h-4 w-4" />
-                    {formatTime(appointment.appointment_time)}
-                  </div>
-                  {appointment.duration_minutes && (
-                    <span className="text-xs text-gray-500">
-                      {appointment.duration_minutes} min
-                    </span>
                   )}
-                </div>
-
-                {/* Appointment Details */}
-                <div className="flex-1 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-medium text-gray-900 line-clamp-1">
-                      {appointment.title || 'Untitled Appointment'}
-                    </h3>
-                    {getStatusBadge(appointment.status)}
+                  
+                  {/* Time */}
+                  <div className="flex flex-col items-center gap-1 min-w-[70px]">
+                    <div className="flex items-center gap-1 text-sm font-semibold text-slate-700">
+                      <Clock className="h-4 w-4" />
+                      {formatTime(appointment.appointment_time)}
+                    </div>
+                    {appointment.duration_minutes && (
+                      <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                        {appointment.duration_minutes} min
+                      </span>
+                    )}
                   </div>
 
-                  <div className="flex items-center gap-4 text-sm text-gray-600">
-                    {/* Client */}
-                    {appointment.client_name && (
-                      <div className="flex items-center gap-1">
-                        <User className="h-4 w-4" />
-                        <span>{appointment.client_name}</span>
-                      </div>
-                    )}
+                  {/* Appointment Details */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <h3 className="font-medium text-slate-900 truncate">
+                        {appointment.title || 'Untitled Appointment'}
+                      </h3>
+                      {getStatusBadge(appointment.status)}
+                    </div>
 
-                    {/* Lawyer */}
-                    {appointment.lawyer_name && (
-                      <div className="flex items-center gap-1">
-                        <Avatar className="h-4 w-4">
-                          <AvatarFallback className="text-xs">
-                            {appointment.lawyer_name.split(' ').map(n => n[0]).join('')}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span>{appointment.lawyer_name}</span>
-                      </div>
-                    )}
+                    <div className="flex items-center gap-4 text-sm text-slate-600 flex-wrap">
+                      {appointment.client_name && (
+                        <div className="flex items-center gap-1">
+                          <User className="h-4 w-4" />
+                          <span>{appointment.client_name}</span>
+                        </div>
+                      )}
 
-                    {/* Location */}
-                    {appointment.location && (
-                      <div className="flex items-center gap-1">
-                        {getLocationIcon(appointment.location)}
-                        <span>
-                          {appointment.location === 'online' ? 'Video Call' : 
-                           appointment.location === 'phone' ? 'Phone Call' : 
-                           appointment.location === 'in_person' ? 'Office' : 
-                           appointment.location}
-                        </span>
-                      </div>
-                    )}
+                      {appointment.lawyer_name && (
+                        <div className="flex items-center gap-1">
+                          <Avatar className="h-4 w-4">
+                            <AvatarFallback className="text-[8px] bg-slate-100">
+                              {appointment.lawyer_name.split(' ').map(n => n[0]).join('')}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span>{appointment.lawyer_name}</span>
+                        </div>
+                      )}
+
+                      {appointment.location && (
+                        <div className="flex items-center gap-1">
+                          {getLocationIcon(appointment.location)}
+                          <span>
+                            {appointment.location === 'online' ? 'Video Call' : 
+                             appointment.location === 'phone' ? 'Phone Call' : 
+                             appointment.location === 'in_person' ? 'Office' : 
+                             appointment.location}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

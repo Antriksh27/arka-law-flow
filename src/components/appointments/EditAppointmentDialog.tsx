@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
 } from '../ui/dialog';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -17,7 +15,7 @@ import {
   SelectValue,
 } from '../ui/select';
 import { Badge } from '../ui/badge';
-import { X, UserPlus, Users } from 'lucide-react';
+import { X, UserPlus, Users, Type, Calendar, Clock, MapPin, FileText, User, Briefcase } from 'lucide-react';
 import { format } from 'date-fns';
 import TimeUtils from '@/lib/timeUtils';
 import { supabase } from '@/integrations/supabase/client';
@@ -91,7 +89,6 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
   }, []);
 
   const fetchAdditionalLawyers = async () => {
-    // Using any type since appointment_lawyers table is newly created and types aren't regenerated yet
     const { data, error } = await (supabase as any)
       .from('appointment_lawyers')
       .select('lawyer_id')
@@ -127,7 +124,6 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
       return;
     }
     
-    // Sort to always show "chitrajeet upadhyaya" first
     const sortedData = (data || []).sort((a, b) => {
       const nameA = a.full_name?.toLowerCase() || '';
       const nameB = b.full_name?.toLowerCase() || '';
@@ -194,15 +190,12 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
 
       if (error) throw error;
 
-      // Sync additional lawyers in junction table
       const currentLawyers = additionalLawyers.filter(id => id !== formData.lawyer_id);
       const originalLawyers = originalAdditionalLawyers.filter(id => id !== formData.lawyer_id);
       
-      // Find lawyers to remove and add
       const lawyersToRemove = originalLawyers.filter(id => !currentLawyers.includes(id));
       const lawyersToAdd = currentLawyers.filter(id => !originalLawyers.includes(id));
 
-      // Remove lawyers (using any type since appointment_lawyers is newly created)
       if (lawyersToRemove.length > 0) {
         await (supabase as any)
           .from('appointment_lawyers')
@@ -211,7 +204,6 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
           .in('lawyer_id', lawyersToRemove);
       }
 
-      // Add new lawyers
       if (lawyersToAdd.length > 0) {
         const newRecords = lawyersToAdd.map(lawyerId => ({
           appointment_id: appointment.id,
@@ -220,7 +212,6 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
         }));
         await (supabase as any).from('appointment_lawyers').insert(newRecords);
         
-        // Send notifications to newly added lawyers
         await sendNotificationsToNewLawyers(
           lawyersToAdd,
           formData.title,
@@ -273,218 +264,304 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
 
   return (
     <Dialog open onOpenChange={closeDialog}>
-      <DialogContent className="max-w-2xl max-h-[90vh] bg-background border-border overflow-hidden">
-        <DialogHeader className="pb-4">
-          <DialogTitle className="text-xl font-semibold text-foreground">Edit Appointment</DialogTitle>
-        </DialogHeader>
-        
-        <div className="overflow-y-auto px-1 max-h-[calc(90vh-120px)]">
-          <form onSubmit={handleSubmit} className="space-y-4 pr-3">
-            <div className="space-y-2">
-              <Label htmlFor="title" className="text-sm font-medium text-foreground">Title *</Label>
-              <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) => handleInputChange('title', e.target.value)}
-                placeholder="Appointment title"
-                required
-                className="bg-background border-border text-foreground"
-              />
+      <DialogContent className="sm:max-w-2xl p-0 gap-0 overflow-hidden">
+        <div className="flex flex-col h-full max-h-[90vh] bg-slate-50">
+          {/* Header */}
+          <div className="px-6 py-5 bg-white border-b border-slate-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-slate-900">Edit Appointment</h2>
+                <p className="text-sm text-slate-500 mt-0.5">Update appointment details</p>
+              </div>
+              <button
+                onClick={closeDialog}
+                className="md:hidden w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors"
+              >
+                <X className="w-4 h-4 text-slate-500" />
+              </button>
             </div>
-
-            {/* Assigned To Section */}
-            <div className="bg-accent/30 rounded-xl p-4 space-y-3 border border-accent/50">
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-primary" />
-                <Label htmlFor="lawyer_id" className="text-sm font-semibold text-foreground">
-                  Assigned Team Members
-                </Label>
-              </div>
-              
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">Primary Assignee *</Label>
-                <Select
-                  value={formData.lawyer_id}
-                  onValueChange={(value) => handleInputChange('lawyer_id', value)}
-                  required
-                >
-                  <SelectTrigger className="bg-background border-border text-foreground">
-                    <SelectValue placeholder="Select user" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background border-border">
-                    {users.map((user) => (
-                      <SelectItem key={user.id} value={user.id} className="text-foreground">
-                        {user.full_name} {user.role && <span className="text-muted-foreground">({user.role})</span>}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Additional Lawyers */}
-              <div className="pt-2 border-t border-border/50">
-                <Label className="text-xs text-muted-foreground">Additional Team Members</Label>
-                
-                {additionalLawyers.filter(id => id !== formData.lawyer_id).length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-2 mb-3">
-                    {additionalLawyers.map(lawyerId => {
-                      const lawyer = users.find(u => u.id === lawyerId);
-                      if (!lawyer || lawyerId === formData.lawyer_id) return null;
-                      return (
-                        <Badge 
-                          key={lawyerId} 
-                          variant="outline" 
-                          className="flex items-center gap-1 pl-2 pr-1 py-1 bg-accent"
-                        >
-                          {lawyer.full_name}
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveLawyer(lawyerId)}
-                            className="ml-1 rounded-full p-0.5 hover:bg-background/50 transition-colors"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </Badge>
-                      );
-                    })}
+          </div>
+          
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto px-6 py-6">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Title Card */}
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+                      <Type className="w-5 h-5 text-emerald-500" />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-semibold text-slate-900">Title</Label>
+                      <p className="text-xs text-slate-500">Appointment title</p>
+                    </div>
                   </div>
-                )}
-                
-                {getAvailableLawyers().length > 0 && (
-                  <Select onValueChange={handleAddLawyer} value="">
-                    <SelectTrigger className="bg-background border-border text-foreground h-9 mt-2">
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <UserPlus className="h-4 w-4" />
-                        <span>Add team member...</span>
-                      </div>
-                    </SelectTrigger>
-                    <SelectContent className="bg-background border-border">
-                      {getAvailableLawyers().map(user => (
-                        <SelectItem key={user.id} value={user.id} className="text-foreground">
-                          {user.full_name} {user.role && <span className="text-muted-foreground">({user.role})</span>}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-                
-                <p className="text-xs text-muted-foreground mt-2">
-                  Newly added team members will receive a notification
-                </p>
+                  <Input
+                    value={formData.title}
+                    onChange={(e) => handleInputChange('title', e.target.value)}
+                    placeholder="Appointment title"
+                    required
+                    className="bg-slate-50 border-slate-200 rounded-xl h-11"
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Smart Booking Calendar */}
-            <SmartBookingCalendar
-              selectedLawyer={formData.lawyer_id || null}
-              selectedDate={formData.appointment_date}
-              selectedTime={formData.appointment_time}
-              hideLawyerPicker
-              onTimeSlotSelect={(date, time, duration) => {
-                handleInputChange('appointment_date', date);
-                handleInputChange('appointment_time', time);
-                handleInputChange('duration_minutes', duration);
-              }}
-            />
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-foreground">Duration</Label>
-                <div className="rounded-md border border-border bg-background px-3 py-2 text-foreground">
-                  {formData.duration_minutes} minutes
+              {/* Assigned Team Card */}
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
+                      <Users className="w-5 h-5 text-violet-500" />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-semibold text-slate-900">Assigned Team</Label>
+                      <p className="text-xs text-slate-500">Who should attend?</p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <Label className="text-xs text-slate-500 mb-1 block">Primary Assignee *</Label>
+                      <Select
+                        value={formData.lawyer_id}
+                        onValueChange={(value) => handleInputChange('lawyer_id', value)}
+                        required
+                      >
+                        <SelectTrigger className="bg-slate-50 border-slate-200 rounded-xl h-11">
+                          <SelectValue placeholder="Select user" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-slate-200 rounded-xl">
+                          {users.map((user) => (
+                            <SelectItem key={user.id} value={user.id}>
+                              {user.full_name} {user.role && <span className="text-slate-500">({user.role})</span>}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Additional Lawyers */}
+                    <div className="pt-3 border-t border-slate-100">
+                      <Label className="text-xs text-slate-500 mb-2 block">Additional Team Members</Label>
+                      
+                      {additionalLawyers.filter(id => id !== formData.lawyer_id).length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {additionalLawyers.map(lawyerId => {
+                            const lawyer = users.find(u => u.id === lawyerId);
+                            if (!lawyer || lawyerId === formData.lawyer_id) return null;
+                            return (
+                              <Badge 
+                                key={lawyerId} 
+                                variant="outline" 
+                                className="flex items-center gap-1 pl-3 pr-1 py-1.5 bg-violet-50 border-violet-200 rounded-full"
+                              >
+                                {lawyer.full_name}
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveLawyer(lawyerId)}
+                                  className="ml-1 rounded-full p-0.5 hover:bg-violet-100 transition-colors"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </Badge>
+                            );
+                          })}
+                        </div>
+                      )}
+                      
+                      {getAvailableLawyers().length > 0 && (
+                        <Select onValueChange={handleAddLawyer} value="">
+                          <SelectTrigger className="bg-slate-50 border-slate-200 rounded-xl h-10">
+                            <div className="flex items-center gap-2 text-slate-500">
+                              <UserPlus className="h-4 w-4" />
+                              <span>Add team member...</span>
+                            </div>
+                          </SelectTrigger>
+                          <SelectContent className="bg-white border-slate-200 rounded-xl">
+                            {getAvailableLawyers().map(user => (
+                              <SelectItem key={user.id} value={user.id}>
+                                {user.full_name} {user.role && <span className="text-slate-500">({user.role})</span>}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                      
+                      <p className="text-xs text-slate-500 mt-2">
+                        Newly added team members will receive a notification
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Schedule Card */}
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
+                      <Calendar className="w-5 h-5 text-amber-500" />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-semibold text-slate-900">Schedule</Label>
+                      <p className="text-xs text-slate-500">Date and time</p>
+                    </div>
+                  </div>
+                  <SmartBookingCalendar
+                    selectedLawyer={formData.lawyer_id || null}
+                    selectedDate={formData.appointment_date}
+                    selectedTime={formData.appointment_time}
+                    hideLawyerPicker
+                    onTimeSlotSelect={(date, time, duration) => {
+                      handleInputChange('appointment_date', date);
+                      handleInputChange('appointment_time', time);
+                      handleInputChange('duration_minutes', duration);
+                    }}
+                  />
                 </div>
               </div>
               
-              <div className="space-y-2">
-                <Label htmlFor="location" className="text-sm font-medium text-foreground">Type / Location</Label>
-                <Select
-                  value={formData.location}
-                  onValueChange={(value) => handleInputChange('location', value)}
-                >
-                  <SelectTrigger className="bg-background border-border text-foreground">
-                    <SelectValue placeholder="Select type/location" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background border-border">
-                    {locationTypeOptions.map(opt => (
-                      <SelectItem key={opt.value} value={opt.value} className="text-foreground">
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                    <SelectItem value="other" className="text-foreground">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+              {/* Details Card */}
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-4 space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Clock className="w-4 h-4 text-slate-500" />
+                        <Label className="text-sm font-medium text-slate-700">Duration</Label>
+                      </div>
+                      <div className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-slate-700">
+                        {formData.duration_minutes} minutes
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <MapPin className="w-4 h-4 text-slate-500" />
+                        <Label className="text-sm font-medium text-slate-700">Type</Label>
+                      </div>
+                      <Select
+                        value={formData.location}
+                        onValueChange={(value) => handleInputChange('location', value)}
+                      >
+                        <SelectTrigger className="bg-slate-50 border-slate-200 rounded-xl h-11">
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-slate-200 rounded-xl">
+                          {locationTypeOptions.map(opt => (
+                            <SelectItem key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </SelectItem>
+                          ))}
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="status" className="text-sm font-medium text-foreground">Status</Label>
-                <Select
-                  value={formData.status}
-                  onValueChange={(value) => handleInputChange('status', value)}
-                >
-                  <SelectTrigger className="bg-background border-border text-foreground">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background border-border">
-                    <SelectItem value="upcoming" className="text-foreground">Upcoming</SelectItem>
-                    <SelectItem value="completed" className="text-foreground">Completed</SelectItem>
-                    <SelectItem value="cancelled" className="text-foreground">Cancelled</SelectItem>
-                    <SelectItem value="rescheduled" className="text-foreground">Rescheduled</SelectItem>
-                    <SelectItem value="pending" className="text-foreground">Pending</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-foreground">Client / Contact</Label>
-                <ClientSelector
-                  value={formData.client_id}
-                  onValueChange={(value) => handleInputChange('client_id', value)}
-                  placeholder="Select client or contact"
-                />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="case_id" className="text-sm font-medium text-foreground">Related Case (Optional)</Label>
-              <CaseSelector
-                value={formData.case_id}
-                onValueChange={(value) => handleInputChange('case_id', value)}
-                placeholder="Select case (optional)"
-                clientId={formData.client_id}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="notes" className="text-sm font-medium text-foreground">Notes</Label>
-              <Textarea
-                id="notes"
-                value={formData.notes}
-                onChange={(e) => handleInputChange('notes', e.target.value)}
-                placeholder="Additional notes or agenda items..."
-                rows={3}
-                className="bg-background border-border text-foreground resize-none"
-              />
-            </div>
+                  <div className="grid grid-cols-2 gap-4 pt-3 border-t border-slate-100">
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <User className="w-4 h-4 text-slate-500" />
+                        <Label className="text-sm font-medium text-slate-700">Client</Label>
+                      </div>
+                      <ClientSelector
+                        value={formData.client_id}
+                        onValueChange={(value) => handleInputChange('client_id', value)}
+                        placeholder="Select client"
+                      />
+                    </div>
 
-            <div className="flex justify-end gap-3 pt-4 sticky bottom-0 bg-background border-t border-border pb-2">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={closeDialog}
-              >
-                Cancel
-              </Button>
-              <Button 
-                type="submit" 
-                className="bg-primary hover:bg-primary/90"
-                disabled={loading}
-              >
-                {loading ? 'Updating...' : 'Update Appointment'}
-              </Button>
-            </div>
-          </form>
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Briefcase className="w-4 h-4 text-slate-500" />
+                        <Label className="text-sm font-medium text-slate-700">Status</Label>
+                      </div>
+                      <Select
+                        value={formData.status}
+                        onValueChange={(value) => handleInputChange('status', value)}
+                      >
+                        <SelectTrigger className="bg-slate-50 border-slate-200 rounded-xl h-11">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-slate-200 rounded-xl">
+                          <SelectItem value="upcoming">Upcoming</SelectItem>
+                          <SelectItem value="completed">Completed</SelectItem>
+                          <SelectItem value="cancelled">Cancelled</SelectItem>
+                          <SelectItem value="rescheduled">Rescheduled</SelectItem>
+                          <SelectItem value="pending">Pending</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Case & Notes Card */}
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-4 space-y-4">
+                  <div>
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center">
+                        <Briefcase className="w-5 h-5 text-sky-500" />
+                      </div>
+                      <div>
+                        <Label className="text-sm font-semibold text-slate-900">Related Case</Label>
+                        <p className="text-xs text-slate-500">Optional</p>
+                      </div>
+                    </div>
+                    <CaseSelector
+                      value={formData.case_id}
+                      onValueChange={(value) => handleInputChange('case_id', value)}
+                      placeholder="Select case (optional)"
+                      clientId={formData.client_id}
+                    />
+                  </div>
+                  
+                  <div className="pt-4 border-t border-slate-100">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center">
+                        <FileText className="w-5 h-5 text-rose-500" />
+                      </div>
+                      <div>
+                        <Label className="text-sm font-semibold text-slate-900">Notes</Label>
+                        <p className="text-xs text-slate-500">Additional details</p>
+                      </div>
+                    </div>
+                    <Textarea
+                      value={formData.notes}
+                      onChange={(e) => handleInputChange('notes', e.target.value)}
+                      placeholder="Additional notes or agenda items..."
+                      rows={3}
+                      className="bg-slate-50 border-slate-200 rounded-xl resize-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="pt-4 sticky bottom-0 bg-slate-50 pb-2">
+                <div className="flex gap-3 justify-end">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={closeDialog}
+                    className="rounded-full px-6 border-slate-200"
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    className="rounded-full px-6 bg-slate-800 hover:bg-slate-700"
+                    disabled={loading}
+                  >
+                    {loading ? 'Updating...' : 'Update Appointment'}
+                  </Button>
+                </div>
+              </div>
+            </form>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

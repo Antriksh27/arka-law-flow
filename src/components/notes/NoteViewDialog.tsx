@@ -1,7 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Pin, PinOff, Edit, Trash2, Play, Pause, Download, X, FileText, Mic } from 'lucide-react';
 import { TimeUtils } from '@/lib/timeUtils';
@@ -18,18 +17,12 @@ interface NoteViewDialogProps {
 
 const getColorClasses = (color: string) => {
   switch (color) {
-    case 'yellow':
-      return 'bg-amber-100';
-    case 'blue':
-      return 'bg-sky-100';
-    case 'green':
-      return 'bg-emerald-100';
-    case 'red':
-      return 'bg-rose-100';
-    case 'purple':
-      return 'bg-violet-100';
-    default:
-      return 'bg-white';
+    case 'yellow': return 'bg-amber-50';
+    case 'blue': return 'bg-sky-50';
+    case 'green': return 'bg-emerald-50';
+    case 'red': return 'bg-rose-50';
+    case 'purple': return 'bg-violet-50';
+    default: return 'bg-white';
   }
 };
 
@@ -47,7 +40,7 @@ export const NoteViewDialog: React.FC<NoteViewDialogProps> = ({
   onEdit,
 }) => {
   const audioRef = useRef<HTMLAudioElement>(null);
-  const [isPlaying, setIsPlaying] = React.useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -139,97 +132,107 @@ export const NoteViewDialog: React.FC<NoteViewDialogProps> = ({
   return (
     <>
       <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent 
-          className={`max-w-2xl max-h-[90vh] overflow-hidden p-0 border-0 ${getColorClasses(note.color)}`}
-        >
-          {/* Top action bar */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-black/5">
-            <div className="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-9 w-9 hover:bg-black/10"
-                onClick={() => togglePinMutation.mutate()}
-                disabled={togglePinMutation.isPending}
-              >
-                {note.is_pinned ? (
-                  <PinOff className="w-5 h-5 text-muted-foreground" />
-                ) : (
-                  <Pin className="w-5 h-5 text-muted-foreground" />
-                )}
-              </Button>
-              {onEdit && (
+        <DialogContent className="sm:max-w-2xl p-0 gap-0 overflow-hidden border-0">
+          <div className={`flex flex-col h-full max-h-[90vh] ${getColorClasses(note.color)}`}>
+            {/* Header Action Bar */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200/50 bg-white/50 backdrop-blur-sm">
+              <div className="flex items-center gap-1">
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-9 w-9 hover:bg-black/10"
-                  onClick={onEdit}
+                  className="h-9 w-9 rounded-full hover:bg-slate-100"
+                  onClick={() => togglePinMutation.mutate()}
+                  disabled={togglePinMutation.isPending}
                 >
-                  <Edit className="w-5 h-5 text-muted-foreground" />
+                  {note.is_pinned ? (
+                    <PinOff className="w-5 h-5 text-slate-600" />
+                  ) : (
+                    <Pin className="w-5 h-5 text-slate-600" />
+                  )}
                 </Button>
-              )}
+                {onEdit && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9 rounded-full hover:bg-slate-100"
+                    onClick={onEdit}
+                  >
+                    <Edit className="w-5 h-5 text-slate-600" />
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 rounded-full hover:bg-red-50"
+                  onClick={() => setShowDeleteDialog(true)}
+                >
+                  <Trash2 className="w-5 h-5 text-red-500" />
+                </Button>
+              </div>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9 hover:bg-black/10"
-                onClick={() => setShowDeleteDialog(true)}
+                className="h-9 w-9 rounded-full hover:bg-slate-100"
+                onClick={onClose}
               >
-                <Trash2 className="w-5 h-5 text-muted-foreground" />
+                <X className="w-5 h-5 text-slate-600" />
               </Button>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 hover:bg-black/10"
-              onClick={onClose}
-            >
-              <X className="w-5 h-5 text-muted-foreground" />
-            </Button>
-          </div>
 
-          {/* Content area */}
-          <div className="overflow-y-auto max-h-[calc(90vh-120px)]">
-            {/* Drawing - full width at top */}
-            {hasDrawing && (
-              <div className="w-full">
-                <img 
-                  src={drawingData} 
-                  alt="Note drawing" 
-                  className="w-full max-h-80 object-contain bg-white/50"
-                />
-              </div>
-            )}
-
-            <div className="px-6 py-4 space-y-4">
-              {/* Title */}
-              {note.title && (
-                <h2 className="text-xl font-medium text-foreground">
-                  {note.title}
-                </h2>
-              )}
-
-              {/* Linked Case */}
-              {note.cases?.case_title && (
-                <div className="flex items-center gap-2 text-sm text-primary">
-                  <FileText className="w-4 h-4" />
-                  <span>{note.cases.case_title}</span>
+            {/* Content Area */}
+            <div className="flex-1 overflow-y-auto">
+              {/* Drawing - full width at top */}
+              {hasDrawing && (
+                <div className="w-full bg-white/50">
+                  <img 
+                    src={drawingData} 
+                    alt="Note drawing" 
+                    className="w-full max-h-80 object-contain"
+                  />
                 </div>
               )}
 
-              {/* Audio Player */}
-              {hasAudio && (
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-white/50">
-                  <Button
-                    onClick={handlePlayPause}
-                    size="icon"
-                    className="h-10 w-10 rounded-full bg-primary hover:bg-primary/90"
-                  >
-                    {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
-                  </Button>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <Mic className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground">Audio recording</span>
+              <div className="px-6 py-5 space-y-4">
+                {/* Title */}
+                {note.title && (
+                  <h2 className="text-xl font-semibold text-slate-900">
+                    {note.title}
+                  </h2>
+                )}
+
+                {/* Linked Case */}
+                {note.cases?.case_title && (
+                  <div className="flex items-center gap-2 text-sm text-primary bg-white/60 rounded-xl px-3 py-2 w-fit">
+                    <FileText className="w-4 h-4" />
+                    <span>{note.cases.case_title}</span>
+                  </div>
+                )}
+
+                {/* Audio Player */}
+                {hasAudio && (
+                  <div className="bg-white rounded-2xl shadow-sm p-4">
+                    <div className="flex items-center gap-3">
+                      <Button
+                        onClick={handlePlayPause}
+                        size="icon"
+                        className="h-12 w-12 rounded-full bg-slate-800 hover:bg-slate-700"
+                      >
+                        {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
+                      </Button>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <Mic className="w-4 h-4 text-slate-500" />
+                          <span className="text-sm text-slate-600">Audio recording</span>
+                        </div>
+                      </div>
+                      <Button
+                        onClick={downloadAudio}
+                        size="icon"
+                        variant="ghost"
+                        className="h-9 w-9 rounded-full hover:bg-slate-100"
+                      >
+                        <Download className="w-4 h-4 text-slate-600" />
+                      </Button>
                     </div>
                     <audio
                       ref={audioRef}
@@ -238,70 +241,83 @@ export const NoteViewDialog: React.FC<NoteViewDialogProps> = ({
                       className="hidden"
                     />
                   </div>
-                  <Button
-                    onClick={downloadAudio}
-                    size="icon"
-                    variant="ghost"
-                    className="h-9 w-9 hover:bg-black/10"
-                  >
-                    <Download className="w-4 h-4" />
-                  </Button>
-                </div>
-              )}
+                )}
 
-              {/* Content */}
-              {displayContent && (
-                <div className="text-foreground whitespace-pre-wrap leading-relaxed">
-                  {displayContent}
-                </div>
-              )}
+                {/* Content */}
+                {displayContent && (
+                  <div className="text-slate-700 whitespace-pre-wrap leading-relaxed">
+                    {displayContent}
+                  </div>
+                )}
 
-              {/* Tags */}
-              {note.tags && note.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2 pt-2">
-                  {note.tags.map((tag: string, index: number) => (
-                    <span 
-                      key={index} 
-                      className="text-sm text-muted-foreground bg-black/5 px-3 py-1 rounded-full"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              )}
+                {/* Tags */}
+                {note.tags && note.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    {note.tags.map((tag: string, index: number) => (
+                      <span 
+                        key={index} 
+                        className="text-sm text-slate-600 bg-white/60 px-3 py-1 rounded-full"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
 
-          {/* Footer */}
-          <div className="flex items-center justify-between px-6 py-3 border-t border-black/5 text-xs text-muted-foreground">
-            <span>
-              {note.profiles?.full_name && `By ${note.profiles.full_name}`}
-            </span>
-            <span>
-              Edited {TimeUtils.formatDate(note.updated_at, 'MMM d, h:mm a')}
-            </span>
+            {/* Footer */}
+            <div className="flex items-center justify-between px-6 py-3 border-t border-slate-200/50 text-xs text-slate-500 bg-white/50">
+              <span>
+                {note.profiles?.full_name && `By ${note.profiles.full_name}`}
+              </span>
+              <span>
+                Edited {TimeUtils.formatDate(note.updated_at, 'MMM d, h:mm a')}
+              </span>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete note?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This note will be permanently deleted. This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => deleteMutation.mutate()}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              disabled={deleteMutation.isPending}
-            >
-              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
+        <AlertDialogContent className="sm:max-w-md p-0 gap-0 overflow-hidden bg-slate-50 border-0">
+          <div className="flex flex-col">
+            {/* Header */}
+            <div className="px-6 py-5 bg-white border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center">
+                  <Trash2 className="w-6 h-6 text-red-500" />
+                </div>
+                <div>
+                  <AlertDialogTitle className="text-xl font-semibold text-slate-900">
+                    Delete note?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription className="text-sm text-slate-500 mt-0.5">
+                    This action cannot be undone
+                  </AlertDialogDescription>
+                </div>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="px-6 py-5">
+              <p className="text-sm text-slate-600">
+                This note will be permanently deleted. This action cannot be undone.
+              </p>
+            </div>
+
+            {/* Footer */}
+            <AlertDialogFooter className="px-6 py-4 bg-white border-t border-slate-100">
+              <AlertDialogCancel className="rounded-full px-6 border-slate-200">Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => deleteMutation.mutate()}
+                className="rounded-full px-6 bg-red-600 hover:bg-red-700 text-white"
+                disabled={deleteMutation.isPending}
+              >
+                {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </div>
         </AlertDialogContent>
       </AlertDialog>
     </>
