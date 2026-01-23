@@ -281,8 +281,8 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl w-full h-full md:h-auto md:max-h-[90vh] p-0 overflow-hidden bg-slate-50 border-0 md:rounded-2xl">
-        <div className="flex flex-col h-full">
+      <DialogContent className="sm:max-w-2xl p-0 gap-0 overflow-hidden">
+        <div className="flex flex-col h-full bg-slate-50">
           {/* Header */}
           <div className="px-6 py-5 bg-white border-b border-slate-100">
             <div className="flex items-center justify-between">

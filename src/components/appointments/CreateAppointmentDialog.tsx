@@ -341,8 +341,18 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
     <div className="flex flex-col h-full bg-slate-50">
       {/* Header */}
       <div className="px-6 py-5 bg-white border-b border-slate-100">
-        <h2 className="text-xl font-semibold text-foreground">New Appointment</h2>
-        <p className="text-sm text-muted-foreground mt-1">Schedule a meeting with your client</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-semibold text-foreground">New Appointment</h2>
+            <p className="text-sm text-muted-foreground mt-1">Schedule a meeting with your client</p>
+          </div>
+          <button 
+            onClick={closeDialog}
+            className="sm:hidden w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center"
+          >
+            <X className="w-4 h-4 text-slate-500" />
+          </button>
+        </div>
       </div>
       
       {/* Form Content */}
