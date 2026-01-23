@@ -16,6 +16,7 @@ import {
   PRIMARY_DOCUMENT_TYPES, 
   getSubTypes,
   generateStoragePath,
+  sanitizeFolderName,
   DOCUMENT_TYPE_ICONS 
 } from '@/lib/documentTypes';
 
@@ -156,12 +157,20 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
           fileName: file.name
         });
         
+        // Sanitize names for WebDAV compatibility
+        const sanitizedClientName = sanitizeFolderName(clientName);
+        const sanitizedCaseName = caseNumber 
+          ? `${sanitizeFolderName(caseTitle)}_${sanitizeFolderName(caseNumber)}`
+          : sanitizeFolderName(caseTitle);
+        const sanitizedCategory = sanitizeFolderName(primaryType);
+        const sanitizedDocType = sanitizeFolderName(subType);
+        
         const { data: pydioResult, error: pydioError } = await supabase.functions.invoke('pydio-webdav', {
           body: {
-            clientName,
-            caseName: caseNumber ? `${caseTitle}_${caseNumber}` : caseTitle,
-            category: primaryType,
-            docType: subType,
+            clientName: sanitizedClientName,
+            caseName: sanitizedCaseName,
+            category: sanitizedCategory,
+            docType: sanitizedDocType,
             fileName: file.name,
             fileContent: fileContent
           }
