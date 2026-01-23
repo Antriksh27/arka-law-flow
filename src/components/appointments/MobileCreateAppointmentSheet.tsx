@@ -1,17 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
-import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '../ui/sheet';
-import { X, UserPlus, Users, Clock, MapPin, Video, Phone, Calendar, ChevronRight, User, Briefcase, FileText } from 'lucide-react';
+import { Sheet, SheetContent } from '../ui/sheet';
+import { X, UserPlus, Users, Clock, MapPin, Video, Phone, Calendar, ChevronRight, User, Briefcase, FileText, Check, ArrowLeft, Search } from 'lucide-react';
 import { format } from 'date-fns';
 import TimeUtils from '@/lib/timeUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
-import { Badge } from '../ui/badge';
 import { cn } from '@/lib/utils';
 import { Calendar as CalendarComponent } from '../ui/calendar';
 
@@ -24,7 +21,7 @@ interface Case {
   case_title: string;
   case_number: string;
 }
-interface User {
+interface TeamMember {
   id: string;
   full_name: string;
   role: string;
@@ -45,18 +42,20 @@ const TIME_SLOTS = [
 ];
 
 const DURATION_OPTIONS = [
-  { value: '15', label: '15 min' },
-  { value: '30', label: '30 min' },
-  { value: '60', label: '1 hour' },
-  { value: '90', label: '1.5 hrs' },
-  { value: '120', label: '2 hours' },
+  { value: 15, label: '15m' },
+  { value: 30, label: '30m' },
+  { value: 60, label: '1h' },
+  { value: 90, label: '1.5h' },
+  { value: 120, label: '2h' },
 ];
 
 const TYPE_OPTIONS = [
-  { value: 'in-person', label: 'In-Person', icon: MapPin },
-  { value: 'video-call', label: 'Video Call', icon: Video },
-  { value: 'call', label: 'Phone', icon: Phone },
+  { value: 'in-person', label: 'In-Person', icon: MapPin, color: 'bg-emerald-500' },
+  { value: 'video-call', label: 'Video', icon: Video, color: 'bg-blue-500' },
+  { value: 'call', label: 'Phone', icon: Phone, color: 'bg-amber-500' },
 ];
+
+type StepType = 'form' | 'date' | 'time' | 'client' | 'lawyer' | 'add-team' | 'case';
 
 export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheetProps> = ({
   open,
@@ -69,8 +68,8 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
   const [loading, setLoading] = useState(false);
   const [clients, setClients] = useState<Client[]>([]);
   const [cases, setCases] = useState<Case[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
-  const [step, setStep] = useState<'form' | 'date' | 'time' | 'client' | 'lawyer' | 'add-team' | 'case'>('form');
+  const [users, setUsers] = useState<TeamMember[]>([]);
+  const [step, setStep] = useState<StepType>('form');
   const [clientSearch, setClientSearch] = useState('');
   const [lawyerSearch, setLawyerSearch] = useState('');
   const [additionalLawyers, setAdditionalLawyers] = useState<string[]>([]);
@@ -93,7 +92,6 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
     if (open) {
       fetchClients();
       fetchUsers();
-      // Reset form when opening
       setStep('form');
       setAdditionalLawyers([]);
     }
@@ -107,7 +105,6 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
     }
   }, [formData.client_id]);
 
-  // Auto-select current user
   useEffect(() => {
     if (user?.id && users.length > 0 && !formData.lawyer_id) {
       const currentUserInList = users.find(u => u.id === user.id);
@@ -203,7 +200,6 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
 
       if (error) throw error;
 
-      // Save additional lawyers if any
       if (newAppointment?.id && additionalLawyers.length > 0) {
         const lawyersToSave = additionalLawyers.filter(id => id !== formData.lawyer_id);
         if (lawyersToSave.length > 0) {
@@ -214,7 +210,6 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
           }));
           await (supabase as any).from('appointment_lawyers').insert(lawyerRecords);
 
-          // Send notifications to additional team members
           const notifications = lawyersToSave.map(lawyerId => ({
             recipient_id: lawyerId,
             title: 'New Appointment Assignment',
@@ -257,6 +252,7 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
 
   const selectedClient = clients.find(c => c.id === formData.client_id);
   const selectedLawyer = users.find(u => u.id === formData.lawyer_id);
+  const selectedCase = cases.find(c => c.id === formData.case_id);
 
   const filteredClients = clients.filter(c => 
     c.full_name.toLowerCase().includes(clientSearch.toLowerCase())
@@ -277,8 +273,6 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
     (c.case_number && c.case_number.toLowerCase().includes(caseSearch.toLowerCase()))
   );
 
-  const selectedCase = cases.find(c => c.id === formData.case_id);
-
   const handleAddTeamMember = (lawyerId: string) => {
     if (!additionalLawyers.includes(lawyerId)) {
       setAdditionalLawyers(prev => [...prev, lawyerId]);
@@ -291,159 +285,216 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
     setAdditionalLawyers(prev => prev.filter(id => id !== lawyerId));
   };
 
+  const goBack = () => {
+    setStep('form');
+    setClientSearch('');
+    setLawyerSearch('');
+    setTeamSearch('');
+    setCaseSearch('');
+  };
+
+  // Shared picker header component
+  const PickerHeader = ({ title }: { title: string }) => (
+    <div className="flex items-center gap-3 px-4 py-4 border-b border-border bg-background sticky top-0 z-10">
+      <button 
+        onClick={goBack} 
+        className="w-9 h-9 flex items-center justify-center rounded-full bg-muted active:scale-95 transition-transform"
+      >
+        <ArrowLeft className="w-5 h-5 text-foreground" />
+      </button>
+      <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+    </div>
+  );
+
+  // Shared search input component
+  const SearchInput = ({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) => (
+    <div className="px-4 py-3 border-b border-border bg-muted/30">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Input
+          placeholder={placeholder}
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          className="h-11 pl-10 rounded-xl bg-background border-border"
+          autoFocus
+        />
+      </div>
+    </div>
+  );
+
+  // Avatar component
+  const Avatar = ({ name, color = 'bg-primary/10', textColor = 'text-primary' }: { name: string; color?: string; textColor?: string }) => (
+    <div className={cn("w-11 h-11 rounded-full flex items-center justify-center shrink-0", color)}>
+      <span className={cn("text-sm font-semibold", textColor)}>
+        {name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+      </span>
+    </div>
+  );
+
   const renderFormView = () => (
-    <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto px-4 pb-32">
-        {/* Date & Time Section */}
-        <div className="py-4 space-y-3">
-          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">When</h3>
-          
-          {/* Date Selector */}
+    <div className="flex flex-col h-full bg-muted/30">
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-4 bg-background border-b border-border">
+        <h2 className="text-xl font-bold text-foreground">New Appointment</h2>
+        <button 
+          onClick={onClose} 
+          className="w-9 h-9 flex items-center justify-center rounded-full bg-muted active:scale-95 transition-transform"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto pb-28">
+        {/* Date & Time Card */}
+        <div className="m-4 bg-background rounded-2xl overflow-hidden shadow-sm border border-border">
           <button
             type="button"
             onClick={() => setStep('date')}
-            className="w-full flex items-center justify-between p-4 bg-card rounded-2xl border border-border active:scale-[0.98] transition-all"
+            className="w-full flex items-center gap-4 p-4 active:bg-muted/50 transition-colors border-b border-border"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Calendar className="w-5 h-5 text-primary" />
-              </div>
-              <div className="text-left">
-                <p className="text-sm text-muted-foreground">Date</p>
-                <p className="font-semibold text-foreground">
-                  {format(formData.appointment_date, 'EEE, MMM d, yyyy')}
-                </p>
-              </div>
+            <div className="w-11 h-11 rounded-xl bg-blue-100 flex items-center justify-center">
+              <Calendar className="w-5 h-5 text-blue-600" />
+            </div>
+            <div className="flex-1 text-left">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Date</p>
+              <p className="text-base font-semibold text-foreground mt-0.5">
+                {format(formData.appointment_date, 'EEEE, MMM d')}
+              </p>
             </div>
             <ChevronRight className="w-5 h-5 text-muted-foreground" />
           </button>
 
-          {/* Time Selector */}
           <button
             type="button"
             onClick={() => setStep('time')}
-            className="w-full flex items-center justify-between p-4 bg-card rounded-2xl border border-border active:scale-[0.98] transition-all"
+            className="w-full flex items-center gap-4 p-4 active:bg-muted/50 transition-colors"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Clock className="w-5 h-5 text-primary" />
-              </div>
-              <div className="text-left">
-                <p className="text-sm text-muted-foreground">Time</p>
-                <p className={cn("font-semibold", formData.appointment_time ? "text-foreground" : "text-muted-foreground")}>
-                  {formData.appointment_time 
-                    ? format(new Date(`2000-01-01T${formData.appointment_time}`), 'h:mm a')
-                    : 'Select time'
-                  }
-                </p>
-              </div>
+            <div className="w-11 h-11 rounded-xl bg-violet-100 flex items-center justify-center">
+              <Clock className="w-5 h-5 text-violet-600" />
+            </div>
+            <div className="flex-1 text-left">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Time</p>
+              <p className={cn("text-base font-semibold mt-0.5", formData.appointment_time ? "text-foreground" : "text-muted-foreground")}>
+                {formData.appointment_time 
+                  ? format(new Date(`2000-01-01T${formData.appointment_time}`), 'h:mm a')
+                  : 'Select time'
+                }
+              </p>
             </div>
             <ChevronRight className="w-5 h-5 text-muted-foreground" />
           </button>
+        </div>
 
-          {/* Duration & Type Row */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">Duration</Label>
-              <Select 
-                value={formData.duration_minutes.toString()} 
-                onValueChange={v => handleInputChange('duration_minutes', parseInt(v))}
+        {/* Duration Chips */}
+        <div className="px-4 mb-4">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2.5">Duration</p>
+          <div className="flex gap-2">
+            {DURATION_OPTIONS.map(opt => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => handleInputChange('duration_minutes', opt.value)}
+                className={cn(
+                  "flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95",
+                  formData.duration_minutes === opt.value 
+                    ? "bg-foreground text-background" 
+                    : "bg-background border border-border text-foreground"
+                )}
               >
-                <SelectTrigger className="h-12 rounded-xl">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {DURATION_OPTIONS.map(opt => (
-                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Meeting Type Chips */}
-          <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Meeting Type</Label>
-            <div className="flex gap-2">
-              {TYPE_OPTIONS.map(opt => {
-                const Icon = opt.icon;
-                const isActive = formData.type === opt.value;
-                return (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => handleInputChange('type', opt.value)}
-                    className={cn(
-                      "flex-1 flex items-center justify-center gap-2 py-3 px-3 rounded-xl border transition-all active:scale-95",
-                      isActive 
-                        ? "bg-primary/40 text-white border-primary/50" 
-                        : "bg-card border-border text-foreground"
-                    )}
-                  >
-                    <Icon className="w-4 h-4" />
-                    <span className="text-sm font-medium">{opt.label}</span>
-                  </button>
-                );
-              })}
-            </div>
+                {opt.label}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* People Section */}
-        <div className="py-4 border-t border-border space-y-3">
-          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Who</h3>
+        {/* Meeting Type */}
+        <div className="px-4 mb-4">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2.5">Type</p>
+          <div className="flex gap-2">
+            {TYPE_OPTIONS.map(opt => {
+              const Icon = opt.icon;
+              const isActive = formData.type === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => handleInputChange('type', opt.value)}
+                  className={cn(
+                    "flex-1 flex flex-col items-center gap-2 py-3 px-2 rounded-xl transition-all active:scale-95",
+                    isActive 
+                      ? "bg-foreground text-background" 
+                      : "bg-background border border-border text-foreground"
+                  )}
+                >
+                  <div className={cn(
+                    "w-9 h-9 rounded-full flex items-center justify-center",
+                    isActive ? "bg-background/20" : opt.color
+                  )}>
+                    <Icon className={cn("w-4 h-4", isActive ? "text-background" : "text-white")} />
+                  </div>
+                  <span className="text-xs font-medium">{opt.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* People Card */}
+        <div className="m-4 bg-background rounded-2xl overflow-hidden shadow-sm border border-border">
+          <p className="px-4 pt-4 pb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">People</p>
           
-          {/* Client Selector */}
+          {/* Client */}
           <button
             type="button"
             onClick={() => setStep('client')}
-            className="w-full flex items-center justify-between p-4 bg-card rounded-2xl border border-border active:scale-[0.98] transition-all"
+            className="w-full flex items-center gap-4 p-4 active:bg-muted/50 transition-colors border-b border-border"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                <User className="w-5 h-5 text-primary" />
+            {selectedClient ? (
+              <Avatar name={selectedClient.full_name} color="bg-emerald-100" textColor="text-emerald-700" />
+            ) : (
+              <div className="w-11 h-11 rounded-full bg-muted flex items-center justify-center">
+                <User className="w-5 h-5 text-muted-foreground" />
               </div>
-              <div className="text-left">
-                <p className="text-sm text-muted-foreground">Client <span className="text-destructive">*</span></p>
-                <p className={cn("font-semibold", selectedClient ? "text-foreground" : "text-muted-foreground")}>
-                  {selectedClient?.full_name || 'Select client'}
-                </p>
-              </div>
+            )}
+            <div className="flex-1 text-left">
+              <p className="text-xs font-medium text-muted-foreground">Client <span className="text-destructive">*</span></p>
+              <p className={cn("text-base font-semibold mt-0.5", selectedClient ? "text-foreground" : "text-muted-foreground")}>
+                {selectedClient?.full_name || 'Select client'}
+              </p>
             </div>
             <ChevronRight className="w-5 h-5 text-muted-foreground" />
           </button>
 
-          {/* Lawyer Selector */}
+          {/* Lawyer */}
           <button
             type="button"
             onClick={() => setStep('lawyer')}
-            className="w-full flex items-center justify-between p-4 bg-card rounded-2xl border border-border active:scale-[0.98] transition-all"
+            className="w-full flex items-center gap-4 p-4 active:bg-muted/50 transition-colors border-b border-border"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center">
-                <Briefcase className="w-5 h-5 text-accent-foreground" />
+            {selectedLawyer ? (
+              <Avatar name={selectedLawyer.full_name} color="bg-blue-100" textColor="text-blue-700" />
+            ) : (
+              <div className="w-11 h-11 rounded-full bg-muted flex items-center justify-center">
+                <Briefcase className="w-5 h-5 text-muted-foreground" />
               </div>
-              <div className="text-left">
-                <p className="text-sm text-muted-foreground">Assigned To <span className="text-destructive">*</span></p>
-                <p className={cn("font-semibold", selectedLawyer ? "text-foreground" : "text-muted-foreground")}>
-                  {selectedLawyer?.full_name || 'Select lawyer'}
-                </p>
-              </div>
+            )}
+            <div className="flex-1 text-left">
+              <p className="text-xs font-medium text-muted-foreground">Assigned To <span className="text-destructive">*</span></p>
+              <p className={cn("text-base font-semibold mt-0.5", selectedLawyer ? "text-foreground" : "text-muted-foreground")}>
+                {selectedLawyer?.full_name || 'Select lawyer'}
+              </p>
             </div>
             <ChevronRight className="w-5 h-5 text-muted-foreground" />
           </button>
 
-          {/* Additional Team Members */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Users className="w-4 h-4 text-muted-foreground" />
-                <Label className="text-xs text-muted-foreground">Additional Team Members</Label>
-              </div>
+          {/* Additional Team */}
+          <div className="p-4">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs font-medium text-muted-foreground">Additional Team</p>
               <button
                 type="button"
                 onClick={() => setStep('add-team')}
-                className="flex items-center gap-1 text-xs text-primary font-medium active:opacity-70"
+                className="flex items-center gap-1.5 text-xs font-semibold text-primary active:opacity-70"
               >
                 <UserPlus className="w-3.5 h-3.5" />
                 Add
@@ -456,70 +507,70 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
                   const lawyer = users.find(u => u.id === lawyerId);
                   if (!lawyer) return null;
                   return (
-                    <Badge 
+                    <div 
                       key={lawyerId} 
-                      variant="outline"
-                      className="flex items-center gap-1 pl-2 pr-1 py-1.5 bg-accent"
+                      className="flex items-center gap-2 bg-muted rounded-full pl-1 pr-2 py-1"
                     >
-                      {lawyer.full_name}
+                      <Avatar name={lawyer.full_name} color="bg-primary/20" textColor="text-primary" />
+                      <span className="text-sm font-medium text-foreground">{lawyer.full_name.split(' ')[0]}</span>
                       <button
                         type="button"
                         onClick={() => handleRemoveTeamMember(lawyerId)}
-                        className="ml-1 rounded-full p-0.5 hover:bg-background/50 transition-colors"
+                        className="w-5 h-5 rounded-full bg-muted-foreground/20 flex items-center justify-center"
                       >
-                        <X className="h-3 w-3" />
+                        <X className="w-3 h-3 text-muted-foreground" />
                       </button>
-                    </Badge>
+                    </div>
                   );
                 })}
               </div>
             ) : (
-              <p className="text-xs text-muted-foreground">No additional team members</p>
+              <p className="text-sm text-muted-foreground">No additional team members</p>
             )}
           </div>
+        </div>
 
-          {/* Case Selector (optional) - Searchable */}
+        {/* Case Card */}
+        <div className="mx-4 bg-background rounded-2xl overflow-hidden shadow-sm border border-border">
           <button
             type="button"
             onClick={() => setStep('case')}
-            className="w-full flex items-center justify-between p-4 bg-card rounded-2xl border border-border active:scale-[0.98] transition-all"
+            className="w-full flex items-center gap-4 p-4 active:bg-muted/50 transition-colors"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
-                <FileText className="w-5 h-5 text-muted-foreground" />
-              </div>
-              <div className="text-left">
-                <p className="text-sm text-muted-foreground">Related Case (Optional)</p>
-                <p className={cn("font-semibold", selectedCase ? "text-foreground" : "text-muted-foreground")}>
-                  {selectedCase ? selectedCase.case_title : 'Search & select case'}
-                </p>
-                {selectedCase?.case_number && (
-                  <p className="text-xs text-muted-foreground">{selectedCase.case_number}</p>
-                )}
-              </div>
+            <div className="w-11 h-11 rounded-xl bg-amber-100 flex items-center justify-center">
+              <FileText className="w-5 h-5 text-amber-600" />
             </div>
-            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+            <div className="flex-1 text-left min-w-0">
+              <p className="text-xs font-medium text-muted-foreground">Related Case</p>
+              <p className={cn("text-base font-semibold mt-0.5 truncate", selectedCase ? "text-foreground" : "text-muted-foreground")}>
+                {selectedCase ? selectedCase.case_title : 'None (optional)'}
+              </p>
+              {selectedCase?.case_number && (
+                <p className="text-xs text-muted-foreground truncate">{selectedCase.case_number}</p>
+              )}
+            </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
           </button>
         </div>
 
-        {/* Notes Section */}
-        <div className="py-4 border-t border-border space-y-3">
-          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Notes</h3>
+        {/* Notes */}
+        <div className="m-4">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2.5">Notes</p>
           <Textarea
             value={formData.notes}
             onChange={e => handleInputChange('notes', e.target.value)}
             placeholder="Add notes, agenda, or discussion points..."
-            className="min-h-[100px] rounded-xl resize-none"
+            className="min-h-[100px] rounded-xl resize-none bg-background border-border"
           />
         </div>
       </div>
 
       {/* Fixed Bottom Action */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t border-border safe-area-pb">
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-sm border-t border-border safe-area-pb">
         <Button 
           onClick={handleSubmit} 
           disabled={loading || !formData.appointment_time || !formData.client_id || !formData.lawyer_id}
-          className="w-full h-14 rounded-2xl text-base font-semibold"
+          className="w-full h-14 rounded-2xl text-base font-bold shadow-lg"
         >
           {loading ? 'Creating...' : 'Create Appointment'}
         </Button>
@@ -528,40 +579,28 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
   );
 
   const renderDatePicker = () => (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-        <button onClick={() => setStep('form')} className="p-2 -ml-2">
-          <X className="w-5 h-5" />
-        </button>
-        <h3 className="font-semibold">Select Date</h3>
-        <div className="w-9" />
-      </div>
-      <div className="flex-1 flex items-start justify-center pt-4">
+    <div className="flex flex-col h-full bg-background">
+      <PickerHeader title="Select Date" />
+      <div className="flex-1 flex items-start justify-center pt-6 px-4">
         <CalendarComponent
           mode="single"
           selected={formData.appointment_date}
           onSelect={(date) => {
             if (date) {
               handleInputChange('appointment_date', date);
-              setStep('form');
+              goBack();
             }
           }}
           disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-          className="rounded-xl border-0"
+          className="rounded-2xl border border-border shadow-sm"
         />
       </div>
     </div>
   );
 
   const renderTimePicker = () => (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-        <button onClick={() => setStep('form')} className="p-2 -ml-2">
-          <X className="w-5 h-5" />
-        </button>
-        <h3 className="font-semibold">Select Time</h3>
-        <div className="w-9" />
-      </div>
+    <div className="flex flex-col h-full bg-background">
+      <PickerHeader title="Select Time" />
       <div className="flex-1 overflow-y-auto p-4">
         <div className="grid grid-cols-3 gap-2">
           {TIME_SLOTS.map(time => {
@@ -571,13 +610,13 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
                 key={time}
                 onClick={() => {
                   handleInputChange('appointment_time', time);
-                  setStep('form');
+                  goBack();
                 }}
                 className={cn(
-                  "py-3 px-4 rounded-xl text-sm font-medium transition-all active:scale-95",
+                  "py-4 rounded-xl text-sm font-semibold transition-all active:scale-95",
                   isSelected 
-                    ? "bg-primary text-primary-foreground" 
-                    : "bg-card border border-border text-foreground"
+                    ? "bg-foreground text-background shadow-lg" 
+                    : "bg-muted text-foreground"
                 )}
               >
                 {format(new Date(`2000-01-01T${time}`), 'h:mm a')}
@@ -590,123 +629,95 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
   );
 
   const renderClientPicker = () => (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-        <button onClick={() => setStep('form')} className="p-2 -ml-2">
-          <X className="w-5 h-5" />
-        </button>
-        <h3 className="font-semibold">Select Client</h3>
-        <div className="w-9" />
-      </div>
-      <div className="p-4 border-b border-border">
-        <Input
-          placeholder="Search clients..."
-          value={clientSearch}
-          onChange={e => setClientSearch(e.target.value)}
-          className="h-12 rounded-xl"
-        />
-      </div>
+    <div className="flex flex-col h-full bg-background">
+      <PickerHeader title="Select Client" />
+      <SearchInput value={clientSearch} onChange={setClientSearch} placeholder="Search clients..." />
       <div className="flex-1 overflow-y-auto">
-        {filteredClients.map(client => (
-          <button
-            key={client.id}
-            onClick={() => {
-              handleInputChange('client_id', client.id);
-              setClientSearch('');
-              setStep('form');
-            }}
-            className={cn(
-              "w-full flex items-center gap-3 px-4 py-4 border-b border-border active:bg-accent transition-colors",
-              formData.client_id === client.id && "bg-accent/50"
-            )}
-          >
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <span className="text-sm font-semibold text-primary">
-                {client.full_name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-              </span>
-            </div>
-            <span className="font-medium text-foreground">{client.full_name}</span>
-          </button>
-        ))}
+        {filteredClients.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+            <User className="w-12 h-12 mb-3 opacity-30" />
+            <p className="text-sm">No clients found</p>
+          </div>
+        ) : (
+          filteredClients.map(client => {
+            const isSelected = formData.client_id === client.id;
+            return (
+              <button
+                key={client.id}
+                onClick={() => {
+                  handleInputChange('client_id', client.id);
+                  goBack();
+                }}
+                className={cn(
+                  "w-full flex items-center gap-4 px-4 py-4 border-b border-border active:bg-muted/50 transition-colors",
+                  isSelected && "bg-primary/5"
+                )}
+              >
+                <Avatar name={client.full_name} color="bg-emerald-100" textColor="text-emerald-700" />
+                <span className="flex-1 text-left font-medium text-foreground">{client.full_name}</span>
+                {isSelected && (
+                  <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                    <Check className="w-4 h-4 text-primary-foreground" />
+                  </div>
+                )}
+              </button>
+            );
+          })
+        )}
       </div>
     </div>
   );
 
   const renderLawyerPicker = () => (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-        <button onClick={() => setStep('form')} className="p-2 -ml-2">
-          <X className="w-5 h-5" />
-        </button>
-        <h3 className="font-semibold">Select Lawyer</h3>
-        <div className="w-9" />
-      </div>
-      <div className="p-4 border-b border-border">
-        <Input
-          placeholder="Search team members..."
-          value={lawyerSearch}
-          onChange={e => setLawyerSearch(e.target.value)}
-          className="h-12 rounded-xl"
-        />
-      </div>
+    <div className="flex flex-col h-full bg-background">
+      <PickerHeader title="Assigned To" />
+      <SearchInput value={lawyerSearch} onChange={setLawyerSearch} placeholder="Search team members..." />
       <div className="flex-1 overflow-y-auto">
-        {filteredLawyers.map(lawyer => (
-          <button
-            key={lawyer.id}
-            onClick={() => {
-              handleInputChange('lawyer_id', lawyer.id);
-              setLawyerSearch('');
-              setStep('form');
-            }}
-            className={cn(
-              "w-full flex items-center justify-between px-4 py-4 border-b border-border active:bg-accent transition-colors",
-              formData.lawyer_id === lawyer.id && "bg-accent/50"
-            )}
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center">
-                <span className="text-sm font-semibold text-accent-foreground">
-                  {lawyer.full_name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                </span>
-              </div>
-              <div className="text-left">
-                <p className="font-medium text-foreground">{lawyer.full_name}</p>
-                <p className="text-sm text-muted-foreground capitalize">{lawyer.role}</p>
-              </div>
-            </div>
-            {formData.lawyer_id === lawyer.id && (
-              <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                <svg className="w-3 h-3 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-            )}
-          </button>
-        ))}
+        {filteredLawyers.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+            <Briefcase className="w-12 h-12 mb-3 opacity-30" />
+            <p className="text-sm">No team members found</p>
+          </div>
+        ) : (
+          filteredLawyers.map(lawyer => {
+            const isSelected = formData.lawyer_id === lawyer.id;
+            return (
+              <button
+                key={lawyer.id}
+                onClick={() => {
+                  handleInputChange('lawyer_id', lawyer.id);
+                  goBack();
+                }}
+                className={cn(
+                  "w-full flex items-center gap-4 px-4 py-4 border-b border-border active:bg-muted/50 transition-colors",
+                  isSelected && "bg-primary/5"
+                )}
+              >
+                <Avatar name={lawyer.full_name} color="bg-blue-100" textColor="text-blue-700" />
+                <div className="flex-1 text-left">
+                  <p className="font-medium text-foreground">{lawyer.full_name}</p>
+                  <p className="text-sm text-muted-foreground capitalize">{lawyer.role}</p>
+                </div>
+                {isSelected && (
+                  <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                    <Check className="w-4 h-4 text-primary-foreground" />
+                  </div>
+                )}
+              </button>
+            );
+          })
+        )}
       </div>
     </div>
   );
 
   const renderAddTeamPicker = () => (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-        <button onClick={() => setStep('form')} className="p-2 -ml-2">
-          <X className="w-5 h-5" />
-        </button>
-        <h3 className="font-semibold">Add Team Member</h3>
-        <div className="w-9" />
-      </div>
-      <div className="p-4 border-b border-border">
-        <Input
-          placeholder="Search team members..."
-          value={teamSearch}
-          onChange={e => setTeamSearch(e.target.value)}
-          className="h-12 rounded-xl"
-        />
-      </div>
+    <div className="flex flex-col h-full bg-background">
+      <PickerHeader title="Add Team Member" />
+      <SearchInput value={teamSearch} onChange={setTeamSearch} placeholder="Search team members..." />
       <div className="flex-1 overflow-y-auto">
         {availableTeamMembers.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+          <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
             <Users className="w-12 h-12 mb-3 opacity-30" />
             <p className="text-sm">No more team members to add</p>
           </div>
@@ -715,18 +726,12 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
             <button
               key={lawyer.id}
               onClick={() => handleAddTeamMember(lawyer.id)}
-              className="w-full flex items-center justify-between px-4 py-4 border-b border-border active:bg-accent transition-colors"
+              className="w-full flex items-center gap-4 px-4 py-4 border-b border-border active:bg-muted/50 transition-colors"
             >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center">
-                  <span className="text-sm font-semibold text-accent-foreground">
-                    {lawyer.full_name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                  </span>
-                </div>
-                <div className="text-left">
-                  <p className="font-medium text-foreground">{lawyer.full_name}</p>
-                  <p className="text-sm text-muted-foreground capitalize">{lawyer.role}</p>
-                </div>
+              <Avatar name={lawyer.full_name} color="bg-violet-100" textColor="text-violet-700" />
+              <div className="flex-1 text-left">
+                <p className="font-medium text-foreground">{lawyer.full_name}</p>
+                <p className="text-sm text-muted-foreground capitalize">{lawyer.role}</p>
               </div>
               <UserPlus className="w-5 h-5 text-primary" />
             </button>
@@ -737,53 +742,34 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
   );
 
   const renderCasePicker = () => (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-        <button onClick={() => { setStep('form'); setCaseSearch(''); }} className="p-2 -ml-2">
-          <X className="w-5 h-5" />
-        </button>
-        <h3 className="font-semibold">Select Case</h3>
-        <div className="w-9" />
-      </div>
-      <div className="p-4 border-b border-border">
-        <Input
-          placeholder="Search by case title or number..."
-          value={caseSearch}
-          onChange={e => setCaseSearch(e.target.value)}
-          className="h-12 rounded-xl"
-          autoFocus
-        />
-      </div>
+    <div className="flex flex-col h-full bg-background">
+      <PickerHeader title="Related Case" />
+      <SearchInput value={caseSearch} onChange={setCaseSearch} placeholder="Search by title or number..." />
       <div className="flex-1 overflow-y-auto">
         {/* No case option */}
         <button
           onClick={() => {
             handleInputChange('case_id', '');
-            setCaseSearch('');
-            setStep('form');
+            goBack();
           }}
           className={cn(
-            "w-full flex items-center justify-between px-4 py-4 border-b border-border active:bg-accent transition-colors",
-            !formData.case_id && "bg-primary/10"
+            "w-full flex items-center gap-4 px-4 py-4 border-b border-border active:bg-muted/50 transition-colors",
+            !formData.case_id && "bg-primary/5"
           )}
         >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
-              <X className="w-5 h-5 text-muted-foreground" />
-            </div>
-            <p className="font-medium text-foreground">No case</p>
+          <div className="w-11 h-11 rounded-xl bg-muted flex items-center justify-center">
+            <X className="w-5 h-5 text-muted-foreground" />
           </div>
+          <span className="flex-1 text-left font-medium text-foreground">No case</span>
           {!formData.case_id && (
-            <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-              <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-              </svg>
+            <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+              <Check className="w-4 h-4 text-primary-foreground" />
             </div>
           )}
         </button>
 
         {filteredCases.length === 0 && caseSearch ? (
-          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+          <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
             <FileText className="w-12 h-12 mb-3 opacity-30" />
             <p className="text-sm">No cases found</p>
           </div>
@@ -795,30 +781,25 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
                 key={caseItem.id}
                 onClick={() => {
                   handleInputChange('case_id', caseItem.id);
-                  setCaseSearch('');
-                  setStep('form');
+                  goBack();
                 }}
                 className={cn(
-                  "w-full flex items-center justify-between px-4 py-4 border-b border-border active:bg-accent transition-colors",
-                  isSelected && "bg-primary/10"
+                  "w-full flex items-center gap-4 px-4 py-4 border-b border-border active:bg-muted/50 transition-colors",
+                  isSelected && "bg-primary/5"
                 )}
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-primary" />
-                  </div>
-                  <div className="text-left">
-                    <p className="font-medium text-foreground">{caseItem.case_title}</p>
-                    {caseItem.case_number && (
-                      <p className="text-sm text-muted-foreground">{caseItem.case_number}</p>
-                    )}
-                  </div>
+                <div className="w-11 h-11 rounded-xl bg-amber-100 flex items-center justify-center">
+                  <FileText className="w-5 h-5 text-amber-600" />
+                </div>
+                <div className="flex-1 text-left min-w-0">
+                  <p className="font-medium text-foreground truncate">{caseItem.case_title}</p>
+                  {caseItem.case_number && (
+                    <p className="text-sm text-muted-foreground truncate">{caseItem.case_number}</p>
+                  )}
                 </div>
                 {isSelected && (
-                  <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                    </svg>
+                  <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center shrink-0">
+                    <Check className="w-4 h-4 text-primary-foreground" />
                   </div>
                 )}
               </button>
@@ -831,17 +812,8 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
 
   return (
     <Sheet open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <SheetContent side="bottom" className="h-[95vh] rounded-t-3xl p-0">
-        <SheetHeader className="px-4 py-4 border-b border-border">
-          <div className="flex items-center justify-between">
-            <SheetTitle className="text-lg font-semibold">New Appointment</SheetTitle>
-            <button onClick={onClose} className="p-2 -mr-2 rounded-full hover:bg-accent">
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-        </SheetHeader>
-        
-        <div className="h-[calc(95vh-60px)]">
+      <SheetContent side="bottom" className="h-[95vh] rounded-t-3xl p-0 overflow-hidden">
+        <div className="h-full">
           {step === 'form' && renderFormView()}
           {step === 'date' && renderDatePicker()}
           {step === 'time' && renderTimePicker()}
