@@ -1,4 +1,4 @@
-// WebDAV upload handler - v2.1.0 - 200MB file size limit (redeployed 2026-01-23T11:00)
+// WebDAV upload handler - v2.2.0 - 200MB limit + relaxed case name validation (deployed 2026-01-23T11:15)
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts'
 
