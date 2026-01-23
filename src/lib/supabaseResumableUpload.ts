@@ -53,7 +53,32 @@ export async function uploadResumableToSupabaseStorage({
       chunkSize: 6 * 1024 * 1024,
       onError: (error) => {
         console.error('❌ Resumable upload error:', error);
-        reject(new Error(`Resumable upload failed: ${error.message || error}`));
+
+        const rawMsg = (error as any)?.message ? String((error as any).message) : String(error);
+        const msgLower = rawMsg.toLowerCase();
+
+        // Supabase Storage returns 413 when bucket file_size_limit is exceeded.
+        // tus-js-client wraps it as an error message including the request + status.
+        const looksLikeBucketLimit =
+          msgLower.includes('maximum size exceeded') ||
+          msgLower.includes('payload too large') ||
+          msgLower.includes('response code: 413') ||
+          msgLower.includes(' 413');
+
+        if (looksLikeBucketLimit) {
+          reject(
+            new Error(
+              [
+                'Upload failed: your Supabase Storage bucket has a file size limit and rejected this file (HTTP 413).',
+                "Fix: increase the 'documents' bucket file_size_limit (e.g., 200MB) in Supabase.",
+                "SQL (run in Supabase SQL Editor): update storage.buckets set file_size_limit = 209715200 where id = 'documents';",
+              ].join(' ')
+            )
+          );
+          return;
+        }
+
+        reject(new Error(`Resumable upload failed: ${rawMsg}`));
       },
       onProgress: (bytesUploaded, bytesTotal) => {
         const pct = bytesTotal ? (bytesUploaded / bytesTotal) * 100 : 0;
