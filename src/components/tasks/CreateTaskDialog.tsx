@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,7 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { ClientSelector } from '@/components/appointments/ClientSelector';
 import { CaseSelector } from '@/components/appointments/CaseSelector';
-import { Mic, MicOff, Loader2 } from 'lucide-react';
+import { Mic, MicOff, Loader2, CheckSquare, FileText, Calendar, User, Tag, Bell, Link, X } from 'lucide-react';
 import { AudioRecorder } from '@/utils/audioRecorder';
 import { useDeepgramTranscription } from '@/hooks/useDeepgramTranscription';
 
@@ -71,7 +71,6 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
     }
   });
 
-  // Set default client_contact_id if provided as prop
   useEffect(() => {
     if (clientId) {
       setValue('client_contact_id', clientId);
@@ -79,10 +78,11 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   }, [clientId, setValue]);
 
   const linkType = watch('link_type');
+  const watchedPriority = watch('priority');
+  const watchedStatus = watch('status');
 
   const toggleDictation = async () => {
     if (isDictating) {
-      // Stop dictation and transcribe
       setIsDictating(false);
       
       try {
@@ -122,7 +122,6 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
         });
       }
     } else {
-      // Start dictation
       try {
         await audioRecorderRef.current.startRecording();
         setIsDictating(true);
@@ -141,7 +140,6 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
     }
   };
 
-  // Fetch team members for assignment
   const { data: teamMembers = [] } = useQuery({
     queryKey: ['team-members-for-tasks', firmId],
     queryFn: async () => {
@@ -154,7 +152,6 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       
       if (error) throw error;
       
-      // Map to expected shape and sort to always show "chitrajeet upadhyaya" first
       const mapped = (data || []).map(tm => ({
         id: tm.user_id,
         full_name: tm.full_name,
@@ -173,17 +170,13 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
     enabled: !!firmId
   });
 
-  // Fetch cases for linking (keep for reference, but CaseSelector handles its own fetching)
-
   const createTaskMutation = useMutation({
     mutationFn: async (data: TaskFormData) => {
       const user = await supabase.auth.getUser();
       if (!user.data.user) throw new Error('Not authenticated');
 
-      // Determine if client_contact_id is a client (contacts not supported in tasks table)
-      let clientId = null;
+      let clientIdToUse = null;
       if (data.link_type === 'client_contact' && data.client_contact_id) {
-        // Check if it's a client
         const { data: clientCheck } = await supabase
           .from('clients')
           .select('id')
@@ -191,9 +184,8 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
           .maybeSingle();
         
         if (clientCheck) {
-          clientId = data.client_contact_id;
+          clientIdToUse = data.client_contact_id;
         }
-        // If not a client, we can't link to contacts (column doesn't exist)
       }
 
       const taskData: any = {
@@ -206,7 +198,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
         due_date: data.due_date ? new Date(data.due_date).toISOString().split('T')[0] : null,
         reminder_time: data.reminder_time ? new Date(data.reminder_time).toISOString() : null,
         case_id: data.link_type === 'case' ? data.case_id || null : null,
-        client_id: clientId || null,
+        client_id: clientIdToUse || null,
         contact_id: contactId || null,
         created_by: user.data.user.id,
         firm_id: firmId,
@@ -224,26 +216,20 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       return createdTask;
     },
     onMutate: async (newTask) => {
-      // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['tasks'] });
-      
-      // Snapshot previous value
       const previousTasks = queryClient.getQueryData(['tasks']);
       
-      // Optimistically update to cache
       queryClient.setQueryData(['tasks'], (old: any) => {
         if (!old) return [{ ...newTask, id: 'temp-' + Date.now() }];
         return [{ ...newTask, id: 'temp-' + Date.now(), created_at: new Date().toISOString() }, ...old];
       });
       
-      // Also update dashboard if needed
       await queryClient.cancelQueries({ queryKey: ['dashboard-data'] });
       const previousDashboard = queryClient.getQueryData(['dashboard-data']);
       
       return { previousTasks, previousDashboard };
     },
     onError: (error, _variables, context: any) => {
-      // Rollback on error
       if (context?.previousTasks) {
         queryClient.setQueryData(['tasks'], context.previousTasks);
       }
@@ -263,7 +249,6 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       onClose();
     },
     onSettled: () => {
-      // Always refetch after error or success
       queryClient.invalidateQueries({ queryKey: ['case-tasks'] });
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
@@ -281,237 +266,318 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
     createTaskMutation.mutate(data);
   };
 
+  const priorityOptions = [
+    { value: 'low', label: 'Low', bg: 'bg-slate-100', activeBg: 'bg-slate-200', text: 'text-slate-700' },
+    { value: 'medium', label: 'Medium', bg: 'bg-amber-50', activeBg: 'bg-amber-100', text: 'text-amber-700' },
+    { value: 'high', label: 'High', bg: 'bg-rose-50', activeBg: 'bg-rose-100', text: 'text-rose-700' },
+    { value: 'critical', label: 'Critical', bg: 'bg-red-100', activeBg: 'bg-red-200', text: 'text-red-700' },
+  ];
+
+  const statusOptions = [
+    { value: 'todo', label: 'To Do', bg: 'bg-slate-100', activeBg: 'bg-slate-200', text: 'text-slate-700' },
+    { value: 'in_progress', label: 'In Progress', bg: 'bg-sky-50', activeBg: 'bg-sky-100', text: 'text-sky-700' },
+    { value: 'completed', label: 'Done', bg: 'bg-emerald-50', activeBg: 'bg-emerald-100', text: 'text-emerald-700' },
+  ];
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white border border-gray-200 shadow-lg">
-        <DialogHeader className="pb-4 border-b border-gray-100">
-          <DialogTitle className="text-xl font-semibold text-gray-900">Create New Task</DialogTitle>
-        </DialogHeader>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 pt-4">
-          <div className="space-y-2">
-            <Label htmlFor="title" className="text-sm font-medium text-gray-700">
-              Task Title *
-            </Label>
-            <Input
-              id="title"
-              {...register('title', { required: 'Task title is required' })}
-              placeholder="Enter task title..."
-              className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-            />
-            {errors.title && <p className="text-sm text-red-600">{errors.title.message}</p>}
+      <DialogContent className="max-w-2xl w-full h-full md:h-auto md:max-h-[90vh] p-0 overflow-hidden bg-slate-50 border-0 md:rounded-2xl">
+        <div className="flex flex-col h-full">
+          {/* Header */}
+          <div className="px-6 py-5 bg-white border-b border-slate-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-foreground">Create New Task</h2>
+                <p className="text-sm text-muted-foreground mt-1">Add a new task to your workflow</p>
+              </div>
+              <button 
+                onClick={onClose}
+                className="md:hidden w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center"
+              >
+                <X className="w-4 h-4 text-slate-500" />
+              </button>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="description" className="text-sm font-medium text-gray-700">
-                Description
-              </Label>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={toggleDictation}
-                disabled={isTranscribing}
-                className={`${isDictating 
-                  ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100' 
-                  : 'text-blue-600 border-blue-200 hover:bg-blue-50'}`}
-              >
-                {isTranscribing ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Transcribing...
-                  </>
-                ) : isDictating ? (
-                  <>
-                    <MicOff className="w-4 h-4 mr-2" />
-                    Stop Dictation
-                  </>
-                ) : (
-                  <>
-                    <Mic className="w-4 h-4 mr-2" />
-                    Dictate
-                  </>
+          {/* Form Content */}
+          <div className="flex-1 overflow-y-auto px-6 py-6">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              
+              {/* Title Card */}
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-4 border-b border-slate-100">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+                      <CheckSquare className="w-5 h-5 text-emerald-500" />
+                    </div>
+                    <div>
+                      <Label htmlFor="title" className="text-sm font-semibold text-foreground">
+                        Task Title <span className="text-destructive">*</span>
+                      </Label>
+                      <p className="text-xs text-muted-foreground">What needs to be done?</p>
+                    </div>
+                  </div>
+                  <Input
+                    id="title"
+                    {...register('title', { required: 'Task title is required' })}
+                    placeholder="Enter task title..."
+                    className="bg-slate-50 border-slate-200 rounded-xl h-11"
+                  />
+                  {errors.title && <p className="text-sm text-destructive mt-2">{errors.title.message}</p>}
+                </div>
+              </div>
+
+              {/* Description Card */}
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-4 border-b border-slate-100">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center">
+                        <FileText className="w-5 h-5 text-sky-500" />
+                      </div>
+                      <div>
+                        <Label htmlFor="description" className="text-sm font-semibold text-foreground">Description</Label>
+                        <p className="text-xs text-muted-foreground">Add more details</p>
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={toggleDictation}
+                      disabled={isTranscribing}
+                      className={`rounded-full ${isDictating 
+                        ? 'bg-rose-50 text-rose-600 border-rose-200' 
+                        : 'bg-slate-50 border-slate-200'}`}
+                    >
+                      {isTranscribing ? (
+                        <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Transcribing</>
+                      ) : isDictating ? (
+                        <><MicOff className="w-4 h-4 mr-2" />Stop</>
+                      ) : (
+                        <><Mic className="w-4 h-4 mr-2" />Dictate</>
+                      )}
+                    </Button>
+                  </div>
+                  <div className="relative">
+                    <Textarea
+                      id="description"
+                      {...register('description')}
+                      placeholder="Enter task description or click Dictate to speak..."
+                      className="bg-slate-50 border-slate-200 rounded-xl min-h-[100px] resize-none"
+                      rows={4}
+                    />
+                    {isDictating && (
+                      <div className="absolute bottom-2 right-2 flex items-center gap-2 text-rose-500 text-sm">
+                        <span className="animate-pulse">●</span> Recording...
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Priority & Status Card */}
+              <div className="bg-white rounded-2xl shadow-sm p-4">
+                <div className="space-y-4">
+                  {/* Priority */}
+                  <div>
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 block">Priority</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {priorityOptions.map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => setValue('priority', option.value as any)}
+                          className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                            watchedPriority === option.value
+                              ? `${option.activeBg} ${option.text} ring-2 ring-offset-1 ring-current`
+                              : `${option.bg} ${option.text} hover:opacity-80`
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Status */}
+                  <div>
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 block">Status</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {statusOptions.map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => setValue('status', option.value as any)}
+                          className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                            watchedStatus === option.value
+                              ? `${option.activeBg} ${option.text} ring-2 ring-offset-1 ring-current`
+                              : `${option.bg} ${option.text} hover:opacity-80`
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Assignee Card */}
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-4 border-b border-slate-100">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
+                      <User className="w-5 h-5 text-violet-500" />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-semibold text-foreground">Assign To</Label>
+                      <p className="text-xs text-muted-foreground">Who will work on this?</p>
+                    </div>
+                  </div>
+                  <Select onValueChange={(value) => setValue('assigned_to', value)}>
+                    <SelectTrigger className="bg-slate-50 border-slate-200 rounded-xl h-11">
+                      <SelectValue placeholder="Select team member..." />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border-slate-200 rounded-xl">
+                      {teamMembers.map((member) => (
+                        <SelectItem key={member.id} value={member.id}>
+                          {member.full_name} ({member.role})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Link To Card */}
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-4 border-b border-slate-100">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center">
+                      <Link className="w-5 h-5 text-rose-500" />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-semibold text-foreground">Link To</Label>
+                      <p className="text-xs text-muted-foreground">Connect to case or client</p>
+                    </div>
+                  </div>
+                  <Select 
+                    onValueChange={(value) => setValue('link_type', value as any)} 
+                    defaultValue={caseId ? 'case' : (clientId ? 'client_contact' : 'none')}
+                  >
+                    <SelectTrigger className="bg-slate-50 border-slate-200 rounded-xl h-11">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border-slate-200 rounded-xl">
+                      <SelectItem value="none">No Link</SelectItem>
+                      <SelectItem value="case">Link to Case</SelectItem>
+                      <SelectItem value="client_contact">Link to Client/Contact</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {linkType === 'case' && (
+                  <div className="p-4 bg-slate-50/50">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 block">Select Case</Label>
+                    <CaseSelector
+                      value={watch('case_id') || ''}
+                      onValueChange={(value) => setValue('case_id', value)}
+                      placeholder="Search and select a case..."
+                    />
+                  </div>
                 )}
+
+                {linkType === 'client_contact' && (
+                  <div className="p-4 bg-slate-50/50">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 block">Select Client or Contact</Label>
+                    <ClientSelector
+                      value={watch('client_contact_id') || ''}
+                      onValueChange={(value) => setValue('client_contact_id', value)}
+                      placeholder="Search and select..."
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Due Date & Reminder Card */}
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-4 border-b border-slate-100">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
+                      <Calendar className="w-5 h-5 text-amber-500" />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-semibold text-foreground">Schedule</Label>
+                      <p className="text-xs text-muted-foreground">Set due date and reminder</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Due Date</Label>
+                    <Input
+                      type="date"
+                      {...register('due_date')}
+                      className="bg-slate-50 border-slate-200 rounded-xl h-11"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Reminder</Label>
+                    <Input
+                      type="datetime-local"
+                      {...register('reminder_time')}
+                      className="bg-slate-50 border-slate-200 rounded-xl h-11"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Tags Card */}
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-4 border-b border-slate-100">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center">
+                      <Tag className="w-5 h-5 text-slate-500" />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-semibold text-foreground">Tags</Label>
+                      <p className="text-xs text-muted-foreground">Separate with commas</p>
+                    </div>
+                  </div>
+                  <Input
+                    {...register('tags')}
+                    placeholder="urgent, follow-up, client-work..."
+                    className="bg-slate-50 border-slate-200 rounded-xl h-11"
+                  />
+                </div>
+              </div>
+
+            </form>
+          </div>
+
+          {/* Footer Actions */}
+          <div className="px-6 py-4 border-t border-slate-100 bg-white">
+            <div className="flex justify-end gap-3">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={onClose}
+                className="min-w-[100px] rounded-full border-slate-200"
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit"
+                onClick={handleSubmit(onSubmit)}
+                disabled={isSubmitting}
+                className="min-w-[140px] bg-slate-800 hover:bg-slate-700 text-white rounded-full shadow-lg"
+              >
+                {isSubmitting ? 'Creating...' : 'Create Task'}
               </Button>
             </div>
-            <div className="relative">
-              <Textarea
-                id="description"
-                {...register('description')}
-                placeholder="Enter task description or click Dictate to speak..."
-                className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 min-h-[100px]"
-                rows={4}
-              />
-              {isDictating && (
-                <div className="absolute bottom-2 right-2 flex items-center gap-2 text-red-500 text-sm">
-                  <span className="animate-pulse">●</span> Recording...
-                </div>
-              )}
-            </div>
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="link_type" className="text-sm font-medium text-gray-700">
-              Link To
-            </Label>
-            <Select 
-              onValueChange={(value) => setValue('link_type', value as any)} 
-              defaultValue={caseId ? 'case' : (clientId ? 'client_contact' : 'none')}
-            >
-              <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                <SelectItem value="none" className="hover:bg-gray-50">No Link</SelectItem>
-                <SelectItem value="case" className="hover:bg-gray-50">Link to Case</SelectItem>
-                <SelectItem value="client_contact" className="hover:bg-gray-50">Link to Client/Contact</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {linkType === 'case' && (
-            <div className="space-y-2">
-              <Label htmlFor="case_id" className="text-sm font-medium text-gray-700">
-                Select Case {caseId && <span className="text-green-600 text-xs">(Auto-linked)</span>}
-              </Label>
-              <CaseSelector
-                value={watch('case_id') || ''}
-                onValueChange={(value) => setValue('case_id', value)}
-                placeholder="Search and select a case..."
-              />
-            </div>
-          )}
-
-          {linkType === 'client_contact' && (
-            <div className="space-y-2">
-              <Label htmlFor="client_contact_id" className="text-sm font-medium text-gray-700">
-                Select Client or Contact
-              </Label>
-              <ClientSelector
-                value={watch('client_contact_id') || ''}
-                onValueChange={(value) => setValue('client_contact_id', value)}
-                placeholder="Search and select a client or contact..."
-              />
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="priority" className="text-sm font-medium text-gray-700">
-                Priority
-              </Label>
-              <Select onValueChange={(value) => setValue('priority', value as any)} defaultValue="medium">
-                <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                  <SelectItem value="low" className="hover:bg-gray-50">Low</SelectItem>
-                  <SelectItem value="medium" className="hover:bg-gray-50">Medium</SelectItem>
-                  <SelectItem value="high" className="hover:bg-gray-50">High</SelectItem>
-                  <SelectItem value="critical" className="hover:bg-gray-50">Critical</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="status" className="text-sm font-medium text-gray-700">
-                Status
-              </Label>
-              <Select onValueChange={(value) => setValue('status', value as any)} defaultValue="todo">
-                <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                  <SelectItem value="todo" className="hover:bg-gray-50">To Do</SelectItem>
-                  <SelectItem value="in_progress" className="hover:bg-gray-50">In Progress</SelectItem>
-                  <SelectItem value="completed" className="hover:bg-gray-50">Completed</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="assigned_to" className="text-sm font-medium text-gray-700">
-              Assign To
-            </Label>
-            <Select onValueChange={(value) => setValue('assigned_to', value)}>
-              <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                <SelectValue placeholder="Select team member..." />
-              </SelectTrigger>
-              <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                {teamMembers.map((member) => (
-                  <SelectItem key={member.id} value={member.id} className="hover:bg-gray-50">
-                    {member.full_name} ({member.role})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="due_date" className="text-sm font-medium text-gray-700">
-                Due Date
-              </Label>
-              <Input
-                id="due_date"
-                type="date"
-                {...register('due_date')}
-                className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="reminder_time" className="text-sm font-medium text-gray-700">
-                Reminder
-              </Label>
-              <Input
-                id="reminder_time"
-                type="datetime-local"
-                {...register('reminder_time')}
-                className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="tags" className="text-sm font-medium text-gray-700">
-              Tags
-            </Label>
-            <Input
-              id="tags"
-              {...register('tags')}
-              placeholder="Enter tags separated by commas..."
-              className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-            />
-            <p className="text-xs text-gray-500">Separate multiple tags with commas</p>
-          </div>
-
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-sm text-blue-800">
-              <strong>Note:</strong> After creating the task, you can add attachments, comments, and view the timeline in the task details.
-            </p>
-          </div>
-
-          <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              className="px-6 py-2 border-gray-300 bg-red-700 hover:bg-red-600 text-slate-50"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-6 py-2 text-white bg-slate-800 hover:bg-slate-700"
-            >
-              {isSubmitting ? 'Creating...' : 'Create Task'}
-            </Button>
-          </div>
-        </form>
+        </div>
       </DialogContent>
     </Dialog>
   );
