@@ -147,13 +147,16 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
 
   const startRecording = async () => {
     try {
+      console.log('Starting recording...');
       await audioRecorderRef.current.startRecording();
       setIsRecording(true);
+      console.log('Recording started successfully');
       toast({ title: "Recording started", description: "Speak now..." });
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Recording failed:', error);
       toast({
         title: "Recording failed",
-        description: "Could not access microphone",
+        description: error?.message || "Could not access microphone. Please allow microphone access.",
         variant: "destructive"
       });
     }
@@ -161,14 +164,19 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
 
   const stopRecording = async () => {
     try {
+      console.log('Stopping recording...');
       const blob = await audioRecorderRef.current.stopRecording();
+      console.log('Recording stopped, blob size:', blob.size);
       setAudioBlob(blob);
       setAudioUrl(URL.createObjectURL(blob));
       setIsRecording(false);
-    } catch (error) {
+      toast({ title: "Recording saved", description: "Audio ready to attach" });
+    } catch (error: any) {
+      console.error('Stop recording failed:', error);
+      setIsRecording(false);
       toast({
         title: "Stop recording failed",
-        description: "Could not stop recording",
+        description: error?.message || "Could not stop recording",
         variant: "destructive"
       });
     }
