@@ -375,311 +375,344 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
       <DialogContent className={`${isMobile ? 'h-[100dvh] max-h-[100dvh] w-full max-w-full rounded-none m-0' : 'sm:max-w-2xl max-h-[90vh]'} p-0 gap-0 overflow-hidden`}>
         <div className="flex flex-col h-full bg-slate-50">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 bg-white border-b border-slate-200">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center">
-                <Upload className="w-5 h-5 text-sky-500" />
-              </div>
+          <div className="px-6 py-5 bg-white border-b border-slate-100">
+            <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-slate-900">Upload Documents</h2>
-                <p className="text-xs text-slate-500">Add files to your document library</p>
+                <h2 className="text-xl font-semibold text-foreground">Upload Documents</h2>
+                <p className="text-sm text-muted-foreground mt-1">Add files to your document library</p>
               </div>
+              <button 
+                onClick={onClose}
+                className="md:hidden w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center"
+              >
+                <X className="w-4 h-4 text-slate-500" />
+              </button>
             </div>
-            {isMobile && (
-              <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full">
-                <X className="w-5 h-5" />
-              </Button>
-            )}
           </div>
 
           {/* Scrollable Content */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 overflow-y-auto px-6 py-6">
             <form id="upload-document-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               {/* File Upload Card */}
-              <div className="bg-white rounded-2xl shadow-sm p-4">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center">
-                    <FileText className="w-4 h-4 text-violet-500" />
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-4 border-b border-slate-100">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center">
+                      <Upload className="w-5 h-5 text-sky-500" />
+                    </div>
+                    <div>
+                      <span className="text-sm font-semibold text-foreground">Select Files</span>
+                      <span className="text-destructive"> *</span>
+                      <p className="text-xs text-muted-foreground">Choose documents to upload</p>
+                    </div>
                   </div>
-                  <span className="font-medium text-slate-700">Select Files</span>
-                </div>
 
-                <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center hover:border-sky-300 transition-colors">
-                  <input 
-                    type="file" 
-                    multiple 
-                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.txt" 
-                    onChange={handleFileSelect} 
-                    className="hidden" 
-                    id="file-upload" 
-                  />
-                  <label htmlFor="file-upload" className="cursor-pointer">
-                    <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                    <p className="text-sm text-slate-600">Click to select files or drag and drop</p>
-                    <p className="text-xs text-slate-400 mt-1">PDF, Word, Images, Text files up to 50MB</p>
-                  </label>
-                </div>
+                  <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center hover:border-sky-300 transition-colors bg-slate-50">
+                    <input 
+                      type="file" 
+                      multiple 
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.txt" 
+                      onChange={handleFileSelect} 
+                      className="hidden" 
+                      id="file-upload" 
+                    />
+                    <label htmlFor="file-upload" className="cursor-pointer">
+                      <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+                      <p className="text-sm text-slate-600">Click to select files or drag and drop</p>
+                      <p className="text-xs text-muted-foreground mt-1">PDF, Word, Images, Text files up to 50MB</p>
+                    </label>
+                  </div>
 
-                {selectedFiles.length > 0 && (
-                  <div className="mt-4 space-y-2 max-h-32 overflow-y-auto">
-                    {selectedFiles.map((file, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <FileText className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium text-slate-700 truncate">{file.name}</p>
-                            <p className="text-xs text-slate-400">{formatFileSize(file.size)}</p>
+                  {selectedFiles.length > 0 && (
+                    <div className="mt-4 space-y-2 max-h-32 overflow-y-auto">
+                      {selectedFiles.map((file, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 bg-emerald-50 rounded-xl border border-emerald-200">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <FileText className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-emerald-700 truncate">{file.name}</p>
+                              <p className="text-xs text-emerald-600">{formatFileSize(file.size)}</p>
+                            </div>
                           </div>
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => removeFile(index)} 
+                            className="h-8 w-8 p-0 text-slate-400 hover:text-red-500 rounded-full flex-shrink-0"
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
                         </div>
-                        <Button 
-                          type="button" 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => removeFile(index)} 
-                          className="h-8 w-8 p-0 text-slate-400 hover:text-red-500 rounded-full flex-shrink-0"
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Client & Case Card */}
               {!caseId && (
-                <div className="bg-white rounded-2xl shadow-sm p-4 space-y-4">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
-                      <User className="w-4 h-4 text-emerald-500" />
-                    </div>
-                    <span className="font-medium text-slate-700">Client & Case</span>
-                  </div>
-
-                  <div>
-                    <Label className="text-sm text-slate-600">Select Client *</Label>
-                    <div className="mt-2">
-                      <ClientSelector
-                        value={selectedClientId || ''}
-                        onValueChange={(value) => {
-                          setValue('client_id', value);
-                          setValue('case_id', 'no-case');
-                        }}
-                        placeholder="Search and select client..."
-                        onClientAdded={(clientId) => {
-                          if (clientId) setValue('client_id', clientId);
-                        }}
-                      />
+                <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                  <div className="p-4 border-b border-slate-100">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+                        <User className="w-5 h-5 text-emerald-500" />
+                      </div>
+                      <div>
+                        <span className="text-sm font-semibold text-foreground">Client & Case</span>
+                        <span className="text-destructive"> *</span>
+                        <p className="text-xs text-muted-foreground">Associate with client and case</p>
+                      </div>
                     </div>
                   </div>
+                  <div className="p-4 space-y-4 bg-slate-50/50">
+                    <div>
+                      <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Select Client *</Label>
+                      <div className="mt-2">
+                        <ClientSelector
+                          value={selectedClientId || ''}
+                          onValueChange={(value) => {
+                            setValue('client_id', value);
+                            setValue('case_id', 'no-case');
+                          }}
+                          placeholder="Search and select client..."
+                          onClientAdded={(clientId) => {
+                            if (clientId) setValue('client_id', clientId);
+                          }}
+                        />
+                      </div>
+                    </div>
 
-                  <div>
-                    <Label className="text-sm text-slate-600">Assign to Case *</Label>
-                    <Select 
-                      onValueChange={value => setValue('case_id', value)} 
-                      value={selectedCaseId}
-                      disabled={!selectedClientId}
-                    >
-                      <SelectTrigger className="rounded-xl h-11 mt-2">
-                        <SelectValue placeholder={selectedClientId ? "Select a case..." : "Select client first"} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="no-case">No Case (General Documents)</SelectItem>
-                        {cases
-                          .filter(case_item => !selectedClientId || case_item.client_id === selectedClientId)
-                          .map(case_item => (
-                            <SelectItem key={case_item.id} value={case_item.id}>
-                              {case_item.case_title} {case_item.case_number && `(${case_item.case_number})`}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
+                    <div>
+                      <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Assign to Case *</Label>
+                      <Select 
+                        onValueChange={value => setValue('case_id', value)} 
+                        value={selectedCaseId}
+                        disabled={!selectedClientId}
+                      >
+                        <SelectTrigger className="bg-white border-slate-200 rounded-xl h-11 mt-2">
+                          <SelectValue placeholder={selectedClientId ? "Select a case..." : "Select client first"} />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-slate-200 rounded-xl">
+                          <SelectItem value="no-case">No Case (General Documents)</SelectItem>
+                          {cases
+                            .filter(case_item => !selectedClientId || case_item.client_id === selectedClientId)
+                            .map(case_item => (
+                              <SelectItem key={case_item.id} value={case_item.id}>
+                                {case_item.case_title} {case_item.case_number && `(${case_item.case_number})`}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </div>
               )}
 
               {/* Document Type Card */}
-              <div className="bg-white rounded-2xl shadow-sm p-4 space-y-4">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
-                    <FolderOpen className="w-4 h-4 text-amber-500" />
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-4 border-b border-slate-100">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
+                      <FolderOpen className="w-5 h-5 text-amber-500" />
+                    </div>
+                    <div>
+                      <span className="text-sm font-semibold text-foreground">Document Type</span>
+                      <span className="text-destructive"> *</span>
+                      <p className="text-xs text-muted-foreground">Categorize your document</p>
+                    </div>
                   </div>
-                  <span className="font-medium text-slate-700">Document Type</span>
                 </div>
-
-                <div>
-                  <Label className="text-sm text-slate-600">Primary Type *</Label>
-                  <Select 
-                    onValueChange={value => {
-                      setValue('primary_document_type', value);
-                      setValue('sub_document_type', '');
-                    }} 
-                    value={selectedPrimaryType}
-                  >
-                    <SelectTrigger className="rounded-xl h-11 mt-2">
-                      <SelectValue placeholder="Select document type..." />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-[300px]">
-                      {PRIMARY_DOCUMENT_TYPES.map(type => (
-                        <SelectItem key={type} value={type}>
-                          <span className="flex items-center gap-2">
-                            <span>{DOCUMENT_TYPE_ICONS[type] || '📄'}</span>
-                            <span>{type}</span>
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {selectedPrimaryType && (
+                <div className="p-4 space-y-4 bg-slate-50/50">
                   <div>
-                    <Label className="text-sm text-slate-600">Sub Type *</Label>
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Primary Type *</Label>
                     <Select 
-                      onValueChange={value => setValue('sub_document_type', value)} 
-                      value={selectedSubType}
+                      onValueChange={value => {
+                        setValue('primary_document_type', value);
+                        setValue('sub_document_type', '');
+                      }} 
+                      value={selectedPrimaryType}
                     >
-                      <SelectTrigger className="rounded-xl h-11 mt-2">
-                        <SelectValue placeholder="Select sub-type..." />
+                      <SelectTrigger className="bg-white border-slate-200 rounded-xl h-11 mt-2">
+                        <SelectValue placeholder="Select document type..." />
                       </SelectTrigger>
-                      <SelectContent>
-                        {availableSubTypes.map(type => (
-                          <SelectItem key={type} value={type}>{type}</SelectItem>
+                      <SelectContent className="bg-white border-slate-200 rounded-xl max-h-[300px]">
+                        {PRIMARY_DOCUMENT_TYPES.map(type => (
+                          <SelectItem key={type} value={type}>
+                            <span className="flex items-center gap-2">
+                              <span>{DOCUMENT_TYPE_ICONS[type] || '📄'}</span>
+                              <span>{type}</span>
+                            </span>
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
-                )}
 
-                <StoragePathPreview
-                  clientName={selectedClient?.full_name}
-                  caseTitle={selectedCase?.case_title}
-                  caseNumber={selectedCase?.case_number}
-                  primaryType={selectedPrimaryType}
-                  subType={selectedSubType}
-                  fileName={selectedFiles.length === 1 ? selectedFiles[0].name : selectedFiles.length > 1 ? `${selectedFiles.length} files` : undefined}
-                />
+                  {selectedPrimaryType && (
+                    <div>
+                      <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Sub Type *</Label>
+                      <Select 
+                        onValueChange={value => setValue('sub_document_type', value)} 
+                        value={selectedSubType}
+                      >
+                        <SelectTrigger className="bg-white border-slate-200 rounded-xl h-11 mt-2">
+                          <SelectValue placeholder="Select sub-type..." />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-slate-200 rounded-xl">
+                          {availableSubTypes.map(type => (
+                            <SelectItem key={type} value={type}>{type}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  <StoragePathPreview
+                    clientName={selectedClient?.full_name}
+                    caseTitle={selectedCase?.case_title}
+                    caseNumber={selectedCase?.case_number}
+                    primaryType={selectedPrimaryType}
+                    subType={selectedSubType}
+                    fileName={selectedFiles.length === 1 ? selectedFiles[0].name : selectedFiles.length > 1 ? `${selectedFiles.length} files` : undefined}
+                  />
+                </div>
               </div>
 
               {/* Notes Card */}
-              <div className="bg-white rounded-2xl shadow-sm p-4">
-                <Label className="text-sm text-slate-600">Notes (Optional)</Label>
-                <Textarea
-                  {...register('notes')}
-                  placeholder="Add any additional notes about this document..."
-                  rows={3}
-                  className="rounded-xl mt-2"
-                />
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-4 border-b border-slate-100">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center">
+                      <FileText className="w-5 h-5 text-sky-500" />
+                    </div>
+                    <div>
+                      <span className="text-sm font-semibold text-foreground">Notes</span>
+                      <p className="text-xs text-muted-foreground">Additional information (optional)</p>
+                    </div>
+                  </div>
+                  <Textarea
+                    {...register('notes')}
+                    placeholder="Add any additional notes about this document..."
+                    rows={3}
+                    className="bg-slate-50 border-slate-200 rounded-xl resize-none"
+                  />
+                </div>
               </div>
 
               {/* Document Properties Card */}
-              <div className="bg-white rounded-2xl shadow-sm p-4 space-y-3">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
-                    <Info className="w-4 h-4 text-slate-500" />
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-4 border-b border-slate-100">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
+                      <Info className="w-5 h-5 text-violet-500" />
+                    </div>
+                    <div>
+                      <span className="text-sm font-semibold text-foreground">Document Properties</span>
+                      <p className="text-xs text-muted-foreground">Additional attributes</p>
+                    </div>
                   </div>
-                  <span className="font-medium text-slate-700">Document Properties</span>
-                </div>
 
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-3 p-2 rounded-lg hover:bg-slate-50">
-                    <Checkbox
-                      id="is_evidence"
-                      {...register('is_evidence')}
-                      onCheckedChange={(checked) => setValue('is_evidence', !!checked)}
-                    />
-                    <Label htmlFor="is_evidence" className="text-sm text-slate-600 cursor-pointer">
-                      Mark as important/evidence
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-3 p-2 rounded-lg hover:bg-slate-50">
-                    <Checkbox
-                      id="confidential"
-                      {...register('confidential')}
-                      onCheckedChange={(checked) => setValue('confidential', !!checked)}
-                    />
-                    <Label htmlFor="confidential" className="text-sm text-slate-600 cursor-pointer">
-                      Confidential document
-                    </Label>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Info className="h-4 w-4 text-slate-400 cursor-help" />
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-xs">
-                          <p className="text-sm">Only you, admins, and office staff can view confidential documents.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                  <div className="flex items-center space-x-3 p-2 rounded-lg hover:bg-slate-50">
-                    <Checkbox
-                      id="certified_copy"
-                      {...register('certified_copy')}
-                      onCheckedChange={(checked) => setValue('certified_copy', !!checked)}
-                    />
-                    <Label htmlFor="certified_copy" className="text-sm text-slate-600 cursor-pointer">
-                      Certified copy
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-3 p-2 rounded-lg hover:bg-slate-50">
-                    <Checkbox
-                      id="original_copy_retained"
-                      {...register('original_copy_retained')}
-                      onCheckedChange={(checked) => setValue('original_copy_retained', !!checked)}
-                    />
-                    <Label htmlFor="original_copy_retained" className="text-sm text-slate-600 cursor-pointer">
-                      Original copy retained
-                    </Label>
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-3 p-3 rounded-xl hover:bg-slate-50 transition-colors">
+                      <Checkbox
+                        id="is_evidence"
+                        {...register('is_evidence')}
+                        onCheckedChange={(checked) => setValue('is_evidence', !!checked)}
+                      />
+                      <Label htmlFor="is_evidence" className="text-sm text-foreground cursor-pointer flex-1">
+                        Mark as important/evidence
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-3 p-3 rounded-xl hover:bg-slate-50 transition-colors">
+                      <Checkbox
+                        id="confidential"
+                        {...register('confidential')}
+                        onCheckedChange={(checked) => setValue('confidential', !!checked)}
+                      />
+                      <Label htmlFor="confidential" className="text-sm text-foreground cursor-pointer flex-1">
+                        Confidential document
+                      </Label>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs bg-slate-800 text-white rounded-xl">
+                            <p className="text-sm">Only you, admins, and office staff can view confidential documents.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    <div className="flex items-center space-x-3 p-3 rounded-xl hover:bg-slate-50 transition-colors">
+                      <Checkbox
+                        id="certified_copy"
+                        {...register('certified_copy')}
+                        onCheckedChange={(checked) => setValue('certified_copy', !!checked)}
+                      />
+                      <Label htmlFor="certified_copy" className="text-sm text-foreground cursor-pointer flex-1">
+                        Certified copy
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-3 p-3 rounded-xl hover:bg-slate-50 transition-colors">
+                      <Checkbox
+                        id="original_copy_retained"
+                        {...register('original_copy_retained')}
+                        onCheckedChange={(checked) => setValue('original_copy_retained', !!checked)}
+                      />
+                      <Label htmlFor="original_copy_retained" className="text-sm text-foreground cursor-pointer flex-1">
+                        Original copy retained
+                      </Label>
+                    </div>
                   </div>
                 </div>
               </div>
             </form>
           </div>
 
-          {/* Footer */}
-          <div className="p-4 bg-white border-t border-slate-200">
+          {/* Footer Actions */}
+          <div className="px-6 py-4 border-t border-slate-100 bg-white">
             {showSuccessOptions ? (
               <div className="space-y-3">
                 <div className="flex items-center justify-center gap-2 text-emerald-600 mb-2">
                   <CheckCircle className="w-5 h-5" />
                   <span className="font-medium">Files uploaded successfully!</span>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex justify-end gap-3">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={handleAddMoreFiles}
-                    className="flex-1 rounded-full h-11"
+                    className="min-w-[120px] rounded-full border-slate-200"
                   >
                     <Plus className="w-4 h-4 mr-2" />
-                    Add More Files
+                    Add More
                   </Button>
                   <Button
                     type="button"
                     onClick={handleFinishUploading}
-                    className="flex-1 rounded-full h-11"
+                    className="min-w-[100px] bg-slate-800 hover:bg-slate-700 text-white rounded-full shadow-lg"
                   >
                     Done
                   </Button>
                 </div>
               </div>
             ) : (
-              <div className="flex gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
+              <div className="flex justify-end gap-3">
+                <Button 
+                  type="button" 
+                  variant="outline" 
                   onClick={onClose}
                   disabled={uploadMutation.isPending}
-                  className="flex-1 rounded-full h-11"
+                  className="min-w-[100px] rounded-full border-slate-200"
                 >
                   Cancel
                 </Button>
-                <Button
+                <Button 
                   type="submit"
                   form="upload-document-form"
                   disabled={selectedFiles.length === 0 || uploadMutation.isPending}
-                  className="flex-1 rounded-full h-11"
+                  className="min-w-[140px] bg-slate-800 hover:bg-slate-700 text-white rounded-full shadow-lg"
                 >
                   {uploadMutation.isPending ? (
                     <>
@@ -687,7 +720,10 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                       Uploading...
                     </>
                   ) : (
-                    `Upload ${selectedFiles.length > 0 ? `(${selectedFiles.length})` : ''}`
+                    <>
+                      <Upload className="w-4 h-4 mr-2" />
+                      Upload {selectedFiles.length > 0 ? `(${selectedFiles.length})` : ''}
+                    </>
                   )}
                 </Button>
               </div>
