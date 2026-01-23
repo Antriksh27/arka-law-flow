@@ -8,6 +8,8 @@ import { CreateTaskDialog } from '@/components/tasks/CreateTaskDialog';
 import { CreateNoteMultiModal } from '@/components/notes/CreateNoteMultiModal';
 import { useNavigate } from 'react-router-dom';
 import { useDialog } from '@/hooks/use-dialog';
+import { cn } from '@/lib/utils';
+import { CARD_STYLES } from '@/lib/mobileStyles';
 
 export const DashboardMobileFAB = () => {
   const [showSheet, setShowSheet] = useState(false);
@@ -22,8 +24,9 @@ export const DashboardMobileFAB = () => {
     {
       icon: Briefcase,
       label: 'Add New Case',
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
+      bg: 'bg-sky-50',
+      iconBg: 'bg-sky-100',
+      iconColor: 'text-sky-500',
       onClick: () => {
         setShowSheet(false);
         setShowCaseDialog(true);
@@ -32,8 +35,9 @@ export const DashboardMobileFAB = () => {
     {
       icon: Calendar,
       label: 'Schedule Appointment',
-      color: 'text-green-600',
-      bgColor: 'bg-green-50',
+      bg: 'bg-emerald-50',
+      iconBg: 'bg-emerald-100',
+      iconColor: 'text-emerald-500',
       onClick: () => {
         setShowSheet(false);
         openDialog(<CreateAppointmentDialog />);
@@ -42,8 +46,9 @@ export const DashboardMobileFAB = () => {
     {
       icon: CheckSquare,
       label: 'Create Task',
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-50',
+      bg: 'bg-amber-50',
+      iconBg: 'bg-amber-100',
+      iconColor: 'text-amber-500',
       onClick: () => {
         setShowSheet(false);
         setShowTaskDialog(true);
@@ -52,8 +57,9 @@ export const DashboardMobileFAB = () => {
     {
       icon: StickyNote,
       label: 'Quick Note',
-      color: 'text-yellow-600',
-      bgColor: 'bg-yellow-50',
+      bg: 'bg-violet-50',
+      iconBg: 'bg-violet-100',
+      iconColor: 'text-violet-500',
       onClick: () => {
         setShowSheet(false);
         setShowNoteDialog(true);
@@ -62,8 +68,9 @@ export const DashboardMobileFAB = () => {
     {
       icon: Upload,
       label: 'Upload Document',
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
+      bg: 'bg-rose-50',
+      iconBg: 'bg-rose-100',
+      iconColor: 'text-rose-500',
       onClick: () => {
         setShowSheet(false);
         navigate('/documents');
@@ -76,9 +83,9 @@ export const DashboardMobileFAB = () => {
       {/* FAB Button */}
       <button
         onClick={() => setShowSheet(true)}
-        className="fixed bottom-6 right-4 z-40 w-14 h-14 rounded-full bg-primary shadow-lg hover:shadow-xl active:scale-95 transition-all duration-200 flex items-center justify-center sm:hidden"
+        className="fixed bottom-6 right-4 z-40 w-14 h-14 rounded-full bg-slate-800 shadow-lg hover:shadow-xl active:scale-95 transition-all duration-200 flex items-center justify-center sm:hidden"
       >
-        <Plus className="w-6 h-6 text-primary-foreground" />
+        <Plus className="w-6 h-6 text-white" />
       </button>
 
       {/* Actions Bottom Sheet */}
@@ -87,19 +94,26 @@ export const DashboardMobileFAB = () => {
         onClose={() => setShowSheet(false)}
         title="Quick Actions"
       >
-        <div className="space-y-2 p-4">
+        <div className="px-4 space-y-2 pb-6">
           {actions.map((action, index) => {
             const Icon = action.icon;
             return (
               <button
                 key={index}
                 onClick={action.onClick}
-                className="w-full flex items-center gap-4 p-4 rounded-xl border border-border hover:bg-accent/50 active:scale-98 transition-all"
+                className={cn(
+                  "w-full flex items-center gap-4 p-4 rounded-2xl transition-all active:scale-[0.98]",
+                  action.bg,
+                  "border border-transparent hover:border-slate-200"
+                )}
               >
-                <div className={`w-12 h-12 rounded-xl ${action.bgColor} flex items-center justify-center flex-shrink-0`}>
-                  <Icon className={`w-6 h-6 ${action.color}`} />
+                <div className={cn(
+                  "w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0",
+                  action.iconBg
+                )}>
+                  <Icon className={cn("w-6 h-6", action.iconColor)} />
                 </div>
-                <span className="text-base font-medium text-foreground">
+                <span className="text-base font-medium text-slate-900">
                   {action.label}
                 </span>
               </button>

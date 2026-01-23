@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Plus, Search, MoreHorizontal, Eye, Upload, ArrowUpDown, ChevronLeft, ChevronRight, Pencil, Trash2, Filter, SlidersHorizontal, Star } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, Eye, Upload, ArrowUpDown, ChevronLeft, ChevronRight, Pencil, Trash2, Filter, SlidersHorizontal, Star, X } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -260,66 +260,88 @@ export const ClientList = () => {
   // Mobile Filter Sheet
   const MobileFilterSheet = () => (
     <Sheet open={showMobileFilter} onOpenChange={setShowMobileFilter}>
-      <SheetContent side="bottom" className="h-[80vh] rounded-t-3xl">
-        <SheetHeader>
-          <SheetTitle>Filters & Sort</SheetTitle>
-        </SheetHeader>
-        <div className="py-6 space-y-6">
-          {/* Status Filter */}
-          <div>
-            <h3 className="text-sm font-medium mb-3">Status</h3>
-            <div className="flex flex-wrap gap-2">
-              {['all', 'active', 'lead', 'inactive'].map((status) => (
-                <button
-                  key={status}
-                  onClick={() => {
-                    setStatusFilter(status as StatusFilter);
-                    setPage(1);
-                  }}
-                  className={`px-4 h-10 rounded-full font-medium text-sm transition-all ${
-                    statusFilter === status
-                      ? 'bg-slate-800 text-white'
-                      : 'bg-white border border-border text-foreground'
-                  }`}
-                >
-                  {status.charAt(0).toUpperCase() + status.slice(1)}
-                </button>
-              ))}
+      <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl bg-slate-50 p-0 border-0">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-4 bg-white border-b border-slate-100">
+          <h2 className="text-lg font-semibold text-slate-900">Filters & Sort</h2>
+          <button
+            onClick={() => setShowMobileFilter(false)}
+            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center active:scale-95 transition-all"
+          >
+            <X className="w-4 h-4 text-slate-600" />
+          </button>
+        </div>
+
+        <div className="p-4 space-y-4 overflow-y-auto h-[calc(85vh-140px)]">
+          {/* Status Filter Card */}
+          <div className="bg-white rounded-2xl shadow-sm">
+            <div className="p-4">
+              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Status</h3>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { value: 'all', label: 'All', bg: 'bg-slate-100' },
+                  { value: 'active', label: 'Active', bg: 'bg-emerald-50' },
+                  { value: 'lead', label: 'Lead', bg: 'bg-amber-50' },
+                  { value: 'inactive', label: 'Inactive', bg: 'bg-slate-100' },
+                ].map((status) => (
+                  <button
+                    key={status.value}
+                    onClick={() => {
+                      setStatusFilter(status.value as StatusFilter);
+                      setPage(1);
+                    }}
+                    className={`px-4 py-2.5 rounded-full font-medium text-sm transition-all active:scale-95 ${
+                      statusFilter === status.value
+                        ? 'bg-slate-800 text-white'
+                        : `${status.bg} text-slate-700 border border-slate-200`
+                    }`}
+                  >
+                    {status.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
-          {/* Sort Options */}
-          <div>
-            <h3 className="text-sm font-medium mb-3">Sort By</h3>
-            <div className="space-y-2">
-              {[
-                { field: 'name' as SortField, label: 'Name' },
-                { field: 'email' as SortField, label: 'Email' },
-                { field: 'status' as SortField, label: 'Status' },
-                { field: 'active_cases' as SortField, label: 'Active Cases' },
-                { field: 'created_at' as SortField, label: 'Date Added' },
-              ].map((sort) => (
-                <button
-                  key={sort.field}
-                  onClick={() => handleSort(sort.field)}
-                  className={`w-full flex items-center justify-between p-3 rounded-lg transition-all ${
-                    sortField === sort.field
-                      ? 'bg-slate-100'
-                      : 'bg-white border border-border'
-                  }`}
-                >
-                  <span>{sort.label}</span>
-                  {sortField === sort.field && (
-                    <span>{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                  )}
-                </button>
-              ))}
+          {/* Sort Options Card */}
+          <div className="bg-white rounded-2xl shadow-sm">
+            <div className="p-4">
+              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Sort By</h3>
+              <div className="space-y-2">
+                {[
+                  { field: 'name' as SortField, label: 'Name' },
+                  { field: 'email' as SortField, label: 'Email' },
+                  { field: 'status' as SortField, label: 'Status' },
+                  { field: 'active_cases' as SortField, label: 'Active Cases' },
+                  { field: 'created_at' as SortField, label: 'Date Added' },
+                ].map((sort) => (
+                  <button
+                    key={sort.field}
+                    onClick={() => handleSort(sort.field)}
+                    className={`w-full flex items-center justify-between p-3 rounded-xl transition-all active:scale-[0.98] ${
+                      sortField === sort.field
+                        ? 'bg-sky-50'
+                        : 'bg-slate-50 hover:bg-slate-100'
+                    }`}
+                  >
+                    <span className={sortField === sort.field ? 'text-slate-900 font-medium' : 'text-slate-600'}>
+                      {sort.label}
+                    </span>
+                    {sortField === sort.field && (
+                      <span className="text-sky-500 font-medium">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
+        </div>
 
+        {/* Action Bar */}
+        <div className="absolute bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-lg border-t border-slate-100">
           <Button
             onClick={() => setShowMobileFilter(false)}
-            className="w-full h-12 bg-slate-800 hover:bg-slate-700"
+            className="w-full h-12 rounded-full bg-slate-800 hover:bg-slate-700 text-white"
           >
             Apply Filters
           </Button>

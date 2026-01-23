@@ -51,7 +51,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
       {/* Backdrop */}
       <div
         className={cn(
-          "fixed inset-0 z-50 bg-black/50 transition-opacity sm:hidden",
+          "fixed inset-0 z-50 bg-black/40 backdrop-blur-sm transition-opacity sm:hidden",
           isClosing ? "animate-fade-out" : "animate-fade-in"
         )}
         onClick={handleClose}
@@ -60,7 +60,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
       {/* Sheet */}
       <div
         className={cn(
-          "fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-2xl sm:hidden",
+          "fixed bottom-0 left-0 right-0 z-50 bg-slate-50 rounded-t-3xl shadow-2xl sm:hidden flex flex-col",
           heightClass,
           isClosing ? "animate-slide-out-bottom" : "animate-slide-in-bottom"
         )}
@@ -71,25 +71,25 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
         }}
       >
         {/* Drag Handle */}
-        <div className="flex justify-center py-3">
-          <div className="w-10 h-1 bg-muted rounded-full" />
+        <div className="flex justify-center py-3 flex-shrink-0">
+          <div className="w-10 h-1 bg-slate-300 rounded-full" />
         </div>
 
         {/* Header */}
         {title && (
-          <div className="flex items-center justify-between px-4 pb-3 border-b border-border">
-            <h2 className="text-lg font-semibold text-foreground">{title}</h2>
+          <div className="flex items-center justify-between px-4 pb-4 flex-shrink-0">
+            <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
             <button
               onClick={handleClose}
-              className="p-2 rounded-lg hover:bg-muted active:scale-95 transition-all"
+              className="w-8 h-8 rounded-full bg-slate-200 hover:bg-slate-300 flex items-center justify-center active:scale-95 transition-all"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4 text-slate-600" />
             </button>
           </div>
         )}
 
         {/* Content */}
-        <div className="overflow-y-auto h-full pb-safe px-4 pt-4">
+        <div className="flex-1 overflow-y-auto pb-safe">
           {children}
         </div>
       </div>
