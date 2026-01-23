@@ -219,24 +219,10 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
             webdavErrorMessage = pydioError?.message || pydioResult?.error || 'Unknown WebDAV error';
           }
         } else {
-          // For large files, stream raw bytes to the edge function (no base64)
-          const { data: pydioResult, error: pydioError } = await supabase.functions.invoke('pydio-webdav', {
-            headers: {
-              'Content-Type': file.type || 'application/octet-stream',
-              'x-client-name': sanitizedClientName,
-              'x-case-name': sanitizedCaseName,
-              'x-category': sanitizedCategory,
-              'x-doc-type': sanitizedDocType,
-              'x-file-name': encodeURIComponent(file.name),
-            },
-            body: file,
-          });
-
-          webdavOk = !!pydioResult?.success && !pydioError;
-          webdavPath = pydioResult?.path;
-          if (!webdavOk) {
-            webdavErrorMessage = pydioError?.message || pydioResult?.error || 'Unknown WebDAV error';
-          }
+          // Large files: don't call the edge function (it can be unreliable for big payloads).
+          // Instead upload directly to Supabase Storage.
+          webdavOk = false;
+          webdavErrorMessage = `Skipped WebDAV for large file (${(file.size / 1024 / 1024).toFixed(1)}MB > 10MB)`;
         }
         
         // If WebDAV failed or wasn't attempted, use Supabase Storage
@@ -247,7 +233,14 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
             .upload(storagePathFallback, file);
 
           if (storageError) {
-            throw new Error(`Upload failed: ${webdavErrorMessage || storageError.message}`);
+            const msg = storageError.message || 'Storage upload failed';
+            const looksLikeTooLarge = /payload too large|maximum allowed size|exceeded the maximum/i.test(msg);
+            if (looksLikeTooLarge) {
+              throw new Error(
+                `Upload failed: Supabase Storage rejected the file as too large. Increase the 'documents' bucket file size limit to 200MB (see SQL below).`
+              );
+            }
+            throw new Error(`Upload failed: ${webdavErrorMessage || msg}`);
           }
 
           const fallbackDocumentData = {
