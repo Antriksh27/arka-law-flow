@@ -50,9 +50,9 @@ const DURATION_OPTIONS = [
 ];
 
 const TYPE_OPTIONS = [
-  { value: 'in-person', label: 'In-Person', icon: MapPin, color: 'bg-emerald-500' },
-  { value: 'video-call', label: 'Video', icon: Video, color: 'bg-blue-500' },
-  { value: 'call', label: 'Phone', icon: Phone, color: 'bg-amber-500' },
+  { value: 'in-person', label: 'In-Person', icon: MapPin },
+  { value: 'video-call', label: 'Video', icon: Video },
+  { value: 'call', label: 'Phone', icon: Phone },
 ];
 
 type StepType = 'form' | 'date' | 'time' | 'client' | 'lawyer' | 'add-team' | 'case';
@@ -323,9 +323,9 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
   );
 
   // Avatar component
-  const Avatar = ({ name, color = 'bg-primary/10', textColor = 'text-primary' }: { name: string; color?: string; textColor?: string }) => (
-    <div className={cn("w-11 h-11 rounded-full flex items-center justify-center shrink-0", color)}>
-      <span className={cn("text-sm font-semibold", textColor)}>
+  const Avatar = ({ name }: { name: string }) => (
+    <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 bg-muted">
+      <span className="text-sm font-semibold text-foreground">
         {name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
       </span>
     </div>
@@ -352,8 +352,8 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
             onClick={() => setStep('date')}
             className="w-full flex items-center gap-4 p-4 active:bg-muted/50 transition-colors border-b border-border"
           >
-            <div className="w-11 h-11 rounded-xl bg-blue-100 flex items-center justify-center">
-              <Calendar className="w-5 h-5 text-blue-600" />
+            <div className="w-11 h-11 rounded-xl bg-muted flex items-center justify-center">
+              <Calendar className="w-5 h-5 text-foreground" />
             </div>
             <div className="flex-1 text-left">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Date</p>
@@ -369,8 +369,8 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
             onClick={() => setStep('time')}
             className="w-full flex items-center gap-4 p-4 active:bg-muted/50 transition-colors"
           >
-            <div className="w-11 h-11 rounded-xl bg-violet-100 flex items-center justify-center">
-              <Clock className="w-5 h-5 text-violet-600" />
+            <div className="w-11 h-11 rounded-xl bg-muted flex items-center justify-center">
+              <Clock className="w-5 h-5 text-foreground" />
             </div>
             <div className="flex-1 text-left">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Time</p>
@@ -428,9 +428,9 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
                 >
                   <div className={cn(
                     "w-9 h-9 rounded-full flex items-center justify-center",
-                    isActive ? "bg-background/20" : opt.color
+                    isActive ? "bg-background/20" : "bg-muted"
                   )}>
-                    <Icon className={cn("w-4 h-4", isActive ? "text-background" : "text-white")} />
+                    <Icon className={cn("w-4 h-4", isActive ? "text-background" : "text-foreground")} />
                   </div>
                   <span className="text-xs font-medium">{opt.label}</span>
                 </button>
@@ -450,7 +450,7 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
             className="w-full flex items-center gap-4 p-4 active:bg-muted/50 transition-colors border-b border-border"
           >
             {selectedClient ? (
-              <Avatar name={selectedClient.full_name} color="bg-emerald-100" textColor="text-emerald-700" />
+              <Avatar name={selectedClient.full_name} />
             ) : (
               <div className="w-11 h-11 rounded-full bg-muted flex items-center justify-center">
                 <User className="w-5 h-5 text-muted-foreground" />
@@ -472,7 +472,7 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
             className="w-full flex items-center gap-4 p-4 active:bg-muted/50 transition-colors border-b border-border"
           >
             {selectedLawyer ? (
-              <Avatar name={selectedLawyer.full_name} color="bg-blue-100" textColor="text-blue-700" />
+              <Avatar name={selectedLawyer.full_name} />
             ) : (
               <div className="w-11 h-11 rounded-full bg-muted flex items-center justify-center">
                 <Briefcase className="w-5 h-5 text-muted-foreground" />
@@ -511,7 +511,8 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
                       key={lawyerId} 
                       className="flex items-center gap-2 bg-muted rounded-full pl-1 pr-2 py-1"
                     >
-                      <Avatar name={lawyer.full_name} color="bg-primary/20" textColor="text-primary" />
+                      <Avatar name={lawyer.full_name} />
+                      
                       <span className="text-sm font-medium text-foreground">{lawyer.full_name.split(' ')[0]}</span>
                       <button
                         type="button"
@@ -537,8 +538,8 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
             onClick={() => setStep('case')}
             className="w-full flex items-center gap-4 p-4 active:bg-muted/50 transition-colors"
           >
-            <div className="w-11 h-11 rounded-xl bg-amber-100 flex items-center justify-center">
-              <FileText className="w-5 h-5 text-amber-600" />
+            <div className="w-11 h-11 rounded-xl bg-muted flex items-center justify-center">
+              <FileText className="w-5 h-5 text-foreground" />
             </div>
             <div className="flex-1 text-left min-w-0">
               <p className="text-xs font-medium text-muted-foreground">Related Case</p>
@@ -649,11 +650,11 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
                   goBack();
                 }}
                 className={cn(
-                  "w-full flex items-center gap-4 px-4 py-4 border-b border-border active:bg-muted/50 transition-colors",
+                  "w-full flex items-center gap-4 px-4 py-4 border-b border-border active:bg-muted/50 transition-colors bg-background",
                   isSelected && "bg-primary/5"
                 )}
               >
-                <Avatar name={client.full_name} color="bg-emerald-100" textColor="text-emerald-700" />
+                <Avatar name={client.full_name} />
                 <span className="flex-1 text-left font-medium text-foreground">{client.full_name}</span>
                 {isSelected && (
                   <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
@@ -689,11 +690,11 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
                   goBack();
                 }}
                 className={cn(
-                  "w-full flex items-center gap-4 px-4 py-4 border-b border-border active:bg-muted/50 transition-colors",
-                  isSelected && "bg-primary/5"
+                  "w-full flex items-center gap-4 px-4 py-4 border-b border-border active:bg-muted/50 transition-colors bg-background",
+                  isSelected && "bg-muted/50"
                 )}
               >
-                <Avatar name={lawyer.full_name} color="bg-blue-100" textColor="text-blue-700" />
+                <Avatar name={lawyer.full_name} />
                 <div className="flex-1 text-left">
                   <p className="font-medium text-foreground">{lawyer.full_name}</p>
                   <p className="text-sm text-muted-foreground capitalize">{lawyer.role}</p>
@@ -726,9 +727,9 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
             <button
               key={lawyer.id}
               onClick={() => handleAddTeamMember(lawyer.id)}
-              className="w-full flex items-center gap-4 px-4 py-4 border-b border-border active:bg-muted/50 transition-colors"
+              className="w-full flex items-center gap-4 px-4 py-4 border-b border-border active:bg-muted/50 transition-colors bg-background"
             >
-              <Avatar name={lawyer.full_name} color="bg-violet-100" textColor="text-violet-700" />
+              <Avatar name={lawyer.full_name} />
               <div className="flex-1 text-left">
                 <p className="font-medium text-foreground">{lawyer.full_name}</p>
                 <p className="text-sm text-muted-foreground capitalize">{lawyer.role}</p>
@@ -753,8 +754,8 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
             goBack();
           }}
           className={cn(
-            "w-full flex items-center gap-4 px-4 py-4 border-b border-border active:bg-muted/50 transition-colors",
-            !formData.case_id && "bg-primary/5"
+            "w-full flex items-center gap-4 px-4 py-4 border-b border-border active:bg-muted/50 transition-colors bg-background",
+            !formData.case_id && "bg-muted/50"
           )}
         >
           <div className="w-11 h-11 rounded-xl bg-muted flex items-center justify-center">
@@ -784,12 +785,12 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
                   goBack();
                 }}
                 className={cn(
-                  "w-full flex items-center gap-4 px-4 py-4 border-b border-border active:bg-muted/50 transition-colors",
-                  isSelected && "bg-primary/5"
+                  "w-full flex items-center gap-4 px-4 py-4 border-b border-border active:bg-muted/50 transition-colors bg-background",
+                  isSelected && "bg-muted/50"
                 )}
               >
-                <div className="w-11 h-11 rounded-xl bg-amber-100 flex items-center justify-center">
-                  <FileText className="w-5 h-5 text-amber-600" />
+                <div className="w-11 h-11 rounded-xl bg-muted flex items-center justify-center">
+                  <FileText className="w-5 h-5 text-foreground" />
                 </div>
                 <div className="flex-1 text-left min-w-0">
                   <p className="font-medium text-foreground truncate">{caseItem.case_title}</p>
