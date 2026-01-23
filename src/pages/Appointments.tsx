@@ -10,7 +10,7 @@ import DefaultPageLayout from '../components/messages/ui/DefaultPageLayout';
 import { Button } from '../components/ui/button';
 import { TextField } from '../components/messages/ui/TextField';
 import { ToggleGroup, ToggleGroupItem } from '../components/ui/toggle-group';
-import { Filter, Plus, Search, LayoutList, Calendar, Clock, Copy, SlidersHorizontal } from 'lucide-react';
+import { Filter, Plus, Search, LayoutList, Calendar, Clock, Copy, SlidersHorizontal, Loader2 } from 'lucide-react';
 import { useDialog } from '@/hooks/use-dialog';
 import { CreateAppointmentDialog } from '../components/appointments/CreateAppointmentDialog';
 import { useAuth } from '@/contexts/AuthContext';
@@ -19,14 +19,13 @@ import { getPublicBaseUrl } from '@/lib/appConfig';
 import { ALLOWED_BOOKING_ROLES } from '@/lib/bookingConfig';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileStickyHeader } from '@/components/mobile/MobileStickyHeader';
-
 import { MobileFAB } from '@/components/mobile/MobileFAB';
 import { MobileAppointmentCard } from '../components/appointments/MobileAppointmentCard';
-import { useQuery } from '@tanstack/react-query';
+import { MobileCreateAppointmentSheet } from '../components/appointments/MobileCreateAppointmentSheet';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import TimeUtils from '@/lib/timeUtils';
 import { ViewAppointmentDialog } from '../components/appointments/ViewAppointmentDialog';
-import { Loader2, AlertCircle } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 
@@ -54,10 +53,12 @@ const Appointments = () => {
     showPastAppointments: false,
   });
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [showMobileCreate, setShowMobileCreate] = useState(false);
   const { openDialog } = useDialog();
   const navigate = useNavigate();
   const { user, role } = useAuth();
   const isMobile = useIsMobile();
+  const queryClient = useQueryClient();
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setFilters({
@@ -172,7 +173,16 @@ const Appointments = () => {
           </div>
         </div>
 
-        <MobileFAB onClick={() => openDialog(<CreateAppointmentDialog />)} icon={Plus} />
+        <MobileFAB onClick={() => setShowMobileCreate(true)} icon={Plus} />
+
+        {/* Mobile Create Sheet */}
+        <MobileCreateAppointmentSheet
+          open={showMobileCreate}
+          onClose={() => setShowMobileCreate(false)}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ['appointments-mobile'] });
+          }}
+        />
 
         <Sheet open={showMobileFilters} onOpenChange={setShowMobileFilters}>
           <SheetContent side="bottom" className="h-[80vh]">
