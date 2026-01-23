@@ -50,9 +50,9 @@ const DURATION_OPTIONS = [
 ];
 
 const TYPE_OPTIONS = [
-  { value: 'in-person', label: 'In-Person', icon: MapPin },
-  { value: 'video-call', label: 'Video', icon: Video },
-  { value: 'call', label: 'Phone', icon: Phone },
+  { value: 'in-person', label: 'In-Person', icon: MapPin, bg: 'bg-emerald-50', iconColor: 'text-emerald-400' },
+  { value: 'video-call', label: 'Video', icon: Video, bg: 'bg-sky-50', iconColor: 'text-sky-400' },
+  { value: 'call', label: 'Phone', icon: Phone, bg: 'bg-amber-50', iconColor: 'text-amber-400' },
 ];
 
 type StepType = 'form' | 'date' | 'time' | 'client' | 'lawyer' | 'add-team' | 'case';
@@ -322,14 +322,32 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
     </div>
   );
 
-  // Avatar component
-  const Avatar = ({ name }: { name: string }) => (
-    <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 bg-muted">
-      <span className="text-sm font-semibold text-foreground">
-        {name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-      </span>
-    </div>
-  );
+  // Avatar component with pastel colors
+  const getAvatarColor = (name: string) => {
+    const colors = [
+      { bg: 'bg-rose-100', text: 'text-rose-500' },
+      { bg: 'bg-sky-100', text: 'text-sky-500' },
+      { bg: 'bg-violet-100', text: 'text-violet-500' },
+      { bg: 'bg-emerald-100', text: 'text-emerald-500' },
+      { bg: 'bg-amber-100', text: 'text-amber-500' },
+      { bg: 'bg-pink-100', text: 'text-pink-500' },
+      { bg: 'bg-teal-100', text: 'text-teal-500' },
+      { bg: 'bg-indigo-100', text: 'text-indigo-500' },
+    ];
+    const index = name.charCodeAt(0) % colors.length;
+    return colors[index];
+  };
+
+  const Avatar = ({ name }: { name: string }) => {
+    const color = getAvatarColor(name);
+    return (
+      <div className={cn("w-11 h-11 rounded-full flex items-center justify-center shrink-0", color.bg)}>
+        <span className={cn("text-sm font-semibold", color.text)}>
+          {name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+        </span>
+      </div>
+    );
+  };
 
   const renderFormView = () => (
     <div className="flex flex-col h-full bg-muted/30">
@@ -352,8 +370,8 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
             onClick={() => setStep('date')}
             className="w-full flex items-center gap-4 p-4 active:bg-muted/50 transition-colors border-b border-border"
           >
-            <div className="w-11 h-11 rounded-xl bg-muted flex items-center justify-center">
-              <Calendar className="w-5 h-5 text-foreground" />
+            <div className="w-11 h-11 rounded-xl bg-sky-100 flex items-center justify-center">
+              <Calendar className="w-5 h-5 text-sky-500" />
             </div>
             <div className="flex-1 text-left">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Date</p>
@@ -369,8 +387,8 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
             onClick={() => setStep('time')}
             className="w-full flex items-center gap-4 p-4 active:bg-muted/50 transition-colors"
           >
-            <div className="w-11 h-11 rounded-xl bg-muted flex items-center justify-center">
-              <Clock className="w-5 h-5 text-foreground" />
+            <div className="w-11 h-11 rounded-xl bg-violet-100 flex items-center justify-center">
+              <Clock className="w-5 h-5 text-violet-500" />
             </div>
             <div className="flex-1 text-left">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Time</p>
@@ -397,7 +415,7 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
                 className={cn(
                   "flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95",
                   formData.duration_minutes === opt.value 
-                    ? "bg-foreground text-background" 
+                    ? "bg-violet-100 text-violet-600 border border-violet-200" 
                     : "bg-background border border-border text-foreground"
                 )}
               >
@@ -420,19 +438,19 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
                   type="button"
                   onClick={() => handleInputChange('type', opt.value)}
                   className={cn(
-                    "flex-1 flex flex-col items-center gap-2 py-3 px-2 rounded-xl transition-all active:scale-95",
+                    "flex-1 flex flex-col items-center gap-2 py-3 px-2 rounded-xl transition-all active:scale-95 border",
                     isActive 
-                      ? "bg-foreground text-background" 
-                      : "bg-background border border-border text-foreground"
+                      ? `${opt.bg} border-${opt.iconColor.replace('text-', '')}/30` 
+                      : "bg-background border-border text-foreground"
                   )}
                 >
                   <div className={cn(
                     "w-9 h-9 rounded-full flex items-center justify-center",
-                    isActive ? "bg-background/20" : "bg-muted"
+                    isActive ? opt.bg : opt.bg
                   )}>
-                    <Icon className={cn("w-4 h-4", isActive ? "text-background" : "text-foreground")} />
+                    <Icon className={cn("w-4 h-4", opt.iconColor)} />
                   </div>
-                  <span className="text-xs font-medium">{opt.label}</span>
+                  <span className={cn("text-xs font-medium", isActive ? opt.iconColor : "text-foreground")}>{opt.label}</span>
                 </button>
               );
             })}
@@ -452,8 +470,8 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
             {selectedClient ? (
               <Avatar name={selectedClient.full_name} />
             ) : (
-              <div className="w-11 h-11 rounded-full bg-muted flex items-center justify-center">
-                <User className="w-5 h-5 text-muted-foreground" />
+              <div className="w-11 h-11 rounded-full bg-emerald-100 flex items-center justify-center">
+                <User className="w-5 h-5 text-emerald-500" />
               </div>
             )}
             <div className="flex-1 text-left">
@@ -474,8 +492,8 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
             {selectedLawyer ? (
               <Avatar name={selectedLawyer.full_name} />
             ) : (
-              <div className="w-11 h-11 rounded-full bg-muted flex items-center justify-center">
-                <Briefcase className="w-5 h-5 text-muted-foreground" />
+              <div className="w-11 h-11 rounded-full bg-sky-100 flex items-center justify-center">
+                <Briefcase className="w-5 h-5 text-sky-500" />
               </div>
             )}
             <div className="flex-1 text-left">
@@ -538,8 +556,8 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
             onClick={() => setStep('case')}
             className="w-full flex items-center gap-4 p-4 active:bg-muted/50 transition-colors"
           >
-            <div className="w-11 h-11 rounded-xl bg-muted flex items-center justify-center">
-              <FileText className="w-5 h-5 text-foreground" />
+            <div className="w-11 h-11 rounded-xl bg-amber-100 flex items-center justify-center">
+              <FileText className="w-5 h-5 text-amber-500" />
             </div>
             <div className="flex-1 text-left min-w-0">
               <p className="text-xs font-medium text-muted-foreground">Related Case</p>
@@ -616,8 +634,8 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
                 className={cn(
                   "py-4 rounded-xl text-sm font-semibold transition-all active:scale-95",
                   isSelected 
-                    ? "bg-foreground text-background shadow-lg" 
-                    : "bg-muted text-foreground"
+                    ? "bg-violet-100 text-violet-600 ring-2 ring-violet-200" 
+                    : "bg-muted/50 text-foreground"
                 )}
               >
                 {format(new Date(`2000-01-01T${time}`), 'h:mm a')}
@@ -651,14 +669,14 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
                 }}
                 className={cn(
                   "w-full flex items-center gap-4 px-4 py-4 border-b border-border active:bg-muted/50 transition-colors bg-background",
-                  isSelected && "bg-primary/5"
+                  isSelected && "bg-emerald-50"
                 )}
               >
                 <Avatar name={client.full_name} />
                 <span className="flex-1 text-left font-medium text-foreground">{client.full_name}</span>
                 {isSelected && (
-                  <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-                    <Check className="w-4 h-4 text-primary-foreground" />
+                  <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center">
+                    <Check className="w-4 h-4 text-white" />
                   </div>
                 )}
               </button>
@@ -691,7 +709,7 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
                 }}
                 className={cn(
                   "w-full flex items-center gap-4 px-4 py-4 border-b border-border active:bg-muted/50 transition-colors bg-background",
-                  isSelected && "bg-muted/50"
+                  isSelected && "bg-sky-50"
                 )}
               >
                 <Avatar name={lawyer.full_name} />
@@ -700,8 +718,8 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
                   <p className="text-sm text-muted-foreground capitalize">{lawyer.role}</p>
                 </div>
                 {isSelected && (
-                  <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-                    <Check className="w-4 h-4 text-primary-foreground" />
+                  <div className="w-6 h-6 rounded-full bg-sky-500 flex items-center justify-center">
+                    <Check className="w-4 h-4 text-white" />
                   </div>
                 )}
               </button>
@@ -734,7 +752,7 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
                 <p className="font-medium text-foreground">{lawyer.full_name}</p>
                 <p className="text-sm text-muted-foreground capitalize">{lawyer.role}</p>
               </div>
-              <UserPlus className="w-5 h-5 text-primary" />
+              <UserPlus className="w-5 h-5 text-violet-500" />
             </button>
           ))
         )}
@@ -755,16 +773,16 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
           }}
           className={cn(
             "w-full flex items-center gap-4 px-4 py-4 border-b border-border active:bg-muted/50 transition-colors bg-background",
-            !formData.case_id && "bg-muted/50"
+            !formData.case_id && "bg-rose-50"
           )}
         >
-          <div className="w-11 h-11 rounded-xl bg-muted flex items-center justify-center">
-            <X className="w-5 h-5 text-muted-foreground" />
+          <div className="w-11 h-11 rounded-xl bg-rose-100 flex items-center justify-center">
+            <X className="w-5 h-5 text-rose-400" />
           </div>
           <span className="flex-1 text-left font-medium text-foreground">No case</span>
           {!formData.case_id && (
-            <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-              <Check className="w-4 h-4 text-primary-foreground" />
+            <div className="w-6 h-6 rounded-full bg-rose-400 flex items-center justify-center">
+              <Check className="w-4 h-4 text-white" />
             </div>
           )}
         </button>
@@ -786,11 +804,11 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
                 }}
                 className={cn(
                   "w-full flex items-center gap-4 px-4 py-4 border-b border-border active:bg-muted/50 transition-colors bg-background",
-                  isSelected && "bg-muted/50"
+                  isSelected && "bg-amber-50"
                 )}
               >
-                <div className="w-11 h-11 rounded-xl bg-muted flex items-center justify-center">
-                  <FileText className="w-5 h-5 text-foreground" />
+                <div className="w-11 h-11 rounded-xl bg-amber-100 flex items-center justify-center">
+                  <FileText className="w-5 h-5 text-amber-500" />
                 </div>
                 <div className="flex-1 text-left min-w-0">
                   <p className="font-medium text-foreground truncate">{caseItem.case_title}</p>
@@ -799,8 +817,8 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
                   )}
                 </div>
                 {isSelected && (
-                  <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center shrink-0">
-                    <Check className="w-4 h-4 text-primary-foreground" />
+                  <div className="w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center shrink-0">
+                    <Check className="w-4 h-4 text-white" />
                   </div>
                 )}
               </button>
