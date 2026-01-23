@@ -4,7 +4,7 @@ import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-client-name, x-case-name, x-category, x-doc-type, x-file-name',
 }
 
 // Allowed file types
@@ -180,7 +180,173 @@ serve(async (req) => {
   }
 
   try {
-    // Parse the request body
+    const contentType = req.headers.get('content-type') || '';
+
+    // ------------------------------------------------------------
+    // Binary streaming upload (avoids base64 + WORKER_LIMIT)
+    // Client sends:
+    //  - body: Blob/File (raw bytes)
+    //  - headers: x-client-name, x-case-name, x-category, x-doc-type, x-file-name
+    // ------------------------------------------------------------
+    if (!contentType.includes('application/json')) {
+      const clientName = req.headers.get('x-client-name') || '';
+      const caseName = req.headers.get('x-case-name') || '';
+      const category = req.headers.get('x-category') || '';
+      const docType = req.headers.get('x-doc-type') || '';
+      const fileNameRaw = req.headers.get('x-file-name') || '';
+      const fileName = (() => {
+        try {
+          return decodeURIComponent(fileNameRaw);
+        } catch {
+          return fileNameRaw;
+        }
+      })();
+
+      // Basic validation (same blocklist approach)
+      const headerValidation = uploadSchema
+        .omit({ fileContent: true })
+        .extend({
+          fileContent: z.string().optional(),
+        })
+        .safeParse({
+          clientName,
+          caseName,
+          category,
+          docType,
+          fileName,
+          fileContent: 'x',
+        });
+
+      if (!headerValidation.success) {
+        console.error('Header validation failed:', headerValidation.error.flatten());
+        return new Response(JSON.stringify({
+          success: false,
+          error: 'Invalid input',
+          details: headerValidation.error.flatten().fieldErrors,
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        });
+      }
+
+      const fileExt = fileName.split('.').pop()?.toLowerCase();
+      if (!fileExt || !ALLOWED_EXTENSIONS.includes(fileExt)) {
+        return new Response(JSON.stringify({
+          success: false,
+          error: 'Invalid file type',
+          details: `Allowed types: ${ALLOWED_EXTENSIONS.join(', ')}`,
+          receivedExtension: fileExt,
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        });
+      }
+
+      const contentLengthHeader = req.headers.get('content-length');
+      const contentLength = contentLengthHeader ? Number(contentLengthHeader) : null;
+      if (contentLength && Number.isFinite(contentLength) && contentLength > MAX_FILE_SIZE_BYTES) {
+        return new Response(JSON.stringify({
+          success: false,
+          error: 'File too large',
+          details: `Maximum file size: ${MAX_FILE_SIZE_MB}MB`,
+          receivedSize: (contentLength / 1024 / 1024).toFixed(2) + 'MB',
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 413,
+        });
+      }
+
+      const webdavUrl = Deno.env.get('WEBDAV_URL');
+      const webdavUsername = Deno.env.get('WEBDAV_USERNAME');
+      const webdavPassword = Deno.env.get('WEBDAV_PASSWORD');
+      if (!webdavUrl || !webdavUsername || !webdavPassword) {
+        return new Response(JSON.stringify({
+          success: false,
+          error: 'WebDAV configuration missing',
+          details: 'WebDAV URL, username, or password not configured',
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        });
+      }
+
+      const workingBaseUrl = webdavUrl.endsWith('/') ? webdavUrl.slice(0, -1) : webdavUrl;
+      const authHeader = `Basic ${btoa(`${webdavUsername}:${webdavPassword}`)}`;
+
+      // Create folder structure: {clientName}/{caseName}/{category}/{docType}
+      const folders = [clientName, caseName, category, docType].map((v) => encodeURIComponent(v));
+      let currentPath = '';
+
+      for (const folder of folders) {
+        currentPath += `/${folder}`;
+        const fullFolderUrl = `${workingBaseUrl}${currentPath}`;
+        try {
+          const mkcolResponse = await fetch(fullFolderUrl, {
+            method: 'MKCOL',
+            headers: {
+              'Authorization': authHeader,
+            },
+          });
+          // 201 created, 405 exists, 409 conflict (intermediate missing) -> we continue and rely on subsequent calls
+          if (mkcolResponse.status === 201) {
+            console.log(`✅ Created folder: ${currentPath}`);
+          }
+        } catch (e) {
+          console.log(`⚠️ Folder create failed (continuing): ${currentPath}`, e);
+        }
+      }
+
+      const encodedFileName = encodeURIComponent(fileName);
+      const fullPath = `${currentPath}/${encodedFileName}`;
+      const fullUploadUrl = `${workingBaseUrl}${fullPath}`;
+      console.log(`📤 Streaming upload to: ${fullUploadUrl}`);
+
+      if (!req.body) {
+        return new Response(JSON.stringify({
+          success: false,
+          error: 'Missing file body',
+          details: 'Request body stream is empty',
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        });
+      }
+
+      const uploadResponse = await fetch(fullUploadUrl, {
+        method: 'PUT',
+        headers: {
+          'Authorization': authHeader,
+          'Content-Type': 'application/octet-stream',
+        },
+        body: req.body,
+      });
+
+      if (!uploadResponse.ok && uploadResponse.status !== 201 && uploadResponse.status !== 204) {
+        const errorText = await uploadResponse.text();
+        console.error('❌ Streaming upload failed:', uploadResponse.status, uploadResponse.statusText, errorText);
+        return new Response(JSON.stringify({
+          success: false,
+          error: `Upload failed: ${uploadResponse.status} ${uploadResponse.statusText}`,
+          details: errorText,
+          uploadUrl: fullUploadUrl,
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        });
+      }
+
+      return new Response(JSON.stringify({
+        success: true,
+        message: `File uploaded successfully to ${fullPath}`,
+        path: fullPath,
+        actualUrl: fullUploadUrl,
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      });
+    }
+
+    // Parse the JSON request body
     const body = await req.json()
     const { operation, filename, content, filePath } = body
     console.log(`📋 Operation: ${operation || 'hierarchical-upload'}`);

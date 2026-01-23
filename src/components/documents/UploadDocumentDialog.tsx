@@ -152,8 +152,8 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
       }
       const firmId = teamMember.firm_id;
       
-      // Max file size for WebDAV edge function (10MB) - larger files go directly to Supabase Storage
-      const MAX_WEBDAV_SIZE = 10 * 1024 * 1024;
+      // Max size for JSON(base64) WebDAV upload. Larger files use streaming upload to avoid edge memory limits.
+      const MAX_WEBDAV_JSON_SIZE = 10 * 1024 * 1024;
       
       const uploadPromises = selectedFiles.map(async file => {
         const clientName = selectedClient?.full_name || 'General';
@@ -184,8 +184,8 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
         let webdavPath: string | undefined = undefined;
         let webdavErrorMessage: string | undefined = undefined;
         
-        // Only try WebDAV for files under 10MB (edge function memory limits)
-        if (file.size <= MAX_WEBDAV_SIZE) {
+        // For smaller files, use JSON + base64
+        if (file.size <= MAX_WEBDAV_JSON_SIZE) {
           let fileContent: string;
           if (file.type.startsWith('text/') || file.name.endsWith('.txt')) {
             fileContent = await file.text();
@@ -219,8 +219,24 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
             webdavErrorMessage = pydioError?.message || pydioResult?.error || 'Unknown WebDAV error';
           }
         } else {
-          console.log(`📁 File ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB) exceeds WebDAV limit, uploading to Supabase Storage`);
-          webdavErrorMessage = `File too large for WebDAV (${(file.size / 1024 / 1024).toFixed(1)}MB > 10MB limit)`;
+          // For large files, stream raw bytes to the edge function (no base64)
+          const { data: pydioResult, error: pydioError } = await supabase.functions.invoke('pydio-webdav', {
+            headers: {
+              'Content-Type': file.type || 'application/octet-stream',
+              'x-client-name': sanitizedClientName,
+              'x-case-name': sanitizedCaseName,
+              'x-category': sanitizedCategory,
+              'x-doc-type': sanitizedDocType,
+              'x-file-name': encodeURIComponent(file.name),
+            },
+            body: file,
+          });
+
+          webdavOk = !!pydioResult?.success && !pydioError;
+          webdavPath = pydioResult?.path;
+          if (!webdavOk) {
+            webdavErrorMessage = pydioError?.message || pydioResult?.error || 'Unknown WebDAV error';
+          }
         }
         
         // If WebDAV failed or wasn't attempted, use Supabase Storage
