@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -372,10 +373,16 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className={`${isMobile ? 'h-[100dvh] max-h-[100dvh] w-full max-w-full rounded-none m-0' : 'sm:max-w-2xl max-h-[90vh]'} p-0 gap-0 overflow-hidden`}>
-        <div className="flex flex-col h-full bg-slate-50">
+      <DialogContent 
+        className={`${isMobile ? 'h-[100dvh] max-h-[100dvh] w-full max-w-full rounded-none m-0' : 'sm:max-w-2xl max-h-[90vh]'} p-0 gap-0 flex flex-col overflow-hidden`}
+        aria-describedby={undefined}
+      >
+        <VisuallyHidden>
+          <DialogTitle>Upload Documents</DialogTitle>
+        </VisuallyHidden>
+        <div className="flex flex-col h-full min-h-0 bg-slate-50">
           {/* Header */}
-          <div className="px-6 py-5 bg-white border-b border-slate-100">
+          <div className="flex-shrink-0 px-6 py-5 bg-white border-b border-slate-100">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-foreground">Upload Documents</h2>
@@ -391,7 +398,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
           </div>
 
           {/* Scrollable Content */}
-          <div className="flex-1 overflow-y-auto px-6 py-6">
+          <div className="flex-1 min-h-0 overflow-y-auto px-6 py-6">
             <form id="upload-document-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               {/* File Upload Card */}
               <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
@@ -671,7 +678,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
           </div>
 
           {/* Footer Actions */}
-          <div className="px-6 py-4 border-t border-slate-100 bg-white">
+          <div className="flex-shrink-0 px-6 py-4 border-t border-slate-100 bg-white">
             {showSuccessOptions ? (
               <div className="space-y-3">
                 <div className="flex items-center justify-center gap-2 text-emerald-600 mb-2">
