@@ -4,6 +4,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { MoreHorizontal, Plus, Calendar, FileText, StickyNote, Briefcase, Edit, Trash2, Users, Mail, FileSignature } from 'lucide-react';
 import { AssignToCaseDialog } from './AssignToCaseDialog';
 import { CreateAppointmentDialog } from '@/components/appointments/CreateAppointmentDialog';
+import { MobileCreateAppointmentSheet } from '@/components/appointments/MobileCreateAppointmentSheet';
 import { UploadDocumentForClientDialog } from '@/components/documents/UploadDocumentForClientDialog';
 import { CreateNoteDialog } from '@/components/notes/CreateNoteDialog';
 import { EditClientDialog } from './EditClientDialog';
@@ -13,6 +14,7 @@ import { toast } from '@/hooks/use-toast';
 import { useDialog } from '@/hooks/use-dialog';
 import { SendEmailDialog } from './SendEmailDialog';
 import { GenerateEngagementLetterDialog } from './GenerateEngagementLetterDialog';
+import { useIsMobile } from '@/hooks/use-mobile';
 interface ClientQuickActionsProps {
   clientId: string;
   clientName: string;
@@ -27,15 +29,15 @@ export const ClientQuickActions: React.FC<ClientQuickActionsProps> = ({
 }) => {
   const [showAssignDialog, setShowAssignDialog] = useState(false);
   const [showAppointmentDialog, setShowAppointmentDialog] = useState(false);
+  const [showMobileAppointment, setShowMobileAppointment] = useState(false);
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [showNoteDialog, setShowNoteDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showEmailDialog, setShowEmailDialog] = useState(false);
   const [clientData, setClientData] = useState<any>(null);
-  const {
-    openDialog
-  } = useDialog();
+  const { openDialog } = useDialog();
+  const isMobile = useIsMobile();
   const fetchClientData = async () => {
     try {
       const {
@@ -67,7 +69,16 @@ export const ClientQuickActions: React.FC<ClientQuickActionsProps> = ({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56 bg-white border border-gray-200 rounded-xl shadow-sm">
-            <DropdownMenuItem className="hover:bg-gray-50 cursor-pointer" onClick={() => openDialog(<CreateAppointmentDialog />)}>
+            <DropdownMenuItem 
+              className="hover:bg-gray-50 cursor-pointer" 
+              onClick={() => {
+                if (isMobile) {
+                  setShowMobileAppointment(true);
+                } else {
+                  openDialog(<CreateAppointmentDialog preSelectedClientId={clientId} />);
+                }
+              }}
+            >
               <Calendar className="w-4 h-4 mr-3 text-gray-400" />
               <span>Schedule Appointment</span>
             </DropdownMenuItem>
@@ -143,5 +154,12 @@ export const ClientQuickActions: React.FC<ClientQuickActionsProps> = ({
           clientEmail={clientEmail}
         />
       )}
+
+      <MobileCreateAppointmentSheet
+        open={showMobileAppointment}
+        onClose={() => setShowMobileAppointment(false)}
+        preSelectedClientId={clientId}
+        onSuccess={onAction}
+      />
     </>;
 };
