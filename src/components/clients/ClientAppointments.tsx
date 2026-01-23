@@ -1,5 +1,5 @@
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Calendar, Plus, Clock, MapPin, FileText, User } from 'lucide-react';
 import { useDialog } from '@/hooks/use-dialog';
 import { CreateAppointmentDialog } from '@/components/appointments/CreateAppointmentDialog';
+import { MobileCreateAppointmentSheet } from '@/components/appointments/MobileCreateAppointmentSheet';
 import { format } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -36,6 +37,8 @@ interface AppointmentWithDetails {
 
 export const ClientAppointments: React.FC<ClientAppointmentsProps> = ({ clientId }) => {
   const isMobile = useIsMobile();
+  const [showMobileCreate, setShowMobileCreate] = useState(false);
+  const queryClient = useQueryClient();
   const { data: appointments = [], isLoading } = useQuery({
     queryKey: ['client-appointments', clientId],
     queryFn: async (): Promise<AppointmentWithDetails[]> => {
@@ -251,7 +254,7 @@ export const ClientAppointments: React.FC<ClientAppointmentsProps> = ({ clientId
           <Button 
             size="sm" 
             className="bg-primary hover:bg-primary/90 h-9" 
-            onClick={() => openDialog(<CreateAppointmentDialog preSelectedClientId={clientId} />)}
+            onClick={() => setShowMobileCreate(true)}
           >
             <Plus className="w-4 h-4 mr-1" />
             Add
@@ -265,7 +268,7 @@ export const ClientAppointments: React.FC<ClientAppointmentsProps> = ({ clientId
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={() => openDialog(<CreateAppointmentDialog preSelectedClientId={clientId} />)}
+                onClick={() => setShowMobileCreate(true)}
               >
                 Schedule First Appointment
               </Button>
@@ -353,6 +356,15 @@ export const ClientAppointments: React.FC<ClientAppointmentsProps> = ({ clientId
             </div>
           )}
         </CardContent>
+
+        <MobileCreateAppointmentSheet
+          open={showMobileCreate}
+          onClose={() => setShowMobileCreate(false)}
+          preSelectedClientId={clientId}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ['client-appointments', clientId] });
+          }}
+        />
       </Card>
     );
   }
