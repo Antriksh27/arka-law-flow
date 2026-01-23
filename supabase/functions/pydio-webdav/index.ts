@@ -217,15 +217,17 @@ serve(async (req) => {
         });
       }
 
-      // Validate file size
-      const fileSize = fileContent.length
-      if (fileSize > MAX_FILE_SIZE_BYTES) {
-        console.error('File too large:', fileSize, 'bytes')
+      // Validate file size - base64 is ~33% larger than original, so calculate actual file size
+      const base64Length = fileContent.length
+      // Base64 encoded size = original size * 4/3, so original = base64 * 3/4
+      const estimatedActualSize = Math.floor(base64Length * 0.75)
+      if (estimatedActualSize > MAX_FILE_SIZE_BYTES) {
+        console.error('File too large:', estimatedActualSize, 'bytes (from base64 length:', base64Length, ')')
         return new Response(JSON.stringify({
           success: false,
           error: 'File too large',
           details: `Maximum file size: ${MAX_FILE_SIZE_MB}MB`,
-          receivedSize: Math.round(fileSize / 1024 / 1024 * 100) / 100 + 'MB'
+          receivedSize: (estimatedActualSize / 1024 / 1024).toFixed(2) + 'MB'
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 413,
