@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
@@ -13,8 +13,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { uploadResumableToSupabaseStorage } from '@/lib/supabaseResumableUpload';
+import { uploadWebDAVStreaming } from '@/lib/webdavStreamingUpload';
 import { ClientSelector } from '@/components/appointments/ClientSelector';
 import { StoragePathPreview } from './StoragePathPreview';
+import { UploadProgress, UploadProgressState } from './UploadProgress';
 import { 
   DOCUMENT_TYPE_HIERARCHY, 
   PRIMARY_DOCUMENT_TYPES, 
@@ -56,6 +58,8 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
   const isMobile = useIsMobile();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [showSuccessOptions, setShowSuccessOptions] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<UploadProgressState[]>([]);
+  const abortControllersRef = useRef<Map<string, AbortController>>(new Map());
   
   const { data: caseDetails } = useQuery({
     queryKey: ['case-details', caseId],
@@ -221,43 +225,56 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
               webdavErrorMessage = pydioError?.message || pydioResult?.error || 'Unknown WebDAV error';
             }
           } else if (file.size <= MAX_WEBDAV_STREAM_SIZE) {
-            // Large files: use streaming upload to WebDAV (sends raw binary body with headers)
+            // Large files: use streaming upload to WebDAV with progress tracking
             console.log(`📤 Starting WebDAV streaming upload for ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
             
+            // Set up progress tracking
+            setUploadProgress(prev => [
+              ...prev.filter(p => p.fileName !== file.name),
+              { fileName: file.name, progress: 0, status: 'uploading' }
+            ]);
+            
+            // Create abort controller for this upload
+            const abortController = new AbortController();
+            abortControllersRef.current.set(file.name, abortController);
+            
             try {
-              const { data: { session } } = await supabase.auth.getSession();
-              if (!session?.access_token) throw new Error('Not authenticated');
-              
-              const supabaseUrl = 'https://hpcnipcbymruvsnqrmjx.supabase.co';
-              const functionUrl = `${supabaseUrl}/functions/v1/pydio-webdav`;
-              
-              const response = await fetch(functionUrl, {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${session.access_token}`,
-                  'x-client-name': encodeURIComponent(sanitizedClientName),
-                  'x-case-name': encodeURIComponent(sanitizedCaseName),
-                  'x-category': encodeURIComponent(sanitizedCategory),
-                  'x-doc-type': encodeURIComponent(sanitizedDocType),
-                  'x-file-name': encodeURIComponent(file.name),
-                  'Content-Type': 'application/octet-stream',
-                  'Content-Length': String(file.size),
+              const result = await uploadWebDAVStreaming({
+                file,
+                clientName: sanitizedClientName,
+                caseName: sanitizedCaseName,
+                category: sanitizedCategory,
+                docType: sanitizedDocType,
+                onProgress: (percent) => {
+                  setUploadProgress(prev => 
+                    prev.map(p => p.fileName === file.name ? { ...p, progress: percent } : p)
+                  );
                 },
-                body: file,
+                abortSignal: abortController.signal,
               });
               
-              const result = await response.json();
-              console.log('📤 WebDAV streaming response:', result);
+              // Clean up abort controller
+              abortControllersRef.current.delete(file.name);
               
               if (result.success) {
                 webdavOk = true;
                 webdavPath = result.path;
+                setUploadProgress(prev => 
+                  prev.map(p => p.fileName === file.name ? { ...p, progress: 100, status: 'completed' } : p)
+                );
               } else {
-                webdavErrorMessage = result.error || result.details || 'Streaming upload failed';
+                webdavErrorMessage = result.error || 'Streaming upload failed';
+                setUploadProgress(prev => 
+                  prev.map(p => p.fileName === file.name ? { ...p, status: 'error', error: webdavErrorMessage } : p)
+                );
               }
             } catch (streamErr: any) {
               console.error('❌ WebDAV streaming upload error:', streamErr);
               webdavErrorMessage = streamErr?.message || String(streamErr);
+              abortControllersRef.current.delete(file.name);
+              setUploadProgress(prev => 
+                prev.map(p => p.fileName === file.name ? { ...p, status: 'error', error: webdavErrorMessage } : p)
+              );
             }
           } else {
             // File too large even for streaming
@@ -389,6 +406,8 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
       
       if (onUploadSuccess) onUploadSuccess();
       setSelectedFiles([]);
+      // Clear progress after a delay so user can see completion
+      setTimeout(() => setUploadProgress([]), 2000);
       setShowSuccessOptions(true);
     },
     onError: (error: any) => {
@@ -407,6 +426,17 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
 
   const removeFile = (index: number) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleCancelUpload = (fileName: string) => {
+    const controller = abortControllersRef.current.get(fileName);
+    if (controller) {
+      controller.abort();
+      abortControllersRef.current.delete(fileName);
+    }
+    setUploadProgress(prev => 
+      prev.map(p => p.fileName === fileName ? { ...p, status: 'cancelled' } : p)
+    );
   };
 
   const handleAddMoreFiles = () => {
@@ -547,6 +577,16 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                           </Button>
                         </div>
                       ))}
+                    </div>
+                  )}
+
+                  {/* Upload Progress */}
+                  {uploadProgress.length > 0 && (
+                    <div className="mt-4">
+                      <UploadProgress 
+                        uploads={uploadProgress} 
+                        onCancel={handleCancelUpload}
+                      />
                     </div>
                   )}
                 </div>
