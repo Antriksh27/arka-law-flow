@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, X, Hash, Scale, Info } from 'lucide-react';
 
 interface FetchCaseDetailsDialogProps {
   open: boolean;
@@ -19,17 +19,14 @@ interface FetchCaseDetailsDialogProps {
 const detectCourtType = (cnr: string): 'high_court' | 'district_court' | 'supreme_court' => {
   const normalized = cnr.toUpperCase().replace(/[-\s]/g, '');
   
-  // Check if starts with "SCIN" -> Supreme Court
   if (normalized.startsWith('SCIN')) {
     return 'supreme_court';
   }
   
-  // Check if 3rd and 4th characters are "HC" -> High Court
   if (normalized.length >= 4 && normalized.substring(2, 4) === 'HC') {
     return 'high_court';
   }
   
-  // Default to District Court
   return 'district_court';
 };
 
@@ -79,7 +76,6 @@ export function FetchCaseDetailsDialog({ open, onClose, caseId, onFetchTriggered
     try {
       const courtType = manualCourtType || detectedCourtType;
       
-      // Update case with CNR and court type
       const { error } = await supabase
         .from('cases')
         .update({
@@ -92,7 +88,6 @@ export function FetchCaseDetailsDialog({ open, onClose, caseId, onFetchTriggered
 
       toast({ title: 'CNR number saved successfully' });
       
-      // Trigger fetch from parent
       onFetchTriggered();
     } catch (error: any) {
       console.error('Error saving CNR:', error);
@@ -107,85 +102,149 @@ export function FetchCaseDetailsDialog({ open, onClose, caseId, onFetchTriggered
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Enter CNR Number</DialogTitle>
-          <DialogDescription>
-            Please provide the CNR number to fetch case details from eCourts
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="cnr">CNR Number</Label>
-            <Input
-              id="cnr"
-              placeholder="e.g. GJHC24-074065-2025"
-              value={cnrNumber}
-              onChange={handleCnrChange}
-              className={validationError ? 'border-destructive' : ''}
-            />
-            {validationError && (
-              <p className="text-sm text-destructive">{validationError}</p>
-            )}
-            {!validationError && cnrNumber && (
-              <p className="text-sm text-muted-foreground">
-                Examples: GJHC24-074065-2025, SCIN010138342019, GJAH010006472005
-              </p>
-            )}
+      <DialogContent className="max-w-full sm:max-w-md h-screen sm:h-auto p-0 bg-slate-50 m-0 sm:m-4 rounded-none sm:rounded-2xl overflow-hidden">
+        <div className="flex flex-col h-full sm:h-auto">
+          {/* Header */}
+          <div className="px-6 py-5 bg-white border-b border-slate-100">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center">
+                  <Hash className="w-5 h-5 text-sky-500" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-slate-800">Enter CNR Number</h2>
+                  <p className="text-sm text-muted-foreground">Fetch case details from eCourts</p>
+                </div>
+              </div>
+              <button
+                onClick={onClose}
+                className="md:hidden w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors"
+              >
+                <X className="w-4 h-4 text-slate-500" />
+              </button>
+            </div>
           </div>
 
-          {cnrNumber.length >= 4 && (
-            <div className="space-y-2">
-              <Label>Detected Court Type</Label>
-              <div className="flex items-center gap-2">
-                <Badge className="bg-accent text-accent-foreground">
-                  {getCourtTypeLabel(detectedCourtType)}
-                </Badge>
-                <span className="text-sm text-muted-foreground">(Auto-detected)</span>
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-4">
+            {/* CNR Input Card */}
+            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div className="p-4">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+                    <Hash className="w-5 h-5 text-emerald-500" />
+                  </div>
+                  <div>
+                    <Label className="text-sm font-semibold text-slate-700">CNR Number</Label>
+                    <p className="text-xs text-muted-foreground">Case identification number</p>
+                  </div>
+                </div>
+                
+                <Input
+                  placeholder="e.g. GJHC24-074065-2025"
+                  value={cnrNumber}
+                  onChange={handleCnrChange}
+                  className={`bg-slate-50 border-slate-200 rounded-xl h-12 text-lg font-mono ${validationError ? 'border-red-300' : ''}`}
+                />
+                {validationError && (
+                  <p className="text-sm text-red-500 mt-2">{validationError}</p>
+                )}
+                {!validationError && cnrNumber && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Examples: GJHC24-074065-2025, SCIN010138342019
+                  </p>
+                )}
               </div>
             </div>
-          )}
 
-          <div className="space-y-2">
-            <Label htmlFor="court-type">Override Court Type (Optional)</Label>
-            <Select
-              value={manualCourtType || ''}
-              onValueChange={(value) => setManualCourtType(value as 'high_court' | 'district_court' | 'supreme_court')}
-            >
-              <SelectTrigger id="court-type">
-                <SelectValue placeholder="Use auto-detected type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="high_court">High Court</SelectItem>
-                <SelectItem value="district_court">District Court</SelectItem>
-                <SelectItem value="supreme_court">Supreme Court</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-sm text-muted-foreground">
-              Leave empty to use auto-detected court type
-            </p>
-          </div>
-        </div>
-
-        <div className="flex gap-2 justify-end">
-          <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleSaveAndFetch} 
-            disabled={isSubmitting || !cnrNumber}
-            className="bg-primary text-primary-foreground"
-          >
-            {isSubmitting ? (
-              <>
-                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              'Save & Fetch Details'
+            {/* Detected Court Type Card */}
+            {cnrNumber.length >= 4 && (
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-4">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
+                      <Scale className="w-5 h-5 text-violet-500" />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-semibold text-slate-700">Detected Court Type</Label>
+                      <p className="text-xs text-muted-foreground">Auto-detected from CNR format</p>
+                    </div>
+                  </div>
+                  
+                  <Badge className="bg-violet-100 text-violet-700 border-0 rounded-full px-4 py-1.5 text-sm">
+                    {getCourtTypeLabel(detectedCourtType)}
+                  </Badge>
+                </div>
+              </div>
             )}
-          </Button>
+
+            {/* Override Court Type Card */}
+            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div className="p-4">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
+                    <Scale className="w-5 h-5 text-amber-500" />
+                  </div>
+                  <div>
+                    <Label className="text-sm font-semibold text-slate-700">Override Court Type</Label>
+                    <p className="text-xs text-muted-foreground">Optional manual selection</p>
+                  </div>
+                </div>
+                
+                <Select
+                  value={manualCourtType || ''}
+                  onValueChange={(value) => setManualCourtType(value as 'high_court' | 'district_court' | 'supreme_court')}
+                >
+                  <SelectTrigger className="bg-slate-50 border-slate-200 rounded-xl h-11">
+                    <SelectValue placeholder="Use auto-detected type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="high_court">High Court</SelectItem>
+                    <SelectItem value="district_court">District Court</SelectItem>
+                    <SelectItem value="supreme_court">Supreme Court</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Info Card */}
+            <div className="bg-sky-50 rounded-2xl p-4 border border-sky-100">
+              <div className="flex items-start gap-3">
+                <Info className="w-5 h-5 text-sky-500 mt-0.5" />
+                <p className="text-sm text-sky-700">
+                  Leave the override empty to use the auto-detected court type based on the CNR format.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="px-6 py-4 bg-white border-t border-slate-100">
+            <div className="flex gap-3 justify-end">
+              <Button 
+                variant="outline" 
+                onClick={onClose} 
+                disabled={isSubmitting}
+                className="rounded-full px-6 border-slate-200"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSaveAndFetch} 
+                disabled={isSubmitting || !cnrNumber}
+                className="rounded-full px-6 bg-sky-500 hover:bg-sky-600"
+              >
+                {isSubmitting ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save & Fetch Details'
+                )}
+              </Button>
+            </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

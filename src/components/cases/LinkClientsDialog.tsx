@@ -1,17 +1,12 @@
 import React, { useState } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Upload, Download, Loader2, Link2 } from 'lucide-react';
+import { Upload, Download, Loader2, Link2, X, CheckCircle, AlertCircle, FileSpreadsheet } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { Progress } from '@/components/ui/progress';
+import { Label } from '@/components/ui/label';
 
 interface LinkClientsDialogProps {
   open: boolean;
@@ -129,7 +124,6 @@ export const LinkClientsDialog: React.FC<LinkClientsDialogProps> = ({
 
               const normalizedCNR = normalizeCNR(row.cnr_number);
 
-              // Find case by CNR
               const { data: cases, error: caseError } = await supabase
                 .from('cases')
                 .select('id, client_id, cnr_number, case_number')
@@ -148,13 +142,11 @@ export const LinkClientsDialog: React.FC<LinkClientsDialogProps> = ({
 
               const existingCase = cases[0];
 
-              // Skip if already linked
               if (existingCase.client_id) {
                 processingResult.skipped++;
                 return;
               }
 
-              // Find client by name
               const { data: clients, error: clientError } = await supabase
                 .from('clients')
                 .select('id, full_name')
@@ -171,7 +163,6 @@ export const LinkClientsDialog: React.FC<LinkClientsDialogProps> = ({
                 return;
               }
 
-              // Update case with client_id
               const { error: updateError } = await supabase
                 .from('cases')
                 .update({ client_id: clients[0].id })
@@ -191,7 +182,6 @@ export const LinkClientsDialog: React.FC<LinkClientsDialogProps> = ({
 
         setProgress(Math.round(((i + batch.length) / rows.length) * 100));
         
-        // Delay between batches
         if (i + BATCH_SIZE < rows.length) {
           await new Promise(resolve => setTimeout(resolve, 500));
         }
@@ -227,147 +217,183 @@ export const LinkClientsDialog: React.FC<LinkClientsDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Link2 className="w-5 h-5" />
-            Link Clients to Cases
-          </DialogTitle>
-          <DialogDescription>
-            Upload an Excel file with CNR numbers and client names to link existing clients to cases
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-w-full sm:max-w-xl h-screen sm:h-auto sm:max-h-[85vh] p-0 bg-slate-50 m-0 sm:m-4 rounded-none sm:rounded-2xl overflow-hidden">
+        <div className="flex flex-col h-full sm:h-auto">
+          {/* Header */}
+          <div className="px-6 py-5 bg-white border-b border-slate-100">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center">
+                  <Link2 className="w-5 h-5 text-sky-500" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-slate-800">Link Clients to Cases</h2>
+                  <p className="text-sm text-muted-foreground">Upload Excel with CNR and client names</p>
+                </div>
+              </div>
+              <button
+                onClick={handleClose}
+                disabled={isProcessing}
+                className="md:hidden w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors"
+              >
+                <X className="w-4 h-4 text-slate-500" />
+              </button>
+            </div>
+          </div>
 
-        <div className="space-y-4">
-          {/* File Upload Section */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                onClick={() => document.getElementById('client-link-file')?.click()}
-                disabled={isProcessing}
-                className="flex-1"
-              >
-                <Upload className="w-4 h-4 mr-2" />
-                {file ? file.name : 'Select Excel File'}
-              </Button>
-              <input
-                id="client-link-file"
-                type="file"
-                accept=".xlsx,.xls,.csv"
-                onChange={handleFileChange}
-                className="hidden"
-              />
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={downloadTemplate}
-                disabled={isProcessing}
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Template
-              </Button>
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-4">
+            {/* File Upload Card */}
+            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div className="p-4">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+                    <FileSpreadsheet className="w-5 h-5 text-emerald-500" />
+                  </div>
+                  <div>
+                    <Label className="text-sm font-semibold text-slate-700">Upload Excel File</Label>
+                    <p className="text-xs text-muted-foreground">Select file with CNR and client data</p>
+                  </div>
+                </div>
+                
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => document.getElementById('client-link-file')?.click()}
+                    disabled={isProcessing}
+                    className="flex-1 rounded-xl h-11 border-slate-200"
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    {file ? file.name : 'Select File'}
+                  </Button>
+                  <input
+                    id="client-link-file"
+                    type="file"
+                    accept=".xlsx,.xls,.csv"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={downloadTemplate}
+                    disabled={isProcessing}
+                    className="h-11 w-11 rounded-xl"
+                  >
+                    <Download className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
             </div>
 
-            {file && (
-              <div className="text-sm text-muted-foreground">
-                Selected: {file.name}
+            {/* Process Button */}
+            {file && !result && (
+              <Button
+                onClick={processFile}
+                disabled={isProcessing}
+                className="w-full rounded-xl h-12 bg-sky-500 hover:bg-sky-600"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <Link2 className="w-4 h-4 mr-2" />
+                    Link Clients
+                  </>
+                )}
+              </Button>
+            )}
+
+            {/* Progress Section */}
+            {isProcessing && totalRows > 0 && (
+              <div className="bg-white rounded-2xl shadow-sm p-4 space-y-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Progress</span>
+                  <span className="font-medium text-slate-800">
+                    {currentRow} / {totalRows} rows ({progress}%)
+                  </span>
+                </div>
+                <Progress value={progress} className="h-2" />
+              </div>
+            )}
+
+            {/* Results Section */}
+            {result && (
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-4 border-b border-slate-100">
+                  <h3 className="font-semibold text-slate-800">Results</h3>
+                </div>
+                <div className="p-4 space-y-3">
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                      <span className="text-muted-foreground">Total Rows</span>
+                      <span className="font-semibold text-slate-800">{result.total}</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-emerald-50 rounded-xl">
+                      <span className="text-emerald-600">Linked</span>
+                      <span className="font-semibold text-emerald-600">{result.linked}</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                      <span className="text-muted-foreground">Skipped</span>
+                      <span className="font-semibold text-slate-600">{result.skipped}</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-amber-50 rounded-xl">
+                      <span className="text-amber-600">Case Not Found</span>
+                      <span className="font-semibold text-amber-600">{result.caseNotFound}</span>
+                    </div>
+                    <div className="col-span-2 flex items-center justify-between p-3 bg-red-50 rounded-xl">
+                      <span className="text-red-600">Client Not Found</span>
+                      <span className="font-semibold text-red-600">{result.clientNotFound}</span>
+                    </div>
+                  </div>
+
+                  {result.errors.length > 0 && (
+                    <div className="mt-4 space-y-2">
+                      <h4 className="text-sm font-medium text-red-600 flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4" />
+                        Errors
+                      </h4>
+                      <div className="max-h-32 overflow-y-auto space-y-1.5">
+                        {result.errors.map((error, index) => (
+                          <div key={index} className="text-xs text-red-600 bg-red-50 p-2 rounded-lg">
+                            {error}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
 
-          {/* Process Button */}
-          {file && !result && (
-            <Button
-              onClick={processFile}
-              disabled={isProcessing}
-              className="w-full"
-            >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <Link2 className="w-4 h-4 mr-2" />
-                  Link Clients
-                </>
+          {/* Footer */}
+          <div className="px-6 py-4 bg-white border-t border-slate-100">
+            <div className="flex gap-3 justify-end">
+              {result && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setFile(null);
+                    setResult(null);
+                  }}
+                  className="rounded-full px-6 border-slate-200"
+                >
+                  Upload Another
+                </Button>
               )}
-            </Button>
-          )}
-
-          {/* Progress Section */}
-          {isProcessing && totalRows > 0 && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Progress</span>
-                <span className="font-medium">
-                  {currentRow} / {totalRows} rows ({progress}%)
-                </span>
-              </div>
-              <Progress value={progress} className="h-2" />
-            </div>
-          )}
-
-          {/* Results Section */}
-          {result && (
-            <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-4">
-              <h3 className="font-medium">Results</h3>
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Total Rows:</span>
-                  <span className="font-medium">{result.total}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-green-600">✓ Linked:</span>
-                  <span className="font-medium text-green-600">{result.linked}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">⊘ Skipped (already linked):</span>
-                  <span className="font-medium">{result.skipped}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-orange-600">Case Not Found:</span>
-                  <span className="font-medium text-orange-600">{result.caseNotFound}</span>
-                </div>
-                <div className="flex items-center justify-between col-span-2">
-                  <span className="text-red-600">Client Not Found:</span>
-                  <span className="font-medium text-red-600">{result.clientNotFound}</span>
-                </div>
-              </div>
-
-              {result.errors.length > 0 && (
-                <div className="mt-3 space-y-2">
-                  <h4 className="text-sm font-medium text-red-600">Errors:</h4>
-                  <div className="max-h-40 overflow-y-auto space-y-1">
-                    {result.errors.map((error, index) => (
-                      <div key={index} className="text-xs text-red-600 bg-red-50 p-2 rounded">
-                        {error}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Action Buttons */}
-          <div className="flex justify-end gap-2 pt-2">
-            {result && (
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setFile(null);
-                  setResult(null);
-                }}
+              <Button 
+                variant="ghost" 
+                onClick={handleClose} 
+                disabled={isProcessing}
+                className="rounded-full px-6"
               >
-                Upload Another
+                {result ? 'Close' : 'Cancel'}
               </Button>
-            )}
-            <Button variant="ghost" onClick={handleClose} disabled={isProcessing}>
-              {result ? 'Close' : 'Cancel'}
-            </Button>
+            </div>
           </div>
         </div>
       </DialogContent>
