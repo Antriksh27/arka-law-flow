@@ -30,6 +30,7 @@ export const CaseSelector: React.FC<CaseSelectorProps> = ({
   const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
   const [cases, setCases] = useState<Case[]>([]);
+  const [selectedCase, setSelectedCase] = useState<Case | null>(null);
   const [isSearching, setIsSearching] = useState(false);
 
   // Detect if input looks like a case number
@@ -38,7 +39,37 @@ export const CaseSelector: React.FC<CaseSelectorProps> = ({
            (input.includes('/') || input.includes('GJHC') || /^\d+$/.test(input));
   };
 
-  // Search cases by case_number or cnr_number
+  // Fetch the selected case separately to ensure it's always available
+  useEffect(() => {
+    const fetchSelectedCase = async () => {
+      if (!value || value === 'no-case') {
+        setSelectedCase(null);
+        return;
+      }
+
+      // Check if already in cases list
+      const existingCase = cases.find(c => c.id === value);
+      if (existingCase) {
+        setSelectedCase(existingCase);
+        return;
+      }
+
+      // Fetch from database
+      const { data } = await supabase
+        .from('cases')
+        .select('id, case_title, case_number, cnr_number, client_id')
+        .eq('id', value)
+        .single();
+
+      if (data) {
+        setSelectedCase(data);
+      }
+    };
+
+    fetchSelectedCase();
+  }, [value, cases]);
+
+  // Search cases server-side
   const searchCases = useCallback(async (searchTerm: string) => {
     setIsSearching(true);
     
@@ -50,25 +81,33 @@ export const CaseSelector: React.FC<CaseSelectorProps> = ({
       query = query.eq('client_id', clientId);
     }
 
-    if (searchTerm && isLikelyNumber(searchTerm)) {
-      // Search by case number or CNR
-      query = query.or(`case_number.ilike.%${searchTerm}%,cnr_number.ilike.%${searchTerm}%`);
-    } else if (searchTerm) {
-      // Search by case title
-      query = query.ilike('case_title', `%${searchTerm}%`);
+    if (searchTerm && searchTerm.length >= 2) {
+      if (isLikelyNumber(searchTerm)) {
+        // Search by case number, CNR, or other reference numbers
+        query = query.or(
+          `case_number.ilike.%${searchTerm}%,cnr_number.ilike.%${searchTerm}%,registration_number.ilike.%${searchTerm}%,filing_number.ilike.%${searchTerm}%`
+        );
+      } else {
+        // Search by case title, petitioner, respondent
+        query = query.or(
+          `case_title.ilike.%${searchTerm}%,petitioner.ilike.%${searchTerm}%,respondent.ilike.%${searchTerm}%`
+        );
+      }
     }
 
-    query = query.limit(20);
+    // Limit results for performance, but search covers ALL cases
+    query = query.order('case_title').limit(50);
 
     const { data } = await query;
     
     if (data) {
       // Sort results - exact matches first
       const sorted = data.sort((a, b) => {
-        const aExact = a.case_number?.toLowerCase() === searchTerm.toLowerCase() ||
-                       a.cnr_number?.toLowerCase() === searchTerm.toLowerCase();
-        const bExact = b.case_number?.toLowerCase() === searchTerm.toLowerCase() ||
-                       b.cnr_number?.toLowerCase() === searchTerm.toLowerCase();
+        const searchLower = searchTerm.toLowerCase();
+        const aExact = a.case_number?.toLowerCase() === searchLower ||
+                       a.cnr_number?.toLowerCase() === searchLower;
+        const bExact = b.case_number?.toLowerCase() === searchLower ||
+                       b.cnr_number?.toLowerCase() === searchLower;
         
         if (aExact && !bExact) return -1;
         if (bExact && !aExact) return 1;
@@ -89,12 +128,11 @@ export const CaseSelector: React.FC<CaseSelectorProps> = ({
     return () => clearTimeout(timer);
   }, [searchValue, searchCases]);
 
-  // Initial load
+  // Initial load - fetch recent cases
   useEffect(() => {
     searchCases('');
   }, [clientId]);
-  const selectedCase = cases.find(c => c.id === value);
-  
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -102,58 +140,54 @@ export const CaseSelector: React.FC<CaseSelectorProps> = ({
           variant="outline" 
           role="combobox" 
           aria-expanded={open} 
-          className="w-full justify-between bg-white border-gray-300 text-gray-900 hover:bg-gray-50"
+          className="w-full justify-between bg-white border-gray-300 text-gray-900 hover:bg-gray-50 overflow-hidden"
         >
           {selectedCase ? (
-            <div className="flex items-center gap-2 truncate">
+            <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
               <Briefcase className="h-4 w-4 text-gray-500 flex-shrink-0" />
-              <span className="truncate">
-                {selectedCase.case_title.length > 20 
-                  ? `${selectedCase.case_title.substring(0, 20)}...` 
-                  : selectedCase.case_title}
-              </span>
+              <span className="truncate">{selectedCase.case_title}</span>
               {selectedCase.case_number && (
-                <span className="text-xs text-muted-foreground">({selectedCase.case_number})</span>
+                <span className="text-xs text-muted-foreground flex-shrink-0">({selectedCase.case_number})</span>
               )}
             </div>
-          ) : placeholder}
+          ) : (
+            <span className="truncate">{placeholder}</span>
+          )}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[450px] p-0 bg-white border-gray-300" align="start">
-        <Command className="bg-white">
+        <Command className="bg-white" shouldFilter={false}>
           <CommandInput 
-            placeholder="Search by case title, case number, or CNR..." 
+            placeholder="Search by case title, number, CNR, petitioner..." 
             value={searchValue} 
             onValueChange={setSearchValue} 
             className="text-gray-900" 
           />
           <CommandList className="max-h-[350px]">
-            <CommandEmpty className="text-gray-500 py-6">
-              <div className="text-center">
-                <p>No cases found matching "{searchValue}"</p>
-                <p className="text-xs mt-1 text-muted-foreground">
-                  {isLikelyNumber(searchValue) 
-                    ? "Try entering the full case number or CNR" 
-                    : clientId 
-                      ? "Select a different client to see more cases" 
-                      : "Try a different search term"}
-                </p>
-              </div>
-            </CommandEmpty>
-            
-            {isSearching && (
+            {isSearching ? (
               <div className="py-6 text-center text-sm text-muted-foreground">
-                Searching...
+                Searching all cases...
               </div>
-            )}
-            
-            {!isSearching && cases.length > 0 && (
-              <CommandGroup heading="Cases" className="text-gray-700">
+            ) : cases.length === 0 ? (
+              <CommandEmpty className="text-gray-500 py-6">
+                <div className="text-center">
+                  <p>No cases found {searchValue ? `matching "${searchValue}"` : ''}</p>
+                  <p className="text-xs mt-1 text-muted-foreground">
+                    {searchValue.length < 2 
+                      ? "Type at least 2 characters to search all cases"
+                      : isLikelyNumber(searchValue) 
+                        ? "Try entering the full case number or CNR" 
+                        : "Try a different search term"}
+                  </p>
+                </div>
+              </CommandEmpty>
+            ) : (
+              <CommandGroup heading={`Cases (${cases.length} results)`} className="text-gray-700">
                 {cases.map(caseItem => (
                   <CommandItem 
                     key={caseItem.id} 
-                    value={`${caseItem.case_title} ${caseItem.case_number || ''} ${caseItem.cnr_number || ''}`}
+                    value={caseItem.id}
                     onSelect={() => {
                       onValueChange(caseItem.id);
                       setOpen(false);
