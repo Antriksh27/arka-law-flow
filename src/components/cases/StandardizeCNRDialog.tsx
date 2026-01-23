@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, CheckCircle, Loader2, ArrowRight } from 'lucide-react';
+import { AlertCircle, CheckCircle, Loader2, ArrowRight, X, Hash, Info } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -31,7 +31,6 @@ export const StandardizeCNRDialog = ({
   const { toast } = useToast();
   const { user } = useAuth();
 
-  // Normalize CNR number by removing dashes, spaces and converting to uppercase
   const normalizeCNR = (cnr: string): string => {
     return cnr.replace(/[-\s]/g, '').toUpperCase();
   };
@@ -44,7 +43,6 @@ export const StandardizeCNRDialog = ({
     setResults(null);
 
     try {
-      // Get user's firm_id
       const { data: teamMember } = await supabase
         .from('team_members')
         .select('firm_id')
@@ -55,7 +53,6 @@ export const StandardizeCNRDialog = ({
         throw new Error('Unable to determine your firm');
       }
 
-      // Get all cases with CNR numbers
       const { data: cases, error } = await supabase
         .from('cases')
         .select('id, case_title, cnr_number')
@@ -72,14 +69,12 @@ export const StandardizeCNRDialog = ({
         return;
       }
 
-      // Find cases that need standardization (contain dashes or spaces)
       const needsStandardization: CNRPreview[] = [];
       
       for (const caseItem of cases) {
         const original = caseItem.cnr_number || '';
         const standardized = normalizeCNR(original);
         
-        // Only include if there's a difference
         if (original !== standardized) {
           needsStandardization.push({
             caseId: caseItem.id,
@@ -126,7 +121,6 @@ export const StandardizeCNRDialog = ({
       let updatedCount = 0;
       const errors: string[] = [];
 
-      // Update each case
       for (const item of preview) {
         try {
           const { error } = await supabase
@@ -188,140 +182,166 @@ export const StandardizeCNRDialog = ({
       if (!open) resetDialog();
       onOpenChange(open);
     }}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Standardize CNR Numbers</DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-6">
-          {/* Info */}
-          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5" />
-              <div className="flex-1">
-                <h3 className="font-medium text-blue-900 mb-1">About CNR Standardization</h3>
-                <p className="text-sm text-blue-700">
-                  This tool will remove dashes and spaces from all CNR numbers in your database, converting them to a consistent uppercase format without dashes.
-                  <br />
-                  <strong>Example:</strong> GJHC-24052244-2018 → GJHC240522442018
-                </p>
+      <DialogContent className="max-w-full sm:max-w-2xl h-screen sm:h-[90vh] sm:max-h-[800px] p-0 bg-slate-50 m-0 sm:m-4 rounded-none sm:rounded-2xl overflow-hidden">
+        <div className="flex flex-col h-full">
+          {/* Header */}
+          <div className="px-6 py-5 bg-white border-b border-slate-100">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
+                  <Hash className="w-5 h-5 text-violet-500" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-slate-800">Standardize CNR Numbers</h2>
+                  <p className="text-sm text-muted-foreground">Clean and format all CNR numbers</p>
+                </div>
               </div>
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="space-y-3">
-            <Button
-              onClick={analyzeCNRs}
-              disabled={analyzing || loading}
-              className="w-full bg-slate-800 hover:bg-slate-700"
-            >
-              {analyzing ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Analyzing...
-                </>
-              ) : (
-                <>
-                  Analyze CNR Numbers
-                </>
-              )}
-            </Button>
-
-            {preview.length > 0 && (
-              <Button
-                onClick={applyStandardization}
-                disabled={loading}
-                className="w-full bg-green-600 hover:bg-green-700"
+              <button
+                onClick={() => onOpenChange(false)}
+                className="md:hidden w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors"
               >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Applying Changes...
-                  </>
-                ) : (
-                  <>
-                    Apply Standardization ({preview.length} case{preview.length !== 1 ? 's' : ''})
-                  </>
-                )}
-              </Button>
-            )}
+                <X className="w-4 h-4 text-slate-500" />
+              </button>
+            </div>
           </div>
 
-          {/* Preview */}
-          {preview.length > 0 && !results && (
-            <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-4">
+            {/* Info Card */}
+            <div className="bg-sky-50 rounded-2xl p-4 border border-sky-100">
               <div className="flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-purple-600 mt-0.5" />
-                <div className="flex-1">
-                  <h3 className="font-medium text-purple-900 mb-3">Preview of Changes</h3>
-                  <div className="space-y-3 max-h-96 overflow-y-auto">
-                    {preview.slice(0, 20).map((item, idx) => (
-                      <div key={idx} className="bg-white p-3 rounded border border-purple-200">
-                        <p className="text-sm font-medium text-gray-800 mb-2">{item.caseTitle}</p>
-                        <div className="flex items-center gap-3 text-xs">
-                          <span className="text-red-700 font-mono">{item.originalCNR}</span>
-                          <ArrowRight className="w-4 h-4 text-purple-600" />
-                          <span className="text-green-700 font-mono font-medium">{item.standardizedCNR}</span>
-                        </div>
-                      </div>
-                    ))}
-                    {preview.length > 20 && (
-                      <p className="text-sm text-purple-600 italic text-center">
-                        ...and {preview.length - 20} more
-                      </p>
-                    )}
-                  </div>
+                <Info className="w-5 h-5 text-sky-500 mt-0.5 flex-shrink-0" />
+                <div>
+                  <h3 className="font-semibold text-sky-900 mb-1">About CNR Standardization</h3>
+                  <p className="text-sm text-sky-700">
+                    This tool removes dashes and spaces from CNR numbers, converting them to uppercase.
+                  </p>
+                  <p className="text-sm text-sky-600 mt-2 font-mono">
+                    Example: GJHC-24052244-2018 → GJHC240522442018
+                  </p>
                 </div>
               </div>
             </div>
-          )}
 
-          {/* Results */}
-          {results && (
-            <div className="space-y-4">
-              {results.updated > 0 && (
-                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                  <div className="flex items-center gap-2 text-green-800">
-                    <CheckCircle className="w-5 h-5" />
-                    <span className="font-medium">
-                      Successfully standardized {results.updated} CNR number(s)
-                    </span>
-                  </div>
-                </div>
-              )}
+            {/* Actions Card */}
+            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div className="p-4 space-y-3">
+                <Button
+                  onClick={analyzeCNRs}
+                  disabled={analyzing || loading}
+                  className="w-full rounded-xl h-12 bg-slate-800 hover:bg-slate-700"
+                >
+                  {analyzing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Analyzing...
+                    </>
+                  ) : (
+                    'Analyze CNR Numbers'
+                  )}
+                </Button>
 
-              {results.errors.length > 0 && (
-                <div className="bg-red-50 p-4 rounded-lg border border-red-200">
-                  <div className="flex items-start gap-2">
-                    <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
-                    <div className="flex-1">
-                      <h3 className="font-medium text-red-800 mb-2">
-                        {results.errors.length} error(s) occurred:
-                      </h3>
-                      <div className="space-y-1 max-h-40 overflow-y-auto">
-                        {results.errors.map((error, index) => (
-                          <p key={index} className="text-sm text-red-700">
-                            • {error}
-                          </p>
-                        ))}
-                      </div>
+                {preview.length > 0 && !results && (
+                  <Button
+                    onClick={applyStandardization}
+                    disabled={loading}
+                    className="w-full rounded-xl h-12 bg-emerald-500 hover:bg-emerald-600"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Applying Changes...
+                      </>
+                    ) : (
+                      <>
+                        Apply Standardization ({preview.length} case{preview.length !== 1 ? 's' : ''})
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Preview */}
+            {preview.length > 0 && !results && (
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-4 border-b border-slate-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
+                      <AlertCircle className="w-5 h-5 text-violet-500" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-semibold text-slate-700">Preview of Changes</h3>
+                      <p className="text-xs text-muted-foreground">{preview.length} CNR numbers will be updated</p>
                     </div>
                   </div>
                 </div>
-              )}
-            </div>
-          )}
+                <div className="divide-y divide-slate-100 max-h-64 overflow-y-auto">
+                  {preview.slice(0, 20).map((item, idx) => (
+                    <div key={idx} className="p-4">
+                      <p className="text-sm font-medium text-slate-800 mb-2 truncate">{item.caseTitle}</p>
+                      <div className="flex items-center gap-3 text-xs">
+                        <span className="text-red-600 font-mono bg-red-50 px-2 py-1 rounded">{item.originalCNR}</span>
+                        <ArrowRight className="w-4 h-4 text-slate-400" />
+                        <span className="text-emerald-600 font-mono font-medium bg-emerald-50 px-2 py-1 rounded">{item.standardizedCNR}</span>
+                      </div>
+                    </div>
+                  ))}
+                  {preview.length > 20 && (
+                    <div className="p-4 text-center text-sm text-muted-foreground">
+                      ...and {preview.length - 20} more
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
-          {/* Instructions */}
-          <div className="bg-gray-50 p-4 rounded-lg text-sm text-gray-600">
-            <h3 className="font-medium text-gray-800 mb-2">How to use:</h3>
-            <ol className="space-y-1 list-decimal list-inside">
-              <li>Click "Analyze CNR Numbers" to scan your database</li>
-              <li>Review the preview of changes that will be made</li>
-              <li>Click "Apply Standardization" to update all CNR numbers</li>
-              <li>This will make CNR matching more reliable across the system</li>
-            </ol>
+            {/* Results */}
+            {results && (
+              <div className="space-y-4">
+                {results.updated > 0 && (
+                  <div className="bg-emerald-50 rounded-2xl p-4 border border-emerald-100">
+                    <div className="flex items-center gap-3 text-emerald-800">
+                      <CheckCircle className="w-5 h-5" />
+                      <span className="font-medium">
+                        Successfully standardized {results.updated} CNR number(s)
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {results.errors.length > 0 && (
+                  <div className="bg-red-50 rounded-2xl p-4 border border-red-100">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="w-5 h-5 text-red-500 mt-0.5" />
+                      <div className="flex-1">
+                        <h3 className="font-medium text-red-800 mb-2">
+                          {results.errors.length} error(s) occurred:
+                        </h3>
+                        <div className="space-y-1 max-h-32 overflow-y-auto">
+                          {results.errors.map((error, index) => (
+                            <p key={index} className="text-sm text-red-700">
+                              • {error}
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Instructions */}
+            <div className="bg-slate-100 rounded-2xl p-4">
+              <h3 className="font-semibold text-slate-800 mb-2">How to use:</h3>
+              <ol className="space-y-1.5 list-decimal list-inside text-sm text-slate-600">
+                <li>Click "Analyze CNR Numbers" to scan your database</li>
+                <li>Review the preview of changes</li>
+                <li>Click "Apply Standardization" to update all CNR numbers</li>
+                <li>This makes CNR matching more reliable</li>
+              </ol>
+            </div>
           </div>
         </div>
       </DialogContent>

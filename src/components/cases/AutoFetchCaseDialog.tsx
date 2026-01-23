@@ -4,9 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2, Settings, Info } from 'lucide-react';
+import { Loader2, Settings, Info, X, Zap } from 'lucide-react';
 
 interface AutoFetchCaseDialogProps {
   open: boolean;
@@ -40,7 +40,6 @@ export const AutoFetchCaseDialog: React.FC<AutoFetchCaseDialogProps> = ({
         description: `CNR auto-fetch has been ${enabled ? 'enabled' : 'disabled'} for this case`,
       });
       
-      // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ['case', caseId] });
       queryClient.invalidateQueries({ queryKey: ['cases'] });
       
@@ -61,66 +60,109 @@ export const AutoFetchCaseDialog: React.FC<AutoFetchCaseDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Settings className="h-5 w-5" />
-            CNR Auto-Fetch Settings
-          </DialogTitle>
-          <DialogDescription>
-            Configure automatic case data fetching when CNR is updated
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <Label htmlFor="auto-fetch">Enable Auto-Fetch</Label>
-              <p className="text-sm text-gray-500">
-                Automatically fetch case details from Legalkart when CNR is added or changed
-              </p>
+      <DialogContent className="max-w-full sm:max-w-md h-screen sm:h-auto p-0 bg-slate-50 m-0 sm:m-4 rounded-none sm:rounded-2xl overflow-hidden">
+        <div className="flex flex-col h-full sm:h-auto">
+          {/* Header */}
+          <div className="px-6 py-5 bg-white border-b border-slate-100">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
+                  <Settings className="w-5 h-5 text-violet-500" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-slate-800">Auto-Fetch Settings</h2>
+                  <p className="text-sm text-muted-foreground">Configure automatic case fetching</p>
+                </div>
+              </div>
+              <button
+                onClick={onClose}
+                className="md:hidden w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors"
+              >
+                <X className="w-4 h-4 text-slate-500" />
+              </button>
             </div>
-            <Switch
-              id="auto-fetch"
-              checked={autoFetchEnabled}
-              onCheckedChange={setAutoFetchEnabled}
-            />
           </div>
 
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex items-start gap-2">
-              <Info className="h-5 w-5 text-blue-500 mt-0.5" />
-              <div className="space-y-2">
-                <h4 className="text-sm font-medium text-blue-900">How Auto-Fetch Works</h4>
-                <ul className="text-sm text-blue-700 space-y-1">
-                  <li>• Triggers when CNR number is added or modified</li>
-                  <li>• Searches High Court, District Court, and Supreme Court</li>
-                  <li>• Updates case details with fetched information</li>
-                  <li>• Creates search records for audit trail</li>
-                </ul>
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-4">
+            {/* Toggle Card */}
+            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+                      <Zap className="w-5 h-5 text-emerald-500" />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-semibold text-slate-700">Enable Auto-Fetch</Label>
+                      <p className="text-xs text-muted-foreground">Automatically fetch when CNR changes</p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={autoFetchEnabled}
+                    onCheckedChange={setAutoFetchEnabled}
+                    className="data-[state=checked]:bg-emerald-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Info Card */}
+            <div className="bg-sky-50 rounded-2xl p-4 border border-sky-100">
+              <div className="flex items-start gap-3">
+                <Info className="w-5 h-5 text-sky-500 mt-0.5 flex-shrink-0" />
+                <div className="space-y-3">
+                  <h4 className="text-sm font-semibold text-sky-900">How Auto-Fetch Works</h4>
+                  <ul className="text-sm text-sky-700 space-y-2">
+                    <li className="flex items-start gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-sky-400 mt-1.5 flex-shrink-0" />
+                      <span>Triggers when CNR number is added or modified</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-sky-400 mt-1.5 flex-shrink-0" />
+                      <span>Searches High Court, District Court, and Supreme Court</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-sky-400 mt-1.5 flex-shrink-0" />
+                      <span>Updates case details with fetched information</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-sky-400 mt-1.5 flex-shrink-0" />
+                      <span>Creates search records for audit trail</span>
+                    </li>
+                  </ul>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleSave}
-            disabled={updateAutoFetchMutation.isPending}
-          >
-            {updateAutoFetchMutation.isPending ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              'Save Settings'
-            )}
-          </Button>
-        </DialogFooter>
+          {/* Footer */}
+          <div className="px-6 py-4 bg-white border-t border-slate-100">
+            <div className="flex gap-3 justify-end">
+              <Button 
+                variant="outline" 
+                onClick={onClose}
+                className="rounded-full px-6 border-slate-200"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSave}
+                disabled={updateAutoFetchMutation.isPending}
+                className="rounded-full px-6 bg-slate-800 hover:bg-slate-700"
+              >
+                {updateAutoFetchMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save Settings'
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
