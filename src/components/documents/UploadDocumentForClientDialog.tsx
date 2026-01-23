@@ -11,6 +11,7 @@ import { Upload, X, FileText, FolderOpen, FileType, MessageSquare, Shield } from
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { uploadResumableToSupabaseStorage } from '@/lib/supabaseResumableUpload';
 import { StoragePathPreview } from './StoragePathPreview';
 import { 
   PRIMARY_DOCUMENT_TYPES, 
@@ -202,9 +203,27 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
           console.warn('⚠️ WebDAV upload failed or skipped, falling back to Supabase Storage:', webdavErrorMessage);
 
           const storagePathFallback = `uploads/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${file.name}`;
-          const { error: storageError } = await supabase.storage
-            .from('documents')
-            .upload(storagePathFallback, file);
+          const useResumable = file.size > 45 * 1024 * 1024; // avoid /object endpoint limits
+
+          let storageError: { message?: string } | null = null;
+
+          if (useResumable) {
+            try {
+              await uploadResumableToSupabaseStorage({
+                bucket: 'documents',
+                objectPath: storagePathFallback,
+                file,
+                upsert: false,
+              });
+            } catch (e: any) {
+              storageError = { message: e?.message || String(e) };
+            }
+          } else {
+            const { error } = await supabase.storage
+              .from('documents')
+              .upload(storagePathFallback, file);
+            storageError = error ? { message: error.message } : null;
+          }
 
           if (storageError) {
             console.error('❌ Supabase storage upload failed as fallback:', storageError);
