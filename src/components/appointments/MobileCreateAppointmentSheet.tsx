@@ -375,14 +375,14 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
             <div className="space-y-2">
               <Label className="text-xs text-muted-foreground">Related Case (Optional)</Label>
               <Select 
-                value={formData.case_id} 
-                onValueChange={v => handleInputChange('case_id', v)}
+                value={formData.case_id || "__none__"} 
+                onValueChange={v => handleInputChange('case_id', v === "__none__" ? "" : v)}
               >
                 <SelectTrigger className="h-12 rounded-xl">
                   <SelectValue placeholder="Select case" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No case</SelectItem>
+                  <SelectItem value="__none__">No case</SelectItem>
                   {cases.map(c => (
                     <SelectItem key={c.id} value={c.id}>{c.case_title}</SelectItem>
                   ))}
