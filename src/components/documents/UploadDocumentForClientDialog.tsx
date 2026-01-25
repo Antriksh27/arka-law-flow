@@ -473,9 +473,9 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] p-0 gap-0 overflow-hidden">
-        <div className="flex flex-col h-full bg-slate-50">
+        <div className="flex flex-col h-full bg-muted">
           {/* Header */}
-          <div className="px-6 py-5 bg-white border-b border-slate-100">
+          <div className="px-6 py-5 bg-background border-b border-border">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-foreground">Upload Document</h2>
@@ -483,9 +483,9 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
               </div>
               <button 
                 onClick={onClose}
-                className="md:hidden w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center"
+                className="md:hidden w-8 h-8 rounded-full bg-muted flex items-center justify-center"
               >
-                <X className="w-4 h-4 text-slate-500" />
+                <X className="w-4 h-4 text-muted-foreground" />
               </button>
             </div>
           </div>
@@ -494,14 +494,14 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
           <form onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto">
             <div className="p-6 space-y-6">
               {/* File Upload Card */}
-              <div className="bg-white rounded-2xl shadow-sm p-5">
+              <div className="bg-background rounded-2xl shadow-sm p-5">
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center flex-shrink-0">
                     <Upload className="w-5 h-5 text-sky-500" />
                   </div>
                   <div className="flex-1 space-y-3">
                     <Label className="text-sm font-medium text-foreground">Select Files</Label>
-                    <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center hover:border-primary/50 transition-colors bg-slate-50/50">
+                    <div className="border-2 border-dashed border-input rounded-xl p-6 text-center hover:border-primary/50 transition-colors bg-muted/50">
                       <input 
                         type="file" 
                         multiple 
@@ -520,9 +520,9 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
                     {selectedFiles.length > 0 && (
                       <div className="space-y-2">
                         <Label className="text-sm font-medium text-foreground">Selected Files ({selectedFiles.length})</Label>
-                        <div className="max-h-40 overflow-y-auto border border-slate-200 rounded-xl">
+                        <div className="max-h-40 overflow-y-auto border border-border rounded-xl">
                           {selectedFiles.map((file, index) => (
-                            <div key={index} className="flex items-center justify-between p-3 border-b border-slate-100 last:border-b-0 hover:bg-slate-50">
+                            <div key={index} className="flex items-center justify-between p-3 border-b border-border last:border-b-0 hover:bg-muted">
                               <div className="flex items-center gap-3">
                                 <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
                                   <FileText className="w-4 h-4 text-amber-500" />
@@ -561,7 +561,7 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
               </div>
 
               {/* Case Assignment Card */}
-              <div className="bg-white rounded-2xl shadow-sm p-5">
+              <div className="bg-background rounded-2xl shadow-sm p-5">
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center flex-shrink-0">
                     <FolderOpen className="w-5 h-5 text-violet-500" />
@@ -569,10 +569,10 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
                   <div className="flex-1 space-y-3">
                     <Label className="text-sm font-medium text-foreground">Assign to Case (Optional)</Label>
                     <Select onValueChange={value => setValue('case_id', value)} value={selectedCaseId}>
-                      <SelectTrigger className="rounded-xl border-slate-200">
+                      <SelectTrigger className="rounded-xl border-input">
                         <SelectValue placeholder="Select a case..." />
                       </SelectTrigger>
-                      <SelectContent className="bg-white border border-slate-200 shadow-lg rounded-xl z-50">
+                      <SelectContent className="bg-background border border-border shadow-lg rounded-xl z-50">
                         <SelectItem value="no-case">No Case (General Documents)</SelectItem>
                         {cases.map(case_item => (
                           <SelectItem key={case_item.id} value={case_item.id}>
@@ -586,7 +586,7 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
               </div>
 
               {/* Document Type Card */}
-              <div className="bg-white rounded-2xl shadow-sm p-5">
+              <div className="bg-background rounded-2xl shadow-sm p-5">
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0">
                     <FileType className="w-5 h-5 text-amber-500" />
@@ -603,10 +603,10 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
                         }} 
                         value={selectedPrimaryType}
                       >
-                        <SelectTrigger className="rounded-xl border-slate-200">
+                        <SelectTrigger className="rounded-xl border-input">
                           <SelectValue placeholder="Select document type..." />
                         </SelectTrigger>
-                        <SelectContent className="bg-white border border-slate-200 shadow-lg rounded-xl z-50 max-h-[300px]">
+                        <SelectContent className="bg-background border border-border shadow-lg rounded-xl z-50 max-h-[300px]">
                           {PRIMARY_DOCUMENT_TYPES.map(type => (
                             <SelectItem key={type} value={type}>
                               <span className="flex items-center gap-2">
@@ -628,10 +628,10 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
                           onValueChange={value => setValue('sub_document_type', value)} 
                           value={selectedSubType}
                         >
-                          <SelectTrigger className="rounded-xl border-slate-200">
+                          <SelectTrigger className="rounded-xl border-input">
                             <SelectValue placeholder="Select sub-type..." />
                           </SelectTrigger>
-                          <SelectContent className="bg-white border border-slate-200 shadow-lg rounded-xl z-50">
+                          <SelectContent className="bg-background border border-border shadow-lg rounded-xl z-50">
                             {availableSubTypes.map(type => (
                               <SelectItem key={type} value={type}>{type}</SelectItem>
                             ))}
@@ -654,7 +654,7 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
               />
 
               {/* Notes Card */}
-              <div className="bg-white rounded-2xl shadow-sm p-5">
+              <div className="bg-background rounded-2xl shadow-sm p-5">
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center flex-shrink-0">
                     <MessageSquare className="w-5 h-5 text-emerald-500" />
@@ -665,14 +665,14 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
                       {...register('notes')}
                       placeholder="Add any additional notes about this document..."
                       rows={3}
-                      className="rounded-xl border-slate-200"
+                      className="rounded-xl border-input"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Document Properties Card */}
-              <div className="bg-white rounded-2xl shadow-sm p-5">
+              <div className="bg-background rounded-2xl shadow-sm p-5">
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center flex-shrink-0">
                     <Shield className="w-5 h-5 text-rose-500" />
@@ -680,7 +680,7 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
                   <div className="flex-1 space-y-3">
                     <Label className="text-sm font-medium text-foreground">Document Properties</Label>
                     <div className="space-y-1">
-                      <div className="flex items-center space-x-3 p-3 rounded-xl hover:bg-slate-50 transition-colors">
+                      <div className="flex items-center space-x-3 p-3 rounded-xl hover:bg-muted transition-colors">
                         <Checkbox
                           id="is_evidence_client"
                           {...register('is_evidence')}
@@ -690,7 +690,7 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
                           Mark as important/evidence
                         </Label>
                       </div>
-                      <div className="flex items-center space-x-3 p-3 rounded-xl hover:bg-slate-50 transition-colors">
+                      <div className="flex items-center space-x-3 p-3 rounded-xl hover:bg-muted transition-colors">
                         <Checkbox
                           id="confidential_client"
                           {...register('confidential')}
@@ -702,17 +702,17 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center cursor-help">
-                                <span className="text-xs text-slate-500">?</span>
+                              <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center cursor-help">
+                                <span className="text-xs text-muted-foreground">?</span>
                               </div>
                             </TooltipTrigger>
-                            <TooltipContent className="max-w-xs bg-slate-900 text-white rounded-xl">
+                            <TooltipContent className="max-w-xs bg-popover text-popover-foreground rounded-xl">
                               <p className="text-sm">Only you, admins, and office staff can view confidential documents.</p>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
                       </div>
-                      <div className="flex items-center space-x-3 p-3 rounded-xl hover:bg-slate-50 transition-colors">
+                      <div className="flex items-center space-x-3 p-3 rounded-xl hover:bg-muted transition-colors">
                         <Checkbox
                           id="certified_copy_client"
                           {...register('certified_copy')}
@@ -722,7 +722,7 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
                           Certified copy
                         </Label>
                       </div>
-                      <div className="flex items-center space-x-3 p-3 rounded-xl hover:bg-slate-50 transition-colors">
+                      <div className="flex items-center space-x-3 p-3 rounded-xl hover:bg-muted transition-colors">
                         <Checkbox
                           id="original_copy_retained_client"
                           {...register('original_copy_retained')}
@@ -739,14 +739,14 @@ export const UploadDocumentForClientDialog: React.FC<UploadDocumentForClientDial
             </div>
 
             {/* Footer Actions */}
-            <div className="sticky bottom-0 bg-white border-t border-slate-100 px-6 py-4">
+            <div className="sticky bottom-0 bg-background border-t border-border px-6 py-4">
               <div className="flex justify-end gap-3">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={onClose}
                   disabled={uploadMutation.isPending}
-                  className="rounded-full px-6 border-slate-200"
+                  className="rounded-full px-6 border-input"
                 >
                   Cancel
                 </Button>
