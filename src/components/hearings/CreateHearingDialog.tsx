@@ -128,184 +128,216 @@ export const CreateHearingDialog: React.FC = () => {
 
   return (
     <Dialog open onOpenChange={closeDialog}>
-      <DialogContent className="max-w-2xl max-h-[90vh] bg-white border-gray-900 overflow-hidden">
-        <DialogHeader className="pb-4">
-          <DialogTitle className="text-gray-900">Create New Hearing</DialogTitle>
-        </DialogHeader>
-        
-        <div className="overflow-y-auto px-1 max-h-[calc(90vh-120px)]">
-          <form onSubmit={handleSubmit} className="space-y-4 pr-3">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="case" className="text-gray-900">Case *</Label>
-                <Select
-                  value={formData.case_id}
-                  onValueChange={(value) => handleInputChange('case_id', value)}
-                >
-                  <SelectTrigger className="bg-white border-gray-900 text-gray-900">
-                    <SelectValue placeholder="Select a case" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border-gray-900">
-                    {cases?.map((case_item) => (
-                      <SelectItem key={case_item.id} value={case_item.id} className="text-gray-900">
-                        {case_item.case_title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+      <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 flex flex-col overflow-hidden">
+        <div className="flex flex-col h-full min-h-0 bg-muted">
+          {/* Header */}
+          <div className="flex-shrink-0 px-6 py-5 bg-background border-b border-border">
+            <div className="flex items-center justify-between">
+              <div>
+                <DialogTitle className="text-xl font-semibold text-foreground">Create New Hearing</DialogTitle>
+                <p className="text-sm text-muted-foreground mt-1">Schedule a new court hearing</p>
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="hearing_type" className="text-gray-900">Hearing Type</Label>
-                <Select
-                  value={formData.hearing_type}
-                  onValueChange={(value: HearingType) => handleInputChange('hearing_type', value)}
-                >
-                  <SelectTrigger className="bg-white border-gray-900 text-gray-900">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border-gray-900">
-                    <SelectItem value="preliminary" className="text-gray-900">Preliminary</SelectItem>
-                    <SelectItem value="evidence" className="text-gray-900">Evidence</SelectItem>
-                    <SelectItem value="arguments" className="text-gray-900">Arguments</SelectItem>
-                    <SelectItem value="judgment" className="text-gray-900">Judgment</SelectItem>
-                    <SelectItem value="bail" className="text-gray-900">Bail</SelectItem>
-                    <SelectItem value="order" className="text-gray-900">Order</SelectItem>
-                    <SelectItem value="cross_examination" className="text-gray-900">Cross Examination</SelectItem>
-                    <SelectItem value="other" className="text-gray-900">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-gray-900">Hearing Date *</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start text-left bg-white border-gray-900 text-gray-900 hover:bg-gray-50">
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formData.hearing_date ? TimeUtils.formatDisplay(formData.hearing_date, 'PPP') : 'Select date'}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 bg-white border-gray-900">
-                    <Calendar
-                      mode="single"
-                      selected={typeof formData.hearing_date === 'string' 
-                        ? new Date(formData.hearing_date) 
-                        : formData.hearing_date}
-                      onSelect={(date) => handleInputChange('hearing_date', date || new Date())}
-                      initialFocus
-                      className="bg-white"
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="hearing_time" className="text-gray-900">Time (Optional)</Label>
-                <Input
-                  id="hearing_time"
-                  type="time"
-                  value={formData.hearing_time || ''}
-                  onChange={(e) => handleInputChange('hearing_time', e.target.value)}
-                  className="bg-white border-gray-900 text-gray-900"
-                  placeholder="HH:MM"
-                />
-                <p className="text-xs text-gray-500">Leave empty if time is not specified</p>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="court_name" className="text-gray-900">Court Name *</Label>
-              <Input
-                id="court_name"
-                value={formData.court_name}
-                onChange={(e) => handleInputChange('court_name', e.target.value)}
-                placeholder="Enter court name"
-                className="bg-white border-gray-900 text-gray-900"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="bench" className="text-gray-900">Bench</Label>
-                <Input
-                  id="bench"
-                  value={formData.bench || ''}
-                  onChange={(e) => handleInputChange('bench', e.target.value)}
-                  placeholder="Enter bench details"
-                  className="bg-white border-gray-900 text-gray-900"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="coram" className="text-gray-900">Coram</Label>
-                <Input
-                  id="coram"
-                  value={formData.coram || ''}
-                  onChange={(e) => handleInputChange('coram', e.target.value)}
-                  placeholder="Enter coram details"
-                  className="bg-white border-gray-900 text-gray-900"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="status" className="text-gray-900">Status</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value: HearingStatus) => handleInputChange('status', value)}
+              <button 
+                onClick={closeDialog}
+                className="sm:hidden w-8 h-8 rounded-full bg-muted flex items-center justify-center"
               >
-                <SelectTrigger className="bg-white border-gray-900 text-gray-900">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-white border-gray-900">
-                  <SelectItem value="scheduled" className="text-gray-900">Scheduled</SelectItem>
-                  <SelectItem value="adjourned" className="text-gray-900">Adjourned</SelectItem>
-                  <SelectItem value="completed" className="text-gray-900">Completed</SelectItem>
-                  <SelectItem value="cancelled" className="text-gray-900">Cancelled</SelectItem>
-                </SelectContent>
-              </Select>
+                <span className="sr-only">Close</span>
+                <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+              </button>
             </div>
+          </div>
+          
+          <div className="flex-1 min-h-0 overflow-y-auto px-6 py-6">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Case & Type Card */}
+              <div className="bg-background rounded-2xl shadow-sm p-4 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="case" className="text-foreground">Case *</Label>
+                    <Select
+                      value={formData.case_id}
+                      onValueChange={(value) => handleInputChange('case_id', value)}
+                    >
+                      <SelectTrigger className="bg-background border-input rounded-xl h-11">
+                        <SelectValue placeholder="Select a case" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background border-border rounded-xl">
+                        {cases?.map((case_item) => (
+                          <SelectItem key={case_item.id} value={case_item.id}>
+                            {case_item.case_title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="outcome" className="text-gray-900">Outcome</Label>
-              <Textarea
-                id="outcome"
-                value={formData.outcome || ''}
-                onChange={(e) => handleInputChange('outcome', e.target.value)}
-                placeholder="Enter hearing outcome"
-                rows={3}
-                className="bg-white border-gray-900 text-gray-900"
-              />
-            </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="hearing_type" className="text-foreground">Hearing Type</Label>
+                    <Select
+                      value={formData.hearing_type}
+                      onValueChange={(value: HearingType) => handleInputChange('hearing_type', value)}
+                    >
+                      <SelectTrigger className="bg-background border-input rounded-xl h-11">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background border-border rounded-xl">
+                        <SelectItem value="preliminary">Preliminary</SelectItem>
+                        <SelectItem value="evidence">Evidence</SelectItem>
+                        <SelectItem value="arguments">Arguments</SelectItem>
+                        <SelectItem value="judgment">Judgment</SelectItem>
+                        <SelectItem value="bail">Bail</SelectItem>
+                        <SelectItem value="order">Order</SelectItem>
+                        <SelectItem value="cross_examination">Cross Examination</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="notes" className="text-gray-900">Notes</Label>
-              <Textarea
-                id="notes"
-                value={formData.notes || ''}
-                onChange={(e) => handleInputChange('notes', e.target.value)}
-                placeholder="Enter additional notes"
-                rows={3}
-                className="bg-white border-gray-900 text-gray-900"
-              />
-            </div>
+              {/* Date & Time Card */}
+              <div className="bg-background rounded-2xl shadow-sm p-4 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-foreground">Hearing Date *</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className="w-full justify-start text-left bg-background border-input rounded-xl h-11 hover:bg-muted">
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {formData.hearing_date ? TimeUtils.formatDisplay(formData.hearing_date, 'PPP') : 'Select date'}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 bg-background border-border rounded-xl">
+                        <Calendar
+                          mode="single"
+                          selected={typeof formData.hearing_date === 'string' 
+                            ? new Date(formData.hearing_date) 
+                            : formData.hearing_date}
+                          onSelect={(date) => handleInputChange('hearing_date', date || new Date())}
+                          initialFocus
+                          className="bg-background"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
 
-            <div className="flex justify-end gap-3 pt-4 sticky bottom-0 bg-white border-t border-gray-200 pb-2">
-              <Button type="button" variant="outline" onClick={closeDialog} className="bg-white border-gray-900 text-gray-900 hover:bg-gray-50">
+                  <div className="space-y-2">
+                    <Label htmlFor="hearing_time" className="text-foreground">Time (Optional)</Label>
+                    <Input
+                      id="hearing_time"
+                      type="time"
+                      value={formData.hearing_time || ''}
+                      onChange={(e) => handleInputChange('hearing_time', e.target.value)}
+                      className="bg-background border-input rounded-xl h-11"
+                      placeholder="HH:MM"
+                    />
+                    <p className="text-xs text-muted-foreground">Leave empty if time is not specified</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Court Details Card */}
+              <div className="bg-background rounded-2xl shadow-sm p-4 space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="court_name" className="text-foreground">Court Name *</Label>
+                  <Input
+                    id="court_name"
+                    value={formData.court_name}
+                    onChange={(e) => handleInputChange('court_name', e.target.value)}
+                    placeholder="Enter court name"
+                    className="bg-background border-input rounded-xl h-11"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="bench" className="text-foreground">Bench</Label>
+                    <Input
+                      id="bench"
+                      value={formData.bench || ''}
+                      onChange={(e) => handleInputChange('bench', e.target.value)}
+                      placeholder="Enter bench details"
+                      className="bg-background border-input rounded-xl h-11"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="coram" className="text-foreground">Coram</Label>
+                    <Input
+                      id="coram"
+                      value={formData.coram || ''}
+                      onChange={(e) => handleInputChange('coram', e.target.value)}
+                      placeholder="Enter coram details"
+                      className="bg-background border-input rounded-xl h-11"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="status" className="text-foreground">Status</Label>
+                  <Select
+                    value={formData.status}
+                    onValueChange={(value: HearingStatus) => handleInputChange('status', value)}
+                  >
+                    <SelectTrigger className="bg-background border-input rounded-xl h-11">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border-border rounded-xl">
+                      <SelectItem value="scheduled">Scheduled</SelectItem>
+                      <SelectItem value="adjourned">Adjourned</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Notes Card */}
+              <div className="bg-background rounded-2xl shadow-sm p-4 space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="outcome" className="text-foreground">Outcome</Label>
+                  <Textarea
+                    id="outcome"
+                    value={formData.outcome || ''}
+                    onChange={(e) => handleInputChange('outcome', e.target.value)}
+                    placeholder="Enter hearing outcome"
+                    rows={3}
+                    className="bg-muted border-input rounded-xl resize-none"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="notes" className="text-foreground">Notes</Label>
+                  <Textarea
+                    id="notes"
+                    value={formData.notes || ''}
+                    onChange={(e) => handleInputChange('notes', e.target.value)}
+                    placeholder="Enter additional notes"
+                    rows={3}
+                    className="bg-muted border-input rounded-xl resize-none"
+                  />
+                </div>
+              </div>
+            </form>
+          </div>
+
+          {/* Footer */}
+          <div className="flex-shrink-0 p-4 bg-background border-t border-border">
+            <div className="flex gap-3">
+              <Button type="button" variant="outline" onClick={closeDialog} className="flex-1 rounded-full h-11">
                 Cancel
               </Button>
               <Button 
-                type="submit" 
-                className="bg-blue-700 hover:bg-blue-800 text-white"
+                type="submit"
+                form="hearing-form"
+                onClick={handleSubmit}
+                className="flex-1 rounded-full h-11"
                 disabled={createHearingMutation.isPending}
               >
                 {createHearingMutation.isPending ? 'Creating...' : 'Create Hearing'}
               </Button>
             </div>
-          </form>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
