@@ -52,17 +52,6 @@ const DialogContent = React.forwardRef<
       {...props}
     >
       {children}
-      {!hideCloseButton && (
-        <DialogPrimitive.Close 
-          className="hidden"
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-        >
-          <X className="h-4 w-4 text-muted-foreground" />
-          <span className="sr-only">Close</span>
-        </DialogPrimitive.Close>
-      )}
     </DialogPrimitive.Content>
   </DialogPortal>
 ))
