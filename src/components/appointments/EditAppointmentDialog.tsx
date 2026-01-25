@@ -25,6 +25,7 @@ import { SmartBookingCalendar } from '@/components/appointments/SmartBookingCale
 import { ClientSelector } from '@/components/appointments/ClientSelector';
 import { CaseSelector } from '@/components/appointments/CaseSelector';
 import { useAuth } from '@/contexts/AuthContext';
+import { MobileDialogHeader } from '@/components/ui/mobile-dialog-header';
 
 interface Appointment {
   id: string;
@@ -266,21 +267,11 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
     <Dialog open onOpenChange={closeDialog}>
       <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden">
         <div className="flex flex-col h-full max-h-[90vh] bg-slate-50">
-          {/* Header */}
-          <div className="px-6 py-5 bg-white border-b border-slate-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-slate-900">Edit Appointment</h2>
-                <p className="text-sm text-slate-500 mt-0.5">Update appointment details</p>
-              </div>
-              <button
-                onClick={closeDialog}
-                className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors"
-              >
-                <X className="w-4 h-4 text-slate-500" />
-              </button>
-            </div>
-          </div>
+          <MobileDialogHeader
+            title="Edit Appointment"
+            subtitle="Update appointment details"
+            onClose={closeDialog}
+          />
           
           {/* Content */}
           <div className="flex-1 overflow-y-auto px-6 py-6">
