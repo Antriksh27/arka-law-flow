@@ -292,6 +292,11 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
 
       // Switch to chats tab
       setActiveTab('chats');
+      
+      // On mobile, open the chat window
+      if (isMobile) {
+        setShowMobileChat(true);
+      }
     } catch (error) {
       console.error('Error starting DM:', error);
       toast({
