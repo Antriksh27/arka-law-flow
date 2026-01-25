@@ -379,42 +379,102 @@ export default function CaseDetailEnhanced() {
         />
       )}
 
-      <div className={isMobile ? "h-[calc(100vh-56px)]" : undefined}>
-        <PullToRefresh onRefresh={handleFetchDetails}>
-          <div className={`bg-gray-50 ${isMobile ? 'pb-24' : 'min-h-screen pb-8'}`}>
-            {/* Mobile Hero Card */}
-          {isMobile && (
-            <div className="p-4">
-              <HeroCard
-                title={caseData.case_title || `${caseData.petitioner || 'Petitioner'} vs ${caseData.respondent || 'Respondent'}`}
-                subtitle={`CNR: ${caseData.cnr_number || 'N/A'}`}
-                badges={
-                  <>
-                    <Badge className={`${displayStatus.color} rounded-full`}>
-                      {displayStatus.label}
+      <div className={isMobile ? "flex flex-col h-[calc(100vh-56px)]" : undefined}>
+        {/* Mobile Hero Card - Outside scrollable area */}
+        {isMobile && (
+          <div className="p-4 bg-gray-50 flex-shrink-0">
+            <HeroCard
+              title={caseData.case_title || `${caseData.petitioner || 'Petitioner'} vs ${caseData.respondent || 'Respondent'}`}
+              subtitle={`CNR: ${caseData.cnr_number || 'N/A'}`}
+              badges={
+                <>
+                  <Badge className={`${displayStatus.color} rounded-full`}>
+                    {displayStatus.label}
+                  </Badge>
+                  {caseData.stage && (
+                    <Badge variant="outline" className="rounded-full">
+                      {caseData.stage}
                     </Badge>
-                    {caseData.stage && (
-                      <Badge variant="outline" className="rounded-full">
-                        {caseData.stage}
-                      </Badge>
-                    )}
-                  </>
-                }
-                metrics={[
-                  { label: 'Documents', value: documents.length },
-                  { label: 'Hearings', value: hearings.length },
-                  { label: 'Tasks', value: 0 },
-                ]}
-              />
-            </div>
-          )}
+                  )}
+                </>
+              }
+              metrics={[
+                { label: 'Documents', value: documents.length },
+                { label: 'Hearings', value: hearings.length },
+                { label: 'Tasks', value: 0 },
+              ]}
+            />
+          </div>
+        )}
 
-          {/* Desktop/Tablet Layout */}
-          <div className={isMobile ? '' : 'bg-white border border-gray-200 rounded-2xl shadow-sm m-8'}>
+        {/* Mobile Sticky Tabs - Outside scrollable area */}
+        {isMobile && (
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
+            <div className="bg-background border-b border-border flex-shrink-0">
+              <div className="flex overflow-x-auto scrollbar-hide px-4">
+                {tabs.map(tab => {
+                  const IconComponent = tab.icon;
+                  return (
+                    <button 
+                      key={tab.value} 
+                      onClick={() => setActiveTab(tab.value)}
+                      className={`flex items-center gap-2 px-4 py-3 min-h-[48px] text-sm font-medium border-b-2 whitespace-nowrap transition-colors flex-shrink-0 ${
+                        activeTab === tab.value 
+                          ? 'border-primary text-primary' 
+                          : 'border-transparent text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      <IconComponent className="w-4 h-4" />
+                      {tab.label.split(' ')[0]}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Mobile Scrollable Content */}
+            <div className="flex-1 min-h-0 overflow-y-auto bg-gray-50 pb-24">
+              <div className="p-4 pb-8">
+                <TabsContent value="details" className="m-0">
+                  <DetailsTab caseData={caseData} legalkartData={legalkartCase} petitioners={petitioners} respondents={respondents} iaDetails={iaDetails} documents={documents} orders={orders} hearings={hearings} objections={objections} />
+                </TabsContent>
+                <TabsContent value="contacts" className="m-0">
+                  <ContactTab caseId={id!} />
+                </TabsContent>
+                <TabsContent value="notes" className="m-0">
+                  <NotesTab caseId={id!} />
+                </TabsContent>
+                <TabsContent value="tasks" className="m-0">
+                  <TasksTab caseId={id!} />
+                </TabsContent>
+                <TabsContent value="documents" className="m-0">
+                  <DocumentsTab caseId={id!} />
+                </TabsContent>
+                <TabsContent value="chat" className="m-0">
+                  <CaseChatTab caseId={id!} />
+                </TabsContent>
+                <TabsContent value="timeline" className="m-0">
+                  <TimelineTab caseId={id!} caseData={caseData} legalkartData={legalkartCase} hearings={hearings} />
+                </TabsContent>
+                <TabsContent value="lawyers" className="m-0">
+                  <LawyersTab caseId={id!} />
+                </TabsContent>
+                <TabsContent value="related" className="m-0">
+                  <RelatedMattersTab caseId={id!} />
+                </TabsContent>
+              </div>
+            </div>
+          </Tabs>
+        )}
+
+        {/* Desktop Layout */}
+        {!isMobile && (
+        <PullToRefresh onRefresh={handleFetchDetails}>
+          <div className="bg-gray-50 min-h-screen pb-8">
+          <div className="bg-white border border-gray-200 rounded-2xl shadow-sm m-8">
             {/* Tabs with integrated header */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               {/* Header section integrated with tabs - Desktop only */}
-              {!isMobile && (
                 <div className="p-6 pb-0">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
@@ -482,60 +542,60 @@ export default function CaseDetailEnhanced() {
                     </div>
                   </div>
                 </div>
-              )}
 
               {/* Horizontal Scroll Tabs */}
-              <TabsList className={`w-full bg-background border-b border-border h-auto p-0 ${isMobile ? 'sticky top-0 z-40 shadow-sm isolate' : ''}`}>
-                <div className={`flex overflow-x-auto scrollbar-hide ${isMobile ? 'px-4' : ''}`}>
+              <TabsList className="w-full bg-background border-b border-border h-auto p-0">
+                <div className="flex overflow-x-auto scrollbar-hide">
                   {tabs.map(tab => {
                     const IconComponent = tab.icon;
                     return (
                       <TabsTrigger 
                         key={tab.value} 
                         value={tab.value} 
-                        className={`flex items-center gap-2 ${isMobile ? 'px-4 py-3 min-h-[48px]' : 'px-4 py-3'} text-sm font-medium text-muted-foreground hover:text-foreground border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary bg-transparent rounded-none whitespace-nowrap transition-colors flex-shrink-0`}
+                        className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary bg-transparent rounded-none whitespace-nowrap transition-colors flex-shrink-0"
                       >
                         <IconComponent className="w-4 h-4" />
-                        {isMobile ? tab.label.split(' ')[0] : tab.label}
+                        {tab.label}
                       </TabsTrigger>
                     );
                   })}
                 </div>
               </TabsList>
 
-              <div className={isMobile ? 'p-4 pb-8' : 'p-6'}>
+              <div className="p-6">
                 <TabsContent value="details" className="m-0">
                   <DetailsTab caseData={caseData} legalkartData={legalkartCase} petitioners={petitioners} respondents={respondents} iaDetails={iaDetails} documents={documents} orders={orders} hearings={hearings} objections={objections} />
                 </TabsContent>
-            <TabsContent value="contacts" className="m-0">
-              <ContactTab caseId={id!} />
-            </TabsContent>
-            <TabsContent value="notes" className="m-0">
-              <NotesTab caseId={id!} />
-            </TabsContent>
-            <TabsContent value="tasks" className="m-0">
-              <TasksTab caseId={id!} />
-            </TabsContent>
-            <TabsContent value="documents" className="m-0">
-              <DocumentsTab caseId={id!} />
-            </TabsContent>
-            <TabsContent value="chat" className="m-0">
-              <CaseChatTab caseId={id!} />
-            </TabsContent>
-            <TabsContent value="timeline" className="m-0">
-              <TimelineTab caseId={id!} caseData={caseData} legalkartData={legalkartCase} hearings={hearings} />
-            </TabsContent>
-            <TabsContent value="lawyers" className="m-0">
-              <LawyersTab caseId={id!} />
-            </TabsContent>
+                <TabsContent value="contacts" className="m-0">
+                  <ContactTab caseId={id!} />
+                </TabsContent>
+                <TabsContent value="notes" className="m-0">
+                  <NotesTab caseId={id!} />
+                </TabsContent>
+                <TabsContent value="tasks" className="m-0">
+                  <TasksTab caseId={id!} />
+                </TabsContent>
+                <TabsContent value="documents" className="m-0">
+                  <DocumentsTab caseId={id!} />
+                </TabsContent>
+                <TabsContent value="chat" className="m-0">
+                  <CaseChatTab caseId={id!} />
+                </TabsContent>
+                <TabsContent value="timeline" className="m-0">
+                  <TimelineTab caseId={id!} caseData={caseData} legalkartData={legalkartCase} hearings={hearings} />
+                </TabsContent>
+                <TabsContent value="lawyers" className="m-0">
+                  <LawyersTab caseId={id!} />
+                </TabsContent>
                 <TabsContent value="related" className="m-0">
                   <RelatedMattersTab caseId={id!} />
                 </TabsContent>
               </div>
-              </Tabs>
-            </div>
+            </Tabs>
+          </div>
           </div>
         </PullToRefresh>
+        )}
       </div>
 
 
