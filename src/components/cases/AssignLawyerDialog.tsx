@@ -84,99 +84,103 @@ export const AssignLawyerDialog: React.FC<AssignLawyerDialogProps> = ({
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent hideCloseButton className="sm:max-w-md p-0 bg-slate-50 overflow-hidden">
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full max-h-[85vh] sm:max-h-[90vh]">
+          {/* Drag Handle - Mobile Only */}
+          <div className="flex justify-center pt-3 pb-1 sm:hidden">
+            <div className="w-10 h-1 bg-slate-300 rounded-full" />
+          </div>
+
           {/* Header */}
-          <div className="px-6 py-5 bg-white border-b border-slate-100">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
-                  <Users className="w-5 h-5 text-violet-500" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-semibold text-slate-800">Assign Lawyers</h2>
-                  <p className="text-sm text-muted-foreground">Select team members for this case</p>
-                </div>
+          <div className="px-5 py-4 flex items-center justify-between border-b border-slate-100 bg-slate-50">
+            <button
+              onClick={onClose}
+              className="text-primary text-base font-medium"
+            >
+              Cancel
+            </button>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center">
+                <Users className="w-4 h-4 text-violet-600" />
               </div>
-              <button
-                onClick={onClose}
-                className="md:hidden w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors"
-              >
-                <X className="w-4 h-4 text-slate-500" />
-              </button>
+              <h2 className="text-lg font-semibold text-foreground">Assign Lawyers</h2>
             </div>
+            <button
+              onClick={handleSave}
+              disabled={assignLawyersMutation.isPending}
+              className="text-primary text-base font-semibold disabled:opacity-50"
+            >
+              {assignLawyersMutation.isPending ? 'Saving...' : 'Done'}
+            </button>
           </div>
 
           {/* Scrollable Content */}
-          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
-            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-              {isLoading ? (
-                <div className="p-8 text-center text-muted-foreground">
-                  Loading lawyers...
-                </div>
-              ) : (
-                <div className="divide-y divide-slate-100">
-                  {lawyers?.map(lawyer => (
-                    <div 
-                      key={lawyer.user_id} 
-                      className="flex items-center justify-between p-4 hover:bg-slate-50 cursor-pointer transition-colors active:scale-[0.99]"
-                      onClick={() => toggleLawyer(lawyer.user_id)}
-                    >
-                      <div className="flex items-center gap-3">
-                        <Avatar className="w-10 h-10 border-2 border-white shadow-sm">
-                          <AvatarFallback className="bg-violet-100 text-violet-600 text-sm font-medium">
-                            {lawyer.full_name?.charAt(0) || 'U'}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-medium text-slate-800">
-                            {lawyer.full_name}
-                          </p>
-                          <p className="text-sm text-muted-foreground capitalize">
-                            {lawyer.role}
-                          </p>
-                        </div>
-                      </div>
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${
-                        selectedLawyers.includes(lawyer.user_id) 
-                          ? 'bg-violet-500' 
-                          : 'bg-slate-100'
-                      }`}>
-                        {selectedLawyers.includes(lawyer.user_id) && (
-                          <Check className="w-4 h-4 text-white" />
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
+          <div className="flex-1 overflow-y-auto px-4 py-4">
+            {/* Selected Count Badge */}
             {selectedLawyers.length > 0 && (
-              <div className="mt-4 p-3 bg-violet-50 rounded-xl">
-                <p className="text-sm text-violet-700 font-medium">
+              <div className="mb-4 p-3 bg-violet-50 rounded-xl">
+                <p className="text-sm text-violet-700 font-medium text-center">
                   {selectedLawyers.length} lawyer{selectedLawyers.length !== 1 ? 's' : ''} selected
                 </p>
               </div>
             )}
-          </div>
 
-          {/* Footer */}
-          <div className="px-6 py-4 bg-white border-t border-slate-100">
-            <div className="flex gap-3 justify-end">
-              <Button
-                variant="outline"
-                onClick={onClose}
-                className="rounded-full px-6 border-slate-200"
-              >
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleSave} 
-                disabled={assignLawyersMutation.isPending}
-                className="rounded-full px-6 bg-violet-500 hover:bg-violet-600"
-              >
-                {assignLawyersMutation.isPending ? 'Assigning...' : 'Assign Lawyers'}
-              </Button>
+            {/* Lawyers List */}
+            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+              {isLoading ? (
+                <div className="p-8 text-center text-muted-foreground">
+                  <div className="animate-pulse flex flex-col items-center gap-3">
+                    <div className="w-10 h-10 bg-slate-200 rounded-full" />
+                    <div className="h-4 w-32 bg-slate-200 rounded" />
+                  </div>
+                </div>
+              ) : lawyers?.length === 0 ? (
+                <div className="p-8 text-center text-muted-foreground">
+                  <Users className="w-10 h-10 mx-auto mb-2 text-slate-300" />
+                  <p>No lawyers available</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-slate-100">
+                  {lawyers?.map(lawyer => {
+                    const isSelected = selectedLawyers.includes(lawyer.user_id);
+                    return (
+                      <div 
+                        key={lawyer.user_id} 
+                        className="flex items-center justify-between p-4 active:bg-slate-50 cursor-pointer transition-colors"
+                        onClick={() => toggleLawyer(lawyer.user_id)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Avatar className="w-11 h-11 border-2 border-white shadow-sm">
+                            <AvatarFallback className={`text-sm font-medium ${
+                              isSelected 
+                                ? 'bg-violet-500 text-white' 
+                                : 'bg-violet-100 text-violet-600'
+                            }`}>
+                              {lawyer.full_name?.charAt(0) || 'U'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium text-foreground">
+                              {lawyer.full_name}
+                            </p>
+                            <p className="text-sm text-muted-foreground capitalize">
+                              {lawyer.role}
+                            </p>
+                          </div>
+                        </div>
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${
+                          isSelected 
+                            ? 'bg-violet-500' 
+                            : 'border-2 border-slate-300'
+                        }`}>
+                          {isSelected && (
+                            <Check className="w-4 h-4 text-white" />
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         </div>
