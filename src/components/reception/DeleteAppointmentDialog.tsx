@@ -68,7 +68,7 @@ const DeleteAppointmentDialog: React.FC<DeleteAppointmentDialogProps> = ({
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="pb-4 border-b border-gray-100">
+        <DialogHeader className="pb-4 border-b border-border">
           <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-red-600">
             <AlertTriangle className="h-5 w-5" />
             Delete Appointment
@@ -84,9 +84,9 @@ const DeleteAppointmentDialog: React.FC<DeleteAppointmentDialogProps> = ({
                 </p>
               </div>
               
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-2">
-                <p className="text-sm font-medium text-gray-700">Appointment Details:</p>
-                <div className="space-y-1 text-sm text-gray-600">
+              <div className="bg-slate-50 border border-border rounded-lg p-4 space-y-2">
+                <p className="text-sm font-medium text-foreground">Appointment Details:</p>
+                <div className="space-y-1 text-sm text-muted-foreground">
                   <p><strong>Client:</strong> {appointment.client_name || 'No client assigned'}</p>
                   <p><strong>Lawyer:</strong> {appointment.lawyer_name || 'No lawyer assigned'}</p>
                   <p><strong>Date:</strong> {appointment.appointment_date}</p>
@@ -117,10 +117,10 @@ const DeleteAppointmentDialog: React.FC<DeleteAppointmentDialogProps> = ({
               </div>
 
               <div className="text-center">
-                <p className="text-sm font-medium text-gray-900">
+                <p className="text-sm font-medium text-foreground">
                   Delete appointment permanently?
                 </p>
-                <p className="text-xs text-gray-600 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   This action is irreversible
                 </p>
               </div>
@@ -128,13 +128,13 @@ const DeleteAppointmentDialog: React.FC<DeleteAppointmentDialogProps> = ({
           )}
         </div>
 
-        <DialogFooter className="pt-4 border-t border-gray-100">
+        <DialogFooter className="pt-4 border-t border-border">
           {confirmStep === 1 ? (
             <div className="flex gap-3 w-full">
               <Button
                 variant="outline"
                 onClick={handleClose}
-                className="flex-1 border-gray-300 hover:bg-gray-50"
+                className="flex-1 border-border hover:bg-slate-50"
               >
                 Cancel
               </Button>
@@ -151,7 +151,7 @@ const DeleteAppointmentDialog: React.FC<DeleteAppointmentDialogProps> = ({
               <Button
                 variant="outline"
                 onClick={() => setConfirmStep(1)}
-                className="flex-1 border-gray-300 hover:bg-gray-50"
+                className="flex-1 border-border hover:bg-slate-50"
               >
                 Go Back
               </Button>

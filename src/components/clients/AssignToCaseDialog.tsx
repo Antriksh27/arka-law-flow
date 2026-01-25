@@ -127,7 +127,7 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
   return <>
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden">
-          <div className="flex flex-col h-full bg-slate-50">
+          <div className="flex flex-col h-full bg-muted">
             {/* Header */}
             <div className="px-6 py-5 bg-background border-b border-border">
               <div className="flex items-center justify-between">
@@ -153,7 +153,7 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4 bg-slate-50">
+            <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4 bg-muted">
               {view === 'selection' && <div className="space-y-3">
                   {/* Link Existing Case Option */}
                   <button onClick={() => setView('existing')} className="w-full bg-background rounded-2xl shadow-sm p-5 text-left hover:shadow-md transition-shadow active:scale-[0.98]">

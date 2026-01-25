@@ -27,10 +27,10 @@ export const HearingsHeader: React.FC<HearingsHeaderProps> = ({
   return <div className="flex w-full flex-col items-start gap-4">
       <div className="flex w-full items-center justify-between">
         <div className="flex flex-col items-start gap-1">
-          <span className="text-2xl font-semibold text-gray-900">
+          <span className="text-2xl font-semibold text-foreground">
             Hearings
           </span>
-          <span className="text-base text-gray-600">
+          <span className="text-base text-muted-foreground">
             Track all your firm's court hearings
           </span>
         </div>
@@ -48,12 +48,12 @@ export const HearingsHeader: React.FC<HearingsHeaderProps> = ({
         
         
         
-        <div className="bg-gray-100 rounded-lg flex p-1">
-          <button className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 ${currentView === 'calendar' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-600 hover:text-gray-900'}`} onClick={() => onViewChange('calendar')}>
+        <div className="bg-muted rounded-lg flex p-1">
+          <button className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 ${currentView === 'calendar' ? 'bg-background shadow-sm text-primary' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => onViewChange('calendar')}>
             <CalendarDays className="h-4 w-4" />
             <span className="text-sm font-medium">Calendar</span>
           </button>
-          <button className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 ${currentView === 'timeline' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-600 hover:text-gray-900'}`} onClick={() => onViewChange('timeline')}>
+          <button className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 ${currentView === 'timeline' ? 'bg-background shadow-sm text-primary' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => onViewChange('timeline')}>
             <Calendar className="h-4 w-4" />
             <span className="text-sm font-medium">Timeline</span>
           </button>
