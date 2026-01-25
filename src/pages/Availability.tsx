@@ -78,7 +78,7 @@ const Availability = () => {
         {/* Page Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900">Availability</h1>
+            <h1 className="text-2xl font-semibold text-slate-900">Availability</h1>
             <p className="text-sm text-muted-foreground mt-1">
               Set your weekly hours and date-specific blocks. These control when clients can book you.
             </p>
@@ -87,7 +87,7 @@ const Availability = () => {
 
         {/* Top Tabs like Calendly */}
         <Tabs defaultValue="schedules" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 rounded-xl border bg-gray-50 p-1">
+          <TabsList className="grid w-full grid-cols-3 rounded-xl border bg-slate-50 p-1">
             <TabsTrigger value="schedules" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm hover-scale">Schedules</TabsTrigger>
             <TabsTrigger value="holidays" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm hover-scale">Holidays</TabsTrigger>
             <TabsTrigger value="settings" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm hover-scale">Calendar settings</TabsTrigger>
@@ -100,7 +100,7 @@ const Availability = () => {
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
                   <div className="text-sm text-muted-foreground">Schedule</div>
-                  <div className="text-lg font-semibold text-gray-900">Working hours (default)</div>
+                  <div className="text-lg font-semibold text-slate-900">Working hours (default)</div>
                   <div className="text-xs text-muted-foreground mt-1">Active on: 1 event type</div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -134,7 +134,7 @@ const Availability = () => {
                 <section className="rounded-2xl border bg-white p-5 shadow-sm">
                   <header className="flex items-center justify-between mb-4">
                     <div>
-                      <h2 className="text-base font-medium text-gray-900">Weekly hours</h2>
+                      <h2 className="text-base font-medium text-slate-900">Weekly hours</h2>
                       <p className="text-xs text-muted-foreground">Set when you are typically available for meetings</p>
                     </div>
                   </header>
@@ -144,7 +144,7 @@ const Availability = () => {
                 <aside className="rounded-2xl border bg-white p-5 shadow-sm">
                   <header className="flex items-center justify-between mb-4">
                     <div>
-                      <h2 className="text-base font-medium text-gray-900">Date-specific hours</h2>
+                      <h2 className="text-base font-medium text-slate-900">Date-specific hours</h2>
                       <p className="text-xs text-muted-foreground">Adjust hours for specific days (use as blocked dates)</p>
                     </div>
                     <div className="text-xs text-muted-foreground">+ Hours</div>
@@ -156,7 +156,7 @@ const Availability = () => {
               <div className="rounded-2xl border bg-white p-5 shadow-sm">
                 <div className="flex items-center gap-2 mb-4">
                   <Calendar className="h-4 w-4" />
-                  <h2 className="text-base font-medium text-gray-900">Availability calendar (preview)</h2>
+                  <h2 className="text-base font-medium text-slate-900">Availability calendar (preview)</h2>
                 </div>
                 {/* Lightweight preview: reuse the schedule list for now */}
                 <p className="text-sm text-muted-foreground mb-4">Preview your bookable days based on weekly hours and blocked dates.</p>
@@ -172,7 +172,7 @@ const Availability = () => {
             </div>
             
             <div className="rounded-2xl border bg-white p-5 shadow-sm">
-              <h2 className="text-base font-medium text-gray-900 mb-2">Personal Blocked Dates</h2>
+              <h2 className="text-base font-medium text-slate-900 mb-2">Personal Blocked Dates</h2>
               <p className="text-xs text-muted-foreground mb-4">Add your personal blocked dates in addition to firm holidays.</p>
               <AvailabilityExceptions />
             </div>
@@ -183,7 +183,7 @@ const Availability = () => {
             <GoogleCalendarSync />
             
             <div className="rounded-2xl border bg-white p-5 shadow-sm">
-              <h2 className="text-base font-medium text-gray-900 mb-2">General Settings</h2>
+              <h2 className="text-base font-medium text-slate-900 mb-2">General Settings</h2>
               <ul className="text-sm text-muted-foreground list-disc pl-5 space-y-2">
                 <li>Appointment duration and buffer are configured per day in Weekly hours.</li>
                 <li>Blocked dates override weekly hours.</li>

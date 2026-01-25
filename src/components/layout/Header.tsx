@@ -54,7 +54,7 @@ const Header = ({ onMenuClick }: HeaderProps) => {
               variant="ghost" 
               size="icon" 
               onClick={() => setShowNotifications(!showNotifications)}
-              className="relative bg-gray-50 hover:bg-gray-200 text-gray-900"
+              className="relative bg-slate-50 hover:bg-slate-200 text-slate-900"
             >
               <Bell className="w-5 h-5" />
               {unreadCount > 0 && (
@@ -75,7 +75,7 @@ const Header = ({ onMenuClick }: HeaderProps) => {
           {/* User Profile Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="bg-gray-50 hover:bg-gray-200 text-gray-900 focus:ring-[#111827]">
+              <Button variant="ghost" size="icon" className="bg-slate-50 hover:bg-slate-200 text-slate-900 focus:ring-[#111827]">
                 <User className="w-5 h-5" />
               </Button>
             </DropdownMenuTrigger>

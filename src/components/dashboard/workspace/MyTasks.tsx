@@ -52,7 +52,7 @@ export const MyTasks = ({
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
-          {[1, 2].map(i => <div key={i} className="h-32 bg-gray-100 rounded-lg animate-pulse" />)}
+          {[1, 2].map(i => <div key={i} className="h-32 bg-slate-100 rounded-lg animate-pulse" />)}
         </div>
       </div>;
   }
@@ -65,7 +65,7 @@ export const MyTasks = ({
       case 'low':
         return 'bg-green-50 border-green-200';
       default:
-        return 'bg-gray-50 border-gray-200';
+        return 'bg-slate-50 border-slate-200';
     }
   };
   const getPriorityBadge = (priority: string) => {
@@ -77,7 +77,7 @@ export const MyTasks = ({
       case 'low':
         return 'bg-green-100 text-green-700 border-green-200';
       default:
-        return 'bg-gray-100 text-gray-700 border-gray-200';
+        return 'bg-slate-100 text-slate-700 border-slate-200';
     }
   };
   return <>
@@ -93,7 +93,7 @@ export const MyTasks = ({
         </div>
 
         {tasks.length === 0 ? <Card className="p-6 md:p-8 text-center border-dashed">
-            <CheckCircle2 className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+            <CheckCircle2 className="w-12 h-12 text-slate-300 mx-auto mb-3" />
             <p className="text-sm text-muted-foreground mb-3">No tasks yet</p>
             <Button size="sm" variant="outline" onClick={() => setShowCreateDialog(true)}>
               <Plus className="w-4 h-4 mr-2" />

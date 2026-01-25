@@ -137,9 +137,9 @@ export const LegalkartDocumentsTable: React.FC<LegalkartDocumentsTableProps> = (
     return (
       <div className="flex items-center justify-center py-8">
         <div className="animate-pulse flex space-x-4">
-          <div className="h-4 bg-gray-200 rounded w-20"></div>
-          <div className="h-4 bg-gray-200 rounded w-32"></div>
-          <div className="h-4 bg-gray-200 rounded w-24"></div>
+          <div className="h-4 bg-slate-200 rounded w-20"></div>
+          <div className="h-4 bg-slate-200 rounded w-32"></div>
+          <div className="h-4 bg-slate-200 rounded w-24"></div>
         </div>
       </div>
     );

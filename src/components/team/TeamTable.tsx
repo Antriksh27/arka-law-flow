@@ -16,7 +16,7 @@ import { User } from "lucide-react";
 const statusColor: Record<string, string> = {
   active: "bg-green-100 text-green-800",
   onboarding: "bg-blue-100 text-blue-800",
-  inactive: "bg-gray-100 text-gray-500",
+  inactive: "bg-slate-100 text-slate-500",
   invited: "bg-blue-50 text-blue-700",
   suspended: "bg-red-50 text-red-700",
 };
@@ -110,12 +110,12 @@ const TeamTable = () => {
               <span>{member.email}</span>
             </TableCell>
             <TableCell>
-              <Badge className={`rounded-full px-3 py-1 text-xs font-medium ${roleColor[member.role] || "bg-gray-100 text-gray-900"}`}>
+              <Badge className={`rounded-full px-3 py-1 text-xs font-medium ${roleColor[member.role] || "bg-slate-100 text-slate-900"}`}>
                 {member.role.replace("_", " ").replace(/\b\w/g, c => c.toUpperCase())}
               </Badge>
             </TableCell>
             <TableCell>
-              <Badge className={`rounded-full px-3 py-1 text-xs ${statusColor[member.status] || "bg-gray-100 text-gray-900"}`}>
+              <Badge className={`rounded-full px-3 py-1 text-xs ${statusColor[member.status] || "bg-slate-100 text-slate-900"}`}>
                 {member.status.charAt(0).toUpperCase() + member.status.slice(1)}
               </Badge>
             </TableCell>

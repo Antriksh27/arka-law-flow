@@ -32,12 +32,12 @@ export const TodayAppointmentsCard = ({ appointments, isLoading }: TodayAppointm
 
   const getStatusColor = (status: string) => {
     if (status === 'completed') return 'bg-green-100 text-green-800';
-    if (status === 'cancelled') return 'bg-gray-100 text-gray-800';
+    if (status === 'cancelled') return 'bg-slate-100 text-slate-800';
     return 'bg-blue-100 text-blue-800';
   };
 
   return (
-    <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+    <Card className="bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-medium flex items-center gap-2">
@@ -56,8 +56,8 @@ export const TodayAppointmentsCard = ({ appointments, isLoading }: TodayAppointm
           </div>
         ) : appointments.length === 0 ? (
           <div className="text-center py-8">
-            <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-sm text-gray-500">No appointments scheduled for today</p>
+            <Calendar className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+            <p className="text-sm text-slate-500">No appointments scheduled for today</p>
             <Button variant="outline" size="sm" className="mt-3" onClick={() => navigate('/appointments')}>
               Schedule Appointment
             </Button>
@@ -65,7 +65,7 @@ export const TodayAppointmentsCard = ({ appointments, isLoading }: TodayAppointm
         ) : (
           <div className="space-y-3">
             {appointments.slice(0, 5).map((appt) => (
-              <div key={appt.id} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+              <div key={appt.id} className="p-3 bg-slate-50 rounded-lg border border-slate-200">
                 <div className="flex items-start justify-between mb-2">
                   {appt.daily_serial_number && (
                     <div className="flex-shrink-0 relative mr-3">
@@ -82,10 +82,10 @@ export const TodayAppointmentsCard = ({ appointments, isLoading }: TodayAppointm
                         {appt.status}
                       </Badge>
                     </div>
-                    {appt.purpose && <p className="text-xs text-gray-600">{appt.purpose}</p>}
+                    {appt.purpose && <p className="text-xs text-slate-600">{appt.purpose}</p>}
                   </div>
                 </div>
-                <div className="flex items-center gap-3 text-xs text-gray-500">
+                <div className="flex items-center gap-3 text-xs text-slate-500">
                   <div className="flex items-center gap-1">
                     <Clock className="w-3 h-3" />
                     {TimeUtils.formatTime(appt.start_time)}

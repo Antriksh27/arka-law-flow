@@ -518,7 +518,7 @@ const StaleCases = () => {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-3xl font-bold text-gray-500">{stats.noCnr}</p>
+              <p className="text-3xl font-bold text-slate-500">{stats.noCnr}</p>
               <p className="text-sm text-muted-foreground">No CNR</p>
             </div>
           </CardContent>

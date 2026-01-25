@@ -90,7 +90,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
     });
   };
   if (!threadId) {
-    return <div className="flex grow flex-col items-center justify-center h-full bg-gray-50 text-gray-500">
+    return <div className="flex grow flex-col items-center justify-center h-full bg-slate-50 text-slate-500">
         <Info className="w-12 h-12 mb-4" />
         <h2 className="text-xl font-semibold">Select a conversation</h2>
         <p>Choose a chat from the sidebar to start messaging.</p>
@@ -107,14 +107,14 @@ export const ChatView: React.FC<ChatViewProps> = ({
       <ChatHeader name={threadData?.title || 'Loading...'} subtitle={getSubtitle()} buttons={<div className="flex items-center gap-2">
             
           </div>} />
-      <div className="flex w-full grow shrink-0 basis-0 flex-col justify-end overflow-hidden bg-gray-50">
+      <div className="flex w-full grow shrink-0 basis-0 flex-col justify-end overflow-hidden bg-slate-50">
         <div className="w-full grow shrink-0 basis-0 overflow-y-auto px-6 py-8 space-y-6">
           {isLoading && <div className="space-y-4">
               <Skeleton className="h-16 w-3/4" />
               <Skeleton className="h-16 w-3/4 self-end ml-auto" />
               <Skeleton className="h-16 w-3/4" />
             </div>}
-          {!isLoading && messages.length === 0 && <div className="text-center text-gray-500">
+          {!isLoading && messages.length === 0 && <div className="text-center text-slate-500">
               <p>This is the beginning of your conversation.</p>
             </div>}
           {messages.map((msg, index) => {
@@ -129,7 +129,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
           <div ref={messagesEndRef} />
         </div>
       </div>
-      <div className="flex w-full flex-col border-t border-solid border-gray-200 bg-white">
+      <div className="flex w-full flex-col border-t border-solid border-slate-200 bg-white">
         <FileUploadArea onFilesSelected={handleFilesSelected} selectedFiles={selectedFiles} onRemoveFile={handleRemoveFile} />
         <div className="flex items-center gap-4 px-4 py-3">
           <TextFieldUnstyled className="h-auto grow shrink-0 basis-0">
