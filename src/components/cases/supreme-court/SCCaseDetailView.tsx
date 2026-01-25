@@ -326,7 +326,7 @@ export function SCCaseDetailView({
   return (
     <div className="min-h-screen bg-gray-50">
       {isMobile ? (
-        <MobileHeader title={caseTitle || caseData.case_title} showBack />
+        <MobileHeader title={caseTitle || caseData.case_title} showBack backTo="/cases" />
       ) : null}
 
       <div className={isMobile ? '' : 'container mx-auto p-6 max-w-7xl'}>
