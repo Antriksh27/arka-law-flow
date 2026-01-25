@@ -74,9 +74,9 @@ export const DeleteAllCasesDialog = ({ open, onOpenChange }: DeleteAllCasesDialo
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden max-h-[90vh]">
-        <div className="flex flex-col h-full bg-slate-50">
+        <div className="flex flex-col h-full bg-muted">
           {/* Header */}
-          <div className="px-6 py-5 bg-white border-b border-slate-100">
+          <div className="px-6 py-5 bg-background border-b">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
@@ -89,9 +89,9 @@ export const DeleteAllCasesDialog = ({ open, onOpenChange }: DeleteAllCasesDialo
               </div>
               <button 
                 onClick={() => onOpenChange(false)}
-                className="md:hidden w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors"
+                className="md:hidden w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-accent transition-colors"
               >
-                <X className="w-4 h-4 text-slate-500" />
+                <X className="w-4 h-4 text-muted-foreground" />
               </button>
             </div>
           </div>
@@ -112,18 +112,18 @@ export const DeleteAllCasesDialog = ({ open, onOpenChange }: DeleteAllCasesDialo
             </div>
 
             {/* What Will Be Deleted Card */}
-            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
               <div className="p-4">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center">
                     <Trash2 className="w-5 h-5 text-rose-500" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">Will Be Deleted</p>
+                    <p className="text-sm font-semibold text-foreground">Will Be Deleted</p>
                     <p className="text-xs text-muted-foreground">Permanently removed</p>
                   </div>
                 </div>
-                <ul className="space-y-2 text-sm text-slate-600">
+                <ul className="space-y-2 text-sm text-muted-foreground">
                   <li className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-red-400"></span>
                     All cases in your firm
@@ -145,18 +145,18 @@ export const DeleteAllCasesDialog = ({ open, onOpenChange }: DeleteAllCasesDialo
             </div>
 
             {/* What Will Be Preserved Card */}
-            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
               <div className="p-4">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
                     <Shield className="w-5 h-5 text-emerald-500" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">Will Be Preserved</p>
+                    <p className="text-sm font-semibold text-foreground">Will Be Preserved</p>
                     <p className="text-xs text-muted-foreground">Unaffected data</p>
                   </div>
                 </div>
-                <ul className="space-y-2 text-sm text-slate-600">
+                <ul className="space-y-2 text-sm text-muted-foreground">
                   <li className="flex items-center gap-2">
                     <CheckCircle className="w-4 h-4 text-emerald-500" />
                     Clients
@@ -182,16 +182,16 @@ export const DeleteAllCasesDialog = ({ open, onOpenChange }: DeleteAllCasesDialo
             </div>
 
             {/* Confirmation Input Card */}
-            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
               <div className="p-4">
-                <Label className="text-sm font-semibold text-slate-900">
-                  Type <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-red-600">DELETE_ALL_CASES</span> to confirm
+                <Label className="text-sm font-semibold text-foreground">
+                  Type <span className="font-mono bg-muted px-1.5 py-0.5 rounded text-red-600">DELETE_ALL_CASES</span> to confirm
                 </Label>
                 <Input 
                   value={confirmation} 
                   onChange={e => setConfirmation(e.target.value)} 
                   placeholder="DELETE_ALL_CASES" 
-                  className="mt-2 bg-slate-50 border-slate-200 rounded-xl h-11 font-mono"
+                  className="mt-2 bg-muted border-input rounded-xl h-11 font-mono"
                   disabled={isDeleting} 
                 />
               </div>
@@ -199,7 +199,7 @@ export const DeleteAllCasesDialog = ({ open, onOpenChange }: DeleteAllCasesDialo
           </div>
 
           {/* Footer */}
-          <div className="px-6 py-4 bg-white border-t border-slate-100">
+          <div className="px-6 py-4 bg-background border-t">
             <div className="flex gap-3">
               <Button 
                 variant="outline" 
