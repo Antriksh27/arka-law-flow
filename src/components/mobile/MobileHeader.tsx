@@ -79,7 +79,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
                   handleBack();
                 }
               }}
-              className="flex-shrink-0 p-2 -ml-2 rounded-xl active:scale-95 transition-transform min-h-[44px] min-w-[44px] flex items-center justify-center z-10 relative bg-muted touch-manipulation cursor-pointer select-none"
+              className="flex-shrink-0 p-2 -ml-2 rounded-xl active:scale-95 transition-transform min-h-[44px] min-w-[44px] flex items-center justify-center z-10 relative bg-slate-50 touch-manipulation cursor-pointer select-none"
               aria-label="Go back"
             >
               <ArrowLeft className="w-5 h-5 text-foreground pointer-events-none" />
