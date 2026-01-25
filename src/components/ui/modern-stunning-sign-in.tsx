@@ -58,7 +58,7 @@ const SignIn1 = () => {
       setIsLoading(false);
     }
   };
-  return <div className="min-h-screen flex flex-col items-center justify-center bg-slate-800 relative overflow-hidden w-full rounded-xl">
+  return <div className="min-h-screen flex flex-col items-center justify-center bg-slate-800 relative overflow-hidden w-full">
       {/* Centered glass card */}
       <div className="relative z-10 w-full max-w-sm rounded-3xl bg-gradient-to-r from-[#ffffff10] to-slate-800 backdrop-blur-sm shadow-2xl p-8 flex flex-col items-center">
         {/* Logo */}
