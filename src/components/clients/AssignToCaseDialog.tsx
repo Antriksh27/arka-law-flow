@@ -48,6 +48,7 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
     setIsLoading(true);
     const term = searchTerm.trim();
     
+    // Note: case_type is an enum, so we can't use ilike on it
     const { data, error } = await supabase
       .from('cases')
       .select(`
@@ -61,7 +62,7 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
         cnr_number,
         clients(full_name)
       `)
-      .or(`case_title.ilike.%${term}%,case_number.ilike.%${term}%,cnr_number.ilike.%${term}%,case_type.ilike.%${term}%,petitioner.ilike.%${term}%,respondent.ilike.%${term}%,registration_number.ilike.%${term}%,filing_number.ilike.%${term}%`)
+      .or(`case_title.ilike.%${term}%,case_number.ilike.%${term}%,cnr_number.ilike.%${term}%,petitioner.ilike.%${term}%,respondent.ilike.%${term}%,registration_number.ilike.%${term}%,filing_number.ilike.%${term}%,reference_number.ilike.%${term}%`)
       .order('created_at', { ascending: false })
       .limit(200);
     
