@@ -118,7 +118,7 @@ export const ContactTabs: React.FC<ContactTabsProps> = ({
 
         <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
           {/* Mobile Tabs */}
-          <div className="sticky top-[calc(3.5rem+env(safe-area-inset-top))] -mt-px z-30 bg-background">
+          <div className="sticky top-[calc(3.5rem+env(safe-area-inset-top))] -mt-1 z-30 bg-background">
             <TabsList className="w-full bg-background border-b border-border h-auto p-0 rounded-none">
               <div className="flex overflow-x-auto scrollbar-hide px-4">
                 {tabs.map(tab => {
