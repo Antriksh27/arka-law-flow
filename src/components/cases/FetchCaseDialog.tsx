@@ -448,10 +448,10 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={handleCancel}>
-      <DialogContent hideCloseButton className="sm:max-w-[700px] p-0 gap-0 overflow-hidden bg-muted">
+      <DialogContent hideCloseButton className="sm:max-w-[700px] p-0 gap-0 overflow-hidden bg-slate-50">
         <div className="flex flex-col h-full sm:h-auto max-h-[95vh] sm:max-h-[90vh]">
           {/* Header */}
-          <div className="px-6 py-5 bg-background border-b border-border">
+          <div className="px-6 py-5 bg-white border-b border-slate-100">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center">
@@ -464,7 +464,7 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
               </div>
               <button
                 onClick={handleCancel}
-                className="md:hidden w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
+                className="md:hidden w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors"
               >
                 <X className="w-4 h-4 text-muted-foreground" />
               </button>
@@ -475,7 +475,7 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
             <form onSubmit={handleSubmit(handleFetch)} className="flex flex-col flex-1 overflow-hidden">
               <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-4">
                 {/* CNR Input Card */}
-                <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+                <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
                   <div className="p-4">
                     <div className="flex items-center gap-3 mb-4">
                       <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
@@ -490,7 +490,7 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
                       id="cnr_number"
                       {...register('cnr_number', { required: 'CNR number is required' })}
                       placeholder="e.g., DLCT010012345678"
-                      className="bg-muted border-border rounded-xl h-12 text-lg font-mono"
+                      className="bg-slate-50 border-slate-200 rounded-xl h-12 text-lg font-mono"
                     />
                     {errors.cnr_number && (
                       <p className="text-sm text-destructive mt-2">{errors.cnr_number.message}</p>
@@ -499,7 +499,7 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
                 </div>
 
                 {/* Court Type Card */}
-                <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+                <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
                   <div className="p-4">
                     <div className="flex items-center gap-3 mb-4">
                       <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
@@ -511,7 +511,7 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
                       </div>
                     </div>
                     <Select value={searchType} onValueChange={(value: any) => setSearchType(value)}>
-                      <SelectTrigger className="bg-muted border-border rounded-xl h-11">
+                      <SelectTrigger className="bg-slate-50 border-slate-200 rounded-xl h-11">
                         <SelectValue placeholder="Select court type" />
                       </SelectTrigger>
                       <SelectContent>
@@ -525,9 +525,9 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
               </div>
 
               {/* Footer */}
-              <div className="px-6 py-4 bg-background border-t border-border">
+              <div className="px-6 py-4 bg-white border-t border-slate-100">
                 <div className="flex gap-3">
-                  <Button type="button" variant="outline" onClick={handleCancel} className="flex-1 rounded-full border-border">
+                  <Button type="button" variant="outline" onClick={handleCancel} className="flex-1 rounded-full border-slate-200">
                     Cancel
                   </Button>
                   <Button type="submit" disabled={searchCase.isPending} className="flex-1 rounded-full">
@@ -558,47 +558,47 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
                     
                     <div className="space-y-3">
                       {fetchedData.diary_number && (
-                        <div className="bg-background rounded-xl p-3">
-                          <p className="text-xs text-muted-foreground font-semibold">Diary Number</p>
+                        <div className="bg-white rounded-xl p-3">
+                          <p className="text-xs text-slate-500 font-semibold">Diary Number</p>
                           <p className="font-bold text-primary text-lg">{fetchedData.diary_number}</p>
                         </div>
                       )}
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                         {fetchedData.case_title && (
-                          <div className="bg-background rounded-xl p-3 col-span-1 md:col-span-2">
-                            <p className="text-xs text-muted-foreground">Case Title</p>
-                            <p className="font-medium text-foreground">{fetchedData.case_title}</p>
+                          <div className="bg-white rounded-xl p-3 col-span-1 md:col-span-2">
+                            <p className="text-xs text-slate-500">Case Title</p>
+                            <p className="font-medium text-slate-900">{fetchedData.case_title}</p>
                           </div>
                         )}
                         {fetchedData.cnr_number && (
-                          <div className="bg-background rounded-xl p-3">
-                            <p className="text-xs text-muted-foreground">CNR Number</p>
-                            <p className="font-medium text-foreground">{fetchedData.cnr_number}</p>
+                          <div className="bg-white rounded-xl p-3">
+                            <p className="text-xs text-slate-500">CNR Number</p>
+                            <p className="font-medium text-slate-900">{fetchedData.cnr_number}</p>
                           </div>
                         )}
                         {fetchedData.category && (
-                          <div className="bg-background rounded-xl p-3">
-                            <p className="text-xs text-muted-foreground">Category</p>
-                            <p className="font-medium text-foreground">{fetchedData.category}</p>
+                          <div className="bg-white rounded-xl p-3">
+                            <p className="text-xs text-slate-500">Category</p>
+                            <p className="font-medium text-slate-900">{fetchedData.category}</p>
                           </div>
                         )}
                         {fetchedData.bench_composition && (
-                          <div className="bg-background rounded-xl p-3 col-span-1 md:col-span-2">
-                            <p className="text-xs text-muted-foreground">Bench Composition</p>
-                            <p className="font-medium text-foreground">{fetchedData.bench_composition}</p>
+                          <div className="bg-white rounded-xl p-3 col-span-1 md:col-span-2">
+                            <p className="text-xs text-slate-500">Bench Composition</p>
+                            <p className="font-medium text-slate-900">{fetchedData.bench_composition}</p>
                           </div>
                         )}
                         {fetchedData.petitioner && (
-                          <div className="bg-background rounded-xl p-3 col-span-1 md:col-span-2">
-                            <p className="text-xs text-muted-foreground">Petitioner(s)</p>
-                            <p className="font-medium text-foreground">{fetchedData.petitioner}</p>
+                          <div className="bg-white rounded-xl p-3 col-span-1 md:col-span-2">
+                            <p className="text-xs text-slate-500">Petitioner(s)</p>
+                            <p className="font-medium text-slate-900">{fetchedData.petitioner}</p>
                           </div>
                         )}
                         {fetchedData.respondent && (
-                          <div className="bg-background rounded-xl p-3 col-span-1 md:col-span-2">
-                            <p className="text-xs text-muted-foreground">Respondent(s)</p>
-                            <p className="font-medium text-foreground">{fetchedData.respondent}</p>
+                          <div className="bg-white rounded-xl p-3 col-span-1 md:col-span-2">
+                            <p className="text-xs text-slate-500">Respondent(s)</p>
+                            <p className="font-medium text-slate-900">{fetchedData.respondent}</p>
                           </div>
                         )}
                       </div>
@@ -608,53 +608,53 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
                   /* High Court / District Court Display */
                   <div className="space-y-4">
                     {/* Case Info Card */}
-                    <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+                    <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
                       <div className="p-4">
                         <div className="flex items-center gap-3 mb-4">
                           <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
                             <FileText className="w-5 h-5 text-emerald-500" />
                           </div>
-                          <h3 className="text-sm font-semibold text-foreground">Case Information</h3>
+                          <h3 className="text-sm font-semibold text-slate-900">Case Information</h3>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                          <div className="bg-muted rounded-xl p-3 col-span-1 md:col-span-2">
-                            <p className="text-xs text-muted-foreground">Case Title</p>
-                            <p className="font-medium text-foreground">{fetchedData.case_title || '-'}</p>
+                          <div className="bg-slate-50 rounded-xl p-3 col-span-1 md:col-span-2">
+                            <p className="text-xs text-slate-500">Case Title</p>
+                            <p className="font-medium text-slate-900">{fetchedData.case_title || '-'}</p>
                           </div>
                           {fetchedData.case_number && (
-                            <div className="bg-muted rounded-xl p-3">
-                              <p className="text-xs text-muted-foreground">Case Number</p>
-                              <p className="font-medium text-foreground">{fetchedData.case_number}</p>
+                            <div className="bg-slate-50 rounded-xl p-3">
+                              <p className="text-xs text-slate-500">Case Number</p>
+                              <p className="font-medium text-slate-900">{fetchedData.case_number}</p>
                             </div>
                           )}
                           {fetchedData.cnr_number && (
-                            <div className="bg-muted rounded-xl p-3">
-                              <p className="text-xs text-muted-foreground">CNR Number</p>
-                              <p className="font-medium text-foreground">{fetchedData.cnr_number}</p>
+                            <div className="bg-slate-50 rounded-xl p-3">
+                              <p className="text-xs text-slate-500">CNR Number</p>
+                              <p className="font-medium text-slate-900">{fetchedData.cnr_number}</p>
                             </div>
                           )}
                           {fetchedData.filing_number && (
-                            <div className="bg-muted rounded-xl p-3">
-                              <p className="text-xs text-muted-foreground">Filing Number</p>
-                              <p className="font-medium text-foreground">{fetchedData.filing_number}</p>
+                            <div className="bg-slate-50 rounded-xl p-3">
+                              <p className="text-xs text-slate-500">Filing Number</p>
+                              <p className="font-medium text-slate-900">{fetchedData.filing_number}</p>
                             </div>
                           )}
                           {fetchedData.registration_number && (
-                            <div className="bg-muted rounded-xl p-3">
-                              <p className="text-xs text-muted-foreground">Registration Number</p>
-                              <p className="font-medium text-foreground">{fetchedData.registration_number}</p>
+                            <div className="bg-slate-50 rounded-xl p-3">
+                              <p className="text-xs text-slate-500">Registration Number</p>
+                              <p className="font-medium text-slate-900">{fetchedData.registration_number}</p>
                             </div>
                           )}
                           {fetchedData.status && (
-                            <div className="bg-muted rounded-xl p-3">
-                              <p className="text-xs text-muted-foreground">Status</p>
-                              <p className="font-medium text-foreground">{fetchedData.status}</p>
+                            <div className="bg-slate-50 rounded-xl p-3">
+                              <p className="text-xs text-slate-500">Status</p>
+                              <p className="font-medium text-slate-900">{fetchedData.status}</p>
                             </div>
                           )}
                           {fetchedData.stage && (
-                            <div className="bg-muted rounded-xl p-3">
-                              <p className="text-xs text-muted-foreground">Stage</p>
-                              <p className="font-medium text-foreground">{fetchedData.stage}</p>
+                            <div className="bg-slate-50 rounded-xl p-3">
+                              <p className="text-xs text-slate-500">Stage</p>
+                              <p className="font-medium text-slate-900">{fetchedData.stage}</p>
                             </div>
                           )}
                         </div>
@@ -662,43 +662,43 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
                     </div>
 
                     {/* Court Details Card */}
-                    <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+                    <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
                       <div className="p-4">
                         <div className="flex items-center gap-3 mb-4">
                           <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
                             <Building className="w-5 h-5 text-violet-500" />
                           </div>
-                          <h3 className="text-sm font-semibold text-foreground">Court Details</h3>
+                          <h3 className="text-sm font-semibold text-slate-900">Court Details</h3>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                           {fetchedData.court && (
-                            <div className="bg-muted rounded-xl p-3 col-span-1 md:col-span-2">
-                              <p className="text-xs text-muted-foreground">Court Name</p>
-                              <p className="font-medium text-foreground">{fetchedData.court}</p>
+                            <div className="bg-slate-50 rounded-xl p-3 col-span-1 md:col-span-2">
+                              <p className="text-xs text-slate-500">Court Name</p>
+                              <p className="font-medium text-slate-900">{fetchedData.court}</p>
                             </div>
                           )}
                           {fetchedData.district && (
-                            <div className="bg-muted rounded-xl p-3">
-                              <p className="text-xs text-muted-foreground">District</p>
-                              <p className="font-medium text-foreground">{fetchedData.district}</p>
+                            <div className="bg-slate-50 rounded-xl p-3">
+                              <p className="text-xs text-slate-500">District</p>
+                              <p className="font-medium text-slate-900">{fetchedData.district}</p>
                             </div>
                           )}
                           {fetchedData.state && (
-                            <div className="bg-muted rounded-xl p-3">
-                              <p className="text-xs text-muted-foreground">State</p>
-                              <p className="font-medium text-foreground">{fetchedData.state}</p>
+                            <div className="bg-slate-50 rounded-xl p-3">
+                              <p className="text-xs text-slate-500">State</p>
+                              <p className="font-medium text-slate-900">{fetchedData.state}</p>
                             </div>
                           )}
                           {fetchedData.bench_type && (
-                            <div className="bg-muted rounded-xl p-3">
-                              <p className="text-xs text-muted-foreground">Bench Type</p>
-                              <p className="font-medium text-foreground">{fetchedData.bench_type}</p>
+                            <div className="bg-slate-50 rounded-xl p-3">
+                              <p className="text-xs text-slate-500">Bench Type</p>
+                              <p className="font-medium text-slate-900">{fetchedData.bench_type}</p>
                             </div>
                           )}
                           {fetchedData.coram && (
-                            <div className="bg-muted rounded-xl p-3">
-                              <p className="text-xs text-muted-foreground">Coram (Judge)</p>
-                              <p className="font-medium text-foreground">{fetchedData.coram}</p>
+                            <div className="bg-slate-50 rounded-xl p-3">
+                              <p className="text-xs text-slate-500">Coram (Judge)</p>
+                              <p className="font-medium text-slate-900">{fetchedData.coram}</p>
                             </div>
                           )}
                         </div>
@@ -707,37 +707,37 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
 
                     {/* Dates Card */}
                     {(fetchedData.filing_date || fetchedData.next_hearing_date) && (
-                      <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+                      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
                         <div className="p-4">
                           <div className="flex items-center gap-3 mb-4">
                             <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
                               <Calendar className="w-5 h-5 text-amber-500" />
                             </div>
-                            <h3 className="text-sm font-semibold text-foreground">Important Dates</h3>
+                            <h3 className="text-sm font-semibold text-slate-900">Important Dates</h3>
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                             {fetchedData.filing_date && (
-                              <div className="bg-muted rounded-xl p-3">
-                                <p className="text-xs text-muted-foreground">Filing Date</p>
-                                <p className="font-medium text-foreground">{fetchedData.filing_date}</p>
+                              <div className="bg-slate-50 rounded-xl p-3">
+                                <p className="text-xs text-slate-500">Filing Date</p>
+                                <p className="font-medium text-slate-900">{fetchedData.filing_date}</p>
                               </div>
                             )}
                             {fetchedData.registration_date && (
-                              <div className="bg-muted rounded-xl p-3">
-                                <p className="text-xs text-muted-foreground">Registration Date</p>
-                                <p className="font-medium text-foreground">{fetchedData.registration_date}</p>
+                              <div className="bg-slate-50 rounded-xl p-3">
+                                <p className="text-xs text-slate-500">Registration Date</p>
+                                <p className="font-medium text-slate-900">{fetchedData.registration_date}</p>
                               </div>
                             )}
                             {fetchedData.first_hearing_date && (
-                              <div className="bg-muted rounded-xl p-3">
-                                <p className="text-xs text-muted-foreground">First Hearing</p>
-                                <p className="font-medium text-foreground">{fetchedData.first_hearing_date}</p>
+                              <div className="bg-slate-50 rounded-xl p-3">
+                                <p className="text-xs text-slate-500">First Hearing</p>
+                                <p className="font-medium text-slate-900">{fetchedData.first_hearing_date}</p>
                               </div>
                             )}
                             {fetchedData.next_hearing_date && (
-                              <div className="bg-muted rounded-xl p-3">
-                                <p className="text-xs text-muted-foreground">Next Hearing</p>
-                                <p className="font-medium text-foreground">{fetchedData.next_hearing_date}</p>
+                              <div className="bg-slate-50 rounded-xl p-3">
+                                <p className="text-xs text-slate-500">Next Hearing</p>
+                                <p className="font-medium text-slate-900">{fetchedData.next_hearing_date}</p>
                               </div>
                             )}
                           </div>
@@ -747,30 +747,30 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
 
                     {/* Parties Card */}
                     {(fetchedData.petitioner || fetchedData.respondent) && (
-                      <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+                      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
                         <div className="p-4">
                           <div className="flex items-center gap-3 mb-4">
                             <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center">
                               <User className="w-5 h-5 text-sky-500" />
                             </div>
-                            <h3 className="text-sm font-semibold text-foreground">Parties</h3>
+                            <h3 className="text-sm font-semibold text-slate-900">Parties</h3>
                           </div>
                           <div className="space-y-3 text-sm">
                             {fetchedData.petitioner && (
-                              <div className="bg-muted rounded-xl p-3">
-                                <p className="text-xs text-muted-foreground">Petitioner</p>
-                                <p className="font-medium text-foreground">{fetchedData.petitioner}</p>
+                              <div className="bg-slate-50 rounded-xl p-3">
+                                <p className="text-xs text-slate-500">Petitioner</p>
+                                <p className="font-medium text-slate-900">{fetchedData.petitioner}</p>
                                 {fetchedData.petitioner_advocate && (
-                                  <p className="text-xs text-muted-foreground mt-1">Advocate: {fetchedData.petitioner_advocate}</p>
+                                  <p className="text-xs text-slate-500 mt-1">Advocate: {fetchedData.petitioner_advocate}</p>
                                 )}
                               </div>
                             )}
                             {fetchedData.respondent && (
-                              <div className="bg-muted rounded-xl p-3">
-                                <p className="text-xs text-muted-foreground">Respondent</p>
-                                <p className="font-medium text-foreground">{fetchedData.respondent}</p>
+                              <div className="bg-slate-50 rounded-xl p-3">
+                                <p className="text-xs text-slate-500">Respondent</p>
+                                <p className="font-medium text-slate-900">{fetchedData.respondent}</p>
                                 {fetchedData.respondent_advocate && (
-                                  <p className="text-xs text-muted-foreground mt-1">Advocate: {fetchedData.respondent_advocate}</p>
+                                  <p className="text-xs text-slate-500 mt-1">Advocate: {fetchedData.respondent_advocate}</p>
                                 )}
                               </div>
                             )}
@@ -783,9 +783,9 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
               </div>
 
               {/* Footer */}
-              <div className="px-6 py-4 bg-background border-t border-border">
+              <div className="px-6 py-4 bg-white border-t border-slate-100">
                 <div className="flex gap-3">
-                  <Button type="button" variant="outline" onClick={handleCancel} disabled={addCaseMutation.isPending} className="flex-1 rounded-full border-border">
+                  <Button type="button" variant="outline" onClick={handleCancel} disabled={addCaseMutation.isPending} className="flex-1 rounded-full border-slate-200">
                     Cancel
                   </Button>
                   <Button type="button" onClick={handleAddCase} disabled={addCaseMutation.isPending} className="flex-1 rounded-full">
