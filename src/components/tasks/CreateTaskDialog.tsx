@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -16,6 +15,7 @@ import { CaseSelector } from '@/components/appointments/CaseSelector';
 import { Mic, MicOff, Loader2, CheckSquare, FileText, Calendar, User, Tag, Bell, Link, X } from 'lucide-react';
 import { AudioRecorder } from '@/utils/audioRecorder';
 import { useDeepgramTranscription } from '@/hooks/useDeepgramTranscription';
+import { MobileDialogHeader } from '@/components/ui/mobile-dialog-header';
 
 interface CreateTaskDialogProps {
   open: boolean;
@@ -283,21 +283,11 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden">
         <div className="flex flex-col h-full bg-slate-50">
-          {/* Header */}
-          <div className="px-6 py-5 bg-white border-b border-slate-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-foreground">Create New Task</h2>
-                <p className="text-sm text-muted-foreground mt-1">Add a new task to your workflow</p>
-              </div>
-              <button 
-                onClick={onClose}
-                className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors"
-              >
-                <X className="w-4 h-4 text-slate-500" />
-              </button>
-            </div>
-          </div>
+          <MobileDialogHeader
+            title="Create New Task"
+            subtitle="Add a new task to your workflow"
+            onClose={onClose}
+          />
 
           {/* Form Content */}
           <div className="flex-1 overflow-y-auto px-6 py-6">

@@ -18,6 +18,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { getAppointmentStatusColor } from '@/lib/statusColors';
+import { MobileDialogHeader } from '@/components/ui/mobile-dialog-header';
 
 interface ViewAppointmentDialogProps {
   appointment: {
