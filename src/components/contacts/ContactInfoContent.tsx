@@ -41,7 +41,7 @@ export const ContactInfoContent: React.FC<ContactInfoContentProps> = ({ contactI
   if (isLoading && isMobile) {
     return (
       <MobilePageContainer>
-        <MobileHeader title="Loading..." showBack />
+        <MobileHeader title="Loading..." showBack backTo="/contacts" />
         <div className="p-4 space-y-4">
           {/* Header skeleton */}
           <div className="flex items-center gap-3">
@@ -83,7 +83,7 @@ export const ContactInfoContent: React.FC<ContactInfoContentProps> = ({ contactI
   if ((error || !contact) && isMobile) {
     return (
       <MobilePageContainer>
-        <MobileHeader title="Contact" showBack />
+        <MobileHeader title="Contact" showBack backTo="/contacts" />
         <div className="flex flex-col items-center justify-center py-20 px-4">
           <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
             <Users className="w-8 h-8 text-muted-foreground" />
