@@ -79,19 +79,19 @@ export const InlineEditReferenceActs = ({ caseId, currentActs }: InlineEditRefer
   }
 
   return (
-    <div className="flex items-start justify-between gap-2">
-      <div className="flex-1">
+    <div className="flex items-start justify-between gap-2 min-w-0">
+      <div className="flex-1 min-w-0 overflow-hidden">
         {acts && acts.length > 0 ? (
-          <p className="text-sm font-medium text-gray-900">{acts.join(', ')}</p>
+          <p className="text-sm font-medium text-foreground break-words whitespace-normal">{acts.join(', ')}</p>
         ) : (
-          <p className="text-sm text-gray-400 italic">No acts specified</p>
+          <p className="text-sm text-muted-foreground italic">No acts specified</p>
         )}
       </div>
       <Button
         size="sm"
         variant="ghost"
         onClick={() => setIsEditing(true)}
-        className="h-8 w-8 p-0 hover:bg-gray-100"
+        className="h-8 w-8 p-0 flex-shrink-0 hover:bg-muted"
       >
         <Pencil className="w-4 h-4" />
       </Button>
