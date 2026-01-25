@@ -14,6 +14,7 @@ import { ClientSelector } from './ClientSelector';
 import { CaseSelector } from '@/components/appointments/CaseSelector';
 import { ContactSelector } from '@/components/contacts/ContactSelector';
 import { X, Type, FileText, Link2, User, Calendar, Tag, Flag, CheckCircle } from 'lucide-react';
+import { bg, border, text } from '@/lib/colors';
 
 interface EditTaskDialogProps {
   open: boolean;
@@ -225,19 +226,19 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden">
-        <div className="flex flex-col h-full bg-muted">
+        <div className={`flex flex-col h-full ${bg.page}`}>
           {/* Header */}
-          <div className="px-6 py-5 bg-white border-b border-slate-100">
+          <div className={`px-6 py-5 ${bg.card} border-b ${border.light}`}>
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-semibold text-slate-900">Edit Task</h2>
-                <p className="text-sm text-slate-500 mt-0.5">Update task details and settings</p>
+                <h2 className={`text-xl font-semibold ${text.primary}`}>Edit Task</h2>
+                <p className={`text-sm ${text.light} mt-0.5`}>Update task details and settings</p>
               </div>
               <button
                 onClick={onClose}
-                className="md:hidden w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors"
+                className={`md:hidden w-8 h-8 rounded-full ${bg.muted} flex items-center justify-center hover:bg-muted transition-colors`}
               >
-                <X className="w-4 h-4 text-slate-500" />
+                <X className={`w-4 h-4 ${text.light}`} />
               </button>
             </div>
           </div>
@@ -246,21 +247,21 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
           <form onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto">
             <div className="px-6 py-6 space-y-4">
               {/* Title Card */}
-              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div className={`${bg.card} rounded-2xl shadow-sm overflow-hidden`}>
                 <div className="p-4">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
                       <Type className="w-5 h-5 text-emerald-500" />
                     </div>
                     <div>
-                      <Label className="text-sm font-semibold text-slate-900">Task Title</Label>
-                      <p className="text-xs text-slate-500">What needs to be done?</p>
+                      <Label className={`text-sm font-semibold ${text.primary}`}>Task Title</Label>
+                      <p className={`text-xs ${text.light}`}>What needs to be done?</p>
                     </div>
                   </div>
                   <Input
                     {...register('title', { required: 'Task title is required' })}
                     placeholder="Enter task title..."
-                    className="bg-slate-50 border-slate-200 rounded-xl h-11"
+                    className={`${bg.input} ${border.default} rounded-xl h-11`}
                   />
                   {errors.title && <p className="text-sm text-red-600 mt-1">{errors.title.message}</p>}
                 </div>

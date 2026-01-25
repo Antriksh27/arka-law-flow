@@ -26,6 +26,7 @@ import { ClientSelector } from '@/components/appointments/ClientSelector';
 import { CaseSelector } from '@/components/appointments/CaseSelector';
 import { useAuth } from '@/contexts/AuthContext';
 import { MobileDialogHeader } from '@/components/ui/mobile-dialog-header';
+import { bg, border, text } from '@/lib/colors';
 
 interface Appointment {
   id: string;
@@ -266,7 +267,7 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
   return (
     <Dialog open onOpenChange={closeDialog}>
       <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden">
-        <div className="flex flex-col h-full max-h-[90vh] bg-slate-50">
+        <div className={`flex flex-col h-full max-h-[90vh] ${bg.page}`}>
           <MobileDialogHeader
             title="Edit Appointment"
             subtitle="Update appointment details"
@@ -277,7 +278,7 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
           <div className="flex-1 overflow-y-auto px-6 py-6">
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Title Card */}
-              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div className={`${bg.card} rounded-2xl shadow-sm overflow-hidden`}>
                 <div className="p-4">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
@@ -293,7 +294,7 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
                     onChange={(e) => handleInputChange('title', e.target.value)}
                     placeholder="Appointment title"
                     required
-                    className="bg-slate-50 border-slate-200 rounded-xl h-11"
+                    className={`${bg.input} ${border.default} rounded-xl h-11`}
                   />
                 </div>
               </div>

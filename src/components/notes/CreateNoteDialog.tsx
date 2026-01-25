@@ -13,6 +13,7 @@ import { X, Plus, StickyNote, FileText, Eye, Palette, Tag, Link } from 'lucide-r
 import { ClientSelector } from '@/components/appointments/ClientSelector';
 import { CaseSelector } from '@/components/appointments/CaseSelector';
 import { MobileDialogHeader } from '@/components/ui/mobile-dialog-header';
+import { bg, border } from '@/lib/colors';
 
 interface CreateNoteDialogProps {
   open: boolean;
@@ -171,7 +172,7 @@ export const CreateNoteDialog: React.FC<CreateNoteDialogProps> = ({
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden">
-        <div className="flex flex-col h-full bg-slate-50">
+        <div className={`flex flex-col h-full ${bg.page}`}>
           <MobileDialogHeader
             title="Create New Note"
             subtitle="Capture your thoughts quickly"
@@ -183,8 +184,8 @@ export const CreateNoteDialog: React.FC<CreateNoteDialogProps> = ({
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               
               {/* Title Card */}
-              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-4 border-b border-slate-100">
+              <div className={`${bg.card} rounded-2xl shadow-sm overflow-hidden`}>
+                <div className={`p-4 border-b ${border.light}`}>
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
                       <StickyNote className="w-5 h-5 text-amber-500" />
@@ -200,15 +201,15 @@ export const CreateNoteDialog: React.FC<CreateNoteDialogProps> = ({
                     id="title"
                     {...register('title', { required: 'Title is required' })}
                     placeholder="Enter note title..."
-                    className="bg-slate-50 border-slate-200 rounded-xl h-11"
+                    className={`${bg.input} ${border.default} rounded-xl h-11`}
                   />
                   {errors.title && <p className="text-sm text-destructive mt-2">{errors.title.message}</p>}
                 </div>
               </div>
 
               {/* Content Card */}
-              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-4 border-b border-slate-100">
+              <div className={`${bg.card} rounded-2xl shadow-sm overflow-hidden`}>
+                <div className={`p-4 border-b ${border.light}`}>
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center">
                       <FileText className="w-5 h-5 text-sky-500" />
@@ -222,7 +223,7 @@ export const CreateNoteDialog: React.FC<CreateNoteDialogProps> = ({
                     id="content"
                     {...register('content')}
                     placeholder="Write your note content..."
-                    className="bg-slate-50 border-slate-200 rounded-xl min-h-[120px] resize-none"
+                    className={`${bg.input} ${border.default} rounded-xl min-h-[120px] resize-none`}
                     rows={6}
                   />
                 </div>

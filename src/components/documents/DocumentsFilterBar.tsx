@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { PRIMARY_DOCUMENT_TYPES } from '@/lib/documentTypes';
 import { CaseSelector } from '@/components/appointments/CaseSelector';
 import { ClientSelector } from '@/components/appointments/ClientSelector';
+import { border } from '@/lib/colors';
 
 interface DocumentsFilterBarProps {
   viewMode: 'grid' | 'list';
@@ -32,7 +33,7 @@ export const DocumentsFilterBar: React.FC<DocumentsFilterBarProps> = ({
   onUploadClick
 }) => {
   return (
-    <div className="bg-card rounded-2xl shadow-sm p-4 sm:p-6 border border-border">
+    <div className={`bg-card rounded-2xl shadow-sm p-4 sm:p-6 border ${border.default}`}>
       <div className="flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-4">
         {/* Search Input - searches by document name and client name */}
         <div className="relative flex-1">
@@ -94,7 +95,7 @@ export const DocumentsFilterBar: React.FC<DocumentsFilterBarProps> = ({
 
         {/* View Mode Toggle */}
         <div className="flex items-center gap-2 ml-auto">
-          <div className="flex border border-border rounded-lg overflow-hidden">
+          <div className={`flex border ${border.default} rounded-lg overflow-hidden`}>
             <Button
               variant={viewMode === 'grid' ? 'default' : 'ghost'}
               size="sm"
