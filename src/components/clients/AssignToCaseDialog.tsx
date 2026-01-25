@@ -51,16 +51,19 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
         cnr_number,
         clients(full_name)
       `);
-    
+
     // Apply search filter if search term exists
     if (searchTerm && searchTerm.trim().length > 0) {
       const term = searchTerm.trim();
       query = query.or(`case_title.ilike.%${term}%,case_number.ilike.%${term}%,cnr_number.ilike.%${term}%,case_type.ilike.%${term}%,petitioner.ilike.%${term}%,respondent.ilike.%${term}%`);
     }
-    
-    query = query.order('created_at', { ascending: false }).limit(100);
-    
-    const { data, error } = await query;
+    query = query.order('created_at', {
+      ascending: false
+    }).limit(100);
+    const {
+      data,
+      error
+    } = await query;
     if (!error && data) {
       setCases(data as CaseItem[]);
     }
@@ -124,7 +127,7 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
   return <>
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden">
-          <div className="flex flex-col h-full bg-muted">
+          <div className="flex flex-col h-full bg-slate-50">
             {/* Header */}
             <div className="px-6 py-5 bg-background border-b border-border">
               <div className="flex items-center justify-between">
@@ -150,7 +153,7 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4 bg-muted">
+            <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4 bg-slate-50">
               {view === 'selection' && <div className="space-y-3">
                   {/* Link Existing Case Option */}
                   <button onClick={() => setView('existing')} className="w-full bg-background rounded-2xl shadow-sm p-5 text-left hover:shadow-md transition-shadow active:scale-[0.98]">
