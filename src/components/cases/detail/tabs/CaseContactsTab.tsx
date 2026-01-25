@@ -207,7 +207,7 @@ export const ContactTab: React.FC<ContactTabProps> = ({
                   <Input id="name" value={formData.name} onChange={e => setFormData({
                   ...formData,
                   name: e.target.value
-                })} placeholder="Enter name" required className="bg-muted border-border h-11 rounded-xl" />
+                })} placeholder="Enter name" required className="bg-slate-50 border-border h-11 rounded-xl" />
                 </div>
                 <div className="p-4">
                   <div className="flex items-center gap-3 mb-3">
@@ -222,7 +222,7 @@ export const ContactTab: React.FC<ContactTabProps> = ({
                   <Input id="role" value={formData.role} onChange={e => setFormData({
                   ...formData,
                   role: e.target.value
-                })} placeholder="Enter role" className="bg-muted border-border h-11 rounded-xl" />
+                })} placeholder="Enter role" className="bg-slate-50 border-border h-11 rounded-xl" />
                 </div>
               </div>
 
@@ -241,7 +241,7 @@ export const ContactTab: React.FC<ContactTabProps> = ({
                   <Input id="email" type="email" value={formData.email} onChange={e => setFormData({
                   ...formData,
                   email: e.target.value
-                })} placeholder="email@example.com" className="bg-muted border-border h-11 rounded-xl" />
+                })} placeholder="email@example.com" className="bg-slate-50 border-border h-11 rounded-xl" />
                 </div>
                 <div className="p-4">
                   <div className="flex items-center gap-3 mb-3">
@@ -256,7 +256,7 @@ export const ContactTab: React.FC<ContactTabProps> = ({
                   <Input id="phone" value={formData.phone} onChange={e => setFormData({
                   ...formData,
                   phone: e.target.value
-                })} placeholder="+91 98765 43210" className="bg-muted border-border h-11 rounded-xl" />
+                })} placeholder="+91 98765 43210" className="bg-slate-50 border-border h-11 rounded-xl" />
                 </div>
               </div>
 
@@ -274,7 +274,7 @@ export const ContactTab: React.FC<ContactTabProps> = ({
                 <Textarea id="notes" value={formData.notes} onChange={e => setFormData({
                 ...formData,
                 notes: e.target.value
-              })} placeholder="Add any additional notes..." rows={3} className="bg-muted border-border rounded-xl resize-none" />
+              })} placeholder="Add any additional notes..." rows={3} className="bg-slate-50 border-border rounded-xl resize-none" />
               </div>
             </form>
 
