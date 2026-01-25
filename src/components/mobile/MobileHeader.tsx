@@ -67,7 +67,18 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
           {showBack && (
             <button
               type="button"
-              onClick={handleBack}
+              // Use Pointer events for consistent mobile behavior (avoids flaky click/touch combos)
+              onPointerUp={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleBack();
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleBack();
+                }
+              }}
               className="flex-shrink-0 p-2 -ml-2 rounded-xl active:scale-95 transition-transform min-h-[44px] min-w-[44px] flex items-center justify-center z-10 relative bg-muted touch-manipulation cursor-pointer select-none"
               aria-label="Go back"
             >

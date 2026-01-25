@@ -57,6 +57,7 @@ export const ContactTabs: React.FC<ContactTabsProps> = ({
         <MobileHeader 
           title={contact.name}
           showBack={true}
+          backTo="/contacts"
           actions={
             <ContactQuickActions 
               contactId={contact.id} 
