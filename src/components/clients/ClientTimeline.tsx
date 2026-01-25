@@ -1,11 +1,15 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Timeline } from '@/components/ui/timeline';
 import { 
   FileText, Calendar, CheckSquare, StickyNote, 
-  Briefcase, Loader2 
+  Briefcase, Loader2, Clock
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { format, formatDistanceToNow, isToday, isYesterday } from 'date-fns';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { ChevronDown } from 'lucide-react';
 
 interface ClientTimelineProps {
   clientId: string;
@@ -18,10 +22,49 @@ interface TimelineEvent {
   description: string;
   date: string;
   icon: any;
-  color: string;
+  iconBg: string;
+  iconColor: string;
 }
 
+const getEventStyle = (type: string) => {
+  switch (type) {
+    case 'case':
+      return { iconBg: 'bg-sky-100', iconColor: 'text-sky-500' };
+    case 'appointment':
+      return { iconBg: 'bg-emerald-100', iconColor: 'text-emerald-500' };
+    case 'document':
+      return { iconBg: 'bg-violet-100', iconColor: 'text-violet-500' };
+    case 'task':
+      return { iconBg: 'bg-amber-100', iconColor: 'text-amber-500' };
+    case 'note':
+      return { iconBg: 'bg-rose-100', iconColor: 'text-rose-500' };
+    case 'invoice':
+      return { iconBg: 'bg-indigo-100', iconColor: 'text-indigo-500' };
+    default:
+      return { iconBg: 'bg-slate-100', iconColor: 'text-slate-500' };
+  }
+};
+
+const formatEventDate = (dateStr: string) => {
+  const date = new Date(dateStr);
+  if (isToday(date)) {
+    return `Today, ${format(date, 'h:mm a')}`;
+  }
+  if (isYesterday(date)) {
+    return `Yesterday, ${format(date, 'h:mm a')}`;
+  }
+  const distance = formatDistanceToNow(date, { addSuffix: true });
+  return distance;
+};
+
+const formatFullDate = (dateStr: string) => {
+  return format(new Date(dateStr), 'MMM d, yyyy');
+};
+
 export const ClientTimeline: React.FC<ClientTimelineProps> = ({ clientId }) => {
+  const [showAll, setShowAll] = React.useState(false);
+  const initialCount = 8;
+
   const { data: events = [], isLoading } = useQuery({
     queryKey: ['client-timeline', clientId],
     queryFn: async () => {
@@ -35,6 +78,7 @@ export const ClientTimeline: React.FC<ClientTimelineProps> = ({ clientId }) => {
         .order('created_at', { ascending: false });
 
       cases?.forEach((caseItem) => {
+        const style = getEventStyle('case');
         timelineEvents.push({
           id: `case-${caseItem.id}`,
           type: 'case',
@@ -42,7 +86,7 @@ export const ClientTimeline: React.FC<ClientTimelineProps> = ({ clientId }) => {
           description: `${caseItem.case_number}: ${caseItem.case_title || 'Untitled'}`,
           date: caseItem.created_at,
           icon: Briefcase,
-          color: 'blue'
+          ...style
         });
       });
 
@@ -55,6 +99,7 @@ export const ClientTimeline: React.FC<ClientTimelineProps> = ({ clientId }) => {
         .limit(10);
 
       appointments?.forEach((apt) => {
+        const style = getEventStyle('appointment');
         timelineEvents.push({
           id: `appointment-${apt.id}`,
           type: 'appointment',
@@ -62,7 +107,7 @@ export const ClientTimeline: React.FC<ClientTimelineProps> = ({ clientId }) => {
           description: apt.type || 'Meeting',
           date: apt.created_at,
           icon: Calendar,
-          color: 'green'
+          ...style
         });
       });
 
@@ -75,6 +120,7 @@ export const ClientTimeline: React.FC<ClientTimelineProps> = ({ clientId }) => {
         .limit(10);
 
       documents?.forEach((doc) => {
+        const style = getEventStyle('document');
         timelineEvents.push({
           id: `document-${doc.id}`,
           type: 'document',
@@ -82,7 +128,7 @@ export const ClientTimeline: React.FC<ClientTimelineProps> = ({ clientId }) => {
           description: doc.title || doc.file_name,
           date: doc.uploaded_at,
           icon: FileText,
-          color: 'purple'
+          ...style
         });
       });
 
@@ -95,6 +141,7 @@ export const ClientTimeline: React.FC<ClientTimelineProps> = ({ clientId }) => {
         .limit(10);
 
       tasks?.forEach((task) => {
+        const style = getEventStyle('task');
         timelineEvents.push({
           id: `task-${task.id}`,
           type: 'task',
@@ -102,7 +149,7 @@ export const ClientTimeline: React.FC<ClientTimelineProps> = ({ clientId }) => {
           description: task.title,
           date: task.created_at,
           icon: CheckSquare,
-          color: 'orange'
+          ...style
         });
       });
 
@@ -115,6 +162,7 @@ export const ClientTimeline: React.FC<ClientTimelineProps> = ({ clientId }) => {
         .limit(10);
 
       notes?.forEach((note) => {
+        const style = getEventStyle('note');
         timelineEvents.push({
           id: `note-${note.id}`,
           type: 'note',
@@ -122,7 +170,7 @@ export const ClientTimeline: React.FC<ClientTimelineProps> = ({ clientId }) => {
           description: note.title,
           date: note.created_at,
           icon: StickyNote,
-          color: 'yellow'
+          ...style
         });
       });
 
@@ -143,32 +191,105 @@ export const ClientTimeline: React.FC<ClientTimelineProps> = ({ clientId }) => {
 
   if (events.length === 0) {
     return (
-      <div className="text-center py-12 text-slate-500">
-        No timeline events found
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+          <Clock className="w-8 h-8 text-slate-400" />
+        </div>
+        <p className="text-base font-medium text-foreground">No activity yet</p>
+        <p className="text-sm text-muted-foreground mt-1">
+          Activity will appear here as you work with this client
+        </p>
       </div>
     );
   }
 
-  // Transform events to Timeline items format
-  const timelineItems = events.map(event => ({
-    date: event.date,
-    title: event.title,
-    description: event.description,
-    icon: React.createElement(event.icon, { className: "h-3 w-3" }),
-  }));
+  const displayedEvents = showAll ? events : events.slice(0, initialCount);
+  const remainingCount = events.length - initialCount;
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-slate-900 mb-4">Activity Timeline</h3>
-      
-      <Timeline
-        items={timelineItems}
-        initialCount={10}
-        showMoreText="Load More Events"
-        showLessText="Show Less"
-        dotClassName="bg-gradient-to-b from-background to-muted ring-1 ring-border"
-        lineClassName="border-l border-border"
-      />
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold text-foreground">Activity</h3>
+        <span className="text-sm text-muted-foreground">
+          {events.length} event{events.length !== 1 ? 's' : ''}
+        </span>
+      </div>
+
+      {/* Timeline Cards */}
+      <div className="space-y-3">
+        <AnimatePresence mode="popLayout">
+          {displayedEvents.map((event, index) => {
+            const Icon = event.icon;
+            return (
+              <motion.div
+                key={event.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2, delay: index * 0.03 }}
+                className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 active:scale-[0.98] transition-transform"
+              >
+                <div className="flex items-start gap-4">
+                  {/* Icon */}
+                  <div className={cn(
+                    "w-11 h-11 rounded-xl flex items-center justify-center shrink-0",
+                    event.iconBg
+                  )}>
+                    <Icon className={cn("w-5 h-5", event.iconColor)} />
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-foreground">
+                          {event.title}
+                        </p>
+                        <p className="text-sm text-muted-foreground truncate mt-0.5">
+                          {event.description}
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-xs font-medium text-muted-foreground">
+                          {formatEventDate(event.date)}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+                          {formatFullDate(event.date)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
+      </div>
+
+      {/* Show More Button */}
+      {remainingCount > 0 && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="flex justify-center pt-2"
+        >
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowAll(!showAll)}
+            className="gap-2 text-muted-foreground hover:text-foreground"
+          >
+            {showAll ? 'Show Less' : `Show ${remainingCount} More`}
+            <motion.div
+              animate={{ rotate: showAll ? 180 : 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <ChevronDown className="h-4 w-4" />
+            </motion.div>
+          </Button>
+        </motion.div>
+      )}
     </div>
   );
 };
