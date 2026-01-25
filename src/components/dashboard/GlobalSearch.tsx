@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Input } from '@/components/ui/input';
+import { bg, border, text } from '@/lib/colors';
 
 export const GlobalSearch = () => {
   const [open, setOpen] = useState(false);
@@ -88,7 +89,6 @@ export const GlobalSearch = () => {
     if (type === 'contact') navigate(`/contacts`);
     if (type === 'task') navigate(`/tasks`);
     if (type === 'document') {
-      // Navigate to case if document has case_id, otherwise to documents page
       if (caseId) {
         navigate(`/cases/${caseId}?tab=documents`);
       } else {
@@ -108,7 +108,7 @@ export const GlobalSearch = () => {
   return (
     <div className="w-full max-w-2xl relative">
       <div className="relative">
-        <Search className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-slate-400" />
+        <Search className={`absolute left-3 md:left-4 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 ${text.light}`} />
         <Input
           ref={inputRef}
           type="text"
@@ -116,12 +116,12 @@ export const GlobalSearch = () => {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => query.length >= 2 && setOpen(true)}
-          className="w-full pl-10 md:pl-12 pr-10 py-2.5 md:py-3 bg-white border-slate-200 rounded-xl shadow-sm hover:border-primary focus:border-primary transition-colors text-sm md:text-base"
+          className={`w-full pl-10 md:pl-12 pr-10 py-2.5 md:py-3 bg-white ${border.default} rounded-xl shadow-sm hover:border-primary focus:border-primary transition-colors text-sm md:text-base`}
         />
         {query && (
           <button
             onClick={clearSearch}
-            className="absolute right-3 md:right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+            className={`absolute right-3 md:right-4 top-1/2 -translate-y-1/2 ${text.light} hover:${text.secondary}`}
           >
             <X className="w-3 h-3 md:w-4 md:h-4" />
           </button>
@@ -134,7 +134,7 @@ export const GlobalSearch = () => {
       </div>
 
       {open && query.length >= 2 && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-lg z-50 max-h-[60vh] md:max-h-96 overflow-y-auto">
+        <div className={`absolute top-full left-0 right-0 mt-2 bg-white ${border.default} rounded-xl shadow-lg z-50 max-h-[60vh] md:max-h-96 overflow-y-auto`}>
           {!loading && totalResults === 0 && (
             <div className="px-4 py-8 text-center text-sm text-muted-foreground">
               No results found for "{query}"
@@ -150,7 +150,7 @@ export const GlobalSearch = () => {
                 <button
                   key={client.id}
                   onClick={() => handleSelect('client', client.id)}
-                  className="w-full flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-50 text-left transition-colors"
+                  className={`w-full flex items-start gap-3 px-3 py-2.5 rounded-lg ${bg.hover} text-left transition-colors`}
                 >
                   <Users className="w-4 h-4 mt-0.5 text-primary flex-shrink-0" />
                   <div className="flex-1 min-w-0">
@@ -163,7 +163,7 @@ export const GlobalSearch = () => {
           )}
 
           {results.cases.length > 0 && (
-            <div className="p-2 border-t border-slate-100">
+            <div className={`p-2 border-t ${border.light}`}>
               <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase">
                 Cases
               </div>
@@ -188,7 +188,7 @@ export const GlobalSearch = () => {
                   <button
                     key={caseItem.id}
                     onClick={() => handleSelect('case', caseItem.id)}
-                    className="w-full flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-50 text-left transition-colors"
+                    className={`w-full flex items-start gap-3 px-3 py-2.5 rounded-lg ${bg.hover} text-left transition-colors`}
                   >
                     <Briefcase className="w-4 h-4 mt-0.5 text-primary flex-shrink-0" />
                     <div className="flex-1 min-w-0">
@@ -202,7 +202,7 @@ export const GlobalSearch = () => {
           )}
 
           {results.contacts.length > 0 && (
-            <div className="p-2 border-t border-slate-100">
+            <div className={`p-2 border-t ${border.light}`}>
               <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase">
                 Contacts
               </div>
@@ -210,7 +210,7 @@ export const GlobalSearch = () => {
                 <button
                   key={contact.id}
                   onClick={() => handleSelect('contact', contact.id)}
-                  className="w-full flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-50 text-left transition-colors"
+                  className={`w-full flex items-start gap-3 px-3 py-2.5 rounded-lg ${bg.hover} text-left transition-colors`}
                 >
                   <Users className="w-4 h-4 mt-0.5 text-primary flex-shrink-0" />
                   <div className="flex-1 min-w-0">
@@ -223,7 +223,7 @@ export const GlobalSearch = () => {
           )}
 
           {results.tasks.length > 0 && (
-            <div className="p-2 border-t border-slate-100">
+            <div className={`p-2 border-t ${border.light}`}>
               <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase">
                 Tasks
               </div>
@@ -231,7 +231,7 @@ export const GlobalSearch = () => {
                 <button
                   key={task.id}
                   onClick={() => handleSelect('task', task.id)}
-                  className="w-full flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-50 text-left transition-colors"
+                  className={`w-full flex items-start gap-3 px-3 py-2.5 rounded-lg ${bg.hover} text-left transition-colors`}
                 >
                   <CheckSquare className="w-4 h-4 mt-0.5 text-primary flex-shrink-0" />
                   <div className="flex-1 min-w-0">
@@ -243,7 +243,7 @@ export const GlobalSearch = () => {
           )}
 
           {results.documents.length > 0 && (
-            <div className="p-2 border-t border-slate-100">
+            <div className={`p-2 border-t ${border.light}`}>
               <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase">
                 Documents
               </div>
@@ -251,7 +251,7 @@ export const GlobalSearch = () => {
                 <button
                   key={doc.id}
                   onClick={() => handleSelect('document', doc.id, doc.case_id)}
-                  className="w-full flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-50 text-left transition-colors"
+                  className={`w-full flex items-start gap-3 px-3 py-2.5 rounded-lg ${bg.hover} text-left transition-colors`}
                 >
                   <File className="w-4 h-4 mt-0.5 text-amber-600 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
