@@ -54,9 +54,9 @@ export const MobileStickyHeader: React.FC<MobileStickyHeaderProps> = ({
   className,
 }) => {
   return (
-    <>
+    <div className="flex-shrink-0">
       {/* Fixed Header Bar */}
-      <header className="sticky top-0 z-40 w-full bg-background border-b border-border h-14 supports-[padding-top:env(safe-area-inset-top)]:pt-[env(safe-area-inset-top)]">
+      <header className="bg-background border-b border-border h-14 supports-[padding-top:env(safe-area-inset-top)]:pt-[env(safe-area-inset-top)]">
         <div className="flex items-center justify-between h-full px-4">
           <div className="flex items-center gap-3">
             <h1 className="text-lg font-semibold text-foreground">{title}</h1>
@@ -72,9 +72,9 @@ export const MobileStickyHeader: React.FC<MobileStickyHeaderProps> = ({
         </div>
       </header>
 
-      {/* Sticky Search + Tabs Container */}
+      {/* Search + Tabs Container */}
       <div className={cn(
-        "sticky top-14 z-30 bg-background px-4 py-3 space-y-3 border-b border-border",
+        "bg-background px-4 py-3 space-y-3 border-b border-border",
         className
       )}>
         {/* Search Bar */}
@@ -133,6 +133,6 @@ export const MobileStickyHeader: React.FC<MobileStickyHeaderProps> = ({
           </Tabs>
         )}
       </div>
-    </>
+    </div>
   );
 };

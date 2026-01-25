@@ -85,7 +85,7 @@ const Cases = () => {
 
   if (isMobile) {
     return (
-      <div className="h-full min-h-0 bg-background flex flex-col">
+      <div className="fixed inset-0 bg-background flex flex-col">
         <MobileStickyHeader
           title="Cases"
           searchValue={searchQuery}
@@ -101,17 +101,19 @@ const Cases = () => {
           onTabChange={(value) => setCasesTab(value as 'all' | 'my')}
         />
 
-        <PullToRefresh onRefresh={handleRefresh}>
-          <div className="flex-1 min-h-0 overflow-y-auto pb-24 px-4 pt-4 space-y-4">
-            <CasesGrid 
-              searchQuery={searchQuery}
-              statusFilter={statusFilter}
-              typeFilter={typeFilter}
-              assignedFilter={assignedFilter}
-              showOnlyMyCases={casesTab === 'my'}
-            />
-          </div>
-        </PullToRefresh>
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <PullToRefresh onRefresh={handleRefresh}>
+            <div className="px-4 pt-4 pb-24 space-y-4">
+              <CasesGrid 
+                searchQuery={searchQuery}
+                statusFilter={statusFilter}
+                typeFilter={typeFilter}
+                assignedFilter={assignedFilter}
+                showOnlyMyCases={casesTab === 'my'}
+              />
+            </div>
+          </PullToRefresh>
+        </div>
 
         <CaseMobileFAB onClick={() => setShowMobileActions(true)} />
         
