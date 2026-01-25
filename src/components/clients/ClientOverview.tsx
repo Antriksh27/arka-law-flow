@@ -94,11 +94,11 @@ export const ClientOverview: React.FC<ClientOverviewProps> = ({
                   <div className={`w-8 h-8 rounded-lg ${stat.bgColor} flex items-center justify-center mb-2`}>
                     <IconComponent className={`w-4 h-4 ${stat.color}`} />
                   </div>
-                  <p className="text-lg font-bold text-gray-900">
+                  <p className="text-lg font-bold text-slate-900">
                     {stat.value}
-                    {stat.total && <span className="text-xs font-normal text-gray-500">/{stat.total}</span>}
+                    {stat.total && <span className="text-xs font-normal text-slate-500">/{stat.total}</span>}
                   </p>
-                  <p className="text-xs text-gray-600 truncate">{stat.title}</p>
+                  <p className="text-xs text-slate-600 truncate">{stat.title}</p>
                 </CardContent>
               </Card>
             );
@@ -107,24 +107,24 @@ export const ClientOverview: React.FC<ClientOverviewProps> = ({
 
         {/* Recent Activity - Mobile Cards */}
         <div>
-          <h3 className="text-base font-semibold text-gray-900 mb-3 px-1">Recent Activity</h3>
+          <h3 className="text-base font-semibold text-slate-900 mb-3 px-1">Recent Activity</h3>
           <div className="space-y-2">
             {recentActivity && recentActivity.length > 0 ? (
               recentActivity.map((activity) => (
                 <Card key={activity.id} className="active:scale-95 transition-transform">
                   <CardContent className="p-3">
                     <div className="flex items-start justify-between mb-1">
-                      <div className="font-medium text-sm text-gray-900 flex-1">
+                      <div className="font-medium text-sm text-slate-900 flex-1">
                         {activity.description}
                       </div>
                       <Badge variant="outline" className="capitalize text-xs ml-2 flex-shrink-0">
                         {activity.activity_type}
                       </Badge>
                     </div>
-                    <div className="text-xs text-gray-600 mb-1">
+                    <div className="text-xs text-slate-600 mb-1">
                       {activity.cases?.case_number} - {activity.cases?.case_title}
                     </div>
-                    <div className="flex items-center gap-1 text-xs text-gray-500">
+                    <div className="flex items-center gap-1 text-xs text-slate-500">
                       <Calendar className="w-3 h-3" />
                       {TimeUtils.formatDate(activity.created_at)}
                     </div>
@@ -132,8 +132,8 @@ export const ClientOverview: React.FC<ClientOverviewProps> = ({
                 </Card>
               ))
             ) : (
-              <div className="text-center py-12 text-gray-500">
-                <Briefcase className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+              <div className="text-center py-12 text-slate-500">
+                <Briefcase className="w-8 h-8 mx-auto mb-2 text-slate-300" />
                 <p className="text-sm">No recent activity</p>
               </div>
             )}
@@ -146,7 +146,7 @@ export const ClientOverview: React.FC<ClientOverviewProps> = ({
   return <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-gray-900">Client Overview</h2>
+        <h2 className="text-xl font-semibold text-slate-900">Client Overview</h2>
         
       </div>
 
@@ -158,10 +158,10 @@ export const ClientOverview: React.FC<ClientOverviewProps> = ({
               <CardContent className="p-0">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                    <p className="text-2xl font-bold text-gray-900">
+                    <p className="text-sm font-medium text-slate-600">{stat.title}</p>
+                    <p className="text-2xl font-bold text-slate-900">
                       {stat.value}
-                      {stat.total && <span className="text-sm font-normal text-gray-500">/{stat.total}</span>}
+                      {stat.total && <span className="text-sm font-normal text-slate-500">/{stat.total}</span>}
                     </p>
                   </div>
                   <div className={`p-3 rounded-lg ${stat.bgColor}`}>
@@ -175,24 +175,24 @@ export const ClientOverview: React.FC<ClientOverviewProps> = ({
 
       {/* Recent Activity */}
       <div>
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Activity</h3>
+        <h3 className="text-lg font-medium text-slate-900 mb-4">Recent Activity</h3>
         <div className="space-y-3">
-          {recentActivity && recentActivity.length > 0 ? recentActivity.map((activity, index) => <div key={activity.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+          {recentActivity && recentActivity.length > 0 ? recentActivity.map((activity, index) => <div key={activity.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                 <div className="flex-1">
-                  <div className="font-medium text-gray-900">{activity.description}</div>
-                  <div className="text-sm text-gray-600">
+                  <div className="font-medium text-slate-900">{activity.description}</div>
+                  <div className="text-sm text-slate-600">
                     Case: {activity.cases?.case_number} - {activity.cases?.case_title}
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-sm text-gray-500">
+                  <span className="text-sm text-slate-500">
                     {TimeUtils.formatDate(activity.created_at)}
                   </span>
                   <Badge variant="outline" className="capitalize">
                     {activity.activity_type}
                   </Badge>
                 </div>
-              </div>) : <div className="text-center py-8 text-gray-500">
+              </div>) : <div className="text-center py-8 text-slate-500">
               No recent activity found
             </div>}
         </div>

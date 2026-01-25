@@ -48,10 +48,10 @@ export const ClientInfoContent: React.FC<ClientInfoContentProps> = ({
 
   if (isLoading) {
     console.log('⏳ Showing loading state for client:', clientId);
-    return <div className="min-h-[calc(100vh-64px)] bg-gray-50 flex items-center justify-center">
+    return <div className="min-h-[calc(100vh-64px)] bg-slate-50 flex items-center justify-center">
         <div className="flex items-center gap-3">
           <Loader2 className="w-6 h-6 animate-spin text-primary" />
-          <span className="text-gray-600">Loading client information...</span>
+          <span className="text-slate-600">Loading client information...</span>
         </div>
       </div>;
   }
@@ -59,11 +59,11 @@ export const ClientInfoContent: React.FC<ClientInfoContentProps> = ({
   if (error || !client) {
     console.error('❌ Client loading error:', error);
     console.log('🚫 Showing error state - error:', error?.message, 'client:', !!client);
-    return <div className="min-h-[calc(100vh-64px)] bg-gray-50 p-6">
+    return <div className="min-h-[calc(100vh-64px)] bg-slate-50 p-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center py-12">
             <div className="text-red-600 mb-2 text-lg font-medium">Error loading client</div>
-            <div className="text-gray-500 mb-4">
+            <div className="text-slate-500 mb-4">
               {error?.message || 'Client not found'}
             </div>
             <Button variant="outline" onClick={() => navigate('/clients')} className="mx-auto">
@@ -83,7 +83,7 @@ export const ClientInfoContent: React.FC<ClientInfoContentProps> = ({
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50">
       {/* Single unified container - matching CaseDetailEnhanced pattern */}
       <ClientTabs 
         clientId={clientId} 

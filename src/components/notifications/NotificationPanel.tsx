@@ -127,19 +127,19 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
       case 'client':
         return <User className="w-4 h-4 text-purple-600" />;
       default:
-        return <Bell className="w-4 h-4 text-gray-600" />;
+        return <Bell className="w-4 h-4 text-slate-600" />;
     }
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="absolute right-0 top-full mt-2 w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+    <div className="absolute right-0 top-full mt-2 w-96 bg-white rounded-lg shadow-lg border border-slate-200 z-50">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
+      <div className="flex items-center justify-between p-4 border-b border-slate-200">
         <div className="flex items-center gap-2">
-          <Bell className="w-5 h-5 text-gray-600" />
-          <h3 className="font-semibold text-gray-900">Notifications</h3>
+          <Bell className="w-5 h-5 text-slate-600" />
+          <h3 className="font-semibold text-slate-900">Notifications</h3>
           {unreadCount > 0 && (
             <Badge variant="error" className="text-xs">
               {unreadCount}
@@ -171,22 +171,22 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
       {/* Notifications List */}
       <ScrollArea className="h-96">
         {isLoading ? (
-          <div className="p-4 text-center text-gray-500">
+          <div className="p-4 text-center text-slate-500">
             Loading notifications...
           </div>
         ) : notifications.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">
-            <Bell className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+          <div className="p-8 text-center text-slate-500">
+            <Bell className="w-12 h-12 mx-auto mb-2 text-slate-300" />
             <p>No notifications yet</p>
             <p className="text-sm">You'll see notifications here when you have updates</p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-slate-100">
             {notifications.map((notification) => (
               <div
                 key={notification.id}
                 onClick={() => handleNotificationClick(notification)}
-                className={`p-4 hover:bg-gray-50 transition-colors cursor-pointer ${
+                className={`p-4 hover:bg-slate-50 transition-colors cursor-pointer ${
                   !notification.read ? 'bg-blue-50' : ''
                 }`}
               >
@@ -197,15 +197,15 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <p className={`text-sm font-medium text-gray-900 ${
+                        <p className={`text-sm font-medium text-slate-900 ${
                           !notification.read ? 'font-semibold' : ''
                         }`}>
                           {notification.title}
                         </p>
-                        <p className="text-sm text-gray-600 mt-1">
+                        <p className="text-sm text-slate-600 mt-1">
                           {notification.message}
                         </p>
-                        <p className="text-xs text-gray-400 mt-2">
+                        <p className="text-xs text-slate-400 mt-2">
                           {TimeUtils.formatNotificationTime(notification.created_at)}
                         </p>
                       </div>
@@ -233,7 +233,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
 
       {/* Footer */}
       {notifications.length > 0 && (
-        <div className="p-3 border-t border-gray-200 bg-gray-50">
+        <div className="p-3 border-t border-slate-200 bg-slate-50">
           <Button
             variant="ghost"
             size="sm"

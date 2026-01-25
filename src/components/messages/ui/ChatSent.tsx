@@ -36,14 +36,14 @@ const ChatSent: React.FC<ChatSentProps> = ({
         {onReactionAdd && (
           <ReactionPicker onEmojiSelect={onReactionAdd} />
         )}
-        <div className="bg-blue-50 text-gray-900 p-3 rounded-lg rounded-br-none shadow-sm">
+        <div className="bg-blue-50 text-slate-900 p-3 rounded-lg rounded-br-none shadow-sm">
           <p className="text-sm">{message}</p>
         </div>
       </div>
       {reactions && reactions.length > 0 && onReactionClick && (
         <MessageReactions reactions={reactions} onReactionClick={onReactionClick} />
       )}
-      <p className="text-xs text-gray-500 mt-1 text-right pr-1">{timestamp}</p>
+      <p className="text-xs text-slate-500 mt-1 text-right pr-1">{timestamp}</p>
     </div>
   </div>
 );

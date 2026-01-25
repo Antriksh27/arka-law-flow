@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { ClientInfoContent } from '../components/clients/ClientInfoContent';
@@ -9,7 +8,7 @@ const ClientInfo = () => {
   if (!id) {
     return (
       <div className="text-center py-12">
-        <div className="text-gray-500">Client not found</div>
+        <div className="text-slate-500">Client not found</div>
       </div>
     );
   }

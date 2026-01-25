@@ -42,7 +42,7 @@ const ChatReceived: React.FC<ChatReceivedProps> = ({
         </div>
       )}
       <div className="flex items-start gap-2">
-        <div className="bg-gray-100 text-gray-900 p-3 rounded-lg rounded-tl-none shadow-sm">
+        <div className="bg-slate-100 text-slate-900 p-3 rounded-lg rounded-tl-none shadow-sm">
           <p className="text-sm">{message}</p>
         </div>
         {onReactionAdd && (
@@ -52,7 +52,7 @@ const ChatReceived: React.FC<ChatReceivedProps> = ({
       {reactions && reactions.length > 0 && onReactionClick && (
         <MessageReactions reactions={reactions} onReactionClick={onReactionClick} />
       )}
-      <p className="text-xs text-gray-500 mt-1 pl-1">{time}</p>
+      <p className="text-xs text-slate-500 mt-1 pl-1">{time}</p>
     </div>
   </div>
 );

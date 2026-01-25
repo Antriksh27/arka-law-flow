@@ -59,7 +59,7 @@ export const ClientTasks: React.FC<ClientTasksProps> = ({ clientId }) => {
       case 'completed':
         return 'bg-green-100 text-green-700 border-green-200';
       default:
-        return 'bg-gray-100 text-gray-700 border-gray-200';
+        return 'bg-slate-100 text-slate-700 border-slate-200';
     }
   };
 
@@ -72,7 +72,7 @@ export const ClientTasks: React.FC<ClientTasksProps> = ({ clientId }) => {
       case 'low':
         return 'bg-green-100 text-green-700 border-green-200';
       default:
-        return 'bg-gray-100 text-gray-700 border-gray-200';
+        return 'bg-slate-100 text-slate-700 border-slate-200';
     }
   };
 
@@ -80,7 +80,7 @@ export const ClientTasks: React.FC<ClientTasksProps> = ({ clientId }) => {
     return (
       <Card className="bg-white rounded-2xl shadow-sm">
         <CardContent className="p-6">
-          <div className="flex items-center justify-center gap-2 text-gray-500">
+          <div className="flex items-center justify-center gap-2 text-slate-500">
             <Loader2 className="w-4 h-4 animate-spin" />
             Loading tasks...
           </div>
@@ -102,8 +102,8 @@ export const ClientTasks: React.FC<ClientTasksProps> = ({ clientId }) => {
           </CardHeader>
           <CardContent className="px-3 pb-3">
             {tasks.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <ListTodo className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+              <div className="text-center py-8 text-slate-500">
+                <ListTodo className="w-8 h-8 mx-auto mb-2 text-slate-300" />
                 <p className="text-sm">No tasks assigned</p>
               </div>
             ) : (
@@ -111,7 +111,7 @@ export const ClientTasks: React.FC<ClientTasksProps> = ({ clientId }) => {
                 {tasks.map((task) => (
                   <Card key={task.id} className="active:scale-95 transition-transform">
                     <CardContent className="p-3">
-                      <div className="font-medium text-sm text-gray-900 mb-2">
+                      <div className="font-medium text-sm text-slate-900 mb-2">
                         {task.title}
                       </div>
                       <div className="flex items-center gap-1 flex-wrap mb-2">
@@ -123,9 +123,9 @@ export const ClientTasks: React.FC<ClientTasksProps> = ({ clientId }) => {
                         </Badge>
                       </div>
                       {task.description && (
-                        <div className="text-xs text-gray-600 mb-2 line-clamp-2">{task.description}</div>
+                        <div className="text-xs text-slate-600 mb-2 line-clamp-2">{task.description}</div>
                       )}
-                      <div className="flex items-center gap-3 text-xs text-gray-500">
+                      <div className="flex items-center gap-3 text-xs text-slate-500">
                         <div className="flex items-center gap-1">
                           <User className="w-3 h-3" />
                           {task.assigned_user?.full_name || 'Unassigned'}
@@ -160,25 +160,25 @@ export const ClientTasks: React.FC<ClientTasksProps> = ({ clientId }) => {
       </CardHeader>
       <CardContent>
         {tasks.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-slate-500">
             <ListTodo className="w-8 h-8 mx-auto mb-2" />
             No tasks assigned to this client
           </div>
         ) : (
           <div className="space-y-4">
             {tasks.map((task) => (
-              <div key={task.id} className="border rounded-lg p-4 hover:bg-gray-50 space-y-1">
+              <div key={task.id} className="border rounded-lg p-4 hover:bg-slate-50 space-y-1">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-gray-900">{task.title}</span>
+                    <span className="font-medium text-slate-900">{task.title}</span>
                     <Badge className={`${getStatusColor(task.status)} text-xs px-2 ml-1 rounded-full`}>{task.status?.replace('_', ' ')}</Badge>
                     <Badge className={`${getPriorityColor(task.priority)} text-xs px-2 rounded-full`}>{task.priority}</Badge>
                   </div>
                 </div>
                 {task.description && (
-                  <div className="text-gray-600 text-sm mb-1 line-clamp-2">{task.description}</div>
+                  <div className="text-slate-600 text-sm mb-1 line-clamp-2">{task.description}</div>
                 )}
-                <div className="flex items-center gap-4 text-xs text-gray-500 mt-1">
+                <div className="flex items-center gap-4 text-xs text-slate-500 mt-1">
                   <div className="flex items-center gap-1">
                     <User className="w-3 h-3" />
                     {task.assigned_user?.full_name || 'Unassigned'}

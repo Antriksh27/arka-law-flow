@@ -100,13 +100,13 @@ export const ClientTabs: React.FC<ClientTabsProps> = ({
       case 'active':
         return 'bg-green-100 text-green-700 border-green-200';
       case 'inactive':
-        return 'bg-gray-100 text-gray-700 border-gray-200';
+        return 'bg-slate-100 text-slate-700 border-slate-200';
       case 'lead':
         return 'bg-blue-100 text-blue-700 border-blue-200';
       case 'prospect':
         return 'bg-purple-100 text-purple-700 border-purple-200';
       default:
-        return 'bg-gray-100 text-gray-700 border-gray-200';
+        return 'bg-slate-100 text-slate-700 border-slate-200';
     }
   };
   const tabs = [{
@@ -163,7 +163,7 @@ export const ClientTabs: React.FC<ClientTabsProps> = ({
         />
       )}
 
-      <div className={isMobile ? "" : "bg-white border border-gray-200 rounded-2xl shadow-sm m-8"}>
+      <div className={isMobile ? "" : "bg-white border border-slate-200 rounded-2xl shadow-sm m-8"}>
       <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
         {/* Header section - Desktop only */}
         {!isMobile && (
@@ -171,20 +171,20 @@ export const ClientTabs: React.FC<ClientTabsProps> = ({
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-4 flex-1">
                 <Avatar className="w-16 h-16">
-                  <AvatarFallback className="bg-gray-100 text-gray-600 text-lg font-medium">
+                  <AvatarFallback className="bg-slate-100 text-slate-600 text-lg font-medium">
                     {client.full_name.split(' ').map((n: string) => n[0]).join('')}
                   </AvatarFallback>
                 </Avatar>
                 
                 <div className="flex-1">
-                  <h1 className="text-2xl font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                  <h1 className="text-2xl font-semibold text-slate-900 mb-2 flex items-center gap-2">
                     {client.full_name}
                     {client.is_vip && (
                       <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" aria-label="VIP Client" />
                     )}
                   </h1>
                   <div className="space-y-2">
-                    <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                    <div className="flex flex-wrap gap-4 text-sm text-slate-600">
                       {client.email && <div>
                           <span className="font-medium">Email:</span> {client.email}
                         </div>}
@@ -195,12 +195,12 @@ export const ClientTabs: React.FC<ClientTabsProps> = ({
                           <span className="font-medium">Type:</span> {client.type}
                         </div>}
                     </div>
-                    <div className="flex flex-wrap gap-4 text-sm text-gray-600 items-center">
+                    <div className="flex flex-wrap gap-4 text-sm text-slate-600 items-center">
                       {client.organization && <div>
                           <span className="font-medium">Organization:</span> {client.organization}
                         </div>}
                     </div>
-                    {(client.referred_by_name || client.source) && <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                    {(client.referred_by_name || client.source) && <div className="flex flex-wrap gap-4 text-sm text-slate-600">
                         {client.referred_by_name && <div>
                             <span className="font-medium">Referred By:</span> {client.referred_by_name}
                           </div>}
@@ -232,7 +232,7 @@ export const ClientTabs: React.FC<ClientTabsProps> = ({
 
 
         {/* Tabs List */}
-        <TabsList className={`w-full bg-white border-b border-gray-200 h-auto p-0 ${isMobile ? 'sticky top-14 z-30' : ''}`}>
+        <TabsList className={`w-full bg-white border-b border-slate-200 h-auto p-0 ${isMobile ? 'sticky top-14 z-30' : ''}`}>
           <div className={`flex ${isMobile ? 'overflow-x-auto scrollbar-hide' : 'flex-wrap sm:flex-nowrap overflow-x-auto'}`}>
             {tabs.map(tab => {
             const IconComponent = tab.icon;
@@ -243,7 +243,7 @@ export const ClientTabs: React.FC<ClientTabsProps> = ({
                 isMobile 
                   ? 'px-3 py-2.5 text-xs flex-shrink-0' 
                   : 'px-4 py-3 text-sm'
-              } font-medium text-gray-600 hover:text-gray-900 border-b-2 border-transparent data-[state=active]:border-blue-700 data-[state=active]:text-blue-800 data-[state=active]:bg-blue-50 bg-transparent rounded-none whitespace-nowrap transition-colors`}
+              } font-medium text-slate-600 hover:text-slate-900 border-b-2 border-transparent data-[state=active]:border-blue-700 data-[state=active]:text-blue-800 data-[state=active]:bg-blue-50 bg-transparent rounded-none whitespace-nowrap transition-colors`}
             >
               <IconComponent className="w-4 h-4" />
               {tab.label}
