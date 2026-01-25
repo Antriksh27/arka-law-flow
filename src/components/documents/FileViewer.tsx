@@ -306,7 +306,20 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
           );
         }
         
-        // For PDFs, use an embed tag which is more reliable than iframe for blob URLs
+        // Mobile: render PDF directly without header
+        if (isMobile) {
+          return (
+            <div className="w-full h-full bg-muted">
+              <iframe
+                src={fileUrl}
+                className="w-full h-full border-0"
+                title={document.file_name}
+              />
+            </div>
+          );
+        }
+        
+        // Desktop: render with header controls
         return (
           <div className="w-full h-full bg-gray-50 rounded-lg flex flex-col">
             <div className="flex items-center justify-between p-3 bg-white border-b">
