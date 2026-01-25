@@ -235,11 +235,11 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
   // Mobile view with sticky horizontal scrollable tabs
   if (isMobile) {
     return (
-      <div className="flex flex-col h-full">
-        <Tabs value={activeTab} onValueChange={onTabChange} className="flex-1 flex flex-col">
-          {/* Sticky Tab Navigation */}
-          <div className="sticky top-0 z-30 bg-white border-b border-slate-200">
-            <div className="overflow-x-auto scrollbar-hide">
+      <>
+        <Tabs value={activeTab} onValueChange={onTabChange} className="flex flex-col min-h-0">
+          {/* Sticky Tab Navigation - uses fixed positioning for reliable stickiness */}
+          <div className="sticky top-14 z-40 bg-white border-b border-slate-200 -mx-4 px-4">
+            <div className="overflow-x-auto scrollbar-hide -mx-2">
               <div className="flex min-w-max px-2 py-2 gap-1">
                 {allTabs.map(tab => {
                   const IconComponent = tab.icon;
@@ -269,7 +269,7 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
         </Tabs>
         
         <CreateNoteMultiModal open={showCreateNoteModal} onClose={() => setShowCreateNoteModal(false)} caseId={caseId} />
-      </div>
+      </>
     );
   }
 
