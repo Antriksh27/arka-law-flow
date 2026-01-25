@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Pencil, X, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { ActsSelector } from '@/components/cases/ActsSelector';
@@ -82,7 +83,13 @@ export const InlineEditReferenceActs = ({ caseId, currentActs }: InlineEditRefer
     <div className="flex items-start justify-between gap-2 min-w-0">
       <div className="flex-1 min-w-0 overflow-hidden">
         {acts && acts.length > 0 ? (
-          <p className="text-sm font-medium text-foreground break-words whitespace-normal">{acts.join(', ')}</p>
+          <div className="flex flex-wrap gap-1.5">
+            {acts.map((act, index) => (
+              <Badge key={index} variant="outline" className="text-xs">
+                {act}
+              </Badge>
+            ))}
+          </div>
         ) : (
           <p className="text-sm text-muted-foreground italic">No acts specified</p>
         )}
