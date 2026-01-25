@@ -304,15 +304,15 @@ export const LawyersTab: React.FC<LawyersTabProps> = ({ caseId }) => {
 
       {/* Add Lawyers Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent hideCloseButton className="sm:max-w-2xl p-0 overflow-hidden">
-          <div className="flex flex-col h-full max-h-[85vh] sm:max-h-[90vh] bg-muted">
+        <DialogContent hideCloseButton className="sm:max-w-2xl p-0 overflow-hidden bg-slate-50">
+          <div className="flex flex-col h-full max-h-[85vh] sm:max-h-[90vh] bg-slate-50">
             {/* Drag Handle - mobile only */}
             <div className="flex justify-center pt-3 pb-1 sm:hidden">
-              <div className="w-10 h-1 bg-border rounded-full" />
+              <div className="w-10 h-1 bg-slate-300 rounded-full" />
             </div>
 
             {/* iOS-style header */}
-            <div className="px-5 py-4 flex items-center justify-between border-b border-border bg-muted">
+            <div className="px-5 py-4 flex items-center justify-between border-b border-slate-200 bg-slate-50">
               <button
                 type="button"
                 onClick={() => setIsAddDialogOpen(false)}
