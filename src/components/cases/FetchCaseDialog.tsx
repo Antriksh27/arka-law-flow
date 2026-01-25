@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useLegalkartIntegration } from '@/hooks/useLegalkartIntegration';
-import { Loader2 } from 'lucide-react';
+import { Loader2, X, Hash, Scale, FileText, User, Calendar, Building, Gavel } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -448,347 +448,361 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={handleCancel}>
-      <DialogContent hideCloseButton className="sm:max-w-[700px] p-0 gap-0 overflow-hidden">
-        <DialogHeader>
-          <DialogTitle>Fetch Case Details from eCourts</DialogTitle>
-        </DialogHeader>
-        
-        {!fetchedData ? (
-          <form onSubmit={handleSubmit(handleFetch)} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="cnr_number">CNR Number *</Label>
-              <Input
-                id="cnr_number"
-                {...register('cnr_number', { required: 'CNR number is required' })}
-                placeholder="Enter CNR number (e.g., DLCT010012345678)"
-              />
-              {errors.cnr_number && (
-                <p className="text-sm text-destructive">{errors.cnr_number.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="searchType">Court Type *</Label>
-              <Select value={searchType} onValueChange={(value: any) => setSearchType(value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select court type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="district_court">District Court</SelectItem>
-                  <SelectItem value="high_court">High Court</SelectItem>
-                  <SelectItem value="supreme_court">Supreme Court</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex justify-end gap-3 pt-4">
-              <Button type="button" variant="outline" onClick={handleCancel}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={searchCase.isPending}>
-                {searchCase.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Fetching...
-                  </>
-                ) : (
-                  'Fetch Details'
-                )}
-              </Button>
-            </div>
-          </form>
-        ) : (
-          <div className="space-y-6">
-            {/* Supreme Court Specific Display */}
-            {fetchedData.is_supreme_court ? (
-              <div className="bg-[#E0E7FF] rounded-lg p-4 space-y-4 border-2 border-[#1E3A8A]">
-                <h3 className="text-lg font-bold text-[#1E3A8A]">Supreme Court Case Details</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  {fetchedData.diary_number && (
-                    <div className="space-y-1 col-span-1 md:col-span-2 bg-white rounded p-3">
-                      <p className="text-[#6B7280] font-semibold">Diary Number</p>
-                      <p className="font-bold text-[#1E3A8A] text-lg">{fetchedData.diary_number}</p>
-                    </div>
-                  )}
-                  {fetchedData.case_title && (
-                    <div className="space-y-1 col-span-1 md:col-span-2">
-                      <p className="text-[#6B7280]">Case Title</p>
-                      <p className="font-medium text-[#111827]">{fetchedData.case_title}</p>
-                    </div>
-                  )}
-                  {fetchedData.cnr_number && (
-                    <div className="space-y-1">
-                      <p className="text-[#6B7280]">CNR Number</p>
-                      <p className="font-medium text-[#111827]">{fetchedData.cnr_number}</p>
-                    </div>
-                  )}
-                  {fetchedData.category && (
-                    <div className="space-y-1">
-                      <p className="text-[#6B7280]">Category</p>
-                      <p className="font-medium text-[#111827]">{fetchedData.category}</p>
-                    </div>
-                  )}
-                  {fetchedData.bench_composition && (
-                    <div className="space-y-1 col-span-1 md:col-span-2">
-                      <p className="text-[#6B7280]">Bench Composition</p>
-                      <p className="font-medium text-[#111827]">{fetchedData.bench_composition}</p>
-                    </div>
-                  )}
-                  {fetchedData.case_numbers && fetchedData.case_numbers.length > 0 && (
-                    <div className="space-y-1 col-span-1 md:col-span-2">
-                      <p className="text-[#6B7280]">Case Numbers</p>
-                      <p className="font-medium text-[#111827]">{fetchedData.case_numbers.join(', ')}</p>
-                    </div>
-                  )}
-                  {fetchedData.status && (
-                    <div className="space-y-1">
-                      <p className="text-[#6B7280]">Status</p>
-                      <p className="font-medium text-[#111827]">{fetchedData.status}</p>
-                    </div>
-                  )}
-                  {fetchedData.petitioner && (
-                    <div className="space-y-1 col-span-1 md:col-span-2">
-                      <p className="text-[#6B7280]">Petitioner(s)</p>
-                      <p className="font-medium text-[#111827]">{fetchedData.petitioner}</p>
-                    </div>
-                  )}
-                  {fetchedData.petitioner_advocate && (
-                    <div className="space-y-1 col-span-1 md:col-span-2">
-                      <p className="text-[#6B7280]">Petitioner Advocate(s)</p>
-                      <p className="font-medium text-[#111827]">{fetchedData.petitioner_advocate}</p>
-                    </div>
-                  )}
-                  {fetchedData.respondent && (
-                    <div className="space-y-1 col-span-1 md:col-span-2">
-                      <p className="text-[#6B7280]">Respondent(s)</p>
-                      <p className="font-medium text-[#111827]">{fetchedData.respondent}</p>
-                    </div>
-                  )}
-                  {fetchedData.respondent_advocate && (
-                    <div className="space-y-1 col-span-1 md:col-span-2">
-                      <p className="text-[#6B7280]">Respondent Advocate(s)</p>
-                      <p className="font-medium text-[#111827]">{fetchedData.respondent_advocate}</p>
-                    </div>
-                  )}
+      <DialogContent hideCloseButton className="sm:max-w-[700px] p-0 gap-0 overflow-hidden bg-muted">
+        <div className="flex flex-col h-full sm:h-auto max-h-[95vh] sm:max-h-[90vh]">
+          {/* Header */}
+          <div className="px-6 py-5 bg-background border-b border-border">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center">
+                  <Hash className="w-5 h-5 text-sky-500" />
                 </div>
-
-                {/* SC-specific nested data counts */}
-                <div className="bg-white rounded p-3 space-y-2">
-                  <p className="text-[#6B7280] font-semibold">Additional Data Available:</p>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-                    {fetchedData.earlier_courts_count > 0 && (
-                      <div className="bg-[#F9FAFB] rounded p-2">
-                        <span className="font-bold text-[#1E3A8A]">{fetchedData.earlier_courts_count}</span>
-                        <span className="text-[#6B7280]"> Earlier Courts</span>
-                      </div>
-                    )}
-                    {fetchedData.tagged_matters_count > 0 && (
-                      <div className="bg-[#F9FAFB] rounded p-2">
-                        <span className="font-bold text-[#1E3A8A]">{fetchedData.tagged_matters_count}</span>
-                        <span className="text-[#6B7280]"> Tagged Matters</span>
-                      </div>
-                    )}
-                    {fetchedData.listing_dates_count > 0 && (
-                      <div className="bg-[#F9FAFB] rounded p-2">
-                        <span className="font-bold text-[#1E3A8A]">{fetchedData.listing_dates_count}</span>
-                        <span className="text-[#6B7280]"> Listing Dates</span>
-                      </div>
-                    )}
-                    {fetchedData.notices_count > 0 && (
-                      <div className="bg-[#F9FAFB] rounded p-2">
-                        <span className="font-bold text-[#1E3A8A]">{fetchedData.notices_count}</span>
-                        <span className="text-[#6B7280]"> Notices</span>
-                      </div>
-                    )}
-                    {fetchedData.defects_count > 0 && (
-                      <div className="bg-[#F9FAFB] rounded p-2">
-                        <span className="font-bold text-[#1E3A8A]">{fetchedData.defects_count}</span>
-                        <span className="text-[#6B7280]"> Defects</span>
-                      </div>
-                    )}
-                    {fetchedData.orders_count > 0 && (
-                      <div className="bg-[#F9FAFB] rounded p-2">
-                        <span className="font-bold text-[#1E3A8A]">{fetchedData.orders_count}</span>
-                        <span className="text-[#6B7280]"> Judgement Orders</span>
-                      </div>
-                    )}
-                    {fetchedData.office_reports_count > 0 && (
-                      <div className="bg-[#F9FAFB] rounded p-2">
-                        <span className="font-bold text-[#1E3A8A]">{fetchedData.office_reports_count}</span>
-                        <span className="text-[#6B7280]"> Office Reports</span>
-                      </div>
-                    )}
-                  </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-foreground">Fetch Case Details</h2>
+                  <p className="text-sm text-muted-foreground">Import from eCourts</p>
                 </div>
               </div>
-            ) : (
-              /* High Court / District Court Display (existing) */
-              <div className="bg-[#F9FAFB] rounded-lg p-4 space-y-4">
-                <h3 className="text-lg font-bold text-[#1F2937]">Basic Case Details</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div className="space-y-1">
-                  <p className="text-[#6B7280]">Case Title</p>
-                  <p className="font-medium text-[#111827]">{fetchedData.case_title || '-'}</p>
-                </div>
-                {fetchedData.case_number && (
-                  <div className="space-y-1">
-                    <p className="text-[#6B7280]">Case Number</p>
-                    <p className="font-medium text-[#111827]">{fetchedData.case_number}</p>
-                  </div>
-                )}
-                {fetchedData.cnr_number && (
-                  <div className="space-y-1">
-                    <p className="text-[#6B7280]">CNR Number</p>
-                    <p className="font-medium text-[#111827]">{fetchedData.cnr_number}</p>
-                  </div>
-                )}
-                {fetchedData.filing_number && (
-                  <div className="space-y-1">
-                    <p className="text-[#6B7280]">Filing Number</p>
-                    <p className="font-medium text-[#111827]">{fetchedData.filing_number}</p>
-                  </div>
-                )}
-                {fetchedData.registration_number && (
-                  <div className="space-y-1">
-                    <p className="text-[#6B7280]">Registration Number</p>
-                    <p className="font-medium text-[#111827]">{fetchedData.registration_number}</p>
-                  </div>
-                )}
-                {fetchedData.court && (
-                  <div className="space-y-1">
-                    <p className="text-[#6B7280]">Court Name</p>
-                    <p className="font-medium text-[#111827]">{fetchedData.court}</p>
-                  </div>
-                )}
-                {fetchedData.district && (
-                  <div className="space-y-1">
-                    <p className="text-[#6B7280]">District</p>
-                    <p className="font-medium text-[#111827]">{fetchedData.district}</p>
-                  </div>
-                )}
-                {fetchedData.state && (
-                  <div className="space-y-1">
-                    <p className="text-[#6B7280]">State</p>
-                    <p className="font-medium text-[#111827]">{fetchedData.state}</p>
-                  </div>
-                )}
-                {fetchedData.filing_date && (
-                  <div className="space-y-1">
-                    <p className="text-[#6B7280]">Filing Date</p>
-                    <p className="font-medium text-[#111827]">{fetchedData.filing_date}</p>
-                  </div>
-                )}
-                {fetchedData.registration_date && (
-                  <div className="space-y-1">
-                    <p className="text-[#6B7280]">Registration Date</p>
-                    <p className="font-medium text-[#111827]">{fetchedData.registration_date}</p>
-                  </div>
-                )}
-                {fetchedData.first_hearing_date && (
-                  <div className="space-y-1">
-                    <p className="text-[#6B7280]">First Hearing Date</p>
-                    <p className="font-medium text-[#111827]">{fetchedData.first_hearing_date}</p>
-                  </div>
-                )}
-                {fetchedData.next_hearing_date && (
-                  <div className="space-y-1">
-                    <p className="text-[#6B7280]">Next Hearing Date</p>
-                    <p className="font-medium text-[#111827]">{fetchedData.next_hearing_date}</p>
-                  </div>
-                )}
-                {fetchedData.status && (
-                  <div className="space-y-1">
-                    <p className="text-[#6B7280]">Status</p>
-                    <p className="font-medium text-[#111827]">{fetchedData.status}</p>
-                  </div>
-                )}
-                {fetchedData.stage && (
-                  <div className="space-y-1">
-                    <p className="text-[#6B7280]">Stage</p>
-                    <p className="font-medium text-[#111827]">{fetchedData.stage}</p>
-                  </div>
-                )}
-                {fetchedData.case_type && (
-                  <div className="space-y-1">
-                    <p className="text-[#6B7280]">Case Type</p>
-                    <p className="font-medium text-[#111827]">{fetchedData.case_type}</p>
-                  </div>
-                )}
-                {fetchedData.petitioner && (
-                  <div className="space-y-1">
-                    <p className="text-[#6B7280]">Petitioner</p>
-                    <p className="font-medium text-[#111827]">{fetchedData.petitioner}</p>
-                  </div>
-                )}
-                {fetchedData.petitioner_advocate && (
-                  <div className="space-y-1">
-                    <p className="text-[#6B7280]">Petitioner Advocate</p>
-                    <p className="font-medium text-[#111827]">{fetchedData.petitioner_advocate}</p>
-                  </div>
-                )}
-                {fetchedData.respondent && (
-                  <div className="space-y-1">
-                    <p className="text-[#6B7280]">Respondent</p>
-                    <p className="font-medium text-[#111827]">{fetchedData.respondent}</p>
-                  </div>
-                )}
-                {fetchedData.respondent_advocate && (
-                  <div className="space-y-1">
-                    <p className="text-[#6B7280]">Respondent Advocate</p>
-                    <p className="font-medium text-[#111827]">{fetchedData.respondent_advocate}</p>
-                  </div>
-                )}
-                {fetchedData.bench_type && (
-                  <div className="space-y-1">
-                    <p className="text-[#6B7280]">Bench Type</p>
-                    <p className="font-medium text-[#111827]">{fetchedData.bench_type}</p>
-                  </div>
-                )}
-                {fetchedData.court_complex && (
-                  <div className="space-y-1">
-                    <p className="text-[#6B7280]">Court Complex</p>
-                    <p className="font-medium text-[#111827]">{fetchedData.court_complex}</p>
-                  </div>
-                )}
-                {fetchedData.coram && (
-                  <div className="space-y-1">
-                    <p className="text-[#6B7280]">Coram (Judge)</p>
-                    <p className="font-medium text-[#111827]">{fetchedData.coram}</p>
-                  </div>
-                )}
-                {fetchedData.under_act && (
-                  <div className="space-y-1 col-span-1 md:col-span-2">
-                    <p className="text-[#6B7280]">Under Act</p>
-                    <p className="font-medium text-[#111827]">{fetchedData.under_act}</p>
-                  </div>
-                )}
-                {fetchedData.under_section && (
-                  <div className="space-y-1 col-span-1 md:col-span-2">
-                    <p className="text-[#6B7280]">Under Section</p>
-                    <p className="font-medium text-[#111827]">{fetchedData.under_section}</p>
-                  </div>
-                )}
-              </div>
-              </div>
-            )}
-
-            <div className="flex justify-end gap-3 pt-4">
-              <Button type="button" variant="outline" onClick={handleCancel} disabled={addCaseMutation.isPending}>
-                Cancel
-              </Button>
-              <Button type="button" onClick={handleAddCase} disabled={addCaseMutation.isPending}>
-                {addCaseMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Adding Case...
-                  </>
-                ) : (
-                  'Add Case'
-                )}
-              </Button>
+              <button
+                onClick={handleCancel}
+                className="md:hidden w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
+              >
+                <X className="w-4 h-4 text-muted-foreground" />
+              </button>
             </div>
           </div>
-        )}
+        
+          {!fetchedData ? (
+            <form onSubmit={handleSubmit(handleFetch)} className="flex flex-col flex-1 overflow-hidden">
+              <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-4">
+                {/* CNR Input Card */}
+                <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+                  <div className="p-4">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+                        <Hash className="w-5 h-5 text-emerald-500" />
+                      </div>
+                      <div>
+                        <Label className="text-sm font-semibold text-foreground">CNR Number</Label>
+                        <p className="text-xs text-muted-foreground">Case identification number</p>
+                      </div>
+                    </div>
+                    <Input
+                      id="cnr_number"
+                      {...register('cnr_number', { required: 'CNR number is required' })}
+                      placeholder="e.g., DLCT010012345678"
+                      className="bg-muted border-border rounded-xl h-12 text-lg font-mono"
+                    />
+                    {errors.cnr_number && (
+                      <p className="text-sm text-destructive mt-2">{errors.cnr_number.message}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Court Type Card */}
+                <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+                  <div className="p-4">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
+                        <Scale className="w-5 h-5 text-violet-500" />
+                      </div>
+                      <div>
+                        <Label className="text-sm font-semibold text-foreground">Court Type</Label>
+                        <p className="text-xs text-muted-foreground">Select the court type</p>
+                      </div>
+                    </div>
+                    <Select value={searchType} onValueChange={(value: any) => setSearchType(value)}>
+                      <SelectTrigger className="bg-muted border-border rounded-xl h-11">
+                        <SelectValue placeholder="Select court type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="district_court">District Court</SelectItem>
+                        <SelectItem value="high_court">High Court</SelectItem>
+                        <SelectItem value="supreme_court">Supreme Court</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="px-6 py-4 bg-background border-t border-border">
+                <div className="flex gap-3">
+                  <Button type="button" variant="outline" onClick={handleCancel} className="flex-1 rounded-full border-border">
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={searchCase.isPending} className="flex-1 rounded-full">
+                    {searchCase.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Fetching...
+                      </>
+                    ) : (
+                      'Fetch Details'
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </form>
+          ) : (
+            <div className="flex flex-col flex-1 overflow-hidden">
+              <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-4">
+                {/* Supreme Court Specific Display */}
+                {fetchedData.is_supreme_court ? (
+                  <div className="bg-primary/10 rounded-2xl p-4 space-y-4 border border-primary/20">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+                        <Gavel className="w-5 h-5 text-primary" />
+                      </div>
+                      <h3 className="text-lg font-bold text-primary">Supreme Court Case</h3>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      {fetchedData.diary_number && (
+                        <div className="bg-background rounded-xl p-3">
+                          <p className="text-xs text-muted-foreground font-semibold">Diary Number</p>
+                          <p className="font-bold text-primary text-lg">{fetchedData.diary_number}</p>
+                        </div>
+                      )}
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                        {fetchedData.case_title && (
+                          <div className="bg-background rounded-xl p-3 col-span-1 md:col-span-2">
+                            <p className="text-xs text-muted-foreground">Case Title</p>
+                            <p className="font-medium text-foreground">{fetchedData.case_title}</p>
+                          </div>
+                        )}
+                        {fetchedData.cnr_number && (
+                          <div className="bg-background rounded-xl p-3">
+                            <p className="text-xs text-muted-foreground">CNR Number</p>
+                            <p className="font-medium text-foreground">{fetchedData.cnr_number}</p>
+                          </div>
+                        )}
+                        {fetchedData.category && (
+                          <div className="bg-background rounded-xl p-3">
+                            <p className="text-xs text-muted-foreground">Category</p>
+                            <p className="font-medium text-foreground">{fetchedData.category}</p>
+                          </div>
+                        )}
+                        {fetchedData.bench_composition && (
+                          <div className="bg-background rounded-xl p-3 col-span-1 md:col-span-2">
+                            <p className="text-xs text-muted-foreground">Bench Composition</p>
+                            <p className="font-medium text-foreground">{fetchedData.bench_composition}</p>
+                          </div>
+                        )}
+                        {fetchedData.petitioner && (
+                          <div className="bg-background rounded-xl p-3 col-span-1 md:col-span-2">
+                            <p className="text-xs text-muted-foreground">Petitioner(s)</p>
+                            <p className="font-medium text-foreground">{fetchedData.petitioner}</p>
+                          </div>
+                        )}
+                        {fetchedData.respondent && (
+                          <div className="bg-background rounded-xl p-3 col-span-1 md:col-span-2">
+                            <p className="text-xs text-muted-foreground">Respondent(s)</p>
+                            <p className="font-medium text-foreground">{fetchedData.respondent}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  /* High Court / District Court Display */
+                  <div className="space-y-4">
+                    {/* Case Info Card */}
+                    <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+                      <div className="p-4">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+                            <FileText className="w-5 h-5 text-emerald-500" />
+                          </div>
+                          <h3 className="text-sm font-semibold text-foreground">Case Information</h3>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                          <div className="bg-muted rounded-xl p-3 col-span-1 md:col-span-2">
+                            <p className="text-xs text-muted-foreground">Case Title</p>
+                            <p className="font-medium text-foreground">{fetchedData.case_title || '-'}</p>
+                          </div>
+                          {fetchedData.case_number && (
+                            <div className="bg-muted rounded-xl p-3">
+                              <p className="text-xs text-muted-foreground">Case Number</p>
+                              <p className="font-medium text-foreground">{fetchedData.case_number}</p>
+                            </div>
+                          )}
+                          {fetchedData.cnr_number && (
+                            <div className="bg-muted rounded-xl p-3">
+                              <p className="text-xs text-muted-foreground">CNR Number</p>
+                              <p className="font-medium text-foreground">{fetchedData.cnr_number}</p>
+                            </div>
+                          )}
+                          {fetchedData.filing_number && (
+                            <div className="bg-muted rounded-xl p-3">
+                              <p className="text-xs text-muted-foreground">Filing Number</p>
+                              <p className="font-medium text-foreground">{fetchedData.filing_number}</p>
+                            </div>
+                          )}
+                          {fetchedData.registration_number && (
+                            <div className="bg-muted rounded-xl p-3">
+                              <p className="text-xs text-muted-foreground">Registration Number</p>
+                              <p className="font-medium text-foreground">{fetchedData.registration_number}</p>
+                            </div>
+                          )}
+                          {fetchedData.status && (
+                            <div className="bg-muted rounded-xl p-3">
+                              <p className="text-xs text-muted-foreground">Status</p>
+                              <p className="font-medium text-foreground">{fetchedData.status}</p>
+                            </div>
+                          )}
+                          {fetchedData.stage && (
+                            <div className="bg-muted rounded-xl p-3">
+                              <p className="text-xs text-muted-foreground">Stage</p>
+                              <p className="font-medium text-foreground">{fetchedData.stage}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Court Details Card */}
+                    <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+                      <div className="p-4">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
+                            <Building className="w-5 h-5 text-violet-500" />
+                          </div>
+                          <h3 className="text-sm font-semibold text-foreground">Court Details</h3>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                          {fetchedData.court && (
+                            <div className="bg-muted rounded-xl p-3 col-span-1 md:col-span-2">
+                              <p className="text-xs text-muted-foreground">Court Name</p>
+                              <p className="font-medium text-foreground">{fetchedData.court}</p>
+                            </div>
+                          )}
+                          {fetchedData.district && (
+                            <div className="bg-muted rounded-xl p-3">
+                              <p className="text-xs text-muted-foreground">District</p>
+                              <p className="font-medium text-foreground">{fetchedData.district}</p>
+                            </div>
+                          )}
+                          {fetchedData.state && (
+                            <div className="bg-muted rounded-xl p-3">
+                              <p className="text-xs text-muted-foreground">State</p>
+                              <p className="font-medium text-foreground">{fetchedData.state}</p>
+                            </div>
+                          )}
+                          {fetchedData.bench_type && (
+                            <div className="bg-muted rounded-xl p-3">
+                              <p className="text-xs text-muted-foreground">Bench Type</p>
+                              <p className="font-medium text-foreground">{fetchedData.bench_type}</p>
+                            </div>
+                          )}
+                          {fetchedData.coram && (
+                            <div className="bg-muted rounded-xl p-3">
+                              <p className="text-xs text-muted-foreground">Coram (Judge)</p>
+                              <p className="font-medium text-foreground">{fetchedData.coram}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Dates Card */}
+                    {(fetchedData.filing_date || fetchedData.next_hearing_date) && (
+                      <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+                        <div className="p-4">
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
+                              <Calendar className="w-5 h-5 text-amber-500" />
+                            </div>
+                            <h3 className="text-sm font-semibold text-foreground">Important Dates</h3>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                            {fetchedData.filing_date && (
+                              <div className="bg-muted rounded-xl p-3">
+                                <p className="text-xs text-muted-foreground">Filing Date</p>
+                                <p className="font-medium text-foreground">{fetchedData.filing_date}</p>
+                              </div>
+                            )}
+                            {fetchedData.registration_date && (
+                              <div className="bg-muted rounded-xl p-3">
+                                <p className="text-xs text-muted-foreground">Registration Date</p>
+                                <p className="font-medium text-foreground">{fetchedData.registration_date}</p>
+                              </div>
+                            )}
+                            {fetchedData.first_hearing_date && (
+                              <div className="bg-muted rounded-xl p-3">
+                                <p className="text-xs text-muted-foreground">First Hearing</p>
+                                <p className="font-medium text-foreground">{fetchedData.first_hearing_date}</p>
+                              </div>
+                            )}
+                            {fetchedData.next_hearing_date && (
+                              <div className="bg-muted rounded-xl p-3">
+                                <p className="text-xs text-muted-foreground">Next Hearing</p>
+                                <p className="font-medium text-foreground">{fetchedData.next_hearing_date}</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Parties Card */}
+                    {(fetchedData.petitioner || fetchedData.respondent) && (
+                      <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+                        <div className="p-4">
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center">
+                              <User className="w-5 h-5 text-sky-500" />
+                            </div>
+                            <h3 className="text-sm font-semibold text-foreground">Parties</h3>
+                          </div>
+                          <div className="space-y-3 text-sm">
+                            {fetchedData.petitioner && (
+                              <div className="bg-muted rounded-xl p-3">
+                                <p className="text-xs text-muted-foreground">Petitioner</p>
+                                <p className="font-medium text-foreground">{fetchedData.petitioner}</p>
+                                {fetchedData.petitioner_advocate && (
+                                  <p className="text-xs text-muted-foreground mt-1">Advocate: {fetchedData.petitioner_advocate}</p>
+                                )}
+                              </div>
+                            )}
+                            {fetchedData.respondent && (
+                              <div className="bg-muted rounded-xl p-3">
+                                <p className="text-xs text-muted-foreground">Respondent</p>
+                                <p className="font-medium text-foreground">{fetchedData.respondent}</p>
+                                {fetchedData.respondent_advocate && (
+                                  <p className="text-xs text-muted-foreground mt-1">Advocate: {fetchedData.respondent_advocate}</p>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="px-6 py-4 bg-background border-t border-border">
+                <div className="flex gap-3">
+                  <Button type="button" variant="outline" onClick={handleCancel} disabled={addCaseMutation.isPending} className="flex-1 rounded-full border-border">
+                    Cancel
+                  </Button>
+                  <Button type="button" onClick={handleAddCase} disabled={addCaseMutation.isPending} className="flex-1 rounded-full">
+                    {addCaseMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Adding Case...
+                      </>
+                    ) : (
+                      'Add Case'
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );
