@@ -446,72 +446,71 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
 
         {/* Fixed Bottom Action Bar */}
         <div className="sticky bottom-0 bg-white/95 backdrop-blur-sm border-t border-slate-100 p-3 sm:p-4">
-          <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:gap-2">
+          <div className="grid grid-cols-3 gap-2">
             <Button
               variant="outline"
               onClick={() => setShowNoteDialog(true)}
-              className="rounded-xl text-xs sm:text-sm h-10"
+              className="rounded-xl text-xs h-9 flex flex-col items-center justify-center gap-0.5 py-1"
               size="sm"
             >
-              <StickyNote className="h-4 w-4 sm:mr-1.5" />
-              <span className="hidden sm:inline">Note</span>
+              <StickyNote className="h-4 w-4" />
+              <span className="text-[10px]">Note</span>
             </Button>
             <Button
               variant="outline"
               onClick={() => setShowTaskDialog(true)}
-              className="rounded-xl text-xs sm:text-sm h-10"
+              className="rounded-xl text-xs h-9 flex flex-col items-center justify-center gap-0.5 py-1"
               size="sm"
             >
-              <CheckSquare className="h-4 w-4 sm:mr-1.5" />
-              <span className="hidden sm:inline">Task</span>
+              <CheckSquare className="h-4 w-4" />
+              <span className="text-[10px]">Task</span>
             </Button>
             <Button
               variant="outline"
               onClick={handleEdit}
-              className="rounded-xl text-xs sm:text-sm h-10"
+              className="rounded-xl text-xs h-9 flex flex-col items-center justify-center gap-0.5 py-1"
               size="sm"
             >
-              <Edit className="h-4 w-4 sm:mr-1.5" />
-              <span className="hidden sm:inline">Edit</span>
+              <Edit className="h-4 w-4" />
+              <span className="text-[10px]">Edit</span>
             </Button>
             <Button
               variant="outline"
               onClick={handleReschedule}
-              className="rounded-xl text-xs sm:text-sm h-10"
+              className="rounded-xl text-xs h-9 flex flex-col items-center justify-center gap-0.5 py-1"
               size="sm"
             >
-              <RotateCcw className="h-4 w-4 sm:mr-1.5" />
-              <span className="hidden sm:inline">Reschedule</span>
+              <RotateCcw className="h-4 w-4" />
+              <span className="text-[10px]">Reschedule</span>
             </Button>
             <Button
               variant="outline"
               onClick={handleCancel}
               disabled={cancelMutation.isPending}
-              className="rounded-xl text-xs sm:text-sm h-10"
+              className="rounded-xl text-xs h-9 flex flex-col items-center justify-center gap-0.5 py-1"
               size="sm"
             >
-              <X className="h-4 w-4 sm:mr-1.5" />
-              <span className="hidden sm:inline">{cancelMutation.isPending ? 'Cancelling...' : 'Cancel'}</span>
+              <X className="h-4 w-4" />
+              <span className="text-[10px]">{cancelMutation.isPending ? 'Cancelling' : 'Cancel'}</span>
             </Button>
             <Button
               variant="destructive"
               onClick={handleDeleteClick}
               disabled={deleteMutation.isPending}
-              className="rounded-xl text-xs sm:text-sm h-10"
+              className="rounded-xl text-xs h-9 flex flex-col items-center justify-center gap-0.5 py-1"
               size="sm"
             >
-              <Trash className="h-4 w-4 sm:mr-1.5" />
-              <span className="hidden sm:inline">{deleteMutation.isPending ? 'Deleting...' : 'Delete'}</span>
+              <Trash className="h-4 w-4" />
+              <span className="text-[10px]">{deleteMutation.isPending ? 'Deleting' : 'Delete'}</span>
             </Button>
             {extractedClientName && !appointment.client_id && (role === 'lawyer' || role === 'junior') && (
               <Button
                 onClick={handleConvertToClient}
-                className="rounded-xl text-xs sm:text-sm h-10 col-span-3 sm:col-span-1"
+                className="rounded-xl text-xs h-9 flex flex-col items-center justify-center gap-0.5 py-1 col-span-3"
                 size="sm"
               >
-                <UserPlus className="h-4 w-4 sm:mr-1.5" />
-                <span className="sm:hidden">Convert</span>
-                <span className="hidden sm:inline">Convert to Client</span>
+                <UserPlus className="h-4 w-4" />
+                <span className="text-[10px]">Convert to Client</span>
               </Button>
             )}
           </div>
