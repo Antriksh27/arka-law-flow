@@ -8,7 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { ChatDropdown } from '@/components/messages/ChatDropdown';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useNotifications } from '@/hooks/useNotifications';
-import { NotificationPanel } from '@/components/notifications/NotificationPanel';
+import { NotificationDialog } from '@/components/notifications/NotificationDialog';
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -49,28 +49,27 @@ const Header = ({ onMenuClick }: HeaderProps) => {
           <ChatDropdown />
           
           {/* Notification Bell */}
-          <div className="relative">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="relative bg-slate-50 hover:bg-slate-200 text-slate-900"
-            >
-              <Bell className="w-5 h-5" />
-              {unreadCount > 0 && (
-                <Badge 
-                  variant="error" 
-                  className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
-                >
-                  {unreadCount > 9 ? '9+' : unreadCount}
-                </Badge>
-              )}
-            </Button>
-            <NotificationPanel 
-              isOpen={showNotifications} 
-              onClose={() => setShowNotifications(false)} 
-            />
-          </div>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => setShowNotifications(true)}
+            className="relative bg-slate-50 hover:bg-slate-200 text-slate-900"
+          >
+            <Bell className="w-5 h-5" />
+            {unreadCount > 0 && (
+              <Badge 
+                variant="error" 
+                className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+              >
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </Badge>
+            )}
+          </Button>
+          
+          <NotificationDialog 
+            isOpen={showNotifications} 
+            onClose={() => setShowNotifications(false)} 
+          />
           
           {/* User Profile Dropdown */}
           <DropdownMenu>
@@ -89,7 +88,7 @@ const Header = ({ onMenuClick }: HeaderProps) => {
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={signOut} className="text-red-600 hover:text-red-700 hover:bg-red-50 focus:text-red-600 focus:bg-red-50 cursor-pointer">
-                <LogOut className="w-4 h-4 mr-2" />
+                <LogOut className="w-4 h-4" />
                 Sign Out
               </DropdownMenuItem>
               </DropdownMenuContent>
