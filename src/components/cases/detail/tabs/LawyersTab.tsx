@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, X, User } from 'lucide-react';
+import { Plus, X, User, Users, Check } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -304,76 +304,155 @@ export const LawyersTab: React.FC<LawyersTabProps> = ({ caseId }) => {
 
       {/* Add Lawyers Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Assign Lawyers to Case</DialogTitle>
-            <DialogDescription>
-              Select one or more lawyers from your firm to assign to this case
-            </DialogDescription>
-          </DialogHeader>
+        <DialogContent hideCloseButton className="sm:max-w-2xl p-0 overflow-hidden">
+          <div className="flex flex-col h-full max-h-[85vh] sm:max-h-[90vh] bg-muted">
+            {/* Drag Handle - mobile only */}
+            <div className="flex justify-center pt-3 pb-1 sm:hidden">
+              <div className="w-10 h-1 bg-border rounded-full" />
+            </div>
 
-          <div className="space-y-2 py-4 max-h-[400px] overflow-y-auto">
-            {availableLawyers
-              .filter((lawyer: any) => !assignedLawyerIds.has(lawyer.user_id))
-              .sort((a: any, b: any) => {
-                // Admins first
-                if (a.role === 'admin' && b.role !== 'admin') return -1;
-                if (a.role !== 'admin' && b.role === 'admin') return 1;
-                return 0;
-              })
-              .map((lawyer: any) => {
-                const profile = lawyer.profiles;
-                
-                return (
-                  <div
-                    key={lawyer.id}
-                    className="flex items-center space-x-3 p-3 rounded-lg hover:bg-accent cursor-pointer"
-                    onClick={() => handleToggleLawyer(lawyer.user_id)}
-                  >
-                    <Checkbox
-                      checked={selectedLawyers.has(lawyer.user_id)}
-                      onCheckedChange={() => handleToggleLawyer(lawyer.user_id)}
-                    />
-                    <Avatar className="h-10 w-10">
-                      <AvatarFallback className="bg-primary text-primary-foreground">
-                        {getInitials(profile?.full_name || 'Unknown')}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-medium text-sm truncate">
-                          {profile?.full_name || 'Unknown'}
-                        </p>
-                        <Badge variant="outline" className="text-xs">
-                          {lawyer.role}
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {profile?.email || 'No email'}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            
-            {availableLawyers.filter((lawyer: any) => !assignedLawyerIds.has(lawyer.user_id)).length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                All available lawyers are already assigned to this case
+            {/* iOS-style header */}
+            <div className="px-5 py-4 flex items-center justify-between border-b border-border bg-muted">
+              <button
+                type="button"
+                onClick={() => setIsAddDialogOpen(false)}
+                className="text-primary text-base font-medium"
+              >
+                Cancel
+              </button>
+
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-8 h-8 rounded-full bg-background border border-border flex items-center justify-center">
+                  <Users className="w-4 h-4 text-foreground" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-base font-semibold text-foreground truncate">Assign Lawyers</p>
+                  <p className="text-xs text-muted-foreground truncate sm:hidden">
+                    Tap to select
+                  </p>
+                </div>
               </div>
-            )}
-          </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleAddLawyers}
-              disabled={assignLawyersMutation.isPending || selectedLawyers.size === 0}
-            >
-              {assignLawyersMutation.isPending ? 'Assigning...' : `Assign ${selectedLawyers.size > 0 ? `(${selectedLawyers.size})` : ''}`}
-            </Button>
-          </DialogFooter>
+              <button
+                type="button"
+                onClick={handleAddLawyers}
+                disabled={assignLawyersMutation.isPending || selectedLawyers.size === 0}
+                className="text-primary text-base font-semibold disabled:opacity-50"
+              >
+                {assignLawyersMutation.isPending ? 'Saving...' : 'Done'}
+              </button>
+            </div>
+
+            {/* Desktop header (kept for accessibility/semantics) */}
+            <div className="hidden sm:block px-6 pt-6">
+              <DialogHeader>
+                <DialogTitle>Assign Lawyers to Case</DialogTitle>
+                <DialogDescription>
+                  Select one or more lawyers from your firm to assign to this case
+                </DialogDescription>
+              </DialogHeader>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
+              {selectedLawyers.size > 0 && (
+                <div className="mb-4 p-3 bg-background rounded-xl border border-border">
+                  <p className="text-sm text-foreground font-medium text-center">
+                    {selectedLawyers.size} selected
+                  </p>
+                </div>
+              )}
+
+              <div className="bg-background rounded-2xl shadow-sm overflow-hidden border border-border">
+                <div className="divide-y divide-border">
+                  {availableLawyers
+                    .filter((lawyer: any) => !assignedLawyerIds.has(lawyer.user_id))
+                    .sort((a: any, b: any) => {
+                      // Admins first
+                      if (a.role === 'admin' && b.role !== 'admin') return -1;
+                      if (a.role !== 'admin' && b.role === 'admin') return 1;
+                      return 0;
+                    })
+                    .map((lawyer: any) => {
+                      const profile = lawyer.profiles;
+                      const isSelected = selectedLawyers.has(lawyer.user_id);
+
+                      return (
+                        <div
+                          key={lawyer.id}
+                          className="flex items-center justify-between p-4 cursor-pointer active:bg-accent transition-colors"
+                          onClick={() => handleToggleLawyer(lawyer.user_id)}
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            {/* keep checkbox for a11y, but visually make row the main target */}
+                            <div className="flex items-center">
+                              <Checkbox
+                                checked={isSelected}
+                                onCheckedChange={() => handleToggleLawyer(lawyer.user_id)}
+                                aria-label={`Select ${profile?.full_name || 'lawyer'}`}
+                              />
+                            </div>
+
+                            <Avatar className="h-11 w-11">
+                              <AvatarFallback className="bg-primary text-primary-foreground">
+                                {getInitials(profile?.full_name || 'Unknown')}
+                              </AvatarFallback>
+                            </Avatar>
+
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <p className="font-medium text-sm text-foreground truncate">
+                                  {profile?.full_name || 'Unknown'}
+                                </p>
+                                <Badge variant="outline" className="text-xs">
+                                  {lawyer.role}
+                                </Badge>
+                              </div>
+                              <p className="text-xs text-muted-foreground truncate">
+                                {profile?.email || 'No email'}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div
+                            className={
+                              "w-6 h-6 rounded-full flex items-center justify-center transition-all " +
+                              (isSelected
+                                ? 'bg-primary'
+                                : 'border-2 border-border bg-transparent')
+                            }
+                          >
+                            {isSelected && <Check className="w-4 h-4 text-primary-foreground" />}
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+
+                {availableLawyers.filter((lawyer: any) => !assignedLawyerIds.has(lawyer.user_id)).length === 0 && (
+                  <div className="text-center py-10 text-muted-foreground">
+                    All available lawyers are already assigned to this case
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Desktop footer actions */}
+            <div className="hidden sm:block px-6 pb-6">
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleAddLawyers}
+                  disabled={assignLawyersMutation.isPending || selectedLawyers.size === 0}
+                >
+                  {assignLawyersMutation.isPending
+                    ? 'Assigning...'
+                    : `Assign ${selectedLawyers.size > 0 ? `(${selectedLawyers.size})` : ''}`}
+                </Button>
+              </DialogFooter>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
