@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -11,10 +11,12 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { X, Plus, FileText, Palette, Link2, Tag } from 'lucide-react';
+import { X, Plus, Mic, MicOff, Loader2, FileText, Palette, Link2, Tag } from 'lucide-react';
 import { DrawingCanvas } from './DrawingCanvas';
 import { ClientSelector } from '@/components/appointments/ClientSelector';
 import { CaseSelector } from '@/components/appointments/CaseSelector';
+import { AudioRecorder } from '@/utils/audioRecorder';
+import { useDeepgramTranscription } from '@/hooks/useDeepgramTranscription';
 
 interface CreateNoteMultiModalProps {
   open: boolean;
@@ -48,6 +50,9 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
   const [newTag, setNewTag] = useState('');
   const [activeTab, setActiveTab] = useState('write');
   const [drawingData, setDrawingData] = useState<string | null>(null);
+  const [isDictating, setIsDictating] = useState(false);
+  const audioRecorderRef = useRef<AudioRecorder>(new AudioRecorder());
+  const { transcribe, isProcessing: isTranscribing } = useDeepgramTranscription();
 
   const {
     register,
@@ -151,6 +156,36 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
     { value: 'red', label: 'Red', class: 'bg-rose-200' }
   ];
 
+  const toggleDictation = async () => {
+    if (isDictating) {
+      setIsDictating(false);
+      try {
+        const blob = await audioRecorderRef.current.stopRecording();
+        toast({ title: "Transcribing...", description: "Converting speech to text" });
+        const result = await transcribe(blob);
+        if (result.error) {
+          toast({ title: "Transcription failed", description: result.error, variant: "destructive" });
+        } else if (result.text) {
+          const currentContent = watch('content') || '';
+          const newContent = currentContent ? `${currentContent}\n\n${result.text}` : result.text;
+          setValue('content', newContent);
+          toast({ title: "Transcription complete", description: "Speech converted to text successfully" });
+        }
+      } catch (error) {
+        console.error('Dictation error:', error);
+        toast({ title: "Dictation failed", description: "Could not process speech", variant: "destructive" });
+      }
+    } else {
+      try {
+        await audioRecorderRef.current.startRecording();
+        setIsDictating(true);
+        toast({ title: "Recording started", description: "Speak now, click again to finish" });
+      } catch (error) {
+        toast({ title: "Dictation failed", description: "Could not access microphone", variant: "destructive" });
+      }
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent hideCloseButton className="sm:max-w-4xl p-0 gap-0 overflow-hidden">
@@ -204,14 +239,41 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
                   </TabsList>
                   
                   <TabsContent value="write" className="mt-4 space-y-4">
-                    <Label htmlFor="content" className="text-sm font-medium text-foreground">Content</Label>
-                    <Textarea 
-                      id="content" 
-                      {...register('content')} 
-                      placeholder="Write your note content..." 
-                      className="rounded-xl border-slate-200 focus:border-primary focus:ring-primary min-h-[160px]" 
-                      rows={6} 
-                    />
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="content" className="text-sm font-medium text-foreground">Content</Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={toggleDictation}
+                        disabled={isTranscribing}
+                        className={`rounded-full ${isDictating 
+                          ? 'bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-100' 
+                          : 'text-sky-600 border-sky-200 hover:bg-sky-50'}`}
+                      >
+                        {isTranscribing ? (
+                          <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Transcribing...</>
+                        ) : isDictating ? (
+                          <><MicOff className="w-4 h-4 mr-2" />Stop Dictation</>
+                        ) : (
+                          <><Mic className="w-4 h-4 mr-2" />Dictate</>
+                        )}
+                      </Button>
+                    </div>
+                    <div className="relative">
+                      <Textarea 
+                        id="content" 
+                        {...register('content')} 
+                        placeholder="Write your note content or click Dictate to speak..." 
+                        className="rounded-xl border-slate-200 focus:border-primary focus:ring-primary min-h-[160px]" 
+                        rows={6} 
+                      />
+                      {isDictating && (
+                        <div className="absolute bottom-3 right-3 flex items-center gap-2 text-rose-500 text-sm">
+                          <span className="animate-pulse">●</span> Recording...
+                        </div>
+                      )}
+                    </div>
                   </TabsContent>
                   
                   <TabsContent value="draw" className="mt-4 space-y-4">
