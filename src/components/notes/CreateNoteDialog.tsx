@@ -170,7 +170,7 @@ export const CreateNoteDialog: React.FC<CreateNoteDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl p-0 gap-0 overflow-hidden">
+      <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden">
         <div className="flex flex-col h-full bg-slate-50">
           {/* Header */}
           <div className="px-6 py-5 bg-white border-b border-slate-100">
@@ -181,7 +181,7 @@ export const CreateNoteDialog: React.FC<CreateNoteDialogProps> = ({
               </div>
               <button 
                 onClick={onClose}
-                className="md:hidden w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center"
+                className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors"
               >
                 <X className="w-4 h-4 text-slate-500" />
               </button>

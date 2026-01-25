@@ -311,7 +311,7 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
 
   return (
     <Dialog open={true} onOpenChange={(open) => !open && closeDialog()}>
-      <DialogContent className="sm:max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
+      <DialogContent hideCloseButton className="sm:max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
         {/* Mobile-friendly Header with Close Button */}
         <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3 sm:px-6 sm:py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
