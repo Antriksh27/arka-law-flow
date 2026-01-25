@@ -30,7 +30,7 @@ const getColorClasses = (color: string) => {
     case 'purple':
       return 'bg-violet-100 border-violet-200 hover:shadow-violet-200/50';
     default:
-      return 'bg-white border-border hover:shadow-gray-200/50';
+      return 'bg-white border-border hover:shadow-slate-200/50';
   }
 };
 

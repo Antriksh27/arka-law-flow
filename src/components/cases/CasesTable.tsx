@@ -173,7 +173,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
       case 'disposed':
         return 'bg-purple-100 text-purple-700 border-purple-200';
       default:
-        return 'bg-gray-100 text-gray-700 border-gray-200';
+        return 'bg-slate-100 text-slate-700 border-slate-200';
     }
   };
 
@@ -285,9 +285,9 @@ export const CasesTable: React.FC<CasesTableProps> = ({
 
   return (
     <>
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200">
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200">
         {selectedCases.size > 0 && (
-          <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
+          <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-50">
             <div className="text-sm text-muted-foreground">
               {selectedCases.size} case(s) selected
             </div>
@@ -365,7 +365,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {cases?.map(caseItem => <TableRow key={caseItem.id} className="hover:bg-gray-50">
+            {cases?.map(caseItem => <TableRow key={caseItem.id} className="hover:bg-slate-50">
                 <TableCell>
                   <Checkbox
                     checked={selectedCases.has(caseItem.id)}

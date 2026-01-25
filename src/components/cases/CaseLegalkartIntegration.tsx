@@ -78,14 +78,14 @@ export const CaseLegalkartIntegration: React.FC<CaseLegalkartIntegrationProps> =
         <CardContent>
           <div className="space-y-6">
             {cnrNumber && (
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                 <div>
                   <p className="text-sm font-medium">CNR Number</p>
                   <p className="text-lg font-mono">{cnrNumber}</p>
                 </div>
                 {lastFetchedAt && (
                   <div className="text-right">
-                    <p className="text-sm text-gray-500 flex items-center gap-1">
+                    <p className="text-sm text-slate-500 flex items-center gap-1">
                       <Clock className="h-4 w-4" />
                       Last fetched
                     </p>
@@ -98,7 +98,7 @@ export const CaseLegalkartIntegration: React.FC<CaseLegalkartIntegrationProps> =
             )}
 
             {!cnrNumber && (
-              <div className="text-center py-6 text-gray-500">
+              <div className="text-center py-6 text-slate-500">
                 <p>No CNR number provided for this case.</p>
                 <p className="text-sm">Add a CNR number to enable Legalkart integration.</p>
               </div>

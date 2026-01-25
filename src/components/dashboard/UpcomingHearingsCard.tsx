@@ -36,7 +36,7 @@ export const UpcomingHearingsCard = ({ hearings, isLoading }: UpcomingHearingsCa
   };
 
   return (
-    <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+    <Card className="bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-medium flex items-center gap-2">
@@ -55,15 +55,15 @@ export const UpcomingHearingsCard = ({ hearings, isLoading }: UpcomingHearingsCa
           </div>
         ) : hearings.length === 0 ? (
           <div className="text-center py-8">
-            <Scale className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-sm text-gray-500">No upcoming hearings</p>
+            <Scale className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+            <p className="text-sm text-slate-500">No upcoming hearings</p>
           </div>
         ) : (
           <div className="space-y-3">
             {hearings.slice(0, 5).map((hearing) => {
               const urgency = getUrgencyColor(hearing.hearing_date);
               return (
-                <div key={hearing.id} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <div key={hearing.id} className="p-3 bg-slate-50 rounded-lg border border-slate-200">
                   <div className="flex items-start justify-between mb-2">
                     <h4 className="font-medium text-sm flex-1">{hearing.case_title}</h4>
                     <Badge className={`${urgency.bg} ${urgency.text}`}>
@@ -71,16 +71,16 @@ export const UpcomingHearingsCard = ({ hearings, isLoading }: UpcomingHearingsCa
                     </Badge>
                   </div>
                   <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-xs text-gray-600">
+                    <div className="flex items-center gap-2 text-xs text-slate-600">
                       <Clock className="w-3 h-3" />
                       {TimeUtils.formatDateTime(hearing.hearing_date, 'MMM dd, yyyy - h:mm a')}
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-gray-600">
+                    <div className="flex items-center gap-2 text-xs text-slate-600">
                       <MapPin className="w-3 h-3" />
                       {hearing.court_name}
                     </div>
                     {hearing.assigned_lawyer && (
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-slate-500">
                         Assigned to: {hearing.assigned_lawyer}
                       </div>
                     )}
