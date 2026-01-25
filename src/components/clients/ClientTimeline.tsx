@@ -143,7 +143,7 @@ export const ClientTimeline: React.FC<ClientTimelineProps> = ({ clientId }) => {
 
   if (events.length === 0) {
     return (
-      <div className="text-center py-12 text-gray-500">
+      <div className="text-center py-12 text-slate-500">
         No timeline events found
       </div>
     );
@@ -159,7 +159,7 @@ export const ClientTimeline: React.FC<ClientTimelineProps> = ({ clientId }) => {
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Activity Timeline</h3>
+      <h3 className="text-lg font-semibold text-slate-900 mb-4">Activity Timeline</h3>
       
       <Timeline
         items={timelineItems}

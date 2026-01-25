@@ -43,7 +43,7 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
       </div>;
   }
   if (!client) {
-    return <div className="text-center py-12 text-gray-500">
+    return <div className="text-center py-12 text-slate-500">
         Client information not found
       </div>;
   }
@@ -86,10 +86,10 @@ export const ClientInformation: React.FC<ClientInformationProps> = ({
     value: string | null | undefined;
   }) => {
     return <div className="flex items-start gap-3">
-        <Icon className="w-4 h-4 text-gray-400 mt-0.5" />
+        <Icon className="w-4 h-4 text-slate-400 mt-0.5" />
         <div className="flex-1">
-          <span className="text-sm text-gray-600">{label}: </span>
-          <span className={`text-sm ${value ? 'font-medium text-gray-900' : 'italic text-gray-400'}`}>
+          <span className="text-sm text-slate-600">{label}: </span>
+          <span className={`text-sm ${value ? 'font-medium text-slate-900' : 'italic text-slate-400'}`}>
             {value || 'Not provided'}
           </span>
         </div>

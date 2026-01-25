@@ -141,10 +141,10 @@ export const InlineEditCard: React.FC<InlineEditCardProps> = ({
     const Icon = field.icon;
     return (
       <div className="flex items-start gap-3">
-        <Icon className="w-4 h-4 text-gray-400 mt-0.5" />
+        <Icon className="w-4 h-4 text-slate-400 mt-0.5" />
         <div className="flex-1">
-          <span className="text-sm text-gray-600">{field.label}: </span>
-          <span className={`text-sm ${value ? 'font-medium text-gray-900' : 'italic text-gray-400'}`}>
+          <span className="text-sm text-slate-600">{field.label}: </span>
+          <span className={`text-sm ${value ? 'font-medium text-slate-900' : 'italic text-slate-400'}`}>
             {value || 'Not provided'}
           </span>
         </div>
