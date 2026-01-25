@@ -1,11 +1,13 @@
 
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Download, X, ZoomIn, ZoomOut, RotateCw, ExternalLink } from 'lucide-react';
+import { Download, X, ZoomIn, ZoomOut, RotateCw, ExternalLink, ChevronLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 import * as mammoth from 'mammoth';
 
 interface FileViewerProps {
@@ -22,6 +24,7 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
   const [zoom, setZoom] = useState(100);
   const [rotation, setRotation] = useState(0);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const getFileUrl = async () => {
     if (!document?.file_url) return;
@@ -448,9 +451,95 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
     };
   };
 
+  // Mobile fullscreen view
+  if (isMobile) {
+    return (
+      <Sheet open={open} onOpenChange={onClose}>
+        <SheetContent 
+          side="bottom" 
+          className="h-full w-full p-0 border-0 rounded-none bg-background"
+          hideCloseButton
+        >
+          {/* Minimal Mobile Header */}
+          <div className="flex items-center justify-between px-4 h-14 border-b bg-background sticky top-0 z-10">
+            <button 
+              onClick={onClose}
+              className="flex items-center gap-1 text-muted-foreground active:scale-95 transition-transform"
+            >
+              <ChevronLeft className="w-5 h-5" />
+              <span className="text-sm">Back</span>
+            </button>
+            
+            <div className="flex items-center gap-2">
+              {showZoomControls && (
+                <>
+                  <button 
+                    onClick={handleZoomOut}
+                    className="p-2 rounded-full hover:bg-muted active:scale-95 transition-transform"
+                  >
+                    <ZoomOut className="w-5 h-5 text-foreground" />
+                  </button>
+                  <button 
+                    onClick={handleZoomIn}
+                    className="p-2 rounded-full hover:bg-muted active:scale-95 transition-transform"
+                  >
+                    <ZoomIn className="w-5 h-5 text-foreground" />
+                  </button>
+                  <button 
+                    onClick={handleRotate}
+                    className="p-2 rounded-full hover:bg-muted active:scale-95 transition-transform"
+                  >
+                    <RotateCw className="w-5 h-5 text-foreground" />
+                  </button>
+                </>
+              )}
+              <button 
+                onClick={handleDownload}
+                className="p-2 rounded-full hover:bg-muted active:scale-95 transition-transform"
+              >
+                <Download className="w-5 h-5 text-foreground" />
+              </button>
+            </div>
+          </div>
+          
+          {/* File name bar */}
+          <div className="px-4 py-2 bg-muted/50 border-b">
+            <p className="text-sm font-medium text-foreground truncate">
+              {document?.file_name || 'Document'}
+            </p>
+            {(() => {
+              const { primary, sub } = getDocTypeBadges();
+              if (!primary && !sub) return null;
+              return (
+                <div className="flex items-center gap-2 mt-1">
+                  {primary && (
+                    <Badge variant="default" className="text-[10px] px-2 py-0">
+                      {primary}
+                    </Badge>
+                  )}
+                  {sub && (
+                    <Badge variant="outline" className="text-[10px] px-2 py-0 bg-accent/50">
+                      {sub}
+                    </Badge>
+                  )}
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* Document Content - Full Screen */}
+          <div className="flex-1 overflow-auto" style={{ height: 'calc(100vh - 100px)' }}>
+            {renderFileContent()}
+          </div>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  // Desktop dialog view
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="w-screen h-screen max-w-none max-h-none bg-white p-0 m-0 rounded-none">
+      <DialogContent className="w-screen h-screen max-w-none max-h-none bg-background p-0 m-0 rounded-none">
         <DialogHeader className="flex flex-row items-center justify-between p-6 pb-4 border-b">
           <DialogTitle className="text-lg font-semibold pr-4 min-w-0">
             {(() => {
@@ -478,7 +567,7 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
                 <Button variant="ghost" size="sm" onClick={handleZoomOut}>
                   <ZoomOut className="w-4 h-4" />
                 </Button>
-                <span className="text-sm text-gray-600 min-w-[3rem] text-center">
+                <span className="text-sm text-muted-foreground min-w-[3rem] text-center">
                   {zoom}%
                 </span>
                 <Button variant="ghost" size="sm" onClick={handleZoomIn}>
@@ -503,7 +592,7 @@ export const FileViewer: React.FC<FileViewerProps> = ({ open, onClose, document 
         </div>
 
         {document && (
-          <div className="p-6 pt-4 border-t text-sm text-gray-500">
+          <div className="p-6 pt-4 border-t text-sm text-muted-foreground">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <span className="font-medium">File Type:</span> {document.file_type?.toUpperCase() || 'Unknown'}
