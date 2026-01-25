@@ -832,7 +832,7 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
 
   return (
     <Sheet open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <SheetContent side="bottom" className="h-[95vh] rounded-t-3xl p-0 overflow-hidden">
+      <SheetContent hideCloseButton side="bottom" className="h-[95vh] rounded-t-3xl p-0 overflow-hidden">
         <div className="h-full">
           {step === 'form' && renderFormView()}
           {step === 'date' && renderDatePicker()}
