@@ -83,7 +83,7 @@ export const AssignLawyerDialog: React.FC<AssignLawyerDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent hideCloseButton className="sm:max-w-md p-0 bg-muted overflow-hidden">
+      <DialogContent hideCloseButton className="sm:max-w-md p-0 bg-slate-50 overflow-hidden">
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="px-6 py-5 bg-white border-b border-slate-100">

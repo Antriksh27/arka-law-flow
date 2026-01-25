@@ -2,13 +2,13 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, ExternalLink, Trash2, Search, Loader2 } from 'lucide-react';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Plus, ExternalLink, Trash2, Search, Loader2, Link2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface RelatedMattersTabProps {
   caseId: string;
@@ -178,104 +178,150 @@ export const RelatedMattersTab: React.FC<RelatedMattersTabProps> = ({ caseId }) 
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Related Matters</h3>
+        <Button size="sm" onClick={() => setIsAddDialogOpen(true)}>
+          <Plus className="w-4 h-4 mr-2" />
+          Link Case
+        </Button>
+        
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm">
-              <Plus className="w-4 h-4 mr-2" />
-              Link Case
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Link Related Case</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label>Search Case</Label>
-                <p className="text-xs text-muted-foreground mt-0.5 mb-1">
-                  Search by case name, case number, CNR, registration, filing, or reference number
-                </p>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <Input
-                    placeholder="Type to search cases..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9"
-                  />
+          <DialogContent hideCloseButton className="sm:max-w-lg p-0 bg-slate-50 overflow-hidden">
+            <div className="flex flex-col h-full">
+              {/* Header */}
+              <div className="px-6 py-5 bg-white border-b border-slate-100">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center">
+                      <Link2 className="w-5 h-5 text-sky-500" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-semibold text-slate-800">Link Related Case</h2>
+                      <p className="text-sm text-muted-foreground">Search and connect related matters</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setIsAddDialogOpen(false);
+                      setSearchQuery('');
+                      setSelectedCaseId('');
+                    }}
+                    className="md:hidden w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors"
+                  >
+                    <X className="w-4 h-4 text-slate-500" />
+                  </button>
                 </div>
               </div>
-              
-              {searchQuery && (
-                <div className="max-h-64 overflow-y-auto border rounded-md">
-                  {isSearching ? (
-                    <div className="p-4 text-center text-sm text-gray-500 flex items-center justify-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Searching...
+
+              {/* Scrollable Content */}
+              <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-4">
+                {/* Search Card */}
+                <div className="bg-white rounded-2xl shadow-sm p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center">
+                      <Search className="w-4 h-4 text-violet-500" />
                     </div>
-                  ) : filteredCases.length > 0 ? (
-                    <div className="divide-y">
-                      {filteredCases.map((c) => (
-                        <button
-                          key={c.id}
-                          onClick={() => {
-                            setSelectedCaseId(c.id);
-                            setSearchQuery(getDisplayTitle(c));
-                          }}
-                          className={`w-full text-left p-3 hover:bg-gray-50 transition-colors ${
-                            selectedCaseId === c.id ? 'bg-blue-50' : ''
-                          }`}
-                        >
-                          <p className="font-medium text-sm">{getDisplayTitle(c)}</p>
-                          <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
-                            {c.case_number && (
-                              <p className="text-xs text-gray-500">Case #: {c.case_number}</p>
-                            )}
-                            {c.cnr_number && (
-                              <p className="text-xs text-gray-500">CNR: {c.cnr_number}</p>
-                            )}
-                            {c.registration_number && (
-                              <p className="text-xs text-gray-500">Reg: {c.registration_number}</p>
-                            )}
-                            {c.filing_number && (
-                              <p className="text-xs text-gray-500">Filing: {c.filing_number}</p>
-                            )}
-                            {c.reference_number && (
-                              <p className="text-xs text-gray-500">Ref: {c.reference_number}</p>
-                            )}
-                          </div>
-                        </button>
-                      ))}
+                    <div>
+                      <p className="text-sm font-medium text-slate-700">Search Case</p>
+                      <p className="text-xs text-muted-foreground">
+                        By name, CNR, registration, or filing number
+                      </p>
                     </div>
-                  ) : debouncedSearch ? (
-                    <div className="p-4 text-center text-sm text-gray-500">
-                      No cases found matching "{searchQuery}"
-                    </div>
-                  ) : (
-                    <div className="p-4 text-center text-sm text-gray-500">
-                      Type at least one character to search
-                    </div>
-                  )}
+                  </div>
+                  <div className="relative">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                    <Input
+                      placeholder="Type to search cases..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10 h-11 rounded-xl border-slate-200"
+                    />
+                  </div>
                 </div>
-              )}
+                
+                {/* Search Results */}
+                {searchQuery && (
+                  <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                    {isSearching ? (
+                      <div className="p-6 text-center text-sm text-muted-foreground flex items-center justify-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Searching...
+                      </div>
+                    ) : filteredCases.length > 0 ? (
+                      <div className="divide-y divide-slate-100">
+                        {filteredCases.map((c) => (
+                          <button
+                            key={c.id}
+                            onClick={() => {
+                              setSelectedCaseId(c.id);
+                              setSearchQuery(getDisplayTitle(c));
+                            }}
+                            className={`w-full text-left p-4 transition-colors active:scale-[0.99] ${
+                              selectedCaseId === c.id 
+                                ? 'bg-sky-50 border-l-4 border-l-sky-500' 
+                                : 'hover:bg-slate-50'
+                            }`}
+                          >
+                            <p className="font-medium text-sm text-slate-800">{getDisplayTitle(c)}</p>
+                            <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
+                              {c.case_number && (
+                                <p className="text-xs text-muted-foreground">Case #: {c.case_number}</p>
+                              )}
+                              {c.cnr_number && (
+                                <p className="text-xs text-muted-foreground">CNR: {c.cnr_number}</p>
+                              )}
+                              {c.registration_number && (
+                                <p className="text-xs text-muted-foreground">Reg: {c.registration_number}</p>
+                              )}
+                              {c.filing_number && (
+                                <p className="text-xs text-muted-foreground">Filing: {c.filing_number}</p>
+                              )}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    ) : debouncedSearch ? (
+                      <div className="p-6 text-center text-sm text-muted-foreground">
+                        No cases found matching "{searchQuery}"
+                      </div>
+                    ) : (
+                      <div className="p-6 text-center text-sm text-muted-foreground">
+                        Type at least one character to search
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Selected Case Indicator */}
+                {selectedCaseId && (
+                  <div className="p-3 bg-sky-50 rounded-xl">
+                    <p className="text-sm text-sky-700 font-medium">
+                      Ready to link selected case
+                    </p>
+                  </div>
+                )}
+              </div>
               
-              <div className="flex justify-end gap-2">
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    setIsAddDialogOpen(false);
-                    setSearchQuery('');
-                    setSelectedCaseId('');
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={handleAddRelation} 
-                  disabled={!selectedCaseId || addRelationMutation.isPending}
-                >
-                  {addRelationMutation.isPending ? 'Linking...' : 'Link Case'}
-                </Button>
+              {/* Footer */}
+              <div className="px-6 py-4 bg-white border-t border-slate-100">
+                <div className="flex gap-3 justify-end">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setIsAddDialogOpen(false);
+                      setSearchQuery('');
+                      setSelectedCaseId('');
+                    }}
+                    className="rounded-full px-6 border-slate-200"
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleAddRelation} 
+                    disabled={!selectedCaseId || addRelationMutation.isPending}
+                    className="rounded-full px-6 bg-sky-500 hover:bg-sky-600"
+                  >
+                    {addRelationMutation.isPending ? 'Linking...' : 'Link Case'}
+                  </Button>
+                </div>
               </div>
             </div>
           </DialogContent>
