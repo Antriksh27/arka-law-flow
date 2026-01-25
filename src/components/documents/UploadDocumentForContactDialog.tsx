@@ -136,7 +136,7 @@ export const UploadDocumentForContactDialog: React.FC<UploadDocumentForContactDi
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className={`${isMobile ? 'h-[100dvh] max-h-[100dvh] w-full max-w-full rounded-none m-0' : 'sm:max-w-lg max-h-[90vh]'} p-0 gap-0 overflow-hidden`}>
+      <DialogContent hideCloseButton className="sm:max-w-lg p-0 gap-0 overflow-hidden">
         <div className="flex flex-col h-full bg-slate-50">
           {/* Header */}
           <div className="px-6 py-5 bg-white border-b border-slate-100">

@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, X } from 'lucide-react';
 import { format } from 'date-fns';
 import TimeUtils from '@/lib/timeUtils';
 import { useDialog } from '@/hooks/use-dialog';
@@ -163,12 +163,24 @@ export const EditHearingDialog: React.FC<EditHearingDialogProps> = ({ hearingId 
 
   return (
     <Dialog open onOpenChange={closeDialog}>
-      <DialogContent className="max-w-4xl max-h-[90vh] bg-white border-gray-900 overflow-y-auto p-6">
-        <DialogHeader className="pb-4">
-          <DialogTitle className="text-gray-900">Edit Hearing</DialogTitle>
-        </DialogHeader>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
+      <DialogContent hideCloseButton className="sm:max-w-4xl p-0 gap-0 overflow-hidden bg-background">
+        <div className="flex flex-col h-full bg-muted">
+          {/* Header */}
+          <div className="px-6 py-5 bg-background border-b">
+            <div className="flex items-center justify-between">
+              <DialogHeader className="p-0">
+                <DialogTitle className="text-foreground">Edit Hearing</DialogTitle>
+              </DialogHeader>
+              <button
+                onClick={closeDialog}
+                className="md:hidden w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-accent transition-colors"
+              >
+                <X className="w-4 h-4 text-muted-foreground" />
+              </button>
+            </div>
+          </div>
+          
+          <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="case" className="text-gray-900">Case *</Label>
@@ -340,6 +352,7 @@ export const EditHearingDialog: React.FC<EditHearingDialogProps> = ({ hearingId 
             </Button>
           </div>
         </form>
+        </div>
       </DialogContent>
     </Dialog>
   );

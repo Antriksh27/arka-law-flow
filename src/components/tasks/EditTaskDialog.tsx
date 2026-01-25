@@ -213,7 +213,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
   if (isLoading) {
     return (
       <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-2xl p-0 gap-0 overflow-hidden bg-slate-50">
+        <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden bg-muted">
           <div className="flex items-center justify-center py-16">
             <div className="animate-pulse text-slate-500">Loading task details...</div>
           </div>
@@ -224,8 +224,8 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl p-0 gap-0 overflow-hidden">
-        <div className="flex flex-col h-full bg-slate-50">
+      <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden">
+        <div className="flex flex-col h-full bg-muted">
           {/* Header */}
           <div className="px-6 py-5 bg-white border-b border-slate-100">
             <div className="flex items-center justify-between">

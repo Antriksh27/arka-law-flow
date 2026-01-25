@@ -171,7 +171,7 @@ export const CreateNoteDialog: React.FC<CreateNoteDialogProps> = ({
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden">
-        <div className="flex flex-col h-full bg-slate-50">
+        <div className="flex flex-col h-full bg-muted">
           <MobileDialogHeader
             title="Create New Note"
             subtitle="Capture your thoughts quickly"

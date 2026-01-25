@@ -221,7 +221,7 @@ export const ConvertToClientDialog = ({ open, onOpenChange, contact }: ConvertTo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={`${isMobile ? 'h-[100dvh] max-h-[100dvh] w-full max-w-full rounded-none m-0' : 'sm:max-w-2xl max-h-[90vh]'} p-0 gap-0 overflow-hidden`}>
+      <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden">
         <div className="flex flex-col h-full bg-slate-50">
           {/* Header */}
           <div className="flex items-center justify-between p-4 bg-white border-b border-slate-200">

@@ -160,7 +160,7 @@ const AddTeamMemberDialog = ({
     return null;
   }
   return <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+      <DialogContent hideCloseButton className="sm:max-w-[500px] p-0 gap-0 overflow-hidden">
         <DialogHeader>
           <DialogTitle>Add New Team Member</DialogTitle>
           <DialogDescription>
