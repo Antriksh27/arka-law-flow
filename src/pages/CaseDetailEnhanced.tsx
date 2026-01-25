@@ -421,7 +421,8 @@ export default function CaseDetailEnhanced() {
 
             {/* Tabs - sticky below hero card */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col">
-              <div className="sticky top-[calc(3.5rem+env(safe-area-inset-top))] z-40 bg-background border-b border-border">
+              {/* Header is outside this scroll container, so sticky should be top-0 */}
+              <div className="sticky top-0 z-30 bg-background border-b border-border">
                 <div className="flex overflow-x-auto scrollbar-hide px-4">
                   {tabs.map(tab => {
                     const IconComponent = tab.icon;
