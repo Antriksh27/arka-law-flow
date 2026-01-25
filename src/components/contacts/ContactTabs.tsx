@@ -116,27 +116,25 @@ export const ContactTabs: React.FC<ContactTabsProps> = ({
           </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={onTabChange} className="w-full flex-1 flex flex-col min-h-0">
-          {/* Mobile Tabs - Sticky below header */}
-          <div className="sticky top-0 z-30 bg-background">
-            <TabsList className="w-full bg-background border-b border-border h-auto p-0">
-              <div className="flex overflow-x-auto scrollbar-hide px-4">
-                {tabs.map(tab => {
-                  const IconComponent = tab.icon;
-                  return (
-                    <TabsTrigger 
-                      key={tab.value} 
-                      value={tab.value} 
-                      className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary bg-transparent rounded-none whitespace-nowrap transition-colors min-h-[48px]"
-                    >
-                      <IconComponent className="w-4 h-4" />
-                      {tab.label}
-                    </TabsTrigger>
-                  );
-                })}
-              </div>
-            </TabsList>
-          </div>
+        <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
+          {/* Mobile Tabs */}
+          <TabsList className="w-full bg-background border-b border-border h-auto p-0 sticky top-14 z-30">
+            <div className="flex overflow-x-auto scrollbar-hide px-4">
+              {tabs.map(tab => {
+                const IconComponent = tab.icon;
+                return (
+                  <TabsTrigger 
+                    key={tab.value} 
+                    value={tab.value} 
+                    className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary bg-transparent rounded-none whitespace-nowrap transition-colors min-h-[48px]"
+                  >
+                    <IconComponent className="w-4 h-4" />
+                    {tab.label}
+                  </TabsTrigger>
+                );
+              })}
+            </div>
+          </TabsList>
 
           {/* Tab Content */}
           <div className="p-4 pb-8">
