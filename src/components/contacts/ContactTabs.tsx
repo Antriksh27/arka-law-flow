@@ -118,7 +118,7 @@ export const ContactTabs: React.FC<ContactTabsProps> = ({
 
         <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
           {/* Mobile Tabs */}
-          <TabsList className="w-full bg-background border-b border-border h-auto p-0 sticky top-[calc(3.5rem+env(safe-area-inset-top)-1px)] z-30">
+          <TabsList className="w-full bg-background border-b border-border h-auto p-0 sticky top-[calc(3.5rem+env(safe-area-inset-top))] -mt-px z-30">
             <div className="flex overflow-x-auto scrollbar-hide px-4">
               {tabs.map(tab => {
                 const IconComponent = tab.icon;
