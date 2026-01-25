@@ -13,6 +13,7 @@ interface NewCaseFormProps {
   onSuccess: () => void;
   onCancel: () => void;
   preSelectedClientId?: string;
+  hideHeader?: boolean;
 }
 interface CaseFormData {
   case_title: string;
@@ -36,7 +37,8 @@ interface CaseFormData {
 export const NewCaseForm: React.FC<NewCaseFormProps> = ({
   onSuccess,
   onCancel,
-  preSelectedClientId
+  preSelectedClientId,
+  hideHeader = false
 }) => {
   const {
     toast
@@ -193,146 +195,177 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
       description: "Case details fetched successfully"
     });
   };
-  return <div className="max-w-full h-screen p-8 bg-slate-50 overflow-y-auto">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900">Add New Case</h1>
-            <p className="text-gray-600 mt-2">Enter the case information below.</p>
+  return <div className="h-full p-4 sm:p-6 bg-slate-50">
+      <div className="max-w-4xl mx-auto space-y-4">
+        {!hideHeader && (
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">Add New Case</h1>
+              <p className="text-slate-500 text-sm mt-1">Enter the case information below.</p>
+            </div>
+            <Button type="button" variant="outline" onClick={() => setShowFetchDialog(true)} className="text-white border-primary bg-slate-800 hover:bg-slate-700 w-full sm:w-auto">
+              Fetch Case Details
+            </Button>
           </div>
-          <Button type="button" variant="outline" onClick={() => setShowFetchDialog(true)} className="text-white border-primary bg-slate-800 hover:bg-slate-700">
-            Fetch Case Details
-          </Button>
-        </div>
+        )}
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="md:col-span-2">
-              <Label htmlFor="case_title">Case Title *</Label>
-              <Input id="case_title" {...register('case_title', {
-              required: 'Case title is required'
-            })} className="mt-2 bg-white border-gray-300" placeholder="Enter case title..." />
-              {errors.case_title && <p className="text-sm text-red-600 mt-1">{errors.case_title.message}</p>}
-            </div>
+        {hideHeader && (
+          <div className="flex justify-end">
+            <Button type="button" variant="outline" onClick={() => setShowFetchDialog(true)} className="text-white border-primary bg-slate-800 hover:bg-slate-700 text-sm">
+              Fetch Case Details
+            </Button>
+          </div>
+        )}
 
-            <div>
-              <Label htmlFor="client_id">Client</Label>
-              <select id="client_id" {...register('client_id')} className="w-full px-3 py-2 mt-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white" disabled={!!preSelectedClientId}>
-                <option value="">Select a client...</option>
-                {clients.map(client => <option key={client.id} value={client.id}>
-                    {client.full_name}
-                  </option>)}
-              </select>
-            </div>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {/* Basic Info Card */}
+          <div className="bg-white rounded-2xl shadow-sm p-4 space-y-4">
+            <h3 className="text-sm font-medium text-slate-500 uppercase tracking-wide">Basic Information</h3>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="case_title" className="text-sm">Case Title *</Label>
+                <Input id="case_title" {...register('case_title', {
+                required: 'Case title is required'
+              })} className="mt-1.5 bg-white border-slate-200 rounded-xl" placeholder="Enter case title..." />
+                {errors.case_title && <p className="text-sm text-red-600 mt-1">{errors.case_title.message}</p>}
+              </div>
 
-            <div>
-              <Label htmlFor="case_type">Case Type</Label>
-              <select id="case_type" {...register('case_type')} className="w-full px-3 py-2 mt-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white">
-                <option value="civil">Civil</option>
-                <option value="criminal">Criminal</option>
-                <option value="corporate">Corporate</option>
-                <option value="family">Family</option>
-                <option value="tax">Tax</option>
-                <option value="labor">Labor</option>
-                <option value="intellectual_property">Intellectual Property</option>
-                <option value="real_estate">Real Estate</option>
-                <option value="immigration">Immigration</option>
-                <option value="constitutional">Constitutional</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="client_id" className="text-sm">Client</Label>
+                  <select id="client_id" {...register('client_id')} className="w-full px-3 py-2 mt-1.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary bg-white text-sm" disabled={!!preSelectedClientId}>
+                    <option value="">Select a client...</option>
+                    {clients.map(client => <option key={client.id} value={client.id}>
+                        {client.full_name}
+                      </option>)}
+                  </select>
+                </div>
 
-            <div>
-              <Label htmlFor="status">Status</Label>
-              <select id="status" {...register('status')} className="w-full px-3 py-2 mt-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white">
-                <option value="open">Open</option>
-                <option value="in_court">In Court</option>
-                <option value="on_hold">On Hold</option>
-                <option value="closed">Closed</option>
-              </select>
-            </div>
+                <div>
+                  <Label htmlFor="case_type" className="text-sm">Case Type</Label>
+                  <select id="case_type" {...register('case_type')} className="w-full px-3 py-2 mt-1.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary bg-white text-sm">
+                    <option value="civil">Civil</option>
+                    <option value="criminal">Criminal</option>
+                    <option value="corporate">Corporate</option>
+                    <option value="family">Family</option>
+                    <option value="tax">Tax</option>
+                    <option value="labor">Labor</option>
+                    <option value="intellectual_property">Intellectual Property</option>
+                    <option value="real_estate">Real Estate</option>
+                    <option value="immigration">Immigration</option>
+                    <option value="constitutional">Constitutional</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
 
-            <div>
-              <Label htmlFor="by_against">By/Against</Label>
-              <select id="by_against" {...register('by_against')} className="w-full px-3 py-2 mt-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white z-50">
-                <option value="">Not specified</option>
-                <option value="by">By (Filed by client)</option>
-                <option value="against">Against (Filed against client)</option>
-              </select>
-            </div>
+                <div>
+                  <Label htmlFor="status" className="text-sm">Status</Label>
+                  <select id="status" {...register('status')} className="w-full px-3 py-2 mt-1.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary bg-white text-sm">
+                    <option value="open">Open</option>
+                    <option value="in_court">In Court</option>
+                    <option value="on_hold">On Hold</option>
+                    <option value="closed">Closed</option>
+                  </select>
+                </div>
 
-            <div>
-              <Label htmlFor="reference_number">Reference Number (Internal)</Label>
-              <Input id="reference_number" {...register('reference_number')} className="mt-2 bg-white border-gray-300" placeholder="Internal case reference number..." />
-            </div>
-
-            <div>
-              <Label htmlFor="case_number">Case Number</Label>
-              <Input id="case_number" {...register('case_number')} className="mt-2 bg-white border-gray-300" placeholder="Enter case number..." />
-            </div>
-
-            <div>
-              <Label htmlFor="filing_date">Filing Date</Label>
-              <Input id="filing_date" type="date" {...register('filing_date')} className="mt-2 bg-white border-gray-300" />
-            </div>
-
-            <div>
-              <Label htmlFor="court_name">Court</Label>
-              <Input id="court_name" {...register('court_name')} className="mt-2 bg-white border-gray-300" placeholder="Enter court name..." />
-            </div>
-
-            <div>
-              <Label htmlFor="cnr_number">CNR Number</Label>
-              <Input id="cnr_number" {...register('cnr_number')} className="mt-2 bg-white border-gray-300" placeholder="Enter CNR number..." />
-            </div>
-
-            <div>
-              <Label htmlFor="filing_number">Filing Number</Label>
-              <Input id="filing_number" {...register('filing_number')} className="mt-2 bg-white border-gray-300" placeholder="Enter filing number..." />
-            </div>
-
-            <div>
-              <Label htmlFor="petitioner">Petitioner</Label>
-              <Input id="petitioner" {...register('petitioner')} className="mt-2 bg-white border-gray-300" placeholder="Enter petitioner name..." />
-            </div>
-
-            <div>
-              <Label htmlFor="respondent">Respondent</Label>
-              <Input id="respondent" {...register('respondent')} className="mt-2 bg-white border-gray-300" placeholder="Enter respondent name..." />
-            </div>
-
-            <div>
-              <Label htmlFor="advocate_name">Advocate Name</Label>
-              <Input id="advocate_name" {...register('advocate_name')} className="mt-2 bg-white border-gray-300" placeholder="Enter advocate name..." />
-            </div>
-
-            <div>
-              <Label htmlFor="district">District</Label>
-              <Input id="district" {...register('district')} className="mt-2 bg-white border-gray-300" placeholder="Enter district..." />
-            </div>
-
-            <div className="md:col-span-2">
-              <Label htmlFor="assigned_users">Assign Lawyers</Label>
-              <div className="mt-2 space-y-2 max-h-40 overflow-y-auto border border-gray-300 rounded-md p-3 bg-white">
-                {lawyers.length === 0 ? <p className="text-gray-500 text-sm">No lawyers available</p> : lawyers.map(lawyer => <label key={lawyer.id} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
-                      <input type="checkbox" value={lawyer.id} {...register('assigned_users')} className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary" />
-                      <span className="text-sm">{lawyer.full_name}</span>
-                      <span className="text-xs text-gray-500 capitalize">({lawyer.role})</span>
-                    </label>)}
+                <div>
+                  <Label htmlFor="by_against" className="text-sm">By/Against</Label>
+                  <select id="by_against" {...register('by_against')} className="w-full px-3 py-2 mt-1.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary bg-white text-sm">
+                    <option value="">Not specified</option>
+                    <option value="by">By (Filed by client)</option>
+                    <option value="against">Against (Filed against client)</option>
+                  </select>
+                </div>
               </div>
             </div>
+          </div>
 
-            <div className="md:col-span-2">
-              <Label htmlFor="description">Case Description</Label>
-              <textarea id="description" {...register('description')} className="w-full px-3 py-2 mt-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white" rows={4} placeholder="Enter case description..." />
+          {/* Case Details Card */}
+          <div className="bg-white rounded-2xl shadow-sm p-4 space-y-4">
+            <h3 className="text-sm font-medium text-slate-500 uppercase tracking-wide">Case Details</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="reference_number" className="text-sm">Reference Number</Label>
+                <Input id="reference_number" {...register('reference_number')} className="mt-1.5 bg-white border-slate-200 rounded-xl" placeholder="Internal reference..." />
+              </div>
+
+              <div>
+                <Label htmlFor="case_number" className="text-sm">Case Number</Label>
+                <Input id="case_number" {...register('case_number')} className="mt-1.5 bg-white border-slate-200 rounded-xl" placeholder="Case number..." />
+              </div>
+
+              <div>
+                <Label htmlFor="filing_date" className="text-sm">Filing Date</Label>
+                <Input id="filing_date" type="date" {...register('filing_date')} className="mt-1.5 bg-white border-slate-200 rounded-xl" />
+              </div>
+
+              <div>
+                <Label htmlFor="court_name" className="text-sm">Court</Label>
+                <Input id="court_name" {...register('court_name')} className="mt-1.5 bg-white border-slate-200 rounded-xl" placeholder="Court name..." />
+              </div>
+
+              <div>
+                <Label htmlFor="cnr_number" className="text-sm">CNR Number</Label>
+                <Input id="cnr_number" {...register('cnr_number')} className="mt-1.5 bg-white border-slate-200 rounded-xl" placeholder="CNR number..." />
+              </div>
+
+              <div>
+                <Label htmlFor="filing_number" className="text-sm">Filing Number</Label>
+                <Input id="filing_number" {...register('filing_number')} className="mt-1.5 bg-white border-slate-200 rounded-xl" placeholder="Filing number..." />
+              </div>
+
+              <div>
+                <Label htmlFor="district" className="text-sm">District</Label>
+                <Input id="district" {...register('district')} className="mt-1.5 bg-white border-slate-200 rounded-xl" placeholder="District..." />
+              </div>
             </div>
           </div>
 
-          <div className="flex justify-end gap-4 pt-6 border-t">
-            <Button type="button" variant="outline" onClick={onCancel} className="bg-red-700 hover:bg-red-600 text-slate-50">
+          {/* Parties Card */}
+          <div className="bg-white rounded-2xl shadow-sm p-4 space-y-4">
+            <h3 className="text-sm font-medium text-slate-500 uppercase tracking-wide">Parties</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="petitioner" className="text-sm">Petitioner</Label>
+                <Input id="petitioner" {...register('petitioner')} className="mt-1.5 bg-white border-slate-200 rounded-xl" placeholder="Petitioner name..." />
+              </div>
+
+              <div>
+                <Label htmlFor="respondent" className="text-sm">Respondent</Label>
+                <Input id="respondent" {...register('respondent')} className="mt-1.5 bg-white border-slate-200 rounded-xl" placeholder="Respondent name..." />
+              </div>
+
+              <div>
+                <Label htmlFor="advocate_name" className="text-sm">Advocate Name</Label>
+                <Input id="advocate_name" {...register('advocate_name')} className="mt-1.5 bg-white border-slate-200 rounded-xl" placeholder="Advocate name..." />
+              </div>
+            </div>
+          </div>
+
+          {/* Assignment Card */}
+          <div className="bg-white rounded-2xl shadow-sm p-4 space-y-4">
+            <h3 className="text-sm font-medium text-slate-500 uppercase tracking-wide">Assign Lawyers</h3>
+            <div className="space-y-2 max-h-32 overflow-y-auto border border-slate-200 rounded-xl p-3 bg-slate-50">
+              {lawyers.length === 0 ? <p className="text-slate-400 text-sm">No lawyers available</p> : lawyers.map(lawyer => <label key={lawyer.id} className="flex items-center space-x-2 cursor-pointer hover:bg-white p-2 rounded-lg active:scale-[0.98] transition-all">
+                    <input type="checkbox" value={lawyer.id} {...register('assigned_users')} className="w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary" />
+                    <span className="text-sm text-slate-700">{lawyer.full_name}</span>
+                    <span className="text-xs text-slate-400 capitalize">({lawyer.role})</span>
+                  </label>)}
+            </div>
+          </div>
+
+          {/* Description Card */}
+          <div className="bg-white rounded-2xl shadow-sm p-4 space-y-4">
+            <h3 className="text-sm font-medium text-slate-500 uppercase tracking-wide">Description</h3>
+            <textarea id="description" {...register('description')} className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary bg-white text-sm" rows={3} placeholder="Enter case description..." />
+          </div>
+
+          {/* Action Buttons - Sticky on mobile */}
+          <div className="sticky bottom-0 bg-white/95 backdrop-blur-sm border-t border-slate-100 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 mt-4 flex gap-3">
+            <Button type="button" variant="outline" onClick={onCancel} className="flex-1 rounded-xl border-slate-200 text-slate-600 hover:bg-slate-50">
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting} className="bg-slate-800 hover:bg-slate-700">
+            <Button type="submit" disabled={isSubmitting} className="flex-1 rounded-xl bg-slate-800 hover:bg-slate-700">
               {isSubmitting ? 'Creating...' : 'Create Case'}
             </Button>
           </div>
