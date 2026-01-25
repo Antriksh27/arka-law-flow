@@ -24,8 +24,8 @@ export const MobileDialogHeader: React.FC<MobileDialogHeaderProps> = ({
   return (
     <div
       className={cn(
-        "px-6 py-5 bg-white",
-        showBorder && "border-b border-slate-100",
+        "px-6 py-5 bg-background",
+        showBorder && "border-b border-border",
         className
       )}
     >
@@ -46,10 +46,10 @@ export const MobileDialogHeader: React.FC<MobileDialogHeaderProps> = ({
         <button
           type="button"
           onClick={onClose}
-          className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors flex-shrink-0"
+          className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors flex-shrink-0"
           aria-label="Close dialog"
         >
-          <X className="w-4 h-4 text-slate-500" />
+          <X className="w-4 h-4 text-muted-foreground" />
         </button>
       </div>
     </div>
