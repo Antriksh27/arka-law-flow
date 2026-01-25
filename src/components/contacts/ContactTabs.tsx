@@ -52,8 +52,8 @@ export const ContactTabs: React.FC<ContactTabsProps> = ({
 
   // Mobile Layout
   if (isMobile) {
-    return (
-      <MobilePageContainer>
+      return (
+      <MobilePageContainer className="bg-background">
         <MobileHeader 
           title={contact.name}
           showBack={true}
