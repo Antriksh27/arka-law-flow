@@ -37,10 +37,20 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
   const [cases, setCases] = useState<CaseItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Server-side search function - no limit when searching to find any case
+  // Server-side search function - only search when 4+ characters typed
   const searchCases = useCallback(async (searchTerm: string) => {
+    // Require at least 4 characters to search
+    if (!searchTerm || searchTerm.trim().length < 4) {
+      setCases([]);
+      return;
+    }
+    
     setIsLoading(true);
-    let query = supabase.from('cases').select(`
+    const term = searchTerm.trim();
+    
+    const { data, error } = await supabase
+      .from('cases')
+      .select(`
         id,
         case_title,
         status,
@@ -50,20 +60,11 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
         case_number,
         cnr_number,
         clients(full_name)
-      `);
-
-    // Apply search filter if search term exists
-    if (searchTerm && searchTerm.trim().length > 0) {
-      const term = searchTerm.trim();
-      // When searching, query all matching cases (no limit) to find any case
-      query = query.or(`case_title.ilike.%${term}%,case_number.ilike.%${term}%,cnr_number.ilike.%${term}%,case_type.ilike.%${term}%,petitioner.ilike.%${term}%,respondent.ilike.%${term}%,registration_number.ilike.%${term}%,filing_number.ilike.%${term}%`);
-      query = query.order('created_at', { ascending: false }).limit(200);
-    } else {
-      // Initial load: show recent 50 cases only
-      query = query.order('created_at', { ascending: false }).limit(50);
-    }
+      `)
+      .or(`case_title.ilike.%${term}%,case_number.ilike.%${term}%,cnr_number.ilike.%${term}%,case_type.ilike.%${term}%,petitioner.ilike.%${term}%,respondent.ilike.%${term}%,registration_number.ilike.%${term}%,filing_number.ilike.%${term}%`)
+      .order('created_at', { ascending: false })
+      .limit(200);
     
-    const { data, error } = await query;
     if (!error && data) {
       setCases(data as CaseItem[]);
     }
@@ -79,12 +80,13 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
     return () => clearTimeout(timer);
   }, [searchQuery, searchCases, view]);
 
-  // Initial load when view changes to existing
+  // Reset cases when view changes
   useEffect(() => {
     if (view === 'existing') {
-      searchCases('');
+      setCases([]);
+      setSearchQuery('');
     }
-  }, [view, searchCases]);
+  }, [view]);
   const handleAssignToCase = async (caseId: string) => {
     try {
       const {
@@ -207,10 +209,13 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
                           <Briefcase className="w-5 h-5 text-amber-500" />
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-foreground">Available Cases</p>
+                          <p className="text-sm font-semibold text-foreground">
+                            {searchQuery.trim().length < 4 ? 'Search Results' : 'Available Cases'}
+                          </p>
                           <p className="text-xs text-muted-foreground">
-                            {cases.length} case{cases.length !== 1 ? 's' : ''} found
-                            {!searchQuery.trim() && cases.length === 50 && ' • Search to find more'}
+                            {searchQuery.trim().length < 4 
+                              ? 'Type at least 4 characters to search' 
+                              : `${cases.length} case${cases.length !== 1 ? 's' : ''} found`}
                           </p>
                         </div>
                       </div>
@@ -218,7 +223,10 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
                       <div className="space-y-2 max-h-[400px] overflow-y-auto">
                         {isLoading ? <div className="text-center py-8 text-muted-foreground flex items-center justify-center gap-2">
                             <Loader2 className="w-4 h-4 animate-spin" />
-                            Loading cases...
+                            Searching cases...
+                          </div> : searchQuery.trim().length < 4 ? <div className="text-center py-8 text-muted-foreground">
+                            <Search className="w-8 h-8 mx-auto mb-2 opacity-40" />
+                            <p>Enter at least 4 characters to search</p>
                           </div> : cases.length === 0 ? <div className="text-center py-8 text-muted-foreground">
                             {searchQuery.trim() ? 'No cases found matching your search' : 'No cases available'}
                           </div> : cases.map(case_item => <div key={case_item.id} className="p-4 rounded-xl bg-slate-50 hover:bg-slate-100 cursor-pointer transition-colors" onClick={() => handleAssignToCase(case_item.id)}>
