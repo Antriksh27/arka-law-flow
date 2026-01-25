@@ -7,6 +7,7 @@ import { FilterState } from './types';
 import { Badge } from '@/components/ui/badge';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { defaultQueryConfig } from '@/lib/queryConfig';
+import { bg, border, text } from '@/lib/colors';
 
 interface HearingsTableProps {
   filters: FilterState;
@@ -88,13 +89,13 @@ export const HearingsTable: React.FC<HearingsTableProps> = ({ filters }) => {
       <div ref={tableContainerRef} className="overflow-auto max-h-[600px]">
         <table className="w-full">
           <thead className="sticky top-0 bg-white z-10">
-            <tr className="border-b border-gray-200">
-              <th className="text-left py-3 px-4 font-medium text-gray-900">Date</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">Case</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">Court</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">Judge</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">Purpose</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">Status</th>
+            <tr className={`border-b ${border.default}`}>
+              <th className={`text-left py-3 px-4 font-medium ${text.primary}`}>Date</th>
+              <th className={`text-left py-3 px-4 font-medium ${text.primary}`}>Case</th>
+              <th className={`text-left py-3 px-4 font-medium ${text.primary}`}>Court</th>
+              <th className={`text-left py-3 px-4 font-medium ${text.primary}`}>Judge</th>
+              <th className={`text-left py-3 px-4 font-medium ${text.primary}`}>Purpose</th>
+              <th className={`text-left py-3 px-4 font-medium ${text.primary}`}>Status</th>
             </tr>
           </thead>
           <tbody style={{ height: `${virtualizer.getTotalSize()}px`, position: 'relative' }}>
@@ -105,7 +106,7 @@ export const HearingsTable: React.FC<HearingsTableProps> = ({ filters }) => {
               return (
                 <tr 
                   key={hearing.id} 
-                  className="border-b border-gray-100 hover:bg-gray-50 absolute w-full"
+                  className={`border-b ${border.light} ${bg.hover} absolute w-full`}
                   style={{
                     height: `${virtualRow.size}px`,
                     transform: `translateY(${virtualRow.start}px)`,
@@ -117,7 +118,7 @@ export const HearingsTable: React.FC<HearingsTableProps> = ({ filters }) => {
                   <td className="py-3 px-4">
                     <div>
                       <div className="font-medium">{hearing.cases?.case_title}</div>
-                      <div className="text-sm text-gray-500">{hearing.cases?.registration_number || 'Not registered'}</div>
+                      <div className={`text-sm ${text.muted}`}>{hearing.cases?.registration_number || 'Not registered'}</div>
                     </div>
                   </td>
                   <td className="py-3 px-4">{hearing.cases?.court_name || '-'}</td>

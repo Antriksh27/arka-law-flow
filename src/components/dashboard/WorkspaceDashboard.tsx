@@ -20,6 +20,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { addDays, startOfWeek, format } from 'date-fns';
 import { Search } from 'lucide-react';
+import { bg, border, text } from '@/lib/colors';
 
 // Mobile-specific components
 import { MobileDashboardHeader } from './mobile/MobileDashboardHeader';
@@ -97,7 +98,7 @@ const WorkspaceDashboard = () => {
       {/* Mobile View */}
       {isMobile && (
         <PullToRefresh onRefresh={handleRefresh}>
-          <div className="h-screen bg-slate-50 overflow-hidden flex flex-col">
+          <div className={`h-screen ${bg.page} overflow-hidden flex flex-col`}>
             {/* Custom Header with greeting and icons */}
             <MobileDashboardHeader userName={userName} />
 
@@ -107,10 +108,10 @@ const WorkspaceDashboard = () => {
               <div className="mb-4">
                 <button 
                   onClick={() => setShowSearchModal(true)}
-                  className="w-full flex items-center gap-3 px-4 py-3 bg-white rounded-2xl shadow-sm border border-slate-200 text-left active:scale-[0.98] transition-transform"
+                  className={`w-full flex items-center gap-3 px-4 py-3 bg-white rounded-2xl shadow-sm border ${border.default} text-left active:scale-[0.98] transition-transform`}
                 >
-                  <Search className="w-5 h-5 text-slate-400" />
-                  <span className="text-sm text-slate-400">Search cases, clients, documents...</span>
+                  <Search className={`w-5 h-5 ${text.light}`} />
+                  <span className={`text-sm ${text.light}`}>Search cases, clients, documents...</span>
                 </button>
               </div>
 

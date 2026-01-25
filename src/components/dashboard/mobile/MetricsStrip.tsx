@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Gavel, CalendarClock, CheckSquare } from 'lucide-react';
 import { useHapticFeedback } from '@/hooks/use-haptic-feedback';
+import { bg } from '@/lib/colors';
 
 interface Metric {
   label: string;
@@ -70,9 +71,9 @@ export const MetricsStrip: React.FC<MetricsStripProps> = ({
               key={i}
               className="flex-shrink-0 flex-1 min-w-[110px] bg-white rounded-2xl p-4 animate-pulse shadow-sm"
             >
-              <div className="w-10 h-10 bg-slate-100 rounded-xl mb-3" />
-              <div className="h-8 bg-slate-100 rounded w-12 mb-2" />
-              <div className="h-4 bg-slate-100 rounded w-20" />
+              <div className={`w-10 h-10 ${bg.muted} rounded-xl mb-3`} />
+              <div className={`h-8 ${bg.muted} rounded w-12 mb-2`} />
+              <div className={`h-4 ${bg.muted} rounded w-20`} />
             </div>
           ))}
         </div>

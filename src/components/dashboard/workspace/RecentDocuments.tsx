@@ -2,6 +2,8 @@ import { FileText, Download } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import TimeUtils from '@/lib/timeUtils';
+import { bg, text } from '@/lib/colors';
+
 interface Document {
   id: string;
   file_name: string;
@@ -26,7 +28,7 @@ export const RecentDocuments = ({
           </div>
         </div>
         <div className="space-y-3">
-          {[1, 2, 3].map(i => <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse" />)}
+          {[1, 2, 3].map(i => <div key={i} className={`h-16 ${bg.muted} rounded-lg animate-pulse`} />)}
         </div>
       </div>;
   }
@@ -51,7 +53,7 @@ export const RecentDocuments = ({
       </div>
 
       {documents.length === 0 ? <Card className="p-6 md:p-8 text-center border-dashed">
-          <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+          <FileText className={`w-12 h-12 ${text.light} mx-auto mb-3`} />
           <p className="text-sm text-muted-foreground">No recent documents</p>
         </Card> : <div className="space-y-3">
           {documents.slice(0, 3).map(doc => <Card key={doc.id} className="p-3 md:p-4 hover:shadow-md transition-shadow">
