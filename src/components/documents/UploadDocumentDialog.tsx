@@ -566,7 +566,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                     </div>
                   </div>
 
-                  <div className="border-2 border-dashed border-input rounded-xl p-6 text-center hover:border-sky-300 transition-colors bg-muted">
+                  <div className="border-2 border-dashed border-input rounded-xl p-6 text-center hover:border-sky-300 transition-colors bg-slate-50">
                     <input 
                       type="file" 
                       multiple 
@@ -634,7 +634,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                       </div>
                     </div>
                   </div>
-                  <div className="p-4 space-y-4 bg-muted/50">
+                  <div className="p-4 space-y-4 bg-slate-50">
                     <div>
                       <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Select Client *</Label>
                       <div className="mt-2">
@@ -692,7 +692,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                     </div>
                   </div>
                 </div>
-                <div className="p-4 space-y-4 bg-muted/50">
+                <div className="p-4 space-y-4 bg-slate-50">
                   <div>
                     <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Primary Type *</Label>
                     <Select 
@@ -764,7 +764,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                     {...register('notes')}
                     placeholder="Add any additional notes about this document..."
                     rows={3}
-                    className="bg-muted border-input rounded-xl resize-none"
+                    className="bg-slate-50 border-input rounded-xl resize-none"
                   />
                 </div>
               </div>
