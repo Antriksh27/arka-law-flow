@@ -34,7 +34,12 @@ export const DialogProvider = ({ children }: { children: ReactNode }) => {
 export const useDialog = () => {
   const context = useContext(DialogContext);
   if (context === undefined) {
-    throw new Error('useDialog must be used within a DialogProvider');
+    // Return no-op functions during HMR or when context is temporarily unavailable
+    console.warn('useDialog called outside DialogProvider context - returning no-op functions');
+    return {
+      openDialog: () => {},
+      closeDialog: () => {},
+    };
   }
   return context;
 };
