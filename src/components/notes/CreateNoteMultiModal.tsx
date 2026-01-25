@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,12 +11,10 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { X, Plus, Mic, MicOff, Square, Play, Pause, Trash2, Loader2, FileText, Palette, Link2, Tag } from 'lucide-react';
+import { X, Plus, FileText, Palette, Link2, Tag } from 'lucide-react';
 import { DrawingCanvas } from './DrawingCanvas';
 import { ClientSelector } from '@/components/appointments/ClientSelector';
 import { CaseSelector } from '@/components/appointments/CaseSelector';
-import { AudioRecorder } from '@/utils/audioRecorder';
-import { useDeepgramTranscription } from '@/hooks/useDeepgramTranscription';
 
 interface CreateNoteMultiModalProps {
   open: boolean;
@@ -50,14 +48,6 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
   const [newTag, setNewTag] = useState('');
   const [activeTab, setActiveTab] = useState('write');
   const [drawingData, setDrawingData] = useState<string | null>(null);
-  const [isRecording, setIsRecording] = useState(false);
-  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isDictating, setIsDictating] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const audioRecorderRef = useRef<AudioRecorder>(new AudioRecorder());
-  const { transcribe, isProcessing: isTranscribing } = useDeepgramTranscription();
 
   const {
     register,
@@ -87,19 +77,6 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
       if (!user.data.user) throw new Error('Not authenticated');
       let finalContent = data.content || '';
 
-      let audioDataUrl = null;
-      if (audioBlob) {
-        audioDataUrl = await new Promise<string>(resolve => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.readAsDataURL(audioBlob);
-        });
-
-        if (!finalContent.trim()) {
-          finalContent = '[Audio recording attached]';
-        }
-      }
-
       if (drawingData && !finalContent.trim()) {
         finalContent = '[Drawing attached]';
       }
@@ -116,7 +93,7 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
         color: data.color,
         tags: data.tags,
         drawing_data: drawingData,
-        audio_data: audioDataUrl,
+        audio_data: null,
         is_pinned: isPinned,
         created_by: user.data.user.id
       };
@@ -144,61 +121,6 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
     }
   });
 
-  const startRecording = async () => {
-    try {
-      console.log('Starting recording...');
-      await audioRecorderRef.current.startRecording();
-      setIsRecording(true);
-      console.log('Recording started successfully');
-      toast({ title: "Recording started", description: "Speak now..." });
-    } catch (error: any) {
-      console.error('Recording failed:', error);
-      toast({
-        title: "Recording failed",
-        description: error?.message || "Could not access microphone. Please allow microphone access.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const stopRecording = async () => {
-    try {
-      console.log('Stopping recording...');
-      const blob = await audioRecorderRef.current.stopRecording();
-      console.log('Recording stopped, blob size:', blob.size);
-      setAudioBlob(blob);
-      setAudioUrl(URL.createObjectURL(blob));
-      setIsRecording(false);
-      toast({ title: "Recording saved", description: "Audio ready to attach" });
-    } catch (error: any) {
-      console.error('Stop recording failed:', error);
-      setIsRecording(false);
-      toast({
-        title: "Stop recording failed",
-        description: error?.message || "Could not stop recording",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const playAudio = () => {
-    if (audioUrl && audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.pause();
-        setIsPlaying(false);
-      } else {
-        audioRef.current.play();
-        setIsPlaying(true);
-      }
-    }
-  };
-
-  const deleteRecording = () => {
-    setAudioBlob(null);
-    setAudioUrl(null);
-    setIsPlaying(false);
-  };
-
   const addTag = () => {
     if (newTag.trim() && !watchedTags.includes(newTag.trim())) {
       setValue('tags', [...watchedTags, newTag.trim()]);
@@ -213,9 +135,6 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
   const handleReset = () => {
     reset();
     setDrawingData(null);
-    setAudioBlob(null);
-    setAudioUrl(null);
-    setIsPlaying(false);
     setNewTag('');
     setActiveTab('write');
   };
@@ -232,42 +151,6 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
     { value: 'red', label: 'Red', class: 'bg-rose-200' }
   ];
 
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.onended = () => setIsPlaying(false);
-    }
-  }, [audioUrl]);
-
-  const toggleDictation = async () => {
-    if (isDictating) {
-      setIsDictating(false);
-      try {
-        const blob = await audioRecorderRef.current.stopRecording();
-        toast({ title: "Transcribing with Deepgram...", description: "Converting speech to text" });
-        const result = await transcribe(blob);
-        if (result.error) {
-          toast({ title: "Transcription failed", description: result.error, variant: "destructive" });
-        } else if (result.text) {
-          const currentContent = watch('content') || '';
-          const newContent = currentContent ? `${currentContent}\n\n${result.text}` : result.text;
-          setValue('content', newContent);
-          toast({ title: "Transcription complete", description: "Speech converted to text successfully" });
-        }
-      } catch (error) {
-        console.error('Dictation error:', error);
-        toast({ title: "Dictation failed", description: "Could not process speech", variant: "destructive" });
-      }
-    } else {
-      try {
-        await audioRecorderRef.current.startRecording();
-        setIsDictating(true);
-        toast({ title: "Recording started", description: "Speak now, click again to finish" });
-      } catch (error) {
-        toast({ title: "Dictation failed", description: "Could not access microphone", variant: "destructive" });
-      }
-    }
-  };
-
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent hideCloseButton className="sm:max-w-4xl p-0 gap-0 overflow-hidden">
@@ -277,7 +160,7 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-foreground">Create New Note</h2>
-                <p className="text-sm text-muted-foreground mt-1">Add a note with text, drawing, or audio</p>
+                <p className="text-sm text-muted-foreground mt-1">Add a note with text or drawing</p>
               </div>
               <button 
                 onClick={onClose}
@@ -315,48 +198,20 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
               {/* Content Tabs Card */}
               <div className="bg-white rounded-2xl shadow-sm p-5">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                  <TabsList className="grid w-full grid-cols-3 bg-slate-100 rounded-xl p-1">
+                  <TabsList className="grid w-full grid-cols-2 bg-slate-100 rounded-xl p-1">
                     <TabsTrigger value="write" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">✏️ Write</TabsTrigger>
                     <TabsTrigger value="draw" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">🎨 Draw</TabsTrigger>
-                    <TabsTrigger value="record" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">🎤 Record</TabsTrigger>
                   </TabsList>
                   
                   <TabsContent value="write" className="mt-4 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="content" className="text-sm font-medium text-foreground">Content</Label>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={toggleDictation}
-                        disabled={isTranscribing}
-                        className={`rounded-full ${isDictating 
-                          ? 'bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-100' 
-                          : 'text-sky-600 border-sky-200 hover:bg-sky-50'}`}
-                      >
-                        {isTranscribing ? (
-                          <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Transcribing...</>
-                        ) : isDictating ? (
-                          <><MicOff className="w-4 h-4 mr-2" />Stop Dictation</>
-                        ) : (
-                          <><Mic className="w-4 h-4 mr-2" />Dictate</>
-                        )}
-                      </Button>
-                    </div>
-                    <div className="relative">
-                      <Textarea 
-                        id="content" 
-                        {...register('content')} 
-                        placeholder="Write your note content or click Dictate to speak..." 
-                        className="rounded-xl border-slate-200 focus:border-primary focus:ring-primary min-h-[160px]" 
-                        rows={6} 
-                      />
-                      {isDictating && (
-                        <div className="absolute bottom-3 right-3 flex items-center gap-2 text-rose-500 text-sm">
-                          <span className="animate-pulse">●</span> Recording...
-                        </div>
-                      )}
-                    </div>
+                    <Label htmlFor="content" className="text-sm font-medium text-foreground">Content</Label>
+                    <Textarea 
+                      id="content" 
+                      {...register('content')} 
+                      placeholder="Write your note content..." 
+                      className="rounded-xl border-slate-200 focus:border-primary focus:ring-primary min-h-[160px]" 
+                      rows={6} 
+                    />
                   </TabsContent>
                   
                   <TabsContent value="draw" className="mt-4 space-y-4">
@@ -368,35 +223,6 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
                         <img src={drawingData} alt="Drawing preview" className="max-h-32 rounded-lg border" />
                       </div>
                     )}
-                  </TabsContent>
-                  
-                  <TabsContent value="record" className="mt-4 space-y-4">
-                    <Label className="text-sm font-medium text-foreground">Audio Recording</Label>
-                    <div className="flex items-center gap-4 p-4 bg-slate-50 border border-slate-200 rounded-xl">
-                      {!audioBlob ? (
-                        <div className="flex items-center gap-3">
-                          <Button 
-                            type="button" 
-                            onClick={isRecording ? stopRecording : startRecording} 
-                            className={`rounded-full ${isRecording ? 'bg-rose-600 hover:bg-rose-700' : 'bg-sky-600 hover:bg-sky-700'} text-white`}
-                          >
-                            {isRecording ? <><Square className="w-4 h-4 mr-2" />Stop Recording</> : <><Mic className="w-4 h-4 mr-2" />Start Recording</>}
-                          </Button>
-                          {isRecording && <span className="text-rose-600 animate-pulse text-sm">Recording...</span>}
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-3 w-full">
-                          <Button type="button" onClick={playAudio} className="rounded-full bg-emerald-600 hover:bg-emerald-700 text-white">
-                            {isPlaying ? <><Pause className="w-4 h-4 mr-2" />Pause</> : <><Play className="w-4 h-4 mr-2" />Play</>}
-                          </Button>
-                          <span className="text-sm text-emerald-600 flex-1">✓ Recording ready</span>
-                          <Button type="button" onClick={deleteRecording} variant="outline" size="sm" className="rounded-full text-rose-600 border-rose-200 hover:bg-rose-50">
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                    {audioUrl && <audio ref={audioRef} src={audioUrl} className="hidden" />}
                   </TabsContent>
                 </Tabs>
               </div>
