@@ -448,7 +448,7 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={handleCancel}>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+      <DialogContent hideCloseButton className="sm:max-w-[700px] p-0 gap-0 overflow-hidden">
         <DialogHeader>
           <DialogTitle>Fetch Case Details from eCourts</DialogTitle>
         </DialogHeader>

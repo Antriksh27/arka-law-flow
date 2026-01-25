@@ -151,7 +151,7 @@ const EditTeamMemberDialog = ({ open, onOpenChange, member }: EditTeamMemberDial
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+      <DialogContent hideCloseButton className="sm:max-w-[500px] p-0 gap-0 overflow-hidden">
         <DialogHeader>
           <DialogTitle>Edit Team Member</DialogTitle>
           <DialogDescription>

@@ -182,7 +182,7 @@ export const StandardizeCNRDialog = ({
       if (!open) resetDialog();
       onOpenChange(open);
     }}>
-      <DialogContent className="max-w-full sm:max-w-2xl h-screen sm:h-[90vh] sm:max-h-[800px] p-0 bg-slate-50 m-0 sm:m-4 rounded-none sm:rounded-2xl overflow-hidden">
+      <DialogContent hideCloseButton className="sm:max-w-2xl p-0 bg-muted overflow-hidden">
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="px-6 py-5 bg-white border-b border-slate-100">

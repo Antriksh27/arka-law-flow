@@ -60,7 +60,7 @@ export const AutoFetchCaseDialog: React.FC<AutoFetchCaseDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-full sm:max-w-md h-screen sm:h-auto p-0 bg-slate-50 m-0 sm:m-4 rounded-none sm:rounded-2xl overflow-hidden">
+      <DialogContent hideCloseButton className="sm:max-w-md p-0 bg-muted overflow-hidden">
         <div className="flex flex-col h-full sm:h-auto">
           {/* Header */}
           <div className="px-6 py-5 bg-white border-b border-slate-100">

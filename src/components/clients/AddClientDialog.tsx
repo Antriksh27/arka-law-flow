@@ -226,15 +226,18 @@ export const AddClientDialog: React.FC<AddClientDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent hideCloseButton className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto p-6">
-        <DialogHeader>
-          <DialogTitle>Add New Client</DialogTitle>
-          <DialogDescription>
-            Add a new client to your client management system.
-          </DialogDescription>
-        </DialogHeader>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 mt-4">
+      <DialogContent hideCloseButton className="sm:max-w-[700px] p-0 gap-0 overflow-hidden">
+        <div className="flex flex-col h-full bg-muted">
+          <div className="px-6 py-5 bg-background border-b">
+            <DialogHeader className="p-0">
+              <DialogTitle>Add New Client</DialogTitle>
+              <DialogDescription>
+                Add a new client to your client management system.
+              </DialogDescription>
+            </DialogHeader>
+          </div>
+          <div className="flex-1 overflow-y-auto p-6">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Client Type */}
           <div>
             <Label>Client Type *</Label>
@@ -537,15 +540,17 @@ export const AddClientDialog: React.FC<AddClientDialogProps> = ({
             </div>
           </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Adding...' : 'Add Client'}
-            </Button>
-          </DialogFooter>
-        </form>
+              <DialogFooter className="pt-4">
+                <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? 'Adding...' : 'Add Client'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );

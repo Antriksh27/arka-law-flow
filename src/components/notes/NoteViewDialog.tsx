@@ -132,7 +132,7 @@ export const NoteViewDialog: React.FC<NoteViewDialogProps> = ({
   return (
     <>
       <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-2xl p-0 gap-0 overflow-hidden border-0">
+        <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden border-0">
           <div className={`flex flex-col h-full max-h-[90vh] ${getColorClasses(note.color)}`}>
             {/* Header Action Bar */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200/50 bg-white/50 backdrop-blur-sm">
