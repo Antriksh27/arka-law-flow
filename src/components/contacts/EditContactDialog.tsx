@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, X, User, Building2, Phone, MapPin, UserCheck, FileText, Loader2 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { bg, border, text } from '@/lib/colors';
 
 interface EditContactDialogProps {
   open: boolean;
@@ -195,16 +196,16 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({ open, onOp
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden">
-        <div className="flex flex-col h-full bg-slate-50">
+        <div className={`flex flex-col h-full ${bg.page}`}>
           {/* Header */}
-          <div className="flex items-center justify-between p-4 bg-white border-b border-slate-200">
+          <div className={`flex items-center justify-between p-4 ${bg.card} border-b ${border.default}`}>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center">
                 <User className="w-5 h-5 text-sky-500" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-slate-900">Edit Contact</h2>
-                <p className="text-xs text-slate-500">Update contact information</p>
+                <h2 className={`text-lg font-semibold ${text.primary}`}>Edit Contact</h2>
+                <p className={`text-xs ${text.light}`}>Update contact information</p>
               </div>
             </div>
             {isMobile && (
@@ -219,12 +220,12 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({ open, onOp
             <Form {...form}>
               <form id="edit-contact-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 {/* Contact Type Card */}
-                <div className="bg-white rounded-2xl shadow-sm p-4">
+                <div className={`${bg.card} rounded-2xl shadow-sm p-4`}>
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
-                      <User className="w-4 h-4 text-slate-600" />
+                    <div className={`w-8 h-8 rounded-lg ${bg.muted} flex items-center justify-center`}>
+                      <User className={`w-4 h-4 ${text.muted}`} />
                     </div>
-                    <span className="font-medium text-slate-700">Contact Type</span>
+                    <span className={`font-medium ${text.muted}`}>Contact Type</span>
                   </div>
                   <FormField
                     control={form.control}

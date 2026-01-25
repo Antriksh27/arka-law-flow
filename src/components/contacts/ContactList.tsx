@@ -19,6 +19,7 @@ import { MobileFAB } from '@/components/mobile/MobileFAB';
 import { MobilePageContainer } from '@/components/mobile/MobilePageContainer';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Plus, Users } from 'lucide-react';
+import { border } from '@/lib/colors';
 
 export const ContactList = () => {
   const navigate = useNavigate();
@@ -194,7 +195,7 @@ export const ContactList = () => {
         onSearchChange={setSearchTerm}
       />
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200">
+      <div className={`bg-white rounded-2xl shadow-sm border ${border.default}`}>
         {viewMode === 'table' ? (
           <ContactsTable
             contacts={contacts}

@@ -13,6 +13,7 @@ import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { CARD_STYLES } from '@/lib/mobileStyles';
+import { bg, border, text } from '@/lib/colors';
 
 interface NotesHeaderProps {
   onCreateNote: () => void;
@@ -117,15 +118,15 @@ export const NotesHeader: React.FC<NotesHeaderProps> = ({
   // Mobile Filter Sheet
   const MobileFilterSheet = () => (
     <Sheet open={showMobileFilter} onOpenChange={setShowMobileFilter}>
-      <SheetContent hideCloseButton side="bottom" className="h-[85vh] rounded-t-3xl bg-slate-50 p-0 border-0">
+      <SheetContent hideCloseButton side="bottom" className={`h-[85vh] rounded-t-3xl ${bg.page} p-0 border-0`}>
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-4 bg-white border-b border-slate-100">
-          <h2 className="text-lg font-semibold text-slate-900">Filters</h2>
+        <div className={`flex items-center justify-between px-4 py-4 ${bg.card} border-b ${border.light}`}>
+          <h2 className={`text-lg font-semibold ${text.primary}`}>Filters</h2>
           <button
             onClick={() => setShowMobileFilter(false)}
-            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center active:scale-95 transition-all"
+            className={`w-8 h-8 rounded-full ${bg.muted} hover:bg-muted flex items-center justify-center active:scale-95 transition-all`}
           >
-            <X className="w-4 h-4 text-slate-600" />
+            <X className={`w-4 h-4 ${text.muted}`} />
           </button>
         </div>
 
@@ -298,13 +299,13 @@ export const NotesHeader: React.FC<NotesHeaderProps> = ({
   );
 
   return (
-    <div className={isMobile ? "px-4 py-3 space-y-4 border-b border-border" : "space-y-4"}>
+    <div className={isMobile ? `px-4 py-3 space-y-4 border-b ${border.default}` : "space-y-4"}>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className={isMobile ? "text-xl font-semibold text-gray-900" : "text-2xl font-semibold text-gray-900"}>
+          <h1 className={isMobile ? `text-xl font-semibold ${text.primary}` : `text-2xl font-semibold ${text.primary}`}>
             Notes
           </h1>
-          {!isMobile && <p className="text-sm text-gray-600 mt-1">Create and organize your notes</p>}
+          {!isMobile && <p className={`text-sm ${text.muted} mt-1`}>Create and organize your notes</p>}
         </div>
         
         {!isMobile && (

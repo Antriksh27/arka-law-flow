@@ -11,6 +11,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { CARD_STYLES, getAvatarColor, getInitials } from '@/lib/mobileStyles';
+import { bg, border, text } from '@/lib/colors';
 
 interface DocumentsHeaderProps {
   viewMode: 'grid' | 'list';
@@ -89,12 +90,12 @@ export const DocumentsHeader: React.FC<DocumentsHeaderProps> = ({
 
   return (
     <>
-      <div className={isMobile ? "bg-white border-b border-gray-200 px-4 py-3" : "bg-white border-b border-gray-200 p-6"}>
+      <div className={isMobile ? `bg-white border-b ${border.default} px-4 py-3` : `bg-white border-b ${border.default} p-6`}>
         {!isMobile && (
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-2xl font-semibold text-gray-900">Documents</h1>
-              <p className="text-gray-600 mt-1">Manage and organize your legal documents</p>
+              <h1 className={`text-2xl font-semibold ${text.primary}`}>Documents</h1>
+              <p className={`${text.muted} mt-1`}>Manage and organize your legal documents</p>
             </div>
             
             <div className="flex items-center gap-2">
@@ -241,15 +242,15 @@ export const DocumentsHeader: React.FC<DocumentsHeaderProps> = ({
       {/* Mobile Filter Sheet */}
       {isMobile && (
         <Sheet open={showMobileFilters} onOpenChange={setShowMobileFilters}>
-          <SheetContent hideCloseButton side="bottom" className="h-[85vh] rounded-t-3xl bg-slate-50 p-0 border-0">
+          <SheetContent hideCloseButton side="bottom" className={`h-[85vh] rounded-t-3xl ${bg.page} p-0 border-0`}>
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-4 bg-white border-b border-slate-100">
-              <h2 className="text-lg font-semibold text-slate-900">Filters</h2>
+            <div className={`flex items-center justify-between px-4 py-4 ${bg.card} border-b ${border.light}`}>
+              <h2 className={`text-lg font-semibold ${text.primary}`}>Filters</h2>
               <button
                 onClick={() => setShowMobileFilters(false)}
-                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center active:scale-95 transition-all"
+                className={`w-8 h-8 rounded-full ${bg.muted} hover:bg-muted flex items-center justify-center active:scale-95 transition-all`}
               >
-                <X className="w-4 h-4 text-slate-600" />
+                <X className={`w-4 h-4 ${text.muted}`} />
               </button>
             </div>
 

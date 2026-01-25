@@ -13,6 +13,7 @@ import { EditContactDialog } from './EditContactDialog';
 import { ConvertToClientDialog } from './ConvertToClientDialog';
 import { DeleteContactDialog } from './DeleteContactDialog';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { border, text } from '@/lib/colors';
 
 interface ContactOverviewProps {
   contactId: string;
@@ -204,8 +205,8 @@ export const ContactOverview: React.FC<ContactOverviewProps> = ({ contactId, con
               <StickyNote className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-2xl font-semibold text-gray-900">{stats?.notes || 0}</p>
-              <p className="text-xs text-gray-500">Notes</p>
+              <p className={`text-2xl font-semibold ${text.primary}`}>{stats?.notes || 0}</p>
+              <p className={`text-xs ${text.light}`}>Notes</p>
             </div>
           </CardContent>
         </Card>
@@ -215,8 +216,8 @@ export const ContactOverview: React.FC<ContactOverviewProps> = ({ contactId, con
               <CheckSquare className="w-5 h-5 text-green-600" />
             </div>
             <div>
-              <p className="text-2xl font-semibold text-gray-900">{stats?.tasks || 0}</p>
-              <p className="text-xs text-gray-500">Tasks</p>
+              <p className={`text-2xl font-semibold ${text.primary}`}>{stats?.tasks || 0}</p>
+              <p className={`text-xs ${text.light}`}>Tasks</p>
             </div>
           </CardContent>
         </Card>
@@ -226,8 +227,8 @@ export const ContactOverview: React.FC<ContactOverviewProps> = ({ contactId, con
               <FileText className="w-5 h-5 text-purple-600" />
             </div>
             <div>
-              <p className="text-2xl font-semibold text-gray-900">{stats?.documents || 0}</p>
-              <p className="text-xs text-gray-500">Documents</p>
+              <p className={`text-2xl font-semibold ${text.primary}`}>{stats?.documents || 0}</p>
+              <p className={`text-xs ${text.light}`}>Documents</p>
             </div>
           </CardContent>
         </Card>
@@ -261,9 +262,9 @@ export const ContactOverview: React.FC<ContactOverviewProps> = ({ contactId, con
           </div>
 
           {contact.notes && (
-            <div className="pt-4 border-t border-gray-100">
-              <p className="text-xs text-gray-500 mb-2">Notes</p>
-              <p className="text-sm text-gray-700 whitespace-pre-wrap">{contact.notes}</p>
+            <div className={`pt-4 border-t ${border.light}`}>
+              <p className={`text-xs ${text.light} mb-2`}>Notes</p>
+              <p className={`text-sm ${text.muted} whitespace-pre-wrap`}>{contact.notes}</p>
             </div>
           )}
         </CardContent>

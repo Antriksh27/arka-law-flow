@@ -18,6 +18,7 @@ import { ClientSelector } from '@/components/appointments/ClientSelector';
 import { CaseSelector } from '@/components/appointments/CaseSelector';
 import { Badge } from '../ui/badge';
 import { MobileDialogHeader } from '@/components/ui/mobile-dialog-header';
+import { bg, border } from '@/lib/colors';
 
 interface Client {
   id: string;
@@ -339,7 +340,7 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
   };
 
   return (
-    <div className="flex flex-col h-full bg-slate-50">
+    <div className={`flex flex-col h-full ${bg.page}`}>
       <MobileDialogHeader
         title="New Appointment"
         subtitle="Schedule a meeting with your client"
@@ -351,8 +352,8 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
         <form onSubmit={handleSubmit} className="space-y-4">
           
           {/* Primary Assignee Card */}
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="p-4 border-b border-slate-100">
+          <div className={`${bg.card} rounded-2xl shadow-sm overflow-hidden`}>
+            <div className={`p-4 border-b ${border.light}`}>
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
                   <svg className="w-5 h-5 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -367,10 +368,10 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
                 </div>
               </div>
               <Select value={formData.lawyer_id} onValueChange={value => handleInputChange('lawyer_id', value)} required>
-                <SelectTrigger className="bg-slate-50 border-slate-200 text-foreground h-11 rounded-xl">
+                <SelectTrigger className={`${bg.input} ${border.default} text-foreground h-11 rounded-xl`}>
                   <SelectValue placeholder="Select team member" />
                 </SelectTrigger>
-                <SelectContent className="bg-white border-slate-200 rounded-xl">
+                <SelectContent className={`${bg.card} ${border.default} rounded-xl`}>
                   {users.map(user => (
                     <SelectItem key={user.id} value={user.id} className="text-foreground">
                       {user.full_name} <span className="text-muted-foreground">({user.role})</span>
