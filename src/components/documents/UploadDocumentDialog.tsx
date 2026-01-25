@@ -16,23 +16,14 @@ import { uploadResumableToSupabaseStorage } from '@/lib/supabaseResumableUpload'
 import { ClientSelector } from '@/components/appointments/ClientSelector';
 import { StoragePathPreview } from './StoragePathPreview';
 import { UploadProgress, UploadProgressState } from './UploadProgress';
-import { 
-  DOCUMENT_TYPE_HIERARCHY, 
-  PRIMARY_DOCUMENT_TYPES, 
-  getSubTypes,
-  generateStoragePath,
-  sanitizeFolderName,
-  DOCUMENT_TYPE_ICONS 
-} from '@/lib/documentTypes';
+import { DOCUMENT_TYPE_HIERARCHY, PRIMARY_DOCUMENT_TYPES, getSubTypes, generateStoragePath, sanitizeFolderName, DOCUMENT_TYPE_ICONS } from '@/lib/documentTypes';
 import { useIsMobile } from '@/hooks/use-mobile';
-
 interface UploadDocumentDialogProps {
   open: boolean;
   onClose: () => void;
   caseId?: string;
   onUploadSuccess?: () => void;
 }
-
 interface UploadFormData {
   files: FileList;
   client_id?: string;
@@ -45,43 +36,45 @@ interface UploadFormData {
   original_copy_retained: boolean;
   certified_copy: boolean;
 }
-
 export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
   open,
   onClose,
   caseId,
   onUploadSuccess
 }) => {
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [showSuccessOptions, setShowSuccessOptions] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<UploadProgressState[]>([]);
   const abortControllersRef = useRef<Map<string, AbortController>>(new Map());
-  
-  const { data: caseDetails } = useQuery({
+  const {
+    data: caseDetails
+  } = useQuery({
     queryKey: ['case-details', caseId],
     queryFn: async () => {
       if (!caseId) return null;
-      const { data, error } = await supabase
-        .from('cases')
-        .select('id, case_title, case_number, client_id, clients!inner(id, full_name)')
-        .eq('id', caseId)
-        .single();
+      const {
+        data,
+        error
+      } = await supabase.from('cases').select('id, case_title, case_number, client_id, clients!inner(id, full_name)').eq('id', caseId).single();
       if (error) throw error;
       return data;
     },
     enabled: !!caseId
   });
-
   const {
     register,
     handleSubmit,
     setValue,
     watch,
     reset,
-    formState: { isSubmitting }
+    formState: {
+      isSubmitting
+    }
   } = useForm<UploadFormData>({
     defaultValues: {
       client_id: caseDetails?.client_id || '',
@@ -95,7 +88,6 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
       certified_copy: false
     }
   });
-
   React.useEffect(() => {
     if (caseDetails) {
       setValue('case_id', caseDetails.id);
@@ -104,256 +96,174 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
       }
     }
   }, [caseDetails, setValue]);
-  
   const selectedClientId = watch('client_id');
   const selectedCaseId = watch('case_id');
   const selectedPrimaryType = watch('primary_document_type');
   const selectedSubType = watch('sub_document_type');
-
-  const { data: clients = [] } = useQuery({
+  const {
+    data: clients = []
+  } = useQuery({
     queryKey: ['clients-for-upload'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('clients')
-        .select('id, full_name')
-        .order('full_name');
+      const {
+        data,
+        error
+      } = await supabase.from('clients').select('id, full_name').order('full_name');
       if (error) throw error;
       return data || [];
     }
   });
-
-  const { data: cases = [] } = useQuery({
+  const {
+    data: cases = []
+  } = useQuery({
     queryKey: ['cases-for-upload'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('cases')
-        .select('id, case_title, case_number, client_id')
-        .eq('status', 'pending')
-        .order('case_title');
+      const {
+        data,
+        error
+      } = await supabase.from('cases').select('id, case_title, case_number, client_id').eq('status', 'pending').order('case_title');
       if (error) throw error;
       return data || [];
     }
   });
-
   const selectedClient = clients.find(c => c.id === selectedClientId);
   const selectedCase = cases.find(c => c.id === selectedCaseId);
-
   const uploadMutation = useMutation({
     mutationFn: async (data: UploadFormData) => {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        },
+        error: userError
+      } = await supabase.auth.getUser();
       if (userError || !user) throw new Error('Not authenticated');
-
-      const { data: teamMember, error: firmError } = await supabase
-        .from('team_members')
-        .select('firm_id')
-        .eq('user_id', user.id)
-        .limit(1)
-        .maybeSingle();
-
+      const {
+        data: teamMember,
+        error: firmError
+      } = await supabase.from('team_members').select('firm_id').eq('user_id', user.id).limit(1).maybeSingle();
       if (firmError) throw firmError;
       if (!teamMember || !teamMember.firm_id) {
         throw new Error('Could not determine your firm.');
       }
       const firmId = teamMember.firm_id;
-      
-        // Max size for JSON(base64) WebDAV upload via edge function
-        // Edge functions have ~6MB body limit, so we use 5MB as safe threshold
-        const MAX_WEBDAV_JSON_SIZE = 5 * 1024 * 1024;
-        // For larger files, we use Supabase Storage TUS (resumable uploads)
-        // which bypasses edge function limits entirely
-        const MAX_UPLOAD_SIZE = 200 * 1024 * 1024; // 200MB limit
-        
-        const uploadPromises = selectedFiles.map(async file => {
-          const clientName = selectedClient?.full_name || 'General';
-          const caseTitle = selectedCase?.case_title || 'General Documents';
-          const caseNumber = selectedCase?.case_number || null;
-          const primaryType = data.primary_document_type || 'Miscellaneous';
-          const subType = data.sub_document_type || 'Other Documents';
-          
-          const storagePath = generateStoragePath({
-            clientName,
-            clientId: selectedClientId || 'general',
-            caseTitle,
-            caseNumber,
-            primaryType,
-            subType,
-            fileName: file.name
-          });
-          
-          // Sanitize names for WebDAV compatibility
-          const sanitizedClientName = sanitizeFolderName(clientName);
-          const sanitizedCaseName = caseNumber 
-            ? `${sanitizeFolderName(caseTitle)}_${sanitizeFolderName(caseNumber)}`
-            : sanitizeFolderName(caseTitle);
-          const sanitizedCategory = sanitizeFolderName(primaryType);
-          const sanitizedDocType = sanitizeFolderName(subType);
-          
-          let webdavOk = false;
-          let webdavPath: string | undefined = undefined;
-          let webdavErrorMessage: string | undefined = undefined;
-          
-          // Check file size limit
-          if (file.size > MAX_UPLOAD_SIZE) {
-            throw new Error(`File too large (${(file.size / 1024 / 1024).toFixed(1)}MB > 200MB limit)`);
+
+      // Max size for JSON(base64) WebDAV upload via edge function
+      // Edge functions have ~6MB body limit, so we use 5MB as safe threshold
+      const MAX_WEBDAV_JSON_SIZE = 5 * 1024 * 1024;
+      // For larger files, we use Supabase Storage TUS (resumable uploads)
+      // which bypasses edge function limits entirely
+      const MAX_UPLOAD_SIZE = 200 * 1024 * 1024; // 200MB limit
+
+      const uploadPromises = selectedFiles.map(async file => {
+        const clientName = selectedClient?.full_name || 'General';
+        const caseTitle = selectedCase?.case_title || 'General Documents';
+        const caseNumber = selectedCase?.case_number || null;
+        const primaryType = data.primary_document_type || 'Miscellaneous';
+        const subType = data.sub_document_type || 'Other Documents';
+        const storagePath = generateStoragePath({
+          clientName,
+          clientId: selectedClientId || 'general',
+          caseTitle,
+          caseNumber,
+          primaryType,
+          subType,
+          fileName: file.name
+        });
+
+        // Sanitize names for WebDAV compatibility
+        const sanitizedClientName = sanitizeFolderName(clientName);
+        const sanitizedCaseName = caseNumber ? `${sanitizeFolderName(caseTitle)}_${sanitizeFolderName(caseNumber)}` : sanitizeFolderName(caseTitle);
+        const sanitizedCategory = sanitizeFolderName(primaryType);
+        const sanitizedDocType = sanitizeFolderName(subType);
+        let webdavOk = false;
+        let webdavPath: string | undefined = undefined;
+        let webdavErrorMessage: string | undefined = undefined;
+
+        // Check file size limit
+        if (file.size > MAX_UPLOAD_SIZE) {
+          throw new Error(`File too large (${(file.size / 1024 / 1024).toFixed(1)}MB > 200MB limit)`);
+        }
+
+        // For smaller files (< 5MB), use JSON + base64 via edge function
+        if (file.size <= MAX_WEBDAV_JSON_SIZE) {
+          let fileContent: string;
+          if (file.type.startsWith('text/') || file.name.endsWith('.txt')) {
+            fileContent = await file.text();
+          } else {
+            fileContent = await new Promise((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => {
+                const result = reader.result as string;
+                const base64 = result.split(',')[1] || result;
+                resolve(base64);
+              };
+              reader.onerror = reject;
+              reader.readAsDataURL(file);
+            });
           }
-          
-          // For smaller files (< 5MB), use JSON + base64 via edge function
-          if (file.size <= MAX_WEBDAV_JSON_SIZE) {
-            let fileContent: string;
-            if (file.type.startsWith('text/') || file.name.endsWith('.txt')) {
-              fileContent = await file.text();
-            } else {
-              fileContent = await new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => {
-                  const result = reader.result as string;
-                  const base64 = result.split(',')[1] || result;
-                  resolve(base64);
-                };
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-              });
+          const {
+            data: pydioResult,
+            error: pydioError
+          } = await supabase.functions.invoke('pydio-webdav', {
+            body: {
+              clientName: sanitizedClientName,
+              caseName: sanitizedCaseName,
+              category: sanitizedCategory,
+              docType: sanitizedDocType,
+              fileName: file.name,
+              fileContent: fileContent
             }
-            
-            const { data: pydioResult, error: pydioError } = await supabase.functions.invoke('pydio-webdav', {
-              body: {
-                clientName: sanitizedClientName,
-                caseName: sanitizedCaseName,
-                category: sanitizedCategory,
-                docType: sanitizedDocType,
-                fileName: file.name,
-                fileContent: fileContent
+          });
+          webdavOk = !!pydioResult?.success && !pydioError;
+          webdavPath = pydioResult?.path;
+          if (!webdavOk) {
+            webdavErrorMessage = pydioError?.message || pydioResult?.error || 'Unknown WebDAV error';
+          }
+        } else {
+          // Large files (>5MB): Use Supabase Storage TUS upload with progress
+          // This bypasses edge function body limits entirely
+          console.log(`📤 Starting TUS upload for large file: ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
+
+          // Set up progress tracking
+          setUploadProgress(prev => [...prev.filter(p => p.fileName !== file.name), {
+            fileName: file.name,
+            progress: 0,
+            status: 'uploading'
+          }]);
+          const uniqueStoragePath = `uploads/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${file.name}`;
+          try {
+            await uploadResumableToSupabaseStorage({
+              bucket: 'documents',
+              objectPath: uniqueStoragePath,
+              file,
+              upsert: false,
+              onProgress: percent => {
+                setUploadProgress(prev => prev.map(p => p.fileName === file.name ? {
+                  ...p,
+                  progress: percent
+                } : p));
               }
             });
-            
-            webdavOk = !!pydioResult?.success && !pydioError;
-            webdavPath = pydioResult?.path;
-            if (!webdavOk) {
-              webdavErrorMessage = pydioError?.message || pydioResult?.error || 'Unknown WebDAV error';
-            }
-          } else {
-            // Large files (>5MB): Use Supabase Storage TUS upload with progress
-            // This bypasses edge function body limits entirely
-            console.log(`📤 Starting TUS upload for large file: ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
-            
-            // Set up progress tracking
-            setUploadProgress(prev => [
-              ...prev.filter(p => p.fileName !== file.name),
-              { fileName: file.name, progress: 0, status: 'uploading' }
-            ]);
-            
-            const uniqueStoragePath = `uploads/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${file.name}`;
-            
-            try {
-              await uploadResumableToSupabaseStorage({
-                bucket: 'documents',
-                objectPath: uniqueStoragePath,
-                file,
-                upsert: false,
-                onProgress: (percent) => {
-                  setUploadProgress(prev => 
-                    prev.map(p => p.fileName === file.name ? { ...p, progress: percent } : p)
-                  );
-                },
-              });
-              
-              setUploadProgress(prev => 
-                prev.map(p => p.fileName === file.name ? { ...p, progress: 100, status: 'completed' } : p)
-              );
-              
-              // Large file uploaded to Supabase Storage successfully
-              // WebDAV sync will be attempted separately (background job or manual trigger)
-              webdavPath = storagePath;
-              webdavErrorMessage = 'Pending WebDAV sync (file stored in Supabase)';
-              
-              // Insert document record with webdav_synced = false
-              const { error: insertError } = await supabase.from('documents').insert({
-                file_name: file.name,
-                file_url: uniqueStoragePath,
-                file_type: file.name.split('.').pop()?.toLowerCase() || null,
-                file_size: file.size,
-                case_id: (data.case_id && data.case_id !== 'no-case') ? data.case_id : null,
-                client_id: data.client_id || null,
-                uploaded_by: user.id,
-                is_evidence: data.is_evidence,
-                uploaded_at: new Date().toISOString(),
-                firm_id: firmId,
-                folder_name: primaryType,
-                primary_document_type: primaryType,
-                sub_document_type: subType,
-                document_type_id: null,
-                notes: data.notes || null,
-                confidential: data.confidential || false,
-                original_copy_retained: data.original_copy_retained || false,
-                certified_copy: data.certified_copy || false,
-                webdav_synced: false,
-                webdav_path: storagePath,
-                webdav_error: 'Pending sync - large file uploaded to Supabase Storage',
-                sync_attempted_at: new Date().toISOString(),
-              });
-              
-              if (insertError) {
-                console.error('❌ Failed to insert document record:', insertError);
-                throw new Error(`Failed to save document record: ${insertError.message}`);
-              }
-              
-              console.log(`✅ Large file uploaded and document record created: ${file.name}`);
-              return; // Skip the rest of the upload logic for this file
-              
-            } catch (tusError: any) {
-              console.error('❌ TUS upload error:', tusError);
-              setUploadProgress(prev => 
-                prev.map(p => p.fileName === file.name ? { ...p, status: 'error', error: tusError?.message } : p)
-              );
-              throw new Error(`Upload failed: ${tusError?.message || String(tusError)}`);
-            }
-          }
-          
-          // If WebDAV failed for small files, fall back to Supabase Storage
-          if (!webdavOk) {
-            console.warn('⚠️ WebDAV upload failed, falling back to Supabase Storage:', webdavErrorMessage);
-            
-            const storagePathFallback = `uploads/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${file.name}`;
-            const useResumable = file.size > 45 * 1024 * 1024; // avoid /object endpoint limits
+            setUploadProgress(prev => prev.map(p => p.fileName === file.name ? {
+              ...p,
+              progress: 100,
+              status: 'completed'
+            } : p));
 
-            let storageError: { message?: string } | null = null;
+            // Large file uploaded to Supabase Storage successfully
+            // WebDAV sync will be attempted separately (background job or manual trigger)
+            webdavPath = storagePath;
+            webdavErrorMessage = 'Pending WebDAV sync (file stored in Supabase)';
 
-            if (useResumable) {
-              try {
-                await uploadResumableToSupabaseStorage({
-                  bucket: 'documents',
-                  objectPath: storagePathFallback,
-                  file,
-                  upsert: false,
-                });
-              } catch (e: any) {
-                storageError = { message: e?.message || String(e) };
-              }
-            } else {
-              const { error } = await supabase.storage
-                .from('documents')
-                .upload(storagePathFallback, file);
-              storageError = error ? { message: error.message } : null;
-            }
-
-            if (storageError) {
-              const msg = storageError.message || 'Storage upload failed';
-              console.error('❌ Storage upload failed:', msg);
-              const looksLikeTooLarge = /payload too large|maximum allowed size|exceeded the maximum/i.test(msg);
-              if (looksLikeTooLarge) {
-                throw new Error(
-                  `Upload failed: Both WebDAV and Supabase Storage rejected the file. WebDAV error: ${webdavErrorMessage}`
-                );
-              }
-              throw new Error(`Upload failed: ${msg}`);
-            }
-
-            const fallbackDocumentData = {
+            // Insert document record with webdav_synced = false
+            const {
+              error: insertError
+            } = await supabase.from('documents').insert({
               file_name: file.name,
-              file_url: storagePathFallback,
+              file_url: uniqueStoragePath,
               file_type: file.name.split('.').pop()?.toLowerCase() || null,
               file_size: file.size,
-              case_id: (data.case_id && data.case_id !== 'no-case') ? data.case_id : null,
+              case_id: data.case_id && data.case_id !== 'no-case' ? data.case_id : null,
               client_id: data.client_id || null,
               uploaded_by: user.id,
               is_evidence: data.is_evidence,
@@ -369,19 +279,96 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
               certified_copy: data.certified_copy || false,
               webdav_synced: false,
               webdav_path: storagePath,
-              webdav_error: webdavErrorMessage,
-              sync_attempted_at: new Date().toISOString(),
-            };
-
-            const { data: insertData, error: insertError } = await supabase
-              .from('documents')
-              .insert(fallbackDocumentData)
-              .select('id, file_name, file_url')
-              .single();
-
-            if (insertError) throw insertError;
-            return insertData;
+              webdav_error: 'Pending sync - large file uploaded to Supabase Storage',
+              sync_attempted_at: new Date().toISOString()
+            });
+            if (insertError) {
+              console.error('❌ Failed to insert document record:', insertError);
+              throw new Error(`Failed to save document record: ${insertError.message}`);
+            }
+            console.log(`✅ Large file uploaded and document record created: ${file.name}`);
+            return; // Skip the rest of the upload logic for this file
+          } catch (tusError: any) {
+            console.error('❌ TUS upload error:', tusError);
+            setUploadProgress(prev => prev.map(p => p.fileName === file.name ? {
+              ...p,
+              status: 'error',
+              error: tusError?.message
+            } : p));
+            throw new Error(`Upload failed: ${tusError?.message || String(tusError)}`);
           }
+        }
+
+        // If WebDAV failed for small files, fall back to Supabase Storage
+        if (!webdavOk) {
+          console.warn('⚠️ WebDAV upload failed, falling back to Supabase Storage:', webdavErrorMessage);
+          const storagePathFallback = `uploads/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${file.name}`;
+          const useResumable = file.size > 45 * 1024 * 1024; // avoid /object endpoint limits
+
+          let storageError: {
+            message?: string;
+          } | null = null;
+          if (useResumable) {
+            try {
+              await uploadResumableToSupabaseStorage({
+                bucket: 'documents',
+                objectPath: storagePathFallback,
+                file,
+                upsert: false
+              });
+            } catch (e: any) {
+              storageError = {
+                message: e?.message || String(e)
+              };
+            }
+          } else {
+            const {
+              error
+            } = await supabase.storage.from('documents').upload(storagePathFallback, file);
+            storageError = error ? {
+              message: error.message
+            } : null;
+          }
+          if (storageError) {
+            const msg = storageError.message || 'Storage upload failed';
+            console.error('❌ Storage upload failed:', msg);
+            const looksLikeTooLarge = /payload too large|maximum allowed size|exceeded the maximum/i.test(msg);
+            if (looksLikeTooLarge) {
+              throw new Error(`Upload failed: Both WebDAV and Supabase Storage rejected the file. WebDAV error: ${webdavErrorMessage}`);
+            }
+            throw new Error(`Upload failed: ${msg}`);
+          }
+          const fallbackDocumentData = {
+            file_name: file.name,
+            file_url: storagePathFallback,
+            file_type: file.name.split('.').pop()?.toLowerCase() || null,
+            file_size: file.size,
+            case_id: data.case_id && data.case_id !== 'no-case' ? data.case_id : null,
+            client_id: data.client_id || null,
+            uploaded_by: user.id,
+            is_evidence: data.is_evidence,
+            uploaded_at: new Date().toISOString(),
+            firm_id: firmId,
+            folder_name: primaryType,
+            primary_document_type: primaryType,
+            sub_document_type: subType,
+            document_type_id: null,
+            notes: data.notes || null,
+            confidential: data.confidential || false,
+            original_copy_retained: data.original_copy_retained || false,
+            certified_copy: data.certified_copy || false,
+            webdav_synced: false,
+            webdav_path: storagePath,
+            webdav_error: webdavErrorMessage,
+            sync_attempted_at: new Date().toISOString()
+          };
+          const {
+            data: insertData,
+            error: insertError
+          } = await supabase.from('documents').insert(fallbackDocumentData).select('id, file_name, file_url').single();
+          if (insertError) throw insertError;
+          return insertData;
+        }
 
         // WebDAV succeeded
         const documentData = {
@@ -389,7 +376,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
           file_url: webdavPath || storagePath,
           file_type: file.name.split('.').pop()?.toLowerCase() || null,
           file_size: file.size,
-          case_id: (data.case_id && data.case_id !== 'no-case') ? data.case_id : null,
+          case_id: data.case_id && data.case_id !== 'no-case' ? data.case_id : null,
           client_id: data.client_id || null,
           uploaded_by: user.id,
           is_evidence: data.is_evidence,
@@ -407,30 +394,32 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
           webdav_path: storagePath,
           synced_at: new Date().toISOString()
         };
-
-        const { data: insertData, error: insertError } = await supabase
-          .from('documents')
-          .insert(documentData)
-          .select('id, file_name, file_url')
-          .single();
-        
+        const {
+          data: insertData,
+          error: insertError
+        } = await supabase.from('documents').insert(documentData).select('id, file_name, file_url').single();
         if (insertError) throw insertError;
         return insertData;
       });
-      
       return await Promise.all(uploadPromises);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['documents'] });
-      queryClient.invalidateQueries({ queryKey: ['document-folders'] });
-      queryClient.invalidateQueries({ queryKey: ['document-folder-structure'] });
-      queryClient.invalidateQueries({ queryKey: ['case-documents'] });
-      
+      queryClient.invalidateQueries({
+        queryKey: ['documents']
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['document-folders']
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['document-folder-structure']
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['case-documents']
+      });
       toast({
         title: "Documents uploaded successfully",
         description: `${selectedFiles.length} document(s) uploaded`
       });
-      
       if (onUploadSuccess) onUploadSuccess();
       setSelectedFiles([]);
       // Clear progress after a delay so user can see completion
@@ -445,33 +434,29 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
       });
     }
   });
-
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
     setSelectedFiles(files);
   };
-
   const removeFile = (index: number) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
-
   const handleCancelUpload = (fileName: string) => {
     const controller = abortControllersRef.current.get(fileName);
     if (controller) {
       controller.abort();
       abortControllersRef.current.delete(fileName);
     }
-    setUploadProgress(prev => 
-      prev.map(p => p.fileName === fileName ? { ...p, status: 'cancelled' } : p)
-    );
+    setUploadProgress(prev => prev.map(p => p.fileName === fileName ? {
+      ...p,
+      status: 'cancelled'
+    } : p));
   };
-
   const handleAddMoreFiles = () => {
     setShowSuccessOptions(false);
     const currentClientId = watch('client_id');
     const currentCaseId = watch('case_id');
     const currentPrimaryType = watch('primary_document_type');
-    
     reset({
       client_id: currentClientId,
       case_id: currentCaseId,
@@ -484,51 +469,54 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
       certified_copy: false
     });
   };
-
   const handleFinishUploading = () => {
     reset();
     setShowSuccessOptions(false);
     onClose();
   };
-
   const onSubmit = (data: UploadFormData) => {
     if (selectedFiles.length === 0) {
-      toast({ title: "No files selected", description: "Please select at least one file", variant: "destructive" });
+      toast({
+        title: "No files selected",
+        description: "Please select at least one file",
+        variant: "destructive"
+      });
       return;
     }
-
     if (!caseId && !data.client_id) {
-      toast({ title: "Client required", description: "Please select a client", variant: "destructive" });
+      toast({
+        title: "Client required",
+        description: "Please select a client",
+        variant: "destructive"
+      });
       return;
     }
-
     if (!data.primary_document_type) {
-      toast({ title: "Document type required", description: "Please select a document type", variant: "destructive" });
+      toast({
+        title: "Document type required",
+        description: "Please select a document type",
+        variant: "destructive"
+      });
       return;
     }
-
     if (!data.sub_document_type) {
-      toast({ title: "Sub-type required", description: "Please select a sub-type", variant: "destructive" });
+      toast({
+        title: "Sub-type required",
+        description: "Please select a sub-type",
+        variant: "destructive"
+      });
       return;
     }
-
     uploadMutation.mutate(data);
   };
-
   const formatFileSize = (bytes: number) => {
     const kb = bytes / 1024;
     if (kb < 1024) return `${kb.toFixed(1)} KB`;
     return `${(kb / 1024).toFixed(1)} MB`;
   };
-
   const availableSubTypes = selectedPrimaryType ? getSubTypes(selectedPrimaryType) : [];
-
-  return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent 
-        className={`${isMobile ? 'h-[100dvh] max-h-[100dvh] w-full max-w-full rounded-none m-0' : 'sm:max-w-2xl max-h-[90vh]'} p-0 gap-0 flex flex-col overflow-hidden`}
-        aria-describedby={undefined}
-      >
+  return <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className={`${isMobile ? 'h-[100dvh] max-h-[100dvh] w-full max-w-full rounded-none m-0' : 'sm:max-w-2xl max-h-[90vh]'} p-0 gap-0 flex flex-col overflow-hidden`} aria-describedby={undefined}>
         <VisuallyHidden>
           <DialogTitle>Upload Documents</DialogTitle>
         </VisuallyHidden>
@@ -540,17 +528,14 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                 <h2 className="text-xl font-semibold text-foreground">Upload Documents</h2>
                 <p className="text-sm text-muted-foreground mt-1">Add files to your document library</p>
               </div>
-              <button 
-                onClick={onClose}
-                className="md:hidden w-8 h-8 rounded-full bg-muted flex items-center justify-center"
-              >
+              <button onClick={onClose} className="md:hidden w-8 h-8 rounded-full bg-muted flex items-center justify-center">
                 <X className="w-4 h-4 text-muted-foreground" />
               </button>
             </div>
           </div>
 
           {/* Scrollable Content */}
-          <div className="flex-1 min-h-0 overflow-y-auto px-6 py-6">
+          <div className="flex-1 min-h-0 overflow-y-auto px-6 py-6 bg-slate-50">
             <form id="upload-document-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               {/* File Upload Card */}
               <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
@@ -567,14 +552,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                   </div>
 
                   <div className="border-2 border-dashed border-input rounded-xl p-6 text-center hover:border-sky-300 transition-colors bg-slate-50">
-                    <input 
-                      type="file" 
-                      multiple 
-                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.txt" 
-                      onChange={handleFileSelect} 
-                      className="hidden" 
-                      id="file-upload" 
-                    />
+                    <input type="file" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.txt" onChange={handleFileSelect} className="hidden" id="file-upload" />
                     <label htmlFor="file-upload" className="cursor-pointer">
                       <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
                       <p className="text-sm text-foreground">Click to select files or drag and drop</p>
@@ -582,10 +560,8 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                     </label>
                   </div>
 
-                  {selectedFiles.length > 0 && (
-                    <div className="mt-4 space-y-2 max-h-32 overflow-y-auto">
-                      {selectedFiles.map((file, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 bg-emerald-50 rounded-xl border border-emerald-200">
+                  {selectedFiles.length > 0 && <div className="mt-4 space-y-2 max-h-32 overflow-y-auto">
+                      {selectedFiles.map((file, index) => <div key={index} className="flex items-center justify-between p-3 bg-emerald-50 rounded-xl border border-emerald-200">
                           <div className="flex items-center gap-3 min-w-0">
                             <FileText className="w-4 h-4 text-emerald-500 flex-shrink-0" />
                             <div className="min-w-0">
@@ -593,35 +569,21 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                               <p className="text-xs text-emerald-600">{formatFileSize(file.size)}</p>
                             </div>
                           </div>
-                          <Button 
-                            type="button" 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => removeFile(index)} 
-                            className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive rounded-full flex-shrink-0"
-                          >
+                          <Button type="button" variant="ghost" size="sm" onClick={() => removeFile(index)} className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive rounded-full flex-shrink-0">
                             <X className="w-4 h-4" />
                           </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                        </div>)}
+                    </div>}
 
                   {/* Upload Progress */}
-                  {uploadProgress.length > 0 && (
-                    <div className="mt-4">
-                      <UploadProgress 
-                        uploads={uploadProgress} 
-                        onCancel={handleCancelUpload}
-                      />
-                    </div>
-                  )}
+                  {uploadProgress.length > 0 && <div className="mt-4">
+                      <UploadProgress uploads={uploadProgress} onCancel={handleCancelUpload} />
+                    </div>}
                 </div>
               </div>
 
               {/* Client & Case Card */}
-              {!caseId && (
-                <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+              {!caseId && <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
                   <div className="p-4 border-b border-border">
                     <div className="flex items-center gap-3 mb-3">
                       <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
@@ -638,45 +600,31 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                     <div>
                       <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Select Client *</Label>
                       <div className="mt-2">
-                        <ClientSelector
-                          value={selectedClientId || ''}
-                          onValueChange={(value) => {
-                            setValue('client_id', value);
-                            setValue('case_id', 'no-case');
-                          }}
-                          placeholder="Search and select client..."
-                          onClientAdded={(clientId) => {
-                            if (clientId) setValue('client_id', clientId);
-                          }}
-                        />
+                        <ClientSelector value={selectedClientId || ''} onValueChange={value => {
+                      setValue('client_id', value);
+                      setValue('case_id', 'no-case');
+                    }} placeholder="Search and select client..." onClientAdded={clientId => {
+                      if (clientId) setValue('client_id', clientId);
+                    }} />
                       </div>
                     </div>
 
                     <div>
                       <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Assign to Case *</Label>
-                      <Select 
-                        onValueChange={value => setValue('case_id', value)} 
-                        value={selectedCaseId}
-                        disabled={!selectedClientId}
-                      >
+                      <Select onValueChange={value => setValue('case_id', value)} value={selectedCaseId} disabled={!selectedClientId}>
                         <SelectTrigger className="bg-background border-input rounded-xl h-11 mt-2">
                           <SelectValue placeholder={selectedClientId ? "Select a case..." : "Select client first"} />
                         </SelectTrigger>
                         <SelectContent className="bg-background border-border rounded-xl">
                           <SelectItem value="no-case">No Case (General Documents)</SelectItem>
-                          {cases
-                            .filter(case_item => !selectedClientId || case_item.client_id === selectedClientId)
-                            .map(case_item => (
-                              <SelectItem key={case_item.id} value={case_item.id}>
+                          {cases.filter(case_item => !selectedClientId || case_item.client_id === selectedClientId).map(case_item => <SelectItem key={case_item.id} value={case_item.id}>
                                 {case_item.case_title} {case_item.case_number && `(${case_item.case_number})`}
-                              </SelectItem>
-                            ))}
+                              </SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
-                </div>
-              )}
+                </div>}
 
               {/* Document Type Card */}
               <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
@@ -695,56 +643,37 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                 <div className="p-4 space-y-4 bg-slate-50">
                   <div>
                     <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Primary Type *</Label>
-                    <Select 
-                      onValueChange={value => {
-                        setValue('primary_document_type', value);
-                        setValue('sub_document_type', '');
-                      }} 
-                      value={selectedPrimaryType}
-                    >
+                    <Select onValueChange={value => {
+                    setValue('primary_document_type', value);
+                    setValue('sub_document_type', '');
+                  }} value={selectedPrimaryType}>
                       <SelectTrigger className="bg-background border-input rounded-xl h-11 mt-2">
                         <SelectValue placeholder="Select document type..." />
                       </SelectTrigger>
                       <SelectContent className="bg-background border-border rounded-xl max-h-[300px]">
-                        {PRIMARY_DOCUMENT_TYPES.map(type => (
-                          <SelectItem key={type} value={type}>
+                        {PRIMARY_DOCUMENT_TYPES.map(type => <SelectItem key={type} value={type}>
                             <span className="flex items-center gap-2">
                               <span>{DOCUMENT_TYPE_ICONS[type] || '📄'}</span>
                               <span>{type}</span>
                             </span>
-                          </SelectItem>
-                        ))}
+                          </SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
 
-                  {selectedPrimaryType && (
-                    <div>
+                  {selectedPrimaryType && <div>
                       <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Sub Type *</Label>
-                      <Select 
-                        onValueChange={value => setValue('sub_document_type', value)} 
-                        value={selectedSubType}
-                      >
+                      <Select onValueChange={value => setValue('sub_document_type', value)} value={selectedSubType}>
                       <SelectTrigger className="bg-background border-input rounded-xl h-11 mt-2">
                         <SelectValue placeholder="Select sub-type..." />
                       </SelectTrigger>
                       <SelectContent className="bg-background border-border rounded-xl">
-                          {availableSubTypes.map(type => (
-                            <SelectItem key={type} value={type}>{type}</SelectItem>
-                          ))}
+                          {availableSubTypes.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}
                         </SelectContent>
                       </Select>
-                    </div>
-                  )}
+                    </div>}
 
-                  <StoragePathPreview
-                    clientName={selectedClient?.full_name}
-                    caseTitle={selectedCase?.case_title}
-                    caseNumber={selectedCase?.case_number}
-                    primaryType={selectedPrimaryType}
-                    subType={selectedSubType}
-                    fileName={selectedFiles.length === 1 ? selectedFiles[0].name : selectedFiles.length > 1 ? `${selectedFiles.length} files` : undefined}
-                  />
+                  <StoragePathPreview clientName={selectedClient?.full_name} caseTitle={selectedCase?.case_title} caseNumber={selectedCase?.case_number} primaryType={selectedPrimaryType} subType={selectedSubType} fileName={selectedFiles.length === 1 ? selectedFiles[0].name : selectedFiles.length > 1 ? `${selectedFiles.length} files` : undefined} />
                 </div>
               </div>
 
@@ -760,12 +689,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                       <p className="text-xs text-muted-foreground">Additional information (optional)</p>
                     </div>
                   </div>
-                  <Textarea
-                    {...register('notes')}
-                    placeholder="Add any additional notes about this document..."
-                    rows={3}
-                    className="bg-slate-50 border-input rounded-xl resize-none"
-                  />
+                  <Textarea {...register('notes')} placeholder="Add any additional notes about this document..." rows={3} className="bg-slate-50 border-input rounded-xl resize-none" />
                 </div>
               </div>
 
@@ -784,21 +708,13 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
 
                   <div className="space-y-1">
                     <div className="flex items-center space-x-3 p-3 rounded-xl hover:bg-muted transition-colors">
-                      <Checkbox
-                        id="is_evidence"
-                        {...register('is_evidence')}
-                        onCheckedChange={(checked) => setValue('is_evidence', !!checked)}
-                      />
+                      <Checkbox id="is_evidence" {...register('is_evidence')} onCheckedChange={checked => setValue('is_evidence', !!checked)} />
                       <Label htmlFor="is_evidence" className="text-sm text-foreground cursor-pointer flex-1">
                         Mark as important/evidence
                       </Label>
                     </div>
                     <div className="flex items-center space-x-3 p-3 rounded-xl hover:bg-muted transition-colors">
-                      <Checkbox
-                        id="confidential"
-                        {...register('confidential')}
-                        onCheckedChange={(checked) => setValue('confidential', !!checked)}
-                      />
+                      <Checkbox id="confidential" {...register('confidential')} onCheckedChange={checked => setValue('confidential', !!checked)} />
                       <Label htmlFor="confidential" className="text-sm text-foreground cursor-pointer flex-1">
                         Confidential document
                       </Label>
@@ -814,21 +730,13 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                       </TooltipProvider>
                     </div>
                     <div className="flex items-center space-x-3 p-3 rounded-xl hover:bg-muted transition-colors">
-                      <Checkbox
-                        id="certified_copy"
-                        {...register('certified_copy')}
-                        onCheckedChange={(checked) => setValue('certified_copy', !!checked)}
-                      />
+                      <Checkbox id="certified_copy" {...register('certified_copy')} onCheckedChange={checked => setValue('certified_copy', !!checked)} />
                       <Label htmlFor="certified_copy" className="text-sm text-foreground cursor-pointer flex-1">
                         Certified copy
                       </Label>
                     </div>
                     <div className="flex items-center space-x-3 p-3 rounded-xl hover:bg-slate-50 transition-colors">
-                      <Checkbox
-                        id="original_copy_retained"
-                        {...register('original_copy_retained')}
-                        onCheckedChange={(checked) => setValue('original_copy_retained', !!checked)}
-                      />
+                      <Checkbox id="original_copy_retained" {...register('original_copy_retained')} onCheckedChange={checked => setValue('original_copy_retained', !!checked)} />
                       <Label htmlFor="original_copy_retained" className="text-sm text-foreground cursor-pointer flex-1">
                         Original copy retained
                       </Label>
@@ -841,65 +749,36 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
 
           {/* Footer Actions */}
           <div className="flex-shrink-0 px-6 py-4 border-t border-slate-100 bg-white">
-            {showSuccessOptions ? (
-              <div className="space-y-3">
+            {showSuccessOptions ? <div className="space-y-3">
                 <div className="flex items-center justify-center gap-2 text-emerald-600 mb-2">
                   <CheckCircle className="w-5 h-5" />
                   <span className="font-medium">Files uploaded successfully!</span>
                 </div>
                 <div className="flex justify-end gap-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleAddMoreFiles}
-                    className="min-w-[120px] rounded-full border-slate-200"
-                  >
+                  <Button type="button" variant="outline" onClick={handleAddMoreFiles} className="min-w-[120px] rounded-full border-slate-200">
                     <Plus className="w-4 h-4 mr-2" />
                     Add More
                   </Button>
-                  <Button
-                    type="button"
-                    onClick={handleFinishUploading}
-                    className="min-w-[100px] bg-slate-800 hover:bg-slate-700 text-white rounded-full shadow-lg"
-                  >
+                  <Button type="button" onClick={handleFinishUploading} className="min-w-[100px] bg-slate-800 hover:bg-slate-700 text-white rounded-full shadow-lg">
                     Done
                   </Button>
                 </div>
-              </div>
-            ) : (
-              <div className="flex justify-end gap-3">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={onClose}
-                  disabled={uploadMutation.isPending}
-                  className="min-w-[100px] rounded-full border-slate-200"
-                >
+              </div> : <div className="flex justify-end gap-3">
+                <Button type="button" variant="outline" onClick={onClose} disabled={uploadMutation.isPending} className="min-w-[100px] rounded-full border-slate-200">
                   Cancel
                 </Button>
-                <Button 
-                  type="submit"
-                  form="upload-document-form"
-                  disabled={selectedFiles.length === 0 || uploadMutation.isPending}
-                  className="min-w-[140px] bg-slate-800 hover:bg-slate-700 text-white rounded-full shadow-lg"
-                >
-                  {uploadMutation.isPending ? (
-                    <>
+                <Button type="submit" form="upload-document-form" disabled={selectedFiles.length === 0 || uploadMutation.isPending} className="min-w-[140px] bg-slate-800 hover:bg-slate-700 text-white rounded-full shadow-lg">
+                  {uploadMutation.isPending ? <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       Uploading...
-                    </>
-                  ) : (
-                    <>
+                    </> : <>
                       <Upload className="w-4 h-4 mr-2" />
                       Upload {selectedFiles.length > 0 ? `(${selectedFiles.length})` : ''}
-                    </>
-                  )}
+                    </>}
                 </Button>
-              </div>
-            )}
+              </div>}
           </div>
         </div>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 };
