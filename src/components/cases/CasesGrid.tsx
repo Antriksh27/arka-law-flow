@@ -96,9 +96,10 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
       }
 
       // Apply search filter - comprehensive search across all case identifiers
+      // Note: client_name is not a column in cases table, search through petitioner/respondent instead
       if (searchQuery) {
         const searchTerm = searchQuery.trim();
-        query = query.or(`case_title.ilike.%${searchTerm}%,client_name.ilike.%${searchTerm}%,petitioner.ilike.%${searchTerm}%,respondent.ilike.%${searchTerm}%,vs.ilike.%${searchTerm}%,case_number.ilike.%${searchTerm}%,cnr_number.ilike.%${searchTerm}%,filing_number.ilike.%${searchTerm}%,registration_number.ilike.%${searchTerm}%,reference_number.ilike.%${searchTerm}%`);
+        query = query.or(`case_title.ilike.%${searchTerm}%,petitioner.ilike.%${searchTerm}%,respondent.ilike.%${searchTerm}%,case_number.ilike.%${searchTerm}%,cnr_number.ilike.%${searchTerm}%,filing_number.ilike.%${searchTerm}%,registration_number.ilike.%${searchTerm}%,reference_number.ilike.%${searchTerm}%`);
       }
 
       // Apply status filter at DB level
