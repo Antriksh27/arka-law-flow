@@ -525,7 +525,7 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
           return <button key={time} onClick={() => {
             handleInputChange('appointment_time', time);
             goBack();
-          }} className={cn("py-4 rounded-xl text-sm font-semibold transition-all active:scale-95 bg-slate-100", isSelected ? "bg-violet-100 text-violet-600 ring-2 ring-violet-200" : "bg-muted/50 text-foreground")}>
+          }} className={cn("py-4 rounded-xl text-sm font-semibold transition-all active:scale-95 bg-slate-200 hover:bg-slate-100", isSelected ? "bg-violet-100 text-violet-600 ring-2 ring-violet-200" : "bg-muted/50 text-foreground")}>
                 {format(new Date(`2000-01-01T${time}`), 'h:mm a')}
               </button>;
         })}
