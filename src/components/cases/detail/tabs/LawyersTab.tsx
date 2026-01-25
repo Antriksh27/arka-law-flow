@@ -383,14 +383,6 @@ export const LawyersTab: React.FC<LawyersTabProps> = ({ caseId }) => {
                           onClick={() => handleToggleLawyer(lawyer.user_id)}
                         >
                           <div className="flex items-center gap-3 min-w-0">
-                            {/* keep checkbox for a11y, but visually make row the main target */}
-                            <div className="flex items-center">
-                              <Checkbox
-                                checked={isSelected}
-                                onCheckedChange={() => handleToggleLawyer(lawyer.user_id)}
-                                aria-label={`Select ${profile?.full_name || 'lawyer'}`}
-                              />
-                            </div>
 
                             <Avatar className="h-11 w-11">
                               <AvatarFallback className="bg-primary text-primary-foreground">
