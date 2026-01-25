@@ -314,7 +314,7 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
     <Dialog open={true} onOpenChange={(open) => !open && closeDialog()}>
       <DialogContent hideCloseButton className="sm:max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
         {/* Mobile-friendly Header with Close Button */}
-        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3 sm:px-6 sm:py-4 flex items-center justify-between">
+        <div className="sticky top-0 z-10 bg-background border-b border-border px-4 py-3 sm:px-6 sm:py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             {appointment.daily_serial_number && (
               <div className="bg-gradient-to-br from-primary/90 to-primary text-primary-foreground rounded-xl px-3 py-2 text-center min-w-[52px] shadow-sm">
@@ -323,7 +323,7 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
               </div>
             )}
             <div>
-              <h2 className="text-lg font-semibold text-slate-900">Appointment Details</h2>
+              <h2 className="text-lg font-semibold text-foreground">Appointment Details</h2>
               {appointment.status && (
                 <Badge className={`mt-1 ${getStatusColor(appointment.status)}`}>
                   {appointment.status}
@@ -333,9 +333,9 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
           </div>
           <button 
             onClick={() => closeDialog()}
-            className="p-2 rounded-full hover:bg-slate-100 active:scale-95 transition-all"
+            className="p-2 rounded-full hover:bg-muted active:scale-95 transition-all"
           >
-            <X className="h-5 w-5 text-slate-500" />
+            <X className="h-5 w-5 text-muted-foreground" />
           </button>
         </div>
 
@@ -343,21 +343,21 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
         <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 bg-muted">
           <div className="space-y-4">
             {/* Title Card */}
-            <div className="bg-white rounded-2xl shadow-sm p-4">
-              <h3 className="text-base font-medium text-slate-900">
+            <div className="bg-background rounded-2xl shadow-sm p-4">
+              <h3 className="text-base font-medium text-foreground">
                 {appointment.title || 'Untitled Appointment'}
               </h3>
             </div>
 
             {/* Date, Time & Location Card */}
-            <div className="bg-white rounded-2xl shadow-sm p-4 space-y-3">
+            <div className="bg-background rounded-2xl shadow-sm p-4 space-y-3">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-sky-50 flex items-center justify-center">
                   <Calendar className="h-4 w-4 text-sky-500" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-xs text-slate-500">Date</p>
-                  <p className="text-sm font-medium text-slate-900">{formatDate(appointment.appointment_date)}</p>
+                  <p className="text-xs text-muted-foreground">Date</p>
+                  <p className="text-sm font-medium text-foreground">{formatDate(appointment.appointment_date)}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -365,8 +365,8 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
                   <Clock className="h-4 w-4 text-violet-500" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-xs text-slate-500">Time</p>
-                  <p className="text-sm font-medium text-slate-900">{formatTime(appointment.appointment_time)}</p>
+                  <p className="text-xs text-muted-foreground">Time</p>
+                  <p className="text-sm font-medium text-foreground">{formatTime(appointment.appointment_time)}</p>
                 </div>
               </div>
               {appointment.location && (
@@ -375,23 +375,23 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
                     <MapPin className="h-4 w-4 text-emerald-500" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-xs text-slate-500">Location</p>
-                    <p className="text-sm font-medium text-slate-900">{appointment.location}</p>
+                    <p className="text-xs text-muted-foreground">Location</p>
+                    <p className="text-sm font-medium text-foreground">{appointment.location}</p>
                   </div>
                 </div>
               )}
             </div>
 
             {/* Client & Team Card */}
-            <div className="bg-white rounded-2xl shadow-sm p-4 space-y-3">
+            <div className="bg-background rounded-2xl shadow-sm p-4 space-y-3">
               {appointment.client_name && (
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center">
                     <User className="h-4 w-4 text-amber-500" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-xs text-slate-500">Client</p>
-                    <p className="text-sm font-medium text-slate-900">{appointment.client_name}</p>
+                    <p className="text-xs text-muted-foreground">Client</p>
+                    <p className="text-sm font-medium text-foreground">{appointment.client_name}</p>
                   </div>
                 </div>
               )}
@@ -401,7 +401,7 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
                   <Users className="h-4 w-4 text-rose-500" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-xs text-slate-500">Assigned Team</p>
+                  <p className="text-xs text-muted-foreground">Assigned Team</p>
                   <div className="mt-1.5 flex flex-wrap gap-1.5">
                     {appointment.lawyer_name && (
                       <Badge variant="default" className="bg-primary/10 text-primary border-primary/20 text-xs">
@@ -414,30 +414,30 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
                       </Badge>
                     ))}
                     {!appointment.lawyer_name && additionalLawyerNames.length === 0 && (
-                      <span className="text-sm text-slate-400">No team members assigned</span>
+                      <span className="text-sm text-muted-foreground">No team members assigned</span>
                     )}
                   </div>
                 </div>
               </div>
 
               {appointment.type && (
-                <div className="flex items-center gap-3 pt-2 border-t border-slate-100">
-                  <p className="text-xs text-slate-500">Type:</p>
-                  <p className="text-sm font-medium text-slate-900 capitalize">{appointment.type.replace('_', ' ')}</p>
+                <div className="flex items-center gap-3 pt-2 border-t border-border">
+                  <p className="text-xs text-muted-foreground">Type:</p>
+                  <p className="text-sm font-medium text-foreground capitalize">{appointment.type.replace('_', ' ')}</p>
                 </div>
               )}
             </div>
 
             {/* Notes Card */}
             {appointment.notes && (
-              <div className="bg-white rounded-2xl shadow-sm p-4">
+              <div className="bg-background rounded-2xl shadow-sm p-4">
                 <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center">
-                    <FileText className="h-4 w-4 text-slate-500" />
+                  <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center">
+                    <FileText className="h-4 w-4 text-muted-foreground" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-xs text-slate-500 mb-1">Notes</p>
-                    <p className="text-sm text-slate-700 whitespace-pre-wrap">{appointment.notes}</p>
+                    <p className="text-xs text-muted-foreground mb-1">Notes</p>
+                    <p className="text-sm text-foreground whitespace-pre-wrap">{appointment.notes}</p>
                   </div>
                 </div>
               </div>
@@ -446,7 +446,7 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
         </div>
 
         {/* Fixed Bottom Action Bar */}
-        <div className="sticky bottom-0 bg-white/95 backdrop-blur-sm border-t border-slate-100 p-3 sm:p-4">
+        <div className="sticky bottom-0 bg-background/95 backdrop-blur-sm border-t border-border p-3 sm:p-4">
           <div className="grid grid-cols-3 gap-2">
             <Button
               variant="outline"

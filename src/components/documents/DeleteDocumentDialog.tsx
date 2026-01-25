@@ -121,16 +121,16 @@ export const DeleteDocumentDialog: React.FC<DeleteDocumentDialogProps> = ({
   return (
     <AlertDialog open={open} onOpenChange={handleClose}>
       <AlertDialogContent className={`${isMobile ? 'h-auto max-h-[90dvh] w-[95%] rounded-2xl' : 'sm:max-w-md'} p-0 gap-0 overflow-hidden`}>
-        <div className="flex flex-col bg-slate-50">
+        <div className="flex flex-col bg-muted">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 bg-white border-b border-slate-200">
+          <div className="flex items-center justify-between p-4 bg-background border-b border-border">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center">
                 <Trash2 className="w-5 h-5 text-red-500" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-slate-900">Delete Document</h2>
-                <p className="text-xs text-slate-500">This action cannot be undone</p>
+                <h2 className="text-lg font-semibold text-foreground">Delete Document</h2>
+                <p className="text-xs text-muted-foreground">This action cannot be undone</p>
               </div>
             </div>
             {isMobile && (
@@ -143,21 +143,21 @@ export const DeleteDocumentDialog: React.FC<DeleteDocumentDialogProps> = ({
           {/* Content */}
           <div className="p-4 space-y-4">
             {/* Document Preview Card */}
-            <div className="bg-white rounded-2xl shadow-sm p-4">
+            <div className="bg-background rounded-2xl shadow-sm p-4">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center">
                   <FileText className="w-6 h-6 text-red-500" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-slate-900 truncate">{document?.file_name}</p>
-                  <p className="text-sm text-slate-500">Document will be permanently deleted</p>
+                  <p className="font-medium text-foreground truncate">{document?.file_name}</p>
+                  <p className="text-sm text-muted-foreground">Document will be permanently deleted</p>
                 </div>
               </div>
             </div>
 
             {/* Password Input Card */}
-            <div className="bg-white rounded-2xl shadow-sm p-4">
-              <Label htmlFor="password" className="text-sm font-medium text-slate-700">
+            <div className="bg-background rounded-2xl shadow-sm p-4">
+              <Label htmlFor="password" className="text-sm font-medium text-foreground">
                 Enter your password to confirm
               </Label>
               <div className="relative mt-2">
@@ -182,14 +182,14 @@ export const DeleteDocumentDialog: React.FC<DeleteDocumentDialogProps> = ({
                   disabled={isDeleting}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-4 w-4 text-slate-400" />
+                    <EyeOff className="h-4 w-4 text-muted-foreground" />
                   ) : (
-                    <Eye className="h-4 w-4 text-slate-400" />
+                    <Eye className="h-4 w-4 text-muted-foreground" />
                   )}
                 </Button>
               </div>
               {passwordError && (
-                <p className="text-sm text-red-600 mt-2">{passwordError}</p>
+                <p className="text-sm text-destructive mt-2">{passwordError}</p>
               )}
             </div>
 
@@ -210,7 +210,7 @@ export const DeleteDocumentDialog: React.FC<DeleteDocumentDialogProps> = ({
           </div>
 
           {/* Footer */}
-          <div className="p-4 bg-white border-t border-slate-200">
+          <div className="p-4 bg-background border-t border-border">
             <div className="flex gap-3">
               <Button
                 variant="outline"

@@ -532,9 +532,9 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
         <VisuallyHidden>
           <DialogTitle>Upload Documents</DialogTitle>
         </VisuallyHidden>
-        <div className="flex flex-col h-full min-h-0 bg-slate-50">
+        <div className="flex flex-col h-full min-h-0 bg-muted">
           {/* Header */}
-          <div className="flex-shrink-0 px-6 py-5 bg-white border-b border-slate-100">
+          <div className="flex-shrink-0 px-6 py-5 bg-background border-b border-border">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-foreground">Upload Documents</h2>
@@ -542,9 +542,9 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
               </div>
               <button 
                 onClick={onClose}
-                className="md:hidden w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center"
+                className="md:hidden w-8 h-8 rounded-full bg-muted flex items-center justify-center"
               >
-                <X className="w-4 h-4 text-slate-500" />
+                <X className="w-4 h-4 text-muted-foreground" />
               </button>
             </div>
           </div>
@@ -553,8 +553,8 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
           <div className="flex-1 min-h-0 overflow-y-auto px-6 py-6">
             <form id="upload-document-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               {/* File Upload Card */}
-              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-4 border-b border-slate-100">
+              <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-4 border-b border-border">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center">
                       <Upload className="w-5 h-5 text-sky-500" />
@@ -566,7 +566,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                     </div>
                   </div>
 
-                  <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center hover:border-sky-300 transition-colors bg-slate-50">
+                  <div className="border-2 border-dashed border-input rounded-xl p-6 text-center hover:border-sky-300 transition-colors bg-muted">
                     <input 
                       type="file" 
                       multiple 
@@ -576,8 +576,8 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                       id="file-upload" 
                     />
                     <label htmlFor="file-upload" className="cursor-pointer">
-                      <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                      <p className="text-sm text-slate-600">Click to select files or drag and drop</p>
+                      <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                      <p className="text-sm text-foreground">Click to select files or drag and drop</p>
                       <p className="text-xs text-muted-foreground mt-1">PDF, Word, Images, Text files up to 50MB</p>
                     </label>
                   </div>
@@ -598,7 +598,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                             variant="ghost" 
                             size="sm" 
                             onClick={() => removeFile(index)} 
-                            className="h-8 w-8 p-0 text-slate-400 hover:text-red-500 rounded-full flex-shrink-0"
+                            className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive rounded-full flex-shrink-0"
                           >
                             <X className="w-4 h-4" />
                           </Button>
@@ -621,8 +621,8 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
 
               {/* Client & Case Card */}
               {!caseId && (
-                <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                  <div className="p-4 border-b border-slate-100">
+                <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+                  <div className="p-4 border-b border-border">
                     <div className="flex items-center gap-3 mb-3">
                       <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
                         <User className="w-5 h-5 text-emerald-500" />
@@ -634,7 +634,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                       </div>
                     </div>
                   </div>
-                  <div className="p-4 space-y-4 bg-slate-50/50">
+                  <div className="p-4 space-y-4 bg-muted/50">
                     <div>
                       <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Select Client *</Label>
                       <div className="mt-2">
@@ -659,10 +659,10 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                         value={selectedCaseId}
                         disabled={!selectedClientId}
                       >
-                        <SelectTrigger className="bg-white border-slate-200 rounded-xl h-11 mt-2">
+                        <SelectTrigger className="bg-background border-input rounded-xl h-11 mt-2">
                           <SelectValue placeholder={selectedClientId ? "Select a case..." : "Select client first"} />
                         </SelectTrigger>
-                        <SelectContent className="bg-white border-slate-200 rounded-xl">
+                        <SelectContent className="bg-background border-border rounded-xl">
                           <SelectItem value="no-case">No Case (General Documents)</SelectItem>
                           {cases
                             .filter(case_item => !selectedClientId || case_item.client_id === selectedClientId)
@@ -679,8 +679,8 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
               )}
 
               {/* Document Type Card */}
-              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-4 border-b border-slate-100">
+              <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-4 border-b border-border">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
                       <FolderOpen className="w-5 h-5 text-amber-500" />
@@ -692,7 +692,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                     </div>
                   </div>
                 </div>
-                <div className="p-4 space-y-4 bg-slate-50/50">
+                <div className="p-4 space-y-4 bg-muted/50">
                   <div>
                     <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Primary Type *</Label>
                     <Select 
@@ -702,10 +702,10 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                       }} 
                       value={selectedPrimaryType}
                     >
-                      <SelectTrigger className="bg-white border-slate-200 rounded-xl h-11 mt-2">
+                      <SelectTrigger className="bg-background border-input rounded-xl h-11 mt-2">
                         <SelectValue placeholder="Select document type..." />
                       </SelectTrigger>
-                      <SelectContent className="bg-white border-slate-200 rounded-xl max-h-[300px]">
+                      <SelectContent className="bg-background border-border rounded-xl max-h-[300px]">
                         {PRIMARY_DOCUMENT_TYPES.map(type => (
                           <SelectItem key={type} value={type}>
                             <span className="flex items-center gap-2">
@@ -725,10 +725,10 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                         onValueChange={value => setValue('sub_document_type', value)} 
                         value={selectedSubType}
                       >
-                        <SelectTrigger className="bg-white border-slate-200 rounded-xl h-11 mt-2">
-                          <SelectValue placeholder="Select sub-type..." />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white border-slate-200 rounded-xl">
+                      <SelectTrigger className="bg-background border-input rounded-xl h-11 mt-2">
+                        <SelectValue placeholder="Select sub-type..." />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background border-border rounded-xl">
                           {availableSubTypes.map(type => (
                             <SelectItem key={type} value={type}>{type}</SelectItem>
                           ))}
@@ -749,8 +749,8 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
               </div>
 
               {/* Notes Card */}
-              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-4 border-b border-slate-100">
+              <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-4 border-b border-border">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center">
                       <FileText className="w-5 h-5 text-sky-500" />
@@ -764,14 +764,14 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                     {...register('notes')}
                     placeholder="Add any additional notes about this document..."
                     rows={3}
-                    className="bg-slate-50 border-slate-200 rounded-xl resize-none"
+                    className="bg-muted border-input rounded-xl resize-none"
                   />
                 </div>
               </div>
 
               {/* Document Properties Card */}
-              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-4 border-b border-slate-100">
+              <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-4 border-b border-border">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
                       <Info className="w-5 h-5 text-violet-500" />
@@ -783,7 +783,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                   </div>
 
                   <div className="space-y-1">
-                    <div className="flex items-center space-x-3 p-3 rounded-xl hover:bg-slate-50 transition-colors">
+                    <div className="flex items-center space-x-3 p-3 rounded-xl hover:bg-muted transition-colors">
                       <Checkbox
                         id="is_evidence"
                         {...register('is_evidence')}
@@ -793,7 +793,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                         Mark as important/evidence
                       </Label>
                     </div>
-                    <div className="flex items-center space-x-3 p-3 rounded-xl hover:bg-slate-50 transition-colors">
+                    <div className="flex items-center space-x-3 p-3 rounded-xl hover:bg-muted transition-colors">
                       <Checkbox
                         id="confidential"
                         {...register('confidential')}
@@ -807,13 +807,13 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                           <TooltipTrigger asChild>
                             <Info className="h-4 w-4 text-muted-foreground cursor-help" />
                           </TooltipTrigger>
-                          <TooltipContent className="max-w-xs bg-slate-800 text-white rounded-xl">
+                          <TooltipContent className="max-w-xs bg-popover text-popover-foreground rounded-xl">
                             <p className="text-sm">Only you, admins, and office staff can view confidential documents.</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
                     </div>
-                    <div className="flex items-center space-x-3 p-3 rounded-xl hover:bg-slate-50 transition-colors">
+                    <div className="flex items-center space-x-3 p-3 rounded-xl hover:bg-muted transition-colors">
                       <Checkbox
                         id="certified_copy"
                         {...register('certified_copy')}
