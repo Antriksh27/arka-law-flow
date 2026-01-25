@@ -23,7 +23,7 @@ export const DialogProvider = ({ children }: { children: ReactNode }) => {
     <DialogContext.Provider value={{ openDialog, closeDialog }}>
       {children}
       <Dialog open={!!dialogContent} onOpenChange={(open) => { if (!open) closeDialog(); }}>
-        <DialogContent className="p-0 gap-0 overflow-hidden">
+        <DialogContent hideCloseButton className="p-0 gap-0 overflow-hidden">
           {dialogContent}
         </DialogContent>
       </Dialog>

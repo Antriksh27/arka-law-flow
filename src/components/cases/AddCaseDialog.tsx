@@ -16,7 +16,7 @@ export const AddCaseDialog: React.FC<AddCaseDialogProps> = ({
 }) => {
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-4xl w-full max-h-[100dvh] sm:max-h-[90vh] p-0 bg-slate-50 gap-0 overflow-hidden flex flex-col">
+      <DialogContent hideCloseButton className="sm:max-w-4xl w-full max-h-[100dvh] sm:max-h-[90vh] p-0 bg-slate-50 gap-0 overflow-hidden flex flex-col">
         {/* Mobile-friendly Header with Close Button */}
         <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-3 sm:px-6 sm:py-4 flex items-center justify-between shrink-0">
           <div>

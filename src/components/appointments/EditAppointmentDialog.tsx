@@ -264,7 +264,7 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
 
   return (
     <Dialog open onOpenChange={closeDialog}>
-      <DialogContent className="sm:max-w-2xl p-0 gap-0 overflow-hidden">
+      <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden">
         <div className="flex flex-col h-full max-h-[90vh] bg-slate-50">
           {/* Header */}
           <div className="px-6 py-5 bg-white border-b border-slate-100">
@@ -275,7 +275,7 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
               </div>
               <button
                 onClick={closeDialog}
-                className="md:hidden w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors"
+                className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors"
               >
                 <X className="w-4 h-4 text-slate-500" />
               </button>

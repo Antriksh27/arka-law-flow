@@ -348,7 +348,7 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
           </div>
           <button 
             onClick={closeDialog}
-            className="sm:hidden w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center"
+            className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors"
           >
             <X className="w-4 h-4 text-slate-500" />
           </button>
