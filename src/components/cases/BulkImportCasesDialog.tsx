@@ -631,11 +631,11 @@ export const BulkImportCasesDialog = ({
           {/* File Upload */}
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Select Excel File (.xlsx or .xls)
               </label>
               <div className="flex items-center gap-3">
-                <Input ref={fileInputRef} type="file" accept=".xlsx,.xls" onChange={handleFileSelect} className="border-gray-300" />
+                <Input ref={fileInputRef} type="file" accept=".xlsx,.xls" onChange={handleFileSelect} />
                 {file && <div className="flex items-center gap-2 text-sm text-green-600">
                     <CheckCircle className="w-4 h-4" />
                     {file.name}
@@ -709,7 +709,7 @@ export const BulkImportCasesDialog = ({
 
             {/* Progress Bar */}
             {importing && progress.total > 0 && <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm text-slate-700">
+                <div className="flex items-center justify-between text-sm text-foreground">
                   <span>
                     {progress.phase === 'validating' ? 'Validating data...' : 
                      progress.phase === 'processing' ? `Processing batch ${progress.currentBatch} of ${progress.totalBatches}...` : 
@@ -719,13 +719,13 @@ export const BulkImportCasesDialog = ({
                 </div>
                 <Progress value={progress.current / progress.total * 100} className="h-2" />
                 {progress.phase === 'processing' && (
-                  <p className="text-xs text-slate-500 text-center">
+                  <p className="text-xs text-muted-foreground text-center">
                     Processing 10 cases per batch with 500ms delay to ensure stability
                   </p>
                 )}
               </div>}
 
-            <Button onClick={processImport} disabled={!file || importing} className="w-full bg-slate-800 hover:bg-slate-700">
+            <Button onClick={processImport} disabled={!file || importing} className="w-full">
               {importing ? <>
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
                   Processing...
@@ -739,10 +739,10 @@ export const BulkImportCasesDialog = ({
           {/* Results */}
           {results && <div className="space-y-4">
               {/* Summary */}
-              <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+              <div className="bg-muted p-4 rounded-lg border">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-semibold text-slate-900">Update Summary</h3>
-                  <Button variant="outline" size="sm" onClick={downloadReport} className="text-slate-700">
+                  <h3 className="font-semibold text-foreground">Update Summary</h3>
+                  <Button variant="outline" size="sm" onClick={downloadReport}>
                     <FileDown className="w-4 h-4 mr-2" />
                     Download Report
                   </Button>
@@ -864,8 +864,8 @@ export const BulkImportCasesDialog = ({
             </div>}
 
           {/* Instructions */}
-          <div className="bg-gray-50 p-4 rounded-lg text-sm text-gray-600">
-            <h3 className="font-medium text-gray-800 mb-2">Instructions:</h3>
+          <div className="bg-muted p-4 rounded-lg text-sm text-muted-foreground">
+            <h3 className="font-medium text-foreground mb-2">Instructions:</h3>
             <ul className="space-y-1 list-disc list-inside">
               <li>Upload Excel file with columns: <strong>cnr_number</strong> (or CNR) and <strong>client_name</strong> (or Client Name)</li>
               <li>CNR will be normalized (removes dashes, spaces, slashes) for matching</li>

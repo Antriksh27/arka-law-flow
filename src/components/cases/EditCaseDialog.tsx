@@ -149,17 +149,17 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
       <DialogContent hideCloseButton className="sm:max-w-4xl p-0 bg-muted overflow-hidden">
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="px-6 py-5 bg-white border-b border-slate-100">
+          <div className="px-6 py-5 bg-background border-b">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-semibold text-slate-800">Edit Case</h2>
+                <h2 className="text-xl font-semibold text-foreground">Edit Case</h2>
                 <p className="text-sm text-muted-foreground mt-0.5">Update case information</p>
               </div>
               <button
                 onClick={onClose}
-                className="md:hidden w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors"
+                className="md:hidden w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-accent transition-colors"
               >
-                <X className="w-4 h-4 text-slate-500" />
+                <X className="w-4 h-4 text-muted-foreground" />
               </button>
             </div>
           </div>
@@ -167,21 +167,21 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
           {/* Scrollable Content */}
           <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-4">
             {/* Basic Case Info Card */}
-            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-              <div className="p-4 border-b border-slate-100">
+            <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+              <div className="p-4 border-b">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
                     <Briefcase className="w-5 h-5 text-emerald-500" />
                   </div>
                   <div>
-                    <Label className="text-sm font-semibold text-slate-700">Basic Case Information</Label>
+                    <Label className="text-sm font-semibold text-foreground">Basic Case Information</Label>
                     <p className="text-xs text-muted-foreground">Client, status, and case details</p>
                   </div>
                 </div>
                 
                 <div className="space-y-4">
                   <div>
-                    <Label className="text-xs text-slate-500 mb-1.5 block">Client</Label>
+                    <Label className="text-xs text-muted-foreground mb-1.5 block">Client</Label>
                     <ClientSelector
                       value={formData.client_id}
                       onValueChange={(value) => setFormData({ ...formData, client_id: value })}
@@ -191,20 +191,20 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                   
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <Label className="text-xs text-slate-500 mb-1.5 block">Registration Number</Label>
+                      <Label className="text-xs text-muted-foreground mb-1.5 block">Registration Number</Label>
                       <Input
                         value={formData.registration_number}
                         onChange={(e) => setFormData({ ...formData, registration_number: e.target.value })}
-                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
+                        className="bg-muted border-input rounded-xl h-11"
                       />
                     </div>
                     <div>
-                      <Label className="text-xs text-slate-500 mb-1.5 block">Status</Label>
+                      <Label className="text-xs text-muted-foreground mb-1.5 block">Status</Label>
                       <Select 
                         value={formData.status} 
                         onValueChange={(value) => setFormData({ ...formData, status: value })}
                       >
-                        <SelectTrigger className="bg-slate-50 border-slate-200 rounded-xl h-11">
+                        <SelectTrigger className="bg-muted border-input rounded-xl h-11">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -219,12 +219,12 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <Label className="text-xs text-slate-500 mb-1.5 block">By/Against</Label>
+                      <Label className="text-xs text-muted-foreground mb-1.5 block">By/Against</Label>
                       <Select 
                         value={formData.by_against} 
                         onValueChange={(value) => setFormData({ ...formData, by_against: value })}
                       >
-                        <SelectTrigger className="bg-slate-50 border-slate-200 rounded-xl h-11">
+                        <SelectTrigger className="bg-muted border-input rounded-xl h-11">
                           <SelectValue placeholder="Select..." />
                         </SelectTrigger>
                         <SelectContent>
@@ -235,32 +235,32 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                       </Select>
                     </div>
                     <div>
-                      <Label className="text-xs text-slate-500 mb-1.5 block">Stage</Label>
+                      <Label className="text-xs text-muted-foreground mb-1.5 block">Stage</Label>
                       <Input
                         value={formData.stage}
                         onChange={(e) => setFormData({ ...formData, stage: e.target.value })}
-                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
+                        className="bg-muted border-input rounded-xl h-11"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <Label className="text-xs text-slate-500 mb-1.5 block">Case Title (VS)</Label>
+                    <Label className="text-xs text-muted-foreground mb-1.5 block">Case Title (VS)</Label>
                     <Input
                       value={formData.vs}
                       onChange={(e) => setFormData({ ...formData, vs: e.target.value })}
                       placeholder="e.g., Petitioner Vs Respondent"
-                      className="bg-slate-50 border-slate-200 rounded-xl h-11"
+                      className="bg-muted border-input rounded-xl h-11"
                     />
                   </div>
 
                   <div>
-                    <Label className="text-xs text-slate-500 mb-1.5 block">Description</Label>
+                    <Label className="text-xs text-muted-foreground mb-1.5 block">Description</Label>
                     <Textarea
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                       rows={3}
-                      className="bg-slate-50 border-slate-200 rounded-xl resize-none"
+                      className="bg-muted border-input rounded-xl resize-none"
                     />
                   </div>
                 </div>
@@ -268,14 +268,14 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
             </div>
 
             {/* Parties Card */}
-            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-              <div className="p-4 border-b border-slate-100">
+            <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+              <div className="p-4 border-b">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
                     <Users className="w-5 h-5 text-violet-500" />
                   </div>
                   <div>
-                    <Label className="text-sm font-semibold text-slate-700">Parties Involved</Label>
+                    <Label className="text-sm font-semibold text-foreground">Parties Involved</Label>
                     <p className="text-xs text-muted-foreground">Petitioner and respondent details</p>
                   </div>
                 </div>
@@ -283,37 +283,37 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <Label className="text-xs text-slate-500 mb-1.5 block">Petitioner</Label>
+                      <Label className="text-xs text-muted-foreground mb-1.5 block">Petitioner</Label>
                       <Input
                         value={formData.petitioner}
                         onChange={(e) => setFormData({ ...formData, petitioner: e.target.value })}
-                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
+                        className="bg-muted border-input rounded-xl h-11"
                       />
                     </div>
                     <div>
-                      <Label className="text-xs text-slate-500 mb-1.5 block">Respondent</Label>
+                      <Label className="text-xs text-muted-foreground mb-1.5 block">Respondent</Label>
                       <Input
                         value={formData.respondent}
                         onChange={(e) => setFormData({ ...formData, respondent: e.target.value })}
-                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
+                        className="bg-muted border-input rounded-xl h-11"
                       />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <Label className="text-xs text-slate-500 mb-1.5 block">Petitioner's Advocate</Label>
+                      <Label className="text-xs text-muted-foreground mb-1.5 block">Petitioner's Advocate</Label>
                       <Input
                         value={formData.petitioner_advocate}
                         onChange={(e) => setFormData({ ...formData, petitioner_advocate: e.target.value })}
-                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
+                        className="bg-muted border-input rounded-xl h-11"
                       />
                     </div>
                     <div>
-                      <Label className="text-xs text-slate-500 mb-1.5 block">Respondent's Advocate</Label>
+                      <Label className="text-xs text-muted-foreground mb-1.5 block">Respondent's Advocate</Label>
                       <Input
                         value={formData.respondent_advocate}
                         onChange={(e) => setFormData({ ...formData, respondent_advocate: e.target.value })}
-                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
+                        className="bg-muted border-input rounded-xl h-11"
                       />
                     </div>
                   </div>
@@ -322,14 +322,14 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
             </div>
 
             {/* Court Information Card */}
-            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-              <div className="p-4 border-b border-slate-100">
+            <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+              <div className="p-4 border-b">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center">
                     <Scale className="w-5 h-5 text-sky-500" />
                   </div>
                   <div>
-                    <Label className="text-sm font-semibold text-slate-700">Court Information</Label>
+                    <Label className="text-sm font-semibold text-foreground">Court Information</Label>
                     <p className="text-xs text-muted-foreground">Court and jurisdiction details</p>
                   </div>
                 </div>
@@ -337,37 +337,37 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <Label className="text-xs text-slate-500 mb-1.5 block">Court Name</Label>
+                      <Label className="text-xs text-muted-foreground mb-1.5 block">Court Name</Label>
                       <Input
                         value={formData.court_name}
                         onChange={(e) => setFormData({ ...formData, court_name: e.target.value })}
-                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
+                        className="bg-muted border-input rounded-xl h-11"
                       />
                     </div>
                     <div>
-                      <Label className="text-xs text-slate-500 mb-1.5 block">Court Complex</Label>
+                      <Label className="text-xs text-muted-foreground mb-1.5 block">Court Complex</Label>
                       <Input
                         value={formData.court_complex}
                         onChange={(e) => setFormData({ ...formData, court_complex: e.target.value })}
-                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
+                        className="bg-muted border-input rounded-xl h-11"
                       />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <Label className="text-xs text-slate-500 mb-1.5 block">Bench Type</Label>
+                      <Label className="text-xs text-muted-foreground mb-1.5 block">Bench Type</Label>
                       <Input
                         value={formData.bench_type}
                         onChange={(e) => setFormData({ ...formData, bench_type: e.target.value })}
-                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
+                        className="bg-muted border-input rounded-xl h-11"
                       />
                     </div>
                     <div>
-                      <Label className="text-xs text-slate-500 mb-1.5 block">Judicial Branch</Label>
+                      <Label className="text-xs text-muted-foreground mb-1.5 block">Judicial Branch</Label>
                       <Input
                         value={formData.judicial_branch}
                         onChange={(e) => setFormData({ ...formData, judicial_branch: e.target.value })}
-                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
+                        className="bg-muted border-input rounded-xl h-11"
                       />
                     </div>
                   </div>
@@ -376,14 +376,14 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
             </div>
 
             {/* Location Card */}
-            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-              <div className="p-4 border-b border-slate-100">
+            <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+              <div className="p-4 border-b">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
                     <MapPin className="w-5 h-5 text-amber-500" />
                   </div>
                   <div>
-                    <Label className="text-sm font-semibold text-slate-700">Location</Label>
+                    <Label className="text-sm font-semibold text-foreground">Location</Label>
                     <p className="text-xs text-muted-foreground">State and district information</p>
                   </div>
                 </div>
@@ -391,37 +391,37 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <Label className="text-xs text-slate-500 mb-1.5 block">State</Label>
+                      <Label className="text-xs text-muted-foreground mb-1.5 block">State</Label>
                       <Input
                         value={formData.state}
                         onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
+                        className="bg-muted border-input rounded-xl h-11"
                       />
                     </div>
                     <div>
-                      <Label className="text-xs text-slate-500 mb-1.5 block">District</Label>
+                      <Label className="text-xs text-muted-foreground mb-1.5 block">District</Label>
                       <Input
                         value={formData.district}
                         onChange={(e) => setFormData({ ...formData, district: e.target.value })}
-                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
+                        className="bg-muted border-input rounded-xl h-11"
                       />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <Label className="text-xs text-slate-500 mb-1.5 block">State (Secondary)</Label>
+                      <Label className="text-xs text-muted-foreground mb-1.5 block">State (Secondary)</Label>
                       <Input
                         value={formData.state_1}
                         onChange={(e) => setFormData({ ...formData, state_1: e.target.value })}
-                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
+                        className="bg-muted border-input rounded-xl h-11"
                       />
                     </div>
                     <div>
-                      <Label className="text-xs text-slate-500 mb-1.5 block">District (Secondary)</Label>
+                      <Label className="text-xs text-muted-foreground mb-1.5 block">District (Secondary)</Label>
                       <Input
                         value={formData.district_1}
                         onChange={(e) => setFormData({ ...formData, district_1: e.target.value })}
-                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
+                        className="bg-muted border-input rounded-xl h-11"
                       />
                     </div>
                   </div>
@@ -430,14 +430,14 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
             </div>
 
             {/* Case Numbers Card */}
-            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-              <div className="p-4 border-b border-slate-100">
+            <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+              <div className="p-4 border-b">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center">
                     <Hash className="w-5 h-5 text-rose-500" />
                   </div>
                   <div>
-                    <Label className="text-sm font-semibold text-slate-700">Case Numbers & References</Label>
+                    <Label className="text-sm font-semibold text-foreground">Case Numbers & References</Label>
                     <p className="text-xs text-muted-foreground">Filing and registration numbers</p>
                   </div>
                 </div>
@@ -445,37 +445,37 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <Label className="text-xs text-slate-500 mb-1.5 block">Reference Number</Label>
+                      <Label className="text-xs text-muted-foreground mb-1.5 block">Reference Number</Label>
                       <Input
                         value={formData.reference_number}
                         onChange={(e) => setFormData({ ...formData, reference_number: e.target.value })}
-                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
+                        className="bg-muted border-input rounded-xl h-11"
                       />
                     </div>
                     <div>
-                      <Label className="text-xs text-slate-500 mb-1.5 block">Filing Number</Label>
+                      <Label className="text-xs text-muted-foreground mb-1.5 block">Filing Number</Label>
                       <Input
                         value={formData.filing_number}
                         onChange={(e) => setFormData({ ...formData, filing_number: e.target.value })}
-                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
+                        className="bg-muted border-input rounded-xl h-11"
                       />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <Label className="text-xs text-slate-500 mb-1.5 block">Registration Number</Label>
+                      <Label className="text-xs text-muted-foreground mb-1.5 block">Registration Number</Label>
                       <Input
                         value={formData.registration_number}
                         onChange={(e) => setFormData({ ...formData, registration_number: e.target.value })}
-                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
+                        className="bg-muted border-input rounded-xl h-11"
                       />
                     </div>
                     <div>
-                      <Label className="text-xs text-slate-500 mb-1.5 block">CNR Number</Label>
+                      <Label className="text-xs text-muted-foreground mb-1.5 block">CNR Number</Label>
                       <Input
                         value={formData.cnr_number}
                         onChange={(e) => setFormData({ ...formData, cnr_number: e.target.value })}
-                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
+                        className="bg-muted border-input rounded-xl h-11"
                       />
                     </div>
                   </div>
@@ -484,53 +484,53 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
             </div>
 
             {/* Important Dates Card */}
-            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-              <div className="p-4 border-b border-slate-100">
+            <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+              <div className="p-4 border-b">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
                     <Calendar className="w-5 h-5 text-indigo-500" />
                   </div>
                   <div>
-                    <Label className="text-sm font-semibold text-slate-700">Important Dates</Label>
+                    <Label className="text-sm font-semibold text-foreground">Important Dates</Label>
                     <p className="text-xs text-muted-foreground">Filing and hearing dates</p>
                   </div>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label className="text-xs text-slate-500 mb-1.5 block">Filing Date</Label>
+                    <Label className="text-xs text-muted-foreground mb-1.5 block">Filing Date</Label>
                     <Input
                       type="date"
                       value={formData.filing_date}
                       onChange={(e) => setFormData({ ...formData, filing_date: e.target.value })}
-                      className="bg-slate-50 border-slate-200 rounded-xl h-11"
+                      className="bg-muted border-input rounded-xl h-11"
                     />
                   </div>
                   <div>
-                    <Label className="text-xs text-slate-500 mb-1.5 block">Registration Date</Label>
+                    <Label className="text-xs text-muted-foreground mb-1.5 block">Registration Date</Label>
                     <Input
                       type="date"
                       value={formData.registration_date}
                       onChange={(e) => setFormData({ ...formData, registration_date: e.target.value })}
-                      className="bg-slate-50 border-slate-200 rounded-xl h-11"
+                      className="bg-muted border-input rounded-xl h-11"
                     />
                   </div>
                   <div>
-                    <Label className="text-xs text-slate-500 mb-1.5 block">First Hearing Date</Label>
+                    <Label className="text-xs text-muted-foreground mb-1.5 block">First Hearing Date</Label>
                     <Input
                       type="date"
                       value={formData.first_hearing_date}
                       onChange={(e) => setFormData({ ...formData, first_hearing_date: e.target.value })}
-                      className="bg-slate-50 border-slate-200 rounded-xl h-11"
+                      className="bg-muted border-input rounded-xl h-11"
                     />
                   </div>
                   <div>
-                    <Label className="text-xs text-slate-500 mb-1.5 block">Next Hearing Date</Label>
+                    <Label className="text-xs text-muted-foreground mb-1.5 block">Next Hearing Date</Label>
                     <Input
                       type="date"
                       value={formData.next_hearing_date}
                       onChange={(e) => setFormData({ ...formData, next_hearing_date: e.target.value })}
-                      className="bg-slate-50 border-slate-200 rounded-xl h-11"
+                      className="bg-muted border-input rounded-xl h-11"
                     />
                   </div>
                 </div>
@@ -538,14 +538,14 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
             </div>
 
             {/* Legal References Card */}
-            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-              <div className="p-4 border-b border-slate-100">
+            <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+              <div className="p-4 border-b">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center">
                     <BookOpen className="w-5 h-5 text-teal-500" />
                   </div>
                   <div>
-                    <Label className="text-sm font-semibold text-slate-700">Legal References</Label>
+                    <Label className="text-sm font-semibold text-foreground">Legal References</Label>
                     <p className="text-xs text-muted-foreground">Acts, sections, and categories</p>
                   </div>
                 </div>
@@ -553,36 +553,36 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <Label className="text-xs text-slate-500 mb-1.5 block">Category</Label>
+                      <Label className="text-xs text-muted-foreground mb-1.5 block">Category</Label>
                       <Input
                         value={formData.category}
                         onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
+                        className="bg-muted border-input rounded-xl h-11"
                       />
                     </div>
                     <div>
-                      <Label className="text-xs text-slate-500 mb-1.5 block">Sub Category</Label>
+                      <Label className="text-xs text-muted-foreground mb-1.5 block">Sub Category</Label>
                       <Input
                         value={formData.sub_category}
                         onChange={(e) => setFormData({ ...formData, sub_category: e.target.value })}
-                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
+                        className="bg-muted border-input rounded-xl h-11"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <Label className="text-xs text-slate-500 mb-1.5 block">Reference Acts</Label>
+                    <Label className="text-xs text-muted-foreground mb-1.5 block">Reference Acts</Label>
                     <ActsSelector value={acts} onChange={setActs} />
                   </div>
 
                   <div>
-                    <Label className="text-xs text-slate-500 mb-1.5 block">Sections</Label>
+                    <Label className="text-xs text-muted-foreground mb-1.5 block">Sections</Label>
                     <div className="flex gap-2 mb-2">
                       <Input
                         value={newSection}
                         onChange={(e) => setNewSection(e.target.value)}
                         placeholder="Add a section"
-                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
+                        className="bg-muted border-input rounded-xl h-11"
                       />
                       <Button 
                         type="button" 
@@ -607,47 +607,47 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
             </div>
 
             {/* Documentation Card */}
-            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-              <div className="p-4 border-b border-slate-100">
+            <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+              <div className="p-4 border-b">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center">
                     <FileText className="w-5 h-5 text-orange-500" />
                   </div>
                   <div>
-                    <Label className="text-sm font-semibold text-slate-700">Documentation & Notes</Label>
+                    <Label className="text-sm font-semibold text-foreground">Documentation & Notes</Label>
                     <p className="text-xs text-muted-foreground">Hearing notes and orders</p>
                   </div>
                 </div>
                 
                 <div className="space-y-4">
                   <div>
-                    <Label className="text-xs text-slate-500 mb-1.5 block">Hearing Notes</Label>
+                    <Label className="text-xs text-muted-foreground mb-1.5 block">Hearing Notes</Label>
                     <Textarea
                       value={formData.hearing_notes}
                       onChange={(e) => setFormData({ ...formData, hearing_notes: e.target.value })}
                       rows={3}
-                      className="bg-slate-50 border-slate-200 rounded-xl resize-none"
+                      className="bg-muted border-input rounded-xl resize-none"
                     />
                   </div>
                   
                   <div>
-                    <Label className="text-xs text-slate-500 mb-1.5 block">Objection</Label>
+                    <Label className="text-xs text-muted-foreground mb-1.5 block">Objection</Label>
                     <Textarea
                       value={formData.objection}
                       onChange={(e) => setFormData({ ...formData, objection: e.target.value })}
                       rows={2}
-                      className="bg-slate-50 border-slate-200 rounded-xl resize-none"
+                      className="bg-muted border-input rounded-xl resize-none"
                     />
                   </div>
 
                   <div>
-                    <Label className="text-xs text-slate-500 mb-1.5 block">Orders</Label>
+                    <Label className="text-xs text-muted-foreground mb-1.5 block">Orders</Label>
                     <div className="flex gap-2 mb-2">
                       <Input
                         value={newOrder}
                         onChange={(e) => setNewOrder(e.target.value)}
                         placeholder="Add an order"
-                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
+                        className="bg-muted border-input rounded-xl h-11"
                       />
                       <Button 
                         type="button" 
@@ -660,23 +660,23 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                     </div>
                     <div className="space-y-1.5">
                       {orders.map((order, index) => (
-                        <div key={index} className="flex items-center gap-2 p-3 bg-slate-50 rounded-xl">
-                          <span className="flex-1 text-sm text-slate-700">{order}</span>
-                          <X className="w-4 h-4 cursor-pointer text-slate-400 hover:text-red-500" onClick={() => removeItem('order', index)} />
+                        <div key={index} className="flex items-center gap-2 p-3 bg-muted rounded-xl">
+                          <span className="flex-1 text-sm text-foreground">{order}</span>
+                          <X className="w-4 h-4 cursor-pointer text-muted-foreground hover:text-destructive" onClick={() => removeItem('order', index)} />
                         </div>
                       ))}
                     </div>
                   </div>
 
                   <div>
-                    <Label className="text-xs text-slate-500 mb-1.5 block">Document Links</Label>
+                    <Label className="text-xs text-muted-foreground mb-1.5 block">Document Links</Label>
                     <div className="flex gap-2 mb-2">
                       <Input
                         value={newDocumentLink}
                         onChange={(e) => setNewDocumentLink(e.target.value)}
                         placeholder="Add a document link"
                         type="url"
-                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
+                        className="bg-muted border-input rounded-xl h-11"
                       />
                       <Button 
                         type="button" 
@@ -689,9 +689,9 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                     </div>
                     <div className="space-y-1.5">
                       {documentLinks.map((link, index) => (
-                        <div key={index} className="flex items-center gap-2 p-3 bg-slate-50 rounded-xl">
-                          <span className="flex-1 text-sm text-slate-700 truncate">{link}</span>
-                          <X className="w-4 h-4 cursor-pointer text-slate-400 hover:text-red-500" onClick={() => removeItem('document', index)} />
+                        <div key={index} className="flex items-center gap-2 p-3 bg-muted rounded-xl">
+                          <span className="flex-1 text-sm text-foreground truncate">{link}</span>
+                          <X className="w-4 h-4 cursor-pointer text-muted-foreground hover:text-destructive" onClick={() => removeItem('document', index)} />
                         </div>
                       ))}
                     </div>
@@ -702,20 +702,20 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
           </form>
 
           {/* Footer */}
-          <div className="px-6 py-4 bg-white border-t border-slate-100">
+          <div className="px-6 py-4 bg-background border-t">
             <div className="flex gap-3 justify-end">
               <Button
                 type="button"
                 variant="outline"
                 onClick={onClose}
-                className="rounded-full px-6 border-slate-200"
+                className="rounded-full px-6"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleSubmit}
                 disabled={updateCaseMutation.isPending}
-                className="rounded-full px-6 bg-slate-800 hover:bg-slate-700"
+                className="rounded-full px-6 bg-primary hover:bg-primary/90"
               >
                 {updateCaseMutation.isPending ? 'Updating...' : 'Update Case'}
               </Button>
