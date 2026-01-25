@@ -37,7 +37,7 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
   const [cases, setCases] = useState<CaseItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Server-side search function
+  // Server-side search function - no limit when searching to find any case
   const searchCases = useCallback(async (searchTerm: string) => {
     setIsLoading(true);
     let query = supabase.from('cases').select(`
@@ -55,15 +55,15 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
     // Apply search filter if search term exists
     if (searchTerm && searchTerm.trim().length > 0) {
       const term = searchTerm.trim();
-      query = query.or(`case_title.ilike.%${term}%,case_number.ilike.%${term}%,cnr_number.ilike.%${term}%,case_type.ilike.%${term}%,petitioner.ilike.%${term}%,respondent.ilike.%${term}%`);
+      // When searching, query all matching cases (no limit) to find any case
+      query = query.or(`case_title.ilike.%${term}%,case_number.ilike.%${term}%,cnr_number.ilike.%${term}%,case_type.ilike.%${term}%,petitioner.ilike.%${term}%,respondent.ilike.%${term}%,registration_number.ilike.%${term}%,filing_number.ilike.%${term}%`);
+      query = query.order('created_at', { ascending: false }).limit(200);
+    } else {
+      // Initial load: show recent 50 cases only
+      query = query.order('created_at', { ascending: false }).limit(50);
     }
-    query = query.order('created_at', {
-      ascending: false
-    }).limit(100);
-    const {
-      data,
-      error
-    } = await query;
+    
+    const { data, error } = await query;
     if (!error && data) {
       setCases(data as CaseItem[]);
     }
@@ -210,7 +210,7 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
                           <p className="text-sm font-semibold text-foreground">Available Cases</p>
                           <p className="text-xs text-muted-foreground">
                             {cases.length} case{cases.length !== 1 ? 's' : ''} found
-                            {cases.length === 100 && ' (showing first 100)'}
+                            {!searchQuery.trim() && cases.length === 50 && ' • Search to find more'}
                           </p>
                         </div>
                       </div>
