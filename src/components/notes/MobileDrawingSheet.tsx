@@ -2,6 +2,7 @@ import React, { useState, useRef, useCallback } from 'react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { X, Trash2, Undo2, Redo2, Pencil, Eraser, Check } from 'lucide-react';
 import getStroke from 'perfect-freehand';
+import { useHapticFeedback } from '@/hooks/use-haptic-feedback';
 
 interface MobileDrawingSheetProps {
   open: boolean;
@@ -32,6 +33,7 @@ export const MobileDrawingSheet: React.FC<MobileDrawingSheetProps> = ({
   initialData
 }) => {
   const svgRef = useRef<SVGSVGElement>(null);
+  const { trigger: haptic } = useHapticFeedback();
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentColor, setCurrentColor] = useState('#000000');
   const [brushSize, setBrushSize] = useState(6);
@@ -183,7 +185,7 @@ export const MobileDrawingSheet: React.FC<MobileDrawingSheetProps> = ({
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
             <button
               type="button"
-              onClick={onClose}
+              onClick={() => { haptic('light'); onClose(); }}
               className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center"
             >
               <X className="w-5 h-5 text-slate-600" />
@@ -191,7 +193,7 @@ export const MobileDrawingSheet: React.FC<MobileDrawingSheetProps> = ({
             <span className="text-base font-medium text-foreground">Draw</span>
             <button
               type="button"
-              onClick={handleSave}
+              onClick={() => { haptic('medium'); handleSave(); }}
               className="w-10 h-10 rounded-full bg-primary flex items-center justify-center"
             >
               <Check className="w-5 h-5 text-primary-foreground" />
@@ -237,7 +239,7 @@ export const MobileDrawingSheet: React.FC<MobileDrawingSheetProps> = ({
                 <div className="flex gap-1 p-1 bg-slate-100 rounded-xl">
                   <button
                     type="button"
-                    onClick={() => setActiveTool('pen')}
+                    onClick={() => { haptic('light'); setActiveTool('pen'); }}
                     className={`p-2.5 rounded-lg transition-colors ${
                       activeTool === 'pen' ? 'bg-white shadow-sm' : ''
                     }`}
@@ -246,7 +248,7 @@ export const MobileDrawingSheet: React.FC<MobileDrawingSheetProps> = ({
                   </button>
                   <button
                     type="button"
-                    onClick={() => setActiveTool('eraser')}
+                    onClick={() => { haptic('light'); setActiveTool('eraser'); }}
                     className={`p-2.5 rounded-lg transition-colors ${
                       activeTool === 'eraser' ? 'bg-white shadow-sm' : ''
                     }`}
@@ -259,7 +261,7 @@ export const MobileDrawingSheet: React.FC<MobileDrawingSheetProps> = ({
                 <div className="flex gap-1">
                   <button
                     type="button"
-                    onClick={undo}
+                    onClick={() => { haptic('light'); undo(); }}
                     disabled={strokes.length === 0}
                     className="p-2.5 rounded-lg disabled:opacity-30"
                   >
@@ -267,7 +269,7 @@ export const MobileDrawingSheet: React.FC<MobileDrawingSheetProps> = ({
                   </button>
                   <button
                     type="button"
-                    onClick={redo}
+                    onClick={() => { haptic('light'); redo(); }}
                     disabled={redoStack.length === 0}
                     className="p-2.5 rounded-lg disabled:opacity-30"
                   >
@@ -278,7 +280,7 @@ export const MobileDrawingSheet: React.FC<MobileDrawingSheetProps> = ({
                 {/* Clear */}
                 <button
                   type="button"
-                  onClick={clearCanvas}
+                  onClick={() => { haptic('medium'); clearCanvas(); }}
                   disabled={strokes.length === 0}
                   className="p-2.5 rounded-lg disabled:opacity-30"
                 >
@@ -293,7 +295,7 @@ export const MobileDrawingSheet: React.FC<MobileDrawingSheetProps> = ({
                     <button
                       key={color}
                       type="button"
-                      onClick={() => setCurrentColor(color)}
+                      onClick={() => { haptic('light'); setCurrentColor(color); }}
                       className={`w-8 h-8 rounded-full transition-transform ${
                         currentColor === color ? 'scale-125 ring-2 ring-offset-2 ring-slate-300' : ''
                       }`}
