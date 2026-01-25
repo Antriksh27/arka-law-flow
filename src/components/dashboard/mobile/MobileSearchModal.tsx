@@ -107,7 +107,7 @@ export const MobileSearchModal: React.FC<MobileSearchModalProps> = ({ open, onOp
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl bg-slate-50 p-0 border-0">
+      <SheetContent hideCloseButton side="bottom" className="h-[85vh] rounded-t-3xl bg-slate-50 p-0 border-0">
         {/* Header with Search */}
         <div className="bg-white px-4 py-4 border-b border-slate-100">
           <SheetTitle className="sr-only">Search</SheetTitle>
