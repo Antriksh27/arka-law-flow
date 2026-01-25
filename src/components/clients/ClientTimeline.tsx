@@ -1,9 +1,10 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   FileText, Calendar, CheckSquare, StickyNote, 
-  Briefcase, Loader2, Clock
+  Briefcase, Loader2, Clock, ChevronRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, formatDistanceToNow, isToday, isYesterday } from 'date-fns';
@@ -17,6 +18,7 @@ interface ClientTimelineProps {
 
 interface TimelineEvent {
   id: string;
+  entityId: string;
   type: 'case' | 'appointment' | 'document' | 'task' | 'note' | 'invoice';
   title: string;
   description: string;
@@ -63,6 +65,7 @@ const formatFullDate = (dateStr: string) => {
 
 export const ClientTimeline: React.FC<ClientTimelineProps> = ({ clientId }) => {
   const [showAll, setShowAll] = React.useState(false);
+  const navigate = useNavigate();
   const initialCount = 8;
 
   const { data: events = [], isLoading } = useQuery({
@@ -81,6 +84,7 @@ export const ClientTimeline: React.FC<ClientTimelineProps> = ({ clientId }) => {
         const style = getEventStyle('case');
         timelineEvents.push({
           id: `case-${caseItem.id}`,
+          entityId: caseItem.id,
           type: 'case',
           title: 'Case Created',
           description: `${caseItem.case_number}: ${caseItem.case_title || 'Untitled'}`,
@@ -102,6 +106,7 @@ export const ClientTimeline: React.FC<ClientTimelineProps> = ({ clientId }) => {
         const style = getEventStyle('appointment');
         timelineEvents.push({
           id: `appointment-${apt.id}`,
+          entityId: apt.id,
           type: 'appointment',
           title: 'Appointment Scheduled',
           description: apt.type || 'Meeting',
@@ -123,6 +128,7 @@ export const ClientTimeline: React.FC<ClientTimelineProps> = ({ clientId }) => {
         const style = getEventStyle('document');
         timelineEvents.push({
           id: `document-${doc.id}`,
+          entityId: doc.id,
           type: 'document',
           title: 'Document Added',
           description: doc.title || doc.file_name,
@@ -144,6 +150,7 @@ export const ClientTimeline: React.FC<ClientTimelineProps> = ({ clientId }) => {
         const style = getEventStyle('task');
         timelineEvents.push({
           id: `task-${task.id}`,
+          entityId: task.id,
           type: 'task',
           title: 'Task Created',
           description: task.title,
@@ -165,6 +172,7 @@ export const ClientTimeline: React.FC<ClientTimelineProps> = ({ clientId }) => {
         const style = getEventStyle('note');
         timelineEvents.push({
           id: `note-${note.id}`,
+          entityId: note.id,
           type: 'note',
           title: 'Note Added',
           description: note.title,
@@ -180,6 +188,28 @@ export const ClientTimeline: React.FC<ClientTimelineProps> = ({ clientId }) => {
       );
     }
   });
+
+  const handleEventClick = (event: TimelineEvent) => {
+    switch (event.type) {
+      case 'case':
+        navigate(`/cases/${event.entityId}`);
+        break;
+      case 'appointment':
+        navigate(`/appointments?id=${event.entityId}`);
+        break;
+      case 'document':
+        navigate(`/documents?id=${event.entityId}`);
+        break;
+      case 'task':
+        navigate(`/tasks?id=${event.entityId}`);
+        break;
+      case 'note':
+        navigate(`/notes?id=${event.entityId}`);
+        break;
+      default:
+        break;
+    }
+  };
 
   if (isLoading) {
     return (
@@ -228,9 +258,10 @@ export const ClientTimeline: React.FC<ClientTimelineProps> = ({ clientId }) => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2, delay: index * 0.03 }}
-                className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 active:scale-[0.98] transition-transform"
+                onClick={() => handleEventClick(event)}
+                className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 active:scale-[0.98] transition-transform cursor-pointer hover:shadow-md"
               >
-                <div className="flex items-start gap-4">
+                <div className="flex items-center gap-4">
                   {/* Icon */}
                   <div className={cn(
                     "w-11 h-11 rounded-xl flex items-center justify-center shrink-0",
@@ -260,6 +291,9 @@ export const ClientTimeline: React.FC<ClientTimelineProps> = ({ clientId }) => {
                       </div>
                     </div>
                   </div>
+
+                  {/* Chevron */}
+                  <ChevronRight className="w-4 h-4 text-muted-foreground/50 shrink-0" />
                 </div>
               </motion.div>
             );
