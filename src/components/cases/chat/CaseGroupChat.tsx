@@ -174,53 +174,60 @@ export const CaseGroupChat: React.FC<CaseGroupChatProps> = ({ caseId, caseName, 
 
   if (isLoading) {
     return (
-      <div className="space-y-4 p-6">
-        <Skeleton className="h-16 w-full" />
-        <Skeleton className="h-32 w-3/4" />
-        <Skeleton className="h-32 w-3/4 ml-auto" />
-        <Skeleton className="h-32 w-3/4" />
+      <div className="flex flex-col h-full bg-slate-50">
+        <div className="p-4 bg-white border-b border-slate-100">
+          <Skeleton className="h-12 w-full rounded-xl" />
+        </div>
+        <div className="flex-1 p-4 space-y-3">
+          <Skeleton className="h-16 w-3/4 rounded-2xl" />
+          <Skeleton className="h-16 w-3/4 ml-auto rounded-2xl" />
+          <Skeleton className="h-16 w-3/4 rounded-2xl" />
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-96 text-center p-6">
-        <div className="w-16 h-16 mx-auto rounded-full bg-muted flex items-center justify-center mb-4">
-          <MessageSquare className="w-8 h-8 text-muted-foreground" />
+      <div className="flex flex-col items-center justify-center h-full bg-slate-50 text-center p-6">
+        <div className="w-16 h-16 mx-auto rounded-2xl bg-white shadow-sm flex items-center justify-center mb-4">
+          <MessageSquare className="w-8 h-8 text-slate-400" />
         </div>
-        <h3 className="text-lg font-semibold mb-2">You are not part of the group chat</h3>
-        <p className="text-muted-foreground">Ask an admin to add you</p>
+        <h3 className="text-lg font-semibold text-slate-900 mb-2">Not a member</h3>
+        <p className="text-slate-500 text-sm">Ask an admin to add you to this chat</p>
       </div>
     );
   }
 
   if (!isReady || !group) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <p className="text-muted-foreground">Initializing chat...</p>
+      <div className="flex items-center justify-center h-full bg-slate-50">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 rounded-full border-2 border-slate-200 border-t-primary animate-spin" />
+          <p className="text-slate-500 text-sm">Initializing chat...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-br from-background via-background to-muted/20">
-      {/* Chat Header */}
-      <div className="border-b border-border px-6 py-4 bg-card/95 backdrop-blur-sm">
+    <div className="flex flex-col h-full bg-slate-50">
+      {/* iOS-style Chat Header */}
+      <div className="flex-shrink-0 bg-white border-b border-slate-100 px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="bg-primary/10 p-2.5 rounded-xl">
-              <Users className="w-5 h-5 text-primary" />
+            <div className="w-10 h-10 rounded-full bg-sky-50 flex items-center justify-center">
+              <Users className="w-5 h-5 text-sky-500" />
             </div>
             <div>
-              <h3 className="font-semibold text-foreground">{group.getName()}</h3>
+              <h3 className="font-semibold text-slate-900 text-sm">{group.getName()}</h3>
               <div className="flex items-center gap-2">
-                <p className="text-sm text-muted-foreground">
-                  {members.length} {members.length === 1 ? 'participant' : 'participants'}
+                <p className="text-xs text-slate-500">
+                  {members.length} {members.length === 1 ? 'member' : 'members'}
                 </p>
                 {typingUsers.length > 0 && (
-                  <div className="flex items-center gap-1 text-xs text-primary">
-                    <span>{getTypingUserNames()} typing</span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs text-sky-500">{getTypingUserNames()} typing</span>
                     <MessageLoading />
                   </div>
                 )}
@@ -229,13 +236,12 @@ export const CaseGroupChat: React.FC<CaseGroupChatProps> = ({ caseId, caseName, 
           </div>
           {isAdmin && (
             <Button
-              variant="outline"
-              size="sm"
+              variant="ghost"
+              size="icon"
               onClick={() => setShowParticipantsDialog(true)}
-              className="gap-2 hover:bg-accent transition-colors"
+              className="h-9 w-9 rounded-full bg-slate-50 hover:bg-slate-100"
             >
-              <Settings className="w-4 h-4" />
-              Manage
+              <Settings className="w-4 h-4 text-slate-600" />
             </Button>
           )}
         </div>
@@ -244,15 +250,15 @@ export const CaseGroupChat: React.FC<CaseGroupChatProps> = ({ caseId, caseName, 
       {/* Messages Area */}
       <div
         ref={scrollContainerRef}
-        className="flex-1 overflow-y-auto p-6 space-y-4 bg-card [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+        className="flex-1 min-h-0 overflow-y-auto px-4 py-4 space-y-1"
       >
         {messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="bg-muted/50 p-4 rounded-full mb-4">
-              <Users className="w-8 h-8 text-muted-foreground" />
+          <div className="flex flex-col items-center justify-center h-full text-center py-12">
+            <div className="w-16 h-16 rounded-2xl bg-white shadow-sm flex items-center justify-center mb-4">
+              <MessageSquare className="w-8 h-8 text-slate-300" />
             </div>
-            <p className="text-foreground font-medium">No messages yet</p>
-            <p className="text-muted-foreground text-sm mt-1">
+            <p className="text-slate-900 font-medium">No messages yet</p>
+            <p className="text-slate-500 text-sm mt-1">
               Start the conversation with your team
             </p>
           </div>
@@ -263,32 +269,13 @@ export const CaseGroupChat: React.FC<CaseGroupChatProps> = ({ caseId, caseName, 
           const prevMessage = index > 0 ? messages[index - 1] : null;
           const nextMessage = index < messages.length - 1 ? messages[index + 1] : null;
 
-          // Check if this message is from the same sender as the previous one
           const isSameSenderAsPrev = prevMessage && 
             prevMessage.getSender().getUid() === message.getSender().getUid();
           const isSameSenderAsNext = nextMessage && 
             nextMessage.getSender().getUid() === message.getSender().getUid();
 
-          // Show avatar only for the last message in a group
           const shouldShowAvatar = !isSameSenderAsNext;
-
-          // Adjust spacing based on grouping
-          const spacingClass = isSameSenderAsPrev ? 'mt-1.5' : 'mt-8';
-
-          // Dynamic border radius based on position in group
-          const borderRadius = !isSameSenderAsPrev && !isSameSenderAsNext
-            ? 'rounded-2xl' // Single message (fully rounded)
-            : !isSameSenderAsPrev && isSameSenderAsNext
-            ? isMe
-              ? 'rounded-tl-2xl rounded-tr-2xl rounded-bl-lg rounded-br-2xl' // First in group (right)
-              : 'rounded-bl-2xl rounded-br-2xl rounded-tl-lg rounded-tr-2xl' // First in group (left)
-            : isSameSenderAsPrev && isSameSenderAsNext
-            ? isMe
-              ? 'rounded-tl-lg rounded-tr-2xl rounded-bl-lg rounded-br-2xl' // Middle of group (right)
-              : 'rounded-tl-2xl rounded-tr-lg rounded-bl-2xl rounded-br-lg' // Middle of group (left)
-            : isMe
-            ? 'rounded-tl-2xl rounded-tr-lg rounded-bl-2xl rounded-br-lg' // Last in group (right)
-            : 'rounded-tl-2xl rounded-tr-lg rounded-bl-2xl rounded-br-lg'; // Last in group (left)
+          const spacingClass = isSameSenderAsPrev ? 'mt-0.5' : 'mt-4';
 
           const messageText = (message as CometChat.TextMessage).getText?.() || '';
           const senderName = message.getSender().getName();
@@ -308,40 +295,44 @@ export const CaseGroupChat: React.FC<CaseGroupChatProps> = ({ caseId, caseName, 
             >
               {/* Avatar */}
               {shouldShowAvatar && !isMe ? (
-                <Avatar className="h-8 w-8 mb-1">
+                <Avatar className="h-7 w-7 mb-5">
                   <AvatarImage src={message.getSender().getAvatar()} />
-                  <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                  <AvatarFallback className="bg-emerald-50 text-emerald-600 text-xs font-medium">
                     {getInitials(senderName)}
                   </AvatarFallback>
                 </Avatar>
               ) : (
-                !isMe && <div className="w-8" />
+                !isMe && <div className="w-7" />
               )}
 
               {/* Message Bubble */}
-              <div className={cn('flex flex-col max-w-[70%]', isMe ? 'items-end' : 'items-start')}>
-                {/* Sender name for first message in group (group chats only, not own messages) */}
+              <div className={cn('flex flex-col max-w-[75%]', isMe ? 'items-end' : 'items-start')}>
                 {!isMe && !isSameSenderAsPrev && (
-                  <span className="text-xs text-muted-foreground mb-1 px-3">
+                  <span className="text-xs text-slate-500 mb-1 ml-1 font-medium">
                     {senderName}
                   </span>
                 )}
                 
                 <div
                   className={cn(
-                    'px-4 py-2.5 shadow-sm transition-all',
-                    borderRadius,
+                    'px-3.5 py-2 shadow-sm',
+                    isSameSenderAsPrev && isSameSenderAsNext
+                      ? 'rounded-2xl'
+                      : !isSameSenderAsPrev && isSameSenderAsNext
+                      ? isMe ? 'rounded-2xl rounded-br-lg' : 'rounded-2xl rounded-bl-lg'
+                      : isSameSenderAsPrev && !isSameSenderAsNext
+                      ? isMe ? 'rounded-2xl rounded-tr-lg' : 'rounded-2xl rounded-tl-lg'
+                      : 'rounded-2xl',
                     isMe
-                      ? 'bg-blue-50 text-gray-900'
-                      : 'bg-gray-100 text-gray-900'
+                      ? 'bg-sky-500 text-white'
+                      : 'bg-white text-slate-900'
                   )}
                 >
-                  <p className="text-sm whitespace-pre-wrap break-words">{messageText}</p>
+                  <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">{messageText}</p>
                 </div>
 
-                {/* Timestamp for last message in group */}
                 {shouldShowAvatar && (
-                  <span className="text-xs text-muted-foreground mt-1 px-3">
+                  <span className="text-[10px] text-slate-400 mt-1 mx-1">
                     {timestamp}
                   </span>
                 )}
@@ -352,11 +343,11 @@ export const CaseGroupChat: React.FC<CaseGroupChatProps> = ({ caseId, caseName, 
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Area */}
-      <div className="border-t border-border bg-card p-4">
-        <div className="flex items-center gap-3">
+      {/* Sticky Input Area - iOS style */}
+      <div className="flex-shrink-0 bg-white border-t border-slate-100 p-3 pb-safe">
+        <div className="flex items-center gap-2">
           <Input
-            placeholder="Type your message..."
+            placeholder="Message..."
             value={inputValue}
             onChange={handleInputChange}
             onKeyDown={(e) => {
@@ -365,13 +356,13 @@ export const CaseGroupChat: React.FC<CaseGroupChatProps> = ({ caseId, caseName, 
                 handleSendMessage();
               }
             }}
-            className="flex-1 bg-background border-border/50 focus:ring-2 focus:ring-primary/50"
+            className="flex-1 h-10 bg-slate-50 border-0 rounded-full px-4 text-sm placeholder:text-slate-400 focus-visible:ring-1 focus-visible:ring-sky-200"
           />
           <Button
             onClick={handleSendMessage}
             disabled={!inputValue.trim()}
             size="icon"
-            className="h-10 w-10 rounded-xl"
+            className="h-10 w-10 rounded-full bg-sky-500 hover:bg-sky-600 disabled:bg-slate-200 disabled:text-slate-400 transition-colors"
           >
             <Send className="w-4 h-4" />
           </Button>
