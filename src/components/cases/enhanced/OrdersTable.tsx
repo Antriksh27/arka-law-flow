@@ -2,9 +2,10 @@ import { useState, useMemo, useCallback } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
-import { FileText, Eye, Download, ChevronLeft, ChevronRight, X, Files } from 'lucide-react';
+import { FileText, Eye, Download, ChevronLeft, ChevronRight, X, Files, Scale } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Order {
   id: string;
@@ -178,6 +179,7 @@ export const OrdersTable = ({ orders }: OrdersTableProps) => {
   const [selectedPdf, setSelectedPdf] = useState<{ data: string; name: string } | null>(null);
   const [viewAllOpen, setViewAllOpen] = useState(false);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const ordersWithPdf = useMemo(() => orders.filter((o) => o.pdf_base64), [orders]);
 
@@ -196,7 +198,6 @@ export const OrdersTable = ({ orders }: OrdersTableProps) => {
       description: `Downloading ${ordersWithPdf.length} order(s)`,
     });
 
-    // Download each PDF individually (browser limitation prevents merging without a library)
     ordersWithPdf.forEach((order, idx) => {
       if (order.pdf_base64) {
         const linkSource = `data:application/pdf;base64,${order.pdf_base64}`;
@@ -210,13 +211,126 @@ export const OrdersTable = ({ orders }: OrdersTableProps) => {
 
   if (orders.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-[#6B7280]">
-        <FileText className="h-12 w-12 mb-4 opacity-50" />
-        <div className="text-base">No orders found</div>
+      <div className="flex flex-col items-center justify-center py-12 text-slate-500">
+        <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
+          <Scale className="h-7 w-7 text-slate-400" />
+        </div>
+        <p className="text-sm font-medium text-slate-900">No orders found</p>
+        <p className="text-xs text-slate-500 mt-1">Court orders will appear here</p>
       </div>
     );
   }
 
+  // Mobile Card View
+  if (isMobile) {
+    return (
+      <>
+        {/* Mobile Action Buttons */}
+        <div className="flex gap-2 mb-4">
+          <Button
+            variant="outline"
+            onClick={() => setViewAllOpen(true)}
+            disabled={ordersWithPdf.length === 0}
+            className="flex-1 h-10 text-xs rounded-full"
+          >
+            <Files className="h-4 w-4 mr-1.5" />
+            View All ({ordersWithPdf.length})
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleDownloadAll}
+            disabled={ordersWithPdf.length === 0}
+            className="flex-1 h-10 text-xs rounded-full"
+          >
+            <Download className="h-4 w-4 mr-1.5" />
+            Download All
+          </Button>
+        </div>
+
+        {/* Mobile Order Cards */}
+        <div className="space-y-3">
+          {orders.map((order, idx) => (
+            <div key={order.id} className="bg-slate-50 rounded-xl p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                    <Scale className="w-4 h-4 text-emerald-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-slate-900">
+                      {order.order_number || `Order ${idx + 1}`}
+                    </p>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      {order.hearing_date 
+                        ? format(new Date(order.hearing_date), 'dd MMM yyyy')
+                        : 'No Date'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              {order.judge && (
+                <div className="mt-2">
+                  <p className="text-xs text-slate-500">Judge: {order.judge}</p>
+                </div>
+              )}
+              
+              {order.pdf_base64 && (
+                <div className="mt-3 pt-3 border-t border-slate-200 flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      setSelectedPdf({
+                        data: order.pdf_base64!,
+                        name: `Order_${order.order_number || idx + 1}.pdf`,
+                      })
+                    }
+                    className="flex-1 h-9 text-xs rounded-full"
+                  >
+                    <Eye className="h-3.5 w-3.5 mr-1.5" />
+                    View
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      const linkSource = `data:application/pdf;base64,${order.pdf_base64}`;
+                      const downloadLink = document.createElement('a');
+                      downloadLink.href = linkSource;
+                      downloadLink.download = `Order_${order.order_number || idx + 1}.pdf`;
+                      downloadLink.click();
+                    }}
+                    className="flex-1 h-9 text-xs rounded-full"
+                  >
+                    <Download className="h-3.5 w-3.5 mr-1.5" />
+                    Download
+                  </Button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* PDF Viewers */}
+        {selectedPdf && (
+          <PDFViewerModal
+            base64Data={selectedPdf.data}
+            fileName={selectedPdf.name}
+            isOpen={!!selectedPdf}
+            onClose={() => setSelectedPdf(null)}
+          />
+        )}
+        <AllOrdersViewerModal
+          orders={orders}
+          isOpen={viewAllOpen}
+          onClose={() => setViewAllOpen(false)}
+        />
+      </>
+    );
+  }
+
+  // Desktop Table View
   return (
     <>
       {/* Action Buttons */}
@@ -242,26 +356,26 @@ export const OrdersTable = ({ orders }: OrdersTableProps) => {
       </div>
 
       {/* Orders Table */}
-      <div className="rounded-xl border border-[#E5E7EB] overflow-hidden">
+      <div className="rounded-xl border border-slate-200 overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="bg-[#F9FAFB]">
-              <TableHead className="font-semibold">Order No</TableHead>
-              <TableHead className="font-semibold">Judge</TableHead>
-              <TableHead className="font-semibold">Judgment Date</TableHead>
-              <TableHead className="font-semibold">Actions</TableHead>
+            <TableRow className="bg-slate-50">
+              <TableHead className="font-semibold text-slate-700">Order No</TableHead>
+              <TableHead className="font-semibold text-slate-700">Judge</TableHead>
+              <TableHead className="font-semibold text-slate-700">Judgment Date</TableHead>
+              <TableHead className="font-semibold text-slate-700">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {orders.map((order, idx) => (
               <TableRow key={order.id}>
-                <TableCell className="font-medium text-[#111827]">
+                <TableCell className="font-medium text-slate-900">
                   {order.order_number || `Order ${idx + 1}`}
                 </TableCell>
-                <TableCell className="text-[#111827]">
+                <TableCell className="text-slate-700">
                   {order.judge || 'N/A'}
                 </TableCell>
-                <TableCell className="text-[#111827]">
+                <TableCell className="text-slate-700">
                   {order.hearing_date
                     ? format(new Date(order.hearing_date), 'dd/MM/yyyy')
                     : 'N/A'}
@@ -300,7 +414,7 @@ export const OrdersTable = ({ orders }: OrdersTableProps) => {
                       </Button>
                     </div>
                   ) : (
-                    <span className="text-sm text-[#6B7280]">No PDF</span>
+                    <span className="text-sm text-slate-500">No PDF</span>
                   )}
                 </TableCell>
               </TableRow>
