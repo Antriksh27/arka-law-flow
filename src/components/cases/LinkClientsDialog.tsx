@@ -217,10 +217,10 @@ export const LinkClientsDialog: React.FC<LinkClientsDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent hideCloseButton className="sm:max-w-xl p-0 bg-muted overflow-hidden">
+      <DialogContent hideCloseButton className="sm:max-w-xl p-0 bg-slate-50 overflow-hidden">
         <div className="flex flex-col h-full sm:h-auto">
           {/* Header */}
-          <div className="px-6 py-5 bg-background border-b border-border">
+          <div className="px-6 py-5 bg-white border-b border-slate-100">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center">
@@ -234,9 +234,9 @@ export const LinkClientsDialog: React.FC<LinkClientsDialogProps> = ({
               <button
                 onClick={handleClose}
                 disabled={isProcessing}
-                className="md:hidden w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
+                className="md:hidden w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors"
               >
-                <X className="w-4 h-4 text-muted-foreground" />
+                <X className="w-4 h-4 text-slate-500" />
               </button>
             </div>
           </div>
@@ -244,7 +244,7 @@ export const LinkClientsDialog: React.FC<LinkClientsDialogProps> = ({
           {/* Scrollable Content */}
           <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-4">
             {/* File Upload Card */}
-            <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
               <div className="p-4">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
@@ -309,7 +309,7 @@ export const LinkClientsDialog: React.FC<LinkClientsDialogProps> = ({
 
             {/* Progress Section */}
             {isProcessing && totalRows > 0 && (
-              <div className="bg-background rounded-2xl shadow-sm p-4 space-y-3">
+              <div className="bg-white rounded-2xl shadow-sm p-4 space-y-3">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Progress</span>
                   <span className="font-medium text-foreground">
@@ -322,13 +322,13 @@ export const LinkClientsDialog: React.FC<LinkClientsDialogProps> = ({
 
             {/* Results Section */}
             {result && (
-              <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-4 border-b border-border">
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-4 border-b border-slate-100">
                   <h3 className="font-semibold text-foreground">Results</h3>
                 </div>
                 <div className="p-4 space-y-3">
                   <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div className="flex items-center justify-between p-3 bg-muted rounded-xl">
+                    <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
                       <span className="text-muted-foreground">Total Rows</span>
                       <span className="font-semibold text-foreground">{result.total}</span>
                     </div>
@@ -336,7 +336,7 @@ export const LinkClientsDialog: React.FC<LinkClientsDialogProps> = ({
                       <span className="text-emerald-600">Linked</span>
                       <span className="font-semibold text-emerald-600">{result.linked}</span>
                     </div>
-                    <div className="flex items-center justify-between p-3 bg-muted rounded-xl">
+                    <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
                       <span className="text-muted-foreground">Skipped</span>
                       <span className="font-semibold text-muted-foreground">{result.skipped}</span>
                     </div>
@@ -371,7 +371,7 @@ export const LinkClientsDialog: React.FC<LinkClientsDialogProps> = ({
           </div>
 
           {/* Footer */}
-          <div className="px-6 py-4 bg-background border-t border-border">
+          <div className="px-6 py-4 bg-white border-t border-slate-100">
             <div className="flex gap-3 justify-end">
               {result && (
                 <Button

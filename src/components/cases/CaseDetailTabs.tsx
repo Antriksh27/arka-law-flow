@@ -19,6 +19,9 @@ import { CaseResearch } from './CaseResearch';
 import { CaseLegalkartIntegration } from './CaseLegalkartIntegration';
 import { CreateNoteMultiModal } from '../notes/CreateNoteMultiModal';
 import { LegalkartApiDocuments } from './legalkart/LegalkartApiDocuments';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
+
 interface CaseDetailTabsProps {
   caseId: string;
   activeTab: string;
@@ -31,6 +34,7 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
 }) => {
   const [showCreateNoteModal, setShowCreateNoteModal] = useState(false);
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
 
   const handleCaseDataUpdated = () => {
     // Invalidate and refetch case data and Legalkart data
@@ -149,105 +153,181 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
     label: 'Activity',
     icon: Activity
   }];
-  return <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+
+  // All tabs combined for mobile
+  const allTabs = [...primaryTabs, ...secondaryTabs];
+
+  // Tab content renderer (shared between mobile and desktop)
+  const renderTabContent = () => (
+    <div className={cn("bg-slate-50", isMobile ? "p-4" : "p-6")}>
+      <TabsContent value="overview" className="m-0">
+        <CaseOverview caseId={caseId} />
+      </TabsContent>
+
+      <TabsContent value="details" className="m-0">
+        <CaseDetails caseId={caseId} />
+      </TabsContent>
+
+      <TabsContent value="timeline" className="m-0">
+        <CaseTimeline caseId={caseId} />
+      </TabsContent>
+
+      <TabsContent value="hearings" className="m-0">
+        <CaseHearings caseId={caseId} />
+      </TabsContent>
+
+      <TabsContent value="documents" className="m-0">
+        <div className="space-y-4">
+          {!isMobile && (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+                  <Input placeholder="Search documents..." className="pl-10 w-64" />
+                </div>
+                <Button variant="outline" size="sm">
+                  <Filter className="w-4 h-4 mr-2" />
+                  Filter
+                </Button>
+              </div>
+            </div>
+          )}
+          <CaseDocuments caseId={caseId} />
+          {/* Legalkart API-sourced documents (opens via iframe) */}
+          <div className="mt-8">
+            <LegalkartApiDocuments caseId={caseId} />
+          </div>
+        </div>
+      </TabsContent>
+
+      <TabsContent value="tasks" className="m-0">
+        <CaseTasks caseId={caseId} />
+      </TabsContent>
+
+      <TabsContent value="notes" className="m-0">
+        <CaseNotes caseId={caseId} />
+      </TabsContent>
+
+      <TabsContent value="messages" className="m-0">
+        <CaseMessages caseId={caseId} />
+      </TabsContent>
+
+      <TabsContent value="research" className="m-0">
+        <CaseResearch caseId={caseId} />
+      </TabsContent>
+
+      <TabsContent value="legalkart" className="m-0">
+        <CaseLegalkartIntegration 
+          caseId={caseId}
+          cnrNumber={caseData?.cnr_number}
+          autoFetchEnabled={caseData?.cnr_auto_fetch_enabled}
+          lastFetchedAt={caseData?.last_fetched_at}
+          onCaseDataUpdated={handleCaseDataUpdated}
+        />
+      </TabsContent>
+
+      <TabsContent value="activity" className="m-0">
+        <CaseActivity caseId={caseId} />
+      </TabsContent>
+    </div>
+  );
+
+  // Mobile view with sticky horizontal scrollable tabs
+  if (isMobile) {
+    return (
+      <div className="flex flex-col h-full">
+        <Tabs value={activeTab} onValueChange={onTabChange} className="flex-1 flex flex-col">
+          {/* Sticky Tab Navigation */}
+          <div className="sticky top-0 z-30 bg-white border-b border-slate-200">
+            <div className="overflow-x-auto scrollbar-hide">
+              <div className="flex min-w-max px-2 py-2 gap-1">
+                {allTabs.map(tab => {
+                  const IconComponent = tab.icon;
+                  const isActive = activeTab === tab.value;
+                  return (
+                    <button
+                      key={tab.value}
+                      onClick={() => onTabChange(tab.value)}
+                      className={cn(
+                        "flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all active:scale-95",
+                        isActive 
+                          ? "bg-primary text-primary-foreground shadow-sm" 
+                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      )}
+                    >
+                      <IconComponent className="w-3.5 h-3.5" />
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Tab Content */}
+          {renderTabContent()}
+        </Tabs>
+        
+        <CreateNoteMultiModal open={showCreateNoteModal} onClose={() => setShowCreateNoteModal(false)} caseId={caseId} />
+      </div>
+    );
+  }
+
+  // Desktop view
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
       {/* Main Content */}
       <div className="lg:col-span-3">
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm">
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm">
           <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
             {/* Two-layer tab navigation */}
-            <div className="border-b border-gray-200">
+            <div className="border-b border-slate-200">
               {/* Primary tabs row */}
-              <div className="flex border-b border-gray-100">
+              <div className="flex border-b border-slate-100">
                 {primaryTabs.map(tab => {
-                const IconComponent = tab.icon;
-                return <button key={tab.value} onClick={() => onTabChange(tab.value)} className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors flex-1 justify-center border-b-2 ${activeTab === tab.value ? 'border-primary text-primary bg-blue-50' : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'}`}>
+                  const IconComponent = tab.icon;
+                  return (
+                    <button 
+                      key={tab.value} 
+                      onClick={() => onTabChange(tab.value)} 
+                      className={cn(
+                        "flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors flex-1 justify-center border-b-2",
+                        activeTab === tab.value 
+                          ? "border-primary text-primary bg-primary/5" 
+                          : "border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                      )}
+                    >
                       <IconComponent className="w-4 h-4" />
                       {tab.label}
-                    </button>;
-              })}
+                    </button>
+                  );
+                })}
               </div>
               
               {/* Secondary tabs row */}
               <div className="flex">
                 {secondaryTabs.map(tab => {
-                const IconComponent = tab.icon;
-                return <button key={tab.value} onClick={() => onTabChange(tab.value)} className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors flex-1 justify-center border-b-2 ${activeTab === tab.value ? 'border-primary text-primary bg-blue-50' : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'}`}>
+                  const IconComponent = tab.icon;
+                  return (
+                    <button 
+                      key={tab.value} 
+                      onClick={() => onTabChange(tab.value)} 
+                      className={cn(
+                        "flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors flex-1 justify-center border-b-2",
+                        activeTab === tab.value 
+                          ? "border-primary text-primary bg-primary/5" 
+                          : "border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                      )}
+                    >
                       <IconComponent className="w-4 h-4" />
                       {tab.label}
-                    </button>;
-              })}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
-            <div className="p-6 bg-slate-50">
-              <TabsContent value="overview" className="m-0">
-                <CaseOverview caseId={caseId} />
-              </TabsContent>
-
-              <TabsContent value="details" className="m-0">
-                <CaseDetails caseId={caseId} />
-              </TabsContent>
-
-              <TabsContent value="timeline" className="m-0">
-                <CaseTimeline caseId={caseId} />
-              </TabsContent>
-
-              <TabsContent value="hearings" className="m-0">
-                <CaseHearings caseId={caseId} />
-              </TabsContent>
-
-              <TabsContent value="documents" className="m-0">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="relative">
-                        <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                        <Input placeholder="Search documents..." className="pl-10 w-64" />
-                      </div>
-                      <Button variant="outline" size="sm">
-                        <Filter className="w-4 h-4 mr-2" />
-                        Filter
-                      </Button>
-                    </div>
-                  </div>
-                  <CaseDocuments caseId={caseId} />
-                  {/* Legalkart API-sourced documents (opens via iframe) */}
-                  <div className="mt-8">
-                    <LegalkartApiDocuments caseId={caseId} />
-                  </div>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="tasks" className="m-0">
-                <CaseTasks caseId={caseId} />
-              </TabsContent>
-
-              <TabsContent value="notes" className="m-0">
-                <CaseNotes caseId={caseId} />
-              </TabsContent>
-
-              <TabsContent value="messages" className="m-0">
-                <CaseMessages caseId={caseId} />
-              </TabsContent>
-
-              <TabsContent value="research" className="m-0">
-                <CaseResearch caseId={caseId} />
-              </TabsContent>
-
-              <TabsContent value="legalkart" className="m-0">
-                <CaseLegalkartIntegration 
-                  caseId={caseId}
-                  cnrNumber={caseData?.cnr_number}
-                  autoFetchEnabled={caseData?.cnr_auto_fetch_enabled}
-                  lastFetchedAt={caseData?.last_fetched_at}
-                  onCaseDataUpdated={handleCaseDataUpdated}
-                />
-              </TabsContent>
-
-              <TabsContent value="activity" className="m-0">
-                <CaseActivity caseId={caseId} />
-              </TabsContent>
-            </div>
+            {renderTabContent()}
           </Tabs>
         </div>
       </div>
@@ -255,7 +335,7 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
       {/* Sidebar */}
       <div className="lg:col-span-1 space-y-6">
         {/* Quick Actions */}
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
           <h3 className="text-xl font-semibold mb-4">Quick Actions</h3>
           <div className="space-y-3">
             <Button 
@@ -273,26 +353,31 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
         </div>
 
         {/* Recent Activity */}
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
           <h3 className="text-xl font-semibold mb-4">Recent Activity</h3>
           <div className="space-y-4">
-            {recentActivities && recentActivities.length > 0 ? recentActivities.map(activity => <div key={activity.id} className="flex items-start gap-3">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <Activity className="w-4 h-4 text-blue-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{getActivityTypeLabel(activity.activity_type)}</p>
-                    <p className="text-xs text-muted">
-                      {TimeUtils.formatDateTime(activity.created_at, 'MMM d, h:mm a')}
-                    </p>
-                  </div>
-              </div>) : <div className="text-center py-4">
-                <p className="text-sm text-muted">No recent activity</p>
-              </div>}
+            {recentActivities && recentActivities.length > 0 ? recentActivities.map(activity => (
+              <div key={activity.id} className="flex items-start gap-3">
+                <div className="w-8 h-8 bg-sky-100 rounded-full flex items-center justify-center">
+                  <Activity className="w-4 h-4 text-sky-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium">{getActivityTypeLabel(activity.activity_type)}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {TimeUtils.formatDateTime(activity.created_at, 'MMM d, h:mm a')}
+                  </p>
+                </div>
+              </div>
+            )) : (
+              <div className="text-center py-4">
+                <p className="text-sm text-muted-foreground">No recent activity</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       <CreateNoteMultiModal open={showCreateNoteModal} onClose={() => setShowCreateNoteModal(false)} caseId={caseId} />
-    </div>;
+    </div>
+  );
 };
