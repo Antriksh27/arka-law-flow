@@ -57,12 +57,14 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
   return (
     <header
       className={cn(
-        'sticky top-0 z-40 w-full bg-background border-b border-border h-14 sm:hidden',
+        // Use min-height + safe-area padding to avoid clipping on iOS / emulators
+        'sticky top-0 z-40 w-full bg-background border-b border-border sm:hidden',
         'supports-[padding-top:env(safe-area-inset-top)]:pt-[env(safe-area-inset-top)]',
+        'min-h-[calc(3.5rem+env(safe-area-inset-top))]',
         className
       )}
     >
-      <div className="flex items-center justify-between h-full px-4">
+      <div className="flex items-center justify-between h-14 px-4">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           {showBack && (
             <button
