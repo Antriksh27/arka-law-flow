@@ -1,6 +1,7 @@
 import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import TimeUtils from '@/lib/timeUtils';
+import { bg, text } from '@/lib/colors';
 
 interface ChatListProps {
   children: React.ReactNode;
@@ -19,7 +20,7 @@ interface ChatListItemProps {
 const ChatListItem: React.FC<ChatListItemProps> = ({ avatar, name, message, timestamp, selected = false, unread = false, onClick }) => (
   <li
     className={`flex items-start gap-3 p-2 rounded-lg cursor-pointer transition-colors w-full ${
-      selected ? 'bg-accent' : 'bg-white hover:bg-slate-50'
+      selected ? 'bg-accent' : `bg-white ${bg.hover}`
     }`}
     onClick={onClick}
   >
@@ -35,13 +36,13 @@ const ChatListItem: React.FC<ChatListItemProps> = ({ avatar, name, message, time
     )}
     <div className="flex-1 min-w-0">
       <div className="flex justify-between items-center">
-        <p className={`font-semibold text-sm truncate ${selected ? 'text-accent-foreground' : 'text-slate-900'}`}>{name}</p>
-        <p className="text-xs text-slate-500 flex-shrink-0 ml-2">
+        <p className={`font-semibold text-sm truncate ${selected ? 'text-accent-foreground' : text.primary}`}>{name}</p>
+        <p className={`text-xs ${text.muted} flex-shrink-0 ml-2`}>
           {TimeUtils.isToday(timestamp) ? TimeUtils.formatTime(timestamp) : TimeUtils.formatDate(timestamp)}
         </p>
       </div>
       <div className="flex justify-between items-center mt-1">
-        <p className="text-sm text-slate-600 truncate">{message}</p>
+        <p className={`text-sm ${text.secondary} truncate`}>{message}</p>
         {unread && (
           <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0 ml-2" />
         )}

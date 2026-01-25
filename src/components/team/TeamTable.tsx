@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useTeamMembers } from "./useTeamMembers";
 import {
@@ -12,11 +11,12 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { User } from "lucide-react";
+import { bg, text, status } from '@/lib/colors';
 
 const statusColor: Record<string, string> = {
   active: "bg-green-100 text-green-800",
   onboarding: "bg-blue-100 text-blue-800",
-  inactive: "bg-slate-100 text-slate-500",
+  inactive: `${bg.muted} ${text.muted}`,
   invited: "bg-blue-50 text-blue-700",
   suspended: "bg-red-50 text-red-700",
 };
@@ -110,12 +110,12 @@ const TeamTable = () => {
               <span>{member.email}</span>
             </TableCell>
             <TableCell>
-              <Badge className={`rounded-full px-3 py-1 text-xs font-medium ${roleColor[member.role] || "bg-slate-100 text-slate-900"}`}>
+              <Badge className={`rounded-full px-3 py-1 text-xs font-medium ${roleColor[member.role] || `${status.default.bg} ${text.primary}`}`}>
                 {member.role.replace("_", " ").replace(/\b\w/g, c => c.toUpperCase())}
               </Badge>
             </TableCell>
             <TableCell>
-              <Badge className={`rounded-full px-3 py-1 text-xs ${statusColor[member.status] || "bg-slate-100 text-slate-900"}`}>
+              <Badge className={`rounded-full px-3 py-1 text-xs ${statusColor[member.status] || `${status.default.bg} ${text.primary}`}`}>
                 {member.status.charAt(0).toUpperCase() + member.status.slice(1)}
               </Badge>
             </TableCell>

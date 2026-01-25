@@ -14,6 +14,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Plus, X, User, Building2, Mail, Phone, MapPin, UserCheck, FileText, Loader2 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { bg, border, text, status } from '@/lib/colors';
 
 interface AddContactDialogProps {
   open: boolean;
@@ -188,16 +189,16 @@ export const AddContactDialog = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden">
-        <div className="flex flex-col h-full bg-slate-50">
+        <div className={`flex flex-col h-full ${bg.page}`}>
           {/* Header */}
-          <div className="flex items-center justify-between p-4 bg-white border-b border-slate-200">
+          <div className={`flex items-center justify-between p-4 bg-white border-b ${border.default}`}>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
                 <User className="w-5 h-5 text-violet-500" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-slate-900">Add Contact</h2>
-                <p className="text-xs text-slate-500">Create a new contact record</p>
+                <h2 className={`text-lg font-semibold ${text.primary}`}>Add Contact</h2>
+                <p className={`text-xs ${text.muted}`}>Create a new contact record</p>
               </div>
             </div>
             {isMobile && (
@@ -214,10 +215,10 @@ export const AddContactDialog = ({
                 {/* Contact Type Card */}
                 <div className="bg-white rounded-2xl shadow-sm p-4">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
-                      <User className="w-4 h-4 text-slate-600" />
+                    <div className={`w-8 h-8 rounded-lg ${bg.muted} flex items-center justify-center`}>
+                      <User className={`w-4 h-4 ${text.secondary}`} />
                     </div>
-                    <span className="font-medium text-slate-700">Contact Type</span>
+                    <span className={`font-medium ${text.secondary}`}>Contact Type</span>
                   </div>
                   <FormField
                     control={form.control}
@@ -234,7 +235,7 @@ export const AddContactDialog = ({
                                 className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
                                   field.value === type
                                     ? 'bg-violet-100 text-violet-700 ring-2 ring-violet-200'
-                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                    : `${bg.muted} ${text.secondary} hover:${bg.active}`
                                 }`}
                               >
                                 {type}
@@ -253,7 +254,7 @@ export const AddContactDialog = ({
                     <div className="w-8 h-8 rounded-lg bg-sky-50 flex items-center justify-center">
                       <User className="w-4 h-4 text-sky-500" />
                     </div>
-                    <span className="font-medium text-slate-700">Basic Information</span>
+                    <span className={`font-medium ${text.secondary}`}>Basic Information</span>
                   </div>
 
                   <FormField

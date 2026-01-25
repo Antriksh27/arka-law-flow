@@ -23,6 +23,8 @@ import {
 import { Trash2, Loader2, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { TimeUtils } from '@/lib/timeUtils';
+import { bg, border, text, status } from '@/lib/colors';
+
 interface CasesTableProps {
   searchQuery: string;
   statusFilter: string;
@@ -166,14 +168,14 @@ export const CasesTable: React.FC<CasesTableProps> = ({
     },
     ...defaultQueryConfig,
   });
-  const getStatusColor = (status: string) => {
-    switch (status) {
+  const getStatusColor = (caseStatus: string) => {
+    switch (caseStatus) {
       case 'pending':
         return 'bg-amber-100 text-amber-700 border-amber-200';
       case 'disposed':
         return 'bg-purple-100 text-purple-700 border-purple-200';
       default:
-        return 'bg-slate-100 text-slate-700 border-slate-200';
+        return `${status.default.bg} ${status.default.text} ${status.default.border}`;
     }
   };
 
@@ -285,9 +287,9 @@ export const CasesTable: React.FC<CasesTableProps> = ({
 
   return (
     <>
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200">
+      <div className={`bg-white rounded-2xl shadow-sm border ${border.default}`}>
         {selectedCases.size > 0 && (
-          <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-50">
+          <div className={`flex items-center justify-between p-4 border-b ${border.default} ${bg.page}`}>
             <div className="text-sm text-muted-foreground">
               {selectedCases.size} case(s) selected
             </div>
@@ -365,7 +367,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {cases?.map(caseItem => <TableRow key={caseItem.id} className="hover:bg-slate-50">
+            {cases?.map(caseItem => <TableRow key={caseItem.id} className={bg.hover}>
                 <TableCell>
                   <Checkbox
                     checked={selectedCases.has(caseItem.id)}
