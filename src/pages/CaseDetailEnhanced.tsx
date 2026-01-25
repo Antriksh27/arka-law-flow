@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -68,6 +68,16 @@ export default function CaseDetailEnhanced() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isFetchDialogOpen, setIsFetchDialogOpen] = useState(false);
   const [isFetchConfirmOpen, setIsFetchConfirmOpen] = useState(false);
+  const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Handle scroll to collapse/expand header
+  const handleScroll = useCallback(() => {
+    if (scrollContainerRef.current) {
+      const scrollTop = scrollContainerRef.current.scrollTop;
+      setIsHeaderCollapsed(scrollTop > 50);
+    }
+  }, []);
 
   // Scroll to top when component mounts
   useEffect(() => {
@@ -380,36 +390,21 @@ export default function CaseDetailEnhanced() {
       )}
 
       <div className={isMobile ? "flex flex-col h-[calc(100vh-56px)]" : undefined}>
-        {/* Mobile Hero Card - Outside scrollable area */}
-        {isMobile && (
-          <div className="p-4 bg-gray-50 flex-shrink-0">
-            <HeroCard
-              title={caseData.case_title || `${caseData.petitioner || 'Petitioner'} vs ${caseData.respondent || 'Respondent'}`}
-              subtitle={`CNR: ${caseData.cnr_number || 'N/A'}`}
-              badges={
-                <>
-                  <Badge className={`${displayStatus.color} rounded-full`}>
-                    {displayStatus.label}
-                  </Badge>
-                  {caseData.stage && (
-                    <Badge variant="outline" className="rounded-full">
-                      {caseData.stage}
-                    </Badge>
-                  )}
-                </>
-              }
-              metrics={[
-                { label: 'Documents', value: documents.length },
-                { label: 'Hearings', value: hearings.length },
-                { label: 'Tasks', value: 0 },
-              ]}
-            />
-          </div>
-        )}
-
-        {/* Mobile Sticky Tabs - Outside scrollable area */}
+        {/* Mobile Layout with Collapsing Header */}
         {isMobile && (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
+            {/* Sticky Collapsed Title Bar - shows when scrolled */}
+            <div 
+              className={`bg-background border-b border-border flex-shrink-0 px-4 py-3 transition-all duration-200 ${
+                isHeaderCollapsed ? 'opacity-100 h-auto' : 'opacity-0 h-0 overflow-hidden py-0'
+              }`}
+            >
+              <h1 className="text-base font-semibold text-foreground truncate">
+                {caseData.case_title || `${caseData.petitioner || 'Petitioner'} vs ${caseData.respondent || 'Respondent'}`}
+              </h1>
+            </div>
+
+            {/* Sticky Tabs */}
             <div className="bg-background border-b border-border flex-shrink-0">
               <div className="flex overflow-x-auto scrollbar-hide px-4">
                 {tabs.map(tab => {
@@ -432,9 +427,39 @@ export default function CaseDetailEnhanced() {
               </div>
             </div>
 
-            {/* Mobile Scrollable Content */}
-            <div className="flex-1 min-h-0 overflow-y-auto bg-gray-50 pb-24">
-              <div className="p-4 pb-8">
+            {/* Mobile Scrollable Content with Hero Card inside */}
+            <div 
+              ref={scrollContainerRef}
+              onScroll={handleScroll}
+              className="flex-1 min-h-0 overflow-y-auto bg-slate-50 pb-24"
+            >
+              {/* Hero Card - scrolls with content */}
+              <div className="p-4">
+                <HeroCard
+                  title={caseData.case_title || `${caseData.petitioner || 'Petitioner'} vs ${caseData.respondent || 'Respondent'}`}
+                  subtitle={`CNR: ${caseData.cnr_number || 'N/A'}`}
+                  badges={
+                    <>
+                      <Badge className={`${displayStatus.color} rounded-full`}>
+                        {displayStatus.label}
+                      </Badge>
+                      {caseData.stage && (
+                        <Badge variant="outline" className="rounded-full">
+                          {caseData.stage}
+                        </Badge>
+                      )}
+                    </>
+                  }
+                  metrics={[
+                    { label: 'Documents', value: documents.length },
+                    { label: 'Hearings', value: hearings.length },
+                    { label: 'Tasks', value: 0 },
+                  ]}
+                />
+              </div>
+
+              {/* Tab Content */}
+              <div className="px-4 pb-8">
                 <TabsContent value="details" className="m-0">
                   <DetailsTab caseData={caseData} legalkartData={legalkartCase} petitioners={petitioners} respondents={respondents} iaDetails={iaDetails} documents={documents} orders={orders} hearings={hearings} objections={objections} />
                 </TabsContent>
