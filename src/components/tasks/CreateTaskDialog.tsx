@@ -282,7 +282,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden">
-        <div className="flex flex-col h-full bg-muted">
+        <div className="flex flex-col h-full bg-slate-50">
           <MobileDialogHeader
             title="Create New Task"
             subtitle="Add a new task to your workflow"
@@ -294,8 +294,8 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               
               {/* Title Card */}
-              <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-4 border-b border-border">
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-4 border-b border-slate-100">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
                       <CheckSquare className="w-5 h-5 text-emerald-500" />
@@ -311,15 +311,15 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                     id="title"
                     {...register('title', { required: 'Task title is required' })}
                     placeholder="Enter task title..."
-                    className="bg-muted border-input rounded-xl h-11"
+                    className="bg-slate-50 border-slate-200 rounded-xl h-11"
                   />
                   {errors.title && <p className="text-sm text-destructive mt-2">{errors.title.message}</p>}
                 </div>
               </div>
 
               {/* Description Card */}
-              <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-4 border-b border-border">
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-4 border-b border-slate-100">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center">
@@ -338,7 +338,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                       disabled={isTranscribing}
                       className={`rounded-full ${isDictating 
                         ? 'bg-rose-50 text-rose-600 border-rose-200' 
-                        : 'bg-muted border-input'}`}
+                        : 'bg-slate-50 border-slate-200'}`}
                     >
                       {isTranscribing ? (
                         <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Transcribing</>
@@ -354,7 +354,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                       id="description"
                       {...register('description')}
                       placeholder="Enter task description or click Dictate to speak..."
-                      className="bg-muted border-input rounded-xl min-h-[100px] resize-none"
+                      className="bg-slate-50 border-slate-200 rounded-xl min-h-[100px] resize-none"
                       rows={4}
                     />
                     {isDictating && (
@@ -367,7 +367,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
               </div>
 
               {/* Priority & Status Card */}
-              <div className="bg-background rounded-2xl shadow-sm p-4">
+              <div className="bg-white rounded-2xl shadow-sm p-4">
                 <div className="space-y-4">
                   {/* Priority */}
                   <div>
@@ -414,8 +414,8 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
               </div>
 
               {/* Assignee Card */}
-              <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-4 border-b border-border">
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-4 border-b border-slate-100">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
                       <User className="w-5 h-5 text-violet-500" />
@@ -426,10 +426,10 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                     </div>
                   </div>
                   <Select onValueChange={(value) => setValue('assigned_to', value)}>
-                    <SelectTrigger className="bg-muted border-input rounded-xl h-11">
+                    <SelectTrigger className="bg-slate-50 border-slate-200 rounded-xl h-11">
                       <SelectValue placeholder="Select team member..." />
                     </SelectTrigger>
-                    <SelectContent className="bg-background border-input rounded-xl">
+                    <SelectContent className="bg-white border-slate-200 rounded-xl">
                       {teamMembers.map((member) => (
                         <SelectItem key={member.id} value={member.id}>
                           {member.full_name} ({member.role})
@@ -441,8 +441,8 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
               </div>
 
               {/* Link To Card */}
-              <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-4 border-b border-border">
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-4 border-b border-slate-100">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center">
                       <Link className="w-5 h-5 text-rose-500" />
@@ -456,10 +456,10 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                     onValueChange={(value) => setValue('link_type', value as any)} 
                     defaultValue={caseId ? 'case' : (clientId ? 'client_contact' : 'none')}
                   >
-                    <SelectTrigger className="bg-muted border-input rounded-xl h-11">
+                    <SelectTrigger className="bg-slate-50 border-slate-200 rounded-xl h-11">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-background border-input rounded-xl">
+                    <SelectContent className="bg-white border-slate-200 rounded-xl">
                       <SelectItem value="none">No Link</SelectItem>
                       <SelectItem value="case">Link to Case</SelectItem>
                       <SelectItem value="client_contact">Link to Client/Contact</SelectItem>
@@ -468,7 +468,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                 </div>
 
                 {linkType === 'case' && (
-                  <div className="p-4 bg-muted/50">
+                  <div className="p-4 bg-slate-50/50">
                     <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 block">Select Case</Label>
                     <CaseSelector
                       value={watch('case_id') || ''}
@@ -479,7 +479,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                 )}
 
                 {linkType === 'client_contact' && (
-                  <div className="p-4 bg-muted/50">
+                  <div className="p-4 bg-slate-50/50">
                     <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 block">Select Client or Contact</Label>
                     <ClientSelector
                       value={watch('client_contact_id') || ''}
@@ -491,8 +491,8 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
               </div>
 
               {/* Due Date & Reminder Card */}
-              <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-4 border-b border-border">
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-4 border-b border-slate-100">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
                       <Calendar className="w-5 h-5 text-amber-500" />
@@ -509,7 +509,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                     <Input
                       type="date"
                       {...register('due_date')}
-                      className="bg-muted border-input rounded-xl h-11"
+                      className="bg-slate-50 border-slate-200 rounded-xl h-11"
                     />
                   </div>
                   <div className="space-y-2">
@@ -517,18 +517,18 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                     <Input
                       type="datetime-local"
                       {...register('reminder_time')}
-                      className="bg-muted border-input rounded-xl h-11"
+                      className="bg-slate-50 border-slate-200 rounded-xl h-11"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Tags Card */}
-              <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-4 border-b border-border">
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-4 border-b border-slate-100">
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
-                      <Tag className="w-5 h-5 text-muted-foreground" />
+                    <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center">
+                      <Tag className="w-5 h-5 text-slate-600" />
                     </div>
                     <div>
                       <Label className="text-sm font-semibold text-foreground">Tags</Label>
@@ -538,7 +538,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                   <Input
                     {...register('tags')}
                     placeholder="urgent, follow-up, client-work..."
-                    className="bg-muted border-input rounded-xl h-11"
+                    className="bg-slate-50 border-slate-200 rounded-xl h-11"
                   />
                 </div>
               </div>
@@ -547,13 +547,13 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
           </div>
 
           {/* Footer Actions */}
-          <div className="px-6 py-4 border-t border-border bg-background">
+          <div className="px-6 py-4 border-t border-slate-100 bg-white">
             <div className="flex justify-end gap-3">
               <Button 
                 type="button" 
                 variant="outline" 
                 onClick={onClose}
-                className="min-w-[100px] rounded-full border-input"
+                className="min-w-[100px] rounded-full border-slate-200"
               >
                 Cancel
               </Button>

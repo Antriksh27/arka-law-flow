@@ -127,13 +127,13 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
   return <>
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden">
-          <div className="flex flex-col h-full bg-muted">
+          <div className="flex flex-col h-full bg-slate-50">
             {/* Header */}
-            <div className="px-6 py-5 bg-background border-b border-border">
+            <div className="px-6 py-5 bg-white border-b border-slate-100">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  {view !== 'selection' && <button onClick={() => setView('selection')} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-accent transition-colors">
-                      <ArrowLeft className="w-4 h-4 text-muted-foreground" />
+                  {view !== 'selection' && <button onClick={() => setView('selection')} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors">
+                      <ArrowLeft className="w-4 h-4 text-slate-500" />
                     </button>}
                   <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
                     <Link2 className="w-5 h-5 text-violet-500" />
@@ -146,17 +146,17 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
                     <p className="text-sm text-muted-foreground">{clientName}</p>
                   </div>
                 </div>
-                <button onClick={handleClose} className="md:hidden w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-accent transition-colors">
-                  <X className="w-4 h-4 text-muted-foreground" />
+                <button onClick={handleClose} className="md:hidden w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors">
+                  <X className="w-4 h-4 text-slate-500" />
                 </button>
               </div>
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4 bg-muted">
+            <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4 bg-slate-50">
               {view === 'selection' && <div className="space-y-3">
                   {/* Link Existing Case Option */}
-                  <button onClick={() => setView('existing')} className="w-full bg-background rounded-2xl shadow-sm p-5 text-left hover:shadow-md transition-shadow active:scale-[0.98]">
+                  <button onClick={() => setView('existing')} className="w-full bg-white rounded-2xl shadow-sm p-5 text-left hover:shadow-md transition-shadow active:scale-[0.98]">
                     <div className="flex items-center gap-4">
                       <div className="w-14 h-14 rounded-2xl bg-sky-50 flex items-center justify-center">
                         <FileText className="w-7 h-7 text-sky-500" />
@@ -169,7 +169,7 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
                   </button>
 
                   {/* Add New Case Option */}
-                  <button onClick={() => setShowAddCaseDialog(true)} className="w-full bg-background rounded-2xl shadow-sm p-5 text-left hover:shadow-md transition-shadow active:scale-[0.98]">
+                  <button onClick={() => setShowAddCaseDialog(true)} className="w-full bg-white rounded-2xl shadow-sm p-5 text-left hover:shadow-md transition-shadow active:scale-[0.98]">
                     <div className="flex items-center gap-4">
                       <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center">
                         <Plus className="w-7 h-7 text-emerald-500" />
@@ -184,23 +184,23 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
 
               {view === 'existing' && <div className="space-y-4">
                   {/* Search */}
-                  <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+                  <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
                     <div className="p-4">
                       <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
-                          <Search className="w-5 h-5 text-muted-foreground" />
+                        <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center">
+                          <Search className="w-5 h-5 text-slate-500" />
                         </div>
                         <div>
                           <p className="text-sm font-semibold text-foreground">Search Cases</p>
                           <p className="text-xs text-muted-foreground">Find by title, type, or client</p>
                         </div>
                       </div>
-                      <Input placeholder="Search cases..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="bg-muted border-input rounded-xl h-11" />
+                      <Input placeholder="Search cases..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="bg-slate-50 border-slate-200 rounded-xl h-11" />
                     </div>
                   </div>
 
                   {/* Cases List */}
-                  <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+                  <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
                     <div className="p-4">
                       <div className="flex items-center gap-3 mb-4">
                         <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
@@ -221,7 +221,7 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
                             Loading cases...
                           </div> : cases.length === 0 ? <div className="text-center py-8 text-muted-foreground">
                             {searchQuery.trim() ? 'No cases found matching your search' : 'No cases available'}
-                          </div> : cases.map(case_item => <div key={case_item.id} className="p-4 rounded-xl bg-muted hover:bg-accent cursor-pointer transition-colors" onClick={() => handleAssignToCase(case_item.id)}>
+                          </div> : cases.map(case_item => <div key={case_item.id} className="p-4 rounded-xl bg-slate-50 hover:bg-slate-100 cursor-pointer transition-colors" onClick={() => handleAssignToCase(case_item.id)}>
                               <div className="flex items-start justify-between gap-3">
                                 <div className="flex-1 min-w-0">
                                   <p className="font-medium text-foreground truncate mb-1">
@@ -247,8 +247,8 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
             </div>
 
             {/* Footer */}
-            {view === 'selection' && <div className="px-6 py-4 bg-background border-t border-border">
-                <Button variant="outline" onClick={handleClose} className="w-full rounded-full">
+            {view === 'selection' && <div className="px-6 py-4 bg-white border-t border-slate-100">
+                <Button variant="outline" onClick={handleClose} className="w-full rounded-full border-slate-200">
                   Cancel
                 </Button>
               </div>}
