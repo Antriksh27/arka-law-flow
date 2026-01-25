@@ -331,7 +331,7 @@ export function GenerateEngagementLetterDialog({
     <div className="flex items-center gap-3 px-4 py-4 border-b border-border bg-background sticky top-0 z-10">
       <button 
         onClick={goBack} 
-        className="w-9 h-9 flex items-center justify-center rounded-full bg-muted active:scale-95 transition-transform"
+        className="w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 active:scale-95 transition-transform"
       >
         <ArrowLeft className="w-5 h-5 text-foreground" />
       </button>
@@ -341,7 +341,7 @@ export function GenerateEngagementLetterDialog({
 
   // Search input component
   const SearchInput = ({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) => (
-    <div className="px-4 py-3 border-b border-border bg-muted/30">
+    <div className="px-4 py-3 border-b border-border bg-slate-50">
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input 
@@ -357,13 +357,13 @@ export function GenerateEngagementLetterDialog({
 
   // Main form view
   const renderFormView = () => (
-    <div className="flex flex-col h-full bg-muted/30">
+    <div className="flex flex-col h-full bg-slate-50">
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-5 bg-muted/30">
+      <div className="flex items-center justify-between px-5 py-5 bg-slate-50">
         <h2 className="text-2xl font-bold text-foreground">Engagement Letter</h2>
         <button 
           onClick={onClose} 
-          className="w-10 h-10 flex items-center justify-center rounded-full bg-muted active:scale-95 transition-transform"
+          className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 active:scale-95 transition-transform"
         >
           <X className="w-5 h-5 text-muted-foreground" />
         </button>
@@ -487,7 +487,7 @@ export function GenerateEngagementLetterDialog({
       </div>
 
       {/* Fixed Bottom Action */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-muted/30 safe-area-pb">
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-slate-50 safe-area-pb">
         <Button 
           onClick={handleGeneratePreview}
           disabled={!selectedCaseId || !selectedLawyerId || !matterDescription.trim()}
@@ -522,7 +522,7 @@ export function GenerateEngagementLetterDialog({
                   goBack();
                 }}
                 className={cn(
-                  "w-full flex items-center gap-4 px-4 py-4 border-b border-border active:bg-muted/50 transition-colors bg-background",
+                  "w-full flex items-center gap-4 px-4 py-4 border-b border-border active:bg-slate-100 transition-colors bg-background",
                   isSelected && "bg-amber-50"
                 )}
               >
@@ -574,7 +574,7 @@ export function GenerateEngagementLetterDialog({
                   goBack();
                 }}
                 className={cn(
-                  "w-full flex items-center gap-4 px-4 py-4 border-b border-border active:bg-muted/50 transition-colors bg-background",
+                  "w-full flex items-center gap-4 px-4 py-4 border-b border-border active:bg-slate-100 transition-colors bg-background",
                   isSelected && "bg-sky-50"
                 )}
               >
@@ -598,12 +598,12 @@ export function GenerateEngagementLetterDialog({
 
   // Preview view
   const renderPreviewView = () => (
-    <div className="flex flex-col h-full bg-muted/30">
+    <div className="flex flex-col h-full bg-slate-50">
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-4 border-b border-border bg-background sticky top-0 z-10">
         <button 
           onClick={() => setStep('form')} 
-          className="w-9 h-9 flex items-center justify-center rounded-full bg-muted active:scale-95 transition-transform"
+          className="w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 active:scale-95 transition-transform"
         >
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
@@ -627,7 +627,7 @@ export function GenerateEngagementLetterDialog({
       </div>
 
       {/* Fixed Bottom Actions */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-muted/30 safe-area-pb space-y-2">
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-slate-50 safe-area-pb space-y-2">
         <div className="flex gap-3">
           <Button 
             variant="outline"
@@ -674,14 +674,14 @@ export function GenerateEngagementLetterDialog({
                 <div className="space-y-6 py-4">
                   <div className="space-y-2">
                     <Label>Client Name</Label>
-                    <div className="p-3 rounded-md text-sm bg-muted">
+                    <div className="p-3 rounded-md text-sm bg-slate-50">
                       {clientData?.full_name || clientName}
                     </div>
                   </div>
 
                   <div className="space-y-2">
                     <Label>Client Address</Label>
-                    <div className="p-3 rounded-md text-sm whitespace-pre-line bg-muted">
+                    <div className="p-3 rounded-md text-sm whitespace-pre-line bg-slate-50">
                       {clientData?.address || 'Not provided'}
                     </div>
                   </div>
