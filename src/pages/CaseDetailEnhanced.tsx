@@ -389,12 +389,12 @@ export default function CaseDetailEnhanced() {
         />
       )}
 
-      <div className={isMobile ? "flex flex-col h-[calc(100vh-56px)]" : undefined}>
+      <div className={isMobile ? "flex-1 overflow-y-auto bg-slate-50" : undefined}>
         {/* Mobile Layout */}
         {isMobile && (
-          <div className="flex-1 min-h-0 overflow-y-auto bg-slate-50">
+          <>
             {/* Hero Card - scrolls with content */}
-            <div className="p-4">
+            <div className="p-4 pb-0">
               <HeroCard
                 title={caseData.case_title || `${caseData.petitioner || 'Petitioner'} vs ${caseData.respondent || 'Respondent'}`}
                 subtitle={`CNR: ${caseData.cnr_number || 'N/A'}`}
@@ -473,7 +473,7 @@ export default function CaseDetailEnhanced() {
                 </TabsContent>
               </div>
             </Tabs>
-          </div>
+          </>
         )}
 
         {/* Desktop Layout */}
