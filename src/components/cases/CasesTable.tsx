@@ -124,8 +124,10 @@ export const CasesTable: React.FC<CasesTableProps> = ({
         query = query.eq('assigned_to', assignedFilter);
       }
 
+      // Apply search filter - comprehensive search across all case identifiers
       if (searchQuery) {
-        query = query.or(`case_title.ilike.%${searchQuery}%,petitioner.ilike.%${searchQuery}%,respondent.ilike.%${searchQuery}%,case_number.ilike.%${searchQuery}%,cnr_number.ilike.%${searchQuery}%,filing_number.ilike.%${searchQuery}%,reference_number.ilike.%${searchQuery}%`);
+        const searchTerm = searchQuery.trim();
+        query = query.or(`case_title.ilike.%${searchTerm}%,petitioner.ilike.%${searchTerm}%,respondent.ilike.%${searchTerm}%,case_number.ilike.%${searchTerm}%,cnr_number.ilike.%${searchTerm}%,filing_number.ilike.%${searchTerm}%,reference_number.ilike.%${searchTerm}%,registration_number.ilike.%${searchTerm}%`);
       }
       if (statusFilter !== 'all') {
         query = query.eq('status', statusFilter as any);
