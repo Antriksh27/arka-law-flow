@@ -260,7 +260,7 @@ export const ClientList = () => {
   // Mobile Filter Sheet
   const MobileFilterSheet = () => (
     <Sheet open={showMobileFilter} onOpenChange={setShowMobileFilter}>
-      <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl bg-slate-50 p-0 border-0">
+      <SheetContent hideCloseButton side="bottom" className="h-[85vh] rounded-t-3xl bg-slate-50 p-0 border-0">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-4 bg-white border-b border-slate-100">
           <h2 className="text-lg font-semibold text-slate-900">Filters & Sort</h2>
