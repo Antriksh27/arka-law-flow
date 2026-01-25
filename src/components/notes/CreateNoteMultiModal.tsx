@@ -13,10 +13,12 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { X, Plus, Mic, MicOff, Loader2, FileText, Palette, Link2, Tag } from 'lucide-react';
 import { DrawingCanvas } from './DrawingCanvas';
+import { MobileDrawingSheet } from './MobileDrawingSheet';
 import { ClientSelector } from '@/components/appointments/ClientSelector';
 import { CaseSelector } from '@/components/appointments/CaseSelector';
 import { AudioRecorder } from '@/utils/audioRecorder';
 import { useDeepgramTranscription } from '@/hooks/useDeepgramTranscription';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface CreateNoteMultiModalProps {
   open: boolean;
@@ -47,10 +49,12 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
 }) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   const [newTag, setNewTag] = useState('');
   const [activeTab, setActiveTab] = useState('write');
   const [drawingData, setDrawingData] = useState<string | null>(null);
   const [isDictating, setIsDictating] = useState(false);
+  const [showMobileDrawing, setShowMobileDrawing] = useState(false);
   const audioRecorderRef = useRef<AudioRecorder>(new AudioRecorder());
   const { transcribe, isProcessing: isTranscribing } = useDeepgramTranscription();
 
@@ -277,13 +281,34 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
                   </TabsContent>
                   
                   <TabsContent value="draw" className="mt-4 space-y-4">
-                    <Label className="text-sm font-medium text-foreground">Drawing Canvas</Label>
-                    <DrawingCanvas onDrawingChange={setDrawingData} isFullscreen={true} />
-                    {drawingData && (
-                      <div className="mt-2 p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
-                        <p className="text-sm text-emerald-600 mb-2">✓ Drawing created</p>
-                        <img src={drawingData} alt="Drawing preview" className="max-h-32 rounded-lg border" />
-                      </div>
+                    {isMobile ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setShowMobileDrawing(true)}
+                          className="w-full py-12 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center gap-2 text-slate-500 active:bg-slate-50"
+                        >
+                          <span className="text-4xl">🎨</span>
+                          <span className="text-sm font-medium">Tap to open drawing canvas</span>
+                        </button>
+                        {drawingData && (
+                          <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+                            <p className="text-sm text-emerald-600 mb-2">✓ Drawing created</p>
+                            <img src={drawingData} alt="Drawing preview" className="max-h-32 rounded-lg border" />
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <Label className="text-sm font-medium text-foreground">Drawing Canvas</Label>
+                        <DrawingCanvas onDrawingChange={setDrawingData} isFullscreen={true} />
+                        {drawingData && (
+                          <div className="mt-2 p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+                            <p className="text-sm text-emerald-600 mb-2">✓ Drawing created</p>
+                            <img src={drawingData} alt="Drawing preview" className="max-h-32 rounded-lg border" />
+                          </div>
+                        )}
+                      </>
                     )}
                   </TabsContent>
                 </Tabs>
@@ -420,6 +445,16 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
             </div>
           </form>
         </div>
+
+        {/* Mobile Drawing Sheet */}
+        {isMobile && (
+          <MobileDrawingSheet
+            open={showMobileDrawing}
+            onClose={() => setShowMobileDrawing(false)}
+            onSave={setDrawingData}
+            initialData={drawingData}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );
