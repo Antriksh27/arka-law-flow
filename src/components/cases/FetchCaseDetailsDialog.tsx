@@ -102,7 +102,7 @@ export function FetchCaseDetailsDialog({ open, onClose, caseId, onFetchTriggered
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent hideCloseButton className="sm:max-w-md p-0 bg-muted overflow-hidden">
+      <DialogContent hideCloseButton className="sm:max-w-md p-0 bg-slate-50 overflow-hidden">
         <div className="flex flex-col h-full sm:h-auto">
           {/* Header */}
           <div className="px-6 py-5 bg-white border-b border-slate-100">
@@ -112,7 +112,7 @@ export function FetchCaseDetailsDialog({ open, onClose, caseId, onFetchTriggered
                   <Hash className="w-5 h-5 text-sky-500" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold text-slate-800">Enter CNR Number</h2>
+                  <h2 className="text-xl font-semibold text-foreground">Enter CNR Number</h2>
                   <p className="text-sm text-muted-foreground">Fetch case details from eCourts</p>
                 </div>
               </div>
@@ -135,7 +135,7 @@ export function FetchCaseDetailsDialog({ open, onClose, caseId, onFetchTriggered
                     <Hash className="w-5 h-5 text-emerald-500" />
                   </div>
                   <div>
-                    <Label className="text-sm font-semibold text-slate-700">CNR Number</Label>
+                    <Label className="text-sm font-semibold text-foreground">CNR Number</Label>
                     <p className="text-xs text-muted-foreground">Case identification number</p>
                   </div>
                 </div>
@@ -166,7 +166,7 @@ export function FetchCaseDetailsDialog({ open, onClose, caseId, onFetchTriggered
                       <Scale className="w-5 h-5 text-violet-500" />
                     </div>
                     <div>
-                      <Label className="text-sm font-semibold text-slate-700">Detected Court Type</Label>
+                      <Label className="text-sm font-semibold text-foreground">Detected Court Type</Label>
                       <p className="text-xs text-muted-foreground">Auto-detected from CNR format</p>
                     </div>
                   </div>
@@ -186,7 +186,7 @@ export function FetchCaseDetailsDialog({ open, onClose, caseId, onFetchTriggered
                     <Scale className="w-5 h-5 text-amber-500" />
                   </div>
                   <div>
-                    <Label className="text-sm font-semibold text-slate-700">Override Court Type</Label>
+                    <Label className="text-sm font-semibold text-foreground">Override Court Type</Label>
                     <p className="text-xs text-muted-foreground">Optional manual selection</p>
                   </div>
                 </div>
@@ -210,7 +210,7 @@ export function FetchCaseDetailsDialog({ open, onClose, caseId, onFetchTriggered
             {/* Info Card */}
             <div className="bg-sky-50 rounded-2xl p-4 border border-sky-100">
               <div className="flex items-start gap-3">
-                <Info className="w-5 h-5 text-sky-500 mt-0.5" />
+                <Info className="w-5 h-5 text-sky-500 mt-0.5 flex-shrink-0" />
                 <p className="text-sm text-sky-700">
                   Leave the override empty to use the auto-detected court type based on the CNR format.
                 </p>
@@ -220,19 +220,19 @@ export function FetchCaseDetailsDialog({ open, onClose, caseId, onFetchTriggered
 
           {/* Footer */}
           <div className="px-6 py-4 bg-white border-t border-slate-100">
-            <div className="flex gap-3 justify-end">
+            <div className="flex gap-3">
               <Button 
                 variant="outline" 
                 onClick={onClose} 
                 disabled={isSubmitting}
-                className="rounded-full px-6 border-slate-200"
+                className="flex-1 rounded-full border-slate-200"
               >
                 Cancel
               </Button>
               <Button 
                 onClick={handleSaveAndFetch} 
                 disabled={isSubmitting || !cnrNumber}
-                className="rounded-full px-6 bg-sky-500 hover:bg-sky-600"
+                className="flex-1 rounded-full"
               >
                 {isSubmitting ? (
                   <>
@@ -240,7 +240,7 @@ export function FetchCaseDetailsDialog({ open, onClose, caseId, onFetchTriggered
                     Saving...
                   </>
                 ) : (
-                  'Save & Fetch Details'
+                  'Save & Fetch'
                 )}
               </Button>
             </div>

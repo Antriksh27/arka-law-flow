@@ -356,69 +356,69 @@ export const LegalkartCaseSearch: React.FC<LegalkartCaseSearchProps> = ({
     if (!result) return null;
 
     return (
-      <Card className="mb-4">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-4">
+        <div className="p-4">
+          <div className="flex items-center gap-2 mb-3">
             {result.success ? (
-              <CheckCircle className="h-5 w-5 text-green-500" />
+              <CheckCircle className="h-5 w-5 text-emerald-500" />
             ) : (
               <AlertCircle className="h-5 w-5 text-red-500" />
             )}
-            {title}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+            <span className="font-semibold text-foreground">{title}</span>
+          </div>
           {result.success ? (
-            <div className="space-y-2">
-              <pre className="bg-gray-100 p-4 rounded-md overflow-auto text-sm max-h-96">
-                {JSON.stringify(result.data, null, 2)}
-              </pre>
-            </div>
+            <pre className="bg-slate-50 p-4 rounded-xl overflow-auto text-sm max-h-96 border border-slate-100">
+              {JSON.stringify(result.data, null, 2)}
+            </pre>
           ) : (
-            <div className="text-red-600">
+            <div className="text-red-600 bg-red-50 p-3 rounded-xl">
               <p className="font-medium">Error:</p>
               <p>{result.error}</p>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   };
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Search className="h-5 w-5" />
-            Legalkart Case Search
-          </CardTitle>
-          <CardDescription>
-            Search for case details using Legalkart API
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+    <div className="space-y-4">
+      {/* Main Search Card */}
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div className="p-4 border-b border-slate-100">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center">
+              <Search className="w-5 h-5 text-sky-500" />
+            </div>
+            <div>
+              <h3 className="text-base font-semibold text-foreground">Legalkart Case Search</h3>
+              <p className="text-xs text-muted-foreground">Search for case details using Legalkart API</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="p-4">
           <Tabs defaultValue="single" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="single">Single Search</TabsTrigger>
-              <TabsTrigger value="batch">Batch Search</TabsTrigger>
-              <TabsTrigger value="display-board">Display Board</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-3 bg-slate-100 rounded-xl p-1">
+              <TabsTrigger value="single" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">Single</TabsTrigger>
+              <TabsTrigger value="batch" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">Batch</TabsTrigger>
+              <TabsTrigger value="display-board" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">Display</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="single" className="space-y-4">
+            <TabsContent value="single" className="space-y-4 mt-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="search-type" className="flex items-center gap-2">
+                  <Label htmlFor="search-type" className="flex items-center gap-2 text-sm font-medium text-foreground">
                     Search Type
                     {autoDetected && (
-                      <Badge variant="outline" className="text-xs gap-1">
+                      <Badge variant="outline" className="text-xs gap-1 rounded-full">
                         <Sparkles className="w-3 h-3" />
                         Auto-detected
                       </Badge>
                     )}
                   </Label>
                   <Select value={searchType} onValueChange={(val) => { setSearchType(val); setAutoDetected(false); }}>
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-slate-50 border-slate-200 rounded-xl h-11">
                       <SelectValue placeholder="Select search type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -434,9 +434,9 @@ export const LegalkartCaseSearch: React.FC<LegalkartCaseSearchProps> = ({
                 {/* Show search mode selector only for Gujarat High Court */}
                 {searchType === 'gujarat_high_court' && (
                   <div className="space-y-2">
-                    <Label>Search Mode</Label>
+                    <Label className="text-sm font-medium text-foreground">Search Mode</Label>
                     <Select value={searchMode} onValueChange={(val: 'CNR' | 'REGISTRATION') => setSearchMode(val)}>
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-slate-50 border-slate-200 rounded-xl h-11">
                         <SelectValue placeholder="Select search mode" />
                       </SelectTrigger>
                       <SelectContent>
@@ -451,12 +451,13 @@ export const LegalkartCaseSearch: React.FC<LegalkartCaseSearchProps> = ({
               {/* CNR input - show only when in CNR mode or not Gujarat HC */}
               {(searchType !== 'gujarat_high_court' || searchMode === 'CNR') && (
                 <div className="space-y-2">
-                  <Label htmlFor="cnr">CNR Number</Label>
+                  <Label htmlFor="cnr" className="text-sm font-medium text-foreground">CNR Number</Label>
                   <Input
                     id="cnr"
                     value={cnr}
                     onChange={(e) => setCnr(e.target.value)}
                     placeholder="e.g., GJHC240629522024"
+                    className="bg-slate-50 border-slate-200 rounded-xl h-11"
                   />
                 </div>
               )}
@@ -465,9 +466,9 @@ export const LegalkartCaseSearch: React.FC<LegalkartCaseSearchProps> = ({
               {searchType === 'gujarat_high_court' && searchMode === 'REGISTRATION' && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="case-type">Case Type</Label>
+                    <Label htmlFor="case-type" className="text-sm font-medium text-foreground">Case Type</Label>
                     <Select value={caseType} onValueChange={setCaseType}>
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-slate-50 border-slate-200 rounded-xl h-11">
                         <SelectValue placeholder="Select case type" />
                       </SelectTrigger>
                       <SelectContent>
@@ -481,22 +482,24 @@ export const LegalkartCaseSearch: React.FC<LegalkartCaseSearchProps> = ({
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="case-no">Case Number</Label>
+                    <Label htmlFor="case-no" className="text-sm font-medium text-foreground">Case Number</Label>
                     <Input
                       id="case-no"
                       value={caseNo}
                       onChange={(e) => setCaseNo(e.target.value)}
                       placeholder="e.g., 15981"
+                      className="bg-slate-50 border-slate-200 rounded-xl h-11"
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="case-year">Case Year</Label>
+                    <Label htmlFor="case-year" className="text-sm font-medium text-foreground">Case Year</Label>
                     <Input
                       id="case-year"
                       value={caseYear}
                       onChange={(e) => setCaseYear(e.target.value)}
                       placeholder="e.g., 2017"
+                      className="bg-slate-50 border-slate-200 rounded-xl h-11"
                     />
                   </div>
                 </div>
@@ -505,7 +508,7 @@ export const LegalkartCaseSearch: React.FC<LegalkartCaseSearchProps> = ({
               <Button 
                 onClick={handleSingleSearch}
                 disabled={searchCaseMutation.isPending}
-                className="w-full"
+                className="w-full rounded-xl h-11"
               >
                 {searchCaseMutation.isPending ? (
                   <>
@@ -521,22 +524,22 @@ export const LegalkartCaseSearch: React.FC<LegalkartCaseSearchProps> = ({
               </Button>
             </TabsContent>
             
-            <TabsContent value="batch" className="space-y-4">
+            <TabsContent value="batch" className="space-y-4 mt-4">
               <div className="space-y-2">
-                <Label htmlFor="batch-cnrs">CNR Numbers (one per line)</Label>
+                <Label htmlFor="batch-cnrs" className="text-sm font-medium text-foreground">CNR Numbers (one per line)</Label>
                 <Textarea
                   id="batch-cnrs"
                   value={batchCnrs}
                   onChange={(e) => setBatchCnrs(e.target.value)}
                   placeholder="Enter CNR numbers, one per line"
-                  className="min-h-32"
+                  className="min-h-32 bg-slate-50 border-slate-200 rounded-xl"
                 />
               </div>
               
               <Button 
                 onClick={handleBatchSearch}
                 disabled={batchSearchMutation.isPending}
-                className="w-full"
+                className="w-full rounded-xl h-11"
               >
                 {batchSearchMutation.isPending ? (
                   <>
@@ -552,15 +555,18 @@ export const LegalkartCaseSearch: React.FC<LegalkartCaseSearchProps> = ({
               </Button>
             </TabsContent>
             
-            <TabsContent value="display-board" className="space-y-4">
-              <div className="text-center">
-                <p className="text-sm text-gray-600 mb-4">
+            <TabsContent value="display-board" className="space-y-4 mt-4">
+              <div className="text-center py-4">
+                <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center mx-auto mb-3">
+                  <FileText className="w-6 h-6 text-amber-500" />
+                </div>
+                <p className="text-sm text-muted-foreground mb-4">
                   Fetch the latest Gujarat court display board information
                 </p>
                 <Button 
                   onClick={() => displayBoardMutation.mutate()}
                   disabled={displayBoardMutation.isPending}
-                  className="w-full"
+                  className="w-full rounded-xl h-11"
                 >
                   {displayBoardMutation.isPending ? (
                     <>
@@ -577,82 +583,92 @@ export const LegalkartCaseSearch: React.FC<LegalkartCaseSearchProps> = ({
               </div>
             </TabsContent>
           </Tabs>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Search Results */}
       {Object.keys(searchResults).length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Search Results</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {Object.entries(searchResults).map(([key, result]) => (
-                <div key={key}>
-                  {renderSearchResult(result, key)}
-                </div>
-              ))}
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          <div className="p-4 border-b border-slate-100">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+                <CheckCircle className="w-5 h-5 text-emerald-500" />
+              </div>
+              <h3 className="text-base font-semibold text-foreground">Search Results</h3>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+          <div className="p-4">
+            {Object.entries(searchResults).map(([key, result]) => (
+              <div key={key}>
+                {renderSearchResult(result, key)}
+              </div>
+            ))}
+          </div>
+        </div>
       )}
 
       {/* Previous Searches */}
       {previousSearches && previousSearches.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Previous Searches</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {previousSearches.map((search) => (
-                <div key={search.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline">{search.search_type}</Badge>
-                      <span className="font-medium">{search.cnr_number}</span>
-                      <Badge 
-                        variant={search.status === 'success' ? 'default' : 'error'}
-                      >
-                        {search.status}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {new Date(search.created_at).toLocaleString()}
-                    </p>
-                    {search.error_message && (
-                      <p className="text-sm text-red-600 mt-1">{search.error_message}</p>
-                    )}
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          <div className="p-4 border-b border-slate-100">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
+                <FileText className="w-5 h-5 text-violet-500" />
+              </div>
+              <h3 className="text-base font-semibold text-foreground">Previous Searches</h3>
+            </div>
+          </div>
+          <div className="p-4 space-y-3">
+            {previousSearches.map((search) => (
+              <div key={search.id} className="flex items-center justify-between p-4 rounded-xl bg-slate-50">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge variant="outline" className="rounded-full">{search.search_type}</Badge>
+                    <span className="font-medium text-foreground">{search.cnr_number}</span>
+                    <Badge 
+                      className={`rounded-full border-0 ${search.status === 'success' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}
+                    >
+                      {search.status}
+                    </Badge>
                   </div>
-                  
-                  {search.response_data && (
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" size="sm">
-                          View Data
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-4xl max-h-[80vh] overflow-auto">
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {new Date(search.created_at).toLocaleString()}
+                  </p>
+                  {search.error_message && (
+                    <p className="text-sm text-red-600 mt-1">{search.error_message}</p>
+                  )}
+                </div>
+                
+                {search.response_data && (
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm" className="rounded-full">
+                        View Data
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent hideCloseButton className="sm:max-w-4xl max-h-[80vh] overflow-auto p-0 bg-slate-50">
+                      <div className="p-6 bg-white border-b border-slate-100">
                         <DialogHeader>
-                          <DialogTitle>
+                          <DialogTitle className="text-foreground">
                             Search Result: {search.search_type} - {search.cnr_number}
                           </DialogTitle>
                           <DialogDescription>
                             Searched on {new Date(search.created_at).toLocaleString()}
                           </DialogDescription>
                         </DialogHeader>
-                        <pre className="bg-gray-100 p-4 rounded-md overflow-auto text-sm">
+                      </div>
+                      <div className="p-6">
+                        <pre className="bg-white p-4 rounded-xl overflow-auto text-sm border border-slate-100">
                           {JSON.stringify(search.response_data, null, 2)}
                         </pre>
-                      </DialogContent>
-                    </Dialog>
-                  )}
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );
