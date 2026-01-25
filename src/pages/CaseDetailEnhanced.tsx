@@ -353,43 +353,44 @@ export default function CaseDetailEnhanced() {
 
   return (
     <>
-      {/* Mobile Header */}
-      {isMobile && (
-        <MobileHeader
-          title="Case Detail"
-          showBack
-          backTo="/cases"
-          actions={
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9">
-                  <MoreVertical className="w-5 h-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setIsEditDialogOpen(true)}>
-                  <Pencil className="w-4 h-4 mr-2" />
-                  Edit Case
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleFetchDetails} disabled={isRefreshing}>
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Fetch Details
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setIsNoteModalOpen(true)}>
-                  <StickyNote className="w-4 h-4 mr-2" />
-                  Add Note
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setIsTaskModalOpen(true)}>
-                  <CheckSquare className="w-4 h-4 mr-2" />
-                  Add Task
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          }
-        />
-      )}
+      <div className={isMobile ? "min-h-[100dvh] flex flex-col bg-slate-50" : undefined}>
+        {/* Mobile Header */}
+        {isMobile && (
+          <MobileHeader
+            title="Case Detail"
+            showBack
+            backTo="/cases"
+            actions={
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-9 w-9">
+                    <MoreVertical className="w-5 h-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setIsEditDialogOpen(true)}>
+                    <Pencil className="w-4 h-4 mr-2" />
+                    Edit Case
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleFetchDetails} disabled={isRefreshing}>
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Fetch Details
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setIsNoteModalOpen(true)}>
+                    <StickyNote className="w-4 h-4 mr-2" />
+                    Add Note
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setIsTaskModalOpen(true)}>
+                    <CheckSquare className="w-4 h-4 mr-2" />
+                    Add Task
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            }
+          />
+        )}
 
-      <div className={isMobile ? "flex-1 overflow-y-auto bg-slate-50" : undefined}>
+        <div className={isMobile ? "flex-1 min-h-0 overflow-y-auto" : undefined}>
         {/* Mobile Layout */}
         {isMobile && (
           <>
@@ -420,7 +421,7 @@ export default function CaseDetailEnhanced() {
 
             {/* Tabs - sticky below hero card */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col">
-              <div className="sticky top-0 z-40 bg-background border-b border-border">
+              <div className="sticky top-[calc(3.5rem+env(safe-area-inset-top))] z-40 bg-background border-b border-border">
                 <div className="flex overflow-x-auto scrollbar-hide px-4">
                   {tabs.map(tab => {
                     const IconComponent = tab.icon;
@@ -605,6 +606,7 @@ export default function CaseDetailEnhanced() {
           </div>
         </PullToRefresh>
         )}
+        </div>
       </div>
 
 
