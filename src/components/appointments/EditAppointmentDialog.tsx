@@ -266,7 +266,7 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
   return (
     <Dialog open onOpenChange={closeDialog}>
       <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden">
-        <div className="flex flex-col h-full max-h-[90vh] bg-muted">
+        <div className="flex flex-col h-full max-h-[90vh] bg-slate-50">
           <MobileDialogHeader
             title="Edit Appointment"
             subtitle="Update appointment details"
@@ -277,7 +277,7 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
           <div className="flex-1 overflow-y-auto px-6 py-6">
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Title Card */}
-              <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
                 <div className="p-4">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
@@ -293,13 +293,13 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
                     onChange={(e) => handleInputChange('title', e.target.value)}
                     placeholder="Appointment title"
                     required
-                    className="bg-muted border-input rounded-xl h-11"
+                    className="bg-slate-50 border-slate-200 rounded-xl h-11"
                   />
                 </div>
               </div>
 
               {/* Assigned Team Card */}
-              <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
                 <div className="p-4">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
@@ -319,10 +319,10 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
                         onValueChange={(value) => handleInputChange('lawyer_id', value)}
                         required
                       >
-                        <SelectTrigger className="bg-muted border-input rounded-xl h-11">
+                        <SelectTrigger className="bg-slate-50 border-slate-200 rounded-xl h-11">
                           <SelectValue placeholder="Select user" />
                         </SelectTrigger>
-                        <SelectContent className="bg-background border-border rounded-xl">
+                        <SelectContent className="bg-white border-slate-200 rounded-xl">
                           {users.map((user) => (
                             <SelectItem key={user.id} value={user.id}>
                               {user.full_name} {user.role && <span className="text-muted-foreground">({user.role})</span>}
@@ -333,7 +333,7 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
                     </div>
 
                     {/* Additional Lawyers */}
-                    <div className="pt-3 border-t border-border">
+                    <div className="pt-3 border-t border-slate-100">
                       <Label className="text-xs text-muted-foreground mb-2 block">Additional Team Members</Label>
                       
                       {additionalLawyers.filter(id => id !== formData.lawyer_id).length > 0 && (
@@ -363,13 +363,13 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
                       
                       {getAvailableLawyers().length > 0 && (
                         <Select onValueChange={handleAddLawyer} value="">
-                          <SelectTrigger className="bg-muted border-input rounded-xl h-10">
+                          <SelectTrigger className="bg-slate-50 border-slate-200 rounded-xl h-10">
                             <div className="flex items-center gap-2 text-muted-foreground">
                               <UserPlus className="h-4 w-4" />
                               <span>Add team member...</span>
                             </div>
                           </SelectTrigger>
-                          <SelectContent className="bg-background border-border rounded-xl">
+                          <SelectContent className="bg-white border-slate-200 rounded-xl">
                             {getAvailableLawyers().map(user => (
                               <SelectItem key={user.id} value={user.id}>
                                 {user.full_name} {user.role && <span className="text-muted-foreground">({user.role})</span>}
@@ -388,7 +388,7 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
               </div>
 
               {/* Schedule Card */}
-              <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
                 <div className="p-4">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
@@ -414,7 +414,7 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
               </div>
               
               {/* Details Card */}
-              <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
                 <div className="p-4 space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -422,7 +422,7 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
                         <Clock className="w-4 h-4 text-muted-foreground" />
                         <Label className="text-sm font-medium text-foreground">Duration</Label>
                       </div>
-                      <div className="bg-muted border border-input rounded-xl px-3 py-2.5 text-foreground">
+                      <div className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-foreground">
                         {formData.duration_minutes} minutes
                       </div>
                     </div>
@@ -436,10 +436,10 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
                         value={formData.location}
                         onValueChange={(value) => handleInputChange('location', value)}
                       >
-                        <SelectTrigger className="bg-muted border-input rounded-xl h-11">
+                        <SelectTrigger className="bg-slate-50 border-slate-200 rounded-xl h-11">
                           <SelectValue placeholder="Select type" />
                         </SelectTrigger>
-                        <SelectContent className="bg-background border-border rounded-xl">
+                        <SelectContent className="bg-white border-slate-200 rounded-xl">
                           {locationTypeOptions.map(opt => (
                             <SelectItem key={opt.value} value={opt.value}>
                               {opt.label}
@@ -451,7 +451,7 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 pt-3 border-t border-border">
+                  <div className="grid grid-cols-2 gap-4 pt-3 border-t border-slate-100">
                     <div>
                       <div className="flex items-center gap-2 mb-2">
                         <User className="w-4 h-4 text-muted-foreground" />
@@ -473,10 +473,10 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
                         value={formData.status}
                         onValueChange={(value) => handleInputChange('status', value)}
                       >
-                        <SelectTrigger className="bg-muted border-input rounded-xl h-11">
+                        <SelectTrigger className="bg-slate-50 border-slate-200 rounded-xl h-11">
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="bg-background border-border rounded-xl">
+                        <SelectContent className="bg-white border-slate-200 rounded-xl">
                           <SelectItem value="upcoming">Upcoming</SelectItem>
                           <SelectItem value="completed">Completed</SelectItem>
                           <SelectItem value="cancelled">Cancelled</SelectItem>
@@ -490,7 +490,7 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
               </div>
 
               {/* Case & Notes Card */}
-              <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
                 <div className="p-4 space-y-4">
                   <div>
                     <div className="flex items-center gap-3 mb-3">
@@ -510,7 +510,7 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
                     />
                   </div>
                   
-                  <div className="pt-4 border-t border-border">
+                  <div className="pt-4 border-t border-slate-100">
                     <div className="flex items-center gap-3 mb-3">
                       <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center">
                         <FileText className="w-5 h-5 text-rose-500" />
@@ -525,20 +525,20 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
                       onChange={(e) => handleInputChange('notes', e.target.value)}
                       placeholder="Additional notes or agenda items..."
                       rows={3}
-                      className="bg-muted border-input rounded-xl resize-none"
+                      className="bg-slate-50 border-slate-200 rounded-xl resize-none"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Footer */}
-              <div className="pt-4 sticky bottom-0 bg-muted pb-2">
+              <div className="pt-4 sticky bottom-0 bg-slate-50 pb-2">
                 <div className="flex gap-3 justify-end">
                   <Button 
                     type="button" 
                     variant="outline" 
                     onClick={closeDialog}
-                    className="rounded-full px-6 border-input"
+                    className="rounded-full px-6 border-slate-200"
                   >
                     Cancel
                   </Button>

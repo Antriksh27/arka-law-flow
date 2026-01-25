@@ -171,7 +171,7 @@ export const CreateNoteDialog: React.FC<CreateNoteDialogProps> = ({
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden">
-        <div className="flex flex-col h-full bg-muted">
+        <div className="flex flex-col h-full bg-slate-50">
           <MobileDialogHeader
             title="Create New Note"
             subtitle="Capture your thoughts quickly"
@@ -183,8 +183,8 @@ export const CreateNoteDialog: React.FC<CreateNoteDialogProps> = ({
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               
               {/* Title Card */}
-              <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-4 border-b border-border">
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-4 border-b border-slate-100">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
                       <StickyNote className="w-5 h-5 text-amber-500" />
@@ -200,15 +200,15 @@ export const CreateNoteDialog: React.FC<CreateNoteDialogProps> = ({
                     id="title"
                     {...register('title', { required: 'Title is required' })}
                     placeholder="Enter note title..."
-                    className="bg-muted border-input rounded-xl h-11"
+                    className="bg-slate-50 border-slate-200 rounded-xl h-11"
                   />
                   {errors.title && <p className="text-sm text-destructive mt-2">{errors.title.message}</p>}
                 </div>
               </div>
 
               {/* Content Card */}
-              <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-4 border-b border-border">
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-4 border-b border-slate-100">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center">
                       <FileText className="w-5 h-5 text-sky-500" />
@@ -222,14 +222,14 @@ export const CreateNoteDialog: React.FC<CreateNoteDialogProps> = ({
                     id="content"
                     {...register('content')}
                     placeholder="Write your note content..."
-                    className="bg-muted border-input rounded-xl min-h-[120px] resize-none"
+                    className="bg-slate-50 border-slate-200 rounded-xl min-h-[120px] resize-none"
                     rows={6}
                   />
                 </div>
               </div>
 
               {/* Color & Visibility Card */}
-              <div className="bg-background rounded-2xl shadow-sm p-4">
+              <div className="bg-white rounded-2xl shadow-sm p-4">
                 <div className="space-y-4">
                   {/* Color */}
                   <div>
@@ -281,8 +281,8 @@ export const CreateNoteDialog: React.FC<CreateNoteDialogProps> = ({
               </div>
 
               {/* Link To Card */}
-              <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-4 border-b border-border">
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-4 border-b border-slate-100">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center">
                       <Link className="w-5 h-5 text-rose-500" />
@@ -293,7 +293,7 @@ export const CreateNoteDialog: React.FC<CreateNoteDialogProps> = ({
                     </div>
                   </div>
                 </div>
-                <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4 bg-muted/50">
+                <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50/50">
                   <div className="space-y-2">
                     <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Case</Label>
                     <CaseSelector
@@ -314,8 +314,8 @@ export const CreateNoteDialog: React.FC<CreateNoteDialogProps> = ({
               </div>
 
               {/* Tags Card */}
-              <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-4 border-b border-border">
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-4 border-b border-slate-100">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
                       <Tag className="w-5 h-5 text-violet-500" />
@@ -331,9 +331,9 @@ export const CreateNoteDialog: React.FC<CreateNoteDialogProps> = ({
                       onChange={(e) => setNewTag(e.target.value)}
                       placeholder="Add a tag..."
                       onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
-                      className="bg-muted border-input rounded-xl h-11 flex-1"
+                      className="bg-slate-50 border-slate-200 rounded-xl h-11 flex-1"
                     />
-                    <Button type="button" onClick={addTag} variant="outline" size="icon" className="h-11 w-11 rounded-xl border-input">
+                    <Button type="button" onClick={addTag} variant="outline" size="icon" className="h-11 w-11 rounded-xl border-slate-200">
                       <Plus className="w-4 h-4" />
                     </Button>
                   </div>
@@ -357,13 +357,13 @@ export const CreateNoteDialog: React.FC<CreateNoteDialogProps> = ({
           </div>
 
           {/* Footer Actions */}
-          <div className="px-6 py-4 border-t border-border bg-background">
+          <div className="px-6 py-4 border-t border-slate-100 bg-white">
             <div className="flex justify-end gap-3">
               <Button 
                 type="button" 
                 variant="outline" 
                 onClick={onClose}
-                className="min-w-[100px] rounded-full border-input"
+                className="min-w-[100px] rounded-full border-slate-200"
               >
                 Cancel
               </Button>
