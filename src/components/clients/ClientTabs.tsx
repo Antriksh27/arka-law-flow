@@ -154,6 +154,7 @@ export const ClientTabs: React.FC<ClientTabsProps> = ({
         <MobileHeader 
           title={client.full_name}
           showBack={true}
+          backTo="/clients"
           actions={
             <ClientQuickActions 
               clientId={client.id} 
