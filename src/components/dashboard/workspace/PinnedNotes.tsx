@@ -8,6 +8,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import TimeUtils from '@/lib/timeUtils';
+import { bg } from '@/lib/colors';
+
 interface Note {
   id: string;
   title: string;
@@ -59,7 +61,7 @@ export const PinnedNotes = ({
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
-          {[1, 2].map(i => <div key={i} className="h-32 bg-gray-100 rounded-lg animate-pulse" />)}
+          {[1, 2].map(i => <div key={i} className={`h-32 ${bg.muted} rounded-lg animate-pulse`} />)}
         </div>
       </div>;
   }

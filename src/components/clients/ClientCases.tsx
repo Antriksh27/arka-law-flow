@@ -9,6 +9,7 @@ import { Eye, Link, User, Calendar } from 'lucide-react';
 import { TimeUtils } from '@/lib/timeUtils';
 import { AssignToCaseDialog } from './AssignToCaseDialog';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { bg, text, status } from '@/lib/colors';
 
 interface ClientCasesProps {
   clientId: string;
@@ -47,8 +48,8 @@ export const ClientCases: React.FC<ClientCasesProps> = ({ clientId }) => {
     }
   });
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
+  const getStatusColor = (caseStatus: string) => {
+    switch (caseStatus) {
       case 'open':
         return 'bg-blue-100 text-blue-800';
       case 'in_court':
@@ -56,9 +57,9 @@ export const ClientCases: React.FC<ClientCasesProps> = ({ clientId }) => {
       case 'on_hold':
         return 'bg-orange-100 text-orange-800';
       case 'closed':
-        return 'bg-gray-100 text-gray-800';
+        return `${status.default.bg} ${status.default.text}`;
       default:
-        return 'bg-gray-100 text-gray-800';
+        return `${status.default.bg} ${status.default.text}`;
     }
   };
 
@@ -66,7 +67,7 @@ export const ClientCases: React.FC<ClientCasesProps> = ({ clientId }) => {
     return (
       <Card className="bg-white rounded-2xl shadow-sm">
         <CardContent className="p-6">
-          <div className="text-center text-gray-500">Loading cases...</div>
+          <div className={`text-center ${text.muted}`}>Loading cases...</div>
         </CardContent>
       </Card>
     );
@@ -89,7 +90,7 @@ export const ClientCases: React.FC<ClientCasesProps> = ({ clientId }) => {
           </CardHeader>
           <CardContent className="px-3 pb-3">
             {cases.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className={`text-center py-8 ${text.muted}`}>
                 <p className="text-sm">No cases found</p>
               </div>
             ) : (
@@ -101,7 +102,7 @@ export const ClientCases: React.FC<ClientCasesProps> = ({ clientId }) => {
                     onClick={() => navigate(`/cases/${case_item.id}`)}
                   >
                     <CardContent className="p-3">
-                      <div className="font-medium text-sm text-gray-900 mb-2">
+                      <div className={`font-medium text-sm ${text.primary} mb-2`}>
                         {case_item.case_title?.replace(/\bVersus\b/g, 'Vs')}
                       </div>
                       <div className="flex items-center gap-2 flex-wrap mb-2">
@@ -114,12 +115,12 @@ export const ClientCases: React.FC<ClientCasesProps> = ({ clientId }) => {
                       </div>
                       <div className="space-y-1">
                         {case_item.assigned_to && (
-                          <div className="flex items-center gap-1 text-xs text-gray-600">
+                          <div className={`flex items-center gap-1 text-xs ${text.secondary}`}>
                             <User className="w-3 h-3" />
                             {case_item.assigned_to.full_name}
                           </div>
                         )}
-                        <div className="flex items-center gap-1 text-xs text-gray-500">
+                        <div className={`flex items-center gap-1 text-xs ${text.muted}`}>
                           <Calendar className="w-3 h-3" />
                           {TimeUtils.formatDate(case_item.created_at)}
                         </div>
@@ -157,19 +158,19 @@ export const ClientCases: React.FC<ClientCasesProps> = ({ clientId }) => {
       </CardHeader>
       <CardContent>
         {cases.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
+          <div className={`text-center py-8 ${text.muted}`}>
             No cases found for this client
           </div>
         ) : (
           <div className="space-y-4">
             {cases.map((case_item) => (
-              <div key={case_item.id} className="border rounded-lg p-4 hover:bg-gray-50">
+              <div key={case_item.id} className={`border rounded-lg p-4 ${bg.hover}`}>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h3 className="font-medium text-gray-900 mb-2">
+                    <h3 className={`font-medium ${text.primary} mb-2`}>
                       {case_item.case_title?.replace(/\bVersus\b/g, 'Vs')}
                     </h3>
-                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                    <div className={`flex items-center gap-4 text-sm ${text.muted}`}>
                       <Badge 
                         variant="default" 
                         className={getStatusColor(case_item.status)}

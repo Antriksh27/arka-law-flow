@@ -16,6 +16,7 @@ import { Mic, MicOff, Loader2, CheckSquare, FileText, Calendar, User, Tag, Bell,
 import { AudioRecorder } from '@/utils/audioRecorder';
 import { useDeepgramTranscription } from '@/hooks/useDeepgramTranscription';
 import { MobileDialogHeader } from '@/components/ui/mobile-dialog-header';
+import { bg, border } from '@/lib/colors';
 
 interface CreateTaskDialogProps {
   open: boolean;
@@ -282,7 +283,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden">
-        <div className="flex flex-col h-full bg-slate-50">
+        <div className={`flex flex-col h-full ${bg.page}`}>
           <MobileDialogHeader
             title="Create New Task"
             subtitle="Add a new task to your workflow"
@@ -295,7 +296,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
               
               {/* Title Card */}
               <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-4 border-b border-slate-100">
+                <div className={`p-4 border-b ${border.light}`}>
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
                       <CheckSquare className="w-5 h-5 text-emerald-500" />

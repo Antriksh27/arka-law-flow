@@ -1,5 +1,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { text } from '@/lib/colors';
+
 interface Segment {
   value: string;
   label: string;
@@ -22,7 +24,7 @@ export const SegmentedControl: React.FC<SegmentedControlProps> = ({
       const isActive = value === segment.value;
       return <button key={segment.value} onClick={() => onChange(segment.value)} className={cn('flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all active:scale-95 snap-start flex-shrink-0', isActive ? 'bg-primary text-primary-foreground font-medium' : 'bg-secondary text-secondary-foreground')}>
             {segment.icon && <span className="w-4 h-4">{segment.icon}</span>}
-            <span className="text-sm text-slate-400">{segment.label}</span>
+            <span className={`text-sm ${text.light}`}>{segment.label}</span>
           </button>;
     })}
     </div>;

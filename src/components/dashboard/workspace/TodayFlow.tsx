@@ -6,6 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { bg, border, text } from '@/lib/colors';
 
 interface TimelineEvent {
   id: string;
@@ -64,7 +65,7 @@ export const TodayFlow = ({ events, isLoading }: TodayFlowProps) => {
       case 'task':
         return 'bg-teal-50 border-teal-200 hover:bg-teal-100/50 transition-colors';
       default:
-        return 'bg-gray-50 border-gray-200 hover:bg-gray-100/50 transition-colors';
+        return `${bg.page} ${border.default} ${bg.hover} transition-colors`;
     }
   };
 
@@ -77,7 +78,7 @@ export const TodayFlow = ({ events, isLoading }: TodayFlowProps) => {
         </div>
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-24 bg-gray-100 rounded-lg animate-pulse" />
+            <div key={i} className={`h-24 ${bg.muted} rounded-lg animate-pulse`} />
           ))}
         </div>
       </Card>
@@ -93,13 +94,13 @@ export const TodayFlow = ({ events, isLoading }: TodayFlowProps) => {
 
       {events.length === 0 ? (
         <div className="text-center py-8">
-          <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+          <Calendar className={`w-12 h-12 ${text.light} mx-auto mb-3`} />
           <p className="text-sm text-muted-foreground">No events scheduled for today</p>
         </div>
       ) : (
         <div className="space-y-3 md:space-y-4 relative">
           {/* Vertical timeline line */}
-          <div className="absolute left-5 md:left-6 top-8 bottom-8 w-0.5 bg-gray-200" />
+          <div className={`absolute left-5 md:left-6 top-8 bottom-8 w-0.5 ${bg.muted}`} />
           
           {events.map((event, index) => (
             <div key={event.id} className="relative">

@@ -1,5 +1,6 @@
 import { Card } from '@/components/ui/card';
 import { format, addDays, startOfWeek } from 'date-fns';
+import { bg, border } from '@/lib/colors';
 
 interface WeekEvent {
   date: string;
@@ -27,7 +28,7 @@ export const UpcomingWeek = ({ events, isLoading }: UpcomingWeekProps) => {
         <h2 className="text-lg md:text-xl font-semibold mb-4">Upcoming Week</h2>
         <div className="space-y-3">
           {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="h-12 bg-gray-100 rounded animate-pulse" />
+            <div key={i} className={`h-12 ${bg.muted} rounded animate-pulse`} />
           ))}
         </div>
       </Card>
@@ -44,7 +45,7 @@ export const UpcomingWeek = ({ events, isLoading }: UpcomingWeekProps) => {
     if (data.hearings > 0) bars.push(<div key="hearing" className="w-1 h-full bg-red-500 rounded" />);
     if (data.appointments > 0) bars.push(<div key="appt" className="w-1 h-full bg-blue-500 rounded" />);
     if (data.tasks > 0) bars.push(<div key="task" className="w-1 h-full bg-green-500 rounded" />);
-    return bars.length > 0 ? bars : <div className="w-1 h-full bg-gray-200 rounded" />;
+    return bars.length > 0 ? bars : <div className={`w-1 h-full ${bg.muted} rounded`} />;
   };
 
   return (
@@ -59,8 +60,8 @@ export const UpcomingWeek = ({ events, isLoading }: UpcomingWeekProps) => {
           return (
             <div
               key={index}
-              className={`flex items-center justify-between p-3 rounded-lg border ${
-                isToday ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'
+            className={`flex items-center justify-between p-3 rounded-lg border ${
+                isToday ? 'bg-blue-50 border-blue-200' : `${bg.page} ${border.default}`
               }`}
             >
               <div>

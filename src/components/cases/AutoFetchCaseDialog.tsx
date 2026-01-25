@@ -7,6 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { Loader2, Settings, Info, X, Zap } from 'lucide-react';
+import { bg, border, text } from '@/lib/colors';
 
 interface AutoFetchCaseDialogProps {
   open: boolean;
@@ -63,22 +64,22 @@ export const AutoFetchCaseDialog: React.FC<AutoFetchCaseDialogProps> = ({
       <DialogContent hideCloseButton className="sm:max-w-md p-0 bg-muted overflow-hidden">
         <div className="flex flex-col h-full sm:h-auto">
           {/* Header */}
-          <div className="px-6 py-5 bg-white border-b border-slate-100">
+          <div className={`px-6 py-5 bg-white border-b ${border.light}`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
                   <Settings className="w-5 h-5 text-violet-500" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold text-slate-800">Auto-Fetch Settings</h2>
+                  <h2 className={`text-xl font-semibold ${text.primary}`}>Auto-Fetch Settings</h2>
                   <p className="text-sm text-muted-foreground">Configure automatic case fetching</p>
                 </div>
               </div>
               <button
                 onClick={onClose}
-                className="md:hidden w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors"
+                className={`md:hidden w-8 h-8 rounded-full ${bg.muted} flex items-center justify-center hover:${bg.active} transition-colors`}
               >
-                <X className="w-4 h-4 text-slate-500" />
+                <X className={`w-4 h-4 ${text.muted}`} />
               </button>
             </div>
           </div>
@@ -94,7 +95,7 @@ export const AutoFetchCaseDialog: React.FC<AutoFetchCaseDialogProps> = ({
                       <Zap className="w-5 h-5 text-emerald-500" />
                     </div>
                     <div>
-                      <Label className="text-sm font-semibold text-slate-700">Enable Auto-Fetch</Label>
+                      <Label className={`text-sm font-semibold ${text.secondary}`}>Enable Auto-Fetch</Label>
                       <p className="text-xs text-muted-foreground">Automatically fetch when CNR changes</p>
                     </div>
                   </div>
@@ -137,12 +138,12 @@ export const AutoFetchCaseDialog: React.FC<AutoFetchCaseDialogProps> = ({
           </div>
 
           {/* Footer */}
-          <div className="px-6 py-4 bg-white border-t border-slate-100">
+          <div className={`px-6 py-4 bg-white border-t ${border.light}`}>
             <div className="flex gap-3 justify-end">
               <Button 
                 variant="outline" 
                 onClick={onClose}
-                className="rounded-full px-6 border-slate-200"
+                className={`rounded-full px-6 ${border.default}`}
               >
                 Cancel
               </Button>
