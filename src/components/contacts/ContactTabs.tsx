@@ -118,23 +118,25 @@ export const ContactTabs: React.FC<ContactTabsProps> = ({
 
         <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
           {/* Mobile Tabs */}
-          <TabsList className="w-full bg-background border-b border-border h-auto p-0 sticky top-[calc(3.5rem+env(safe-area-inset-top))] -mt-px z-30">
-            <div className="flex overflow-x-auto scrollbar-hide px-4">
-              {tabs.map(tab => {
-                const IconComponent = tab.icon;
-                return (
-                  <TabsTrigger 
-                    key={tab.value} 
-                    value={tab.value} 
-                    className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary bg-transparent rounded-none whitespace-nowrap transition-colors min-h-[48px]"
-                  >
-                    <IconComponent className="w-4 h-4" />
-                    {tab.label}
-                  </TabsTrigger>
-                );
-              })}
-            </div>
-          </TabsList>
+          <div className="sticky top-[calc(3.5rem+env(safe-area-inset-top))] -mt-px z-30 bg-background">
+            <TabsList className="w-full bg-background border-b border-border h-auto p-0 rounded-none">
+              <div className="flex overflow-x-auto scrollbar-hide px-4">
+                {tabs.map(tab => {
+                  const IconComponent = tab.icon;
+                  return (
+                    <TabsTrigger 
+                      key={tab.value} 
+                      value={tab.value} 
+                      className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary bg-transparent rounded-none whitespace-nowrap transition-colors min-h-[48px]"
+                    >
+                      <IconComponent className="w-4 h-4" />
+                      {tab.label}
+                    </TabsTrigger>
+                  );
+                })}
+              </div>
+            </TabsList>
+          </div>
 
           {/* Tab Content */}
           <div className="p-4 pb-8">
