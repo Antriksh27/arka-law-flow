@@ -340,7 +340,7 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
         </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 bg-muted">
+        <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 bg-slate-50">
           <div className="space-y-4">
             {/* Title Card */}
             <div className="bg-background rounded-2xl shadow-sm p-4">
