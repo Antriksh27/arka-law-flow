@@ -45,7 +45,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
   return <header className={cn('sticky top-0 z-40 w-full bg-background border-b border-border h-14 sm:hidden', 'supports-[padding-top:env(safe-area-inset-top)]:pt-[env(safe-area-inset-top)]', className)}>
       <div className="flex items-center justify-between h-full px-4">
         <div className="flex items-center gap-3 flex-1 min-w-0">
-          {showBack && <button type="button" onClick={handleBack} className="flex-shrink-0 p-2 -ml-2 rounded-xl active:scale-95 transition-transform min-h-[44px] min-w-[44px] flex items-center justify-center z-10 relative bg-slate-50" aria-label="Go back">
+          {showBack && <button type="button" onClick={handleBack} onTouchEnd={(e) => { e.preventDefault(); handleBack(); }} className="flex-shrink-0 p-2 -ml-2 rounded-xl active:scale-95 transition-transform min-h-[44px] min-w-[44px] flex items-center justify-center z-10 relative bg-slate-50 touch-manipulation cursor-pointer select-none" aria-label="Go back">
               <ArrowLeft className="w-5 h-5 text-foreground pointer-events-none" />
             </button>}
           <h1 className="text-lg font-semibold text-foreground truncate">{title}</h1>
