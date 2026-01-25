@@ -176,31 +176,29 @@ function TeamDirectory() {
         </div>
       )}
 
-      {/* Mobile Search & Filter Bar - Sticky */}
+      {/* Mobile Search & Filter Bar - iOS Style Sticky */}
       {isMobile && (
-        <div className="sticky top-14 z-30 bg-background px-4 py-3 border-b border-border">
-          <div className="flex items-center gap-2">
+        <div className="sticky top-14 z-30 bg-slate-50 px-4 py-3">
+          <div className="flex items-center gap-3">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 h-4 w-4" />
               <input 
                 type="text" 
-                className="w-full rounded-xl bg-muted pl-10 pr-4 py-3 text-base border-0 focus:ring-2 focus:ring-primary outline-none min-h-[48px]" 
+                className="w-full rounded-xl bg-white pl-10 pr-4 py-3 text-base border border-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none min-h-[48px] shadow-sm" 
                 placeholder="Search team..." 
                 value={search} 
                 onChange={e => setSearch(e.target.value)} 
               />
             </div>
-            <Button 
-              variant="outline" 
-              size="icon"
+            <button 
               onClick={() => setShowMobileFilters(true)}
-              className="relative h-12 w-12 rounded-xl"
+              className="relative h-12 w-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-sm active:scale-95 transition-transform"
             >
-              <SlidersHorizontal className="w-5 h-5" />
+              <SlidersHorizontal className="w-5 h-5 text-slate-600" />
               {selectedFilter !== "all" && (
-                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-primary rounded-full" />
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full border-2 border-slate-50" />
               )}
-            </Button>
+            </button>
           </div>
         </div>
       )}
@@ -351,22 +349,22 @@ function TeamDirectory() {
           </div>
         )}
 
-        {/* Mobile Card List */}
+        {/* Mobile Card List - iOS Style */}
         {isMobile && (
           <div className="flex flex-col gap-3 px-4 w-full">
             {isLoading ? (
               <>
                 {[...Array(4)].map((_, i) => (
-                  <Skeleton key={i} className="h-28 w-full rounded-2xl" />
+                  <Skeleton key={i} className="h-32 w-full rounded-2xl" />
                 ))}
               </>
             ) : filtered.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 px-4">
-                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-                  <User className="w-8 h-8 text-muted-foreground" />
+                <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+                  <User className="w-10 h-10 text-slate-400" />
                 </div>
-                <h3 className="text-lg font-medium text-foreground mb-1">No team members found</h3>
-                <p className="text-sm text-muted-foreground text-center">
+                <h3 className="text-lg font-semibold text-slate-900 mb-1">No team members found</h3>
+                <p className="text-sm text-slate-500 text-center">
                   {search ? 'Try adjusting your search' : 'Add team members to get started'}
                 </p>
               </div>
@@ -374,39 +372,39 @@ function TeamDirectory() {
               filtered.map((member: any) => (
                 <div
                   key={member.id}
-                  className="bg-card rounded-2xl border border-border p-4 active:scale-[0.98] transition-all duration-200 shadow-sm"
+                  className="bg-white rounded-2xl p-4 active:scale-[0.98] transition-all duration-200 shadow-sm"
                   onClick={() => {
                     setSidebarMember(member);
                     setShowMemberSheet(true);
                   }}
                 >
                   <div className="flex items-start gap-3">
-                    <Avatar className="w-12 h-12 flex-shrink-0 ring-2 ring-primary/10">
+                    <Avatar className="w-14 h-14 flex-shrink-0 ring-2 ring-slate-100">
                       <AvatarImage src={member.avatar_url} alt={member.full_name} />
-                      <AvatarFallback className="bg-primary/10 text-primary font-medium">
+                      <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-semibold text-lg">
                         {getInitials(member.full_name)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-foreground truncate text-base">{member.full_name}</p>
-                          <p className="text-sm text-muted-foreground truncate">{member.email}</p>
+                          <p className="font-semibold text-slate-900 truncate text-base">{member.full_name}</p>
+                          <p className="text-sm text-slate-500 truncate mt-0.5">{member.email}</p>
                         </div>
                         {(() => {
                           const statusColors = getTeamMemberStatusColor(member.status || '');
                           return (
-                            <Badge className={`rounded-full px-2.5 py-0.5 text-[10px] flex-shrink-0 ${statusColors.bg} ${statusColors.text}`}>
+                            <Badge className={`rounded-full px-2.5 py-1 text-[10px] font-medium flex-shrink-0 ${statusColors.bg} ${statusColors.text}`}>
                               {member.status ? member.status.charAt(0).toUpperCase() + member.status.slice(1) : 'Unknown'}
                             </Badge>
                           );
                         })()}
                       </div>
-                      <div className="flex items-center gap-2 mt-2">
-                        <Badge className="rounded-full px-2.5 py-0.5 text-[10px] bg-primary/10 text-primary">
+                      <div className="flex items-center gap-2 mt-2.5">
+                        <Badge className="rounded-full px-2.5 py-1 text-[10px] font-medium bg-sky-50 text-sky-700 border-0">
                           {roleLabels[member.role] || member.role}
                         </Badge>
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        <span className="text-xs text-slate-500 flex items-center gap-1">
                           <Briefcase className="w-3 h-3" />
                           <CaseCountCell memberId={member.user_id} /> cases
                         </span>
@@ -414,19 +412,19 @@ function TeamDirectory() {
                     </div>
                   </div>
                   
-                  {/* Quick contact actions */}
+                  {/* Quick contact actions - iOS Style */}
                   {(member.email || member.phone_number) && (
-                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border">
+                    <div className="flex items-center gap-2 mt-4 pt-3 border-t border-slate-100">
                       {member.phone_number && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             window.open(`tel:${member.phone_number}`);
                           }}
-                          className="flex items-center gap-2 flex-1 py-2.5 px-3 rounded-xl bg-green-50 text-green-700 active:scale-95 transition-transform min-h-[44px]"
+                          className="flex items-center justify-center gap-2 flex-1 py-3 px-4 rounded-xl bg-emerald-50 text-emerald-700 active:scale-95 transition-transform min-h-[48px]"
                         >
                           <Phone className="h-4 w-4" />
-                          <span className="text-sm font-medium">Call</span>
+                          <span className="text-sm font-semibold">Call</span>
                         </button>
                       )}
                       {member.email && (
@@ -435,10 +433,10 @@ function TeamDirectory() {
                             e.stopPropagation();
                             window.open(`mailto:${member.email}`);
                           }}
-                          className="flex items-center gap-2 flex-1 py-2.5 px-3 rounded-xl bg-blue-50 text-blue-700 active:scale-95 transition-transform min-h-[44px]"
+                          className="flex items-center justify-center gap-2 flex-1 py-3 px-4 rounded-xl bg-sky-50 text-sky-700 active:scale-95 transition-transform min-h-[48px]"
                         >
                           <Mail className="h-4 w-4" />
-                          <span className="text-sm font-medium">Email</span>
+                          <span className="text-sm font-semibold">Email</span>
                         </button>
                       )}
                     </div>
@@ -576,220 +574,337 @@ function TeamDirectory() {
         )}
       </div>
 
-      {/* Mobile Member Details Sheet */}
+      {/* Mobile Member Details Sheet - iOS Style */}
       {isMobile && detailMember && (
         <Sheet open={showMemberSheet} onOpenChange={setShowMemberSheet}>
-          <SheetContent side="bottom" className="h-[85vh] overflow-y-auto">
-            <SheetHeader>
-              <SheetTitle>Member Details</SheetTitle>
-            </SheetHeader>
-            <div className="flex flex-col gap-4 mt-4">
-              <div className="flex items-center gap-4">
-                <Avatar className="w-16 h-16">
-                  <AvatarImage src={detailMember.avatar_url} alt={detailMember.full_name} />
-                  <AvatarFallback>
-                    {getInitials(detailMember.full_name)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <p className="font-semibold text-lg text-foreground">{detailMember.full_name}</p>
-                  <Badge className="mt-1">{roleLabels[detailMember.role] || detailMember.role}</Badge>
+          <SheetContent 
+            side="bottom" 
+            className="h-[95vh] rounded-t-3xl bg-slate-50 overflow-hidden p-0"
+            hideCloseButton
+          >
+            {/* iOS-style Header */}
+            <div className="flex items-center justify-between px-4 h-14 bg-white border-b border-slate-100 sticky top-0 z-10">
+              <button 
+                onClick={() => setShowMemberSheet(false)}
+                className="text-primary font-medium text-base active:opacity-70"
+              >
+                Cancel
+              </button>
+              <span className="font-semibold text-slate-900">Member Details</span>
+              <div className="w-14" /> {/* Spacer for centering */}
+            </div>
+            
+            {/* iOS Drag Handle */}
+            <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 bg-slate-300 rounded-full" />
+
+            <div className="flex flex-col gap-4 p-4 overflow-y-auto h-[calc(95vh-56px)]">
+              {/* Profile Header Card */}
+              <div className="bg-white rounded-2xl p-5 shadow-sm">
+                <div className="flex items-center gap-4">
+                  <Avatar className="w-20 h-20 ring-4 ring-slate-100">
+                    <AvatarImage src={detailMember.avatar_url} alt={detailMember.full_name} />
+                    <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-bold text-2xl">
+                      {getInitials(detailMember.full_name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-xl text-slate-900 truncate">{detailMember.full_name}</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <Badge className="rounded-full px-3 py-1 text-xs font-medium bg-sky-50 text-sky-700 border-0">
+                        {roleLabels[detailMember.role] || detailMember.role}
+                      </Badge>
+                      {(() => {
+                        const statusColors = getTeamMemberStatusColor(detailMember.status || '');
+                        return (
+                          <Badge className={`rounded-full px-3 py-1 text-xs font-medium ${statusColors.bg} ${statusColors.text}`}>
+                            {detailMember.status ? detailMember.status.charAt(0).toUpperCase() + detailMember.status.slice(1) : 'Unknown'}
+                          </Badge>
+                        );
+                      })()}
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3 bg-muted/50 rounded-lg p-4">
-                <DataFieldHorizontal icon={<Mail className="w-4 h-4" />} label="Email">
-                  <span className="text-sm text-foreground break-all">
-                    {detailMember.email}
-                  </span>
-                </DataFieldHorizontal>
-                <DataFieldHorizontal icon={<Phone className="w-4 h-4" />} label="Phone">
-                  <span className="text-sm text-foreground">
-                    {detailMember.phone_number || "-"}
-                  </span>
-                </DataFieldHorizontal>
-                <DataFieldHorizontal icon={<Calendar className="w-4 h-4" />} label="Joined">
-                  <span className="text-sm text-foreground">
-                    {detailMember.join_date || (detailMember.joined_at ? new Date(detailMember.joined_at).toLocaleDateString(undefined, {
-                      year: 'numeric',
-                      month: 'short'
-                    }) : "-")}
-                  </span>
-                </DataFieldHorizontal>
+              {/* Contact Info Card */}
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div className="px-4 py-3 border-b border-slate-100">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Contact Information</p>
+                </div>
+                <div className="divide-y divide-slate-100">
+                  <div className="flex items-center gap-3 px-4 py-3">
+                    <div className="w-9 h-9 rounded-full bg-sky-50 flex items-center justify-center">
+                      <Mail className="w-4 h-4 text-sky-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-slate-500">Email</p>
+                      <p className="text-sm font-medium text-slate-900 truncate">{detailMember.email}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 px-4 py-3">
+                    <div className="w-9 h-9 rounded-full bg-emerald-50 flex items-center justify-center">
+                      <Phone className="w-4 h-4 text-emerald-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-slate-500">Phone</p>
+                      <p className="text-sm font-medium text-slate-900">{detailMember.phone_number || "Not provided"}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 px-4 py-3">
+                    <div className="w-9 h-9 rounded-full bg-violet-50 flex items-center justify-center">
+                      <Calendar className="w-4 h-4 text-violet-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-slate-500">Joined</p>
+                      <p className="text-sm font-medium text-slate-900">
+                        {detailMember.join_date || (detailMember.joined_at ? new Date(detailMember.joined_at).toLocaleDateString(undefined, {
+                          year: 'numeric',
+                          month: 'short'
+                        }) : "Unknown")}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <div className="flex flex-col gap-2">
-                <p className="font-medium text-foreground">Statistics</p>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="text-center p-4 bg-primary/5 rounded-lg">
-                    <div className="text-2xl font-bold text-primary">
+              {/* Statistics Card */}
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div className="px-4 py-3 border-b border-slate-100">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Statistics</p>
+                </div>
+                <div className="grid grid-cols-2 divide-x divide-slate-100">
+                  <div className="text-center py-5">
+                    <div className="text-3xl font-bold text-primary">
                       {memberStats?.caseCount || 0}
                     </div>
-                    <div className="text-xs text-muted-foreground">Active Cases</div>
+                    <div className="text-xs text-slate-500 mt-1">Active Cases</div>
                   </div>
-                  <div className="text-center p-4 bg-accent/20 rounded-lg">
-                    <div className="text-2xl font-bold text-accent-foreground">
+                  <div className="text-center py-5">
+                    <div className="text-3xl font-bold text-amber-600">
                       {memberStats?.taskCount || 0}
                     </div>
-                    <div className="text-xs text-muted-foreground">Tasks</div>
+                    <div className="text-xs text-slate-500 mt-1">Tasks</div>
                   </div>
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2">
-                <p className="font-medium text-foreground">Recent Cases</p>
-                <div className="flex flex-col">
-                  {memberStats?.recentCases?.length > 0 ? (
-                    memberStats.recentCases.map((case_item: any) => (
-                      <div key={case_item.id} className="flex items-center justify-between border-b border-border py-3">
-                        <span className="text-sm text-foreground truncate flex-1">
+              {/* Recent Cases Card */}
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div className="px-4 py-3 border-b border-slate-100">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Recent Cases</p>
+                </div>
+                {memberStats?.recentCases?.length > 0 ? (
+                  <div className="divide-y divide-slate-100">
+                    {memberStats.recentCases.map((case_item: any) => (
+                      <div key={case_item.id} className="flex items-center justify-between px-4 py-3">
+                        <span className="text-sm font-medium text-slate-900 truncate flex-1 pr-2">
                           {case_item.case_title}
                         </span>
-                        <Badge variant="outline" className="ml-2">
+                        <Badge variant="outline" className="rounded-full text-[10px] px-2 py-0.5">
                           {case_item.status}
                         </Badge>
                       </div>
-                    ))
-                  ) : (
-                    <div className="text-sm text-muted-foreground py-8 text-center">
-                      No recent cases found
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-sm text-slate-500 py-8 text-center">
+                    No recent cases found
+                  </div>
+                )}
+              </div>
+
+              {/* Permissions Card */}
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div className="px-4 py-3 border-b border-slate-100">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Permissions</p>
+                </div>
+                <div className="divide-y divide-slate-100">
+                  <div className="flex items-center justify-between px-4 py-3">
+                    <span className="text-sm text-slate-700">Can assign tasks</span>
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center ${['admin', 'lawyer'].includes(detailMember.role) ? 'bg-emerald-500' : 'bg-slate-200'}`}>
+                      {['admin', 'lawyer'].includes(detailMember.role) && <Check className="w-3 h-3 text-white" />}
                     </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <p className="font-medium text-foreground">Role Permissions</p>
-                <div className="flex flex-col gap-3 bg-muted/50 rounded-lg p-4">
-                  <div className="flex items-center gap-2">
-                    <Checkbox 
-                      checked={['admin', 'lawyer'].includes(detailMember.role)} 
-                      disabled
-                      id="mobile-assign-tasks"
-                    />
-                    <span className="text-sm text-muted-foreground ml-2">Can assign tasks</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Checkbox 
-                      checked={['admin', 'lawyer', 'paralegal', 'office_staff'].includes(detailMember.role)} 
-                      disabled
-                      id="mobile-upload-documents"
-                    />
-                    <span className="text-sm text-muted-foreground ml-2">Can upload documents</span>
+                  <div className="flex items-center justify-between px-4 py-3">
+                    <span className="text-sm text-slate-700">Can upload documents</span>
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center ${['admin', 'lawyer', 'paralegal', 'office_staff'].includes(detailMember.role) ? 'bg-emerald-500' : 'bg-slate-200'}`}>
+                      {['admin', 'lawyer', 'paralegal', 'office_staff'].includes(detailMember.role) && <Check className="w-3 h-3 text-white" />}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Checkbox 
-                      checked={detailMember.role === 'admin'} 
-                      disabled
-                      id="mobile-manage-team"
-                    />
-                    <span className="text-sm text-muted-foreground ml-2">Can manage team</span>
+                  <div className="flex items-center justify-between px-4 py-3">
+                    <span className="text-sm text-slate-700">Can manage team</span>
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center ${detailMember.role === 'admin' ? 'bg-emerald-500' : 'bg-slate-200'}`}>
+                      {detailMember.role === 'admin' && <Check className="w-3 h-3 text-white" />}
+                    </div>
                   </div>
                 </div>
               </div>
 
+              {/* Admin Actions */}
               {userRole === 'admin' && (
-                <div className="flex flex-col gap-2 mt-4">
-                  <div className="flex gap-2">
-                    <Button 
-                      className="flex-1"
-                      variant="outline"
-                      onClick={() => {
-                        setShowMemberSheet(false);
-                        handleEditMember(detailMember);
-                      }}
-                    >
-                      <Edit className="w-4 h-4 mr-2" /> Edit
-                    </Button>
-                    <Button 
-                      className="flex-1"
-                      variant="outline"
-                      onClick={() => {
-                        setShowMemberSheet(false);
-                        handleResetPassword(detailMember);
-                      }}
-                    >
-                      <KeyRound className="w-4 h-4 mr-2" /> Reset Password
-                    </Button>
+                <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                  <div className="px-4 py-3 border-b border-slate-100">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Admin Actions</p>
                   </div>
-                  {detailMember.status === 'suspended' && (
-                    <Button 
-                      className="w-full bg-green-600 hover:bg-green-700"
+                  <div className="p-4 space-y-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      <button 
+                        className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-slate-100 text-slate-700 active:scale-95 transition-transform font-medium text-sm"
+                        onClick={() => {
+                          setShowMemberSheet(false);
+                          handleEditMember(detailMember);
+                        }}
+                      >
+                        <Edit className="w-4 h-4" /> Edit
+                      </button>
+                      <button 
+                        className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-slate-100 text-slate-700 active:scale-95 transition-transform font-medium text-sm"
+                        onClick={() => {
+                          setShowMemberSheet(false);
+                          handleResetPassword(detailMember);
+                        }}
+                      >
+                        <KeyRound className="w-4 h-4" /> Password
+                      </button>
+                    </div>
+                    {detailMember.status === 'suspended' && (
+                      <button 
+                        className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-emerald-500 text-white active:scale-95 transition-transform font-semibold text-sm"
+                        onClick={() => {
+                          setShowMemberSheet(false);
+                          handleReactivateMember(detailMember);
+                        }}
+                      >
+                        <UserCheck className="w-4 h-4" /> Reactivate Member
+                      </button>
+                    )}
+                    <button 
+                      className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-rose-50 text-rose-600 active:scale-95 transition-transform font-semibold text-sm"
                       onClick={() => {
                         setShowMemberSheet(false);
-                        handleReactivateMember(detailMember);
+                        handleDeleteMember(detailMember);
                       }}
                     >
-                      <UserCheck className="w-4 h-4 mr-2" /> Reactivate
-                    </Button>
-                  )}
-                  <Button 
-                    className="w-full"
-                    variant="destructive"
-                    onClick={() => {
-                      setShowMemberSheet(false);
-                      handleDeleteMember(detailMember);
-                    }}
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" /> Delete Member
-                  </Button>
+                      <Trash2 className="w-4 h-4" /> Delete Member
+                    </button>
+                  </div>
                 </div>
               )}
+
+              {/* Bottom spacing for safe area */}
+              <div className="h-8" />
             </div>
           </SheetContent>
         </Sheet>
       )}
 
-      {/* Mobile Filter Sheet */}
+      {/* Mobile Filter Sheet - iOS Style */}
       {isMobile && (
         <Sheet open={showMobileFilters} onOpenChange={setShowMobileFilters}>
-          <SheetContent side="bottom" className="h-auto">
-            <SheetHeader>
-              <SheetTitle>Filter Team</SheetTitle>
-            </SheetHeader>
-            <div className="flex flex-col gap-3 mt-4">
-              <button
-                className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${
-                  selectedFilter === "all" ? "bg-primary text-primary-foreground" : "bg-muted"
-                }`}
-                onClick={() => {
-                  setSelectedFilter("all");
-                  setShowMobileFilters(false);
-                }}
+          <SheetContent 
+            side="bottom" 
+            className="rounded-t-3xl bg-slate-50 p-0"
+            hideCloseButton
+          >
+            {/* iOS Drag Handle */}
+            <div className="flex justify-center pt-3 pb-2">
+              <div className="w-10 h-1 bg-slate-300 rounded-full" />
+            </div>
+            
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-white">
+              <button 
+                onClick={() => setShowMobileFilters(false)}
+                className="text-primary font-medium text-base active:opacity-70"
               >
-                <div className="flex items-center justify-between">
-                  <span className="font-medium">All Members</span>
-                  <span className="text-sm opacity-75">{filters.all}</span>
-                </div>
+                Cancel
               </button>
-              <button
-                className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${
-                  selectedFilter === "lawyer" ? "bg-primary text-primary-foreground" : "bg-muted"
-                }`}
-                onClick={() => {
-                  setSelectedFilter("lawyer");
-                  setShowMobileFilters(false);
-                }}
+              <span className="font-semibold text-slate-900">Filter Team</span>
+              <button 
+                onClick={() => setShowMobileFilters(false)}
+                className="text-primary font-semibold text-base active:opacity-70"
               >
-                <div className="flex items-center justify-between">
-                  <span className="font-medium">Lawyers</span>
-                  <span className="text-sm opacity-75">{filters.lawyer}</span>
-                </div>
+                Done
               </button>
-              <button
-                className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${
-                  selectedFilter === "paralegal" ? "bg-primary text-primary-foreground" : "bg-muted"
-                }`}
-                onClick={() => {
-                  setSelectedFilter("paralegal");
-                  setShowMobileFilters(false);
-                }}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-medium">Paralegals</span>
-                  <span className="text-sm opacity-75">{filters.paralegal}</span>
-                </div>
-              </button>
+            </div>
+
+            <div className="p-4 space-y-3 pb-8">
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <button
+                  className={`w-full text-left px-4 py-4 flex items-center justify-between transition-colors ${
+                    selectedFilter === "all" ? "bg-primary/5" : ""
+                  }`}
+                  onClick={() => {
+                    setSelectedFilter("all");
+                    setShowMobileFilters(false);
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
+                      <User className="w-5 h-5 text-slate-600" />
+                    </div>
+                    <span className="font-medium text-slate-900">All Members</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-slate-500">{filters.all}</span>
+                    {selectedFilter === "all" && (
+                      <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                        <Check className="w-4 h-4 text-white" />
+                      </div>
+                    )}
+                  </div>
+                </button>
+                <div className="h-px bg-slate-100 ml-16" />
+                <button
+                  className={`w-full text-left px-4 py-4 flex items-center justify-between transition-colors ${
+                    selectedFilter === "lawyer" ? "bg-primary/5" : ""
+                  }`}
+                  onClick={() => {
+                    setSelectedFilter("lawyer");
+                    setShowMobileFilters(false);
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-sky-50 flex items-center justify-center">
+                      <Briefcase className="w-5 h-5 text-sky-600" />
+                    </div>
+                    <span className="font-medium text-slate-900">Lawyers</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-slate-500">{filters.lawyer}</span>
+                    {selectedFilter === "lawyer" && (
+                      <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                        <Check className="w-4 h-4 text-white" />
+                      </div>
+                    )}
+                  </div>
+                </button>
+                <div className="h-px bg-slate-100 ml-16" />
+                <button
+                  className={`w-full text-left px-4 py-4 flex items-center justify-between transition-colors ${
+                    selectedFilter === "paralegal" ? "bg-primary/5" : ""
+                  }`}
+                  onClick={() => {
+                    setSelectedFilter("paralegal");
+                    setShowMobileFilters(false);
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-violet-50 flex items-center justify-center">
+                      <User className="w-5 h-5 text-violet-600" />
+                    </div>
+                    <span className="font-medium text-slate-900">Paralegals</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-slate-500">{filters.paralegal}</span>
+                    {selectedFilter === "paralegal" && (
+                      <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                        <Check className="w-4 h-4 text-white" />
+                      </div>
+                    )}
+                  </div>
+                </button>
+              </div>
             </div>
           </SheetContent>
         </Sheet>
