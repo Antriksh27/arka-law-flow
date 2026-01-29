@@ -1,24 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
-import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { Calendar } from '../ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
-import { CalendarIcon, X, UserPlus, Users } from 'lucide-react';
+import { UserPlus, Users, X, Calendar as CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import TimeUtils from '@/lib/timeUtils';
 import { supabase } from '@/integrations/supabase/client';
-import { useDialog } from '@/hooks/use-dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { SmartBookingCalendar } from '@/components/appointments/SmartBookingCalendar';
 import { ClientSelector } from '@/components/appointments/ClientSelector';
 import { CaseSelector } from '@/components/appointments/CaseSelector';
 import { Badge } from '../ui/badge';
-import { MobileDialogHeader } from '@/components/ui/mobile-dialog-header';
 import { bg, border } from '@/lib/colors';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface Client {
   id: string;
@@ -37,14 +36,17 @@ interface User {
 interface CreateAppointmentDialogProps {
   preSelectedDate?: Date;
   preSelectedClientId?: string;
+  open?: boolean;
+  onClose?: () => void;
 }
+
 export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = ({
   preSelectedDate,
-  preSelectedClientId
+  preSelectedClientId,
+  open = true,
+  onClose,
 }) => {
-  const {
-    closeDialog
-  } = useDialog();
+  const isMobile = useIsMobile();
   const {
     firmId,
     user
@@ -65,6 +67,10 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
     status: 'upcoming',
     type: 'in-person' as 'in-person' | 'other' | 'call' | 'video-call'
   });
+
+  const handleClose = () => {
+    onClose?.();
+  };
 
   useEffect(() => {
     fetchClients();
@@ -296,7 +302,7 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
           ? `Appointment created and ${addedCount} team member(s) notified`
           : "Appointment created successfully"
       });
-      closeDialog();
+      handleClose();
     } catch (error) {
       console.error('Error creating appointment:', error);
       toast({
@@ -339,16 +345,29 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
     return formData.appointment_date && formData.appointment_time && formData.client_id && formData.lawyer_id;
   };
 
-  return (
-    <div className={`flex flex-col h-full ${bg.page}`}>
-      <MobileDialogHeader
-        title="New Appointment"
-        subtitle="Schedule a meeting with your client"
-        onClose={closeDialog}
-      />
+  const formContent = (
+    <div className="flex flex-col h-full bg-slate-50">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 h-14 bg-white border-b border-slate-100 sticky top-0 z-10">
+        <button 
+          type="button"
+          onClick={handleClose}
+          className="text-primary font-medium text-base active:opacity-70"
+        >
+          Cancel
+        </button>
+        <span className="font-semibold text-slate-900">New Appointment</span>
+        <div className="w-14" /> {/* Spacer for alignment */}
+      </div>
+
+      {/* iOS Drag Handle - Mobile only */}
+      {isMobile && (
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 bg-slate-300 rounded-full z-20" />
+      )}
       
       {/* Form Content */}
-      <div className="flex-1 overflow-y-auto px-6 py-6">
+      <ScrollArea className="flex-1">
+        <div className="px-6 py-6">
         <form onSubmit={handleSubmit} className="space-y-4">
           
           {/* Primary Assignee Card */}
@@ -592,15 +611,15 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
             </div>
           </div>
         </form>
-      </div>
-
+        </div>
+      </ScrollArea>
       {/* Footer Actions */}
       <div className="px-6 py-4 border-t border-slate-100 bg-white">
         <div className="flex justify-end gap-3">
           <Button 
             type="button" 
             variant="outline" 
-            onClick={closeDialog} 
+            onClick={handleClose} 
             className="min-w-[100px] rounded-full border-slate-200"
           >
             Cancel
@@ -616,5 +635,32 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
         </div>
       </div>
     </div>
+  );
+
+  // Mobile: iOS-style bottom sheet
+  if (isMobile) {
+    return (
+      <Sheet open={open} onOpenChange={(isOpen) => { if (!isOpen) handleClose(); }}>
+        <SheetContent 
+          side="bottom" 
+          className="h-[95vh] rounded-t-3xl bg-slate-50 overflow-hidden p-0"
+          hideCloseButton
+        >
+          {formContent}
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  // Desktop: Dialog
+  return (
+    <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) handleClose(); }}>
+      <DialogContent 
+        hideCloseButton 
+        className="sm:max-w-[600px] p-0 gap-0 overflow-hidden max-h-[90vh]"
+      >
+        {formContent}
+      </DialogContent>
+    </Dialog>
   );
 };

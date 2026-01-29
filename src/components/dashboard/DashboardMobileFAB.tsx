@@ -7,7 +7,6 @@ import { CreateAppointmentDialog } from '@/components/appointments/CreateAppoint
 import { CreateTaskDialog } from '@/components/tasks/CreateTaskDialog';
 import { CreateNoteMultiModal } from '@/components/notes/CreateNoteMultiModal';
 import { useNavigate } from 'react-router-dom';
-import { useDialog } from '@/hooks/use-dialog';
 import { cn } from '@/lib/utils';
 import { CARD_STYLES } from '@/lib/mobileStyles';
 
@@ -17,8 +16,8 @@ export const DashboardMobileFAB = () => {
   const [showClientDialog, setShowClientDialog] = useState(false);
   const [showTaskDialog, setShowTaskDialog] = useState(false);
   const [showNoteDialog, setShowNoteDialog] = useState(false);
+  const [showAppointmentDialog, setShowAppointmentDialog] = useState(false);
   const navigate = useNavigate();
-  const { openDialog } = useDialog();
 
   const actions = [
     {
@@ -40,7 +39,7 @@ export const DashboardMobileFAB = () => {
       iconColor: 'text-emerald-500',
       onClick: () => {
         setShowSheet(false);
-        openDialog(<CreateAppointmentDialog />);
+        setShowAppointmentDialog(true);
       },
     },
     {
@@ -141,6 +140,12 @@ export const DashboardMobileFAB = () => {
           open={showNoteDialog}
           onClose={() => setShowNoteDialog(false)}
           isPinned={true}
+        />
+      )}
+      {showAppointmentDialog && (
+        <CreateAppointmentDialog 
+          open={showAppointmentDialog} 
+          onClose={() => setShowAppointmentDialog(false)} 
         />
       )}
     </>

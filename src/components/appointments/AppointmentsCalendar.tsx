@@ -185,8 +185,10 @@ export const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({
     setCurrentDisplayMonth(newMonthFirstDay);
   };
 
+  const [showNewAppointment, setShowNewAppointment] = useState(false);
+  
   const handleNewEvent = () => {
-    openDialog(<CreateAppointmentDialog />);
+    setShowNewAppointment(true);
   };
   
   const handleDateSelect = (date: Date) => {
@@ -237,13 +239,22 @@ export const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({
   }
 
   return (
-    <FullScreenCalendar
-      data={calendarDataForFullScreen}
-      initialMonth={format(currentDisplayMonth, "MMM-yyyy")}
-      onMonthChange={handleMonthChange}
-      onNewEventClick={handleNewEvent}
-      onDateSelect={handleDateSelect}
-      onEventClick={handleEventClick}
-    />
+    <>
+      <FullScreenCalendar
+        data={calendarDataForFullScreen}
+        initialMonth={format(currentDisplayMonth, "MMM-yyyy")}
+        onMonthChange={handleMonthChange}
+        onNewEventClick={handleNewEvent}
+        onDateSelect={handleDateSelect}
+        onEventClick={handleEventClick}
+      />
+      
+      {showNewAppointment && (
+        <CreateAppointmentDialog 
+          open={showNewAppointment} 
+          onClose={() => setShowNewAppointment(false)} 
+        />
+      )}
+    </>
   );
 };

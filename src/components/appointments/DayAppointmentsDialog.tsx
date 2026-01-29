@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -38,6 +38,7 @@ export const DayAppointmentsDialog: React.FC<DayAppointmentsDialogProps> = ({
   onClose,
 }) => {
   const { openDialog, closeDialog } = useDialog();
+  const [showNewAppointment, setShowNewAppointment] = useState(false);
 
   const formatTime = (timeString: string | null) => {
     if (!timeString) return 'No time';
@@ -96,7 +97,7 @@ export const DayAppointmentsDialog: React.FC<DayAppointmentsDialogProps> = ({
 
   const handleNewAppointment = () => {
     closeDialog();
-    openDialog(<CreateAppointmentDialog preSelectedDate={selectedDate} />);
+    setShowNewAppointment(true);
   };
 
   const sortedAppointments = [...appointments].sort((a, b) => {
@@ -230,6 +231,14 @@ export const DayAppointmentsDialog: React.FC<DayAppointmentsDialogProps> = ({
           </div>
         )}
       </div>
+      
+      {showNewAppointment && (
+        <CreateAppointmentDialog 
+          open={showNewAppointment} 
+          onClose={() => setShowNewAppointment(false)}
+          preSelectedDate={selectedDate}
+        />
+      )}
     </div>
   );
 };

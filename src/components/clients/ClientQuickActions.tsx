@@ -11,7 +11,6 @@ import { EditClientDialog } from './EditClientDialog';
 import { DeleteClientDialog } from './DeleteClientDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { useDialog } from '@/hooks/use-dialog';
 import { SendEmailDialog } from './SendEmailDialog';
 import { GenerateEngagementLetterDialog } from './GenerateEngagementLetterDialog';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -36,7 +35,6 @@ export const ClientQuickActions: React.FC<ClientQuickActionsProps> = ({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showEmailDialog, setShowEmailDialog] = useState(false);
   const [clientData, setClientData] = useState<any>(null);
-  const { openDialog } = useDialog();
   const isMobile = useIsMobile();
   const fetchClientData = async () => {
     try {
@@ -75,7 +73,7 @@ export const ClientQuickActions: React.FC<ClientQuickActionsProps> = ({
                 if (isMobile) {
                   setShowMobileAppointment(true);
                 } else {
-                  openDialog(<CreateAppointmentDialog preSelectedClientId={clientId} />);
+                  setShowAppointmentDialog(true);
                 }
               }}
             >
@@ -161,5 +159,13 @@ export const ClientQuickActions: React.FC<ClientQuickActionsProps> = ({
         preSelectedClientId={clientId}
         onSuccess={onAction}
       />
+      
+      {showAppointmentDialog && (
+        <CreateAppointmentDialog 
+          open={showAppointmentDialog} 
+          onClose={() => setShowAppointmentDialog(false)}
+          preSelectedClientId={clientId}
+        />
+      )}
     </>;
 };
