@@ -18,7 +18,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { Plus, Check, ChevronsUpDown, Calendar, Briefcase } from 'lucide-react';
+import { Plus, Check, ChevronsUpDown, Calendar, Briefcase, User, Clock, FileText, Loader2 } from 'lucide-react';
 import { SmartBookingCalendar } from '@/components/appointments/SmartBookingCalendar';
 import { CaseSelector } from '@/components/appointments/CaseSelector';
 
@@ -273,275 +273,341 @@ const BookAppointmentDialog = ({
 
   const formContent = (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="lawyer_id"
-          rules={{ required: "Please select a lawyer" }}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Lawyer *</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger className="bg-white">
-                    <SelectValue placeholder="Select lawyer" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {lawyers?.map(lawyer => (
-                    <SelectItem key={lawyer.user_id} value={lawyer.user_id}>
-                      {lawyer.full_name || 'Unnamed Lawyer'} ({lawyer.role})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="client_name"
-          rules={{ required: "Client selection is required" }}
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Client/Contact *</FormLabel>
-              <Popover open={clientSearchOpen} onOpenChange={setClientSearchOpen}>
-                <PopoverTrigger asChild>
+      <form id="book-appointment-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        {/* Lawyer Selection Card */}
+        <div className="bg-white rounded-2xl shadow-sm p-4 space-y-4">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-8 h-8 rounded-lg bg-sky-50 flex items-center justify-center">
+              <User className="w-4 h-4 text-sky-500" />
+            </div>
+            <span className="font-medium text-slate-700">Lawyer</span>
+          </div>
+          <FormField
+            control={form.control}
+            name="lawyer_id"
+            rules={{ required: "Please select a lawyer" }}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm text-slate-600">Select Lawyer *</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={clientSearchOpen}
-                      className="w-full justify-between bg-white"
-                    >
-                      {getSelectedClientDisplay()}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
+                    <SelectTrigger className="rounded-xl h-11 bg-slate-50">
+                      <SelectValue placeholder="Select lawyer" />
+                    </SelectTrigger>
                   </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-full p-0 bg-background border border-border shadow-lg z-50" align="start">
-                  <Command>
-                    <CommandInput placeholder="Search clients and contacts..." />
-                    <CommandList>
-                      <CommandEmpty>No client or contact found.</CommandEmpty>
-                      <CommandGroup>
-                        <CommandItem value="add-new" onSelect={() => handleClientSelection('add-new')}>
-                          <div className="flex items-center gap-2">
-                            <Plus className="w-4 h-4" />
-                            Add New Contact
-                          </div>
-                        </CommandItem>
-                        {clientsAndContacts?.map(item => (
-                          <CommandItem
-                            key={`${item.type}-${item.id}`}
-                            value={`${item.name} ${item.email || ''} ${item.type}`}
-                            onSelect={() => handleClientSelection(`${item.type}-${item.id}`)}
-                          >
-                            <Check className={`mr-2 h-4 w-4 ${selectedClientValue === `${item.type}-${item.id}` ? "opacity-100" : "opacity-0"}`} />
-                            <div className="flex flex-col">
-                              <span>{item.name}</span>
-                              <span className="text-xs text-muted-foreground">
-                                {item.email || 'No email'} • {item.type === 'client' ? 'Client' : 'Contact'}
-                              </span>
+                  <SelectContent>
+                    {lawyers?.map(lawyer => (
+                      <SelectItem key={lawyer.user_id} value={lawyer.user_id}>
+                        {lawyer.full_name || 'Unnamed Lawyer'} ({lawyer.role})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        {/* Client/Contact Card */}
+        <div className="bg-white rounded-2xl shadow-sm p-4 space-y-4">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center">
+              <User className="w-4 h-4 text-violet-500" />
+            </div>
+            <span className="font-medium text-slate-700">Client / Contact</span>
+          </div>
+
+          <FormField
+            control={form.control}
+            name="client_name"
+            rules={{ required: "Client selection is required" }}
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel className="text-sm text-slate-600">Select Client/Contact *</FormLabel>
+                <Popover open={clientSearchOpen} onOpenChange={setClientSearchOpen}>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={clientSearchOpen}
+                        className="w-full justify-between rounded-xl h-11 bg-slate-50"
+                      >
+                        {getSelectedClientDisplay()}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0 bg-background border border-border shadow-lg z-50" align="start">
+                    <Command>
+                      <CommandInput placeholder="Search clients and contacts..." />
+                      <CommandList>
+                        <CommandEmpty>No client or contact found.</CommandEmpty>
+                        <CommandGroup>
+                          <CommandItem value="add-new" onSelect={() => handleClientSelection('add-new')}>
+                            <div className="flex items-center gap-2">
+                              <Plus className="w-4 h-4" />
+                              Add New Contact
                             </div>
                           </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                          {clientsAndContacts?.map(item => (
+                            <CommandItem
+                              key={`${item.type}-${item.id}`}
+                              value={`${item.name} ${item.email || ''} ${item.type}`}
+                              onSelect={() => handleClientSelection(`${item.type}-${item.id}`)}
+                            >
+                              <Check className={`mr-2 h-4 w-4 ${selectedClientValue === `${item.type}-${item.id}` ? "opacity-100" : "opacity-0"}`} />
+                              <div className="flex flex-col">
+                                <span>{item.name}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {item.email || 'No email'} • {item.type === 'client' ? 'Client' : 'Contact'}
+                                </span>
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        {showAddContact && (
-          <div className="space-y-4 p-4 border border-border rounded-xl bg-white">
-            <h4 className="font-medium text-sm">Add New Contact</h4>
-            <div className="grid grid-cols-2 gap-3">
-              <FormField
-                control={form.control}
-                name="client_name"
-                rules={{ required: "Client name is required" }}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Full Name *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter full name" {...field} className="bg-white" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="client_email"
-                rules={{ required: "Client email is required" }}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email *</FormLabel>
-                    <FormControl>
-                      <Input type="email" placeholder="Enter email" {...field} className="bg-white" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <FormField
-              control={form.control}
-              name="client_phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Phone</FormLabel>
-                  <FormControl>
-                    <Input type="tel" placeholder="Enter phone number" {...field} className="bg-white" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        )}
-
-        {!showAddContact && (
-          <>
-            <div className="grid grid-cols-2 gap-3">
-              <FormField
-                control={form.control}
-                name="client_email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input type="email" placeholder="Auto-populated" {...field} disabled className="bg-muted/50" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          {showAddContact && (
+            <div className="space-y-4 p-4 border border-slate-200 rounded-xl bg-slate-50">
+              <h4 className="font-medium text-sm text-slate-700">Add New Contact</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="client_name"
+                  rules={{ required: "Client name is required" }}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm text-slate-600">Full Name *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter full name" {...field} className="rounded-xl h-11 bg-white" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="client_email"
+                  rules={{ required: "Client email is required" }}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm text-slate-600">Email *</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="Enter email" {...field} className="rounded-xl h-11 bg-white" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
               <FormField
                 control={form.control}
                 name="client_phone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Phone</FormLabel>
+                    <FormLabel className="text-sm text-slate-600">Phone</FormLabel>
                     <FormControl>
-                      <Input type="tel" placeholder="Auto-populated" {...field} disabled className="bg-muted/50" />
+                      <Input type="tel" placeholder="Enter phone number" {...field} className="rounded-xl h-11 bg-white" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
-            <FormField
-              control={form.control}
-              name="client_address"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Address</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Auto-populated" {...field} disabled className="bg-muted/50" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </>
-        )}
+          )}
 
-        {/* Case Selection - only show if a client (not contact) is selected */}
+          {!showAddContact && (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="client_email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm text-slate-600">Email</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="Auto-populated" {...field} disabled className="rounded-xl h-11 bg-slate-100" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="client_phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm text-slate-600">Phone</FormLabel>
+                      <FormControl>
+                        <Input type="tel" placeholder="Auto-populated" {...field} disabled className="rounded-xl h-11 bg-slate-100" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <FormField
+                control={form.control}
+                name="client_address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm text-slate-600">Address</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Auto-populated" {...field} disabled className="rounded-xl h-11 bg-slate-100" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </>
+          )}
+        </div>
+
+        {/* Case Selection Card - only show if a client (not contact) is selected */}
         {getClientIdForCases() && (
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Related Case (Optional)</Label>
-            <CaseSelector
-              value={selectedCaseId}
-              onValueChange={setSelectedCaseId}
-              placeholder="Select a case..."
-              clientId={getClientIdForCases()}
-            />
-            <p className="text-xs text-muted-foreground">
-              Link this appointment to a case for the selected client
-            </p>
+          <div className="bg-white rounded-2xl shadow-sm p-4 space-y-4">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
+                <Briefcase className="w-4 h-4 text-amber-500" />
+              </div>
+              <span className="font-medium text-slate-700">Related Case</span>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm text-slate-600">Select Case (Optional)</Label>
+              <CaseSelector
+                value={selectedCaseId}
+                onValueChange={setSelectedCaseId}
+                placeholder="Select a case..."
+                clientId={getClientIdForCases()}
+              />
+              <p className="text-xs text-slate-500">
+                Link this appointment to a case for the selected client
+              </p>
+            </div>
           </div>
         )}
 
-        <SmartBookingCalendar
-          selectedLawyer={selectedLawyerId || null}
-          selectedDate={form.watch('appointment_date') ? new Date(form.watch('appointment_date')) : undefined}
-          selectedTime={form.watch('appointment_time')}
-          hideLawyerPicker
-          allowOverride={allowOverride}
-          onTimeSlotSelect={(date, time, duration) => {
-            form.setValue('appointment_date', format(date, 'yyyy-MM-dd'));
-            form.setValue('appointment_time', time);
-            form.setValue('duration_minutes', duration);
-          }}
-        />
+        {/* Scheduling Card */}
+        <div className="bg-white rounded-2xl shadow-sm p-4 space-y-4">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
+              <Calendar className="w-4 h-4 text-emerald-500" />
+            </div>
+            <span className="font-medium text-slate-700">Schedule</span>
+          </div>
 
-        <FormField
-          control={form.control}
-          name="duration_minutes"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Duration (minutes)</FormLabel>
-              <Select onValueChange={value => field.onChange(parseInt(value))} defaultValue={field.value.toString()}>
-                <FormControl>
-                  <SelectTrigger className="bg-white">
-                    <SelectValue />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="30">30 minutes</SelectItem>
-                  <SelectItem value="60">1 hour</SelectItem>
-                  <SelectItem value="90">1.5 hours</SelectItem>
-                  <SelectItem value="120">2 hours</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="title"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Title</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g., Legal consultation, Contract review" {...field} className="bg-white" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="notes"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Notes</FormLabel>
-              <FormControl>
-                <Textarea placeholder="Additional notes about the appointment" rows={3} {...field} className="bg-white" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="flex justify-end gap-3 pt-2">
-          <Button type="button" variant="outline" onClick={handleClose}>
-            Cancel
-          </Button>
-          <Button type="submit" disabled={bookAppointmentMutation.isPending}>
-            {bookAppointmentMutation.isPending ? 'Booking...' : 'Book Appointment'}
-          </Button>
+          <SmartBookingCalendar
+            selectedLawyer={selectedLawyerId || null}
+            selectedDate={form.watch('appointment_date') ? new Date(form.watch('appointment_date')) : undefined}
+            selectedTime={form.watch('appointment_time')}
+            hideLawyerPicker
+            allowOverride={allowOverride}
+            onTimeSlotSelect={(date, time, duration) => {
+              form.setValue('appointment_date', format(date, 'yyyy-MM-dd'));
+              form.setValue('appointment_time', time);
+              form.setValue('duration_minutes', duration);
+            }}
+          />
         </div>
+
+        {/* Duration Card */}
+        <div className="bg-white rounded-2xl shadow-sm p-4 space-y-4">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center">
+              <Clock className="w-4 h-4 text-rose-500" />
+            </div>
+            <span className="font-medium text-slate-700">Duration</span>
+          </div>
+          <FormField
+            control={form.control}
+            name="duration_minutes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm text-slate-600">Appointment Duration</FormLabel>
+                <Select onValueChange={value => field.onChange(parseInt(value))} defaultValue={field.value.toString()}>
+                  <FormControl>
+                    <SelectTrigger className="rounded-xl h-11 bg-slate-50">
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="30">30 minutes</SelectItem>
+                    <SelectItem value="60">1 hour</SelectItem>
+                    <SelectItem value="90">1.5 hours</SelectItem>
+                    <SelectItem value="120">2 hours</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        {/* Details Card */}
+        <div className="bg-white rounded-2xl shadow-sm p-4 space-y-4">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+              <FileText className="w-4 h-4 text-slate-500" />
+            </div>
+            <span className="font-medium text-slate-700">Details</span>
+          </div>
+
+          <FormField
+            control={form.control}
+            name="title"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm text-slate-600">Title</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g., Legal consultation, Contract review" {...field} className="rounded-xl h-11 bg-slate-50" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="notes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm text-slate-600">Notes</FormLabel>
+                <FormControl>
+                  <Textarea placeholder="Additional notes about the appointment" rows={3} {...field} className="rounded-xl bg-slate-50" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        {/* Footer buttons - only for desktop */}
+        {!isMobile && (
+          <div className="flex gap-3 pt-2">
+            <Button type="button" variant="outline" onClick={handleClose} className="flex-1 rounded-full h-11">
+              Cancel
+            </Button>
+            <Button type="submit" disabled={bookAppointmentMutation.isPending} className="flex-1 rounded-full h-11">
+              {bookAppointmentMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Booking...
+                </>
+              ) : (
+                'Book Appointment'
+              )}
+            </Button>
+          </div>
+        )}
       </form>
     </Form>
   );
@@ -564,32 +630,58 @@ const BookAppointmentDialog = ({
             title="Book New Appointment"
             subtitle="Schedule a new appointment"
             onClose={handleClose}
-            icon={<Calendar className="w-5 h-5 text-primary" />}
+            icon={<Calendar className="w-5 h-5 text-emerald-500" />}
             showBorder
           />
 
-          <ScrollArea className="flex-1 h-[calc(95vh-120px)]">
-            <div className="px-4 pb-8">
+          <ScrollArea className="flex-1 h-[calc(95vh-180px)]">
+            <div className="px-4 pb-4">
               {formContent}
             </div>
           </ScrollArea>
+
+          {/* Mobile Footer */}
+          <div className="p-4 bg-white border-t border-slate-200">
+            <div className="flex gap-3">
+              <Button type="button" variant="outline" onClick={handleClose} className="flex-1 rounded-full h-11">
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                form="book-appointment-form"
+                disabled={bookAppointmentMutation.isPending}
+                className="flex-1 rounded-full h-11"
+              >
+                {bookAppointmentMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Booking...
+                  </>
+                ) : (
+                  'Book Appointment'
+                )}
+              </Button>
+            </div>
+          </div>
         </SheetContent>
       </Sheet>
     );
   }
 
-  // Desktop: Standard dialog
+  // Desktop: Standard dialog with scroll
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto" hideCloseButton>
+      <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto p-0" hideCloseButton>
         <MobileDialogHeader
           title="Book New Appointment"
           subtitle="Schedule a new appointment"
           onClose={handleClose}
-          icon={<Calendar className="w-5 h-5 text-primary" />}
-          showBorder={false}
+          icon={<Calendar className="w-5 h-5 text-emerald-500" />}
+          showBorder
         />
-        {formContent}
+        <div className="p-4 bg-slate-50">
+          {formContent}
+        </div>
       </DialogContent>
     </Dialog>
   );
