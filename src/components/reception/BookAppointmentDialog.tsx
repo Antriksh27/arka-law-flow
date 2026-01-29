@@ -14,11 +14,13 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { Plus, Check, ChevronsUpDown, Calendar } from 'lucide-react';
+import { Plus, Check, ChevronsUpDown, Calendar, Briefcase } from 'lucide-react';
 import { SmartBookingCalendar } from '@/components/appointments/SmartBookingCalendar';
+import { CaseSelector } from '@/components/appointments/CaseSelector';
 
 interface BookAppointmentDialogProps {
   open: boolean;
@@ -55,6 +57,7 @@ const BookAppointmentDialog = ({
   const [showAddContact, setShowAddContact] = useState(false);
   const [clientSearchOpen, setClientSearchOpen] = useState(false);
   const [selectedClientValue, setSelectedClientValue] = useState('');
+  const [selectedCaseId, setSelectedCaseId] = useState('');
 
   const form = useForm<AppointmentFormData>({
     defaultValues: {
@@ -162,6 +165,7 @@ const BookAppointmentDialog = ({
     if (selectedValue === 'add-new') {
       setShowAddContact(true);
       setSelectedClientValue('add-new');
+      setSelectedCaseId(''); // Reset case when adding new contact
       form.setValue('client_name', '');
       form.setValue('client_email', '');
       form.setValue('client_phone', '');
@@ -180,9 +184,18 @@ const BookAppointmentDialog = ({
         form.setValue('notes', selectedClient.additionalInfo.visit_purpose);
       }
       setSelectedClientValue(selectedValue);
+      setSelectedCaseId(''); // Reset case when client changes
       setShowAddContact(false);
       setClientSearchOpen(false);
     }
+  };
+
+  // Get client ID for case selector (only if a client is selected, not a contact)
+  const getClientIdForCases = () => {
+    if (selectedClientValue && selectedClientValue.startsWith('client-')) {
+      return selectedClientValue.replace('client-', '');
+    }
+    return undefined;
   };
 
   const getSelectedClientDisplay = () => {
@@ -217,6 +230,11 @@ const BookAppointmentDialog = ({
 
       if (clientId) {
         appointmentData.client_id = clientId;
+      }
+
+      // Add case_id if a case was selected
+      if (selectedCaseId) {
+        appointmentData.case_id = selectedCaseId;
       }
 
       const { data: newAppointment, error } = await supabase
@@ -433,6 +451,22 @@ const BookAppointmentDialog = ({
               )}
             />
           </>
+        )}
+
+        {/* Case Selection - only show if a client (not contact) is selected */}
+        {getClientIdForCases() && (
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Related Case (Optional)</Label>
+            <CaseSelector
+              value={selectedCaseId}
+              onValueChange={setSelectedCaseId}
+              placeholder="Select a case..."
+              clientId={getClientIdForCases()}
+            />
+            <p className="text-xs text-muted-foreground">
+              Link this appointment to a case for the selected client
+            </p>
+          </div>
         )}
 
         <SmartBookingCalendar

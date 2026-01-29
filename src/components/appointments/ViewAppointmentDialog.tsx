@@ -12,7 +12,7 @@ import { CreateNoteMultiModal } from '@/components/notes/CreateNoteMultiModal';
 import { CreateTaskDialog } from '@/components/tasks/CreateTaskDialog';
 import { parseISO } from 'date-fns';
 import { TimeUtils } from '@/lib/timeUtils';
-import { Calendar, Clock, User, MapPin, FileText, Edit, RotateCcw, X, UserPlus, Users, Trash, StickyNote, CheckSquare } from 'lucide-react';
+import { Calendar, Clock, User, MapPin, FileText, Edit, RotateCcw, X, UserPlus, Users, Trash, StickyNote, CheckSquare, Briefcase } from 'lucide-react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -75,6 +75,27 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
       
       return data || [];
     }
+  });
+
+  // Fetch case details if case_id exists
+  const { data: caseData } = useQuery({
+    queryKey: ['appointment-case', appointment.case_id],
+    queryFn: async () => {
+      if (!appointment.case_id) return null;
+      const { data, error } = await supabase
+        .from('cases')
+        .select('id, case_title, case_number, cnr_number')
+        .eq('id', appointment.case_id)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching case:', error);
+        return null;
+      }
+      
+      return data;
+    },
+    enabled: !!appointment.case_id
   });
 
   const additionalLawyerNames = useMemo(() => 
@@ -392,6 +413,31 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
                   <div className="flex-1">
                     <p className="text-xs text-muted-foreground">Client</p>
                     <p className="text-sm font-medium text-foreground">{appointment.client_name}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Case Information */}
+              {caseData && (
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center">
+                    <Briefcase className="h-4 w-4 text-blue-500" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-xs text-muted-foreground">Related Case</p>
+                    <p className="text-sm font-medium text-foreground">{caseData.case_title}</p>
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {caseData.case_number && (
+                        <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                          {caseData.case_number}
+                        </Badge>
+                      )}
+                      {caseData.cnr_number && (
+                        <Badge variant="outline" className="text-xs bg-slate-50 text-slate-700 border-slate-200">
+                          CNR: {caseData.cnr_number}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
