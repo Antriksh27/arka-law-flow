@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { Calendar, Plus, Clock, MapPin, FileText, User } from 'lucide-react';
-import { useDialog } from '@/hooks/use-dialog';
 import { CreateAppointmentDialog } from '@/components/appointments/CreateAppointmentDialog';
 import { MobileCreateAppointmentSheet } from '@/components/appointments/MobileCreateAppointmentSheet';
 import { format } from 'date-fns';
@@ -38,6 +37,7 @@ interface AppointmentWithDetails {
 export const ClientAppointments: React.FC<ClientAppointmentsProps> = ({ clientId }) => {
   const isMobile = useIsMobile();
   const [showMobileCreate, setShowMobileCreate] = useState(false);
+  const [showAppointmentDialog, setShowAppointmentDialog] = useState(false);
   const queryClient = useQueryClient();
   const { data: appointments = [], isLoading } = useQuery({
     queryKey: ['client-appointments', clientId],
@@ -110,7 +110,6 @@ export const ClientAppointments: React.FC<ClientAppointmentsProps> = ({ clientId
     }
   });
 
-  const { openDialog } = useDialog();
 
   // Separate upcoming and past appointments
   const now = new Date();
@@ -381,7 +380,7 @@ export const ClientAppointments: React.FC<ClientAppointmentsProps> = ({ clientId
         <Button 
           size="sm" 
           className="bg-primary hover:bg-primary/90" 
-          onClick={() => openDialog(<CreateAppointmentDialog preSelectedClientId={clientId} />)}
+          onClick={() => setShowAppointmentDialog(true)}
         >
           <Plus className="w-4 h-4 mr-2" />
           Schedule
@@ -395,7 +394,7 @@ export const ClientAppointments: React.FC<ClientAppointmentsProps> = ({ clientId
             <Button 
               variant="outline" 
               className="mt-4"
-              onClick={() => openDialog(<CreateAppointmentDialog preSelectedClientId={clientId} />)}
+              onClick={() => setShowAppointmentDialog(true)}
             >
               Schedule First Appointment
             </Button>
@@ -438,6 +437,14 @@ export const ClientAppointments: React.FC<ClientAppointmentsProps> = ({ clientId
           </div>
         )}
       </CardContent>
+      
+      {showAppointmentDialog && (
+        <CreateAppointmentDialog 
+          open={showAppointmentDialog} 
+          onClose={() => setShowAppointmentDialog(false)}
+          preSelectedClientId={clientId}
+        />
+      )}
     </Card>
   );
 };

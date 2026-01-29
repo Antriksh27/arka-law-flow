@@ -1,19 +1,17 @@
 import { Plus, Calendar, UserPlus, Upload } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { AddCaseDialog } from '@/components/cases/AddCaseDialog';
 import { AddClientDialog } from '@/components/clients/AddClientDialog';
 import { CreateAppointmentDialog } from '@/components/appointments/CreateAppointmentDialog';
-import { useDialog } from '@/hooks/use-dialog';
 import { bg, border } from '@/lib/colors';
 
 export const QuickActions = () => {
   const navigate = useNavigate();
-  const { openDialog } = useDialog();
   const [showCaseDialog, setShowCaseDialog] = useState(false);
   const [showClientDialog, setShowClientDialog] = useState(false);
+  const [showAppointmentDialog, setShowAppointmentDialog] = useState(false);
 
   const actions = [
     {
@@ -24,7 +22,7 @@ export const QuickActions = () => {
     {
       icon: Calendar,
       label: 'Schedule',
-      onClick: () => openDialog(<CreateAppointmentDialog />),
+      onClick: () => setShowAppointmentDialog(true),
     },
     {
       icon: UserPlus,
@@ -70,6 +68,12 @@ export const QuickActions = () => {
           open={showClientDialog} 
           onOpenChange={setShowClientDialog}
           onSuccess={() => setShowClientDialog(false)} 
+        />
+      )}
+      {showAppointmentDialog && (
+        <CreateAppointmentDialog 
+          open={showAppointmentDialog} 
+          onClose={() => setShowAppointmentDialog(false)} 
         />
       )}
     </>

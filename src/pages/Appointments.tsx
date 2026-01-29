@@ -54,6 +54,7 @@ const Appointments = () => {
   });
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [showMobileCreate, setShowMobileCreate] = useState(false);
+  const [showAppointmentDialog, setShowAppointmentDialog] = useState(false);
   const { openDialog } = useDialog();
   const navigate = useNavigate();
   const { user, role } = useAuth();
@@ -231,7 +232,7 @@ const Appointments = () => {
               <Filter className="w-4 h-4 mr-2" />
               Filter
             </Button>
-            <Button onClick={() => openDialog(<CreateAppointmentDialog />)}>
+            <Button onClick={() => setShowAppointmentDialog(true)}>
               <Plus className="w-4 h-4 mr-2" />
               New Appointment
             </Button>
@@ -277,6 +278,14 @@ const Appointments = () => {
         </div>
         <AppointmentsFilters filters={filters} onFilterChange={setFilters} />
       </div>
+      
+      {/* Create Appointment Dialog */}
+      {showAppointmentDialog && (
+        <CreateAppointmentDialog 
+          open={showAppointmentDialog} 
+          onClose={() => setShowAppointmentDialog(false)} 
+        />
+      )}
     </DefaultPageLayout>
   );
 };
