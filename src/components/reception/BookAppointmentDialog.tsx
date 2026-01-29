@@ -5,7 +5,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { MobileDialogHeader } from '@/components/ui/mobile-dialog-header';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -13,15 +17,17 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { Plus, Check, ChevronsUpDown } from 'lucide-react';
+import { Plus, Check, ChevronsUpDown, Calendar } from 'lucide-react';
 import { SmartBookingCalendar } from '@/components/appointments/SmartBookingCalendar';
+
 interface BookAppointmentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   initialLawyerId?: string;
-  initialDate?: string; // yyyy-MM-dd
-  initialTime?: string; // HH:mm
+  initialDate?: string;
+  initialTime?: string;
 }
+
 interface AppointmentFormData {
   lawyer_id: string;
   client_name: string;
@@ -34,6 +40,7 @@ interface AppointmentFormData {
   title?: string;
   notes?: string;
 }
+
 const BookAppointmentDialog = ({
   open,
   onOpenChange,
@@ -41,17 +48,14 @@ const BookAppointmentDialog = ({
   initialDate,
   initialTime
 }: BookAppointmentDialogProps) => {
-  const {
-    user,
-    firmId
-  } = useAuth();
-  const {
-    toast
-  } = useToast();
+  const isMobile = useIsMobile();
+  const { user, firmId } = useAuth();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showAddContact, setShowAddContact] = useState(false);
   const [clientSearchOpen, setClientSearchOpen] = useState(false);
   const [selectedClientValue, setSelectedClientValue] = useState('');
+
   const form = useForm<AppointmentFormData>({
     defaultValues: {
       lawyer_id: '',
@@ -77,45 +81,36 @@ const BookAppointmentDialog = ({
 
   const selectedLawyerId = form.watch('lawyer_id');
 
-  // Get current user's role to enable override for receptionists
   const { data: currentUserRole } = useQuery({
     queryKey: ['current-user-role', user?.id],
     queryFn: async () => {
       if (!user?.id || !firmId) return null;
-      
       const { data, error } = await supabase
         .from('team_members')
         .select('role')
         .eq('user_id', user.id)
         .eq('firm_id', firmId)
         .single();
-      
       if (error) {
         console.error('Error fetching user role:', error);
         return null;
       }
-      
       return data?.role;
     },
     enabled: !!user?.id && !!firmId
   });
 
-  // Allow override for receptionists and office staff
   const allowOverride = currentUserRole === 'receptionist' || currentUserRole === 'office_staff';
 
-  // Fetch lawyers for selection
-  const {
-    data: lawyers
-  } = useQuery({
+  const { data: lawyers } = useQuery({
     queryKey: ['reception-lawyers-dialog', firmId],
     queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from('team_members').select('id, user_id, full_name, role').eq('firm_id', firmId).in('role', ['admin', 'lawyer', 'junior']);
+      const { data, error } = await supabase
+        .from('team_members')
+        .select('id, user_id, full_name, role')
+        .eq('firm_id', firmId)
+        .in('role', ['admin', 'lawyer', 'junior']);
       if (error) throw error;
-
-      // Sort to always show "chitrajeet upadhyaya" first
       return data?.sort((a, b) => {
         const nameA = a.full_name?.toLowerCase() || '';
         const nameB = b.full_name?.toLowerCase() || '';
@@ -127,13 +122,13 @@ const BookAppointmentDialog = ({
     enabled: !!firmId && open
   });
 
-  // Fetch clients and contacts for selection
-  const {
-    data: clientsAndContacts
-  } = useQuery({
+  const { data: clientsAndContacts } = useQuery({
     queryKey: ['clients-contacts', firmId],
     queryFn: async () => {
-      const [clientsResponse, contactsResponse] = await Promise.all([supabase.from('clients').select('id, full_name, email, phone, address').eq('firm_id', firmId).order('full_name'), supabase.from('contacts').select('id, name, organization, email, phone, address_line_1, address_line_2, visit_purpose, notes').eq('firm_id', firmId).order('name')]);
+      const [clientsResponse, contactsResponse] = await Promise.all([
+        supabase.from('clients').select('id, full_name, email, phone, address').eq('firm_id', firmId).order('full_name'),
+        supabase.from('contacts').select('id, name, organization, email, phone, address_line_1, address_line_2, visit_purpose, notes').eq('firm_id', firmId).order('name')
+      ]);
       if (clientsResponse.error) throw clientsResponse.error;
       if (contactsResponse.error) throw contactsResponse.error;
       const clients = clientsResponse.data?.map(client => ({
@@ -162,6 +157,7 @@ const BookAppointmentDialog = ({
     },
     enabled: !!firmId && open
   });
+
   const handleClientSelection = (selectedValue: string) => {
     if (selectedValue === 'add-new') {
       setShowAddContact(true);
@@ -177,13 +173,9 @@ const BookAppointmentDialog = ({
       form.setValue('client_name', selectedClient.name);
       form.setValue('client_email', selectedClient.email || '');
       form.setValue('client_phone', selectedClient.phone || '');
-
-      // Set additional fields if they exist on the form
       if (selectedClient.address) {
         form.setValue('client_address', selectedClient.address);
       }
-
-      // If it's a contact with additional info, set visit purpose as notes
       if (selectedClient.type === 'contact' && selectedClient.additionalInfo?.visit_purpose) {
         form.setValue('notes', selectedClient.additionalInfo.visit_purpose);
       }
@@ -192,6 +184,7 @@ const BookAppointmentDialog = ({
       setClientSearchOpen(false);
     }
   };
+
   const getSelectedClientDisplay = () => {
     if (showAddContact) return 'Add New Contact';
     if (selectedClientValue && selectedClientValue !== 'add-new') {
@@ -200,21 +193,14 @@ const BookAppointmentDialog = ({
     }
     return 'Select client or contact';
   };
+
   const bookAppointmentMutation = useMutation({
     mutationFn: async (data: AppointmentFormData) => {
-      console.log('🚀 BookAppointmentDialog: Creating appointment with data:', data);
-      console.log('🔍 Selected client value:', selectedClientValue);
-      
-      // Only use client_id if an existing client was selected
       let clientId = null;
       if (selectedClientValue && selectedClientValue.startsWith('client-')) {
         clientId = selectedClientValue.replace('client-', '');
-        console.log('📝 Using existing client ID:', clientId);
-      } else {
-        console.log('📝 No existing client selected - appointment will be created without client_id');
       }
 
-      // Create appointment - store client name directly for contacts
       const appointmentData: any = {
         lawyer_id: data.lawyer_id,
         appointment_date: data.appointment_date,
@@ -229,30 +215,21 @@ const BookAppointmentDialog = ({
         status: 'upcoming'
       };
 
-      // Only set client_id if an existing client was selected
       if (clientId) {
         appointmentData.client_id = clientId;
       }
 
-      console.log('📅 Creating appointment with data:', appointmentData);
-
-      const {
-        data: newAppointment,
-        error
-      } = await supabase.from('appointments').insert(appointmentData).select().single();
+      const { data: newAppointment, error } = await supabase
+        .from('appointments')
+        .insert(appointmentData)
+        .select()
+        .single();
       if (error) throw error;
-      return {
-        appointment: newAppointment,
-        clientName: data.client_name
-      };
+      return { appointment: newAppointment, clientName: data.client_name };
     },
-    onSuccess: result => {
-      queryClient.invalidateQueries({
-        queryKey: ['reception-appointments']
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['reception-today-appointments']
-      });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reception-appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['reception-today-appointments'] });
       toast({
         title: "Success",
         description: "Appointment booked successfully!"
@@ -260,7 +237,7 @@ const BookAppointmentDialog = ({
       form.reset();
       onOpenChange(false);
     },
-    onError: error => {
+    onError: (error) => {
       console.error('Error booking appointment:', error);
       toast({
         title: "Error",
@@ -269,224 +246,319 @@ const BookAppointmentDialog = ({
       });
     }
   });
+
   const onSubmit = (data: AppointmentFormData) => {
     bookAppointmentMutation.mutate(data);
   };
-  return <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Book New Appointment</DialogTitle>
-        </DialogHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField control={form.control} name="lawyer_id" rules={{
-            required: "Please select a lawyer"
-          }} render={({
-            field
-          }) => <FormItem>
-                  <FormLabel>Lawyer *</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select lawyer" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {lawyers?.map(lawyer => <SelectItem key={lawyer.user_id} value={lawyer.user_id}>
-                          {lawyer.full_name || 'Unnamed Lawyer'} ({lawyer.role})
-                        </SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>} />
+  const handleClose = () => onOpenChange(false);
 
-            <FormField control={form.control} name="client_name" rules={{
-            required: "Client selection is required"
-          }} render={({
-            field
-          }) => <FormItem className="flex flex-col">
-                  <FormLabel>Client/Contact *</FormLabel>
-                  <Popover open={clientSearchOpen} onOpenChange={setClientSearchOpen}>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button variant="outline" role="combobox" aria-expanded={clientSearchOpen} className="w-full justify-between">
-                          {getSelectedClientDisplay()}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-full p-0 bg-background border border-border shadow-lg z-50" align="start">
-                      <Command>
-                        <CommandInput placeholder="Search clients and contacts..." />
-                        <CommandList>
-                          <CommandEmpty>No client or contact found.</CommandEmpty>
-                          <CommandGroup>
-                            <CommandItem value="add-new" onSelect={() => handleClientSelection('add-new')}>
-                              <div className="flex items-center gap-2">
-                                <Plus className="w-4 h-4" />
-                                Add New Contact
-                              </div>
-                            </CommandItem>
-                            {clientsAndContacts?.map(item => <CommandItem key={`${item.type}-${item.id}`} value={`${item.name} ${item.email || ''} ${item.type}`} onSelect={() => handleClientSelection(`${item.type}-${item.id}`)}>
-                                <Check className={`mr-2 h-4 w-4 ${selectedClientValue === `${item.type}-${item.id}` ? "opacity-100" : "opacity-0"}`} />
-                                <div className="flex flex-col">
-                                  <span>{item.name}</span>
-                                  <span className="text-xs text-muted-foreground">
-                                    {item.email || 'No email'} • {item.type === 'client' ? 'Client' : 'Contact'}
-                                  </span>
-                                </div>
-                              </CommandItem>)}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>} />
+  const formContent = (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="lawyer_id"
+          rules={{ required: "Please select a lawyer" }}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Lawyer *</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger className="bg-white">
+                    <SelectValue placeholder="Select lawyer" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {lawyers?.map(lawyer => (
+                    <SelectItem key={lawyer.user_id} value={lawyer.user_id}>
+                      {lawyer.full_name || 'Unnamed Lawyer'} ({lawyer.role})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-            {showAddContact && <div className="space-y-4 p-4 border rounded-lg bg-muted/20">
-                <h4 className="font-medium text-sm">Add New Contact</h4>
-                <div className="grid grid-cols-2 gap-3">
-                  <FormField control={form.control} name="client_name" rules={{
-                required: "Client name is required"
-              }} render={({
-                field
-              }) => <FormItem>
-                        <FormLabel>Full Name *</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter full name" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>} />
-
-                  <FormField control={form.control} name="client_email" rules={{
-                required: "Client email is required"
-              }} render={({
-                field
-              }) => <FormItem>
-                        <FormLabel>Email *</FormLabel>
-                        <FormControl>
-                          <Input type="email" placeholder="Enter email" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>} />
-                </div>
-
-                <FormField control={form.control} name="client_phone" render={({
-              field
-            }) => <FormItem>
-                      <FormLabel>Phone</FormLabel>
-                      <FormControl>
-                        <Input type="tel" placeholder="Enter phone number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>} />
-              </div>}
-
-            {!showAddContact && <>
-                <div className="grid grid-cols-2 gap-3">
-                  <FormField control={form.control} name="client_email" render={({
-                field
-              }) => <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input type="email" placeholder="Auto-populated from selection" {...field} disabled />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>} />
-
-                  <FormField control={form.control} name="client_phone" render={({
-                field
-              }) => <FormItem>
-                        <FormLabel>Phone</FormLabel>
-                        <FormControl>
-                          <Input type="tel" placeholder="Auto-populated from selection" {...field} disabled />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>} />
-                </div>
-
-                <FormField control={form.control} name="client_address" render={({
-              field
-            }) => <FormItem>
-                      <FormLabel>Address</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Auto-populated from selection" {...field} disabled />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>} />
-              </>}
-
-            {/* Show contact details in a info box when selected */}
-            {!showAddContact && selectedClientValue && selectedClientValue !== 'add-new'}
-
-            {/* Availability-based selection */}
-            <SmartBookingCalendar
-              selectedLawyer={selectedLawyerId || null}
-              selectedDate={form.watch('appointment_date') ? new Date(form.watch('appointment_date')) : undefined}
-              selectedTime={form.watch('appointment_time')}
-              hideLawyerPicker
-              allowOverride={allowOverride}
-              onTimeSlotSelect={(date, time, duration) => {
-                form.setValue('appointment_date', format(date, 'yyyy-MM-dd'));
-                form.setValue('appointment_time', time);
-                form.setValue('duration_minutes', duration);
-              }}
-            />
-
-            <FormField control={form.control} name="duration_minutes" render={({
-            field
-          }) => <FormItem>
-                  <FormLabel>Duration (minutes)</FormLabel>
-                  <Select onValueChange={value => field.onChange(parseInt(value))} defaultValue={field.value.toString()}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="30">30 minutes</SelectItem>
-                      <SelectItem value="60">1 hour</SelectItem>
-                      <SelectItem value="90">1.5 hours</SelectItem>
-                      <SelectItem value="120">2 hours</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>} />
-
-            <FormField control={form.control} name="title" render={({
-            field
-          }) => <FormItem>
-                  <FormLabel>Title</FormLabel>
+        <FormField
+          control={form.control}
+          name="client_name"
+          rules={{ required: "Client selection is required" }}
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>Client/Contact *</FormLabel>
+              <Popover open={clientSearchOpen} onOpenChange={setClientSearchOpen}>
+                <PopoverTrigger asChild>
                   <FormControl>
-                    <Input placeholder="e.g., Legal consultation, Contract review" {...field} />
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={clientSearchOpen}
+                      className="w-full justify-between bg-white"
+                    >
+                      {getSelectedClientDisplay()}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
                   </FormControl>
-                  <FormMessage />
-                </FormItem>} />
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0 bg-background border border-border shadow-lg z-50" align="start">
+                  <Command>
+                    <CommandInput placeholder="Search clients and contacts..." />
+                    <CommandList>
+                      <CommandEmpty>No client or contact found.</CommandEmpty>
+                      <CommandGroup>
+                        <CommandItem value="add-new" onSelect={() => handleClientSelection('add-new')}>
+                          <div className="flex items-center gap-2">
+                            <Plus className="w-4 h-4" />
+                            Add New Contact
+                          </div>
+                        </CommandItem>
+                        {clientsAndContacts?.map(item => (
+                          <CommandItem
+                            key={`${item.type}-${item.id}`}
+                            value={`${item.name} ${item.email || ''} ${item.type}`}
+                            onSelect={() => handleClientSelection(`${item.type}-${item.id}`)}
+                          >
+                            <Check className={`mr-2 h-4 w-4 ${selectedClientValue === `${item.type}-${item.id}` ? "opacity-100" : "opacity-0"}`} />
+                            <div className="flex flex-col">
+                              <span>{item.name}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {item.email || 'No email'} • {item.type === 'client' ? 'Client' : 'Contact'}
+                              </span>
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-
-            <FormField control={form.control} name="notes" render={({
-            field
-          }) => <FormItem>
-                  <FormLabel>Notes</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Additional notes about the appointment" rows={3} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>} />
-
-            <div className="flex justify-end gap-3">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={bookAppointmentMutation.isPending}>
-                {bookAppointmentMutation.isPending ? 'Booking...' : 'Book Appointment'}
-              </Button>
+        {showAddContact && (
+          <div className="space-y-4 p-4 border border-border rounded-xl bg-white">
+            <h4 className="font-medium text-sm">Add New Contact</h4>
+            <div className="grid grid-cols-2 gap-3">
+              <FormField
+                control={form.control}
+                name="client_name"
+                rules={{ required: "Client name is required" }}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Full Name *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter full name" {...field} className="bg-white" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="client_email"
+                rules={{ required: "Client email is required" }}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email *</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="Enter email" {...field} className="bg-white" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
-          </form>
-        </Form>
+            <FormField
+              control={form.control}
+              name="client_phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone</FormLabel>
+                  <FormControl>
+                    <Input type="tel" placeholder="Enter phone number" {...field} className="bg-white" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        )}
+
+        {!showAddContact && (
+          <>
+            <div className="grid grid-cols-2 gap-3">
+              <FormField
+                control={form.control}
+                name="client_email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="Auto-populated" {...field} disabled className="bg-muted/50" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="client_phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phone</FormLabel>
+                    <FormControl>
+                      <Input type="tel" placeholder="Auto-populated" {...field} disabled className="bg-muted/50" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <FormField
+              control={form.control}
+              name="client_address"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Address</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Auto-populated" {...field} disabled className="bg-muted/50" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </>
+        )}
+
+        <SmartBookingCalendar
+          selectedLawyer={selectedLawyerId || null}
+          selectedDate={form.watch('appointment_date') ? new Date(form.watch('appointment_date')) : undefined}
+          selectedTime={form.watch('appointment_time')}
+          hideLawyerPicker
+          allowOverride={allowOverride}
+          onTimeSlotSelect={(date, time, duration) => {
+            form.setValue('appointment_date', format(date, 'yyyy-MM-dd'));
+            form.setValue('appointment_time', time);
+            form.setValue('duration_minutes', duration);
+          }}
+        />
+
+        <FormField
+          control={form.control}
+          name="duration_minutes"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Duration (minutes)</FormLabel>
+              <Select onValueChange={value => field.onChange(parseInt(value))} defaultValue={field.value.toString()}>
+                <FormControl>
+                  <SelectTrigger className="bg-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="30">30 minutes</SelectItem>
+                  <SelectItem value="60">1 hour</SelectItem>
+                  <SelectItem value="90">1.5 hours</SelectItem>
+                  <SelectItem value="120">2 hours</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="title"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Title</FormLabel>
+              <FormControl>
+                <Input placeholder="e.g., Legal consultation, Contract review" {...field} className="bg-white" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="notes"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Notes</FormLabel>
+              <FormControl>
+                <Textarea placeholder="Additional notes about the appointment" rows={3} {...field} className="bg-white" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="flex justify-end gap-3 pt-2">
+          <Button type="button" variant="outline" onClick={handleClose}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={bookAppointmentMutation.isPending}>
+            {bookAppointmentMutation.isPending ? 'Booking...' : 'Book Appointment'}
+          </Button>
+        </div>
+      </form>
+    </Form>
+  );
+
+  // Mobile: iOS-style bottom sheet
+  if (isMobile) {
+    return (
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent
+          side="bottom"
+          className="h-[95vh] rounded-t-3xl p-0 bg-slate-50"
+          hideCloseButton
+        >
+          {/* Drag handle */}
+          <div className="flex justify-center py-3">
+            <div className="w-10 h-1 bg-muted rounded-full" />
+          </div>
+
+          <MobileDialogHeader
+            title="Book New Appointment"
+            subtitle="Schedule a new appointment"
+            onClose={handleClose}
+            icon={<Calendar className="w-5 h-5 text-primary" />}
+            showBorder
+          />
+
+          <ScrollArea className="flex-1 h-[calc(95vh-120px)]">
+            <div className="px-4 pb-8">
+              {formContent}
+            </div>
+          </ScrollArea>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  // Desktop: Standard dialog
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto" hideCloseButton>
+        <MobileDialogHeader
+          title="Book New Appointment"
+          subtitle="Schedule a new appointment"
+          onClose={handleClose}
+          icon={<Calendar className="w-5 h-5 text-primary" />}
+          showBorder={false}
+        />
+        {formContent}
       </DialogContent>
-    </Dialog>;
+    </Dialog>
+  );
 };
+
 export default BookAppointmentDialog;
