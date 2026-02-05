@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Trash2, FileText, ChevronDown } from 'lucide-react';
+import { Trash2, FileText, ChevronDown, Pencil } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -73,6 +73,15 @@ export const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
             </p>
           </div>
           <div className="flex gap-2 flex-wrap">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setShowEditDialog(true)}
+              className="bg-slate-50 hover:bg-slate-100 border-slate-200"
+            >
+              <Pencil className="w-4 h-4 mr-2" />
+              Edit Case
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm">
