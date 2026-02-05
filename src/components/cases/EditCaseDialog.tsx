@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { X, Briefcase, Users, Scale, MapPin, Hash, Calendar, BookOpen, FileText, Plus } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import { ClientSelector } from '@/components/appointments/ClientSelector';
 import { ActsSelector } from './ActsSelector';
@@ -146,10 +147,10 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent hideCloseButton className="sm:max-w-4xl p-0 bg-muted overflow-hidden">
-        <div className="flex flex-col h-full">
+      <DialogContent hideCloseButton className="sm:max-w-4xl max-h-[90vh] p-0 bg-slate-50 overflow-hidden">
+        <div className="flex flex-col h-full max-h-[90vh]">
           {/* Header */}
-          <div className="px-6 py-5 bg-background border-b">
+          <div className="px-6 py-5 bg-white border-b flex-shrink-0">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-foreground">Edit Case</h2>
@@ -157,7 +158,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
               </div>
               <button
                 onClick={onClose}
-                className="md:hidden w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-accent transition-colors"
+                className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors"
               >
                 <X className="w-4 h-4 text-muted-foreground" />
               </button>
@@ -165,9 +166,10 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
           </div>
 
           {/* Scrollable Content */}
-          <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-4">
-            {/* Basic Case Info Card */}
-            <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+          <ScrollArea className="flex-1 overflow-hidden">
+            <form onSubmit={handleSubmit} className="px-4 sm:px-6 py-6 space-y-4">
+              {/* Basic Case Info Card */}
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
               <div className="p-4 border-b">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
@@ -195,7 +197,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                       <Input
                         value={formData.registration_number}
                         onChange={(e) => setFormData({ ...formData, registration_number: e.target.value })}
-                        className="bg-muted border-input rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
                       />
                     </div>
                     <div>
@@ -204,7 +206,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                         value={formData.status} 
                         onValueChange={(value) => setFormData({ ...formData, status: value })}
                       >
-                        <SelectTrigger className="bg-muted border-input rounded-xl h-11">
+                        <SelectTrigger className="bg-slate-50 border-slate-200 rounded-xl h-11">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -224,7 +226,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                         value={formData.by_against} 
                         onValueChange={(value) => setFormData({ ...formData, by_against: value })}
                       >
-                        <SelectTrigger className="bg-muted border-input rounded-xl h-11">
+                        <SelectTrigger className="bg-slate-50 border-slate-200 rounded-xl h-11">
                           <SelectValue placeholder="Select..." />
                         </SelectTrigger>
                         <SelectContent>
@@ -239,7 +241,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                       <Input
                         value={formData.stage}
                         onChange={(e) => setFormData({ ...formData, stage: e.target.value })}
-                        className="bg-muted border-input rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
                       />
                     </div>
                   </div>
@@ -250,7 +252,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                       value={formData.vs}
                       onChange={(e) => setFormData({ ...formData, vs: e.target.value })}
                       placeholder="e.g., Petitioner Vs Respondent"
-                      className="bg-muted border-input rounded-xl h-11"
+                      className="bg-slate-50 border-slate-200 rounded-xl h-11"
                     />
                   </div>
 
@@ -260,7 +262,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                       rows={3}
-                      className="bg-muted border-input rounded-xl resize-none"
+                      className="bg-slate-50 border-slate-200 rounded-xl resize-none"
                     />
                   </div>
                 </div>
@@ -268,7 +270,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
             </div>
 
             {/* Parties Card */}
-            <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
               <div className="p-4 border-b">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
@@ -287,7 +289,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                       <Input
                         value={formData.petitioner}
                         onChange={(e) => setFormData({ ...formData, petitioner: e.target.value })}
-                        className="bg-muted border-input rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
                       />
                     </div>
                     <div>
@@ -295,7 +297,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                       <Input
                         value={formData.respondent}
                         onChange={(e) => setFormData({ ...formData, respondent: e.target.value })}
-                        className="bg-muted border-input rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
                       />
                     </div>
                   </div>
@@ -305,7 +307,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                       <Input
                         value={formData.petitioner_advocate}
                         onChange={(e) => setFormData({ ...formData, petitioner_advocate: e.target.value })}
-                        className="bg-muted border-input rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
                       />
                     </div>
                     <div>
@@ -313,7 +315,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                       <Input
                         value={formData.respondent_advocate}
                         onChange={(e) => setFormData({ ...formData, respondent_advocate: e.target.value })}
-                        className="bg-muted border-input rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
                       />
                     </div>
                   </div>
@@ -322,7 +324,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
             </div>
 
             {/* Court Information Card */}
-            <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
               <div className="p-4 border-b">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center">
@@ -341,7 +343,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                       <Input
                         value={formData.court_name}
                         onChange={(e) => setFormData({ ...formData, court_name: e.target.value })}
-                        className="bg-muted border-input rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
                       />
                     </div>
                     <div>
@@ -349,7 +351,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                       <Input
                         value={formData.court_complex}
                         onChange={(e) => setFormData({ ...formData, court_complex: e.target.value })}
-                        className="bg-muted border-input rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
                       />
                     </div>
                   </div>
@@ -359,7 +361,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                       <Input
                         value={formData.bench_type}
                         onChange={(e) => setFormData({ ...formData, bench_type: e.target.value })}
-                        className="bg-muted border-input rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
                       />
                     </div>
                     <div>
@@ -367,7 +369,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                       <Input
                         value={formData.judicial_branch}
                         onChange={(e) => setFormData({ ...formData, judicial_branch: e.target.value })}
-                        className="bg-muted border-input rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
                       />
                     </div>
                   </div>
@@ -376,7 +378,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
             </div>
 
             {/* Location Card */}
-            <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
               <div className="p-4 border-b">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
@@ -395,7 +397,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                       <Input
                         value={formData.state}
                         onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                        className="bg-muted border-input rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
                       />
                     </div>
                     <div>
@@ -403,7 +405,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                       <Input
                         value={formData.district}
                         onChange={(e) => setFormData({ ...formData, district: e.target.value })}
-                        className="bg-muted border-input rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
                       />
                     </div>
                   </div>
@@ -413,7 +415,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                       <Input
                         value={formData.state_1}
                         onChange={(e) => setFormData({ ...formData, state_1: e.target.value })}
-                        className="bg-muted border-input rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
                       />
                     </div>
                     <div>
@@ -421,7 +423,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                       <Input
                         value={formData.district_1}
                         onChange={(e) => setFormData({ ...formData, district_1: e.target.value })}
-                        className="bg-muted border-input rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
                       />
                     </div>
                   </div>
@@ -430,7 +432,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
             </div>
 
             {/* Case Numbers Card */}
-            <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
               <div className="p-4 border-b">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center">
@@ -449,7 +451,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                       <Input
                         value={formData.reference_number}
                         onChange={(e) => setFormData({ ...formData, reference_number: e.target.value })}
-                        className="bg-muted border-input rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
                       />
                     </div>
                     <div>
@@ -457,7 +459,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                       <Input
                         value={formData.filing_number}
                         onChange={(e) => setFormData({ ...formData, filing_number: e.target.value })}
-                        className="bg-muted border-input rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
                       />
                     </div>
                   </div>
@@ -467,7 +469,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                       <Input
                         value={formData.registration_number}
                         onChange={(e) => setFormData({ ...formData, registration_number: e.target.value })}
-                        className="bg-muted border-input rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
                       />
                     </div>
                     <div>
@@ -475,7 +477,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                       <Input
                         value={formData.cnr_number}
                         onChange={(e) => setFormData({ ...formData, cnr_number: e.target.value })}
-                        className="bg-muted border-input rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
                       />
                     </div>
                   </div>
@@ -484,7 +486,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
             </div>
 
             {/* Important Dates Card */}
-            <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
               <div className="p-4 border-b">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
@@ -503,7 +505,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                       type="date"
                       value={formData.filing_date}
                       onChange={(e) => setFormData({ ...formData, filing_date: e.target.value })}
-                      className="bg-muted border-input rounded-xl h-11"
+                      className="bg-slate-50 border-slate-200 rounded-xl h-11"
                     />
                   </div>
                   <div>
@@ -512,7 +514,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                       type="date"
                       value={formData.registration_date}
                       onChange={(e) => setFormData({ ...formData, registration_date: e.target.value })}
-                      className="bg-muted border-input rounded-xl h-11"
+                      className="bg-slate-50 border-slate-200 rounded-xl h-11"
                     />
                   </div>
                   <div>
@@ -521,7 +523,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                       type="date"
                       value={formData.first_hearing_date}
                       onChange={(e) => setFormData({ ...formData, first_hearing_date: e.target.value })}
-                      className="bg-muted border-input rounded-xl h-11"
+                      className="bg-slate-50 border-slate-200 rounded-xl h-11"
                     />
                   </div>
                   <div>
@@ -530,7 +532,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                       type="date"
                       value={formData.next_hearing_date}
                       onChange={(e) => setFormData({ ...formData, next_hearing_date: e.target.value })}
-                      className="bg-muted border-input rounded-xl h-11"
+                      className="bg-slate-50 border-slate-200 rounded-xl h-11"
                     />
                   </div>
                 </div>
@@ -538,7 +540,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
             </div>
 
             {/* Legal References Card */}
-            <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
               <div className="p-4 border-b">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center">
@@ -557,7 +559,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                       <Input
                         value={formData.category}
                         onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                        className="bg-muted border-input rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
                       />
                     </div>
                     <div>
@@ -565,7 +567,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                       <Input
                         value={formData.sub_category}
                         onChange={(e) => setFormData({ ...formData, sub_category: e.target.value })}
-                        className="bg-muted border-input rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
                       />
                     </div>
                   </div>
@@ -582,7 +584,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                         value={newSection}
                         onChange={(e) => setNewSection(e.target.value)}
                         placeholder="Add a section"
-                        className="bg-muted border-input rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
                       />
                       <Button 
                         type="button" 
@@ -607,7 +609,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
             </div>
 
             {/* Documentation Card */}
-            <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
               <div className="p-4 border-b">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center">
@@ -626,7 +628,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                       value={formData.hearing_notes}
                       onChange={(e) => setFormData({ ...formData, hearing_notes: e.target.value })}
                       rows={3}
-                      className="bg-muted border-input rounded-xl resize-none"
+                      className="bg-slate-50 border-slate-200 rounded-xl resize-none"
                     />
                   </div>
                   
@@ -636,7 +638,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                       value={formData.objection}
                       onChange={(e) => setFormData({ ...formData, objection: e.target.value })}
                       rows={2}
-                      className="bg-muted border-input rounded-xl resize-none"
+                      className="bg-slate-50 border-slate-200 rounded-xl resize-none"
                     />
                   </div>
 
@@ -647,7 +649,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                         value={newOrder}
                         onChange={(e) => setNewOrder(e.target.value)}
                         placeholder="Add an order"
-                        className="bg-muted border-input rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
                       />
                       <Button 
                         type="button" 
@@ -660,7 +662,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                     </div>
                     <div className="space-y-1.5">
                       {orders.map((order, index) => (
-                        <div key={index} className="flex items-center gap-2 p-3 bg-muted rounded-xl">
+                        <div key={index} className="flex items-center gap-2 p-3 bg-slate-50 rounded-xl">
                           <span className="flex-1 text-sm text-foreground">{order}</span>
                           <X className="w-4 h-4 cursor-pointer text-muted-foreground hover:text-destructive" onClick={() => removeItem('order', index)} />
                         </div>
@@ -676,7 +678,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                         onChange={(e) => setNewDocumentLink(e.target.value)}
                         placeholder="Add a document link"
                         type="url"
-                        className="bg-muted border-input rounded-xl h-11"
+                        className="bg-slate-50 border-slate-200 rounded-xl h-11"
                       />
                       <Button 
                         type="button" 
@@ -689,7 +691,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                     </div>
                     <div className="space-y-1.5">
                       {documentLinks.map((link, index) => (
-                        <div key={index} className="flex items-center gap-2 p-3 bg-muted rounded-xl">
+                        <div key={index} className="flex items-center gap-2 p-3 bg-slate-50 rounded-xl">
                           <span className="flex-1 text-sm text-foreground truncate">{link}</span>
                           <X className="w-4 h-4 cursor-pointer text-muted-foreground hover:text-destructive" onClick={() => removeItem('document', index)} />
                         </div>
@@ -699,16 +701,17 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                 </div>
               </div>
             </div>
-          </form>
+            </form>
+          </ScrollArea>
 
           {/* Footer */}
-          <div className="px-6 py-4 bg-background border-t">
+          <div className="px-6 py-4 bg-white border-t flex-shrink-0">
             <div className="flex gap-3 justify-end">
               <Button
                 type="button"
                 variant="outline"
                 onClick={onClose}
-                className="rounded-full px-6"
+                className="rounded-full px-6 bg-slate-50 hover:bg-slate-100 border-slate-200"
               >
                 Cancel
               </Button>
