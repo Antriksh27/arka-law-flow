@@ -98,6 +98,8 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
       queryClient.invalidateQueries({ queryKey: ['case-details-full', caseId] });
       queryClient.invalidateQueries({ queryKey: ['case-detail', caseId] });
       queryClient.invalidateQueries({ queryKey: ['case-activities', caseId] });
+      queryClient.invalidateQueries({ queryKey: ['cases'] });
+      queryClient.invalidateQueries({ queryKey: ['global-search'] });
       toast.success('Case updated successfully');
       onClose();
     },

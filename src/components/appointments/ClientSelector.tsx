@@ -76,7 +76,15 @@ export const ClientSelector: React.FC<ClientSelectorProps> = ({
 
   const allOptions = [...clients, ...contacts];
   
-  // Don't filter here, let Command component handle it
+  // Filter options based on search - use includes for partial matching
+  const filteredClients = clients.filter(client => 
+    client.full_name.toLowerCase().includes(searchValue.toLowerCase())
+  );
+  
+  const filteredContacts = contacts.filter(contact => 
+    contact.full_name.toLowerCase().includes(searchValue.toLowerCase())
+  );
+  
   const selectedOption = allOptions.find(option => option.id === value);
 
   const handleRefresh = () => {
@@ -148,9 +156,9 @@ export const ClientSelector: React.FC<ClientSelectorProps> = ({
                 </div>
               </CommandEmpty>
               
-              {clients.length > 0 && (
+              {filteredClients.length > 0 && (
                 <CommandGroup heading="Clients" className="text-gray-700">
-                  {clients.map((client) => (
+                  {filteredClients.map((client) => (
                     <CommandItem
                       key={client.id}
                       value={client.full_name}
@@ -176,9 +184,9 @@ export const ClientSelector: React.FC<ClientSelectorProps> = ({
                 </CommandGroup>
               )}
 
-              {contacts.length > 0 && (
+              {filteredContacts.length > 0 && (
                 <CommandGroup heading="Contacts" className="text-gray-700">
-                  {contacts.map((contact) => (
+                  {filteredContacts.map((contact) => (
                     <CommandItem
                       key={contact.id}
                       value={contact.full_name}
