@@ -267,20 +267,36 @@ const EditAppointmentDialog = ({ open, onOpenChange, appointment }: EditAppointm
           )}
         />
 
-        <div className="flex justify-end gap-3 pt-2">
+        <div className="flex justify-between items-center pt-2">
           <Button 
             type="button" 
-            variant="outline" 
-            onClick={handleClose}
+            variant="destructive" 
+            onClick={(e) => {
+              e.preventDefault();
+              const currentValues = form.getValues();
+              updateAppointmentMutation.mutate({
+                ...currentValues,
+                status: 'cancelled'
+              });
+            }}
           >
-            Cancel
+            Cancel Appointment
           </Button>
-          <Button 
-            type="submit" 
-            disabled={updateAppointmentMutation.isPending}
-          >
-            {updateAppointmentMutation.isPending ? 'Updating...' : 'Update Appointment'}
-          </Button>
+          <div className="flex gap-3">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={handleClose}
+            >
+              Close
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={updateAppointmentMutation.isPending}
+            >
+              {updateAppointmentMutation.isPending ? 'Updating...' : 'Update Appointment'}
+            </Button>
+          </div>
         </div>
       </form>
     </Form>
@@ -321,7 +337,7 @@ const EditAppointmentDialog = ({ open, onOpenChange, appointment }: EditAppointm
   // Desktop: Standard dialog
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto" hideCloseButton>
+      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto" hideCloseButton>
         <MobileDialogHeader
           title="Edit Appointment"
           subtitle="Update appointment details"

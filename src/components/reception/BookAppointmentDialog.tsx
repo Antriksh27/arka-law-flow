@@ -8,6 +8,7 @@ import { format } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MobileDialogHeader } from '@/components/ui/mobile-dialog-header';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -58,6 +59,7 @@ const BookAppointmentDialog = ({
   const [clientSearchOpen, setClientSearchOpen] = useState(false);
   const [selectedClientValue, setSelectedClientValue] = useState('');
   const [selectedCaseId, setSelectedCaseId] = useState('');
+  const [bookingType, setBookingType] = useState<'appointment' | 'event'>('appointment');
 
   const form = useForm<AppointmentFormData>({
     defaultValues: {
@@ -224,17 +226,19 @@ const BookAppointmentDialog = ({
         firm_id: firmId,
         created_by: user?.id,
         created_by_user_id: user?.id,
-        type: 'in-person',
-        status: 'upcoming'
+        type: bookingType === 'event' ? 'other' : 'in-person',
+        status: bookingType === 'event' ? 'confirmed' : 'upcoming'
       };
 
-      if (clientId) {
-        appointmentData.client_id = clientId;
-      }
+      if (bookingType === 'appointment') {
+        if (clientId) {
+          appointmentData.client_id = clientId;
+        }
 
-      // Add case_id if a case was selected
-      if (selectedCaseId) {
-        appointmentData.case_id = selectedCaseId;
+        // Add case_id if a case was selected
+        if (selectedCaseId) {
+          appointmentData.case_id = selectedCaseId;
+        }
       }
 
       const { data: newAppointment, error } = await supabase
@@ -309,138 +313,107 @@ const BookAppointmentDialog = ({
           />
         </div>
 
-        {/* Client/Contact Card */}
-        <div className="bg-white rounded-2xl shadow-sm p-4 space-y-4">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center">
-              <User className="w-4 h-4 text-violet-500" />
+        {/* Client/Contact Card - Hidden in Event mode */}
+        {bookingType === 'appointment' && (
+          <div className="bg-white rounded-2xl shadow-sm p-4 space-y-4">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center">
+                <User className="w-4 h-4 text-violet-500" />
+              </div>
+              <span className="font-medium text-slate-700">Client / Contact</span>
             </div>
-            <span className="font-medium text-slate-700">Client / Contact</span>
-          </div>
 
-          <FormField
-            control={form.control}
-            name="client_name"
-            rules={{ required: "Client selection is required" }}
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel className="text-sm text-slate-600">Select Client/Contact *</FormLabel>
-                <Popover open={clientSearchOpen} onOpenChange={setClientSearchOpen}>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={clientSearchOpen}
-                        className="w-full justify-between rounded-xl h-11 bg-slate-50"
-                      >
-                        {getSelectedClientDisplay()}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-full p-0 bg-background border border-border shadow-lg z-50" align="start">
-                    <Command>
-                      <CommandInput placeholder="Search clients and contacts..." />
-                      <CommandList>
-                        <CommandEmpty>No client or contact found.</CommandEmpty>
-                        <CommandGroup>
-                          <CommandItem value="add-new" onSelect={() => handleClientSelection('add-new')}>
-                            <div className="flex items-center gap-2">
-                              <Plus className="w-4 h-4" />
-                              Add New Contact
-                            </div>
-                          </CommandItem>
-                          {clientsAndContacts?.map(item => (
-                            <CommandItem
-                              key={`${item.type}-${item.id}`}
-                              value={`${item.name} ${item.email || ''} ${item.type}`}
-                              onSelect={() => handleClientSelection(`${item.type}-${item.id}`)}
-                            >
-                              <Check className={`mr-2 h-4 w-4 ${selectedClientValue === `${item.type}-${item.id}` ? "opacity-100" : "opacity-0"}`} />
-                              <div className="flex flex-col">
-                                <span>{item.name}</span>
-                                <span className="text-xs text-muted-foreground">
-                                  {item.email || 'No email'} • {item.type === 'client' ? 'Client' : 'Contact'}
-                                </span>
+            <FormField
+              control={form.control}
+              name="client_name"
+              rules={{ required: "Client selection is required" }}
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel className="text-sm text-slate-600">Select Client/Contact *</FormLabel>
+                  <Popover open={clientSearchOpen} onOpenChange={setClientSearchOpen}>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={clientSearchOpen}
+                          className="w-full justify-between rounded-xl h-11 bg-slate-50"
+                        >
+                          {getSelectedClientDisplay()}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0 bg-background border border-border shadow-lg z-50" align="start">
+                      <Command>
+                        <CommandInput placeholder="Search clients and contacts..." />
+                        <CommandList>
+                          <CommandEmpty>No client or contact found.</CommandEmpty>
+                          <CommandGroup>
+                            <CommandItem value="add-new" onSelect={() => handleClientSelection('add-new')}>
+                              <div className="flex items-center gap-2">
+                                <Plus className="w-4 h-4" />
+                                Add New Contact
                               </div>
                             </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                            {clientsAndContacts?.map(item => (
+                              <CommandItem
+                                key={`${item.type}-${item.id}`}
+                                value={`${item.name} ${item.email || ''} ${item.type}`}
+                                onSelect={() => handleClientSelection(`${item.type}-${item.id}`)}
+                              >
+                                <Check className={`mr-2 h-4 w-4 ${selectedClientValue === `${item.type}-${item.id}` ? "opacity-100" : "opacity-0"}`} />
+                                <div className="flex flex-col">
+                                  <span>{item.name}</span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {item.email || 'No email'} • {item.type === 'client' ? 'Client' : 'Contact'}
+                                  </span>
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          {showAddContact && (
-            <div className="space-y-4 p-4 border border-slate-200 rounded-xl bg-slate-50">
-              <h4 className="font-medium text-sm text-slate-700">Add New Contact</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <FormField
-                  control={form.control}
-                  name="client_name"
-                  rules={{ required: "Client name is required" }}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm text-slate-600">Full Name *</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter full name" {...field} className="rounded-xl h-11 bg-white" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="client_email"
-                  rules={{ required: "Client email is required" }}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm text-slate-600">Email *</FormLabel>
-                      <FormControl>
-                        <Input type="email" placeholder="Enter email" {...field} className="rounded-xl h-11 bg-white" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <FormField
-                control={form.control}
-                name="client_phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm text-slate-600">Phone</FormLabel>
-                    <FormControl>
-                      <Input type="tel" placeholder="Enter phone number" {...field} className="rounded-xl h-11 bg-white" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          )}
-
-          {!showAddContact && (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <FormField
-                  control={form.control}
-                  name="client_email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm text-slate-600">Email</FormLabel>
-                      <FormControl>
-                        <Input type="email" placeholder="Auto-populated" {...field} disabled className="rounded-xl h-11 bg-slate-100" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+            {showAddContact && (
+              <div className="space-y-4 p-4 border border-slate-200 rounded-xl bg-slate-50">
+                <h4 className="font-medium text-sm text-slate-700">Add New Contact</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <FormField
+                    control={form.control}
+                    name="client_name"
+                    rules={{ required: "Client name is required" }}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm text-slate-600">Full Name *</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter full name" {...field} className="rounded-xl h-11 bg-white" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="client_email"
+                    rules={{ required: "Client email is required" }}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm text-slate-600">Email *</FormLabel>
+                        <FormControl>
+                          <Input type="email" placeholder="Enter email" {...field} className="rounded-xl h-11 bg-white" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
                 <FormField
                   control={form.control}
                   name="client_phone"
@@ -448,32 +421,66 @@ const BookAppointmentDialog = ({
                     <FormItem>
                       <FormLabel className="text-sm text-slate-600">Phone</FormLabel>
                       <FormControl>
-                        <Input type="tel" placeholder="Auto-populated" {...field} disabled className="rounded-xl h-11 bg-slate-100" />
+                        <Input type="tel" placeholder="Enter phone number" {...field} className="rounded-xl h-11 bg-white" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
-              <FormField
-                control={form.control}
-                name="client_address"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm text-slate-600">Address</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Auto-populated" {...field} disabled className="rounded-xl h-11 bg-slate-100" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </>
-          )}
-        </div>
+            )}
 
-        {/* Case Selection Card - only show if a client (not contact) is selected */}
-        {getClientIdForCases() && (
+            {!showAddContact && (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <FormField
+                    control={form.control}
+                    name="client_email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm text-slate-600">Email</FormLabel>
+                        <FormControl>
+                          <Input type="email" placeholder="Auto-populated" {...field} disabled className="rounded-xl h-11 bg-slate-100" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="client_phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm text-slate-600">Phone</FormLabel>
+                        <FormControl>
+                          <Input type="tel" placeholder="Auto-populated" {...field} disabled className="rounded-xl h-11 bg-slate-100" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <FormField
+                  control={form.control}
+                  name="client_address"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm text-slate-600">Address</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Auto-populated" {...field} disabled className="rounded-xl h-11 bg-slate-100" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
+
+            )}
+          </div>
+        )}
+
+        {/* Case Selection Card - only show if a client (not contact) is selected AND in appointment mode */}
+        {bookingType === 'appointment' && getClientIdForCases() && (
           <div className="bg-white rounded-2xl shadow-sm p-4 space-y-4">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
@@ -564,9 +571,10 @@ const BookAppointmentDialog = ({
           <FormField
             control={form.control}
             name="title"
+            rules={{ required: bookingType === 'event' ? "Title is required for events" : false }}
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-sm text-slate-600">Title</FormLabel>
+                <FormLabel className="text-sm text-slate-600">Title {bookingType === 'event' && '*'}</FormLabel>
                 <FormControl>
                   <Input placeholder="e.g., Legal consultation, Contract review" {...field} className="rounded-xl h-11 bg-slate-50" />
                 </FormControl>
@@ -603,84 +611,35 @@ const BookAppointmentDialog = ({
                   Booking...
                 </>
               ) : (
-                'Book Appointment'
+                'Book ' + (bookingType === 'event' ? 'Event' : 'Appointment')
               )}
             </Button>
           </div>
         )}
       </form>
-    </Form>
+    </Form >
   );
 
-  // Mobile: iOS-style bottom sheet
-  if (isMobile) {
-    return (
-      <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent
-          side="bottom"
-          className="h-[95vh] rounded-t-3xl p-0 bg-slate-50"
-          hideCloseButton
-        >
-          {/* Drag handle */}
-          <div className="flex justify-center py-3">
-            <div className="w-10 h-1 bg-muted rounded-full" />
-          </div>
-
-          <MobileDialogHeader
-            title="Book New Appointment"
-            subtitle="Schedule a new appointment"
-            onClose={handleClose}
-            icon={<Calendar className="w-5 h-5 text-emerald-500" />}
-            showBorder
-          />
-
-          <ScrollArea className="flex-1 h-[calc(95vh-180px)]">
-            <div className="px-4 pb-4">
-              {formContent}
-            </div>
-          </ScrollArea>
-
-          {/* Mobile Footer */}
-          <div className="p-4 bg-white border-t border-slate-200">
-            <div className="flex gap-3">
-              <Button type="button" variant="outline" onClick={handleClose} className="flex-1 rounded-full h-11">
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                form="book-appointment-form"
-                disabled={bookAppointmentMutation.isPending}
-                className="flex-1 rounded-full h-11"
-              >
-                {bookAppointmentMutation.isPending ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Booking...
-                  </>
-                ) : (
-                  'Book Appointment'
-                )}
-              </Button>
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
-    );
-  }
-
-  // Desktop: Standard dialog with scroll
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto p-0" hideCloseButton>
         <MobileDialogHeader
-          title="Book New Appointment"
-          subtitle="Schedule a new appointment"
+          title={bookingType === 'event' ? "Schedule Internal Event" : "Book New Appointment"}
+          subtitle={bookingType === 'event' ? "Add a blocked time or internal meeting" : "Schedule a new appointment for a client"}
           onClose={handleClose}
           icon={<Calendar className="w-5 h-5 text-emerald-500" />}
           showBorder
         />
         <div className="p-4 bg-slate-50">
-          {formContent}
+          <Tabs defaultValue="appointment" value={bookingType} onValueChange={(v) => setBookingType(v as 'appointment' | 'event')} className="w-full mb-4">
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="appointment">Client Appointment</TabsTrigger>
+              <TabsTrigger value="event">Internal Event</TabsTrigger>
+            </TabsList>
+
+            {/* We render the same form for both, but fields show/hide based on state */}
+            {formContent}
+          </Tabs>
         </div>
       </DialogContent>
     </Dialog>
