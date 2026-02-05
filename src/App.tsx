@@ -9,6 +9,7 @@ import Auth from './pages/Auth';
 import { BookingPage } from './pages/BookingPage';
 import { LawyerSelection } from './pages/LawyerSelection';
 import { Toaster } from './components/ui/toaster';
+import { Toaster as SonnerToaster } from './components/ui/sonner';
 import { BookRedirect } from './pages/BookRedirect';
 
 // Lazy load heavy components for better performance
@@ -81,7 +82,7 @@ function AppRoutes() {
 
   // Initialize real-time notifications (inside QueryClientProvider)
   useRealtimeNotifications();
-  
+
   // Initialize CometChat push notifications for messages
   useCometChatPushNotifications();
 
@@ -125,67 +126,68 @@ function AppRoutes() {
 
   return (
     <DialogProvider>
-              <Routes>
-              {/* Public booking routes - completely public, no authentication */}
-              <Route path="/b/:code" element={<BookRedirect />} />
-              <Route path="/bk/:compact" element={<BookRedirect />} />
-              <Route path="/book/:lawyerId" element={<BookingPage />} />
-              <Route path="/book" element={<LawyerSelection />} />
-              
-              {/* Auth routes */}
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/reset-password" element={
-                <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
-                  <ResetPassword />
-                </Suspense>
-              } />
-              
-              {/* Enhanced case details route */}
-              <Route path="/cases/:id/legalkart-details" element={
-                <ProtectedRoute>
-                  <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
-                    <CaseDetailEnhanced />
-                  </Suspense>
-                </ProtectedRoute>
-              } />
-              
-              {/* Notification Dashboard */}
-              <Route path="/notifications" element={
-                <ProtectedRoute>
-                  <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
-                    <NotificationDashboard />
-                  </Suspense>
-                </ProtectedRoute>
-              } />
-              
-              {/* Daily Board */}
-              <Route path="/daily-board" element={
-                <ProtectedRoute>
-                  <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
-                    <DailyBoard />
-                  </Suspense>
-                </ProtectedRoute>
-              } />
-              
-              {/* Cause List */}
-              <Route path="/cause-list" element={
-                <ProtectedRoute>
-                  <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
-                    <CauseList />
-                  </Suspense>
-                </ProtectedRoute>
-              } />
-              
-              {/* All other routes require authentication */}
-              <Route path="/*" element={
-                <ProtectedRoute>
-                  <RoleBasedRouter />
-                </ProtectedRoute>
-              } />
-              </Routes>
-            <Toaster />
-            <ReactQueryDevtools initialIsOpen={false} />
-          </DialogProvider>
+      <Routes>
+        {/* Public booking routes - completely public, no authentication */}
+        <Route path="/b/:code" element={<BookRedirect />} />
+        <Route path="/bk/:compact" element={<BookRedirect />} />
+        <Route path="/book/:lawyerId" element={<BookingPage />} />
+        <Route path="/book" element={<LawyerSelection />} />
+
+        {/* Auth routes */}
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/reset-password" element={
+          <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+            <ResetPassword />
+          </Suspense>
+        } />
+
+        {/* Enhanced case details route */}
+        <Route path="/cases/:id/legalkart-details" element={
+          <ProtectedRoute>
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+              <CaseDetailEnhanced />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+
+        {/* Notification Dashboard */}
+        <Route path="/notifications" element={
+          <ProtectedRoute>
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+              <NotificationDashboard />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+
+        {/* Daily Board */}
+        <Route path="/daily-board" element={
+          <ProtectedRoute>
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+              <DailyBoard />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+
+        {/* Cause List */}
+        <Route path="/cause-list" element={
+          <ProtectedRoute>
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+              <CauseList />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+
+        {/* All other routes require authentication */}
+        <Route path="/*" element={
+          <ProtectedRoute>
+            <RoleBasedRouter />
+          </ProtectedRoute>
+        } />
+      </Routes>
+      <Toaster />
+      <SonnerToaster />
+      <ReactQueryDevtools initialIsOpen={false} />
+    </DialogProvider>
   );
 }
 
