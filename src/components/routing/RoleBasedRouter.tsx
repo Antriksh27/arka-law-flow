@@ -21,6 +21,7 @@ const Tasks = lazy(() => import('@/pages/Tasks'));
 const Hearings = lazy(() => import('@/pages/Hearings'));
 const DailyBoard = lazy(() => import('@/pages/DailyBoard'));
 const StaleCases = lazy(() => import('@/pages/StaleCases'));
+const CaseUnknownAdmin = lazy(() => import('@/pages/CaseUnknownAdmin'));
 const Documents = lazy(() => import('@/pages/Documents'));
 const Notes = lazy(() => import('@/pages/Notes'));
 const Team = lazy(() => import('@/pages/Team'));
@@ -161,6 +162,7 @@ const RoleBasedRouter = () => {
           <Route path="/hearings" element={<Hearings />} />
           <Route path="/daily-board" element={<DailyBoard />} />
           <Route path="/stale-cases" element={<StaleCases />} />
+          <Route path="/case-unknown" element={<CaseUnknownAdmin />} />
           <Route path="/documents" element={<Documents />} />
           <Route path="/notes" element={<Notes />} />
           <Route path="/availability" element={<Availability />} />
