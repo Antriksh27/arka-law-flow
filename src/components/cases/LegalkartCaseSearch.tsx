@@ -149,7 +149,7 @@ export const LegalkartCaseSearch: React.FC<LegalkartCaseSearchProps> = ({
       });
 
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Search timed out. Please retry.')), 30000);
+        setTimeout(() => reject(new Error('Search timed out. Please retry.')), 60000);
       });
 
       const { data, error } = (await Promise.race([

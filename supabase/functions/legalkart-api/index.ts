@@ -1439,7 +1439,7 @@ async function performCaseSearch(token: string, cnr: string, searchType: string,
         },
         body,
       },
-      25000
+      60000
     );
 
     if (!response.ok) {
