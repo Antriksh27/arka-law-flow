@@ -227,6 +227,17 @@ const CaseUnknownAdmin = () => {
           </CardContent>
         </Card>
       )}
+      {fetchDialogCaseId && (
+        <FetchCaseDetailsDialog
+          open={!!fetchDialogCaseId}
+          onClose={() => setFetchDialogCaseId(null)}
+          caseId={fetchDialogCaseId}
+          onFetchTriggered={() => {
+            setFetchDialogCaseId(null);
+            queryClient.invalidateQueries({ queryKey: ['case-unknown-admin'] });
+          }}
+        />
+      )}
     </div>
   );
 };
