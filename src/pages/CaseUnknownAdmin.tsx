@@ -232,9 +232,43 @@ const CaseUnknownAdmin = () => {
           open={!!fetchDialogCaseId}
           onClose={() => setFetchDialogCaseId(null)}
           caseId={fetchDialogCaseId}
-          onFetchTriggered={() => {
-            setFetchDialogCaseId(null);
-            queryClient.invalidateQueries({ queryKey: ['case-unknown-admin'] });
+          onFetchTriggered={async () => {
+            // After CNR is saved, trigger the actual fetch
+            try {
+              const { data: caseData } = await supabase
+                .from('cases')
+                .select('cnr_number, court_type, firm_id')
+                .eq('id', fetchDialogCaseId)
+                .single();
+
+              if (caseData?.cnr_number) {
+                const courtType = caseData.court_type || 'District Court';
+                const searchType = courtType.toLowerCase().includes('high') ? 'high_court'
+                  : courtType.toLowerCase().includes('supreme') ? 'supreme_court'
+                  : 'district_court';
+
+                toast({ title: 'Fetching case details...', description: `CNR: ${caseData.cnr_number}` });
+
+                const { data, error } = await supabase.functions.invoke('legalkart-api', {
+                  body: {
+                    action: 'search',
+                    cnr: caseData.cnr_number,
+                    searchType,
+                    caseId: fetchDialogCaseId,
+                    firmId: caseData.firm_id,
+                  },
+                });
+
+                if (error) throw error;
+                toast({ title: 'Case fetched successfully', description: data?.case_title || 'Details updated' });
+              }
+            } catch (err: any) {
+              console.error('Fetch error:', err);
+              toast({ title: 'Fetch failed', description: err.message, variant: 'destructive' });
+            } finally {
+              setFetchDialogCaseId(null);
+              queryClient.invalidateQueries({ queryKey: ['case-unknown-admin'] });
+            }
           }}
         />
       )}
