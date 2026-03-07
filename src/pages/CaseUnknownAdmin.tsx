@@ -34,7 +34,9 @@ interface UnknownCase {
 const CaseUnknownAdmin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
+  const [fetchDialogCaseId, setFetchDialogCaseId] = useState<string | null>(null);
 
   const { data: cases, isLoading } = useQuery({
     queryKey: ['case-unknown-admin'],
