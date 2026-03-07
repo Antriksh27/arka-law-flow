@@ -1321,7 +1321,7 @@ async function authenticateWithLegalkart(userId: string, hashKey: string): Promi
         },
         body: JSON.stringify(requestBody),
       },
-      15000
+      60000
     );
 
     console.log('Response status:', response.status);
