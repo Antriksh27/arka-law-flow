@@ -194,9 +194,14 @@ const CaseUnknownAdmin = () => {
                           )}
                         </TableCell>
                         <TableCell>
-                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate(`/cases/${c.id}`)}>
-                            <ExternalLink className="h-4 w-4" />
-                          </Button>
+                          <div className="flex items-center gap-1">
+                            <Button variant="ghost" size="icon" className="h-7 w-7" title="Fetch Case Details" onClick={() => setFetchDialogCaseId(c.id)}>
+                              <RefreshCw className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-7 w-7" title="View Case" onClick={() => navigate(`/cases/${c.id}`)}>
+                              <ExternalLink className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))
