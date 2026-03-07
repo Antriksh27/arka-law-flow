@@ -1321,7 +1321,7 @@ async function authenticateWithLegalkart(userId: string, hashKey: string): Promi
         },
         body: JSON.stringify(requestBody),
       },
-      15000
+      60000
     );
 
     console.log('Response status:', response.status);
@@ -1439,7 +1439,7 @@ async function performCaseSearch(token: string, cnr: string, searchType: string,
         },
         body,
       },
-      25000
+      60000
     );
 
     if (!response.ok) {
