@@ -20,8 +20,11 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { ChevronDown } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 
 const DailyBoard = () => {
+  const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isGenerated, setIsGenerated] = useState(false);
   const [filters, setFilters] = useState<DailyBoardFilters>({
@@ -183,6 +186,8 @@ const DailyBoard = () => {
       <div className="min-h-screen bg-background pb-24">
         <MobileHeader 
           title="Daily Board"
+          showBack
+          backTo="/dashboard"
           actions={
             <Popover>
               <PopoverTrigger asChild>
@@ -303,6 +308,17 @@ const DailyBoard = () => {
   return (
     <div className="min-h-screen bg-gray-50 pb-20 print:bg-white">
       <div className="max-w-[1600px] mx-auto p-4 md:p-6 space-y-6 print:hidden">
+        <div className="flex items-center gap-3 mb-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate('/dashboard')}
+            className="rounded-xl"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-2xl font-semibold">Daily Board</h1>
+        </div>
         <DailyBoardHeader
           selectedDate={selectedDate}
           onDateChange={setSelectedDate}
