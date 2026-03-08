@@ -20,8 +20,11 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { ChevronDown } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 
 const DailyBoard = () => {
+  const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isGenerated, setIsGenerated] = useState(false);
   const [filters, setFilters] = useState<DailyBoardFilters>({
