@@ -76,14 +76,46 @@ const DailyBoard = () => {
       judgeMap.get(judge)!.push(hearing);
     });
     
+    // Court priority: Supreme Court (0) > Other High Courts (1) > Gujarat HC (2) > Lower Courts (3)
+    const getCourtPriority = (name: string): number => {
+      const lower = name.toLowerCase();
+      if (lower.includes('supreme court')) return 0;
+      if (lower.includes('high court') && !lower.includes('gujarat')) return 1;
+      if (lower.includes('high court')) return 2;
+      return 3;
+    };
+    
+    // Judge priority: Chief Justice (0) > Division Bench (1) > Single Bench (2)
+    const isDivisionBench = (judgeHearings: typeof hearings): boolean => {
+      return judgeHearings.some(h => {
+        const bt = (h.case_bench_type || '').toLowerCase();
+        if (bt.includes('division') || bt === 'db') return true;
+        // Fallback: check coram for multiple judges
+        const coram = (h.coram || h.judge || '');
+        if (coram.includes(',') || / and /i.test(coram)) return true;
+        return false;
+      });
+    };
+    
+    const getJudgePriority = (judgeName: string, judgeHearings: typeof hearings): number => {
+      if (judgeName.toLowerCase().includes('chief justice')) return 0;
+      if (isDivisionBench(judgeHearings)) return 1;
+      return 2;
+    };
+    
     const result: GroupedHearings[] = [];
     courtMap.forEach((judgeMap, courtName) => {
       const judges: GroupedHearings['judges'] = [];
       judgeMap.forEach((hearings, judgeName) => {
         judges.push({ judgeName, hearings });
       });
+      // Sort judges within court
+      judges.sort((a, b) => getJudgePriority(a.judgeName, a.hearings) - getJudgePriority(b.judgeName, b.hearings));
       result.push({ courtName, judges });
     });
+    
+    // Sort courts
+    result.sort((a, b) => getCourtPriority(a.courtName) - getCourtPriority(b.courtName));
     
     return result;
   }, [hearings]);
