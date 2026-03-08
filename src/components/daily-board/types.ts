@@ -34,6 +34,9 @@ export interface DailyHearing {
   // Formatted advocate strings from normalized tables
   formatted_aorp?: string;
   formatted_aorr?: string;
+  
+  // Bench type from cases table for sorting
+  case_bench_type?: string | null;
 }
 
 // Box type for court number boxes
