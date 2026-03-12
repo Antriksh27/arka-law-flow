@@ -10,6 +10,7 @@ import html2pdf from 'html2pdf.js';
 import { format } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileHeader } from '@/components/mobile/MobileHeader';
+import { supabase } from '@/integrations/supabase/client';
 
 import { MobileDailyBoardCard } from '@/components/daily-board/MobileDailyBoardCard';
 import { Button } from '@/components/ui/button';
