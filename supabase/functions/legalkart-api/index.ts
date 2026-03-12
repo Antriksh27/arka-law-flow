@@ -1652,13 +1652,17 @@ async function getGujaratDisplayBoard(token: string) {
   try {
     console.log('Fetching Gujarat Display Board...');
 
-    const response = await fetch('https://apiservices.legalkart.com/api/v1/application-service/case-search/display-board/gujarat', {
-      method: 'GET',
-      headers: {
-        'Authorization': token,
-        'Accept': 'application/json',
+    const response = await fetchWithTimeout(
+      'https://apiservices.legalkart.com/api/v1/application-service/case-search/display-board/gujarat',
+      {
+        method: 'GET',
+        headers: {
+          'Authorization': token,
+          'Accept': 'application/json',
+        },
       },
-    });
+      30000 // 30 second timeout
+    );
 
     if (!response.ok) {
       console.error(`Display board request failed: ${response.status} ${response.statusText}`);
@@ -1674,10 +1678,14 @@ async function getGujaratDisplayBoard(token: string) {
 
     return { success: true, data, error: null };
   } catch (error) {
-    console.error('Display board error:', error);
+    const errMsg = error instanceof Error ? error.message : 'Unknown error';
+    const isTimeout = errMsg.includes('abort') || errMsg.includes('timeout');
+    console.error(`Display board ${isTimeout ? 'timeout' : 'error'}:`, errMsg);
     return { 
       success: false, 
-      error: `Display board error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      error: isTimeout 
+        ? 'Display board request timed out (30s). The eCourt server may be slow or unavailable.'
+        : `Display board error: ${errMsg}`,
       data: null 
     };
   }

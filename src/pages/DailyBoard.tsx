@@ -63,7 +63,9 @@ const DailyBoard = () => {
         console.error('Display board sync error:', syncError);
         toast({ 
           title: 'Sync warning', 
-          description: 'Could not sync from court. Showing cached data.',
+          description: syncError?.message?.includes('timeout') 
+            ? 'eCourt server is slow. Showing cached data.' 
+            : 'Could not sync from court. Showing cached data.',
           variant: 'destructive' 
         });
       } else if (syncResult?.success) {
