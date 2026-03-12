@@ -156,7 +156,27 @@ Deno.serve(async (req) => {
   };
 
   try {
-    // Query hearings scheduled for today
+    // STEP 0: Discover today's hearings via Gujarat Display Board API
+    console.log('🔍 Step 0: Discovering hearings via Display Board API...');
+    try {
+      const { data: syncResult, error: syncError } = await supabase.functions.invoke('legalkart-api', {
+        body: { 
+          action: 'sync_display_board', 
+          targetDate,
+          firmId: null, // Will be resolved by the function using all firms
+        },
+      });
+
+      if (syncError) {
+        console.warn('⚠️ Display board sync failed (continuing with existing data):', syncError.message);
+      } else if (syncResult?.success) {
+        console.log(`✅ Display board sync: ${syncResult.synced} hearings synced, ${syncResult.matched_cases} cases matched`);
+      }
+    } catch (syncErr: any) {
+      console.warn('⚠️ Display board sync error (continuing):', syncErr.message);
+    }
+
+    // STEP 1: Query hearings scheduled for today (now includes newly synced ones)
     console.log('📋 Querying hearings...');
     const { data: hearings, error: hearingsError } = await supabase
       .from('case_hearings')
