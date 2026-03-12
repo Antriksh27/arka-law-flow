@@ -20,11 +20,11 @@ interface RefreshResult {
   skipped: Array<{ case_id: string; reason: string }>;
 }
 
-// Configuration - optimized for reliability
-const BATCH_SIZE = 2; // Reduced from 3 for better reliability
-const DELAY_MS = 2000; // Delay between batches
-const MAX_SUCCESSFUL = 35;
-const FUNCTION_TIMEOUT_MS = 50000; // 50 seconds (edge functions have 60s limit)
+// Configuration - optimized for throughput
+const BATCH_SIZE = 5; // Increased for faster processing
+const DELAY_MS = 1000; // Reduced delay between batches
+const MAX_SUCCESSFUL = 100; // Increased daily limit
+const FUNCTION_TIMEOUT_MS = 55000; // 55 seconds (edge functions have 60s limit)
 
 function detectCourtType(cnr: string): 'high_court' | 'district_court' | 'supreme_court' {
   const normalized = cnr.toUpperCase().replace(/[-\s]/g, '');

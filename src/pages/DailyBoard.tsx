@@ -49,6 +49,45 @@ const DailyBoard = () => {
   }, [selectedDate]);
 
   const handleGenerate = async () => {
+    const dateStr = format(selectedDate, 'yyyy-MM-dd');
+    
+    // Step 1: Sync from Gujarat Display Board to discover today's hearings
+    try {
+      toast({ title: 'Syncing from court...', description: 'Fetching latest cause list from Gujarat HC' });
+      
+      const { data: syncResult, error: syncError } = await supabase.functions.invoke('legalkart-api', {
+        body: { action: 'sync_display_board', targetDate: dateStr },
+      });
+
+      if (syncError) {
+        console.error('Display board sync error:', syncError);
+        toast({ 
+          title: 'Sync warning', 
+          description: 'Could not sync from court. Showing cached data.',
+          variant: 'destructive' 
+        });
+      } else if (syncResult?.success) {
+        const newCount = syncResult.synced || 0;
+        const matchedCount = syncResult.matched_cases || 0;
+        const totalItems = syncResult.total_display_board_items || 0;
+        
+        if (newCount > 0) {
+          toast({ 
+            title: 'Court data synced!', 
+            description: `Synced ${newCount} hearings (${matchedCount} matched from ${totalItems} board items)` 
+          });
+        } else if (totalItems === 0) {
+          toast({ 
+            title: 'Display board empty', 
+            description: 'No items on court display board. Showing existing data.' 
+          });
+        }
+      }
+    } catch (err) {
+      console.error('Sync failed:', err);
+    }
+
+    // Step 2: Fetch from our DB (now with synced data)
     await refetch();
     setIsGenerated(true);
   };
