@@ -20,11 +20,11 @@ interface RefreshResult {
   skipped: Array<{ case_id: string; reason: string }>;
 }
 
-// Configuration - optimized for reliability
-const BATCH_SIZE = 2; // Reduced from 3 for better reliability
-const DELAY_MS = 2000; // Delay between batches
-const MAX_SUCCESSFUL = 35;
-const FUNCTION_TIMEOUT_MS = 50000; // 50 seconds (edge functions have 60s limit)
+// Configuration - optimized for throughput
+const BATCH_SIZE = 5; // Increased for faster processing
+const DELAY_MS = 1000; // Reduced delay between batches
+const MAX_SUCCESSFUL = 100; // Increased daily limit
+const FUNCTION_TIMEOUT_MS = 55000; // 55 seconds (edge functions have 60s limit)
 
 function detectCourtType(cnr: string): 'high_court' | 'district_court' | 'supreme_court' {
   const normalized = cnr.toUpperCase().replace(/[-\s]/g, '');
@@ -156,7 +156,27 @@ Deno.serve(async (req) => {
   };
 
   try {
-    // Query hearings scheduled for today
+    // STEP 0: Discover today's hearings via Gujarat Display Board API
+    console.log('🔍 Step 0: Discovering hearings via Display Board API...');
+    try {
+      const { data: syncResult, error: syncError } = await supabase.functions.invoke('legalkart-api', {
+        body: { 
+          action: 'sync_display_board', 
+          targetDate,
+          firmId: null, // Will be resolved by the function using all firms
+        },
+      });
+
+      if (syncError) {
+        console.warn('⚠️ Display board sync failed (continuing with existing data):', syncError.message);
+      } else if (syncResult?.success) {
+        console.log(`✅ Display board sync: ${syncResult.synced} hearings synced, ${syncResult.matched_cases} cases matched`);
+      }
+    } catch (syncErr: any) {
+      console.warn('⚠️ Display board sync error (continuing):', syncErr.message);
+    }
+
+    // STEP 1: Query hearings scheduled for today (now includes newly synced ones)
     console.log('📋 Querying hearings...');
     const { data: hearings, error: hearingsError } = await supabase
       .from('case_hearings')

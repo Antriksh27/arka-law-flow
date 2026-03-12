@@ -1213,6 +1213,165 @@ serve(async (req) => {
       });
     }
 
+    if (action === 'sync_display_board') {
+      console.log('🔄 Syncing display board hearings...');
+      const targetDate = requestBody.targetDate || new Date().toISOString().split('T')[0];
+      const firmId = teamMember.firm_id;
+      
+      // Authenticate with LegalKart
+      const authResult = await authenticateWithLegalkart(legalkartUserId, legalkartHashKey);
+      if (!authResult.success || !authResult.token) {
+        console.error('Authentication failed:', authResult.error);
+        return new Response(
+          JSON.stringify({ success: false, error: 'Authentication failed: ' + authResult.error }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Fetch display board
+      const displayBoardResult = await getGujaratDisplayBoard(authResult.token);
+      if (!displayBoardResult.success || !displayBoardResult.data) {
+        return new Response(JSON.stringify({ 
+          success: false, 
+          error: displayBoardResult.error || 'Failed to fetch display board',
+          synced: 0 
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Extract hearing items from nested response
+      const rawItems = displayBoardResult.data?.data || displayBoardResult.data || [];
+      const items = Array.isArray(rawItems) ? rawItems : [];
+      console.log(`📋 Display board returned ${items.length} items`);
+
+      if (items.length === 0) {
+        return new Response(JSON.stringify({ success: true, synced: 0, message: 'No items on display board' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Extract case numbers from display board items
+      const caseNumbers = items
+        .map((item: any) => item.case_number || item.caseNumber || null)
+        .filter(Boolean) as string[];
+      
+      console.log(`📦 Found ${caseNumbers.length} case numbers in display board`);
+
+      // Find matching cases in our DB by case_number
+      const { data: matchedCases, error: matchErr } = await supabase
+        .from('cases')
+        .select('id, case_number, cnr_number, firm_id, case_title')
+        .eq('firm_id', firmId)
+        .in('case_number', caseNumbers);
+
+      if (matchErr) {
+        console.error('Error matching cases:', matchErr);
+        return new Response(JSON.stringify({ success: false, error: matchErr.message }), {
+          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      console.log(`✅ Matched ${matchedCases?.length || 0} cases in DB`);
+
+      // Create a lookup from case_number to DB case
+      const caseByNumber = new Map<string, any>();
+      (matchedCases || []).forEach(c => {
+        if (c.case_number) caseByNumber.set(c.case_number, c);
+      });
+
+      // Build hearing upserts for matched cases
+      const hearingUpserts: any[] = [];
+      const syncedCaseIds: string[] = [];
+
+      items.forEach((item: any) => {
+        const caseNum = item.case_number || item.caseNumber;
+        const dbCase = caseNum ? caseByNumber.get(caseNum) : null;
+        if (!dbCase) return;
+
+        // Extract judge name from display board item
+        const judge = item.judge || item.bench || item.coram || null;
+        const courtName = item.court_name || item.courtName || 'Gujarat High Court';
+        const srNo = item.sr_no || item.srNo || item.serial_number || null;
+        const purpose = item.purpose || item.purpose_of_hearing || null;
+        const courtNumber = item.court_number || item.courtNumber || item.court_room || null;
+        const benchType = item.bench_type || item.benchType || null;
+        const coram = item.coram || null;
+
+        hearingUpserts.push({
+          case_id: dbCase.id,
+          firm_id: firmId,
+          hearing_date: targetDate,
+          judge: judge,
+          court_name: courtName,
+          purpose_of_hearing: purpose,
+          cause_list_type: item.cause_list_type || item.board_type || 'DAILY BOARD',
+          status: 'scheduled',
+          coram: coram,
+          notes: srNo ? `Sr No. ${srNo}` : null,
+        });
+        syncedCaseIds.push(dbCase.id);
+      });
+
+      console.log(`📝 Upserting ${hearingUpserts.length} hearings for ${targetDate}`);
+
+      if (hearingUpserts.length > 0) {
+        // Check existing hearings for today to avoid duplicates
+        const uniqueCaseIds = [...new Set(syncedCaseIds)];
+        const { data: existingHearings } = await supabase
+          .from('case_hearings')
+          .select('case_id')
+          .eq('hearing_date', targetDate)
+          .in('case_id', uniqueCaseIds);
+
+        const existingCaseIds = new Set((existingHearings || []).map(h => h.case_id));
+        const newHearings = hearingUpserts.filter(h => !existingCaseIds.has(h.case_id));
+
+        if (newHearings.length > 0) {
+          const { error: insertErr } = await supabase
+            .from('case_hearings')
+            .insert(newHearings);
+
+          if (insertErr) {
+            console.error('Error inserting hearings:', insertErr);
+          } else {
+            console.log(`✅ Inserted ${newHearings.length} new hearings`);
+          }
+        }
+
+        // Update existing hearings with latest display board info
+        const updateHearings = hearingUpserts.filter(h => existingCaseIds.has(h.case_id));
+        for (const h of updateHearings) {
+          const updateData: any = {};
+          if (h.judge) updateData.judge = h.judge;
+          if (h.court_name) updateData.court_name = h.court_name;
+          if (h.purpose_of_hearing) updateData.purpose_of_hearing = h.purpose_of_hearing;
+          if (h.cause_list_type) updateData.cause_list_type = h.cause_list_type;
+          if (h.coram) updateData.coram = h.coram;
+          if (Object.keys(updateData).length > 0) {
+            await supabase
+              .from('case_hearings')
+              .update(updateData)
+              .eq('case_id', h.case_id)
+              .eq('hearing_date', targetDate);
+          }
+        }
+
+        console.log(`🔄 Updated ${updateHearings.length} existing hearings`);
+      }
+
+      return new Response(JSON.stringify({
+        success: true,
+        synced: hearingUpserts.length,
+        new_hearings: hearingUpserts.length - (hearingUpserts.filter(h => syncedCaseIds.includes(h.case_id)).length - hearingUpserts.length),
+        matched_cases: matchedCases?.length || 0,
+        total_display_board_items: items.length,
+        unmatched_count: items.length - (matchedCases?.length || 0),
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     if (action === 'batch_search') {
       // Validate input
       const validation = batchSearchSchema.safeParse(requestBody)
