@@ -1651,30 +1651,39 @@ async function performCaseSearch(token: string, cnr: string, searchType: string,
 async function getGujaratDisplayBoard(token: string) {
   try {
     console.log('Fetching Gujarat Display Board...');
+    console.log('Token prefix:', token.substring(0, 30) + '...');
 
     const response = await fetchWithTimeout(
       'https://apiservices.legalkart.com/api/v1/application-service/case-search/display-board/gujarat',
       {
         method: 'GET',
         headers: {
-          'Authorization': token,
+          'authorization': token,
+          'content-type': 'application/json',
           'Accept': 'application/json',
         },
       },
       30000 // 30 second timeout
     );
 
+    console.log('Display board response status:', response.status, response.statusText);
+    console.log('Display board response headers:', Object.fromEntries(response.headers.entries()));
+
     if (!response.ok) {
+      const errorBody = await response.text();
       console.error(`Display board request failed: ${response.status} ${response.statusText}`);
+      console.error('Error response body:', errorBody);
       return { 
         success: false, 
         error: `Display board fetch failed: ${response.status} ${response.statusText}`,
+        errorBody,
         data: null 
       };
     }
 
     const data = await response.json();
     console.log('Gujarat Display Board fetched successfully');
+    console.log('Display Board raw response:', JSON.stringify(data, null, 2));
 
     return { success: true, data, error: null };
   } catch (error) {
