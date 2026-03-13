@@ -241,6 +241,11 @@ export const useLegalkartCaseDetails = (caseId: string) => {
         }
       }
 
+      // Final hard guard to prevent accidental fallback to generic high court routing
+      if (cnr.startsWith('GJHC')) {
+        searchType = 'gujarat_high_court';
+      }
+
       console.log('Invoking legalkart-api with:', {
         action: 'search',
         cnr: caseData.cnr_number,

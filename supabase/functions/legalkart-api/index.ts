@@ -80,8 +80,8 @@ interface LegalkartCaseSearchRequest {
 
 // Helper function to detect Gujarat High Court CNR pattern
 function isGujaratHighCourtCNR(cnr: string): boolean {
-  // Gujarat HC CNRs start with GJHC (e.g., GJHC240082762018)
-  return cnr.toUpperCase().startsWith('GJHC');
+  // Normalize first so formats like "gjhc-..." still resolve correctly
+  return normalizeCnr(cnr).startsWith('GJHC');
 }
 
 // Helper function to extract case info from Gujarat HC CNR
@@ -870,9 +870,14 @@ serve(async (req) => {
       
       // For REGISTRATION mode, CNR is optional
       const isRegistrationMode = validatedData.caseMode === 'REGISTRATION';
-      const normalizedCnr = validatedData.cnr ? validatedData.cnr.replace(/[-\s]/g, '') : '';
+      const normalizedCnr = validatedData.cnr ? normalizeCnr(validatedData.cnr) : '';
       
-      console.log(`Starting Legalkart search - Mode: ${validatedData.caseMode || 'CNR'}, Type: ${validatedData.searchType}, System: ${isSystemTriggered || false}`);
+      // Hard guard: any GJHC CNR in CNR mode must route through Gujarat HC search type
+      const resolvedSearchType = (!isRegistrationMode && normalizedCnr && isGujaratHighCourtCNR(normalizedCnr))
+        ? 'gujarat_high_court'
+        : validatedData.searchType;
+      
+      console.log(`Starting Legalkart search - Mode: ${validatedData.caseMode || 'CNR'}, Type: ${validatedData.searchType}, ResolvedType: ${resolvedSearchType}, System: ${isSystemTriggered || false}`);
       if (isRegistrationMode) {
         console.log(`REGISTRATION search: ${validatedData.caseType}/${validatedData.caseNo}/${validatedData.caseYear}`);
       } else {
@@ -898,8 +903,8 @@ serve(async (req) => {
             firm_id: teamMember.firm_id,
             case_id: validatedData.caseId || null,
             cnr_number: normalizedCnr,
-            search_type: validatedData.searchType,
-            request_data: { cnr: validatedData.cnr, searchType: validatedData.searchType },
+            search_type: resolvedSearchType,
+            request_data: { cnr: validatedData.cnr, searchType: validatedData.searchType, resolvedSearchType },
             created_by: userId,
           })
           .select()
@@ -918,7 +923,7 @@ serve(async (req) => {
       const searchOptions: CaseSearchOptions | undefined = validatedData.caseMode === 'REGISTRATION' 
         ? { caseMode: 'REGISTRATION', caseType: validatedData.caseType, caseNo: validatedData.caseNo, caseYear: validatedData.caseYear }
         : undefined;
-      const searchResult = await performCaseSearch(authResult.token, normalizedCnr, validatedData.searchType, searchOptions);
+      const searchResult = await performCaseSearch(authResult.token, normalizedCnr, resolvedSearchType, searchOptions);
 
       // Update search record with results (if one was created)
       if (searchRecord) {
@@ -1581,7 +1586,7 @@ async function performCaseSearch(token: string, cnr: string, searchType: string,
         throw new Error(`Unsupported search type: ${effectiveSearchType}`);
     }
 
-    console.log(`Performing ${searchType} search for CNR: ${cnr}`);
+    console.log(`Performing ${effectiveSearchType} search for CNR: ${cnr}`);
 
     console.log(`Request details:`, {
       endpoint,
