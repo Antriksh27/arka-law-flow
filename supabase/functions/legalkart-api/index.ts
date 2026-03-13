@@ -1548,10 +1548,9 @@ async function performCaseSearch(token: string, cnr: string, searchType: string,
         endpoint = 'https://apiservices.legalkart.com/api/v1/application-service/case-search/supreme-court';
         break;
       case 'gujarat_high_court':
-        endpoint = 'https://apiservices.legalkart.com/api/v1/application-service/case-search/gujarat-high-court';
-        
-        // Check if using REGISTRATION mode
+        // Check if using REGISTRATION mode - uses the general Gujarat HC endpoint
         if (options?.caseMode === 'REGISTRATION' && options?.caseType && options?.caseNo && options?.caseYear) {
+          endpoint = 'https://apiservices.legalkart.com/api/v1/application-service/case-search/gujarat-high-court';
           body = JSON.stringify({ 
             caseMode: 'REGISTRATION',
             caseType: options.caseType,
@@ -1560,12 +1559,10 @@ async function performCaseSearch(token: string, cnr: string, searchType: string,
           });
           console.log('🏛️ Using Gujarat High Court REGISTRATION mode:', { caseType: options.caseType, caseNo: options.caseNo, caseYear: options.caseYear });
         } else {
-          // Default CNR Number mode
-          body = JSON.stringify({ 
-            caseMode: 'CNR Number',
-            cnr: cnr 
-          });
-          console.log('🏛️ Using Gujarat High Court CNR Number mode');
+          // CNR mode - uses the dedicated CNR endpoint
+          endpoint = 'https://apiservices.legalkart.com/api/v1/application-service/case-search/cnr/gujarat-high-court';
+          body = JSON.stringify({ cnr });
+          console.log('🏛️ Using Gujarat High Court CNR mode via /cnr/gujarat-high-court endpoint');
         }
         break;
       case 'district_cause_list':

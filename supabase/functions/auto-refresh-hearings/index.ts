@@ -26,11 +26,16 @@ const DELAY_MS = 1000; // Reduced delay between batches
 const MAX_SUCCESSFUL = 100; // Increased daily limit
 const FUNCTION_TIMEOUT_MS = 55000; // 55 seconds (edge functions have 60s limit)
 
-function detectCourtType(cnr: string): 'high_court' | 'district_court' | 'supreme_court' {
+function detectCourtType(cnr: string): 'high_court' | 'district_court' | 'supreme_court' | 'gujarat_high_court' {
   const normalized = cnr.toUpperCase().replace(/[-\s]/g, '');
   
   if (normalized.startsWith('SCIN')) {
     return 'supreme_court';
+  }
+  
+  // Gujarat HC CNRs start with GJHC - use dedicated Gujarat HC endpoint
+  if (normalized.startsWith('GJHC')) {
+    return 'gujarat_high_court';
   }
   
   if (normalized.length >= 4 && normalized.substring(2, 4) === 'HC') {
