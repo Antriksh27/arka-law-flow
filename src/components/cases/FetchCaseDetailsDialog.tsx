@@ -16,11 +16,17 @@ interface FetchCaseDetailsDialogProps {
   onFetchTriggered: () => void;
 }
 
-const detectCourtType = (cnr: string): 'high_court' | 'district_court' | 'supreme_court' => {
+type CourtType = 'high_court' | 'district_court' | 'supreme_court' | 'gujarat_high_court';
+
+const detectCourtType = (cnr: string): CourtType => {
   const normalized = cnr.toUpperCase().replace(/[-\s]/g, '');
   
   if (normalized.startsWith('SCIN')) {
     return 'supreme_court';
+  }
+
+  if (normalized.startsWith('GJHC')) {
+    return 'gujarat_high_court';
   }
   
   if (normalized.length >= 4 && normalized.substring(2, 4) === 'HC') {
@@ -30,9 +36,10 @@ const detectCourtType = (cnr: string): 'high_court' | 'district_court' | 'suprem
   return 'district_court';
 };
 
-const getCourtTypeLabel = (type: 'high_court' | 'district_court' | 'supreme_court'): string => {
+const getCourtTypeLabel = (type: CourtType): string => {
   const labels = {
     high_court: 'High Court',
+    gujarat_high_court: 'Gujarat High Court',
     district_court: 'District Court',
     supreme_court: 'Supreme Court'
   };
@@ -41,8 +48,8 @@ const getCourtTypeLabel = (type: 'high_court' | 'district_court' | 'supreme_cour
 
 export function FetchCaseDetailsDialog({ open, onClose, caseId, onFetchTriggered }: FetchCaseDetailsDialogProps) {
   const [cnrNumber, setCnrNumber] = useState('');
-  const [detectedCourtType, setDetectedCourtType] = useState<'high_court' | 'district_court' | 'supreme_court'>('district_court');
-  const [manualCourtType, setManualCourtType] = useState<'high_court' | 'district_court' | 'supreme_court' | null>(null);
+  const [detectedCourtType, setDetectedCourtType] = useState<CourtType>('district_court');
+  const [manualCourtType, setManualCourtType] = useState<CourtType | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validationError, setValidationError] = useState('');
 
