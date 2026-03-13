@@ -1586,7 +1586,7 @@ async function performCaseSearch(token: string, cnr: string, searchType: string,
         throw new Error(`Unsupported search type: ${effectiveSearchType}`);
     }
 
-    console.log(`Performing ${searchType} search for CNR: ${cnr}`);
+    console.log(`Performing ${effectiveSearchType} search for CNR: ${cnr}`);
 
     console.log(`Request details:`, {
       endpoint,
