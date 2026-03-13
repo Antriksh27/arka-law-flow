@@ -1541,6 +1541,13 @@ async function performCaseSearch(token: string, cnr: string, searchType: string,
 
     switch (effectiveSearchType) {
       case 'high_court':
+        // Defensive routing: if a Gujarat HC CNR reaches this branch, force Gujarat HC CNR endpoint
+        if (cnr && isGujaratHighCourtCNR(cnr)) {
+          endpoint = 'https://apiservices.legalkart.com/api/v1/application-service/case-search/cnr/gujarat-high-court';
+          body = JSON.stringify({ cnr });
+          console.log('🏛️ Forced Gujarat HC routing from high_court branch for GJHC CNR');
+          break;
+        }
         endpoint = 'https://apiservices.legalkart.com/api/v1/application-service/case-search/high-court';
         break;
       case 'district_court':
