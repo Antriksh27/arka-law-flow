@@ -200,12 +200,13 @@ export function FetchCaseDetailsDialog({ open, onClose, caseId, onFetchTriggered
                 
                 <Select
                   value={manualCourtType || ''}
-                  onValueChange={(value) => setManualCourtType(value as 'high_court' | 'district_court' | 'supreme_court')}
+                  onValueChange={(value) => setManualCourtType(value as CourtType)}
                 >
                   <SelectTrigger className="bg-slate-50 border-slate-200 rounded-xl h-11">
                     <SelectValue placeholder="Use auto-detected type" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="gujarat_high_court">Gujarat High Court</SelectItem>
                     <SelectItem value="high_court">High Court</SelectItem>
                     <SelectItem value="district_court">District Court</SelectItem>
                     <SelectItem value="supreme_court">Supreme Court</SelectItem>

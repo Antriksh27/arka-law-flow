@@ -215,10 +215,12 @@ export const useLegalkartCaseDetails = (caseId: string) => {
 
       // Auto-detect court type from CNR
       const cnr = caseData.cnr_number.toUpperCase().replace(/[-\s]/g, '');
-      let searchType: 'high_court' | 'district_court' | 'supreme_court' = 'district_court';
+      let searchType: 'high_court' | 'district_court' | 'supreme_court' | 'gujarat_high_court' = 'district_court';
       
       if (cnr.startsWith('SCIN')) {
         searchType = 'supreme_court';
+      } else if (cnr.startsWith('GJHC')) {
+        searchType = 'gujarat_high_court';
       } else if (cnr.length >= 4 && cnr.substring(2, 4) === 'HC') {
         searchType = 'high_court';
       } else {
@@ -230,9 +232,11 @@ export const useLegalkartCaseDetails = (caseId: string) => {
         const courtTypeStr = caseData.court_type.toLowerCase();
         if (courtTypeStr.includes('supreme')) {
           searchType = 'supreme_court';
+        } else if (courtTypeStr.includes('gujarat')) {
+          searchType = 'gujarat_high_court';
         } else if (courtTypeStr.includes('district')) {
           searchType = 'district_court';
-        } else if (courtTypeStr.includes('high')) {
+        } else if (courtTypeStr.includes('high') && searchType !== 'gujarat_high_court') {
           searchType = 'high_court';
         }
       }
