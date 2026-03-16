@@ -620,6 +620,64 @@ async function upsertCaseRelationalData(
   console.log('✅ Relational data upserted successfully');
 }
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+const isValidUuid = (value?: string | null) => {
+  if (!value) return false;
+  return UUID_REGEX.test(value);
+};
+
+async function resolveSearchCreatedBy(
+  supabase: any,
+  firmId: string,
+  preferredUserId?: string | null
+): Promise<string | null> {
+  if (isValidUuid(preferredUserId)) {
+    const { data: preferredProfile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', preferredUserId)
+      .maybeSingle();
+
+    if (preferredProfile?.id) {
+      return preferredProfile.id;
+    }
+  }
+
+  const { data: teamMembers, error: teamError } = await supabase
+    .from('team_members')
+    .select('user_id')
+    .eq('firm_id', firmId)
+    .in('role', ['admin', 'lawyer', 'office_staff'])
+    .limit(20);
+
+  if (teamError) {
+    console.error('Error resolving fallback search actor from team_members:', teamError);
+    return null;
+  }
+
+  const candidateUserIds = Array.from(
+    new Set((teamMembers ?? []).map((member: any) => member.user_id).filter(isValidUuid))
+  );
+
+  if (candidateUserIds.length === 0) {
+    return null;
+  }
+
+  const { data: candidateProfiles, error: profileError } = await supabase
+    .from('profiles')
+    .select('id')
+    .in('id', candidateUserIds);
+
+  if (profileError) {
+    console.error('Error validating fallback actor profiles:', profileError);
+    return null;
+  }
+
+  const availableProfileIds = new Set((candidateProfiles ?? []).map((profile: any) => profile.id));
+  return candidateUserIds.find((id) => availableProfileIds.has(id)) ?? null;
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
