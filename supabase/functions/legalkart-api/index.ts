@@ -85,6 +85,15 @@ function isGujaratHighCourtCNR(cnr: string): boolean {
   return normalized.startsWith('GJHC') || normalized.includes('GJHC');
 }
 
+// Helper: detect any High Court CNR pattern (e.g. GJHC, DLHC, MHHC)
+// All HC traffic is routed through gujarat_high_court because high_court endpoint is disabled.
+function isAnyHighCourtCNR(cnr: string): boolean {
+  const normalized = normalizeCnr(cnr);
+  if (!normalized) return false;
+  if (isGujaratHighCourtCNR(normalized)) return true;
+  return normalized.length >= 4 && normalized.substring(2, 4) === 'HC';
+}
+
 // Helper function to extract case info from Gujarat HC CNR
 function parseGujaratHCCNR(cnr: string): { caseNo: string; caseYear: string } | null {
   // Pattern: GJHC + case number + year (last 4 digits)
@@ -935,11 +944,14 @@ serve(async (req) => {
       const isRegistrationMode = validatedData.caseMode === 'REGISTRATION';
       const normalizedCnr = validatedData.cnr ? normalizeCnr(validatedData.cnr) : '';
       
-      // Hard guard: any GJHC CNR in CNR mode must route through Gujarat HC search type
+      // Hard guard: all High Court traffic routes through Gujarat HC search type.
       const isCnrMode = !validatedData.caseMode || validatedData.caseMode === 'CNR Number';
-      const resolvedSearchType = (isCnrMode && normalizedCnr && isGujaratHighCourtCNR(normalizedCnr))
+      const normalizedRequestedType = validatedData.searchType === 'high_court'
         ? 'gujarat_high_court'
         : validatedData.searchType;
+      const resolvedSearchType = (isCnrMode && normalizedCnr && isAnyHighCourtCNR(normalizedCnr))
+        ? 'gujarat_high_court'
+        : normalizedRequestedType;
 
       // Keep DB write compatible with existing search_type CHECK constraints
       // while preserving routed endpoint transparency in request_data.resolvedSearchType.
@@ -1631,12 +1643,12 @@ async function performCaseSearch(token: string, cnr: string, searchType: string,
     // Initialize body based on mode - for REGISTRATION mode, we'll set the body in the switch case
     let body = options?.caseMode === 'REGISTRATION' ? '' : JSON.stringify({ cnr });
 
-    // Auto-detect Gujarat HC from CNR pattern - override any searchType for GJHC CNRs
-    const effectiveSearchType = (cnr && isGujaratHighCourtCNR(cnr) && searchType !== 'gujarat_high_court') 
+    // high_court endpoint is disabled; normalize to gujarat_high_court for all HC traffic.
+    const effectiveSearchType = (searchType === 'high_court' || (cnr && isAnyHighCourtCNR(cnr)))
       ? 'gujarat_high_court'
       : searchType;
-    
-    console.log(`🔍 Search type resolution: input=${searchType}, effective=${effectiveSearchType}, cnr=${cnr}, isGJHC=${cnr ? isGujaratHighCourtCNR(cnr) : false}`);
+
+    console.log(`🔍 Search type resolution: input=${searchType}, effective=${effectiveSearchType}, cnr=${cnr}, isHC=${cnr ? isAnyHighCourtCNR(cnr) : false}`);
 
     switch (effectiveSearchType) {
       case 'high_court':
