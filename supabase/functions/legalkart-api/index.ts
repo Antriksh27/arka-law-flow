@@ -85,6 +85,15 @@ function isGujaratHighCourtCNR(cnr: string): boolean {
   return normalized.startsWith('GJHC') || normalized.includes('GJHC');
 }
 
+// Helper: detect any High Court CNR pattern (e.g. GJHC, DLHC, MHHC)
+// All HC traffic is routed through gujarat_high_court because high_court endpoint is disabled.
+function isAnyHighCourtCNR(cnr: string): boolean {
+  const normalized = normalizeCnr(cnr);
+  if (!normalized) return false;
+  if (isGujaratHighCourtCNR(normalized)) return true;
+  return normalized.length >= 4 && normalized.substring(2, 4) === 'HC';
+}
+
 // Helper function to extract case info from Gujarat HC CNR
 function parseGujaratHCCNR(cnr: string): { caseNo: string; caseYear: string } | null {
   // Pattern: GJHC + case number + year (last 4 digits)
