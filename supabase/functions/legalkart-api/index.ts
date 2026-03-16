@@ -944,11 +944,14 @@ serve(async (req) => {
       const isRegistrationMode = validatedData.caseMode === 'REGISTRATION';
       const normalizedCnr = validatedData.cnr ? normalizeCnr(validatedData.cnr) : '';
       
-      // Hard guard: any GJHC CNR in CNR mode must route through Gujarat HC search type
+      // Hard guard: all High Court traffic routes through Gujarat HC search type.
       const isCnrMode = !validatedData.caseMode || validatedData.caseMode === 'CNR Number';
-      const resolvedSearchType = (isCnrMode && normalizedCnr && isGujaratHighCourtCNR(normalizedCnr))
+      const normalizedRequestedType = validatedData.searchType === 'high_court'
         ? 'gujarat_high_court'
         : validatedData.searchType;
+      const resolvedSearchType = (isCnrMode && normalizedCnr && isAnyHighCourtCNR(normalizedCnr))
+        ? 'gujarat_high_court'
+        : normalizedRequestedType;
 
       // Keep DB write compatible with existing search_type CHECK constraints
       // while preserving routed endpoint transparency in request_data.resolvedSearchType.
