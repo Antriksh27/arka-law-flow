@@ -136,7 +136,8 @@ const StaleCases = () => {
         throw new Error('Case does not have a CNR number');
       }
 
-      const searchType = detectCourtType(caseData.cnr_number);
+      const detectedType = detectCourtType(caseData.cnr_number);
+      const searchType = detectedType === 'high_court' ? 'gujarat_high_court' : detectedType;
 
       const { data, error } = await supabase.functions.invoke('legalkart-api', {
         body: {
