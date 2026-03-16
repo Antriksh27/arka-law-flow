@@ -21,6 +21,7 @@ import { HearingsTable } from '@/components/cases/enhanced/HearingsTable';
 import { ObjectionsTable } from '@/components/cases/enhanced/ObjectionsTable';
 import { LawyersTab } from '@/components/cases/detail/tabs/LawyersTab';
 import { SCCaseDetailView } from '@/components/cases/supreme-court/SCCaseDetailView';
+import { resolveLegalkartSearchType } from '@/lib/legalkartSearchType';
 
 const CaseDetail = () => {
   const { id } = useParams<{ id: string }>();

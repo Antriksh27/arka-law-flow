@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FetchCaseDetailsDialog } from '@/components/cases/FetchCaseDetailsDialog';
+import { resolveLegalkartSearchType } from '@/lib/legalkartSearchType';
 
 interface UnknownCase {
   id: string;

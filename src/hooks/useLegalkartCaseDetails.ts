@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { fetchLegalkartCaseId } from '@/components/cases/legalkart/utils';
+import { resolveLegalkartSearchType } from '@/lib/legalkartSearchType';
 
 export const useLegalkartCaseDetails = (caseId: string) => {
   const queryClient = useQueryClient();
