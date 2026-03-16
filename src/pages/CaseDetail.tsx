@@ -210,7 +210,7 @@ const CaseDetail = () => {
       // First, try to upsert from existing fetched_data
       const { data: caseInfo } = await supabase
         .from('cases')
-        .select('fetched_data, cnr_number, firm_id')
+        .select('fetched_data, cnr_number, firm_id, court_type')
         .eq('id', id!)
         .single();
 

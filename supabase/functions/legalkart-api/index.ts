@@ -1007,7 +1007,7 @@ serve(async (req) => {
           last_fetched_at: new Date().toISOString(),
           fetched_data: searchResult.data,
           fetch_status: 'success',
-          fetch_message: `Successfully fetched from ${searchType} on ${new Date().toISOString()}`,
+          fetch_message: `Successfully fetched from ${resolvedSearchType} on ${new Date().toISOString()}`,
           is_auto_fetched: true,
         };
         
