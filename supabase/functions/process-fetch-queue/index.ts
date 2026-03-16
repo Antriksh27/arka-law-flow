@@ -38,11 +38,13 @@ const mapCourtTypeToSearchType = (courtType: string, cnr?: string): string => {
   if (courtLower.includes("gujarat")) return "gujarat_high_court";
   if (courtLower.includes("supreme")) return "supreme_court";
   if (courtLower.includes("district")) return "district_court";
-  if (courtLower.includes("high")) return "high_court";
+  // All "high court" types route to gujarat_high_court — high_court endpoint is disabled
+  if (courtLower.includes("high")) return "gujarat_high_court";
   
   // Fallback: check CNR prefix pattern
   if (normalizedCnr.startsWith('SCIN')) return 'supreme_court';
-  if (normalizedCnr.length >= 4 && normalizedCnr.substring(2, 4) === 'HC') return 'high_court';
+  // All HC CNRs route to gujarat_high_court
+  if (normalizedCnr.length >= 4 && normalizedCnr.substring(2, 4) === 'HC') return 'gujarat_high_court';
   
   return "district_court";
 };
