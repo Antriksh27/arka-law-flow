@@ -656,8 +656,12 @@ async function resolveSearchCreatedBy(
     return null;
   }
 
-  const candidateUserIds = Array.from(
-    new Set((teamMembers ?? []).map((member: any) => member.user_id).filter(isValidUuid))
+  const candidateUserIds: string[] = Array.from(
+    new Set(
+      (teamMembers ?? [])
+        .map((member: any) => member.user_id as string | undefined)
+        .filter((id): id is string => isValidUuid(id))
+    )
   );
 
   if (candidateUserIds.length === 0) {
