@@ -28,15 +28,33 @@ export const ECourts = () => {
   const { data: legalkartCases, refetch } = useQuery({
     queryKey: ['legalkart-case-searches', firmId],
     queryFn: async () => {
-      console.log('[ECourts History] Fetching with firmId:', firmId);
-      const { data, error } = await supabase
+      const { data: searches, error: searchesError } = await supabase
         .from('legalkart_case_searches')
-        .select(`*, cases (id, case_title, case_number, court_name)`)
+        .select('*')
         .eq('firm_id', firmId as string)
         .order('created_at', { ascending: false });
-      console.log('[ECourts History] Result:', { count: data?.length, error, firstItem: data?.[0] });
-      if (error) throw error;
-      return data || [];
+
+      if (searchesError) throw searchesError;
+      if (!searches || searches.length === 0) return [];
+
+      const caseIds = [...new Set(searches.map((item: any) => item.case_id).filter(Boolean))] as string[];
+      if (caseIds.length === 0) return searches;
+
+      const { data: casesData, error: casesError } = await supabase
+        .from('cases')
+        .select('id, case_title, case_number, court_name')
+        .in('id', caseIds);
+
+      if (casesError) {
+        console.error('[ECourts History] Failed to fetch case metadata:', casesError);
+        return searches;
+      }
+
+      const caseMap = new Map((casesData || []).map((c: any) => [c.id, c]));
+      return searches.map((item: any) => ({
+        ...item,
+        cases: item.case_id ? caseMap.get(item.case_id) ?? null : null,
+      }));
     },
     enabled: !!firmId,
   });
