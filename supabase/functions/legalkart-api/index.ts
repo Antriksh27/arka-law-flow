@@ -1486,6 +1486,14 @@ serve(async (req) => {
         );
       }
 
+      const createdByForBatchSearch = await resolveSearchCreatedBy(supabase, teamMember.firm_id, userId);
+      if (!createdByForBatchSearch) {
+        console.warn('⚠️ Batch search history inserts disabled: no valid profile found for created_by', {
+          preferredUserId: userId,
+          firmId: teamMember.firm_id,
+        });
+      }
+
       const batchResults = [];
       for (const cnr of cnrs) {
         // Search in all court types for each CNR
@@ -1494,22 +1502,23 @@ serve(async (req) => {
         for (const searchType of searchTypes) {
           const searchResult = await performCaseSearch(authResult.token, cnr, searchType);
           
-          // Create search record
-          const { error: insertError } = await supabase
-            .from('legalkart_case_searches')
-            .insert({
-              firm_id: teamMember.firm_id,
-              cnr_number: cnr,
-              search_type: searchType,
-              request_data: { cnr, searchType },
-              response_data: searchResult.data,
-              status: searchResult.success ? 'success' : 'failed',
-              error_message: searchResult.error || null,
-              created_by: userId,
-            });
+          if (createdByForBatchSearch) {
+            const { error: insertError } = await supabase
+              .from('legalkart_case_searches')
+              .insert({
+                firm_id: teamMember.firm_id,
+                cnr_number: cnr,
+                search_type: searchType,
+                request_data: { cnr, searchType, actorUserId: createdByForBatchSearch },
+                response_data: searchResult.data,
+                status: searchResult.success ? 'success' : 'failed',
+                error_message: searchResult.error || null,
+                created_by: createdByForBatchSearch,
+              });
 
-          if (insertError) {
-            console.error('Error creating batch search record:', insertError);
+            if (insertError) {
+              console.error('Error creating batch search record:', insertError);
+            }
           }
 
           batchResults.push({
