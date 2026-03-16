@@ -80,8 +80,9 @@ interface LegalkartCaseSearchRequest {
 
 // Helper function to detect Gujarat High Court CNR pattern
 function isGujaratHighCourtCNR(cnr: string): boolean {
-  // Normalize first so formats like "gjhc-..." still resolve correctly
-  return normalizeCnr(cnr).startsWith('GJHC');
+  // Normalize first so formats like "CNR:GJHC..." and "gjhc-..." still resolve correctly
+  const normalized = normalizeCnr(cnr);
+  return normalized.startsWith('GJHC') || normalized.includes('GJHC');
 }
 
 // Helper function to extract case info from Gujarat HC CNR
