@@ -960,26 +960,41 @@ serve(async (req) => {
         );
       }
 
-      // Create search record (skip if system-triggered to avoid user_id issues)
+      // Create search record (skip if system-triggered to avoid writing noisy automated records)
       let searchRecord: any = null;
       if (!isSystemTriggered) {
-        const { data: sr, error: insertError } = await supabase
-          .from('legalkart_case_searches')
-          .insert({
-            firm_id: teamMember.firm_id,
-            case_id: validatedData.caseId || null,
-            cnr_number: normalizedCnr,
-            search_type: dbSearchType,
-            request_data: { cnr: validatedData.cnr, searchType: validatedData.searchType, resolvedSearchType, persistedSearchType: dbSearchType },
-            created_by: userId,
-          })
-          .select()
-          .single();
+        const createdByForSearch = await resolveSearchCreatedBy(supabase, teamMember.firm_id, userId);
 
-        if (insertError) {
-          console.error('Error creating search record:', insertError);
+        if (!createdByForSearch) {
+          console.warn('⚠️ Skipping search record creation: no valid profile found for created_by', {
+            preferredUserId: userId,
+            firmId: teamMember.firm_id,
+          });
         } else {
-          searchRecord = sr;
+          const { data: sr, error: insertError } = await supabase
+            .from('legalkart_case_searches')
+            .insert({
+              firm_id: teamMember.firm_id,
+              case_id: validatedData.caseId || null,
+              cnr_number: normalizedCnr,
+              search_type: dbSearchType,
+              request_data: {
+                cnr: validatedData.cnr,
+                searchType: validatedData.searchType,
+                resolvedSearchType,
+                persistedSearchType: dbSearchType,
+                actorUserId: createdByForSearch,
+              },
+              created_by: createdByForSearch,
+            })
+            .select()
+            .single();
+
+          if (insertError) {
+            console.error('Error creating search record:', insertError);
+          } else {
+            searchRecord = sr;
+          }
         }
       } else {
         console.log('⚙️ System-triggered search - skipping search record creation');
