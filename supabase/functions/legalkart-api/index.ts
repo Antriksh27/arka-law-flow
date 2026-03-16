@@ -620,6 +620,68 @@ async function upsertCaseRelationalData(
   console.log('✅ Relational data upserted successfully');
 }
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+const isValidUuid = (value?: string | null) => {
+  if (!value) return false;
+  return UUID_REGEX.test(value);
+};
+
+async function resolveSearchCreatedBy(
+  supabase: any,
+  firmId: string,
+  preferredUserId?: string | null
+): Promise<string | null> {
+  if (isValidUuid(preferredUserId)) {
+    const { data: preferredProfile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', preferredUserId)
+      .maybeSingle();
+
+    if (preferredProfile?.id) {
+      return preferredProfile.id;
+    }
+  }
+
+  const { data: teamMembers, error: teamError } = await supabase
+    .from('team_members')
+    .select('user_id')
+    .eq('firm_id', firmId)
+    .in('role', ['admin', 'lawyer', 'office_staff'])
+    .limit(20);
+
+  if (teamError) {
+    console.error('Error resolving fallback search actor from team_members:', teamError);
+    return null;
+  }
+
+  const candidateUserIds: string[] = Array.from(
+    new Set(
+      (teamMembers ?? [])
+        .map((member: any) => member.user_id as string | undefined)
+        .filter((id: string | undefined): id is string => isValidUuid(id))
+    )
+  );
+
+  if (candidateUserIds.length === 0) {
+    return null;
+  }
+
+  const { data: candidateProfiles, error: profileError } = await supabase
+    .from('profiles')
+    .select('id')
+    .in('id', candidateUserIds);
+
+  if (profileError) {
+    console.error('Error validating fallback actor profiles:', profileError);
+    return null;
+  }
+
+  const availableProfileIds = new Set((candidateProfiles ?? []).map((profile: any) => profile.id));
+  return candidateUserIds.find((id) => availableProfileIds.has(id)) ?? null;
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -902,26 +964,41 @@ serve(async (req) => {
         );
       }
 
-      // Create search record (skip if system-triggered to avoid user_id issues)
+      // Create search record (skip if system-triggered to avoid writing noisy automated records)
       let searchRecord: any = null;
       if (!isSystemTriggered) {
-        const { data: sr, error: insertError } = await supabase
-          .from('legalkart_case_searches')
-          .insert({
-            firm_id: teamMember.firm_id,
-            case_id: validatedData.caseId || null,
-            cnr_number: normalizedCnr,
-            search_type: dbSearchType,
-            request_data: { cnr: validatedData.cnr, searchType: validatedData.searchType, resolvedSearchType, persistedSearchType: dbSearchType },
-            created_by: userId,
-          })
-          .select()
-          .single();
+        const createdByForSearch = await resolveSearchCreatedBy(supabase, teamMember.firm_id, userId);
 
-        if (insertError) {
-          console.error('Error creating search record:', insertError);
+        if (!createdByForSearch) {
+          console.warn('⚠️ Skipping search record creation: no valid profile found for created_by', {
+            preferredUserId: userId,
+            firmId: teamMember.firm_id,
+          });
         } else {
-          searchRecord = sr;
+          const { data: sr, error: insertError } = await supabase
+            .from('legalkart_case_searches')
+            .insert({
+              firm_id: teamMember.firm_id,
+              case_id: validatedData.caseId || null,
+              cnr_number: normalizedCnr,
+              search_type: dbSearchType,
+              request_data: {
+                cnr: validatedData.cnr,
+                searchType: validatedData.searchType,
+                resolvedSearchType,
+                persistedSearchType: dbSearchType,
+                actorUserId: createdByForSearch,
+              },
+              created_by: createdByForSearch,
+            })
+            .select()
+            .single();
+
+          if (insertError) {
+            console.error('Error creating search record:', insertError);
+          } else {
+            searchRecord = sr;
+          }
         }
       } else {
         console.log('⚙️ System-triggered search - skipping search record creation');
@@ -1413,6 +1490,14 @@ serve(async (req) => {
         );
       }
 
+      const createdByForBatchSearch = await resolveSearchCreatedBy(supabase, teamMember.firm_id, userId);
+      if (!createdByForBatchSearch) {
+        console.warn('⚠️ Batch search history inserts disabled: no valid profile found for created_by', {
+          preferredUserId: userId,
+          firmId: teamMember.firm_id,
+        });
+      }
+
       const batchResults = [];
       for (const cnr of cnrs) {
         // Search in all court types for each CNR
@@ -1421,22 +1506,23 @@ serve(async (req) => {
         for (const searchType of searchTypes) {
           const searchResult = await performCaseSearch(authResult.token, cnr, searchType);
           
-          // Create search record
-          const { error: insertError } = await supabase
-            .from('legalkart_case_searches')
-            .insert({
-              firm_id: teamMember.firm_id,
-              cnr_number: cnr,
-              search_type: searchType,
-              request_data: { cnr, searchType },
-              response_data: searchResult.data,
-              status: searchResult.success ? 'success' : 'failed',
-              error_message: searchResult.error || null,
-              created_by: userId,
-            });
+          if (createdByForBatchSearch) {
+            const { error: insertError } = await supabase
+              .from('legalkart_case_searches')
+              .insert({
+                firm_id: teamMember.firm_id,
+                cnr_number: cnr,
+                search_type: searchType,
+                request_data: { cnr, searchType, actorUserId: createdByForBatchSearch },
+                response_data: searchResult.data,
+                status: searchResult.success ? 'success' : 'failed',
+                error_message: searchResult.error || null,
+                created_by: createdByForBatchSearch,
+              });
 
-          if (insertError) {
-            console.error('Error creating batch search record:', insertError);
+            if (insertError) {
+              console.error('Error creating batch search record:', insertError);
+            }
           }
 
           batchResults.push({
