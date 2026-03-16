@@ -243,10 +243,11 @@ const CaseUnknownAdmin = () => {
                 .single();
 
               if (caseData?.cnr_number) {
-                const courtType = caseData.court_type || 'District Court';
-                const searchType = courtType.toLowerCase().includes('high') ? 'high_court'
-                  : courtType.toLowerCase().includes('supreme') ? 'supreme_court'
-                  : 'district_court';
+                const searchType = resolveLegalkartSearchType({
+                  cnr: caseData.cnr_number,
+                  courtType: caseData.court_type,
+                  fallback: 'district_court',
+                });
 
                 toast({ title: 'Fetching case details...', description: `CNR: ${caseData.cnr_number}` });
 

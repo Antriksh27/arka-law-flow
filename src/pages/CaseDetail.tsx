@@ -253,11 +253,17 @@ const CaseDetail = () => {
 
       if (!teamMember) throw new Error('Firm not found');
 
+      const searchType = resolveLegalkartSearchType({
+        cnr: caseInfo.cnr_number,
+        courtType: caseInfo.court_type,
+        fallback: 'district_court',
+      });
+
       const { data, error } = await supabase.functions.invoke('legalkart-api', {
         body: {
           action: 'search',
           cnr: caseInfo.cnr_number,
-          searchType: 'high_court',
+          searchType,
           caseId: id,
           firmId: teamMember.firm_id
         }
