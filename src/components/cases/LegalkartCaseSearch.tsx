@@ -76,13 +76,18 @@ export const LegalkartCaseSearch: React.FC<LegalkartCaseSearchProps> = ({
   const [caseNo, setCaseNo] = useState('');
   const [caseYear, setCaseYear] = useState('');
 
-  // Auto-detect court type when CNR changes
+  const locked = isSearchTypeLocked(cnr);
+
+  // Auto-detect court type when CNR changes using centralized resolver
   useEffect(() => {
-    const detected = detectCourtTypeFromCNR(cnr);
-    if (detected && detected !== searchType) {
-      setSearchType(detected);
-      setAutoDetected(true);
-    } else if (!detected) {
+    const normalized = normalizeLegalkartCnr(cnr);
+    if (normalized.length >= 4) {
+      const resolved = resolveLegalkartSearchType({ cnr });
+      if (resolved !== searchType) {
+        setSearchType(resolved);
+        setAutoDetected(true);
+      }
+    } else {
       setAutoDetected(false);
     }
   }, [cnr]);

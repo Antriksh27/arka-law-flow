@@ -178,7 +178,7 @@ serve(async (req) => {
           .eq('id', item.id);
 
         // Call legalkart API with authorization
-        const searchType = mapCourtTypeToSearchType(item.court_type);
+        const searchType = mapCourtTypeToSearchType(item.court_type, item.cnr_number);
         
         const { data: apiResponse, error: apiError } = await supabase.functions.invoke('legalkart-api', {
           headers: authHeader ? { authorization: authHeader } : {},
