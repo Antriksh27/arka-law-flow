@@ -878,8 +878,14 @@ serve(async (req) => {
       const resolvedSearchType = (isCnrMode && normalizedCnr && isGujaratHighCourtCNR(normalizedCnr))
         ? 'gujarat_high_court'
         : validatedData.searchType;
+
+      // Keep DB write compatible with existing search_type CHECK constraints
+      // while preserving routed endpoint transparency in request_data.resolvedSearchType.
+      const dbSearchType = resolvedSearchType === 'gujarat_high_court'
+        ? 'high_court'
+        : resolvedSearchType;
       
-      console.log(`Starting Legalkart search - Mode: ${validatedData.caseMode || 'CNR'}, Type: ${validatedData.searchType}, ResolvedType: ${resolvedSearchType}, System: ${isSystemTriggered || false}`);
+      console.log(`Starting Legalkart search - Mode: ${validatedData.caseMode || 'CNR'}, Type: ${validatedData.searchType}, ResolvedType: ${resolvedSearchType}, StoredType: ${dbSearchType}, System: ${isSystemTriggered || false}`);
       if (isRegistrationMode) {
         console.log(`REGISTRATION search: ${validatedData.caseType}/${validatedData.caseNo}/${validatedData.caseYear}`);
       } else {
@@ -905,8 +911,8 @@ serve(async (req) => {
             firm_id: teamMember.firm_id,
             case_id: validatedData.caseId || null,
             cnr_number: normalizedCnr,
-            search_type: resolvedSearchType,
-            request_data: { cnr: validatedData.cnr, searchType: validatedData.searchType, resolvedSearchType },
+            search_type: dbSearchType,
+            request_data: { cnr: validatedData.cnr, searchType: validatedData.searchType, resolvedSearchType, persistedSearchType: dbSearchType },
             created_by: userId,
           })
           .select()
