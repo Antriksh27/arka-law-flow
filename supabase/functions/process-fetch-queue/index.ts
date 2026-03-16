@@ -190,7 +190,8 @@ serve(async (req) => {
             cnr: item.cnr_number,
             searchType,
             caseId: item.case_id,
-            firmId: item.firm_id
+            firmId: item.firm_id,
+            userId: item.created_by,
           }
         });
 
