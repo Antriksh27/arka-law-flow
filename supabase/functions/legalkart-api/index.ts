@@ -874,7 +874,8 @@ serve(async (req) => {
       const normalizedCnr = validatedData.cnr ? normalizeCnr(validatedData.cnr) : '';
       
       // Hard guard: any GJHC CNR in CNR mode must route through Gujarat HC search type
-      const resolvedSearchType = (!isRegistrationMode && normalizedCnr && isGujaratHighCourtCNR(normalizedCnr))
+      const isCnrMode = !validatedData.caseMode || validatedData.caseMode === 'CNR Number';
+      const resolvedSearchType = (isCnrMode && normalizedCnr && isGujaratHighCourtCNR(normalizedCnr))
         ? 'gujarat_high_court'
         : validatedData.searchType;
       
