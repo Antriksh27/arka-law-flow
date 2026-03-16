@@ -52,25 +52,10 @@ const GUJARAT_HC_CASE_TYPES = [
   { value: 'TCA', label: 'TCA - Tax Appeal' },
 ];
 
-// Auto-detect court type from CNR pattern
-const detectCourtTypeFromCNR = (cnr: string): string | null => {
-  if (!cnr || cnr.length < 4) return null;
-  
-  const prefix = cnr.substring(0, 4).toUpperCase();
-  
-  // Gujarat High Court pattern - GJHC
-  if (prefix === 'GJHC') return 'gujarat_high_court';
-  
-  // Other High Court patterns
-  if (prefix.match(/^[A-Z]{2}HC/)) return 'high_court';
-  
-  // Supreme Court patterns
-  if (prefix.match(/^SCSL|^SC[A-Z]{2}|^SCIN/)) return 'supreme_court';
-  
-  // District Court patterns (usually 4 letters followed by numbers)
-  if (prefix.match(/^[A-Z]{4}/) && !prefix.match(/HC|SC/)) return 'district_court';
-  
-  return null;
+// Check if a CNR is locked to a specific court type (no manual override allowed)
+const isSearchTypeLocked = (cnr: string): boolean => {
+  const normalized = normalizeLegalkartCnr(cnr);
+  return normalized.startsWith('GJHC') || normalized.includes('GJHC');
 };
 
 export const LegalkartCaseSearch: React.FC<LegalkartCaseSearchProps> = ({
