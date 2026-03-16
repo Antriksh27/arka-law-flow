@@ -157,6 +157,11 @@ export const ECourts = () => {
                       <Badge variant="outline" className="text-xs">
                         {item.search_type?.replace('_', ' ')}
                       </Badge>
+                      {item.request_data?.resolvedSearchType && item.request_data.resolvedSearchType !== item.search_type && (
+                        <Badge variant="outline" className="text-xs border-orange-300 text-orange-600">
+                          → {item.request_data.resolvedSearchType.replace('_', ' ')}
+                        </Badge>
+                      )}
                       <Badge 
                         variant={item.status === 'success' ? 'default' : 'error'}
                         className="text-xs"
@@ -355,6 +360,11 @@ export const ECourts = () => {
                               <Badge variant="outline" className="capitalize">
                                 {item.search_type?.replace('_', ' ')}
                               </Badge>
+                              {item.request_data?.resolvedSearchType && (
+                                <Badge variant="outline" className="capitalize border-orange-300 text-orange-600">
+                                  Routed: {item.request_data.resolvedSearchType.replace('_', ' ')}
+                                </Badge>
+                              )}
                               <Badge 
                                 variant={item.status === 'success' ? 'default' : 'error'}
                                 className="capitalize"
