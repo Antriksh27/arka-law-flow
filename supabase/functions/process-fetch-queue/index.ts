@@ -29,12 +29,22 @@ interface ProcessResult {
   errors: Array<{ queue_id: string; error: string }>;
 }
 
-const mapCourtTypeToSearchType = (courtType: string): string => {
+const mapCourtTypeToSearchType = (courtType: string, cnr?: string): string => {
+  // GJHC CNRs must always route to gujarat_high_court
+  const normalizedCnr = (cnr ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (normalizedCnr.startsWith('GJHC') || normalizedCnr.includes('GJHC')) return 'gujarat_high_court';
+
   const courtLower = courtType.toLowerCase();
-  if (courtLower.includes("high")) return "high_court";
-  if (courtLower.includes("district")) return "district_court";
+  if (courtLower.includes("gujarat")) return "gujarat_high_court";
   if (courtLower.includes("supreme")) return "supreme_court";
-  return "high_court";
+  if (courtLower.includes("district")) return "district_court";
+  if (courtLower.includes("high")) return "high_court";
+  
+  // Fallback: check CNR prefix pattern
+  if (normalizedCnr.startsWith('SCIN')) return 'supreme_court';
+  if (normalizedCnr.length >= 4 && normalizedCnr.substring(2, 4) === 'HC') return 'high_court';
+  
+  return "district_court";
 };
 
 const calculateRetryDelay = (retryCount: number): number => {
@@ -168,7 +178,7 @@ serve(async (req) => {
           .eq('id', item.id);
 
         // Call legalkart API with authorization
-        const searchType = mapCourtTypeToSearchType(item.court_type);
+        const searchType = mapCourtTypeToSearchType(item.court_type, item.cnr_number);
         
         const { data: apiResponse, error: apiError } = await supabase.functions.invoke('legalkart-api', {
           headers: authHeader ? { authorization: authHeader } : {},

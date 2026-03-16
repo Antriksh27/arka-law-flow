@@ -11,7 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2, Search, FileText, AlertCircle, CheckCircle, Sparkles } from 'lucide-react';
+import { Loader2, Search, FileText, AlertCircle, CheckCircle, Sparkles, Lock } from 'lucide-react';
+import { resolveLegalkartSearchType, normalizeLegalkartCnr } from '@/lib/legalkartSearchType';
 
 interface LegalkartCaseSearchProps {
   caseId?: string;
@@ -51,25 +52,10 @@ const GUJARAT_HC_CASE_TYPES = [
   { value: 'TCA', label: 'TCA - Tax Appeal' },
 ];
 
-// Auto-detect court type from CNR pattern
-const detectCourtTypeFromCNR = (cnr: string): string | null => {
-  if (!cnr || cnr.length < 4) return null;
-  
-  const prefix = cnr.substring(0, 4).toUpperCase();
-  
-  // Gujarat High Court pattern - GJHC
-  if (prefix === 'GJHC') return 'gujarat_high_court';
-  
-  // Other High Court patterns
-  if (prefix.match(/^[A-Z]{2}HC/)) return 'high_court';
-  
-  // Supreme Court patterns
-  if (prefix.match(/^SCSL|^SC[A-Z]{2}|^SCIN/)) return 'supreme_court';
-  
-  // District Court patterns (usually 4 letters followed by numbers)
-  if (prefix.match(/^[A-Z]{4}/) && !prefix.match(/HC|SC/)) return 'district_court';
-  
-  return null;
+// Check if a CNR is locked to a specific court type (no manual override allowed)
+const isSearchTypeLocked = (cnr: string): boolean => {
+  const normalized = normalizeLegalkartCnr(cnr);
+  return normalized.startsWith('GJHC') || normalized.includes('GJHC');
 };
 
 export const LegalkartCaseSearch: React.FC<LegalkartCaseSearchProps> = ({
@@ -90,13 +76,18 @@ export const LegalkartCaseSearch: React.FC<LegalkartCaseSearchProps> = ({
   const [caseNo, setCaseNo] = useState('');
   const [caseYear, setCaseYear] = useState('');
 
-  // Auto-detect court type when CNR changes
+  const locked = isSearchTypeLocked(cnr);
+
+  // Auto-detect court type when CNR changes using centralized resolver
   useEffect(() => {
-    const detected = detectCourtTypeFromCNR(cnr);
-    if (detected && detected !== searchType) {
-      setSearchType(detected);
-      setAutoDetected(true);
-    } else if (!detected) {
+    const normalized = normalizeLegalkartCnr(cnr);
+    if (normalized.length >= 4) {
+      const resolved = resolveLegalkartSearchType({ cnr });
+      if (resolved !== searchType) {
+        setSearchType(resolved);
+        setAutoDetected(true);
+      }
+    } else {
       setAutoDetected(false);
     }
   }, [cnr]);
@@ -416,8 +407,14 @@ export const LegalkartCaseSearch: React.FC<LegalkartCaseSearchProps> = ({
                         Auto-detected
                       </Badge>
                     )}
+                    {locked && (
+                      <Badge variant="outline" className="text-xs gap-1 rounded-full border-destructive text-destructive">
+                        <Lock className="w-3 h-3" />
+                        Locked
+                      </Badge>
+                    )}
                   </Label>
-                  <Select value={searchType} onValueChange={(val) => { setSearchType(val); setAutoDetected(false); }}>
+                  <Select value={searchType} onValueChange={(val) => { if (!locked) { setSearchType(val); setAutoDetected(false); } }} disabled={locked}>
                     <SelectTrigger className="bg-slate-50 border-slate-200 rounded-xl h-11">
                       <SelectValue placeholder="Select search type" />
                     </SelectTrigger>

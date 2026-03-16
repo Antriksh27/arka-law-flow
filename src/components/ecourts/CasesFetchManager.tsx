@@ -39,6 +39,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
 import TimeUtils from "@/lib/timeUtils";
 import { useNavigate } from "react-router-dom";
+import { resolveLegalkartSearchType } from "@/lib/legalkartSearchType";
 
 interface Case {
   id: string;
@@ -91,15 +92,8 @@ export const CasesFetchManager = () => {
         throw new Error('Case does not have a CNR number');
       }
 
-      // Detect court type from CNR
-      const detectCourtType = (cnr: string): string => {
-        const prefix = cnr.substring(0, 4).toUpperCase();
-        if (prefix.match(/^[A-Z]{2}HC/)) return 'high_court';
-        if (prefix.match(/^SCSL|^SC[A-Z]{2}/)) return 'supreme_court';
-        return 'district_court';
-      };
-
-      const searchType = detectCourtType(caseData.cnr_number);
+      // Use centralized court type resolver
+      const searchType = resolveLegalkartSearchType({ cnr: caseData.cnr_number, courtType: caseData.court_name });
 
       const { data, error } = await supabase.functions.invoke('legalkart-api', {
         body: { 
