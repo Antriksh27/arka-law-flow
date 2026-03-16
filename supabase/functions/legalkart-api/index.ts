@@ -1643,12 +1643,12 @@ async function performCaseSearch(token: string, cnr: string, searchType: string,
     // Initialize body based on mode - for REGISTRATION mode, we'll set the body in the switch case
     let body = options?.caseMode === 'REGISTRATION' ? '' : JSON.stringify({ cnr });
 
-    // Auto-detect Gujarat HC from CNR pattern - override any searchType for GJHC CNRs
-    const effectiveSearchType = (cnr && isGujaratHighCourtCNR(cnr) && searchType !== 'gujarat_high_court') 
+    // high_court endpoint is disabled; normalize to gujarat_high_court for all HC traffic.
+    const effectiveSearchType = (searchType === 'high_court' || (cnr && isAnyHighCourtCNR(cnr)))
       ? 'gujarat_high_court'
       : searchType;
-    
-    console.log(`🔍 Search type resolution: input=${searchType}, effective=${effectiveSearchType}, cnr=${cnr}, isGJHC=${cnr ? isGujaratHighCourtCNR(cnr) : false}`);
+
+    console.log(`🔍 Search type resolution: input=${searchType}, effective=${effectiveSearchType}, cnr=${cnr}, isHC=${cnr ? isAnyHighCourtCNR(cnr) : false}`);
 
     switch (effectiveSearchType) {
       case 'high_court':
