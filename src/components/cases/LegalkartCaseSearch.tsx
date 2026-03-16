@@ -11,7 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2, Search, FileText, AlertCircle, CheckCircle, Sparkles } from 'lucide-react';
+import { Loader2, Search, FileText, AlertCircle, CheckCircle, Sparkles, Lock } from 'lucide-react';
+import { resolveLegalkartSearchType, normalizeLegalkartCnr } from '@/lib/legalkartSearchType';
 
 interface LegalkartCaseSearchProps {
   caseId?: string;
