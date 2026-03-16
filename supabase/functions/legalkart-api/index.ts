@@ -660,7 +660,7 @@ async function resolveSearchCreatedBy(
     new Set(
       (teamMembers ?? [])
         .map((member: any) => member.user_id as string | undefined)
-        .filter((id): id is string => isValidUuid(id))
+        .filter((id: string | undefined): id is string => isValidUuid(id))
     )
   );
 
