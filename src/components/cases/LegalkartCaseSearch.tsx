@@ -407,8 +407,14 @@ export const LegalkartCaseSearch: React.FC<LegalkartCaseSearchProps> = ({
                         Auto-detected
                       </Badge>
                     )}
+                    {locked && (
+                      <Badge variant="outline" className="text-xs gap-1 rounded-full border-destructive text-destructive">
+                        <Lock className="w-3 h-3" />
+                        Locked
+                      </Badge>
+                    )}
                   </Label>
-                  <Select value={searchType} onValueChange={(val) => { setSearchType(val); setAutoDetected(false); }}>
+                  <Select value={searchType} onValueChange={(val) => { if (!locked) { setSearchType(val); setAutoDetected(false); } }} disabled={locked}>
                     <SelectTrigger className="bg-slate-50 border-slate-200 rounded-xl h-11">
                       <SelectValue placeholder="Select search type" />
                     </SelectTrigger>
