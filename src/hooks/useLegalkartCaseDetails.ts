@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { fetchLegalkartCaseId } from '@/components/cases/legalkart/utils';
+import { resolveLegalkartSearchType } from '@/lib/legalkartSearchType';
 
 export const useLegalkartCaseDetails = (caseId: string) => {
   const queryClient = useQueryClient();
@@ -213,38 +214,11 @@ export const useLegalkartCaseDetails = (caseId: string) => {
         throw new Error('CNR number is required to fetch case details. Please add CNR first.');
       }
 
-      // Auto-detect court type from CNR
-      const cnr = caseData.cnr_number.toUpperCase().replace(/[-\s]/g, '');
-      let searchType: 'high_court' | 'district_court' | 'supreme_court' | 'gujarat_high_court' = 'district_court';
-      
-      if (cnr.startsWith('SCIN')) {
-        searchType = 'supreme_court';
-      } else if (cnr.startsWith('GJHC')) {
-        searchType = 'gujarat_high_court';
-      } else if (cnr.length >= 4 && cnr.substring(2, 4) === 'HC') {
-        searchType = 'high_court';
-      } else {
-        searchType = 'district_court';
-      }
-
-      // Override with stored court_type if it exists
-      if (caseData.court_type) {
-        const courtTypeStr = caseData.court_type.toLowerCase();
-        if (courtTypeStr.includes('supreme')) {
-          searchType = 'supreme_court';
-        } else if (courtTypeStr.includes('gujarat')) {
-          searchType = 'gujarat_high_court';
-        } else if (courtTypeStr.includes('district')) {
-          searchType = 'district_court';
-        } else if (courtTypeStr.includes('high') && searchType !== 'gujarat_high_court') {
-          searchType = 'high_court';
-        }
-      }
-
-      // Final hard guard to prevent accidental fallback to generic high court routing
-      if (cnr.startsWith('GJHC')) {
-        searchType = 'gujarat_high_court';
-      }
+      const searchType = resolveLegalkartSearchType({
+        cnr: caseData.cnr_number,
+        courtType: caseData.court_type,
+        fallback: 'district_court',
+      });
 
       console.log('Invoking legalkart-api with:', {
         action: 'search',

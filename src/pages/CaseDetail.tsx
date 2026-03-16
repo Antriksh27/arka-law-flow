@@ -21,6 +21,7 @@ import { HearingsTable } from '@/components/cases/enhanced/HearingsTable';
 import { ObjectionsTable } from '@/components/cases/enhanced/ObjectionsTable';
 import { LawyersTab } from '@/components/cases/detail/tabs/LawyersTab';
 import { SCCaseDetailView } from '@/components/cases/supreme-court/SCCaseDetailView';
+import { resolveLegalkartSearchType } from '@/lib/legalkartSearchType';
 
 const CaseDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -209,7 +210,7 @@ const CaseDetail = () => {
       // First, try to upsert from existing fetched_data
       const { data: caseInfo } = await supabase
         .from('cases')
-        .select('fetched_data, cnr_number, firm_id')
+        .select('fetched_data, cnr_number, firm_id, court_type')
         .eq('id', id!)
         .single();
 
@@ -252,11 +253,17 @@ const CaseDetail = () => {
 
       if (!teamMember) throw new Error('Firm not found');
 
+      const searchType = resolveLegalkartSearchType({
+        cnr: caseInfo.cnr_number,
+        courtType: caseInfo.court_type,
+        fallback: 'district_court',
+      });
+
       const { data, error } = await supabase.functions.invoke('legalkart-api', {
         body: {
           action: 'search',
           cnr: caseInfo.cnr_number,
-          searchType: 'high_court',
+          searchType,
           caseId: id,
           firmId: teamMember.firm_id
         }

@@ -80,8 +80,9 @@ interface LegalkartCaseSearchRequest {
 
 // Helper function to detect Gujarat High Court CNR pattern
 function isGujaratHighCourtCNR(cnr: string): boolean {
-  // Normalize first so formats like "gjhc-..." still resolve correctly
-  return normalizeCnr(cnr).startsWith('GJHC');
+  // Normalize first so formats like "CNR:GJHC..." and "gjhc-..." still resolve correctly
+  const normalized = normalizeCnr(cnr);
+  return normalized.startsWith('GJHC') || normalized.includes('GJHC');
 }
 
 // Helper function to extract case info from Gujarat HC CNR
@@ -873,7 +874,8 @@ serve(async (req) => {
       const normalizedCnr = validatedData.cnr ? normalizeCnr(validatedData.cnr) : '';
       
       // Hard guard: any GJHC CNR in CNR mode must route through Gujarat HC search type
-      const resolvedSearchType = (!isRegistrationMode && normalizedCnr && isGujaratHighCourtCNR(normalizedCnr))
+      const isCnrMode = !validatedData.caseMode || validatedData.caseMode === 'CNR Number';
+      const resolvedSearchType = (isCnrMode && normalizedCnr && isGujaratHighCourtCNR(normalizedCnr))
         ? 'gujarat_high_court'
         : validatedData.searchType;
       
@@ -969,7 +971,7 @@ serve(async (req) => {
       
       // Update case with fetched data if successful and a case_id is available
       if (searchResult.success && effectiveCaseId && searchResult.data) {
-        const mappedData = mapLegalkartDataToCRM(searchResult.data, validatedData.searchType);
+        const mappedData = mapLegalkartDataToCRM(searchResult.data, resolvedSearchType);
         
         // Log the mapped data fields for debugging
         console.log('📊 Mapped Data Summary:');
@@ -1005,7 +1007,7 @@ serve(async (req) => {
           last_fetched_at: new Date().toISOString(),
           fetched_data: searchResult.data,
           fetch_status: 'success',
-          fetch_message: `Successfully fetched from ${searchType} on ${new Date().toISOString()}`,
+          fetch_message: `Successfully fetched from ${resolvedSearchType} on ${new Date().toISOString()}`,
           is_auto_fetched: true,
         };
         
