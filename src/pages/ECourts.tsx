@@ -28,11 +28,13 @@ export const ECourts = () => {
   const { data: legalkartCases, refetch } = useQuery({
     queryKey: ['legalkart-case-searches', firmId],
     queryFn: async () => {
+      console.log('[ECourts History] Fetching with firmId:', firmId);
       const { data, error } = await supabase
         .from('legalkart_case_searches')
         .select(`*, cases (id, case_title, case_number, court_name)`)
         .eq('firm_id', firmId as string)
         .order('created_at', { ascending: false });
+      console.log('[ECourts History] Result:', { count: data?.length, error, firstItem: data?.[0] });
       if (error) throw error;
       return data || [];
     },
