@@ -971,7 +971,7 @@ serve(async (req) => {
       
       // Update case with fetched data if successful and a case_id is available
       if (searchResult.success && effectiveCaseId && searchResult.data) {
-        const mappedData = mapLegalkartDataToCRM(searchResult.data, validatedData.searchType);
+        const mappedData = mapLegalkartDataToCRM(searchResult.data, resolvedSearchType);
         
         // Log the mapped data fields for debugging
         console.log('📊 Mapped Data Summary:');
