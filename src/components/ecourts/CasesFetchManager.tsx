@@ -39,6 +39,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
 import TimeUtils from "@/lib/timeUtils";
 import { useNavigate } from "react-router-dom";
+import { resolveLegalkartSearchType } from "@/lib/legalkartSearchType";
 
 interface Case {
   id: string;
