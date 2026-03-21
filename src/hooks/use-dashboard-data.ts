@@ -59,7 +59,13 @@ const fetchDashboardData = async (firmId: string, userId: string, role: string) 
     supabase.from('cases').select('id').eq('firm_id', firmId),
     supabase.from('invoices').select('status, total_amount').eq('firm_id', firmId),
     supabase.from('documents').select('file_name, file_type, uploaded_at, id').eq('firm_id', firmId).order('uploaded_at', { ascending: false }).limit(2),
-    supabase.from('appointments').select('id, appointment_date, appointment_time, status, title, clients(full_name)').eq('firm_id', firmId).eq('appointment_date', format(today, 'yyyy-MM-dd')).order('appointment_time', { ascending: true }).limit(50),
+    (() => {
+      let query = supabase.from('appointments').select('id, appointment_date, appointment_time, status, title, lawyer_id, clients(full_name)').eq('firm_id', firmId).eq('appointment_date', format(today, 'yyyy-MM-dd')).neq('status', 'cancelled').order('appointment_time', { ascending: true }).limit(50);
+      if (role !== 'admin') {
+        query = query.eq('lawyer_id', userId);
+      }
+      return query;
+    })(),
     supabase.from('case_hearings').select('id, hearing_date, hearing_time, judge, cases!inner(case_title, firm_id)').eq('cases.firm_id', firmId).gte('hearing_date', format(startOfToday, 'yyyy-MM-dd')).lte('hearing_date', format(endOfToday, 'yyyy-MM-dd')).order('hearing_date', { ascending: true }).limit(50),
     supabase.from('clients').select('id, full_name, email, phone, status, created_at').eq('firm_id', firmId).order('created_at', { ascending: false }).limit(5),
     supabase.from('contacts').select('id, name, phone, last_visited_at').eq('firm_id', firmId).order('last_visited_at', { ascending: false, nullsFirst: false }).limit(5),
