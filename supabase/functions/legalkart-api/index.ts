@@ -1767,7 +1767,7 @@ async function getGujaratDisplayBoard(token: string) {
     console.log('Token prefix:', token.substring(0, 30) + '...');
 
     const response = await fetchWithTimeout(
-      'https://apiservices.legalkart.com/api/v1/application-service/case-search/case-search/display-board/gujarat/',
+      'https://apiservices.legalkart.com/api/v1/application-service/case-search/display-board/gujarat',
       {
         method: 'GET',
         headers: {
