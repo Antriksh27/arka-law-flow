@@ -288,6 +288,27 @@ export function GenerateEngagementLetterDialog({
     }
   };
 
+  const handleDownloadDocx = async () => {
+    if (!clientData || !selectedLawyer || !firmData) return;
+    try {
+      await downloadEngagementLetterDocx({
+        date: new Date(),
+        clientName: clientData.full_name,
+        clientAddress: clientData.address || '',
+        matterDescription,
+        lawyerName: selectedLawyer.full_name,
+        lawyerPhone: lawyerData?.phone || '',
+        lawyerEmail: selectedLawyer.email,
+        firmName: firmData.name,
+        firmAddress: firmData.address || '',
+      });
+      toast({ title: 'DOCX Downloaded', description: 'The engagement letter has been saved as a Word document.' });
+    } catch (error) {
+      console.error('DOCX generation error:', error);
+      toast({ title: 'Error', description: 'Failed to generate DOCX.', variant: 'destructive' });
+    }
+  };
+
   const goBack = () => {
     setStep('form');
     setCaseSearch('');
