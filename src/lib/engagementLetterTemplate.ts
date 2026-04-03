@@ -221,22 +221,40 @@ export function generateEngagementLetter(data: EngagementLetterData): string {
         </div>
 
         <div class="section-title">2. Fees and Billing</div>
-        <ul>
-          <li>
-            The fee structure module that our law firm adopts varied fee structure to suit the need of every client and the same is subjective. The same is over and above our terms and conditions shall be as under:
-            <ol>
-              <li>50% Advance</li>
-              <li>25% upon filing of the matter</li>
-              <li>25% on first hearing.</li>
-            </ol>
-          </li>
-          <li>
-            Irrespective of this fees structure, that may be adopted out of the aforestated options, the client shall be bound by the aforesaid payment structure that shall pe adopted qua the professional fees and the said terms and conditions qua the payment structure is to be agreed upon by the client unconditionally.
-          </li>
-          <li>
-            In addition to the aforesaid professional fees, the actual expenses that shall be charged on actual basis over and above professional fees shall be payable by the client immediately on raising the invoice quarterly.
-          </li>
-        </ul>
+        <div class="custom-list">
+          <div class="custom-list-item">
+            <div class="custom-list-marker">•</div>
+            <div class="custom-list-content">
+              The fee structure module that our law firm adopts varied fee structure to suit the need of every client and the same is subjective. The same is over and above our terms and conditions shall be as under:
+              <div class="custom-list custom-list-nested">
+                <div class="custom-list-item">
+                  <div class="custom-number-marker">1.</div>
+                  <div class="custom-list-content">50% Advance</div>
+                </div>
+                <div class="custom-list-item">
+                  <div class="custom-number-marker">2.</div>
+                  <div class="custom-list-content">25% upon filing of the matter</div>
+                </div>
+                <div class="custom-list-item">
+                  <div class="custom-number-marker">3.</div>
+                  <div class="custom-list-content">25% on first hearing.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="custom-list-item">
+            <div class="custom-list-marker">•</div>
+            <div class="custom-list-content">
+              Irrespective of this fees structure, that may be adopted out of the aforestated options, the client shall be bound by the aforesaid payment structure that shall pe adopted qua the professional fees and the said terms and conditions qua the payment structure is to be agreed upon by the client unconditionally.
+            </div>
+          </div>
+          <div class="custom-list-item">
+            <div class="custom-list-marker">•</div>
+            <div class="custom-list-content">
+              In addition to the aforesaid professional fees, the actual expenses that shall be charged on actual basis over and above professional fees shall be payable by the client immediately on raising the invoice quarterly.
+            </div>
+          </div>
+        </div>
 
         <div class="section-title">3. Client Responsibilities</div>
         <p>To effectively represent you, we require your full cooperation. You agree to:</p>
