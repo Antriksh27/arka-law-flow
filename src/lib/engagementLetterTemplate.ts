@@ -258,12 +258,12 @@ export function generateEngagementLetter(data: EngagementLetterData): string {
 
         <div class="section-title">3. Client Responsibilities</div>
         <p>To effectively represent you, we require your full cooperation. You agree to:</p>
-        <ul>
-          <li>Provide all necessary information and documentation promptly.</li>
-          <li>Communicate with us openly and honestly.</li>
-          <li>Attend any required meetings, court appearances, or depositions.</li>
-          <li>Make timely payments for our services as outlined above.</li>
-        </ul>
+        <div class="custom-list">
+          <div class="custom-list-item"><div class="custom-list-marker">•</div><div class="custom-list-content">Provide all necessary information and documentation promptly.</div></div>
+          <div class="custom-list-item"><div class="custom-list-marker">•</div><div class="custom-list-content">Communicate with us openly and honestly.</div></div>
+          <div class="custom-list-item"><div class="custom-list-marker">•</div><div class="custom-list-content">Attend any required meetings, court appearances, or depositions.</div></div>
+          <div class="custom-list-item"><div class="custom-list-marker">•</div><div class="custom-list-content">Make timely payments for our services as outlined above.</div></div>
+        </div>
         <p>Failure to meet these responsibilities may result in delays or termination of our representation.</p>
 
         <div class="section-title">4. Termination</div>
