@@ -90,11 +90,13 @@ export function generateEngagementLetter(data: EngagementLetterData): string {
         }
         .content p {
           margin-bottom: 15px;
+          page-break-inside: avoid;
         }
         .section-title {
           font-weight: bold;
           margin-top: 20px;
           margin-bottom: 10px;
+          page-break-after: avoid;
         }
         .content ul {
           list-style-type: disc;
