@@ -109,8 +109,10 @@ export function generateEngagementLetter(data: EngagementLetterData): string {
         }
         .content li {
           margin-bottom: 10px;
+          page-break-inside: avoid;
         }
         .signature {
+          page-break-inside: avoid;
           margin-top: 40px;
         }
         .signature-line {
