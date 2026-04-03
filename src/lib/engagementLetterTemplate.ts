@@ -99,19 +99,33 @@ export function generateEngagementLetter(data: EngagementLetterData): string {
           page-break-after: avoid;
         }
         .content ul {
-          list-style-type: disc;
-          margin-left: 0;
-          padding-left: 40px;
-          margin-bottom: 15px;
+          list-style: none;
+          margin: 0 0 15px 0;
+          padding-left: 0;
+        }
+        .content ul > li {
+          position: relative;
+          margin-bottom: 10px;
+          padding-left: 22px;
+          page-break-inside: avoid;
+        }
+        .content ul > li::before {
+          content: '•';
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 16px;
+          text-align: center;
+          font-weight: bold;
         }
         .content ol {
-          margin-left: 0;
-          padding-left: 40px;
-          margin-bottom: 15px;
+          margin: 10px 0 15px 0;
+          padding-left: 28px;
+          list-style-position: outside;
         }
-        .content li {
+        .content ol > li {
           margin-bottom: 10px;
-          padding-left: 5px;
+          padding-left: 4px;
           page-break-inside: avoid;
         }
         .signature {
