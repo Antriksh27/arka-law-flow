@@ -176,31 +176,49 @@ export function generateEngagementLetter(data: EngagementLetterData): string {
 
         <div class="section-title">1. Scope of Work</div>
         <p>The Firm will provide the following legal services:</p>
-        <ul>
-          <li>
-            <strong>Legal Consultation and advice:</strong><br>
-            Offering guidance to clients on their legal rights, responsibilities and options in various situations.
-          </li>
-          <li>
-            <strong>Documentation preparation and review:</strong><br>
-            Drafting, reviewing and negotiating various legal documents, including contracts, wills leases, agreements and corporate documents like articles of association or incorporation etc.
-          </li>
-          <li>
-            <strong>Clients' representation:</strong><br>
-            Acting on behalf of the clients in legal proceedings which includes negotiations, mediation, arbitration and court appearances for litigations.
-          </li>
-          <li>
-            <strong>Legal Research and Analysis:</strong><br>
-            Conducting in depth research in to relevant laws, regulations and case precedents to support clients matters and develops sound legal strategies.
-          </li>
-          <li>
-            <strong>Alternative Dispute Resolution (ADR):</strong><br>
-            Assisting clients in resolving disputes outside the Courts through the methods like mediation and arbitration.
-          </li>
-          <li>
-            Any additional services that may be ancillary to the aforestated services, which shall be necessary to resolve the case of the clients. The Law firm also shall provide any other separate additional services that may be required by the clients, however, the same shall be subject to a separate written agreement based on separately agreed terms and conditions for the said scop.
-          </li>
-        </ul>
+        <div class="custom-list">
+          <div class="custom-list-item">
+            <div class="custom-list-marker">•</div>
+            <div class="custom-list-content">
+              <strong>Legal Consultation and advice:</strong><br>
+              Offering guidance to clients on their legal rights, responsibilities and options in various situations.
+            </div>
+          </div>
+          <div class="custom-list-item">
+            <div class="custom-list-marker">•</div>
+            <div class="custom-list-content">
+              <strong>Documentation preparation and review:</strong><br>
+              Drafting, reviewing and negotiating various legal documents, including contracts, wills leases, agreements and corporate documents like articles of association or incorporation etc.
+            </div>
+          </div>
+          <div class="custom-list-item">
+            <div class="custom-list-marker">•</div>
+            <div class="custom-list-content">
+              <strong>Clients' representation:</strong><br>
+              Acting on behalf of the clients in legal proceedings which includes negotiations, mediation, arbitration and court appearances for litigations.
+            </div>
+          </div>
+          <div class="custom-list-item">
+            <div class="custom-list-marker">•</div>
+            <div class="custom-list-content">
+              <strong>Legal Research and Analysis:</strong><br>
+              Conducting in depth research in to relevant laws, regulations and case precedents to support clients matters and develops sound legal strategies.
+            </div>
+          </div>
+          <div class="custom-list-item">
+            <div class="custom-list-marker">•</div>
+            <div class="custom-list-content">
+              <strong>Alternative Dispute Resolution (ADR):</strong><br>
+              Assisting clients in resolving disputes outside the Courts through the methods like mediation and arbitration.
+            </div>
+          </div>
+          <div class="custom-list-item">
+            <div class="custom-list-marker">•</div>
+            <div class="custom-list-content">
+              Any additional services that may be ancillary to the aforestated services, which shall be necessary to resolve the case of the clients. The Law firm also shall provide any other separate additional services that may be required by the clients, however, the same shall be subject to a separate written agreement based on separately agreed terms and conditions for the said scop.
+            </div>
+          </div>
+        </div>
 
         <div class="section-title">2. Fees and Billing</div>
         <ul>
