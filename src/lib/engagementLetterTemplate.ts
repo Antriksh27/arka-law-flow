@@ -124,6 +124,7 @@ export function generateEngagementLetter(data: EngagementLetterData): string {
           margin-top: 60px;
           border-top: 2px solid #000;
           padding-top: 20px;
+          page-break-inside: avoid;
         }
       </style>
     </head>
