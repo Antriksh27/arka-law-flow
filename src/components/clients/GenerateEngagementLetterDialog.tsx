@@ -816,6 +816,14 @@ export function GenerateEngagementLetterDialog({
                 <>
                   <Button 
                     variant="outline" 
+                    onClick={handleDownloadDocx}
+                    className="border-[#E5E7EB]"
+                  >
+                    <FileDown className="w-4 h-4 mr-2" />
+                    DOCX
+                  </Button>
+                  <Button 
+                    variant="outline" 
                     onClick={handleDownloadPDF}
                     disabled={generatingPDF}
                     className="border-[#E5E7EB]"
@@ -825,7 +833,7 @@ export function GenerateEngagementLetterDialog({
                     ) : (
                       <Download className="w-4 h-4 mr-2" />
                     )}
-                    Download PDF
+                    PDF
                   </Button>
                   <Button 
                     onClick={handleSendEmail}
