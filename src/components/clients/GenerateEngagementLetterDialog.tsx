@@ -664,71 +664,100 @@ export function GenerateEngagementLetterDialog({
     return (
       <>
         <Dialog open={open} onOpenChange={onClose}>
-          <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
-            <DialogHeader className="flex-shrink-0">
-              <DialogTitle>Generate Engagement Letter</DialogTitle>
-            </DialogHeader>
+          <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col p-0 gap-0 rounded-2xl overflow-hidden border border-[#E5E7EB]">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-5 border-b border-[#E5E7EB] bg-[#F9FAFB]">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <FileSignature className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-[#1F2937]">Generate Engagement Letter</h2>
+                  <p className="text-sm text-[#6B7280]">
+                    {step === 'form' ? 'Fill in the details below' : 'Review and download your letter'}
+                  </p>
+                </div>
+              </div>
+              {step === 'preview' && (
+                <Button variant="outline" size="sm" onClick={() => setStep('form')} className="border-[#E5E7EB]">
+                  <ArrowLeft className="w-4 h-4 mr-1.5" />
+                  Back
+                </Button>
+              )}
+            </div>
 
-            <div className="flex-1 overflow-y-auto">
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto px-6 py-5">
               {step === 'form' && (
-                <div className="space-y-6 py-4">
-                  <div className="space-y-2">
-                    <Label>Client Name</Label>
-                    <div className="p-3 rounded-md text-sm bg-slate-50">
-                      {clientData?.full_name || clientName}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Client Address</Label>
-                    <div className="p-3 rounded-md text-sm whitespace-pre-line bg-slate-50">
-                      {clientData?.address || 'Not provided'}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="case-select">Select Case *</Label>
-                    <CaseSelector
-                      value={selectedCaseId}
-                      onValueChange={setSelectedCaseId}
-                      placeholder="Select a case..."
-                      clientId={clientId}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="lawyer-select">Select Lawyer *</Label>
-                    {loadingLawyers ? (
-                      <div className="flex items-center justify-center p-4">
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                <div className="space-y-5">
+                  {/* Client Info Card */}
+                  <div className="rounded-xl border border-[#E5E7EB] bg-white p-4 space-y-3">
+                    <h3 className="text-sm font-medium text-[#6B7280] uppercase tracking-wide">Client Information</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs text-[#6B7280]">Client Name</Label>
+                        <div className="p-2.5 rounded-lg text-sm bg-[#F9FAFB] border border-[#E5E7EB] text-[#1F2937] font-medium">
+                          {clientData?.full_name || clientName}
+                        </div>
                       </div>
-                    ) : (
-                      <Select value={selectedLawyerId} onValueChange={setSelectedLawyerId}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a lawyer..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {lawyers?.map(lawyer => (
-                            <SelectItem key={lawyer.user_id} value={lawyer.user_id}>
-                              {lawyer.full_name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
+                      <div className="space-y-1.5">
+                        <Label className="text-xs text-[#6B7280]">Client Address</Label>
+                        <div className="p-2.5 rounded-lg text-sm whitespace-pre-line bg-[#F9FAFB] border border-[#E5E7EB] text-[#1F2937]">
+                          {clientData?.address || 'Not provided'}
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="matter-description">Matter Description *</Label>
+                  {/* Case & Lawyer Card */}
+                  <div className="rounded-xl border border-[#E5E7EB] bg-white p-4 space-y-4">
+                    <h3 className="text-sm font-medium text-[#6B7280] uppercase tracking-wide">Case & Lawyer</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs text-[#6B7280]">Select Case <span className="text-red-400">*</span></Label>
+                        <CaseSelector
+                          value={selectedCaseId}
+                          onValueChange={setSelectedCaseId}
+                          placeholder="Select a case..."
+                          clientId={clientId}
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs text-[#6B7280]">Select Lawyer <span className="text-red-400">*</span></Label>
+                        {loadingLawyers ? (
+                          <div className="flex items-center justify-center p-4">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          </div>
+                        ) : (
+                          <Select value={selectedLawyerId} onValueChange={setSelectedLawyerId}>
+                            <SelectTrigger className="border-[#E5E7EB]">
+                              <SelectValue placeholder="Select a lawyer..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {lawyers?.map(lawyer => (
+                                <SelectItem key={lawyer.user_id} value={lawyer.user_id}>
+                                  {lawyer.full_name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Matter Description Card */}
+                  <div className="rounded-xl border border-[#E5E7EB] bg-white p-4 space-y-3">
+                    <h3 className="text-sm font-medium text-[#6B7280] uppercase tracking-wide">Matter Description <span className="text-red-400">*</span></h3>
                     <Textarea
                       id="matter-description"
                       value={matterDescription}
                       onChange={e => setMatterDescription(e.target.value)}
                       placeholder="Describe the legal matter..."
-                      rows={6}
-                      className="resize-none"
+                      rows={5}
+                      className="resize-none border-[#E5E7EB]"
                     />
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-[#6B7280]">
                       This will appear in the engagement letter as the scope of work.
                     </p>
                   </div>
@@ -736,13 +765,13 @@ export function GenerateEngagementLetterDialog({
               )}
 
               {step === 'preview' && (
-                <div className="space-y-4 py-4">
+                <div>
                   {!generatedHTML ? (
-                    <div className="flex items-center justify-center h-[500px] w-full border rounded-md">
-                      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                    <div className="flex items-center justify-center h-[500px] w-full border border-[#E5E7EB] rounded-xl bg-white">
+                      <Loader2 className="h-8 w-8 animate-spin text-[#6B7280]" />
                     </div>
                   ) : (
-                    <ScrollArea className="h-[500px] w-full border rounded-md bg-white">
+                    <ScrollArea className="h-[500px] w-full border border-[#E5E7EB] rounded-xl bg-white">
                       <div 
                         className="p-6" 
                         dangerouslySetInnerHTML={{ __html: generatedHTML }}
@@ -753,50 +782,43 @@ export function GenerateEngagementLetterDialog({
               )}
             </div>
 
-            <DialogFooter className="flex-shrink-0 flex justify-between items-center sm:justify-between gap-2">
-              <div>
-                {step === 'preview' && (
-                  <Button variant="outline" onClick={() => setStep('form')}>
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    Back
+            {/* Footer */}
+            <div className="flex justify-end items-center gap-2 px-6 py-4 border-t border-[#E5E7EB] bg-[#F9FAFB]">
+              {step === 'form' ? (
+                <Button onClick={handleGeneratePreview} className="bg-primary hover:bg-primary/90">
+                  Generate Preview
+                  <FileSignature className="w-4 h-4 ml-2" />
+                </Button>
+              ) : (
+                <>
+                  <Button 
+                    variant="outline" 
+                    onClick={handleDownloadPDF}
+                    disabled={generatingPDF}
+                    className="border-[#E5E7EB]"
+                  >
+                    {generatingPDF ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Download className="w-4 h-4 mr-2" />
+                    )}
+                    Download PDF
                   </Button>
-                )}
-              </div>
-              <div className="flex gap-2">
-                {step === 'form' ? (
-                  <Button onClick={handleGeneratePreview}>
-                    Generate Preview
-                    <FileSignature className="w-4 h-4 ml-2" />
+                  <Button 
+                    onClick={handleSendEmail}
+                    disabled={generatingPDF}
+                    className="bg-primary hover:bg-primary/90"
+                  >
+                    {generatingPDF ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Mail className="w-4 h-4 mr-2" />
+                    )}
+                    Send Email
                   </Button>
-                ) : (
-                  <>
-                    <Button 
-                      variant="outline" 
-                      onClick={handleDownloadPDF}
-                      disabled={generatingPDF}
-                    >
-                      {generatingPDF ? (
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      ) : (
-                        <Download className="w-4 h-4 mr-2" />
-                      )}
-                      Download PDF
-                    </Button>
-                    <Button 
-                      onClick={handleSendEmail}
-                      disabled={generatingPDF}
-                    >
-                      {generatingPDF ? (
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      ) : (
-                        <Mail className="w-4 h-4 mr-2" />
-                      )}
-                      Send Email
-                    </Button>
-                  </>
-                )}
-              </div>
-            </DialogFooter>
+                </>
+              )}
+            </div>
           </DialogContent>
         </Dialog>
 
