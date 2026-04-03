@@ -267,17 +267,26 @@ export function generateEngagementLetter(data: EngagementLetterData): string {
         <p>Failure to meet these responsibilities may result in delays or termination of our representation.</p>
 
         <div class="section-title">4. Termination</div>
-        <ul>
-          <li>
-            You may terminate our services at any time by providing 7 days advance written notice. In the event of termination by you, the firm shall not be responsible and liable for refund of any of the payments made to the firm as against either professional fees or against the expenses. The firm also shall be entitled to withdraw from the representation towards the clients under certain circumstances, such non-payment of fees, a breakdown in communication or any other reasons listed under the Advocate's Act or Bar Council of India or Professional Conduct Rules.
-          </li>
-          <li>
-            In the event of termination, we will provide reasonable notice and ensure that you have the opportunity to secure alternative representation.
-          </li>
-          <li>
-            Upon termination, any unpaid fees or costs will be due immediately. We will return all original documents to you, and you may request copies of your case file for your records.
-          </li>
-        </ul>
+        <div class="custom-list">
+          <div class="custom-list-item">
+            <div class="custom-list-marker">•</div>
+            <div class="custom-list-content">
+              You may terminate our services at any time by providing 7 days advance written notice. In the event of termination by you, the firm shall not be responsible and liable for refund of any of the payments made to the firm as against either professional fees or against the expenses. The firm also shall be entitled to withdraw from the representation towards the clients under certain circumstances, such non-payment of fees, a breakdown in communication or any other reasons listed under the Advocate's Act or Bar Council of India or Professional Conduct Rules.
+            </div>
+          </div>
+          <div class="custom-list-item">
+            <div class="custom-list-marker">•</div>
+            <div class="custom-list-content">
+              In the event of termination, we will provide reasonable notice and ensure that you have the opportunity to secure alternative representation.
+            </div>
+          </div>
+          <div class="custom-list-item">
+            <div class="custom-list-marker">•</div>
+            <div class="custom-list-content">
+              Upon termination, any unpaid fees or costs will be due immediately. We will return all original documents to you, and you may request copies of your case file for your records.
+            </div>
+          </div>
+        </div>
 
         <div class="section-title">5. Conclusion</div>
         <p>
