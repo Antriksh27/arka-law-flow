@@ -98,38 +98,38 @@ export function generateEngagementLetter(data: EngagementLetterData): string {
           margin-bottom: 10px;
           page-break-after: avoid;
         }
-        .content ul {
-          list-style: none;
+        .custom-list {
           margin: 0 0 15px 0;
-          padding-left: 0;
         }
-        .content ul > li {
-          position: relative;
+        .custom-list-item {
+          display: flex;
+          align-items: flex-start;
+          gap: 10px;
           margin-bottom: 10px;
-          padding-left: 22px;
           page-break-inside: avoid;
         }
-        .content ul > li::before {
-          content: '•';
-          position: absolute;
-          left: 0;
-          top: 0;
+        .custom-list-marker {
           width: 16px;
+          flex: 0 0 16px;
           text-align: center;
+          line-height: 1.6;
           font-weight: bold;
         }
-        .content ol {
-          margin: 10px 0 15px 0;
-          padding-left: 28px;
-          list-style-position: outside;
+        .custom-number-marker {
+          width: 24px;
+          flex: 0 0 24px;
+          text-align: right;
+          line-height: 1.6;
+          font-weight: bold;
         }
-        .content ol > li {
-          margin-bottom: 10px;
-          padding-left: 4px;
-          page-break-inside: avoid;
+        .custom-list-content {
+          flex: 1;
+          min-width: 0;
+        }
+        .custom-list-nested {
+          margin-top: 8px;
         }
         .signature {
-          page-break-inside: avoid;
           margin-top: 40px;
         }
         .signature-line {
