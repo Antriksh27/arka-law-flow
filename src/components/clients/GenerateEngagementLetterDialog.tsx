@@ -26,6 +26,7 @@ import {
 import html2pdf from 'html2pdf.js';
 import { SendEmailDialog } from './SendEmailDialog';
 import { generateEngagementLetter } from '@/lib/engagementLetterTemplate';
+import { downloadEngagementLetterDocx } from '@/lib/engagementLetterDocx';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
