@@ -90,11 +90,13 @@ export function generateEngagementLetter(data: EngagementLetterData): string {
         }
         .content p {
           margin-bottom: 15px;
+          page-break-inside: avoid;
         }
         .section-title {
           font-weight: bold;
           margin-top: 20px;
           margin-bottom: 10px;
+          page-break-after: avoid;
         }
         .content ul {
           list-style-type: disc;
@@ -107,8 +109,10 @@ export function generateEngagementLetter(data: EngagementLetterData): string {
         }
         .content li {
           margin-bottom: 10px;
+          page-break-inside: avoid;
         }
         .signature {
+          page-break-inside: avoid;
           margin-top: 40px;
         }
         .signature-line {
@@ -120,6 +124,7 @@ export function generateEngagementLetter(data: EngagementLetterData): string {
           margin-top: 60px;
           border-top: 2px solid #000;
           padding-top: 20px;
+          page-break-inside: avoid;
         }
       </style>
     </head>

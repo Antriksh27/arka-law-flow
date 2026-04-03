@@ -21,11 +21,13 @@ import {
   Search,
   FileSignature,
   Building,
-  MapPin
+  MapPin,
+  FileDown
 } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
 import { SendEmailDialog } from './SendEmailDialog';
 import { generateEngagementLetter } from '@/lib/engagementLetterTemplate';
+import { downloadEngagementLetterDocx } from '@/lib/engagementLetterDocx';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -283,6 +285,27 @@ export function GenerateEngagementLetterDialog({
       }
     } else {
       setShowEmailDialog(true);
+    }
+  };
+
+  const handleDownloadDocx = async () => {
+    if (!clientData || !selectedLawyer || !firmData) return;
+    try {
+      await downloadEngagementLetterDocx({
+        date: new Date(),
+        clientName: clientData.full_name,
+        clientAddress: clientData.address || '',
+        matterDescription,
+        lawyerName: selectedLawyer.full_name,
+        lawyerPhone: lawyerData?.phone || '',
+        lawyerEmail: selectedLawyer.email,
+        firmName: firmData.name,
+        firmAddress: firmData.address || '',
+      });
+      toast({ title: 'DOCX Downloaded', description: 'The engagement letter has been saved as a Word document.' });
+    } catch (error) {
+      console.error('DOCX generation error:', error);
+      toast({ title: 'Error', description: 'Failed to generate DOCX.', variant: 'destructive' });
     }
   };
 
@@ -628,29 +651,37 @@ export function GenerateEngagementLetterDialog({
 
       {/* Fixed Bottom Actions */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-slate-50 safe-area-pb space-y-2">
-        <div className="flex gap-3">
+        <div className="flex gap-2">
+          <Button 
+            variant="outline"
+            onClick={handleDownloadDocx}
+            className="flex-1 h-12 rounded-full text-sm font-semibold bg-card border-border"
+          >
+            <FileDown className="w-4 h-4 mr-1.5" />
+            DOCX
+          </Button>
           <Button 
             variant="outline"
             onClick={handleDownloadPDF}
             disabled={generatingPDF}
-            className="flex-1 h-14 rounded-full text-base font-semibold bg-card border-border"
+            className="flex-1 h-12 rounded-full text-sm font-semibold bg-card border-border"
           >
             {generatingPDF ? (
-              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+              <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
             ) : (
-              <Download className="w-5 h-5 mr-2" />
+              <Download className="w-4 h-4 mr-1.5" />
             )}
-            Download
+            PDF
           </Button>
           <Button 
             onClick={handleSendEmail}
             disabled={generatingPDF || !clientEmail}
-            className="flex-1 h-14 rounded-full text-base font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl"
+            className="flex-1 h-12 rounded-full text-sm font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl"
           >
             {generatingPDF ? (
-              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+              <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
             ) : (
-              <Mail className="w-5 h-5 mr-2" />
+              <Mail className="w-4 h-4 mr-1.5" />
             )}
             Email
           </Button>
@@ -793,6 +824,14 @@ export function GenerateEngagementLetterDialog({
                 <>
                   <Button 
                     variant="outline" 
+                    onClick={handleDownloadDocx}
+                    className="border-[#E5E7EB]"
+                  >
+                    <FileDown className="w-4 h-4 mr-2" />
+                    DOCX
+                  </Button>
+                  <Button 
+                    variant="outline" 
                     onClick={handleDownloadPDF}
                     disabled={generatingPDF}
                     className="border-[#E5E7EB]"
@@ -802,7 +841,7 @@ export function GenerateEngagementLetterDialog({
                     ) : (
                       <Download className="w-4 h-4 mr-2" />
                     )}
-                    Download PDF
+                    PDF
                   </Button>
                   <Button 
                     onClick={handleSendEmail}
