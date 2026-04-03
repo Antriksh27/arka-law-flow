@@ -100,15 +100,18 @@ export function generateEngagementLetter(data: EngagementLetterData): string {
         }
         .content ul {
           list-style-type: disc;
-          margin-left: 40px;
+          margin-left: 0;
+          padding-left: 40px;
           margin-bottom: 15px;
         }
         .content ol {
-          margin-left: 40px;
+          margin-left: 0;
+          padding-left: 40px;
           margin-bottom: 15px;
         }
         .content li {
           margin-bottom: 10px;
+          padding-left: 5px;
           page-break-inside: avoid;
         }
         .signature {
