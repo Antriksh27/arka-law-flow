@@ -98,38 +98,38 @@ export function generateEngagementLetter(data: EngagementLetterData): string {
           margin-bottom: 10px;
           page-break-after: avoid;
         }
-        .content ul {
-          list-style: none;
+        .custom-list {
           margin: 0 0 15px 0;
-          padding-left: 0;
         }
-        .content ul > li {
-          position: relative;
+        .custom-list-item {
+          display: flex;
+          align-items: flex-start;
+          gap: 10px;
           margin-bottom: 10px;
-          padding-left: 22px;
           page-break-inside: avoid;
         }
-        .content ul > li::before {
-          content: '•';
-          position: absolute;
-          left: 0;
-          top: 0;
+        .custom-list-marker {
           width: 16px;
+          flex: 0 0 16px;
           text-align: center;
+          line-height: 1.6;
           font-weight: bold;
         }
-        .content ol {
-          margin: 10px 0 15px 0;
-          padding-left: 28px;
-          list-style-position: outside;
+        .custom-number-marker {
+          width: 24px;
+          flex: 0 0 24px;
+          text-align: right;
+          line-height: 1.6;
+          font-weight: bold;
         }
-        .content ol > li {
-          margin-bottom: 10px;
-          padding-left: 4px;
-          page-break-inside: avoid;
+        .custom-list-content {
+          flex: 1;
+          min-width: 0;
+        }
+        .custom-list-nested {
+          margin-top: 8px;
         }
         .signature {
-          page-break-inside: avoid;
           margin-top: 40px;
         }
         .signature-line {
@@ -176,72 +176,117 @@ export function generateEngagementLetter(data: EngagementLetterData): string {
 
         <div class="section-title">1. Scope of Work</div>
         <p>The Firm will provide the following legal services:</p>
-        <ul>
-          <li>
-            <strong>Legal Consultation and advice:</strong><br>
-            Offering guidance to clients on their legal rights, responsibilities and options in various situations.
-          </li>
-          <li>
-            <strong>Documentation preparation and review:</strong><br>
-            Drafting, reviewing and negotiating various legal documents, including contracts, wills leases, agreements and corporate documents like articles of association or incorporation etc.
-          </li>
-          <li>
-            <strong>Clients' representation:</strong><br>
-            Acting on behalf of the clients in legal proceedings which includes negotiations, mediation, arbitration and court appearances for litigations.
-          </li>
-          <li>
-            <strong>Legal Research and Analysis:</strong><br>
-            Conducting in depth research in to relevant laws, regulations and case precedents to support clients matters and develops sound legal strategies.
-          </li>
-          <li>
-            <strong>Alternative Dispute Resolution (ADR):</strong><br>
-            Assisting clients in resolving disputes outside the Courts through the methods like mediation and arbitration.
-          </li>
-          <li>
-            Any additional services that may be ancillary to the aforestated services, which shall be necessary to resolve the case of the clients. The Law firm also shall provide any other separate additional services that may be required by the clients, however, the same shall be subject to a separate written agreement based on separately agreed terms and conditions for the said scop.
-          </li>
-        </ul>
+        <div class="custom-list">
+          <div class="custom-list-item">
+            <div class="custom-list-marker">•</div>
+            <div class="custom-list-content">
+              <strong>Legal Consultation and advice:</strong><br>
+              Offering guidance to clients on their legal rights, responsibilities and options in various situations.
+            </div>
+          </div>
+          <div class="custom-list-item">
+            <div class="custom-list-marker">•</div>
+            <div class="custom-list-content">
+              <strong>Documentation preparation and review:</strong><br>
+              Drafting, reviewing and negotiating various legal documents, including contracts, wills leases, agreements and corporate documents like articles of association or incorporation etc.
+            </div>
+          </div>
+          <div class="custom-list-item">
+            <div class="custom-list-marker">•</div>
+            <div class="custom-list-content">
+              <strong>Clients' representation:</strong><br>
+              Acting on behalf of the clients in legal proceedings which includes negotiations, mediation, arbitration and court appearances for litigations.
+            </div>
+          </div>
+          <div class="custom-list-item">
+            <div class="custom-list-marker">•</div>
+            <div class="custom-list-content">
+              <strong>Legal Research and Analysis:</strong><br>
+              Conducting in depth research in to relevant laws, regulations and case precedents to support clients matters and develops sound legal strategies.
+            </div>
+          </div>
+          <div class="custom-list-item">
+            <div class="custom-list-marker">•</div>
+            <div class="custom-list-content">
+              <strong>Alternative Dispute Resolution (ADR):</strong><br>
+              Assisting clients in resolving disputes outside the Courts through the methods like mediation and arbitration.
+            </div>
+          </div>
+          <div class="custom-list-item">
+            <div class="custom-list-marker">•</div>
+            <div class="custom-list-content">
+              Any additional services that may be ancillary to the aforestated services, which shall be necessary to resolve the case of the clients. The Law firm also shall provide any other separate additional services that may be required by the clients, however, the same shall be subject to a separate written agreement based on separately agreed terms and conditions for the said scop.
+            </div>
+          </div>
+        </div>
 
         <div class="section-title">2. Fees and Billing</div>
-        <ul>
-          <li>
-            The fee structure module that our law firm adopts varied fee structure to suit the need of every client and the same is subjective. The same is over and above our terms and conditions shall be as under:
-            <ol>
-              <li>50% Advance</li>
-              <li>25% upon filing of the matter</li>
-              <li>25% on first hearing.</li>
-            </ol>
-          </li>
-          <li>
-            Irrespective of this fees structure, that may be adopted out of the aforestated options, the client shall be bound by the aforesaid payment structure that shall pe adopted qua the professional fees and the said terms and conditions qua the payment structure is to be agreed upon by the client unconditionally.
-          </li>
-          <li>
-            In addition to the aforesaid professional fees, the actual expenses that shall be charged on actual basis over and above professional fees shall be payable by the client immediately on raising the invoice quarterly.
-          </li>
-        </ul>
+        <div class="custom-list">
+          <div class="custom-list-item">
+            <div class="custom-list-marker">•</div>
+            <div class="custom-list-content">
+              The fee structure module that our law firm adopts varied fee structure to suit the need of every client and the same is subjective. The same is over and above our terms and conditions shall be as under:
+              <div class="custom-list custom-list-nested">
+                <div class="custom-list-item">
+                  <div class="custom-number-marker">1.</div>
+                  <div class="custom-list-content">50% Advance</div>
+                </div>
+                <div class="custom-list-item">
+                  <div class="custom-number-marker">2.</div>
+                  <div class="custom-list-content">25% upon filing of the matter</div>
+                </div>
+                <div class="custom-list-item">
+                  <div class="custom-number-marker">3.</div>
+                  <div class="custom-list-content">25% on first hearing.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="custom-list-item">
+            <div class="custom-list-marker">•</div>
+            <div class="custom-list-content">
+              Irrespective of this fees structure, that may be adopted out of the aforestated options, the client shall be bound by the aforesaid payment structure that shall pe adopted qua the professional fees and the said terms and conditions qua the payment structure is to be agreed upon by the client unconditionally.
+            </div>
+          </div>
+          <div class="custom-list-item">
+            <div class="custom-list-marker">•</div>
+            <div class="custom-list-content">
+              In addition to the aforesaid professional fees, the actual expenses that shall be charged on actual basis over and above professional fees shall be payable by the client immediately on raising the invoice quarterly.
+            </div>
+          </div>
+        </div>
 
         <div class="section-title">3. Client Responsibilities</div>
         <p>To effectively represent you, we require your full cooperation. You agree to:</p>
-        <ul>
-          <li>Provide all necessary information and documentation promptly.</li>
-          <li>Communicate with us openly and honestly.</li>
-          <li>Attend any required meetings, court appearances, or depositions.</li>
-          <li>Make timely payments for our services as outlined above.</li>
-        </ul>
+        <div class="custom-list">
+          <div class="custom-list-item"><div class="custom-list-marker">•</div><div class="custom-list-content">Provide all necessary information and documentation promptly.</div></div>
+          <div class="custom-list-item"><div class="custom-list-marker">•</div><div class="custom-list-content">Communicate with us openly and honestly.</div></div>
+          <div class="custom-list-item"><div class="custom-list-marker">•</div><div class="custom-list-content">Attend any required meetings, court appearances, or depositions.</div></div>
+          <div class="custom-list-item"><div class="custom-list-marker">•</div><div class="custom-list-content">Make timely payments for our services as outlined above.</div></div>
+        </div>
         <p>Failure to meet these responsibilities may result in delays or termination of our representation.</p>
 
         <div class="section-title">4. Termination</div>
-        <ul>
-          <li>
-            You may terminate our services at any time by providing 7 days advance written notice. In the event of termination by you, the firm shall not be responsible and liable for refund of any of the payments made to the firm as against either professional fees or against the expenses. The firm also shall be entitled to withdraw from the representation towards the clients under certain circumstances, such non-payment of fees, a breakdown in communication or any other reasons listed under the Advocate's Act or Bar Council of India or Professional Conduct Rules.
-          </li>
-          <li>
-            In the event of termination, we will provide reasonable notice and ensure that you have the opportunity to secure alternative representation.
-          </li>
-          <li>
-            Upon termination, any unpaid fees or costs will be due immediately. We will return all original documents to you, and you may request copies of your case file for your records.
-          </li>
-        </ul>
+        <div class="custom-list">
+          <div class="custom-list-item">
+            <div class="custom-list-marker">•</div>
+            <div class="custom-list-content">
+              You may terminate our services at any time by providing 7 days advance written notice. In the event of termination by you, the firm shall not be responsible and liable for refund of any of the payments made to the firm as against either professional fees or against the expenses. The firm also shall be entitled to withdraw from the representation towards the clients under certain circumstances, such non-payment of fees, a breakdown in communication or any other reasons listed under the Advocate's Act or Bar Council of India or Professional Conduct Rules.
+            </div>
+          </div>
+          <div class="custom-list-item">
+            <div class="custom-list-marker">•</div>
+            <div class="custom-list-content">
+              In the event of termination, we will provide reasonable notice and ensure that you have the opportunity to secure alternative representation.
+            </div>
+          </div>
+          <div class="custom-list-item">
+            <div class="custom-list-marker">•</div>
+            <div class="custom-list-content">
+              Upon termination, any unpaid fees or costs will be due immediately. We will return all original documents to you, and you may request copies of your case file for your records.
+            </div>
+          </div>
+        </div>
 
         <div class="section-title">5. Conclusion</div>
         <p>
