@@ -150,7 +150,7 @@ export const FetchQueueDashboard = () => {
           <div className="flex gap-2">
             <Button
               variant="outline"
-              onClick={() => authenticate.mutateAsync()}
+              onClick={() => authenticate.mutateAsync({ cnr: 'TEST' })}
               disabled={authenticate.isPending}
             >
               {authenticate.isPending ? (
