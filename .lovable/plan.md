@@ -1,28 +1,39 @@
 
 
-# Fix: Edge Function "Failed to send a request" Error
+## Diagnosis
 
-## Root Cause
+The network logs confirm the root cause: the POST request to `https://hpcnipcbymruvsnqrmjx.supabase.co/functions/v1/ecourts-api` returns **"Error: Failed to fetch"** -- a complete network-level failure, not an API error. This means the edge function is either **not deployed** or **crashing on startup** before it can respond.
 
-Two issues are causing the "Failed to send a request to the Edge Function" error:
+The `ecourts-api` function code exists in the repo (`supabase/functions/ecourts-api/index.ts` + `dataMapper.ts`), and it is listed in `supabase/config.toml`, but the deployment depends on a GitHub Actions workflow that triggers only on pushes to `main`/`master`. If this workflow hasn't run successfully (missing GitHub secrets, or changes weren't pushed to the right branch), the function was never deployed to your Supabase project.
 
-1. **Missing CORS headers**: The `ecourts-api` edge function's `Access-Control-Allow-Headers` is missing headers that the Supabase JS client sends (`x-supabase-client-platform`, `x-supabase-client-platform-version`, `x-supabase-client-runtime`, `x-supabase-client-runtime-version`). This causes the browser's CORS preflight to fail.
+## About the MCP Link
 
-2. **Preview fetch proxy interference**: The Lovable preview environment has a fetch proxy that can intercept and break POST requests to edge functions. This is a known limitation of the preview — testing on the **published URL** (https://hru-legal.lovable.app) will bypass this issue.
+The MCP URL (`https://mcp.ecourtsindia.com/mcp?token=...`) is a **Model Context Protocol server** -- it extends the Lovable agent's capabilities during development (letting *me* query eCourts data while building your app). However, **MCP tools cannot be called by your deployed application**. Your end users' app still needs a backend (the edge function) to call the eCourts API.
 
-## Fix
+That said, the MCP link confirms you have a valid eCourtsIndia API token, which the edge function needs as `ECOURTS_API_KEY`.
 
-**File: `supabase/functions/ecourts-api/index.ts`** — Update CORS headers to include all required Supabase client headers:
+## Plan
 
-```typescript
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-};
-```
+### Step 1: Verify the `ECOURTS_API_KEY` secret exists
+Check that the Supabase secret `ECOURTS_API_KEY` is configured with your actual API token (the one from the MCP URL).
 
-This single-line change ensures the CORS preflight succeeds. After this fix:
-- **Published URL** (hru-legal.lovable.app): Should work immediately
-- **Preview URL**: May still fail due to the fetch proxy — this is a known Lovable preview limitation, not a code bug
+### Step 2: Deploy the edge function manually
+Since the GitHub Actions workflow may not have run, deploy the `ecourts-api` function directly using the Supabase CLI or dashboard. This is the most likely fix -- the function code is correct but simply not deployed.
+
+### Step 3: Verify GitHub Actions secrets
+Ensure `SUPABASE_ACCESS_TOKEN` and `SUPABASE_PROJECT_ID` are set in your GitHub repo secrets so future pushes auto-deploy edge functions.
+
+### Step 4: Test end-to-end on published URL
+After deployment, test the case fetch flow on `https://hru-legal.lovable.app`.
+
+---
+
+### What you need to do now
+
+1. Go to your **Supabase Dashboard** → **Edge Functions** and check if `ecourts-api` appears in the list
+2. If it does NOT appear, the function was never deployed -- you'll need to deploy it (I can help prepare the command)
+3. If it DOES appear but shows errors, check the function logs for startup crashes
+4. Confirm that `ECOURTS_API_KEY` is set in **Supabase Dashboard → Settings → Secrets** with the token from your MCP URL
+
+Would you like me to proceed with verifying the secrets and preparing deployment steps?
 
