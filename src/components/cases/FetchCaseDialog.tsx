@@ -82,7 +82,6 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
     try {
       const result = await searchCase.mutateAsync({
         cnr: data.cnr_number,
-        searchType: searchType,
       });
 
       if (result?.success && result?.data) {

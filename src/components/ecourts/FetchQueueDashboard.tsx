@@ -60,7 +60,7 @@ export const FetchQueueDashboard = () => {
     stopProcessing,
   } = useFetchQueue();
 
-  const { authenticate } = useLegalkartIntegration();
+  const { searchCase: authenticate } = useLegalkartIntegration();
 
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [statusFilter, setStatusFilter] = useState<string>("all");
