@@ -261,7 +261,7 @@ const CaseDetail = () => {
 
       const { data, error } = await supabase.functions.invoke('ecourts-api', {
         body: {
-          action: 'search',
+          action: 'case_detail',
           cnr: caseInfo.cnr_number,
           searchType,
           caseId: id,

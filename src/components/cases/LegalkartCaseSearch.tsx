@@ -128,7 +128,7 @@ export const LegalkartCaseSearch: React.FC<LegalkartCaseSearchProps> = ({
     }) => {
       const invokePromise = supabase.functions.invoke('ecourts-api', {
         body: {
-          action: 'search',
+          action: 'case_detail',
           cnr: cnr || undefined,
           searchType,
           caseId,
@@ -246,7 +246,7 @@ export const LegalkartCaseSearch: React.FC<LegalkartCaseSearchProps> = ({
   const displayBoardMutation = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke('ecourts-api', {
-        body: { action: 'gujarat_display_board' },
+        body: { action: 'causelist_search' },
       });
 
       if (error) throw error;

@@ -42,7 +42,7 @@ export const LegalkartApiDocuments: React.FC<LegalkartApiDocumentsProps> = ({ ca
       const normalizedCnr = caseRow?.cnr_number?.replace(/[-\s]/g, '') || '';
 
       const { data, error } = await supabase.functions.invoke('ecourts-api', {
-        body: { action: 'search', cnr: normalizedCnr, searchType, caseId },
+        body: { action: 'case_detail', cnr: normalizedCnr, searchType, caseId },
       });
       if (error) throw error;
       return data as any;

@@ -253,7 +253,7 @@ const CaseUnknownAdmin = () => {
 
                 const { data, error } = await supabase.functions.invoke('ecourts-api', {
                   body: {
-                    action: 'search',
+                    action: 'case_detail',
                     cnr: caseData.cnr_number,
                     searchType,
                     caseId: fetchDialogCaseId,
