@@ -55,7 +55,7 @@ const DailyBoard = () => {
     try {
       toast({ title: 'Syncing from court...', description: 'Fetching latest cause list from Gujarat HC' });
       
-      const { data: syncResult, error: syncError } = await supabase.functions.invoke('legalkart-api', {
+      const { data: syncResult, error: syncError } = await supabase.functions.invoke('ecourts-api', {
         body: { action: 'sync_display_board', targetDate: dateStr },
       });
 

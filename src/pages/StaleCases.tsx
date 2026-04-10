@@ -139,7 +139,7 @@ const StaleCases = () => {
       const detectedType = detectCourtType(caseData.cnr_number);
       const searchType = detectedType === 'high_court' ? 'gujarat_high_court' : detectedType;
 
-      const { data, error } = await supabase.functions.invoke('legalkart-api', {
+      const { data, error } = await supabase.functions.invoke('ecourts-api', {
         body: {
           action: 'search',
           cnr: caseData.cnr_number,

@@ -95,7 +95,7 @@ export const CasesFetchManager = () => {
       // Use centralized court type resolver
       const searchType = resolveLegalkartSearchType({ cnr: caseData.cnr_number, courtType: caseData.court_name });
 
-      const { data, error } = await supabase.functions.invoke('legalkart-api', {
+      const { data, error } = await supabase.functions.invoke('ecourts-api', {
         body: { 
           action: 'search', 
           cnr: caseData.cnr_number, 

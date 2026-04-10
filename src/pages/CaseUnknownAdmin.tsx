@@ -251,7 +251,7 @@ const CaseUnknownAdmin = () => {
 
                 toast({ title: 'Fetching case details...', description: `CNR: ${caseData.cnr_number}` });
 
-                const { data, error } = await supabase.functions.invoke('legalkart-api', {
+                const { data, error } = await supabase.functions.invoke('ecourts-api', {
                   body: {
                     action: 'search',
                     cnr: caseData.cnr_number,
