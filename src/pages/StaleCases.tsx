@@ -59,6 +59,53 @@ interface StaleCase {
   court_type: string | null;
 }
 
+interface EcourtsFunctionResponse<T = unknown> {
+  success?: boolean;
+  error?: string;
+  message?: string;
+  data?: T;
+}
+
+const invokeEcourtsDirect = async (body: Record<string, unknown>): Promise<EcourtsFunctionResponse> => {
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if (!session?.access_token) {
+    throw new Error('Please sign in');
+  }
+
+  const functionBaseUrl = (supabase as any).functionsUrl || `${(supabase as any).supabaseUrl}/functions/v1`;
+  const response = await fetch(`${functionBaseUrl}/ecourts-api`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${session.access_token}`,
+      'apikey': (supabase as any).supabaseKey,
+    },
+    body: JSON.stringify(body),
+  });
+
+  const responseText = await response.text();
+
+  let parsed: EcourtsFunctionResponse | null = null;
+  if (responseText) {
+    try {
+      parsed = JSON.parse(responseText) as EcourtsFunctionResponse;
+    } catch {
+      throw new Error(responseText);
+    }
+  }
+
+  if (!response.ok) {
+    throw new Error(parsed?.error || parsed?.message || `Function request failed (${response.status})`);
+  }
+
+  if (!parsed) {
+    throw new Error('Empty response from edge function');
+  }
+
+  return parsed;
+};
+
 const StaleCases = () => {
   const { firmId } = useAuth();
   const { toast } = useToast();
@@ -139,17 +186,14 @@ const StaleCases = () => {
       const detectedType = detectCourtType(caseData.cnr_number);
       const searchType = detectedType === 'high_court' ? 'gujarat_high_court' : detectedType;
 
-      const { data, error } = await supabase.functions.invoke('ecourts-api', {
-        body: {
-          action: 'case_detail',
-          cnr: caseData.cnr_number,
-          searchType,
-          caseId: caseData.id,
-          firmId,
-        },
+      const data = await invokeEcourtsDirect({
+        action: 'case_detail',
+        cnr: caseData.cnr_number,
+        searchType,
+        caseId: caseData.id,
+        firmId,
       });
 
-      if (error) throw error;
       if (!data?.success) throw new Error(data?.error || 'Failed to fetch case data');
 
       return { caseId: caseData.id, data };
