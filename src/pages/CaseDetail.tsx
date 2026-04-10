@@ -187,7 +187,7 @@ const CaseDetail = () => {
       + (objections?.length || 0)
       + (hearings?.length || 0);
     if (totals === 0 && caseData?.fetched_data) {
-      supabase.functions.invoke('legalkart-api', {
+      supabase.functions.invoke('ecourts-api', {
         body: { action: 'upsert_from_json', caseId: id, rawData: caseData.fetched_data }
       }).then(() => {
         setAutoUpsertDone(true);
@@ -220,7 +220,7 @@ const CaseDetail = () => {
         
         if (session?.access_token) {
           try {
-            await supabase.functions.invoke('legalkart-api', {
+            await supabase.functions.invoke('ecourts-api', {
               body: {
                 action: 'upsert_from_json',
                 caseId: id,
@@ -259,9 +259,9 @@ const CaseDetail = () => {
         fallback: 'district_court',
       });
 
-      const { data, error } = await supabase.functions.invoke('legalkart-api', {
+      const { data, error } = await supabase.functions.invoke('ecourts-api', {
         body: {
-          action: 'search',
+          action: 'case_detail',
           cnr: caseInfo.cnr_number,
           searchType,
           caseId: id,

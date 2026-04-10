@@ -2,7 +2,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { fetchLegalkartCaseId } from '@/components/cases/legalkart/utils';
-import { resolveLegalkartSearchType } from '@/lib/legalkartSearchType';
 
 export const useLegalkartCaseDetails = (caseId: string) => {
   const queryClient = useQueryClient();
@@ -11,18 +10,12 @@ export const useLegalkartCaseDetails = (caseId: string) => {
   const { data: legalkartCase, isLoading: isLoadingCase } = useQuery({
     queryKey: ['legalkart-case', caseId],
     queryFn: async () => {
-      console.log('Fetching legalkart case for case_id:', caseId);
       const { data, error } = await supabase
         .from('legalkart_cases')
         .select('*')
         .eq('case_id', caseId)
         .maybeSingle();
-      
-      if (error) {
-        console.error('Error fetching legalkart case:', error);
-        throw error;
-      }
-      console.log('Legalkart case found:', data);
+      if (error) throw error;
       return data;
     },
     enabled: !!caseId
@@ -31,34 +24,19 @@ export const useLegalkartCaseDetails = (caseId: string) => {
   // If no direct case found, fetch via CNR
   const { data: fallbackLegalkartCaseId } = useQuery({
     queryKey: ['legalkart-case-id-by-cnr', caseId],
-    queryFn: async () => {
-      console.log('Attempting to fetch Legalkart case ID by CNR for case:', caseId);
-      const legalkartCaseId = await fetchLegalkartCaseId(caseId);
-      console.log('Fetched Legalkart case ID:', legalkartCaseId);
-      return legalkartCaseId;
-    },
+    queryFn: () => fetchLegalkartCaseId(caseId),
     enabled: !!caseId && !legalkartCase?.id,
   });
 
   const effectiveLegalkartCaseId = legalkartCase?.id ?? fallbackLegalkartCaseId ?? null;
-  console.log('Effective Legalkart case ID:', effectiveLegalkartCaseId);
 
   const { data: petitioners } = useQuery({
     queryKey: ['petitioners', caseId, effectiveLegalkartCaseId],
     queryFn: async () => {
-      console.log('Fetching petitioners for case_id:', caseId, 'legalkart_case_id:', effectiveLegalkartCaseId);
       const filterColumn = effectiveLegalkartCaseId ? 'legalkart_case_id' : 'case_id';
       const filterValue = effectiveLegalkartCaseId ?? caseId;
-      const { data, error } = await supabase
-        .from('petitioners')
-        .select('*')
-        .eq(filterColumn, filterValue);
-      
-      if (error) {
-        console.error('Error fetching petitioners:', error);
-        throw error;
-      }
-      console.log('Petitioners found:', data?.length || 0);
+      const { data, error } = await supabase.from('petitioners').select('*').eq(filterColumn, filterValue);
+      if (error) throw error;
       return data;
     },
     enabled: !!caseId || !!effectiveLegalkartCaseId
@@ -67,19 +45,10 @@ export const useLegalkartCaseDetails = (caseId: string) => {
   const { data: respondents } = useQuery({
     queryKey: ['respondents', caseId, effectiveLegalkartCaseId],
     queryFn: async () => {
-      console.log('Fetching respondents for case_id:', caseId, 'legalkart_case_id:', effectiveLegalkartCaseId);
       const filterColumn = effectiveLegalkartCaseId ? 'legalkart_case_id' : 'case_id';
       const filterValue = effectiveLegalkartCaseId ?? caseId;
-      const { data, error } = await supabase
-        .from('respondents')
-        .select('*')
-        .eq(filterColumn, filterValue);
-      
-      if (error) {
-        console.error('Error fetching respondents:', error);
-        throw error;
-      }
-      console.log('Respondents found:', data?.length || 0);
+      const { data, error } = await supabase.from('respondents').select('*').eq(filterColumn, filterValue);
+      if (error) throw error;
       return data;
     },
     enabled: !!caseId || !!effectiveLegalkartCaseId
@@ -88,19 +57,10 @@ export const useLegalkartCaseDetails = (caseId: string) => {
   const { data: iaDetails } = useQuery({
     queryKey: ['ia-details', caseId, effectiveLegalkartCaseId],
     queryFn: async () => {
-      console.log('Fetching IA details for case_id:', caseId, 'legalkart_case_id:', effectiveLegalkartCaseId);
       const filterColumn = effectiveLegalkartCaseId ? 'legalkart_case_id' : 'case_id';
       const filterValue = effectiveLegalkartCaseId ?? caseId;
-      const { data, error } = await supabase
-        .from('ia_details')
-        .select('*')
-        .eq(filterColumn, filterValue);
-      
-      if (error) {
-        console.error('Error fetching IA details:', error);
-        throw error;
-      }
-      console.log('IA details found:', data?.length || 0);
+      const { data, error } = await supabase.from('ia_details').select('*').eq(filterColumn, filterValue);
+      if (error) throw error;
       return data;
     },
     enabled: !!caseId || !!effectiveLegalkartCaseId
@@ -110,19 +70,8 @@ export const useLegalkartCaseDetails = (caseId: string) => {
     queryKey: ['case-documents', caseId],
     queryFn: async () => {
       if (!caseId) return [];
-      
-      console.log('Fetching documents for case_id:', caseId);
-      const { data, error } = await supabase
-        .from('case_documents')
-        .select('*')
-        .eq('case_id', caseId)
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        console.error('Error fetching documents:', error);
-        return [];
-      }
-      console.log('Documents found:', data?.length || 0);
+      const { data, error } = await supabase.from('case_documents').select('*').eq('case_id', caseId).order('created_at', { ascending: false });
+      if (error) return [];
       return data;
     },
     enabled: !!caseId
@@ -132,20 +81,8 @@ export const useLegalkartCaseDetails = (caseId: string) => {
     queryKey: ['case-orders', caseId],
     queryFn: async () => {
       if (!caseId) return [];
-      
-      console.log('Fetching orders for case_id:', caseId);
-      const { data, error } = await supabase
-        .from('case_orders')
-        .select('*')
-        .eq('case_id', caseId)
-        .order('hearing_date', { ascending: false })
-        .limit(200);
-      
-      if (error) {
-        console.error('Error fetching orders:', error);
-        return [];
-      }
-      console.log('Orders found:', data?.length || 0);
+      const { data, error } = await supabase.from('case_orders').select('*').eq('case_id', caseId).order('hearing_date', { ascending: false }).limit(200);
+      if (error) return [];
       return data;
     },
     enabled: !!caseId
@@ -155,19 +92,8 @@ export const useLegalkartCaseDetails = (caseId: string) => {
     queryKey: ['case-objections', caseId],
     queryFn: async () => {
       if (!caseId) return [];
-      
-      console.log('Fetching objections for case_id:', caseId);
-      const { data, error } = await supabase
-        .from('case_objections')
-        .select('*')
-        .eq('case_id', caseId)
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        console.error('Error fetching objections:', error);
-        return [];
-      }
-      console.log('Objections found:', data?.length || 0);
+      const { data, error } = await supabase.from('case_objections').select('*').eq('case_id', caseId).order('created_at', { ascending: false });
+      if (error) return [];
       return data;
     },
     enabled: !!caseId
@@ -177,19 +103,8 @@ export const useLegalkartCaseDetails = (caseId: string) => {
     queryKey: ['case-hearings', caseId],
     queryFn: async () => {
       if (!caseId) return [];
-      
-      console.log('Fetching hearings for case_id:', caseId);
-      const { data, error } = await supabase
-        .from('case_hearings')
-        .select('*')
-        .eq('case_id', caseId)
-        .order('hearing_date', { ascending: false });
-      
-      if (error) {
-        console.error('Error fetching hearings:', error);
-        return [];
-      }
-      console.log('Hearings found:', data?.length || 0);
+      const { data, error } = await supabase.from('case_hearings').select('*').eq('case_id', caseId).order('hearing_date', { ascending: false });
+      if (error) return [];
       return data;
     },
     enabled: !!caseId
@@ -197,69 +112,33 @@ export const useLegalkartCaseDetails = (caseId: string) => {
 
   const refreshCaseData = useMutation({
     mutationFn: async () => {
-      console.log('Starting refresh for case:', caseId);
       const { data: caseData, error: caseError } = await supabase
         .from('cases')
         .select('cnr_number, firm_id, court_type')
         .eq('id', caseId)
         .single();
-
-      if (caseError) {
-        console.error('Error fetching case data:', caseError);
-        throw caseError;
-      }
-
-      // Check if CNR exists
+      if (caseError) throw caseError;
       if (!caseData.cnr_number) {
         throw new Error('CNR number is required to fetch case details. Please add CNR first.');
       }
 
-      const searchType = resolveLegalkartSearchType({
-        cnr: caseData.cnr_number,
-        courtType: caseData.court_type,
-        fallback: 'district_court',
-      });
-
-      console.log('Invoking legalkart-api with:', {
-        action: 'search',
-        cnr: caseData.cnr_number,
-        searchType,
-        caseId,
-        firmId: caseData.firm_id
-      });
-
-      const { data, error } = await supabase.functions.invoke('legalkart-api', {
+      // Use new ecourts-api — no searchType needed, single CNR endpoint handles all courts
+      const { data, error } = await supabase.functions.invoke('ecourts-api', {
         body: {
-          action: 'search',
+          action: 'case_detail',
           cnr: caseData.cnr_number,
-          searchType,
           caseId,
-          firmId: caseData.firm_id
+          firmId: caseData.firm_id,
         }
       });
-
-      if (error) {
-        console.error('Error calling legalkart-api:', error);
-        throw error;
-      }
-
-      // Check if the response itself indicates an error
+      if (error) throw error;
       if (data && !data.success) {
-        const errorMessage = data.error || data.message || 'Failed to fetch case details';
-        console.error('Legalkart API returned error:', errorMessage);
-        throw new Error(errorMessage);
+        throw new Error(data.error || 'Failed to fetch case details');
       }
-
-      // Check if we actually got case data
-      if (!data || !data.data) {
-        throw new Error('No case data returned from Legalkart API');
-      }
-
-      console.log('Refresh completed successfully');
+      if (!data?.data) throw new Error('No case data returned');
       return data;
     },
     onSuccess: () => {
-      console.log('Refresh successful, invalidating queries...');
       queryClient.invalidateQueries({ queryKey: ['case', caseId] });
       queryClient.invalidateQueries({ queryKey: ['legalkart-case', caseId] });
       queryClient.invalidateQueries({ queryKey: ['petitioners', caseId] });
@@ -272,12 +151,7 @@ export const useLegalkartCaseDetails = (caseId: string) => {
       toast({ title: "Case data refreshed successfully" });
     },
     onError: (error: any) => {
-      console.error('Refresh failed:', error);
-      toast({
-        title: "Failed to refresh case data",
-        description: error.message,
-        variant: "destructive"
-      });
+      toast({ title: "Failed to refresh case data", description: error.message, variant: "destructive" });
     }
   });
 

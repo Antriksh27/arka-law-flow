@@ -82,7 +82,6 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
     try {
       const result = await searchCase.mutateAsync({
         cnr: data.cnr_number,
-        searchType: searchType,
       });
 
       if (result?.success && result?.data) {
@@ -341,7 +340,7 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
       console.log('📦 API Response JSON:', JSON.stringify(rawData, null, 2));
       
       // Parse and store all case data using edge function
-      const { data: upsertResult, error: upsertError } = await supabase.functions.invoke('legalkart-api', {
+      const { data: upsertResult, error: upsertError } = await supabase.functions.invoke('ecourts-api', {
         body: {
           action: 'upsert_from_json',
           caseId: caseId,

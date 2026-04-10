@@ -60,7 +60,7 @@ export const FetchQueueDashboard = () => {
     stopProcessing,
   } = useFetchQueue();
 
-  const { authenticate } = useLegalkartIntegration();
+  const { searchCase: authenticate } = useLegalkartIntegration();
 
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -150,7 +150,7 @@ export const FetchQueueDashboard = () => {
           <div className="flex gap-2">
             <Button
               variant="outline"
-              onClick={() => authenticate.mutateAsync()}
+              onClick={() => authenticate.mutateAsync({ cnr: 'TEST' })}
               disabled={authenticate.isPending}
             >
               {authenticate.isPending ? (

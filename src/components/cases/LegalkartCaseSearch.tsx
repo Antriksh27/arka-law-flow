@@ -126,9 +126,9 @@ export const LegalkartCaseSearch: React.FC<LegalkartCaseSearchProps> = ({
       caseNo?: string;
       caseYear?: string;
     }) => {
-      const invokePromise = supabase.functions.invoke('legalkart-api', {
+      const invokePromise = supabase.functions.invoke('ecourts-api', {
         body: {
-          action: 'search',
+          action: 'case_detail',
           cnr: cnr || undefined,
           searchType,
           caseId,
@@ -194,7 +194,7 @@ export const LegalkartCaseSearch: React.FC<LegalkartCaseSearchProps> = ({
   // Batch search mutation
   const batchSearchMutation = useMutation({
     mutationFn: async (cnrs: string[]) => {
-      const { data, error } = await supabase.functions.invoke('legalkart-api', {
+      const { data, error } = await supabase.functions.invoke('ecourts-api', {
         body: { 
           action: 'batch_search', 
           cnrs 
@@ -245,8 +245,8 @@ export const LegalkartCaseSearch: React.FC<LegalkartCaseSearchProps> = ({
   // Gujarat Display Board mutation
   const displayBoardMutation = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.functions.invoke('legalkart-api', {
-        body: { action: 'gujarat_display_board' },
+      const { data, error } = await supabase.functions.invoke('ecourts-api', {
+        body: { action: 'causelist_search' },
       });
 
       if (error) throw error;
