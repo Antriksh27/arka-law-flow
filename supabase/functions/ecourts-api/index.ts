@@ -302,7 +302,28 @@ serve(async (req) => {
       }
 
       const apiData = await response.json();
-      console.log('✅ eCourtsIndia API returned data for:', normalizedCnr);
+      console.log('📥 eCourtsIndia API response:', JSON.stringify(apiData).substring(0, 500));
+
+      // Check for API-level errors in 200 responses (e.g. insufficient credits)
+      const apiError = apiData?.error || apiData?.message || apiData?.status;
+      const isApiError = apiData?.success === false 
+        || (typeof apiError === 'string' && /insufficient|invalid.*token|expired|unauthorized|error/i.test(apiError))
+        || (typeof apiData?.status === 'string' && /error|fail/i.test(apiData.status));
+      
+      if (isApiError && !apiData?.data) {
+        const errMsg = mapErrorCode(apiData?.error?.code, apiData?.error?.message || apiData?.message || apiData?.error || 'API returned an error');
+        console.error(`❌ eCourtsIndia API-level error: ${errMsg}`, JSON.stringify(apiData));
+        
+        if (searchRecord) {
+          await supabase.from('legalkart_case_searches')
+            .update({ status: 'failed', error_message: errMsg, response_data: apiData }).eq('id', searchRecord.id);
+        }
+        
+        return new Response(JSON.stringify({ success: false, error: errMsg, data: null, raw: apiData }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      console.log('✅ eCourtsIndia API returned valid data for:', normalizedCnr);
 
       // Update search record
       if (searchRecord) {
