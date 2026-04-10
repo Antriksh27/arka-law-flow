@@ -3,6 +3,62 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { fetchLegalkartCaseId } from '@/components/cases/legalkart/utils';
 
+type EcourtsFunctionResponse<T = unknown> = {
+  success?: boolean;
+  data?: T;
+  error?: string;
+};
+
+const invokeEcourtsDirect = async <T = unknown>(body: Record<string, unknown>) => {
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if (!session?.access_token) {
+    throw new Error('Not authenticated');
+  }
+
+  const supabaseClient = supabase as unknown as {
+    functionsUrl?: string;
+    supabaseUrl?: string;
+    supabaseKey?: string;
+  };
+
+  const functionBaseUrl = supabaseClient.functionsUrl || `${supabaseClient.supabaseUrl}/functions/v1`;
+
+  try {
+    const response = await fetch(`${functionBaseUrl}/ecourts-api`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+        apikey: supabaseClient.supabaseKey || '',
+      },
+      body: JSON.stringify(body),
+    });
+
+    const contentType = response.headers.get('content-type') || '';
+    const parsed = contentType.includes('application/json')
+      ? await response.json()
+      : { success: false, error: await response.text() };
+
+    if (!response.ok) {
+      throw new Error(parsed?.error || 'Failed to fetch case details');
+    }
+
+    return parsed as EcourtsFunctionResponse<T>;
+  } catch (error) {
+    if (error instanceof TypeError) {
+      const isPreview = typeof window !== 'undefined' && window.location.hostname.includes('id-preview--');
+      throw new Error(
+        isPreview
+          ? 'eCourts fetch is blocked in preview. Please use the published URL to see the real API error.'
+          : 'Could not reach the eCourts service. Please try again.'
+      );
+    }
+
+    throw error;
+  }
+};
+
 export const useLegalkartCaseDetails = (caseId: string) => {
   const queryClient = useQueryClient();
 
@@ -123,15 +179,13 @@ export const useLegalkartCaseDetails = (caseId: string) => {
       }
 
       // Use new ecourts-api — no searchType needed, single CNR endpoint handles all courts
-      const { data, error } = await supabase.functions.invoke('ecourts-api', {
-        body: {
-          action: 'case_detail',
-          cnr: caseData.cnr_number,
-          caseId,
-          firmId: caseData.firm_id,
-        }
+      const data = await invokeEcourtsDirect({
+        action: 'case_detail',
+        cnr: caseData.cnr_number,
+        caseId,
+        firmId: caseData.firm_id,
       });
-      if (error) throw error;
+
       if (data && !data.success) {
         throw new Error(data.error || 'Failed to fetch case details');
       }
