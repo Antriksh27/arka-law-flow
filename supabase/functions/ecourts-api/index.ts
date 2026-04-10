@@ -19,6 +19,13 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
 };
 
+function jsonResponse(payload: Record<string, unknown>): Response {
+  return new Response(JSON.stringify(payload), {
+    status: 200,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
+
 const ECOURTS_BASE = 'https://webapi.ecourtsindia.com';
 
 // Input validation schemas
@@ -219,15 +226,13 @@ serve(async (req) => {
 
     if (isInternalCall) {
       if (!requestBody.firmId) {
-        return new Response(JSON.stringify({ success: false, error: 'firmId required for internal calls' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        return jsonResponse({ success: false, error: 'firmId required for internal calls' });
       }
       firmId = requestBody.firmId;
       userId = requestBody.userId || 'system';
     } else {
       if (!authHeader.startsWith('Bearer ')) {
-        return new Response(JSON.stringify({ success: false, error: 'Missing Authorization. Please sign in.' }),
-          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        return jsonResponse({ success: false, error: 'Missing Authorization. Please sign in.' });
       }
       try {
         const jwt = authHeader.split(' ')[1];
@@ -238,13 +243,11 @@ serve(async (req) => {
         const { data: tm, error: tmError } = await supabase
           .from('team_members').select('firm_id, role').eq('user_id', userId).single();
         if (tmError || !tm) {
-          return new Response(JSON.stringify({ success: false, error: 'User not authorized.' }),
-            { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          return jsonResponse({ success: false, error: 'User not authorized.' });
         }
         firmId = tm.firm_id;
       } catch (e) {
-        return new Response(JSON.stringify({ success: false, error: 'Invalid authentication token' }),
-          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        return jsonResponse({ success: false, error: 'Invalid authentication token' });
       }
     }
 
@@ -253,8 +256,7 @@ serve(async (req) => {
       const { cnr, caseId, isSystemTriggered } = requestBody;
       const parsedCnr = cnrSchema.safeParse(cnr);
       if (!parsedCnr.success) {
-        return new Response(JSON.stringify({ success: false, error: 'Invalid CNR format' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        return jsonResponse({ success: false, error: 'Invalid CNR format' });
       }
       const normalizedCnr = parsedCnr.data;
       console.log(`🔍 Fetching case detail for CNR: ${normalizedCnr}`);
@@ -297,8 +299,7 @@ serve(async (req) => {
             .update({ status: 'failed', error_message: errMsg }).eq('id', searchRecord.id);
         }
 
-        return new Response(JSON.stringify({ success: false, error: errMsg, data: null }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        return jsonResponse({ success: false, error: errMsg, data: null });
       }
 
       const apiData = await response.json();
@@ -319,8 +320,7 @@ serve(async (req) => {
             .update({ status: 'failed', error_message: errMsg, response_data: apiData }).eq('id', searchRecord.id);
         }
         
-        return new Response(JSON.stringify({ success: false, error: errMsg, data: null, raw: apiData }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        return jsonResponse({ success: false, error: errMsg, data: null, raw: apiData });
       }
 
       console.log('✅ eCourtsIndia API returned valid data for:', normalizedCnr);
@@ -386,16 +386,14 @@ serve(async (req) => {
         }
       }
 
-      return new Response(JSON.stringify({ success: true, data: apiData?.data ?? apiData }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return jsonResponse({ success: true, data: apiData?.data ?? apiData });
     }
 
     // ===== ACTION: upsert_from_json =====
     if (action === 'upsert_from_json') {
       const { caseId, rawData } = requestBody;
       if (!caseId || !rawData) {
-        return new Response(JSON.stringify({ error: 'caseId and rawData required' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        return jsonResponse({ success: false, error: 'caseId and rawData required' });
       }
 
       const mapped = mapEcourtsCaseToCRM(rawData);
@@ -423,8 +421,7 @@ serve(async (req) => {
         await upsertCaseRelationalData(supabase, caseId, rawData);
       }
 
-      return new Response(JSON.stringify({ success: true, message: 'Case data upserted' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return jsonResponse({ success: true, message: 'Case data upserted' });
     }
 
     // ===== ACTION: case_search =====
@@ -457,12 +454,10 @@ serve(async (req) => {
 
       const data = await response.json();
       if (!response.ok) {
-        return new Response(JSON.stringify({ success: false, error: data?.error?.message ?? 'Search failed' }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        return jsonResponse({ success: false, error: data?.error?.message ?? 'Search failed' });
       }
 
-      return new Response(JSON.stringify({ success: true, data: data?.data ?? data }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return jsonResponse({ success: true, data: data?.data ?? data });
     }
 
     // ===== ACTION: case_refresh =====
@@ -470,8 +465,7 @@ serve(async (req) => {
       const { cnr } = requestBody;
       const parsedCnr = cnrSchema.safeParse(cnr);
       if (!parsedCnr.success) {
-        return new Response(JSON.stringify({ success: false, error: 'Invalid CNR' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        return jsonResponse({ success: false, error: 'Invalid CNR' });
       }
 
       const response = await fetchWithTimeout(
@@ -480,16 +474,14 @@ serve(async (req) => {
         15000
       );
       const data = await response.json();
-      return new Response(JSON.stringify({ success: response.ok, data: data?.data ?? data }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return jsonResponse({ success: response.ok, data: data?.data ?? data });
     }
 
     // ===== ACTION: bulk_refresh =====
     if (action === 'bulk_refresh') {
       const { cnrs } = requestBody;
       if (!Array.isArray(cnrs) || cnrs.length === 0 || cnrs.length > 50) {
-        return new Response(JSON.stringify({ success: false, error: 'Provide 1-50 CNRs' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        return jsonResponse({ success: false, error: 'Provide 1-50 CNRs' });
       }
       const normalized = cnrs.map((c: string) => c.toUpperCase().replace(/[^A-Z0-9]/g, ''));
 
@@ -499,8 +491,7 @@ serve(async (req) => {
         30000
       );
       const data = await response.json();
-      return new Response(JSON.stringify({ success: response.ok, data: data?.data ?? data }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return jsonResponse({ success: response.ok, data: data?.data ?? data });
     }
 
     // ===== ACTION: order_pdf =====
@@ -508,8 +499,7 @@ serve(async (req) => {
       const { cnr, filename } = requestBody;
       const parsedCnr = cnrSchema.safeParse(cnr);
       if (!parsedCnr.success || !filename) {
-        return new Response(JSON.stringify({ success: false, error: 'CNR and filename required' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        return jsonResponse({ success: false, error: 'CNR and filename required' });
       }
       const response = await fetchWithTimeout(
         `${ECOURTS_BASE}/api/partner/case/${parsedCnr.data}/order/${encodeURIComponent(filename)}`,
@@ -517,8 +507,7 @@ serve(async (req) => {
         30000
       );
       const data = await response.json();
-      return new Response(JSON.stringify({ success: response.ok, data: data?.data ?? data }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return jsonResponse({ success: response.ok, data: data?.data ?? data });
     }
 
     // ===== ACTION: order_ai =====
@@ -526,8 +515,7 @@ serve(async (req) => {
       const { cnr, filename } = requestBody;
       const parsedCnr = cnrSchema.safeParse(cnr);
       if (!parsedCnr.success || !filename) {
-        return new Response(JSON.stringify({ success: false, error: 'CNR and filename required' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        return jsonResponse({ success: false, error: 'CNR and filename required' });
       }
       const response = await fetchWithTimeout(
         `${ECOURTS_BASE}/api/partner/case/${parsedCnr.data}/order-ai/${encodeURIComponent(filename)}`,
@@ -535,8 +523,7 @@ serve(async (req) => {
         90000 // AI analysis can take 10-60s
       );
       const data = await response.json();
-      return new Response(JSON.stringify({ success: response.ok, data: data?.data ?? data }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return jsonResponse({ success: response.ok, data: data?.data ?? data });
     }
 
     // ===== ACTION: order_markdown =====
@@ -544,8 +531,7 @@ serve(async (req) => {
       const { cnr, filename } = requestBody;
       const parsedCnr = cnrSchema.safeParse(cnr);
       if (!parsedCnr.success || !filename) {
-        return new Response(JSON.stringify({ success: false, error: 'CNR and filename required' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        return jsonResponse({ success: false, error: 'CNR and filename required' });
       }
       const response = await fetchWithTimeout(
         `${ECOURTS_BASE}/api/partner/case/${parsedCnr.data}/order-md/${encodeURIComponent(filename)}`,
@@ -553,8 +539,7 @@ serve(async (req) => {
         310000 // Can take up to 300s
       );
       const data = await response.json();
-      return new Response(JSON.stringify({ success: response.ok, data: data?.data ?? data }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return jsonResponse({ success: response.ok, data: data?.data ?? data });
     }
 
     // ===== ACTION: causelist_search =====
@@ -587,8 +572,7 @@ serve(async (req) => {
         30000
       );
       const data = await response.json();
-      return new Response(JSON.stringify({ success: response.ok, data: data?.data ?? data }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return jsonResponse({ success: response.ok, data: data?.data ?? data });
     }
 
     // ===== ACTION: causelist_dates =====
@@ -607,16 +591,14 @@ serve(async (req) => {
         15000
       );
       const data = await response.json();
-      return new Response(JSON.stringify({ success: response.ok, data: data?.data ?? data }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return jsonResponse({ success: response.ok, data: data?.data ?? data });
     }
 
     // ===== ACTION: court_structure =====
     if (action === 'court_structure') {
       const { endpoint } = requestBody; // e.g. "states", "states/DL/districts", etc.
       if (!endpoint) {
-        return new Response(JSON.stringify({ success: false, error: 'endpoint required' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        return jsonResponse({ success: false, error: 'endpoint required' });
       }
       const response = await fetchWithTimeout(
         `${ECOURTS_BASE}/api/partner/causelist/court-structure/${endpoint}`,
@@ -624,8 +606,7 @@ serve(async (req) => {
         15000
       );
       const data = await response.json();
-      return new Response(JSON.stringify({ success: response.ok, data: data?.data ?? data }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return jsonResponse({ success: response.ok, data: data?.data ?? data });
     }
 
     // ===== ACTION: enums =====
@@ -638,8 +619,7 @@ serve(async (req) => {
         15000
       );
       const data = await response.json();
-      return new Response(JSON.stringify({ success: response.ok, data: data?.data ?? data }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return jsonResponse({ success: response.ok, data: data?.data ?? data });
     }
 
     // ===== ACTION: sync_display_board (cause list sync to case_hearings) =====
@@ -665,8 +645,7 @@ serve(async (req) => {
 
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
-        return new Response(JSON.stringify({ success: false, error: errData?.error?.message ?? 'Cause list fetch failed', synced: 0 }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        return jsonResponse({ success: false, error: errData?.error?.message ?? 'Cause list fetch failed', synced: 0 });
       }
 
       const clData = await response.json();
@@ -674,8 +653,7 @@ serve(async (req) => {
       console.log(`📋 Cause list returned ${items.length} items`);
 
       if (items.length === 0) {
-        return new Response(JSON.stringify({ success: true, synced: 0, message: 'No items in cause list' }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        return jsonResponse({ success: true, synced: 0, message: 'No items in cause list' });
       }
 
       // Match by case number or CNR
@@ -730,18 +708,17 @@ serve(async (req) => {
         }
       }
 
-      return new Response(JSON.stringify({
+      return jsonResponse({
         success: true, synced: hearingUpserts.length,
         total_cause_list_items: items.length, matched_cases: caseMap.size,
-      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      });
     }
 
     // ===== ACTION: batch_search (legacy compat - calls case_detail for each) =====
     if (action === 'batch_search') {
       const { cnrs } = requestBody;
       if (!Array.isArray(cnrs) || cnrs.length === 0) {
-        return new Response(JSON.stringify({ success: false, error: 'Provide CNR array' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        return jsonResponse({ success: false, error: 'Provide CNR array' });
       }
       const results: any[] = [];
       for (const rawCnr of cnrs.slice(0, 50)) {
@@ -760,17 +737,14 @@ serve(async (req) => {
         // Small delay between requests
         await new Promise(r => setTimeout(r, 200));
       }
-      return new Response(JSON.stringify({ success: true, processed: results.length, results }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return jsonResponse({ success: true, processed: results.length, results });
     }
 
     // Unknown action
-    return new Response(JSON.stringify({ success: false, error: `Unknown action: ${action}` }),
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return jsonResponse({ success: false, error: `Unknown action: ${action}` });
 
   } catch (error: any) {
     console.error('❌ Fatal error:', error);
-    return new Response(JSON.stringify({ success: false, error: error.message ?? 'Unknown error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return jsonResponse({ success: false, error: error.message ?? 'Unknown error' });
   }
 });
