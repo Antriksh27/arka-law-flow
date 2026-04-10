@@ -27,6 +27,7 @@ function jsonResponse(payload: Record<string, unknown>): Response {
 }
 
 const ECOURTS_BASE = 'https://webapi.ecourtsindia.com';
+console.log('[ecourts-api] Function loaded successfully at', new Date().toISOString());
 
 // Input validation schemas
 const cnrSchema = z.string().trim().min(4).max(50).transform(s => s.toUpperCase().replace(/[^A-Z0-9]/g, ''));
