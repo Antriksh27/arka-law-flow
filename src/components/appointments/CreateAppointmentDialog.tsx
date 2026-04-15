@@ -405,6 +405,7 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
                     value={formData.client_id}
                     onValueChange={(val) => handleInputChange('client_id', val)}
                     placeholder="Search and select client..."
+                    showAddButton
                   />
                 </div>
 
