@@ -91,6 +91,7 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
   const [additionalLawyers, setAdditionalLawyers] = useState<string[]>([]);
   const [teamSearch, setTeamSearch] = useState('');
   const [caseSearch, setCaseSearch] = useState('');
+  const [showAddClientDialog, setShowAddClientDialog] = useState(false);
   const [formData, setFormData] = useState({
     appointment_date: preSelectedDate || TimeUtils.nowDate(),
     appointment_time: '',
