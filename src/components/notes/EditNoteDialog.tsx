@@ -51,6 +51,7 @@ const visibilityOptions = [
 
 export const EditNoteDialog: React.FC<EditNoteDialogProps> = ({
   note,
+  open,
   onClose
 }) => {
   const { closeDialog } = useDialog();
