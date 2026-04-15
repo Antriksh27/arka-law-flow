@@ -165,17 +165,6 @@ export const NotificationDialog: React.FC<NotificationDialogProps> = ({
         onClose={handleClose}
         icon={<Bell className="w-5 h-5 text-primary" />}
         showBorder
-        action={
-          <button 
-            onClick={() => {
-              handleClose();
-              navigate('/notifications');
-            }}
-            className="p-2 -mr-2 active:opacity-70"
-          >
-            <Settings className="w-5 h-5 text-slate-500" />
-          </button>
-        }
       />
 
       {/* Mark All Read Bar */}

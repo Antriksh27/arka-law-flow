@@ -39,11 +39,8 @@ interface EditAppointmentFormData {
 }
 
 const EditAppointmentDialog = ({ open, onOpenChange, appointment }: EditAppointmentDialogProps) => {
-  const { useDialog: _unused } = {} as any;
   const isInsideDialog = useContext(DialogContentContext);
-  const handleClose = isInsideDialog ? () => {} : () => onOpenChange?.(false);
-  const isInsideDialog = useContext(DialogContentContext);
-  const handleClose = isInsideDialog ? closeDialog : () => onOpenChange?.(false);
+  const handleClose = () => onOpenChange?.(false);
 
   const isMobile = useIsMobile();
   const { firmId } = useAuth();
