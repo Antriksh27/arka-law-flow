@@ -143,8 +143,7 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
             <MobileDialogHeader
               title={view === 'selection' ? 'Link to Case' : 'Select Case'}
               subtitle={clientName}
-              onClose={handleClose}
-              onBack={view !== 'selection' ? () => setView('selection') : undefined}
+              onClose={view !== 'selection' ? () => setView('selection') : handleClose}
               icon={<Link2 className="w-5 h-5 text-violet-500" />}
               showBorder
             />

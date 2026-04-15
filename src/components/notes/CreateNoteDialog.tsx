@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -35,6 +35,7 @@ interface NoteFormData {
 
 export const CreateNoteDialog: React.FC<CreateNoteDialogProps> = ({
   open,
+  onClose,
   clientId
 }) => {
   const { closeDialog } = useDialog();

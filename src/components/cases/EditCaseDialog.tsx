@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { X, Briefcase, Users, Scale, MapPin, Hash, Calendar, BookOpen, FileText, Plus } from 'lucide-react';
+import { ClientSelector } from '@/components/appointments/ClientSelector';
 import { toast } from 'sonner';
 import { ActsSelector } from './ActsSelector';
 import { useDialog, DialogContentContext } from '@/hooks/use-dialog';

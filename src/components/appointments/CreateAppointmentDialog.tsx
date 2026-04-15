@@ -473,7 +473,7 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
                         return (
                           <Badge
                             key={lawyerId}
-                            variant="secondary"
+                            variant="default"
                             className="pl-3 pr-1 py-1 rounded-full bg-slate-100 text-slate-700 border-none group"
                           >
                             <span className="mr-1">{lawyer.full_name}</span>

@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar, MapPin, User, X, Scale, ExternalLink } from 'lucide-react';
 import { useDialog } from '@/hooks/use-dialog';
+import { MobileDialogHeader } from '@/components/ui/mobile-dialog-header';
 
 interface HearingData {
   id: string;

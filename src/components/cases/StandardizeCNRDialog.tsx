@@ -30,9 +30,14 @@ export const StandardizeCNRDialog = ({
   onSuccess 
 }: StandardizeCNRDialogProps) => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const { closeDialog } = useDialog();
   const isInsideDialog = useContext(DialogContentContext);
   const isMobile = useIsMobile();
+  const [analyzing, setAnalyzing] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [preview, setPreview] = useState<CNRPreview[]>([]);
+  const [results, setResults] = useState<{ updated: number; errors: string[] } | null>(null);
   const handleClose = isInsideDialog ? closeDialog : () => {
     resetDialog();
     onOpenChange?.(false);

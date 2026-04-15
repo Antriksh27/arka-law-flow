@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -13,10 +13,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useContext } from 'react';
 import { DialogContentContext, useDialog } from '@/hooks/use-dialog';
 import { MobileDialogHeader } from '@/components/ui/mobile-dialog-header';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { UserPlus, User, Building2, Phone, MapPin, Plus, UserCheck, FileText, Loader2 } from 'lucide-react';
 
 interface ConvertToClientDialogProps {
   open: boolean;
@@ -25,6 +25,9 @@ interface ConvertToClientDialogProps {
 }
 
 export const ConvertToClientDialog = ({ open, onOpenChange, contact }: ConvertToClientDialogProps) => {
+  const { user, firmId } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const { closeDialog } = useDialog();
   const isInsideDialog = useContext(DialogContentContext);
   const isMobile = useIsMobile();

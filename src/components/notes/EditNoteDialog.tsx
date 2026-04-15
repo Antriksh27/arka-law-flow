@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { X, Plus, Type, FileText, Link2, Eye, Palette, Tag } from 'lucide-react';
 import { ContactSelector } from '@/components/contacts/ContactSelector';
+import { CaseSelector } from '@/components/appointments/CaseSelector';
 import { MobileDialogHeader } from '@/components/ui/mobile-dialog-header';
 import { useDialog, DialogContentContext } from '@/hooks/use-dialog';
 import { useContext } from 'react';
@@ -50,6 +51,7 @@ const visibilityOptions = [
 
 export const EditNoteDialog: React.FC<EditNoteDialogProps> = ({
   note,
+  open,
   onClose
 }) => {
   const { closeDialog } = useDialog();
