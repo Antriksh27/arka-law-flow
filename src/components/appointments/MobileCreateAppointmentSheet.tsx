@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Calendar as CalendarComponent } from '../ui/calendar';
+import { AddClientDialog } from '@/components/clients/AddClientDialog';
 interface Client {
   id: string;
   full_name: string;
