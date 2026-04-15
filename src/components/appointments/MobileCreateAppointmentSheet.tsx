@@ -571,17 +571,6 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
       })}
       </div>
 
-      <AddClientDialog
-        open={showAddClientDialog}
-        onOpenChange={setShowAddClientDialog}
-        onSuccess={(clientId?: string) => {
-          fetchClients();
-          if (clientId) {
-            handleInputChange('client_id', clientId);
-          }
-          setShowAddClientDialog(false);
-        }}
-      />
     </div>;
   const renderLawyerPicker = () => <div className="flex flex-col h-full bg-background">
       <PickerHeader title="Assigned To" />
@@ -666,7 +655,8 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
       })}
       </div>
     </div>;
-  return <Sheet open={open} onOpenChange={isOpen => !isOpen && onClose()}>
+  return <>
+    <Sheet open={open} onOpenChange={isOpen => !isOpen && onClose()}>
       <SheetContent hideCloseButton side="bottom" className="h-[95vh] rounded-t-3xl p-0 overflow-hidden">
         <div className="h-full">
           {step === 'form' && renderFormView()}
@@ -678,5 +668,17 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
           {step === 'case' && renderCasePicker()}
         </div>
       </SheetContent>
-    </Sheet>;
+    </Sheet>
+    <AddClientDialog
+      open={showAddClientDialog}
+      onOpenChange={setShowAddClientDialog}
+      onSuccess={(clientId?: string) => {
+        fetchClients();
+        if (clientId) {
+          handleInputChange('client_id', clientId);
+        }
+        setShowAddClientDialog(false);
+      }}
+    />
+  </>;
 };
