@@ -13,7 +13,6 @@ import { LegalUpdates } from './workspace/LegalUpdates';
 import { GlobalSearch } from './GlobalSearch';
 import { MyTasks } from './workspace/MyTasks';
 import { PullToRefresh } from '@/components/mobile/PullToRefresh';
-import { DashboardMobileFAB } from './DashboardMobileFAB';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -29,14 +28,13 @@ import { MetricsStrip } from './mobile/MetricsStrip';
 import { WeekCalendar } from './mobile/WeekCalendar';
 import { QuickActionsBar } from './mobile/QuickActionsBar';
 import { MobileSearchModal } from './mobile/MobileSearchModal';
+import { MobileCreateAppointmentSheet } from '@/components/appointments/MobileCreateAppointmentSheet';
 
 // Dialogs for quick actions
 import { AddCaseDialog } from '@/components/cases/AddCaseDialog';
-import { CreateAppointmentDialog } from '@/components/appointments/CreateAppointmentDialog';
 import { CreateTaskDialog } from '@/components/tasks/CreateTaskDialog';
 import { CreateNoteDialog } from '@/components/notes/CreateNoteDialog';
 import { UploadDocumentDialog } from '@/components/documents/UploadDocumentDialog';
-import { useDialog } from '@/hooks/use-dialog';
 
 const WorkspaceDashboard = () => {
   const { user } = useAuth();
@@ -44,7 +42,6 @@ const WorkspaceDashboard = () => {
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { openDialog, closeDialog } = useDialog();
   
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -88,6 +85,7 @@ const WorkspaceDashboard = () => {
 
   // Dialog states for mobile quick actions
   const [showCaseDialog, setShowCaseDialog] = useState(false);
+  const [showAppointmentDialog, setShowAppointmentDialog] = useState(false);
   const [showTaskDialog, setShowTaskDialog] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [showNoteDialog, setShowNoteDialog] = useState(false);
@@ -126,7 +124,7 @@ const WorkspaceDashboard = () => {
               {/* Quick Actions */}
               <QuickActionsBar 
                 onNewCase={() => setShowCaseDialog(true)} 
-                onSchedule={() => openDialog(<CreateAppointmentDialog onClose={closeDialog} />)} 
+                onSchedule={() => setShowAppointmentDialog(true)} 
                 onAddTask={() => setShowTaskDialog(true)} 
                 onUpload={() => setShowUploadDialog(true)} 
                 onAddNote={() => setShowNoteDialog(true)}
@@ -142,6 +140,7 @@ const WorkspaceDashboard = () => {
 
             {/* Quick Action Dialogs */}
             <AddCaseDialog open={showCaseDialog} onClose={() => setShowCaseDialog(false)} />
+            <MobileCreateAppointmentSheet open={showAppointmentDialog} onClose={() => setShowAppointmentDialog(false)} />
             <CreateTaskDialog open={showTaskDialog} onClose={() => setShowTaskDialog(false)} />
             <CreateNoteDialog open={showNoteDialog} onClose={() => setShowNoteDialog(false)} />
             <UploadDocumentDialog open={showUploadDialog} onClose={() => setShowUploadDialog(false)} />
