@@ -17,7 +17,6 @@ import {
 } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
 import { AddClientDialog } from '@/components/clients/AddClientDialog';
-import { AddContactDialog } from '@/components/contacts/AddContactDialog';
 
 interface Client {
   id: string;
@@ -38,33 +37,32 @@ interface ClientSelectorProps {
   onValueChange: (value: string) => void;
   placeholder?: string;
   onClientAdded?: (clientId: string) => void;
+  showAddButton?: boolean;
 }
 
 export const ClientSelector: React.FC<ClientSelectorProps> = ({
   value,
   onValueChange,
   placeholder = "Select client/contact...",
-  onClientAdded
+  onClientAdded,
+  showAddButton = false,
 }) => {
   const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
   const [clients, setClients] = useState<Client[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [showAddClientDialog, setShowAddClientDialog] = useState(false);
-  const [showAddContactDialog, setShowAddContactDialog] = useState(false);
 
   useEffect(() => {
     fetchClientsAndContacts();
   }, []);
 
   const fetchClientsAndContacts = async () => {
-    // Fetch clients
     const { data: clientsData } = await supabase
       .from('clients')
       .select('id, full_name')
       .order('full_name');
 
-    // Fetch contacts
     const { data: contactsData } = await supabase
       .from('contacts')
       .select('id, name')
@@ -76,7 +74,6 @@ export const ClientSelector: React.FC<ClientSelectorProps> = ({
 
   const allOptions = [...clients, ...contacts];
   
-  // Filter options based on search - use includes for partial matching
   const filteredClients = clients.filter(client => 
     client.full_name.toLowerCase().includes(searchValue.toLowerCase())
   );
@@ -125,35 +122,7 @@ export const ClientSelector: React.FC<ClientSelectorProps> = ({
             />
             <CommandList className="max-h-[300px]">
               <CommandEmpty className="text-gray-500 py-6">
-                <div className="text-center space-y-3">
-                  <p>No clients or contacts found.</p>
-                  <div className="flex flex-col gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        setShowAddClientDialog(true);
-                        setOpen(false);
-                      }}
-                      className="flex items-center gap-2"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Add New Client
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        setShowAddContactDialog(true);
-                        setOpen(false);
-                      }}
-                      className="flex items-center gap-2"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Add New Contact
-                    </Button>
-                  </div>
-                </div>
+                <p>No clients or contacts found.</p>
               </CommandEmpty>
               
               {filteredClients.length > 0 && (
@@ -211,33 +180,23 @@ export const ClientSelector: React.FC<ClientSelectorProps> = ({
                   ))}
                 </CommandGroup>
               )}
-
-              <CommandGroup heading="Quick Actions" className="border-t">
-                <CommandItem
-                  onSelect={() => {
-                    setShowAddClientDialog(true);
-                    setOpen(false);
-                  }}
-                  className="flex items-center gap-2 text-blue-600 cursor-pointer"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>Add New Client</span>
-                </CommandItem>
-                <CommandItem
-                  onSelect={() => {
-                    setShowAddContactDialog(true);
-                    setOpen(false);
-                  }}
-                  className="flex items-center gap-2 text-green-600 cursor-pointer"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>Add New Contact</span>
-                </CommandItem>
-              </CommandGroup>
             </CommandList>
           </Command>
         </PopoverContent>
       </Popover>
+
+      {showAddButton && (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => setShowAddClientDialog(true)}
+          className="mt-2 w-full flex items-center gap-2 text-slate-600 border-dashed border-slate-300 hover:bg-slate-50"
+        >
+          <Plus className="h-4 w-4" />
+          Add New Client
+        </Button>
+      )}
 
       <AddClientDialog
         open={showAddClientDialog}
@@ -248,17 +207,6 @@ export const ClientSelector: React.FC<ClientSelectorProps> = ({
             onClientAdded(clientId);
           }
           setShowAddClientDialog(false);
-        }}
-      />
-
-      <AddContactDialog
-        open={showAddContactDialog}
-        onOpenChange={(open) => {
-          setShowAddContactDialog(open);
-          if (!open) {
-            // Refresh data when dialog closes in case contact was added
-            handleRefresh();
-          }
         }}
       />
     </>
