@@ -3,7 +3,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 import { Sheet, SheetContent } from '../ui/sheet';
-import { X, UserPlus, Users, Clock, MapPin, Video, Phone, Calendar, ChevronRight, User, Briefcase, FileText, Check, ArrowLeft, Search } from 'lucide-react';
+import { X, UserPlus, Users, Clock, MapPin, Video, Phone, Calendar, ChevronRight, User, Briefcase, FileText, Check, ArrowLeft, Search, Plus } from 'lucide-react';
 import { format } from 'date-fns';
 import TimeUtils from '@/lib/timeUtils';
 import { supabase } from '@/integrations/supabase/client';
