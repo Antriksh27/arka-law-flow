@@ -79,6 +79,7 @@ const RoleBasedRouter = () => {
             <Route path="/reception/display-board" element={<ReceptionDisplayBoard />} />
             <Route path="/daily-board" element={<DailyBoard />} />
             <Route path="/chat" element={<ModernMessenger />} />
+            <Route path="/messages" element={<ModernMessenger />} />
             <Route path="*" element={<ReceptionHome />} />
           </Routes>
         </Suspense>
@@ -104,6 +105,7 @@ const RoleBasedRouter = () => {
             <Route path="/documents" element={<Documents />} />
             <Route path="/tasks" element={<Tasks />} />
             <Route path="/chat" element={<ModernMessenger />} />
+            <Route path="/messages" element={<ModernMessenger />} />
             <Route path="*" element={<StaffDashboard />} />
           </Routes>
         </Suspense>
@@ -134,6 +136,7 @@ const RoleBasedRouter = () => {
             <Route path="/notes" element={<Notes />} />
             <Route path="/availability" element={<Availability />} />
             <Route path="/chat" element={<ModernMessenger />} />
+            <Route path="/messages" element={<ModernMessenger />} />
             <Route path="/search" element={<Search />} />
             <Route path="/team" element={<Index />} />
             <Route path="/reception/*" element={<Index />} />
@@ -167,7 +170,8 @@ const RoleBasedRouter = () => {
           <Route path="/notes" element={<Notes />} />
           <Route path="/availability" element={<Availability />} />
           <Route path="/team" element={<Team />} />
-          <Route path="/chat" element={<ModernMessenger />} />
+            <Route path="/chat" element={<ModernMessenger />} />
+            <Route path="/messages" element={<ModernMessenger />} />
           <Route path="/search" element={<Search />} />
           {/* Fallback for reception routes accessed by non-receptionists */}
           <Route path="/reception/*" element={<Index />} />
