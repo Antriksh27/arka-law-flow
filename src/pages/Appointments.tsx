@@ -13,6 +13,7 @@ import { ToggleGroup, ToggleGroupItem } from '../components/ui/toggle-group';
 import { Filter, Plus, Search, LayoutList, Calendar, Clock, Copy, SlidersHorizontal, Loader2 } from 'lucide-react';
 import { useDialog } from '@/hooks/use-dialog';
 import { CreateAppointmentDialog } from '../components/appointments/CreateAppointmentDialog';
+import { MobileCreateAppointmentSheet } from '../components/appointments/MobileCreateAppointmentSheet';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/components/ui/use-toast';
 import { getPublicBaseUrl } from '@/lib/appConfig';
@@ -21,7 +22,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileStickyHeader } from '@/components/mobile/MobileStickyHeader';
 import { MobileFAB } from '@/components/mobile/MobileFAB';
 import { MobileAppointmentCard } from '../components/appointments/MobileAppointmentCard';
-import { MobileCreateAppointmentSheet } from '../components/appointments/MobileCreateAppointmentSheet';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import TimeUtils from '@/lib/timeUtils';
@@ -281,10 +281,17 @@ const Appointments = () => {
       
       {/* Create Appointment Dialog */}
       {showAppointmentDialog && (
-        <CreateAppointmentDialog 
-          open={showAppointmentDialog} 
-          onClose={() => setShowAppointmentDialog(false)} 
-        />
+        isMobile ? (
+          <MobileCreateAppointmentSheet
+            open={showAppointmentDialog}
+            onClose={() => setShowAppointmentDialog(false)}
+          />
+        ) : (
+          <CreateAppointmentDialog 
+            open={showAppointmentDialog} 
+            onClose={() => setShowAppointmentDialog(false)} 
+          />
+        )
       )}
     </DefaultPageLayout>
   );
