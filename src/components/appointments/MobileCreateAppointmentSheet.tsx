@@ -537,6 +537,21 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
   const renderClientPicker = () => <div className="flex flex-col h-full bg-background">
       <PickerHeader title="Select Client" />
       <SearchInput value={clientSearch} onChange={setClientSearch} placeholder="Search clients..." />
+      
+      {/* Add New Client Button */}
+      <div className="px-4 py-3 border-b border-border">
+        <button
+          type="button"
+          onClick={() => setShowAddClientDialog(true)}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-dashed border-slate-300 text-slate-600 active:bg-slate-50 transition-colors"
+        >
+          <div className="w-10 h-10 rounded-full bg-sky-50 flex items-center justify-center">
+            <Plus className="w-5 h-5 text-sky-500" />
+          </div>
+          <span className="text-sm font-medium">Add New Client</span>
+        </button>
+      </div>
+
       <div className="flex-1 overflow-y-auto">
         {filteredClients.length === 0 ? <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
             <User className="w-12 h-12 mb-3 opacity-30" />
@@ -555,6 +570,18 @@ export const MobileCreateAppointmentSheet: React.FC<MobileCreateAppointmentSheet
               </button>;
       })}
       </div>
+
+      <AddClientDialog
+        open={showAddClientDialog}
+        onOpenChange={setShowAddClientDialog}
+        onSuccess={(clientId?: string) => {
+          fetchClients();
+          if (clientId) {
+            handleInputChange('client_id', clientId);
+          }
+          setShowAddClientDialog(false);
+        }}
+      />
     </div>;
   const renderLawyerPicker = () => <div className="flex flex-col h-full bg-background">
       <PickerHeader title="Assigned To" />
