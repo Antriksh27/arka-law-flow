@@ -13,6 +13,7 @@ import { ToggleGroup, ToggleGroupItem } from '../components/ui/toggle-group';
 import { Filter, Plus, Search, LayoutList, Calendar, Clock, Copy, SlidersHorizontal, Loader2 } from 'lucide-react';
 import { useDialog } from '@/hooks/use-dialog';
 import { CreateAppointmentDialog } from '../components/appointments/CreateAppointmentDialog';
+import { MobileCreateAppointmentSheet } from '../components/appointments/MobileCreateAppointmentSheet';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/components/ui/use-toast';
 import { getPublicBaseUrl } from '@/lib/appConfig';
@@ -281,10 +282,17 @@ const Appointments = () => {
       
       {/* Create Appointment Dialog */}
       {showAppointmentDialog && (
-        <CreateAppointmentDialog 
-          open={showAppointmentDialog} 
-          onClose={() => setShowAppointmentDialog(false)} 
-        />
+        isMobile ? (
+          <MobileCreateAppointmentSheet
+            open={showAppointmentDialog}
+            onClose={() => setShowAppointmentDialog(false)}
+          />
+        ) : (
+          <CreateAppointmentDialog 
+            open={showAppointmentDialog} 
+            onClose={() => setShowAppointmentDialog(false)} 
+          />
+        )
       )}
     </DefaultPageLayout>
   );
