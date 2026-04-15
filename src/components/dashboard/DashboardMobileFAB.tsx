@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { BottomSheet } from '@/components/mobile/BottomSheet';
 import { AddCaseDialog } from '@/components/cases/AddCaseDialog';
 import { AddClientDialog } from '@/components/clients/AddClientDialog';
-import { CreateAppointmentDialog } from '@/components/appointments/CreateAppointmentDialog';
+import { MobileCreateAppointmentSheet } from '@/components/appointments/MobileCreateAppointmentSheet';
 import { CreateTaskDialog } from '@/components/tasks/CreateTaskDialog';
 import { CreateNoteMultiModal } from '@/components/notes/CreateNoteMultiModal';
 import { useNavigate } from 'react-router-dom';
@@ -143,7 +143,7 @@ export const DashboardMobileFAB = () => {
         />
       )}
       {showAppointmentDialog && (
-        <CreateAppointmentDialog 
+        <MobileCreateAppointmentSheet
           open={showAppointmentDialog} 
           onClose={() => setShowAppointmentDialog(false)} 
         />
