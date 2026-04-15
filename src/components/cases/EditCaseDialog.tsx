@@ -710,6 +710,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
             </div>
           </div>
         </div>
+        </div>
       </ScrollArea>
 
       {/* Standardized Footer */}

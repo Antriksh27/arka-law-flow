@@ -373,6 +373,7 @@ function MultiUserCalendar({
 
                         {/* Time Slots */}
                         <div className="space-y-2">
+                          {timeSlots.map((time) => (
                               <div 
                                 key={time} 
                                 className="grid gap-3 items-center" 
